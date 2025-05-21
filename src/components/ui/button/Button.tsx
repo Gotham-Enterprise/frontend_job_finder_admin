@@ -2,8 +2,8 @@ import React, { ReactNode } from "react";
 
 interface ButtonProps {
   children: ReactNode; 
-  size?: "default" | "sm" | "lg" | "icon"; // Button size
-  variant?: "default" | "destructive" | "warning" | "outline" | "outlinePrimary" | "secondary" | "ghost" | "link" | "disabled"; // Button variant
+  size?: "default" | "sm" | "lg" | "icon";
+  variant?: "default" | "destructive" | "warning" | "outline" | "outlinePrimary" | "secondary" | "ghost" | "link" | "disabled" | "text-primary"; // Button variant
   startIcon?: ReactNode; 
   endIcon?: ReactNode;
   onClick?: () => void;
@@ -20,12 +20,10 @@ const Button: React.FC<ButtonProps> = ({
   onClick,
   className = "",
   disabled = false,
-}) => {
-  const buttonStyles = {
-    variants: {
-      variant: {
+}) => {  const buttonStyles = {
+    variants: {      variant: {
         default:
-          'bg-primary text-primary-foreground shadow hover:bg-primary/90 [&>svg]:text-primary-foreground',
+          'bg-primary text-primary-foreground text-white shadow hover:bg-primary/90 [&>svg]:text-primary-foreground',
         destructive:
           'bg-destructive text-destructive-foreground shadow hover:bg-destructive/90',
         warning: 'bg-warning text-warning-foreground shadow hover:bg-warning/90',
@@ -35,6 +33,7 @@ const Button: React.FC<ButtonProps> = ({
         secondary: 'bg-secondary text-secondary-foreground shadow hover:bg-secondary/80',
         ghost: '',
         link: 'text-primary underline-offset-4 hover:underline',
+        'text-primary': 'bg-primary text-white hover:bg-primary/90',
         disabled: 'text-white bg-[#CAD1D8]',
       },
       size: {

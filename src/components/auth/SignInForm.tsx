@@ -6,6 +6,7 @@ import Button from "@/components/ui/button/Button";
 import { ChevronLeftIcon, EyeCloseIcon, EyeIcon } from "@/icons";
 import Link from "next/link";
 import React, { useState } from "react";
+import Image from "next/image";
 
 export default function SignInForm() {
   const [showPassword, setShowPassword] = useState(false);
@@ -21,7 +22,18 @@ export default function SignInForm() {
           Back to dashboard
         </Link>
       </div>
+      <div className="flex flex-col items-center justify-center mt-10 max-w-xs mx-auto lg:hidden">
+                <Link href="/" className="block mb-4">
+                  <Image
+                    width={231}
+                    height={48}
+                    src="./images/logo/main-logo.svg"
+                    alt="Logo"
+                  />
+                </Link>
+              </div>
       <div className="flex flex-col justify-center flex-1 w-full max-w-md mx-auto">
+     
         <div>
           <div className="mb-5 sm:mb-8">
             <h1 className="mb-2 font-semibold text-gray-800 text-title-sm dark:text-white/90 sm:text-title-md">
@@ -128,24 +140,12 @@ export default function SignInForm() {
                   </Link>
                 </div>
                 <div>
-                  <Button className="w-full" size="sm">
+                  <Button variant="default" className="w-full" size="lg">
                     Sign in
                   </Button>
                 </div>
               </div>
             </form>
-
-            <div className="mt-5">
-              <p className="text-sm font-normal text-center text-gray-700 dark:text-gray-400 sm:text-start">
-                Don&apos;t have an account? {""}
-                <Link
-                  href="/signup"
-                  className="text-brand-500 hover:text-brand-600 dark:text-brand-400"
-                >
-                  Sign Up
-                </Link>
-              </p>
-            </div>
           </div>
         </div>
       </div>

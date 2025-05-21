@@ -19,7 +19,7 @@ export default function AuthLayout({
           <div className="lg:w-1/2 w-full h-full bg-brand-950 dark:bg-white/5 lg:grid items-center hidden">
             <div className="relative items-center justify-center  flex z-1">
               <GridShape />
-              <div className="flex flex-col items-center max-w-xs">
+              <div className="flex flex-col items-center">
                 <Link href="/" className="block mb-4">
                   <Image
                     width={231}
@@ -28,8 +28,11 @@ export default function AuthLayout({
                     alt="Logo"
                   />
                 </Link>
+                <p className="text-white text-2xl ml-10"><span className="text-primary"><strong>Explore</strong></span> nationwide Mental<br />Health & Healthcare jobs with us!</p>
               </div>
+             
             </div>
+           
           </div>
           <div className="fixed bottom-6 right-6 z-50 hidden sm:block">
             <ThemeTogglerTwo />
