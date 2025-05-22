@@ -71,7 +71,7 @@ export default function TopEmployers() {
           {employersData.map((employer) => (
             <div 
               key={employer.id}
-              className="bg-secondary rounded-xl p-4 flex items-center justify-between"
+              className="dark:bg-primary  bg-secondary rounded-xl p-4 flex items-center justify-between"
             >
               <div className="flex items-center space-x-3">
                 <span className="font-semibold text-lg text-gray-700 dark:text-white/80">
