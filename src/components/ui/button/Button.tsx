@@ -51,6 +51,7 @@ const Button: React.FC<ButtonProps> = ({
 
   return (
     <button
+     type="submit"
       className={`inline-flex items-center justify-center font-medium gap-2 transition ${className} ${
         buttonStyles.variants.size[size]
       } ${buttonStyles.variants.variant[disabled ? "disabled" : variant]} ${
@@ -62,6 +63,7 @@ const Button: React.FC<ButtonProps> = ({
       {startIcon && <span className="flex items-center">{startIcon}</span>}
       {children}
       {endIcon && <span className="flex items-center">{endIcon}</span>}
+      
     </button>
   );
 };

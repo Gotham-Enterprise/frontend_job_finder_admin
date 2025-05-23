@@ -21,18 +21,18 @@ export const Modal: React.FC<ModalProps> = ({
   const modalRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const handleEscape = (event: KeyboardEvent) => {
+    const initEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         onClose();
       }
     };
 
     if (isOpen) {
-      document.addEventListener("keydown", handleEscape);
+      document.addEventListener("keydown", initEscape);
     }
 
     return () => {
-      document.removeEventListener("keydown", handleEscape);
+      document.removeEventListener("keydown", initEscape);
     };
   }, [isOpen, onClose]);
 

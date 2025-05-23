@@ -16,7 +16,7 @@ export default function InputStates() {
     return isValidEmail;
   };
 
-  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const initEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setEmail(value);
     validateEmail(value);
@@ -34,7 +34,7 @@ export default function InputStates() {
             type="email"
             defaultValue={email}
             error={error}
-            onChange={handleEmailChange}
+            onChange={initEmailChange}
             placeholder="Enter your email"
             hint={error ? "This is an invalid email address." : ""}
           />
@@ -47,7 +47,7 @@ export default function InputStates() {
             type="email"
             defaultValue={email}
             success={!error}
-            onChange={handleEmailChange}
+            onChange={initEmailChange}
             placeholder="Enter your email"
             hint={!error ? "Valid email!" : ""}
           />

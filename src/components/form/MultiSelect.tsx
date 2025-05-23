@@ -30,7 +30,7 @@ const MultiSelect: React.FC<MultiSelectProps> = ({
     setIsOpen((prev) => !prev);
   };
 
-  const handleSelect = (optionValue: string) => {
+  const initSelect = (optionValue: string) => {
     const newSelectedOptions = selectedOptions.includes(optionValue)
       ? selectedOptions.filter((value) => value !== optionValue)
       : [...selectedOptions, optionValue];
@@ -138,7 +138,7 @@ const MultiSelect: React.FC<MultiSelectProps> = ({
                   <div key={index}>
                     <div
                       className={`hover:bg-primary/5 w-full cursor-pointer rounded-t border-b border-gray-200 dark:border-gray-800`}
-                      onClick={() => handleSelect(option.value)}
+                      onClick={() => initSelect(option.value)}
                     >
                       <div
                         className={`relative flex w-full items-center p-2 pl-2 ${

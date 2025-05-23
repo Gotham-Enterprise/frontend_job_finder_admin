@@ -18,7 +18,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
   const dropdownRef = useRef<HTMLDivElement>(null);
 
  useEffect(() => {
-  const handleClickOutside = (event: MouseEvent) => {
+  const clickOutSide = (event: MouseEvent) => {
     if (
       dropdownRef.current &&
       !dropdownRef.current.contains(event.target as Node) &&
@@ -28,9 +28,9 @@ export const Dropdown: React.FC<DropdownProps> = ({
     }
   };
 
-  document.addEventListener("mousedown", handleClickOutside);
+  document.addEventListener("mousedown", clickOutSide);
   return () => {
-    document.removeEventListener("mousedown", handleClickOutside);
+    document.removeEventListener("mousedown", clickOutSide);
   };
 }, [onClose]);
 

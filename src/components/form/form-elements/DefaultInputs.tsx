@@ -14,7 +14,7 @@ export default function DefaultInputs() {
     { value: "template", label: "Template" },
     { value: "development", label: "Development" },
   ];
-  const handleSelectChange = (value: string) => {
+  const initSelectChange = (value: string) => {
     console.log("Selected value:", value);
   };
   return (
@@ -34,7 +34,7 @@ export default function DefaultInputs() {
             <Select
             options={options}
             placeholder="Select an option"
-            onChange={handleSelectChange}
+            onChange={initSelectChange}
             className="dark:bg-dark-900"
           />
              <span className="absolute text-gray-500 -translate-y-1/2 pointer-events-none right-3 top-1/2 dark:text-gray-400">
@@ -68,7 +68,6 @@ export default function DefaultInputs() {
             label="Date Picker Input"
             placeholder="Select a date"
             onChange={(dates, currentDateString) => {
-              // Handle your logic
               console.log({ dates, currentDateString });
             }}
           />

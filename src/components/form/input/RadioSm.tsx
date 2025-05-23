@@ -1,13 +1,13 @@
 import React from "react";
 
 interface RadioProps {
-  id: string; // Unique ID for the radio button
-  name: string; // Group name for the radio button
-  value: string; // Value of the radio button
-  checked: boolean; // Whether the radio button is checked
-  label: string; // Label text for the radio button
-  onChange: (value: string) => void; // Handler for when the radio button is toggled
-  className?: string; // Optional custom classes for styling
+  id: string;
+  name: string; 
+  value: string; 
+  checked: boolean; 
+  label: string; 
+  onChange: (value: string) => void; 
+  className?: string;
 }
 
 const RadioSm: React.FC<RadioProps> = ({
@@ -25,7 +25,7 @@ const RadioSm: React.FC<RadioProps> = ({
       className={`flex cursor-pointer select-none items-center text-sm text-gray-500 dark:text-gray-400 ${className}`}
     >
       <span className="relative">
-        {/* Hidden Input */}
+     
         <input
           type="radio"
           id={id}
@@ -35,7 +35,7 @@ const RadioSm: React.FC<RadioProps> = ({
           onChange={() => onChange(value)}
           className="sr-only"
         />
-        {/* Styled Radio Circle */}
+       
         <span
           className={`mr-2 flex h-4 w-4 items-center justify-center rounded-full border ${
             checked
@@ -43,7 +43,7 @@ const RadioSm: React.FC<RadioProps> = ({
               : "bg-transparent border-gray-300 dark:border-gray-700"
           }`}
         >
-          {/* Inner Dot */}
+     
           <span
             className={`h-1.5 w-1.5 rounded-full ${
               checked ? "bg-white" : "bg-white dark:bg-[#1e2636]"

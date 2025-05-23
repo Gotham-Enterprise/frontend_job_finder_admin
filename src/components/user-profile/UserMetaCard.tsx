@@ -10,8 +10,7 @@ import Image from "next/image";
 
 export default function UserMetaCard() {
   const { isOpen, openModal, closeModal } = useModal();
-  const handleSave = () => {
-    // Handle save logic here
+  const initSave = () => {
     console.log("Saving changes...");
     closeModal();
   };
@@ -221,7 +220,7 @@ export default function UserMetaCard() {
               <Button size="sm" variant="outline" onClick={closeModal}>
                 Close
               </Button>
-              <Button size="sm" onClick={handleSave}>
+              <Button size="sm" onClick={initSave}>
                 Save Changes
               </Button>
             </div>

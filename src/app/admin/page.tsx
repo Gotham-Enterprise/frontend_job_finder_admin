@@ -13,7 +13,7 @@ export const metadata: Metadata = {
   description: "Admin",
 };
 
-export default function Ecommerce() {
+export default function Admin() {
   return (
   <>
     <div className="flex flex-grow justify-between relative items-center mb-10 bg-secondary items-center h-30 justify-between overflow-hidden rounded-2xl dark:border-gray-800 dark:bg-primary px-10">

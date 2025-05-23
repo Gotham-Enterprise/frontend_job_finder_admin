@@ -1,9 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+
   images: {
-    domains: ['jfapi.docbooked.com'],
+    domains: ['https://jfapi.docbooked.com'],
   },
   webpack(config) {
     config.module.rules.push({

@@ -15,7 +15,7 @@ export default function SelectInputs() {
 
   const [selectedValues, setSelectedValues] = useState<string[]>([]);
 
-  const handleSelectChange = (value: string) => {
+  const initSelectChange = (value: string) => {
     console.log("Selected value:", value);
   };
 
@@ -36,7 +36,7 @@ export default function SelectInputs() {
            <Select
             options={options}
             placeholder="Select Option"
-            onChange={handleSelectChange}
+            onChange={initSelectChange}
             className="dark:bg-dark-900"
           />
           <span className="absolute text-gray-500 -translate-y-1/2 pointer-events-none right-3 top-1/2 dark:text-gray-400">

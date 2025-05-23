@@ -20,13 +20,12 @@ const Select: React.FC<SelectProps> = ({
   className = "",
   defaultValue = "",
 }) => {
-  // Manage the selected value
   const [selectedValue, setSelectedValue] = useState<string>(defaultValue);
 
-  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const initChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
     setSelectedValue(value);
-    onChange(value); // Trigger parent handler
+    onChange(value);
   };
 
   return (
@@ -37,7 +36,7 @@ const Select: React.FC<SelectProps> = ({
           : "text-gray-400 dark:text-gray-400"
       } ${className}`}
       value={selectedValue}
-      onChange={handleChange}
+      onChange={initChange}
     >
       {/* Placeholder option */}
       <option

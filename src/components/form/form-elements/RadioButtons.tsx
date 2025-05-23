@@ -6,7 +6,7 @@ import Radio from "../input/Radio";
 export default function RadioButtons() {
   const [selectedValue, setSelectedValue] = useState<string>("option2");
 
-  const handleRadioChange = (value: string) => {
+  const initRadioChange = (value: string) => {
     setSelectedValue(value);
   };
   return (
@@ -17,7 +17,7 @@ export default function RadioButtons() {
           name="group1"
           value="option1"
           checked={selectedValue === "option1"}
-          onChange={handleRadioChange}
+          onChange={initRadioChange}
           label="Default"
         />
         <Radio
@@ -25,7 +25,7 @@ export default function RadioButtons() {
           name="group1"
           value="option2"
           checked={selectedValue === "option2"}
-          onChange={handleRadioChange}
+          onChange={initRadioChange}
           label="Selected"
         />
         <Radio
@@ -33,7 +33,7 @@ export default function RadioButtons() {
           name="group1"
           value="option3"
           checked={selectedValue === "option3"}
-          onChange={handleRadioChange}
+          onChange={initRadioChange}
           label="Disabled"
           disabled={true}
         />

@@ -5,7 +5,7 @@ import FileInput from "../input/FileInput";
 import Label from "../Label";
 
 export default function FileInputExample() {
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const initFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       console.log("Selected file:", file.name);
@@ -16,7 +16,7 @@ export default function FileInputExample() {
     <ComponentCard title="File Input">
       <div>
         <Label>Upload file</Label>
-        <FileInput onChange={handleFileChange} className="custom-class" />
+        <FileInput onChange={initFileChange} className="custom-class" />
       </div>
     </ComponentCard>
   );

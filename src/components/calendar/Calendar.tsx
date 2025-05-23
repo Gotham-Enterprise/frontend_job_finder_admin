@@ -63,14 +63,14 @@ const Calendar: React.FC = () => {
     ]);
   }, []);
 
-  const handleDateSelect = (selectInfo: DateSelectArg) => {
+  const initDateSelect = (selectInfo: DateSelectArg) => {
     resetModalFields();
     setEventStartDate(selectInfo.startStr);
     setEventEndDate(selectInfo.endStr || selectInfo.startStr);
     openModal();
   };
 
-  const handleEventClick = (clickInfo: EventClickArg) => {
+  const initEventClick = (clickInfo: EventClickArg) => {
     const event = clickInfo.event;
     setSelectedEvent(event as unknown as CalendarEvent);
     setEventTitle(event.title);
@@ -80,9 +80,9 @@ const Calendar: React.FC = () => {
     openModal();
   };
 
-  const handleAddOrUpdateEvent = () => {
+  const initAddOrUpdateEvent = () => {
     if (selectedEvent) {
-      // Update existing event
+   
       setEvents((prevEvents) =>
         prevEvents.map((event) =>
           event.id === selectedEvent.id
@@ -97,7 +97,7 @@ const Calendar: React.FC = () => {
         )
       );
     } else {
-      // Add new event
+      
       const newEvent: CalendarEvent = {
         id: Date.now().toString(),
         title: eventTitle,
@@ -134,8 +134,8 @@ const Calendar: React.FC = () => {
           }}
           events={events}
           selectable={true}
-          select={handleDateSelect}
-          eventClick={handleEventClick}
+          select={initDateSelect}
+          eventClick={initEventClick}
           eventContent={renderEventContent}
           customButtons={{
             addEventButton: {
@@ -254,7 +254,7 @@ const Calendar: React.FC = () => {
               Close
             </button>
             <button
-              onClick={handleAddOrUpdateEvent}
+              onClick={initAddOrUpdateEvent}
               type="button"
               className="btn btn-success btn-update-event flex w-full justify-center rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600 sm:w-auto"
             >

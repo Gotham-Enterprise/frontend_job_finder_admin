@@ -27,7 +27,7 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
     {}
   );
 
-  const handleCountryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const initCountryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newCountry = e.target.value;
     setSelectedCountry(newCountry);
     setPhoneNumber(countryCodes[newCountry]);
@@ -36,7 +36,7 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
     }
   };
 
-  const handlePhoneNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const initPhoneNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newPhoneNumber = e.target.value;
     setPhoneNumber(newPhoneNumber);
     if (onChange) {
@@ -51,7 +51,7 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
         <div className="absolute">
           <select
             value={selectedCountry}
-            onChange={handleCountryChange}
+            onChange={initCountryChange}
             className="appearance-none bg-none rounded-l-lg border-0 border-r border-gray-200 bg-transparent py-3 pl-3.5 pr-8 leading-tight text-gray-700 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-800 dark:text-gray-400"
           >
             {countries.map((country) => (
@@ -89,7 +89,7 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
       <input
         type="tel"
         value={phoneNumber}
-        onChange={handlePhoneNumberChange}
+        onChange={initPhoneNumberChange}
         placeholder={placeholder}
         className={`dark:bg-dark-900 h-11 w-full ${
           selectPosition === "start" ? "pl-[84px]" : "pr-[84px]"
@@ -101,7 +101,7 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
         <div className="absolute right-0">
           <select
             value={selectedCountry}
-            onChange={handleCountryChange}
+            onChange={initCountryChange}
             className="appearance-none bg-none rounded-r-lg border-0 border-l border-gray-200 bg-transparent py-3 pl-3.5 pr-8 leading-tight text-gray-700 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-800 dark:text-gray-400"
           >
             {countries.map((country) => (

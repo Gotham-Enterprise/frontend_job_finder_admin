@@ -13,7 +13,7 @@ export default function InputGroup() {
     { code: "CA", label: "+1" },
     { code: "AU", label: "+61" },
   ];
-  const handlePhoneNumberChange = (phoneNumber: string) => {
+  const initPhoneNumberChange = (phoneNumber: string) => {
     console.log("Updated phone number:", phoneNumber);
   };
   return (
@@ -38,7 +38,7 @@ export default function InputGroup() {
             selectPosition="start"
             countries={countries}
             placeholder="+1 (555) 000-0000"
-            onChange={handlePhoneNumberChange}
+            onChange={initPhoneNumberChange}
           />
         </div>{" "}
         <div>
@@ -47,7 +47,7 @@ export default function InputGroup() {
             selectPosition="end"
             countries={countries}
             placeholder="+1 (555) 000-0000"
-            onChange={handlePhoneNumberChange}
+            onChange={initPhoneNumberChange}
           />
         </div>
       </div>

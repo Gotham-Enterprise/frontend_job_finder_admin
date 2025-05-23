@@ -11,8 +11,7 @@ export default function FullScreenModal() {
     openModal: openFullscreenModal,
     closeModal: closeFullscreenModal,
   } = useModal();
-  const handleSave = () => {
-    // Handle save logic here
+  const initSave = () => {
     console.log("Saving changes...");
     closeFullscreenModal();
   };
@@ -55,7 +54,7 @@ export default function FullScreenModal() {
             <Button size="sm" variant="outline" onClick={closeFullscreenModal}>
               Close
             </Button>
-            <Button size="sm" onClick={handleSave}>
+            <Button size="sm" onClick={initSave}>
               Save Changes
             </Button>
           </div>
