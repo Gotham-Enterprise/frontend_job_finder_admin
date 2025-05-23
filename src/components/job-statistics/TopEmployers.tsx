@@ -4,6 +4,33 @@ import Star from "@/components/ui/star";
 
 
 export default function TopEmployers() {
+  const topThreeEmployers = [
+    {
+      id: 1,
+      rank: 1,
+      name: "Wayne Tech",
+      image: "/images/cards/top-1-employer.svg",
+      rating: 5.0,
+      imageSize: 68
+    },
+    {
+      id: 2,
+      rank: 2,
+      name: "Queen Industries",
+      image: "/images/cards/top-2-employer.svg",
+      rating: 4.9,
+      imageSize: 54
+    },
+    {
+      id: 3,
+      rank: 3,
+      name: "Palmer Tech",
+      image: "/images/cards/top-3-employer.svg",
+      rating: 4.8,
+      imageSize: 54
+    }
+  ];
+  
   const employersData = [
     {
       id: 1,
@@ -65,8 +92,87 @@ export default function TopEmployers() {
               Top Employers
             </h3>
           </div>
+        </div>        <div className="mt-6 mb-8">
+         
+          <div className="flex flex-col items-center">
+           
+            <div className="flex flex-col items-center space-y-2">
+              <span className="font-bold text-lg text-gray-700 dark:text-white/80">
+                {topThreeEmployers[0].rank}
+              </span>
+              <div className="relative h-[68px] w-[68px]">
+                <Image
+                  src={topThreeEmployers[0].image}
+                  alt={`Top Employer ${topThreeEmployers[0].rank}`}
+                  fill
+                  className="rounded-full object-cover"
+                />
+              </div>
+              <span className="font-medium text-sm text-gray-800 dark:text-white/90 h-5">
+                {topThreeEmployers[0].name}
+              </span>
+              <div className="flex items-center space-x-1">
+                <Star />
+                <span className="text-rates dark:text-white/90">
+                  {topThreeEmployers[0].rating.toFixed(1)}
+                </span>
+              </div>
+            </div>
+            
+            {/* Bottom Row with Employers 2 and 3 */}
+            <div className="flex justify-center w-full">
+              <div className="flex justify-between max-w-sm w-full px-4">
+                {/* Left Employer (Rank 2) */}
+                <div className="flex flex-col items-center space-y-2">
+                  <span className="font-bold text-lg text-gray-700 dark:text-white/80">
+                    {topThreeEmployers[1].rank}
+                  </span>
+                  <div className="relative h-[54px] w-[54px]">
+                    <Image
+                      src={topThreeEmployers[1].image}
+                      alt={`Top Employer ${topThreeEmployers[1].rank}`}
+                      fill
+                      className="rounded-full object-cover"
+                    />
+                  </div>
+                  <span className="font-medium text-sm text-gray-800 dark:text-white/90 h-5">
+                    {topThreeEmployers[1].name}
+                  </span>
+                  <div className="flex items-center space-x-1">
+                    <Star />
+                    <span className="text-rates dark:text-white/90">
+                      {topThreeEmployers[1].rating.toFixed(1)}
+                    </span>
+                  </div>
+                </div>
+                
+                {/* Right Employer (Rank 3) */}
+                <div className="flex flex-col items-center space-y-2">
+                  <span className="font-bold text-lg text-gray-700 dark:text-white/80">
+                    {topThreeEmployers[2].rank}
+                  </span>
+                  <div className="relative h-[54px] w-[54px]">
+                    <Image
+                      src={topThreeEmployers[2].image}
+                      alt={`Top Employer ${topThreeEmployers[2].rank}`}
+                      fill
+                      className="rounded-full object-cover"
+                    />
+                  </div>
+                  <span className="font-medium text-sm text-gray-800 dark:text-white/90 h-5">
+                    {topThreeEmployers[2].name}
+                  </span>
+                  <div className="flex items-center space-x-1">
+                    <Star />
+                    <span className="text-rates dark:text-white/90">
+                      {topThreeEmployers[2].rating.toFixed(1)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-        
         <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-1">
           {employersData.map((employer) => (
             <div 

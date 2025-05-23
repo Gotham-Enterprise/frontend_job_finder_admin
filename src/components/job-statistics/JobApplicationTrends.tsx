@@ -144,7 +144,7 @@ export default function JobApplicationTrends() {
             options={options}
             series={series}
             type="bar"
-            height={374}
+            height={719}
           />
         </div>
       </div>
