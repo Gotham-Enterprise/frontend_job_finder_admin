@@ -2,14 +2,14 @@ import { LoginCredentials, AuthResponse } from '../types/auth';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-export const authApi = {
-  async login(credentials: LoginCredentials): Promise<AuthResponse> {
+export const authApi = {  async login(credentials: LoginCredentials): Promise<AuthResponse> {
     try {
       const response = await fetch(`${API_URL}/api/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include', 
         body: JSON.stringify(credentials),
       });
 

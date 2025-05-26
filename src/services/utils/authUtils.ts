@@ -29,9 +29,26 @@ export const authUtils = {
     const authState = this.getAuthState();
     return authState?.isAuthenticated === true;
   },
-
   getUser(): User | null {
     const authState = this.getAuthState();
     return authState?.user || null;
+  },
+
+  getToken(): string | null {
+    const authState = this.getAuthState();
+    return authState?.token || null;
+  },
+
+  getAuthHeaders(): Record<string, string> {
+    const token = this.getToken();
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    
+    return headers;
   }
 };

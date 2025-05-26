@@ -45,9 +45,6 @@ export default function Admin() {
           <CategoryDistribution />
         </div>
   
-      
-  
-       
       </div>
   </>
   );

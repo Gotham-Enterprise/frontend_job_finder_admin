@@ -38,7 +38,7 @@ const navItems: NavItem[] = [
   {
     icon: <GroupIcon />,
     name: "Job Seekers",
-    path: "/job-seekers",
+    path: "/admin/job-seekers",
   },
   {
     icon: <UserCircleIcon />,
