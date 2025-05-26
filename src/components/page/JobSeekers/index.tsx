@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo, useTransition } from 'react';
 import Image from 'next/image';
 import { useJobSeekers } from '@/services/hooks/useJobSeekers';
 import { JobSeekerFilters } from '@/services/types/jobSeeker';
@@ -8,18 +8,17 @@ import {
   TableBody,
   TableCell,
   TableRow,
-} from '../ui/table';
-import Badge from '../ui/badge/Badge';
-import Button from '../ui/button/Button';
-import Input from '../ui/input/Input';
-import Select from '../form/Select';
-import Label from '../form/Label';
-import Pagination from '../tables/Pagination';
-import TableHeading from '../tables/tableHeader';
-import { PencilIcon, BoltIcon, MoreDotIcon, FunnelIcon, EyeIcon } from '@/icons';
-import { SearchIcon } from '../ui/icons';
-import LoadingState from '../common/LoadingState';
-import ErrorState from '../common/ErrorState';
+} from '../../ui/table';
+import Badge from '../../ui/badge/Badge';
+import Button from '../../ui/button/Button';
+import Input from '../../ui/input/Input';
+import Select from '../../form/Select';
+import Label from '../../form/Label';
+import Pagination from '../../tables/Pagination';
+import TableHeading from '../../tables/tableHeader';
+import { BoltIcon, FunnelIcon, EyeIcon } from '@/icons';
+import { SearchIcon } from '../../ui/icons';
+import ErrorState from '../../common/ErrorState';
 
 interface JobSeekersProps {
   className?: string;
@@ -34,40 +33,30 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
     location: '',
     specialty: '',
     status: undefined,
-  });
-
-  const [searchInput, setSearchInput] = useState('');
+  });  const [searchInput, setSearchInput] = useState('');
+  const [locationInput, setLocationInput] = useState('');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-
+  const [isPending, startTransition] = useTransition();
   const { data, isLoading, error, refetch } = useJobSeekers(filters);
-  const tableColumns = [
+  
+  const tableColumns = useMemo(() => [
     { key: 'name', label: 'Name' },
-    { key: 'specialties', label: 'Specialties' },
+    { key: 'specialties', label: 'Occupation' },
     { key: 'state', label: 'State' },
     { key: 'resume', label: 'Resume' },
     { key: 'dateJoined', label: 'Date Joined' },
     { key: 'lastActivity', label: 'Last Activity' },
     { key: 'status', label: 'Status' },
-    { key: 'actions', label: 'Actions', className: 'text-right' },
-  ];
+    { key: 'actions', label: '', className: 'text-right' },
+  ], []);
 
-
-  React.useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      setFilters(prev => ({ ...prev, search: searchInput, page: 1 }));
-    }, 500);
-
-    return () => clearTimeout(timeoutId);
-  }, [searchInput]);
-
-  const statusOptions = [
+  const statusOptions = useMemo(() => [
     { value: '', label: 'All Statuses' },
     { value: 'active', label: 'Active' },
     { value: 'inactive', label: 'Inactive' },
-    { value: 'suspended', label: 'Suspended' },
-  ];
+  ], []);
 
-  const specialtyOptions = [
+  const specialtyOptions = useMemo(() => [
     { value: '', label: 'All Specialties' },
     { value: 'Internal Medicine', label: 'Internal Medicine' },
     { value: 'Emergency Medicine', label: 'Emergency Medicine' },
@@ -76,58 +65,71 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
     { value: 'Surgery', label: 'Surgery' },
     { value: 'Geriatrics', label: 'Geriatrics' },
     { value: 'Home Health Nursing', label: 'Home Health Nursing' },
-  ];
+  ], []);
 
-  const itemsPerPageOptions = [
+  const itemsPerPageOptions = useMemo(() => [
     { value: '5', label: '5 per page' },
     { value: '10', label: '10 per page' },
     { value: '20', label: '20 per page' },
     { value: '50', label: '50 per page' },
-  ];
+  ], []);
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      startTransition(() => {
+        setFilters(prev => ({ ...prev, search: searchInput, page: 1 }));
+      });
+    }, 500);
 
-  const filterChange = (key: keyof JobSeekerFilters, value: any) => {
-    setFilters(prev => ({ 
-      ...prev, 
-      [key]: value === '' ? undefined : value,
-      page: 1
-    }));
-  };
+    return () => clearTimeout(timeoutId);
+  }, [searchInput]);
 
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      startTransition(() => {
+        setFilters(prev => ({ ...prev, location: locationInput, page: 1 }));
+      });
+    }, 500);
 
+    return () => clearTimeout(timeoutId);
+  }, [locationInput]);
+  useEffect(() => {
+    setLocationInput(filters.location || '');
+  }, [filters.location]);
+  const filterChange = useMemo(() => (key: keyof JobSeekerFilters, value: any) => {
+    startTransition(() => {
+      setFilters(prev => ({ 
+        ...prev, 
+        [key]: value === '' ? undefined : value,
+        page: 1
+      }));
+    });
+  }, []);
 
-  const initPageChange = (newPage: number) => {
-    setFilters(prev => ({ ...prev, page: newPage }));
-  };
+  const initPageChange = useMemo(() => (newPage: number) => {
+    startTransition(() => {
+      setFilters(prev => ({ ...prev, page: newPage }));
+    });
+  }, []);
 
-
-  const formatDate = (dateString: string) => {
+  const formatDate = useMemo(() => (dateString: string) => {
     if (!dateString) return 'N/A';
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
       day: 'numeric'
     });
-  };
+  }, []);
 
-
-  const getStatusVariant = (status: string): 'light' | 'solid' => {
+  const getStatusVariant = useMemo(() => (status: string): 'light' | 'solid' => {
     switch (status) {
       case 'active': return 'solid';
       case 'inactive': return 'light';
       case 'suspended': return 'solid';
       default: return 'light';
-    }
-  };
-  if (isLoading) {
-    return (
-      <LoadingState 
-        className={className}
-        message="Loading job seekers..."
-      />
-    );
-  }
+    }  }, []);
 
-  if (error) {
+
+  if (error && !isPending) {
     return (
       <ErrorState 
         className={className}
@@ -146,9 +148,13 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
           <div>
             <h3 className="text-xl font-semibold text-gray-800 dark:text-white">
               Job Seekers
-            </h3>
-            <p className="text-sm text-gray-500 text-gray-400 mt-1 dark:text-white">
+            </h3>            <p className="text-sm text-gray-500 text-gray-400 mt-1 dark:text-white">
               {data?.data.totalCount || 0} total job seekers
+              {isPending && (
+                <span className="ml-2 text-xs text-blue-500 dark:text-blue-400">
+                  Updating...
+                </span>
+              )}
             </p>
           </div>
           
@@ -193,19 +199,19 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
             <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
               <div>
                 <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Location
-                </Label>
+                  State
+                </Label>                
                 <Input
                   type="text"
-                  placeholder="Filter by location..."
-                  value={filters.location || ''}
-                  onChange={(e) => filterChange('location', e.target.value)}
+                  placeholder="Filter by state..."
+                  value={locationInput}
+                  onChange={(e) => setLocationInput(e.target.value)}
                 />
               </div>
               
               <div>
                 <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Specialty
+                  Occupation
                 </Label>
                 <Select
                   defaultValue={filters.specialty || ''}
@@ -237,8 +243,8 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
               </div>
             </div>
           </div>
-        )}
-      </div>      <div className="overflow-x-auto">
+        )}      </div>
+      <div className="overflow-x-auto">
         <Table>
           <TableHeading columns={tableColumns} />
           <TableBody>
@@ -251,8 +257,7 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
                   </div>
                 </TableCell>
               </TableRow>
-            ) : !data?.data.items?.length ? (
-              <TableRow>
+            ) : !data?.data.items?.length ? (              <TableRow>
                 <TableCell className="text-center py-8 px-6" colSpan={8}>
                   <p className="text-gray-500 dark:text-gray-400">No job seekers found</p>
                 </TableCell>
@@ -300,7 +305,7 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
                   </TableCell>
                   
                   <TableCell className="py-4 px-6">
-                    <Button variant="outline" size="sm">
+                    <Button variant="outline" size="sm" className="dark:text-white py-2 h-[auto] hover:bg-primary dark:hover:bg-primary" onClick={() => console.log('View resume', jobSeeker.id)}>
                       View Resume
                     </Button>
                   </TableCell>
@@ -322,10 +327,9 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
                       {jobSeeker.status}
                     </Badge>
                   </TableCell>
-                  
-                  <TableCell className="py-4 px-6 text-right">
-                    <div className="flex items-center gap-2">                      
-                        <Button 
+                    <TableCell className="py-4 px-6 text-right">
+                    <div className="flex items-center gap-2">
+                      <Button 
                         variant="ghost" 
                         size="sm" 
                         className="text-brand-400"
@@ -334,7 +338,6 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
                       >
                         View
                       </Button>
-                      
                     </div>
                   </TableCell>
                 </TableRow>
