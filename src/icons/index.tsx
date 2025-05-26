@@ -51,6 +51,7 @@ import HorizontaLDots from "./horizontal-dots.svg";
 import ChatIcon from "./chat.svg";
 import MoreDotIcon from "./more-dot.svg";
 import BellIcon from "./bell.svg";
+import FunnelIcon from "../components/ui/icons/Funnel";
 
 export {
   DownloadIcon,
@@ -103,7 +104,7 @@ export {
   PlugInIcon,
   DocsIcon,
   MailIcon,
-  HorizontaLDots,
-  ChevronUpIcon,
+  HorizontaLDots,  ChevronUpIcon,
   ChatIcon,
+  FunnelIcon,
 };

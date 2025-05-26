@@ -7,7 +7,6 @@ import {
   Table,
   TableBody,
   TableCell,
-  TableHeader,
   TableRow,
 } from '../ui/table';
 import Badge from '../ui/badge/Badge';
@@ -15,14 +14,19 @@ import Button from '../ui/button/Button';
 import Input from '../ui/input/Input';
 import Select from '../form/Select';
 import Label from '../form/Label';
-import { PencilIcon, ListIcon, BoltIcon, MoreDotIcon } from '@/icons';
+import Pagination from '../tables/Pagination';
+import TableHeading from '../tables/tableHeader';
+import { PencilIcon, BoltIcon, MoreDotIcon, FunnelIcon, EyeIcon } from '@/icons';
+import { SearchIcon } from '../ui/icons';
+import LoadingState from '../common/LoadingState';
+import ErrorState from '../common/ErrorState';
 
 interface JobSeekersProps {
   className?: string;
 }
 
 const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
-  // State for filters
+
   const [filters, setFilters] = useState<JobSeekerFilters>({
     page: 1,
     limit: 10,
@@ -36,6 +40,16 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   const { data, isLoading, error, refetch } = useJobSeekers(filters);
+  const tableColumns = [
+    { key: 'name', label: 'Name' },
+    { key: 'specialties', label: 'Specialties' },
+    { key: 'state', label: 'State' },
+    { key: 'resume', label: 'Resume' },
+    { key: 'dateJoined', label: 'Date Joined' },
+    { key: 'lastActivity', label: 'Last Activity' },
+    { key: 'status', label: 'Status' },
+    { key: 'actions', label: 'Actions', className: 'text-right' },
+  ];
 
 
   React.useEffect(() => {
@@ -104,37 +118,23 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
       default: return 'light';
     }
   };
-
   if (isLoading) {
     return (
-      <div className={`rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] ${className}`}>
-        <div className="flex items-center justify-center h-64">
-          <div className="flex items-center gap-3">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-brand-500"></div>
-            <p className="text-gray-500 dark:text-gray-400">Loading job seekers...</p>
-          </div>
-        </div>
-      </div>
+      <LoadingState 
+        className={className}
+        message="Loading job seekers..."
+      />
     );
   }
 
-
   if (error) {
     return (
-      <div className={`rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] ${className}`}>
-        <div className="flex flex-col items-center justify-center h-64 px-6">
-          <div className="text-center">
-            <p className="text-red-500">Error loading job seekers: {error.message}</p>         
-            <Button 
-              onClick={() => refetch()} 
-              className="mt-4"
-              startIcon={<BoltIcon />}
-            >
-              Retry
-            </Button>
-          </div>
-        </div>
-      </div>
+      <ErrorState 
+        className={className}
+        message={`Error loading job seekers: ${error.message}`}
+        onRetry={() => refetch()}
+        retryIcon={<BoltIcon />}
+      />
     );
   }
 
@@ -147,39 +147,44 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
             <h3 className="text-xl font-semibold text-gray-800 dark:text-white">
               Job Seekers
             </h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            <p className="text-sm text-gray-500 text-gray-400 mt-1 dark:text-white">
               {data?.data.totalCount || 0} total job seekers
             </p>
           </div>
           
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3">            
             <Button
               variant="outline"
+              className="dark:text-white"
               size="sm"
               onClick={() => setIsFilterOpen(!isFilterOpen)}
-              startIcon={<ListIcon />}
+              startIcon={<FunnelIcon className="dark:text-white" />}
             >
               Filters
             </Button>
             <Button
-              variant="outline"
+              variant="text-primary"
               size="sm"
+             
               onClick={() => refetch()}
               startIcon={<BoltIcon />}
               disabled={isLoading}
             >
-              Refresh
+              Export
             </Button>
           </div>
-        </div>
+        </div>        
         <div className="mt-4">
           <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <SearchIcon className="h-4 w-4 text-gray-400 dark:text-white" />
+            </div>
             <Input
               type="text"
-              placeholder="Search job seekers by name, specialty..."
+              placeholder="Search job seekers by name..."
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              className="w-full"
+              className="w-full pl-10"
             />
           </div>
         </div>
@@ -233,37 +238,9 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
             </div>
           </div>
         )}
-      </div>
-      <div className="overflow-x-auto">
+      </div>      <div className="overflow-x-auto">
         <Table>
-          <TableHeader>
-            <TableRow className="border-b border-gray-200 dark:border-gray-800">
-              <TableCell className="py-4 px-6 font-semibold text-gray-900 dark:text-white">
-                Name
-              </TableCell>
-              <TableCell className="py-4 px-6 font-semibold text-gray-900 dark:text-white">
-                Specialties
-              </TableCell>
-              <TableCell className="py-4 px-6 font-semibold text-gray-900 dark:text-white">
-                State
-              </TableCell>
-              <TableCell className="py-4 px-6 font-semibold text-gray-900 dark:text-white">
-                Resume
-              </TableCell>
-              <TableCell className="py-4 px-6 font-semibold text-gray-900 dark:text-white">
-                Date Joined
-              </TableCell>
-              <TableCell className="py-4 px-6 font-semibold text-gray-900 dark:text-white">
-                Last Activity
-              </TableCell>
-              <TableCell className="py-4 px-6 font-semibold text-gray-900 dark:text-white">
-                Status
-              </TableCell>
-              <TableCell className="py-4 px-6 font-semibold text-gray-900 dark:text-white text-right">
-                Actions
-              </TableCell>
-            </TableRow>
-          </TableHeader>
+          <TableHeading columns={tableColumns} />
           <TableBody>
             {isLoading ? (
               <TableRow>
@@ -347,12 +324,13 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
                   </TableCell>
                   
                   <TableCell className="py-4 px-6 text-right">
-                    <div className="flex items-center gap-2">
-                      <Button 
+                    <div className="flex items-center gap-2">                      
+                        <Button 
                         variant="ghost" 
                         size="sm" 
+                        className="text-brand-400"
                         onClick={() => console.log('View profile', jobSeeker.id)}
-                        startIcon={<PencilIcon />}
+                        startIcon={<EyeIcon />}
                       >
                         View
                       </Button>
@@ -369,51 +347,16 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
      
       {data && data.data.items && data.data.items.length > 0 && (
         <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-800">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="text-sm text-gray-500 dark:text-gray-400">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">            <div className="text-sm text-gray-500 dark:text-gray-400">
               Showing {((data.data.pagination.currentPage - 1) * (filters.limit || 10)) + 1} to{' '}
               {Math.min(data.data.pagination.currentPage * (filters.limit || 10), data.data.totalCount)} of{' '}
               {data.data.totalCount} results
             </div>
-            
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => initPageChange(data.data.pagination.currentPage - 1)}
-                disabled={!data.data.pagination.hasPreviousPage}
-              >
-                Previous
-              </Button>
-              
-              <div className="flex items-center gap-1">
-                {Array.from({ length: Math.min(5, data.data.pagination.totalPages) }, (_, i) => {
-                  const page = i + 1;
-                  const isActive = page === data.data.pagination.currentPage;
-                  
-                  return (
-                    <Button
-                      key={page}
-                      variant={isActive ? "default" : "ghost"}
-                      size="sm"
-                      onClick={() => initPageChange(page)}
-                      className="min-w-[40px]"
-                    >
-                      {page}
-                    </Button>
-                  );
-                })}
-              </div>
-              
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => initPageChange(data.data.pagination.currentPage + 1)}
-                disabled={!data.data.pagination.hasNextPage}
-              >
-                Next
-              </Button>
-            </div>
+            <Pagination
+              currentPage={data.data.pagination.currentPage}
+              totalPages={data.data.pagination.totalPages}
+              onPageChange={initPageChange}
+            />
           </div>
         </div>
       )}

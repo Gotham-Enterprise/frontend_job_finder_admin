@@ -29,7 +29,6 @@ export const jobSeekerApi = {
         
         try {
           const errorData = await response.json();
-          console.error('📄 Error response data:', errorData);
           errorMessage = errorData.message || errorMessage;
         } catch (parseError) {
          
