@@ -1,19 +1,28 @@
 "use client";
-import Image from "next/image";
-import Link from "next/link";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Dropdown } from "../ui/dropdown/Dropdown";
 import { DropdownItem } from "../ui/dropdown/DropdownItem";
 import { useLogout } from "@/services/hooks/useAuth";
 import LogoutIcon from "../ui/icons/Logout";
-import SupportIcon from "../ui/icons/Support";
-import SettingsIcon from "../ui/icons/Settings";
-import UserIcon from "../ui/icons/User";
 import { profileDropdownItems } from "./helper";
+import { authUtils } from "@/services/utils/authUtils";
 
 export default function UserDropdown() {
   const [isOpen, setIsOpen] = useState(false);
+  const [user, setUser] = useState<any>(null);
+  const [userDisplayName, setUserDisplayName] = useState("Guest");
+  const [userInitials, setUserInitials] = useState("G");
   const { mutate: logout, isPending } = useLogout();
+
+useEffect(() => {
+    const userData = authUtils.getUser();
+    const displayName = authUtils.getUserDisplayName();
+    const initials = authUtils.getUserInitials();
+    
+    setUser(userData);
+    setUserDisplayName(displayName);
+    setUserInitials(initials);
+  }, []);
 
   function toggleDropdown(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
     e.stopPropagation();
@@ -24,21 +33,18 @@ export default function UserDropdown() {
     setIsOpen(false);
   }
   return (
-    <div className="relative">
-      <button
+    <div className="relative">      
+    <button
         onClick={toggleDropdown}
         className="flex items-center text-gray-700 dark:text-gray-400 dropdown-toggle"
       >
-        <span className="mr-3 overflow-hidden rounded-full h-11 w-11">
-          <Image
-            width={44}
-            height={44}
-            src="/images/user/owner.jpeg"
-            alt="User"
-          />
+        <span className="mr-3 overflow-hidden rounded-full h-11 w-11 bg-brand-100 dark:bg-brand-800 flex items-center justify-center">
+          <span className="text-brand-600 dark:text-brand-300 font-medium text-sm">
+            {userInitials}
+          </span>
         </span>
 
-        <span className="block mr-1 font-medium text-theme-sm">Reb</span>
+        <span className="block mr-1 font-medium text-theme-sm">{userDisplayName}</span>
 
         <svg
           className={`stroke-gray-500 dark:stroke-gray-400 transition-transform duration-200 ${
@@ -64,13 +70,12 @@ export default function UserDropdown() {
         isOpen={isOpen}
         onClose={closeDropdown}
         className="absolute right-0 mt-[17px] flex w-[260px] flex-col rounded-2xl border border-gray-200 bg-white p-3 shadow-theme-lg dark:border-gray-800 dark:bg-gray-dark"
-      >
-        <div>
+      >        <div>
           <span className="block font-medium text-gray-700 text-theme-sm dark:text-gray-400">
-            Reb
+            {userDisplayName}
           </span>
           <span className="mt-0.5 block text-theme-xs text-gray-500 dark:text-gray-400">
-            rebgothamenterprisesltd.com
+            {user?.email}
           </span>
         </div>
 

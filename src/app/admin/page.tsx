@@ -5,6 +5,7 @@ import TopEmployers from "@/components/job-statistics/TopEmployers";
 import JobApplicationTrends from "@/components/job-statistics/JobApplicationTrends";
 import CategoryDistribution from "@/components/job-statistics/CategoryDistribution";
 import Image from "next/image";
+import { UserGreeting } from "@/components/admin/UserGreeting";
 
 
 export const metadata: Metadata = {
@@ -17,9 +18,7 @@ export default function Admin() {
   return (
   <>
     <div className="flex flex-grow justify-between relative items-center mb-10 bg-secondary items-center h-30 justify-between overflow-hidden rounded-2xl dark:border-gray-800 dark:bg-primary px-10">
-      <span className="text-2xl relative text-black dark:text-white">
-        Hello, Reb
-        </span>            
+      <UserGreeting />           
         <div className="absolute right-5 top-5 z-10">
           <Image 
             src="/images/cards/greatings-img.svg" 

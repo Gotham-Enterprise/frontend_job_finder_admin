@@ -18,7 +18,7 @@ const SearchIcon: React.FC<IconProps> = ({
       viewBox="0 0 24 24"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      className={className}
+      className={`text-gray-600 dark:text-gray-100 ${className}`}
     >
       <path
         fillRule="evenodd"

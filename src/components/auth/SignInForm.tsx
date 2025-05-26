@@ -88,7 +88,8 @@ export default function SignInForm() {
                     required
                   />
                 </div>
-                <div>                  <Label>
+                <div>                  
+                  <Label>
                     Password <span className="text-error-500">*</span>{" "}
                   </Label>
                   <div className="relative">

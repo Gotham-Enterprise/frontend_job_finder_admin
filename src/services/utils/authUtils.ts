@@ -38,7 +38,6 @@ export const authUtils = {
     const authState = this.getAuthState();
     return authState?.token || null;
   },
-
   getAuthHeaders(): Record<string, string> {
     const token = this.getToken();
     const headers: Record<string, string> = {
@@ -46,5 +45,29 @@ export const authUtils = {
     };
     
     return headers;
+  },
+  getUserDisplayName(): string {
+    if (typeof window === 'undefined') return 'Guest';
+    
+    const user = this.getUser();
+    if (!user) return 'Guest';
+    
+    return `${user.firstName} ${user.lastName}`.trim() || user.username || user.email;
+  },
+
+  getUserInitials(): string {
+    if (typeof window === 'undefined') return 'G';
+    
+    const user = this.getUser();
+    if (!user) return 'G';
+    
+    const firstName = user.firstName?.charAt(0)?.toUpperCase() || '';
+    const lastName = user.lastName?.charAt(0)?.toUpperCase() || '';
+    
+    if (firstName && lastName) {
+      return firstName + lastName;
+    }
+    
+    return firstName || lastName || user.username?.charAt(0)?.toUpperCase() || user.email?.charAt(0)?.toUpperCase() || 'U';
   }
 };
