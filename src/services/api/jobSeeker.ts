@@ -6,13 +6,12 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL;
 export const jobSeekerApi = {
   async getJobSeekers(filters: JobSeekerFilters = {}): Promise<JobSeekersResponse> {
     try {
-      const queryParams = new URLSearchParams();
-      
-      if (filters.page) queryParams.append('page', filters.page.toString());
+      const queryParams = new URLSearchParams();      if (filters.page) queryParams.append('page', filters.page.toString());
       if (filters.limit) queryParams.append('limit', filters.limit.toString());
       if (filters.search) queryParams.append('search', filters.search);
       if (filters.location) queryParams.append('location', filters.location);
       if (filters.specialty) queryParams.append('specialty', filters.specialty);
+      if (filters.occupationId) queryParams.append('occupationId', filters.occupationId.toString());
       if (filters.status) queryParams.append('status', filters.status);
 
       const url = `${API_URL}/api/admin/jobseekers?${queryParams.toString()}`;   

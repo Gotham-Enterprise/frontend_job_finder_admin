@@ -8,6 +8,7 @@ export interface JobSeeker {
   zipCode: string;
   jobApplications: number;
   dateJoined: string;
+  occupation: string;
   lastActivity: string;
   status: 'active' | 'inactive' | 'suspended';
   profilePicture: {
@@ -23,6 +24,7 @@ export interface JobSeekerFilters {
   search?: string;
   location?: string;
   specialty?: string;
+  occupationId?: number;
   status?: 'active' | 'inactive' | 'suspended';
 }
 

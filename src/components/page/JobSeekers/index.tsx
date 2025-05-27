@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useMemo, useTransition } from 'react';
 import Image from 'next/image';
 import { useJobSeekers } from '@/services/hooks/useJobSeekers';
+import { useOccupations } from '@/services/hooks/useOccupations';
 import { JobSeekerFilters } from '@/services/types/jobSeeker';
 import {
   Table,
@@ -25,19 +26,18 @@ interface JobSeekersProps {
 }
 
 const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
-
   const [filters, setFilters] = useState<JobSeekerFilters>({
     page: 1,
     limit: 10,
     search: '',
     location: '',
-    specialty: '',
+    occupationId: undefined,
     status: undefined,
-  });  const [searchInput, setSearchInput] = useState('');
-  const [locationInput, setLocationInput] = useState('');
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  });const [searchInput, setSearchInput] = useState('');
+  const [locationInput, setLocationInput] = useState('');  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const { data, isLoading, error, refetch } = useJobSeekers(filters);
+  const { data: occupationsData, isLoading: isOccupationsLoading } = useOccupations();
   
   const tableColumns = useMemo(() => [
     { key: 'name', label: 'Name' },
@@ -54,18 +54,19 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
     { value: '', label: 'All Statuses' },
     { value: 'active', label: 'Active' },
     { value: 'inactive', label: 'Inactive' },
-  ], []);
-
-  const specialtyOptions = useMemo(() => [
-    { value: '', label: 'All Specialties' },
-    { value: 'Internal Medicine', label: 'Internal Medicine' },
-    { value: 'Emergency Medicine', label: 'Emergency Medicine' },
-    { value: 'Family Medicine', label: 'Family Medicine' },
-    { value: 'Pediatrics', label: 'Pediatrics' },
-    { value: 'Surgery', label: 'Surgery' },
-    { value: 'Geriatrics', label: 'Geriatrics' },
-    { value: 'Home Health Nursing', label: 'Home Health Nursing' },
-  ], []);
+  ], []);  const occupationOptions = useMemo(() => {
+    const baseOptions = [{ value: '', label: 'All Occupations' }];
+    
+    if (occupationsData?.success && occupationsData.data) {
+      const dynamicOptions = occupationsData.data.map(occupation => ({
+        value: occupation.id.toString(),
+        label: occupation.name
+      }));
+      return [...baseOptions, ...dynamicOptions];
+    }
+    
+    return baseOptions;
+  }, [occupationsData]);
 
   const itemsPerPageOptions = useMemo(() => [
     { value: '5', label: '5 per page' },
@@ -219,15 +220,14 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
                   onChange={(e) => setLocationInput(e.target.value)}
                 />
               </div>
-              
-              <div>
+                <div>
                 <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Occupation
                 </Label>
                 <Select
-                  defaultValue={filters.specialty || ''}
-                  onChange={(value: string) => filterChange('specialty', value)}
-                  options={specialtyOptions}
+                  defaultValue={filters.occupationId?.toString() || ''}
+                  onChange={(value: string) => filterChange('occupationId', value === '' ? undefined : parseInt(value))}
+                  options={occupationOptions}
                 />
               </div>
               
@@ -305,7 +305,7 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
                   
                   <TableCell className="py-4 px-6">
                     <p className="text-sm text-gray-900 dark:text-white">
-                      {jobSeeker.specialty}
+                      {jobSeeker.occupation}
                     </p>
                   </TableCell>
                   
