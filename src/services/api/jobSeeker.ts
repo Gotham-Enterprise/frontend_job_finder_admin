@@ -8,7 +8,7 @@ export const jobSeekerApi = {
     try {
       const queryParams = new URLSearchParams();      if (filters.page) queryParams.append('page', filters.page.toString());
       if (filters.limit) queryParams.append('limit', filters.limit.toString());
-      if (filters.search) queryParams.append('search', filters.search);
+      if (filters.search) queryParams.append('name', filters.search);
       if (filters.location) queryParams.append('location', filters.location);
       if (filters.specialty) queryParams.append('specialty', filters.specialty);
       if (filters.occupationId) queryParams.append('occupationId', filters.occupationId.toString());

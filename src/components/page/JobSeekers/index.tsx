@@ -3,6 +3,7 @@ import React, { useState, useEffect, useMemo, useTransition } from 'react';
 import Image from 'next/image';
 import { useJobSeekers } from '@/services/hooks/useJobSeekers';
 import { useOccupations } from '@/services/hooks/useOccupations';
+import { useStates } from '@/services/hooks/useStates';
 import { JobSeekerFilters } from '@/services/types/jobSeeker';
 import {
   Table,
@@ -32,12 +33,11 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
     search: '',
     location: '',
     occupationId: undefined,
-    status: undefined,
-  });const [searchInput, setSearchInput] = useState('');
-  const [locationInput, setLocationInput] = useState('');  const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [isPending, startTransition] = useTransition();
-  const { data, isLoading, error, refetch } = useJobSeekers(filters);
+    status: undefined,  });const [searchInput, setSearchInput] = useState('');
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [isPending, startTransition] = useTransition();  const { data, isLoading, error, refetch } = useJobSeekers(filters);
   const { data: occupationsData, isLoading: isOccupationsLoading } = useOccupations();
+  const { data: statesData, isLoading: isStatesLoading } = useStates();
   
   const tableColumns = useMemo(() => [
     { key: 'name', label: 'Name' },
@@ -68,13 +68,26 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
     return baseOptions;
   }, [occupationsData]);
 
+  const stateOptions = useMemo(() => {
+    const baseOptions = [{ value: '', label: 'All States' }];
+    
+    if (statesData?.success && statesData.data) {
+      const dynamicOptions = statesData.data.map(state => ({
+        value: state,
+        label: state
+      }));
+      return [...baseOptions, ...dynamicOptions];
+    }
+    
+    return baseOptions;
+  }, [statesData]);
+
   const itemsPerPageOptions = useMemo(() => [
     { value: '5', label: '5 per page' },
     { value: '10', label: '10 per page' },
     { value: '20', label: '20 per page' },
     { value: '50', label: '50 per page' },
-  ], []);
-  useEffect(() => {
+  ], []);  useEffect(() => {
     const timeoutId = setTimeout(() => {
       startTransition(() => {
         setFilters(prev => ({ ...prev, search: searchInput, page: 1 }));
@@ -84,18 +97,6 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
     return () => clearTimeout(timeoutId);
   }, [searchInput]);
 
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      startTransition(() => {
-        setFilters(prev => ({ ...prev, location: locationInput, page: 1 }));
-      });
-    }, 500);
-
-    return () => clearTimeout(timeoutId);
-  }, [locationInput]);
-  useEffect(() => {
-    setLocationInput(filters.location || '');
-  }, [filters.location]);
   const filterChange = useMemo(() => (key: keyof JobSeekerFilters, value: any) => {
     startTransition(() => {
       setFilters(prev => ({ 
@@ -208,16 +209,14 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
         </div>
         {isFilterOpen && (
           <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
-            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              <div>
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">              <div>
                 <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   State
                 </Label>                
-                <Input
-                  type="text"
-                  placeholder="Filter by state..."
-                  value={locationInput}
-                  onChange={(e) => setLocationInput(e.target.value)}
+                <Select
+                  defaultValue={filters.location || ''}
+                  onChange={(value: string) => filterChange('location', value)}
+                  options={stateOptions}
                 />
               </div>
                 <div>
