@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect, useMemo, useTransition } from 'react';
 import Image from 'next/image';
-import { useJobSeekers } from '@/services/hooks/useJobSeekers';
+import { useJobSeekers, useViewResume } from '@/services/hooks/useJobSeekers';
 import { useOccupations } from '@/services/hooks/useOccupations';
 import { useStates } from '@/services/hooks/useStates';
 import { JobSeekerFilters } from '@/services/types/jobSeeker';
@@ -21,6 +21,7 @@ import TableHeading from '../../tables/tableHeader';
 import { BoltIcon, DownloadIcon, FunnelIcon, EyeIcon } from '@/icons';
 import { SearchIcon } from '../../ui/icons';
 import ErrorState from '../../common/ErrorState';
+import FullScreenSpinner from '../../ui/FullScreenSpinner';
 
 interface JobSeekersProps {
   className?: string;
@@ -38,6 +39,7 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
   const [isPending, startTransition] = useTransition();  const { data, isLoading, error, refetch } = useJobSeekers(filters);
   const { data: occupationsData, isLoading: isOccupationsLoading } = useOccupations();
   const { data: statesData, isLoading: isStatesLoading } = useStates();
+  const { mutate: viewResume, isPending: isViewingResume } = useViewResume();
   
   const tableColumns = useMemo(() => [
     { key: 'name', label: 'Name' },
@@ -121,7 +123,6 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
       day: 'numeric'
     });
   }, []);
-
   const getStatusVariant = useMemo(() => (status: string): 'light' | 'solid' => {
     switch (status) {
       case 'active': return 'solid';
@@ -129,6 +130,14 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
       case 'suspended': return 'solid';
       default: return 'light';
     }  }, []);
+  const handleViewResume = async (resumeId: string | null) => {
+    if (!resumeId) {
+      console.error('No resume ID provided');
+      return;
+    }
+    
+    viewResume(resumeId);
+  };
 
 
   if (error && !isPending) {
@@ -209,16 +218,7 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
         </div>
         {isFilterOpen && (
           <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
-            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">              <div>
-                <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  State
-                </Label>                
-                <Select
-                  defaultValue={filters.location || ''}
-                  onChange={(value: string) => filterChange('location', value)}
-                  options={stateOptions}
-                />
-              </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">              
                 <div>
                 <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Occupation
@@ -229,7 +229,16 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
                   options={occupationOptions}
                 />
               </div>
-              
+              <div>
+                <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  State
+                </Label>                
+                <Select
+                  defaultValue={filters.location || ''}
+                  onChange={(value: string) => filterChange('location', value)}
+                  options={stateOptions}
+                />
+              </div>
               <div>
                 <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Status
@@ -312,12 +321,22 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
                     <p className="text-sm text-gray-900 dark:text-white">
                       {jobSeeker.state || jobSeeker.city || 'N/A'}
                     </p>
-                  </TableCell>
-                  
+                  </TableCell>                  
                   <TableCell className="py-4 px-6">
-                    <Button variant="outline" size="sm" className="dark:text-white py-2 h-[auto] hover:bg-primary dark:hover:bg-primary" onClick={() => console.log('View resume', jobSeeker.id)}>
-                      View Resume
-                    </Button>
+                    {jobSeeker.hasResume === false ? (
+                      <Badge variant="light" color="error">
+                        No resume uploaded
+                      </Badge>
+                    ) : (                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        className="dark:text-white py-2 h-[auto] hover:bg-primary dark:hover:bg-primary" 
+                        onClick={() => handleViewResume(jobSeeker.resumeId)}
+                        disabled={isViewingResume}
+                      >
+                        {isViewingResume ? 'Opening...' : 'View Resume'}
+                      </Button>
+                    )}
                   </TableCell>
                   
                   <TableCell className="py-4 px-6">
@@ -369,10 +388,15 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
               currentPage={data.data.pagination.currentPage}
               totalPages={data.data.pagination.totalPages}
               onPageChange={initPageChange}
-            />
-          </div>
+            />          </div>
         </div>
       )}
+      
+      {/* Full Screen Spinner for Resume Viewing */}
+      <FullScreenSpinner 
+        isVisible={isViewingResume} 
+        message="Opening resume..." 
+      />
     </div>
   );
 };

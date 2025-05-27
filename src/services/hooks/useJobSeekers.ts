@@ -26,5 +26,14 @@ export const useJobSeekers = (filters: JobSeekerFilters = {}) => {
   });
 };
 
+export const useViewResume = () => {
+  return useMutation({
+    mutationFn: (resumeId: string) => jobSeekerApi.viewResume(resumeId),
+    onError: (error) => {
+      console.error('Failed to view resume:', error);
+    },
+  });
+};
+
 
 

@@ -11,6 +11,8 @@ export interface JobSeeker {
   occupation: string;
   lastActivity: string;
   status: 'active' | 'inactive' | 'suspended';
+  resumeId: string | null;
+  hasResume: boolean;
   profilePicture: {
     fileName: string;
     url: string;

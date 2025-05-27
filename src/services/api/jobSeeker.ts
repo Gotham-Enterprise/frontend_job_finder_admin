@@ -40,11 +40,61 @@ export const jobSeekerApi = {
         }
         
         throw new Error(errorMessage);
-      }
-
-      const data = await response.json();
+      }      const data = await response.json();
       return data;
     } catch (error) {
+      throw error;
+    }
+  },
+
+  async viewResume(resumeId: string): Promise<void> {
+    try {
+      const url = `${API_URL}/api/resumes/${resumeId}/view`;
+      
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: authUtils.getAuthHeaders(),
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+        
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorMessage;
+        } catch (parseError) {
+          try {
+            const errorText = await response.text();
+            if (errorText) errorMessage = errorText;
+          } catch (textError) {
+            console.error('Could not get error response text:', textError);
+          }
+        }
+        
+        throw new Error(errorMessage);
+      }
+
+    
+      const contentType = response.headers.get('content-type');
+      
+      if (contentType && contentType.includes('application/pdf')) {
+      
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        window.open(url, '_blank');
+        
+      
+        setTimeout(() => window.URL.revokeObjectURL(url), 100);
+      } else {
+       
+        const data = await response.json();
+        if (data.url) {
+          window.open(data.url, '_blank');
+        }
+      }
+    } catch (error) {
+      console.error('Error viewing resume:', error);
       throw error;
     }
   },

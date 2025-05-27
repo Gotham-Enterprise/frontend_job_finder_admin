@@ -4,7 +4,7 @@ import SettingsIcon from "../ui/icons/Settings";
 export const profileDropdownItems = [
   {
     label: "Edit profile",
-    href: "/profile",
+    href: "/admin/profile",
     Icon: PencilIcon,
   },
   {
