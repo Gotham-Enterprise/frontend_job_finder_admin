@@ -19,7 +19,7 @@ export default function Admin() {
   <>
     <div className="flex flex-grow justify-between relative items-center mb-10 bg-secondary items-center h-30 justify-between overflow-hidden rounded-2xl dark:border-gray-800 dark:bg-primary px-10">
       <UserGreeting />           
-        <div className="absolute right-5 top-5 z-10">
+        <div className="absolute right-5 top-5 z-2">
           <Image 
             src="/images/cards/greatings-img.svg" 
             alt="Greeting" 

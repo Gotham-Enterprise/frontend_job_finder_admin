@@ -114,9 +114,8 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
       setFilters(prev => ({ ...prev, page: newPage }));
     });
   }, []);
-
   const formatDate = useMemo(() => (dateString: string) => {
-    if (!dateString) return 'N/A';
+    if (!dateString) return null;
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
@@ -130,7 +129,7 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
       case 'suspended': return 'solid';
       default: return 'light';
     }  }, []);
-  const handleViewResume = async (resumeId: string | null) => {
+  const initViewResume = async (resumeId: string | null) => {
     if (!resumeId) {
       console.error('No resume ID provided');
       return;
@@ -316,47 +315,52 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
                       {jobSeeker.occupation}
                     </p>
                   </TableCell>
-                  
-                  <TableCell className="py-4 px-6">
+                    <TableCell className="py-4 px-6">
                     <p className="text-sm text-gray-900 dark:text-white">
                       {jobSeeker.state || jobSeeker.city || 'N/A'}
                     </p>
-                  </TableCell>                  
+                  </TableCell>
                   <TableCell className="py-4 px-6">
                     {jobSeeker.hasResume === false ? (
                       <Badge variant="light" color="error">
                         No resume uploaded
                       </Badge>
-                    ) : (                      <Button 
+                    ) : (
+                      <Button 
                         variant="outline" 
                         size="sm"
-                        className="dark:text-white py-2 h-[auto] hover:bg-primary dark:hover:bg-primary" 
-                        onClick={() => handleViewResume(jobSeeker.resumeId)}
+                        className="group relative bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 
+                                 hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20
+                                 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 
+                                 font-medium transition-all duration-200 shadow-sm hover:shadow-md
+                                 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white 
+                                 dark:disabled:hover:bg-gray-800 px-3 w-full" 
+                        onClick={() => initViewResume(jobSeeker.resumeId)}                        
                         disabled={isViewingResume}
                       >
-                        {isViewingResume ? 'Opening...' : 'View Resume'}
+                        <span className="text-sm">
+                          {isViewingResume ? 'Opening...' : 'View Resume'}
+                        </span>
                       </Button>
                     )}
-                  </TableCell>
-                  
-                  <TableCell className="py-4 px-6">
+                  </TableCell>                  <TableCell className="py-4 px-6">
                     <p className="text-sm text-gray-900 dark:text-white">
                       {formatDate(jobSeeker.dateJoined)}
                     </p>
                   </TableCell>
-                  
                   <TableCell className="py-4 px-6">
                     <p className="text-sm text-gray-900 dark:text-white">
-                      {formatDate(jobSeeker.lastActivity)}
+                      {formatDate(jobSeeker.lastActivity) || (
+                        <span className="text-gray-400 dark:text-gray-500 italic">No activity</span>
+                      )}
                     </p>
                   </TableCell>
-                  
-                  <TableCell className="py-4 px-6">
+                    <TableCell className="py-4 px-6">
                     <Badge variant={getStatusVariant(jobSeeker.status)}>
                       {jobSeeker.status}
                     </Badge>
                   </TableCell>
-                    <TableCell className="py-4 px-6 text-right">
+                  <TableCell className="py-4 px-6 text-right">
                     <div className="flex items-center gap-2">
                       <Button 
                         variant="ghost" 
@@ -392,7 +396,7 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
         </div>
       )}
       
-      {/* Full Screen Spinner for Resume Viewing */}
+     
       <FullScreenSpinner 
         isVisible={isViewingResume} 
         message="Opening resume..." 

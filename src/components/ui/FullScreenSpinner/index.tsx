@@ -12,7 +12,7 @@ const FullScreenSpinner: React.FC<FullScreenSpinnerProps> = ({
   if (!isVisible) return null;
 
   return (
-    <div className="fixed inset-0  bg-white dark:bg-black bg-opacity-[0.8] flex items-center justify-center z-[9999]">      
+    <div className="fixed inset-0 bg-white dark:bg-black bg-opacity-50 flex items-center justify-center z-[9999]">      
     <div className="flex flex-col items-center space-y-4">
       
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-500"></div>

@@ -1,14 +1,26 @@
 import Image from "next/image";
+import Link from "next/link";
 
 export default function ViewDetails() {
     return (
         <>
+        <div className="px-4 pt-4 pb-2">
+            <Link 
+                href="/admin/job-seekers"
+                className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-900 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700 dark:focus:ring-gray-700 transition-colors"
+            >
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                Back to Job Seekers
+            </Link>
+        </div>
+
         <div className="grid grid-cols-1 px-4 pt-6 xl:grid-cols-3 xl:gap-6">
             <div className="col-span-full xl:col-auto">
                 <div className="mb-6 rounded-xl bg-white p-6 shadow-lg border border-gray-100 dark:bg-gray-800 dark:border-gray-700 sm:p-8">
-                    <div className="flex flex-col items-center">
-                        {/* Profile Image */}
-                        <div className="relative mb-6">
+                    <div className="flex flex-col items-center">                        {/* Profile Image */}
+                        <div className="relative mb-6 inline-block">
                             <Image
                                 width={120}
                                 height={120}
@@ -16,7 +28,7 @@ export default function ViewDetails() {
                                 alt="user"
                                 className="rounded-full object-cover border-4 border-blue-100 dark:border-blue-900 shadow-lg"
                             />
-                            <div className="absolute -bottom-2 -right-2 w-6 h-6 bg-green-500 rounded-full border-2 border-white dark:border-gray-800"></div>
+                            <div className="absolute bottom-1 right-1 w-6 h-6 bg-green-500 rounded-full border-3 border-white dark:border-gray-800 shadow-sm"></div>
                         </div>
                         
                         {/* Name and Title */}
