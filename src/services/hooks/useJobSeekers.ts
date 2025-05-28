@@ -1,6 +1,6 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { jobSeekerApi } from '../api/jobSeeker';
-import { JobSeekerFilters, JobSeeker } from '../types/jobSeeker';
+import { JobSeekerFilters } from '../types/jobSeeker';
 
 export const jobSeekerQueryKeys = {
   all: ['jobSeekers'] as const,
@@ -19,7 +19,20 @@ export const useJobSeekers = (filters: JobSeekerFilters = {}) => {
     },
     staleTime: 1000 * 60 * 5, 
     retry: (failureCount, error: Error) => {
-    
+      console.error('Error fetching job seekers:', error);
+      return failureCount < 3;
+    },
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+  });
+};
+
+export const useJobSeekerDetails = (id: string) => {
+  return useQuery({
+    queryKey: jobSeekerQueryKeys.detail(id),
+    queryFn: () => jobSeekerApi.getJobSeekerById(id),
+    enabled: !!id, 
+    staleTime: 1000 * 60 * 5,
+    retry: (failureCount, _error: Error) => {
       return failureCount < 3;
     },
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),

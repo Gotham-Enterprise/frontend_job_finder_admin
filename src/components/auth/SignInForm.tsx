@@ -3,9 +3,9 @@ import Checkbox from "@/components/form/input/Checkbox";
 import Label from "@/components/form/Label";
 import Input from "@/components/ui/input/Input";
 import Button from "@/components/ui/button/Button";
-import { ChevronLeftIcon, EyeCloseIcon, EyeIcon } from "@/icons";
+import { EyeCloseIcon, EyeIcon } from "@/icons";
 import Link from "next/link";
-import React, { useState, FormEvent } from "react";
+import React, { useState, FormEvent, useEffect } from "react";
 import Image from "next/image";
 import { useLogin } from "@/services/hooks/useAuth";
 import { useRouter } from "next/navigation";
@@ -22,7 +22,7 @@ export default function SignInForm() {
   const { mutate: login, isPending } = useLogin();
 
 
-  React.useEffect(() => {
+useEffect(() => {
     if (authUtils.isAuthenticated()) {
       router.push('/');
     }
@@ -39,6 +39,7 @@ export default function SignInForm() {
         }
       });
     } catch (error) {
+      console.error("Login error:", error);
       setErrorMessage("An unexpected error occurred. Please try again.");
     }
   };

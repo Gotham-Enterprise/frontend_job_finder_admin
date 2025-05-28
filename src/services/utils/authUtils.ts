@@ -40,6 +40,9 @@ export const authUtils = {
   },
   getAuthHeaders(): Record<string, string> {
     const token = this.getToken();
+    if (!token) {
+      return {};
+    }
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     };

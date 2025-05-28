@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect, useMemo, useTransition } from 'react';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { useJobSeekers, useViewResume } from '@/services/hooks/useJobSeekers';
 import { useOccupations } from '@/services/hooks/useOccupations';
 import { useStates } from '@/services/hooks/useStates';
@@ -28,6 +29,7 @@ interface JobSeekersProps {
 }
 
 const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
+  const router = useRouter();
   const [filters, setFilters] = useState<JobSeekerFilters>({
     page: 1,
     limit: 10,
@@ -148,6 +150,10 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
         console.error('Error viewing resume:', error);
       }
     });
+  };
+
+  const viewJobSeeker = (jobSeekerId: string) => {
+    router.push(`/admin/job-seekers/details/${jobSeekerId}`);
   };
 
 
@@ -287,14 +293,15 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
                   </div>
                 </TableCell>
               </TableRow>
-            ) : !data?.data.items?.length ? (              <TableRow>
+            ) : !data?.data.items?.length ? (             
+               <TableRow>
                 <TableCell className="text-center py-8 px-6" colSpan={8}>
                   <p className="text-gray-500 dark:text-gray-400">No job seekers found</p>
                 </TableCell>
               </TableRow>
-            ) : (
-              data.data.items.map((jobSeeker) => (
-                <TableRow key={jobSeeker.id} className="border-b border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50">
+            ) : (              
+              data.data.items.map((jobSeeker) => (                
+            <TableRow key={jobSeeker.id} className="border-b border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50">
                   <TableCell className="py-4 px-6">
                     <div className="flex items-center gap-3">
                       <div className="relative w-10 h-10 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700">
@@ -320,19 +327,15 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
                         </p>
                       </div>
                     </div>
-                  </TableCell>
-                  
-                  <TableCell className="py-4 px-6">
+                  </TableCell><TableCell className="py-4 px-6">
                     <p className="text-sm text-gray-900 dark:text-white">
                       {jobSeeker.occupation}
                     </p>
-                  </TableCell>
-                    <TableCell className="py-4 px-6">
+                  </TableCell><TableCell className="py-4 px-6">
                     <p className="text-sm text-gray-900 dark:text-white">
                       {jobSeeker.state || jobSeeker.city || 'N/A'}
                     </p>
-                  </TableCell>
-                  <TableCell className="py-4 px-6">
+                  </TableCell><TableCell className="py-4 px-6">
                     {jobSeeker.hasResume === false ? (
                       <Badge variant="light" color="error">
                         No resume uploaded
@@ -355,30 +358,28 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
                         </span>
                       </Button>
                     )}
-                  </TableCell>                  <TableCell className="py-4 px-6">
+                  </TableCell>
+                  <TableCell className="py-4 px-6">
                     <p className="text-sm text-gray-900 dark:text-white">
                       {formatDate(jobSeeker.dateJoined)}
                     </p>
-                  </TableCell>
-                  <TableCell className="py-4 px-6">
+                  </TableCell><TableCell className="py-4 px-6">
                     <p className="text-sm text-gray-900 dark:text-white">
                       {formatDate(jobSeeker.lastActivity) || (
                         <span className="text-gray-400 dark:text-gray-500 italic">No activity</span>
                       )}
                     </p>
-                  </TableCell>
-                    <TableCell className="py-4 px-6">
+                  </TableCell><TableCell className="py-4 px-6">
                     <Badge variant={getStatusVariant(jobSeeker.status)}>
                       {jobSeeker.status}
                     </Badge>
-                  </TableCell>
-                  <TableCell className="py-4 px-6 text-right">
+                  </TableCell><TableCell className="py-4 px-6 text-right">
                     <div className="flex items-center gap-2">
                       <Button 
                         variant="ghost" 
                         size="sm" 
                         className="text-brand-400"
-                        onClick={() => console.log('View profile', jobSeeker.id)}
+                        onClick={() => viewJobSeeker(jobSeeker.id)}
                         startIcon={<EyeIcon />}
                       >
                         View

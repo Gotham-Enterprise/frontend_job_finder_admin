@@ -24,6 +24,7 @@ export const stateApi = {
           try {
             const errorText = await response.text();
             if (errorText) errorMessage = errorText;
+            console.error('Error response text:', parseError);
           } catch (textError) {
             console.error('Could not get error response text:', textError);
           }

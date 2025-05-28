@@ -1,10 +1,16 @@
 import React from 'react';
 import ViewDetails from '@/components/page/JobSeekers/ViewDetails';
 
-export default function JobSeekersDetails() {
+interface JobSeekersDetailsProps {
+  params: Promise<{ id: string }>;
+}
+
+export default async function JobSeekersDetails({ params }: JobSeekersDetailsProps) {
+  const { id } = await params;
+  
   return (
       <>
-      <ViewDetails />
+      <ViewDetails id={id} />
       </>
   );
 }

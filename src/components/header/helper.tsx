@@ -1,4 +1,4 @@
-import { UserIcon, PencilIcon, InfoIcon } from "@/icons";
+import { UserIcon, PencilIcon } from "@/icons";
 import SettingsIcon from "../ui/icons/Settings";
 
 export const profileDropdownItems = [
