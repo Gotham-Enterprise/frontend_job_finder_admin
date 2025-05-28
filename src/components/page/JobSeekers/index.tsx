@@ -128,14 +128,26 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
       case 'inactive': return 'light';
       case 'suspended': return 'solid';
       default: return 'light';
-    }  }, []);
-  const initViewResume = async (resumeId: string | null) => {
+    }  }, []);  const initViewResume = async (resumeId: string | null) => {
     if (!resumeId) {
       console.error('No resume ID provided');
       return;
     }
     
-    viewResume(resumeId);
+    viewResume(resumeId, {
+      onSuccess: (data: any) => {
+       
+        if (data?.success && data?.data?.fileUrl) {
+       
+          window.open(data.data.fileUrl, '_blank', 'noopener,noreferrer');
+        } else {
+          console.error('No file URL found in response');
+        }
+      },
+      onError: (error) => {
+        console.error('Error viewing resume:', error);
+      }
+    });
   };
 
 

@@ -46,8 +46,7 @@ export const jobSeekerApi = {
       throw error;
     }
   },
-
-  async viewResume(resumeId: string): Promise<void> {
+  async viewResume(resumeId: string): Promise<any> {
     try {
       const url = `${API_URL}/api/resumes/${resumeId}/view`;
       
@@ -74,25 +73,8 @@ export const jobSeekerApi = {
         
         throw new Error(errorMessage);
       }
-
-    
-      const contentType = response.headers.get('content-type');
-      
-      if (contentType && contentType.includes('application/pdf')) {
-      
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        window.open(url, '_blank');
-        
-      
-        setTimeout(() => window.URL.revokeObjectURL(url), 100);
-      } else {
-       
-        const data = await response.json();
-        if (data.url) {
-          window.open(data.url, '_blank');
-        }
-      }
+      const data = await response.json();
+      return data;
     } catch (error) {
       console.error('Error viewing resume:', error);
       throw error;
