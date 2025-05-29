@@ -42,14 +42,13 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
   const { data: occupationsData, isLoading: isOccupationsLoading } = useOccupations();
   const { data: statesData, isLoading: isStatesLoading } = useStates();
   const { mutate: viewResume, isPending: isViewingResume } = useViewResume();
-  
-  const tableColumns = useMemo(() => [
+    const tableColumns = useMemo(() => [
     { key: 'name', label: 'Name' },
     { key: 'specialties', label: 'Occupation' },
     { key: 'state', label: 'State' },
     { key: 'resume', label: 'Resume' },
     { key: 'dateJoined', label: 'Date Joined' },
-    { key: 'lastActivity', label: 'Last Activity' },
+    { key: 'experience', label: 'Experience' },
     { key: 'status', label: 'Status' },
     { key: 'actions', label: '', className: 'text-right' },
   ], []);
@@ -170,14 +169,15 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
 
   return (
     <div className={`rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] ${className}`}>
-    
+
       <div className="px-6 py-5 border-b border-gray-200 dark:border-gray-800">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h3 className="text-xl font-semibold text-gray-800 dark:text-white">
               Job Seekers
-            </h3>            <p className="text-sm text-gray-500 text-gray-400 mt-1 dark:text-white">
-              {data?.data.totalCount || 0} total job seekers
+            </h3>
+            <p className="text-sm text-gray-500 mt-1 dark:text-gray-400">
+              {data?.metaData?.totalCount || data?.data?.length || 0} total job seekers
               {isPending && (
                 <span className="ml-2 text-xs text-blue-500 dark:text-blue-400">
                   Updating...
@@ -186,7 +186,7 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
             </p>
           </div>
           
-          <div className="flex items-center gap-3">            
+          <div className="flex items-center gap-3">
             <Button
               variant="outline"
               className="dark:text-white"
@@ -195,7 +195,8 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
               startIcon={<FunnelIcon className="dark:text-white" />}
             >
               Filters
-            </Button>            <Button
+            </Button>
+            <Button
               variant="text-primary"
               size="sm"
               onClick={() => refetch()}
@@ -205,7 +206,9 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
               Export
             </Button>
           </div>
-        </div>          
+        </div>
+        
+        {/* Search input */}
         <div className="mt-4">
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -233,10 +236,12 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
             )}
           </div>
         </div>
+
+        {/* Filters */}
         {isFilterOpen && (
           <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
-            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">              
-                <div>
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              <div>
                 <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Occupation
                 </Label>
@@ -249,7 +254,7 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
               <div>
                 <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   State
-                </Label>                
+                </Label>
                 <Select
                   defaultValue={filters.location || ''}
                   onChange={(value: string) => filterChange('location', value)}
@@ -266,7 +271,6 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
                   options={statusOptions}
                 />
               </div>
-              
               <div>
                 <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Items per page
@@ -279,7 +283,10 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
               </div>
             </div>
           </div>
-        )}      </div>
+        )}
+      </div>
+
+      {/* Table section */}
       <div className="overflow-x-auto">
         <Table>
           <TableHeading columns={tableColumns} />
@@ -293,15 +300,15 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
                   </div>
                 </TableCell>
               </TableRow>
-            ) : !data?.data.items?.length ? (             
-               <TableRow>
+            ) : !data?.data?.length ? (
+              <TableRow>
                 <TableCell className="text-center py-8 px-6" colSpan={8}>
                   <p className="text-gray-500 dark:text-gray-400">No job seekers found</p>
                 </TableCell>
               </TableRow>
-            ) : (              
-              data.data.items.map((jobSeeker) => (                
-            <TableRow key={jobSeeker.id} className="border-b border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50">
+            ) : (
+              data.data.map((jobSeeker) => (
+                <TableRow key={jobSeeker.id} className="border-b border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50">
                   <TableCell className="py-4 px-6">
                     <div className="flex items-center gap-3">
                       <div className="relative w-10 h-10 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700">
@@ -327,16 +334,24 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
                         </p>
                       </div>
                     </div>
-                  </TableCell><TableCell className="py-4 px-6">
+                  </TableCell>
+                  <TableCell className="py-4 px-6">
                     <p className="text-sm text-gray-900 dark:text-white">
                       {jobSeeker.occupation}
                     </p>
-                  </TableCell><TableCell className="py-4 px-6">
+                    {jobSeeker.specialty && (
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        {jobSeeker.specialty}
+                      </p>
+                    )}
+                  </TableCell>
+                  <TableCell className="py-4 px-6">
                     <p className="text-sm text-gray-900 dark:text-white">
                       {jobSeeker.state || jobSeeker.city || 'N/A'}
                     </p>
-                  </TableCell><TableCell className="py-4 px-6">
-                    {jobSeeker.hasResume === false ? (
+                  </TableCell>
+                  <TableCell className="py-4 px-6">
+                    {!jobSeeker.hasResume ? (
                       <Badge variant="light" color="error">
                         No resume uploaded
                       </Badge>
@@ -363,13 +378,15 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
                     <p className="text-sm text-gray-900 dark:text-white">
                       {formatDate(jobSeeker.dateJoined)}
                     </p>
-                  </TableCell><TableCell className="py-4 px-6">
+                  </TableCell>
+                  <TableCell className="py-4 px-6">
                     <p className="text-sm text-gray-900 dark:text-white">
-                      {formatDate(jobSeeker.lastActivity) || (
+                      {jobSeeker.lastActivity ? formatDate(jobSeeker.lastActivity) : (
                         <span className="text-gray-400 dark:text-gray-500 italic">No activity</span>
                       )}
                     </p>
-                  </TableCell><TableCell className="py-4 px-6">
+                  </TableCell>
+                  <TableCell className="py-4 px-6">
                     <Badge variant={getStatusVariant(jobSeeker.status)}>
                       {jobSeeker.status}
                     </Badge>
@@ -393,23 +410,25 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
         </Table>
       </div>
 
-     
-      {data && data.data.items && data.data.items.length > 0 && (
+      {/* Pagination */}
+      {data && data.data && data.data.length > 0 && (
         <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-800">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">            <div className="text-sm text-gray-500 dark:text-gray-400">
-              Showing {((data.data.pagination.currentPage - 1) * (filters.limit || 10)) + 1} to{' '}
-              {Math.min(data.data.pagination.currentPage * (filters.limit || 10), data.data.totalCount)} of{' '}
-              {data.data.totalCount} results
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="text-sm text-gray-500 dark:text-gray-400">
+              Showing {((data.metaData.page - 1) * (filters.limit || 10)) + 1} to{' '}
+              {Math.min(data.metaData.page * (filters.limit || 10), data.metaData.totalCount)} of{' '}
+              {data.metaData.totalCount} results
             </div>
             <Pagination
-              currentPage={data.data.pagination.currentPage}
-              totalPages={data.data.pagination.totalPages}
+              currentPage={data.metaData.page}
+              totalPages={data.metaData.totalPages}
               onPageChange={initPageChange}
-            />          </div>
+            />
+          </div>
         </div>
       )}
       
-     
+      {/* Loading overlay */}
       <FullScreenSpinner 
         isVisible={isViewingResume} 
         message="Opening resume..." 

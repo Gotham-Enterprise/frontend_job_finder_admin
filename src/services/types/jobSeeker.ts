@@ -2,17 +2,17 @@ export interface JobSeeker {
   id: string;
   name: string;
   specialty: string;
+  occupation: string;
   address: string;
   city: string;
   state: string;
   zipCode: string;
   jobApplications: number;
   dateJoined: string;
-  occupation: string;
-  lastActivity: string;
-  status: 'active' | 'inactive' | 'suspended';
   resumeId: string | null;
   hasResume: boolean;
+  lastActivity: string;
+  status: 'active' | 'inactive' | 'suspended';
   profilePicture: {
     fileName: string;
     url: string;
@@ -32,17 +32,15 @@ export interface JobSeekerFilters {
 
 export interface JobSeekersResponse {
   success: boolean;
-  data: {
-    items: JobSeeker[];
-    totalCount: number;
-    currentPage: number;
+  data: JobSeeker[];
+  metaData: {
+    page: number;
+    limit: number;
     totalPages: number;
-    pagination: {
-      currentPage: number;
-      totalPages: number;
-      hasNextPage: boolean;
-      hasPreviousPage: boolean;
-    };
+    totalCount: number;
+    currentPageTotalItems: number;
+    hasNextPage: boolean;
+    hasPreviousPage: boolean;
   };
   message?: string;
 }
@@ -126,9 +124,28 @@ export interface Language {
   languageName: string;
   proficiency: 'basic' | 'intermediate' | 'advanced' | 'native';
 }
-
 export interface JobSeekerDetailsResponse {
   success: boolean;
-  data: JobSeekerDetails;
+  data: {
+    id: string;
+    name: string;
+    specialty: string;
+    occupation: string;
+    address: string;
+    city: string;
+    state: string;
+    zipCode: string;
+    jobApplications: number;
+    dateJoined: string;
+    resumeId: string | null;
+    hasResume: boolean;
+    lastActivity: string;
+    status: string;
+    profilePicture: {
+      fileName: string;
+      url: string;
+      expiresAt: string;
+    };
+  };
   message?: string;
 }
