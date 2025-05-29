@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useEmployers } from '@/services/hooks/useEmployers';
 import { useEmployerStates } from '@/services/hooks/useEmployerStates';
 import { EmployerFilters } from '@/services/types/employer';
+import { formatDate } from '@/services/utils/dateUtils';
 import {
   Table,
   TableBody,
@@ -89,19 +90,9 @@ const Employers: React.FC<EmployersProps> = ({ className = "" }) => {
       }));
     });
   }, []);
-
   const initPageChange = useMemo(() => (newPage: number) => {
     startTransition(() => {
       setFilters(prev => ({ ...prev, page: newPage }));
-    });
-  }, []);
-
-  const formatDate = useMemo(() => (dateString: string) => {
-    if (!dateString) return null;
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
     });
   }, []);
 
@@ -290,11 +281,9 @@ const Employers: React.FC<EmployersProps> = ({ className = "" }) => {
                     <p className="text-sm text-gray-900 dark:text-white">
                       {employer.email}
                     </p>
-                  </TableCell>
-
-                  <TableCell className="py-4 px-6">
+                  </TableCell>                  <TableCell className="py-4 px-6">
                     <p className="text-sm text-gray-900 dark:text-white">
-                      {employer.state || 'N/A'}
+                      {employer.state || 'Not specified'}
                     </p>
                   </TableCell>
 

@@ -6,6 +6,7 @@ import { useJobSeekers, useViewResume } from '@/services/hooks/useJobSeekers';
 import { useOccupations } from '@/services/hooks/useOccupations';
 import { useStates } from '@/services/hooks/useStates';
 import { JobSeekerFilters } from '@/services/types/jobSeeker';
+import { formatDate } from '@/services/utils/dateUtils';
 import {
   Table,
   TableBody,
@@ -109,20 +110,12 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
       }));
     });
   }, []);
-
   const initPageChange = useMemo(() => (newPage: number) => {
     startTransition(() => {
       setFilters(prev => ({ ...prev, page: newPage }));
     });
   }, []);
-  const formatDate = useMemo(() => (dateString: string) => {
-    if (!dateString) return null;
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
-  }, []);
+  
   const getStatusVariant = useMemo(() => (status: string): 'light' | 'solid' => {
     switch (status) {
       case 'active': return 'solid';
@@ -345,9 +338,8 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
                       </p>
                     )}
                   </TableCell>
-                  <TableCell className="py-4 px-6">
-                    <p className="text-sm text-gray-900 dark:text-white">
-                      {jobSeeker.state || jobSeeker.city || 'N/A'}
+                  <TableCell className="py-4 px-6">                    <p className="text-sm text-gray-900 dark:text-white">
+                      {jobSeeker.state || jobSeeker.city || 'Not specified'}
                     </p>
                   </TableCell>
                   <TableCell className="py-4 px-6">
@@ -409,8 +401,6 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
           </TableBody>
         </Table>
       </div>
-
-      {/* Pagination */}
       {data && data.data && data.data.length > 0 && (
         <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-800">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -428,7 +418,6 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
         </div>
       )}
       
-      {/* Loading overlay */}
       <FullScreenSpinner 
         isVisible={isViewingResume} 
         message="Opening resume..." 

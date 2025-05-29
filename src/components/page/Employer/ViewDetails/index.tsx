@@ -2,6 +2,7 @@
 import React from "react";
 import Link from "next/link";
 import { useEmployerDetails } from "@/services/hooks/useEmployers";
+import { formatDate } from "@/services/utils/dateUtils";
 import ErrorState from "../../../common/ErrorState";
 import FullScreenSpinner from "../../../ui/FullScreenSpinner";
 import Star from "../../../ui/star";
@@ -18,19 +19,6 @@ interface ViewDetailsProps {
 
 export default function ViewDetails({ id }: ViewDetailsProps) {
     const { data, isLoading, error } = useEmployerDetails(id);
-
-    const formatDate = (dateString: string | undefined) => {
-        if (!dateString) return 'N/A';
-        try {
-            return new Date(dateString).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric'
-            });
-        } catch {
-            return 'N/A';
-        }
-    };
 
     if (isLoading) {
         return <FullScreenSpinner isVisible={true} message="Loading employer details..." />;
@@ -139,15 +127,14 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
             label: 'Email',
             value: employer.email,
             className: 'text-gray-900 dark:text-white break-all'
-        },
-        {
+        },        {
             label: 'Phone',
-            value: employer.phoneNumber || 'N/A',
+            value: employer.phoneNumber || 'Not specified',
             className: 'text-gray-900 dark:text-white'
         },
         {
             label: 'Location',
-            value: [employer.city, employer.state].filter(Boolean).join(', ') || employer.state || 'N/A',
+            value: [employer.city, employer.state].filter(Boolean).join(', ') || employer.state || 'Not specified',
             className: 'text-gray-900 dark:text-white text-right'
         },
         {

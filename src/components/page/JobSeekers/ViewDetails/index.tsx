@@ -2,6 +2,7 @@
 import React from "react";
 import Link from "next/link";
 import { useJobSeekerDetails } from "@/services/hooks/useJobSeekers";
+import { formatDate } from "@/services/utils/dateUtils";
 import ErrorState from "../../../common/ErrorState";
 import FullScreenSpinner from "../../../ui/FullScreenSpinner";
 import {
@@ -19,24 +20,9 @@ interface ViewDetailsProps {
 }
 
 export default function ViewDetails({ id }: ViewDetailsProps) {
-    const { data, isLoading, error } = useJobSeekerDetails(id);    const formatDate = (dateString: string | undefined) => {
-        if (!dateString || dateString.trim() === '' || dateString.toLowerCase() === 'null') {
-            return 'Not specified';
-        }
-        try {
-            const date = new Date(dateString);
-            if (isNaN(date.getTime())) {
-                return 'Not specified';
-            }
-            return date.toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric'
-            });
-        } catch {
-            return 'Not specified';
-        }
-    };    const getProficiencyLabel = (proficiency: string) => {
+    const { data, isLoading, error } = useJobSeekerDetails(id);
+
+    const getProficiencyLabel = (proficiency: string) => {
         if (!proficiency || proficiency.trim() === '' || proficiency.toLowerCase() === 'null') {
             return 'Not specified';
         }
@@ -95,7 +81,9 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
                 </div>
             </div>
         );
-    }    const jobSeeker = data.data;
+    }   
+    
+    const jobSeeker = data.data;
 
     const contactInfo = [
         {

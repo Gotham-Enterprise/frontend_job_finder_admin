@@ -40,9 +40,8 @@ export default function JobPosts({ jobPosts, formatDate }: JobPostsProps) {
             return postingDate;
         }
         
-      
         if (!postingDate || postingDate.length < 3) {
-            return "Unknown";
+            return "Not specified";
         }
         
       
