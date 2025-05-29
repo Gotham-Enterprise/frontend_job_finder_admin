@@ -35,3 +35,44 @@ export interface EmployerStatesResponse {
   success: boolean;
   data: string[];
 }
+
+export interface JobPost {
+  id: string;
+  title: string;
+  postingDate: string;
+  _count: {
+    applicants: number;
+  };
+  status?: string;
+  employmentType?: string;
+  location?: string;
+  salaryRange?: string;
+  experienceLevel?: string;
+  description?: string;
+}
+
+export interface EmployerDetails {
+  id: string;
+  companyName: string;
+  averageRating: string;
+  email: string;
+  phoneNumber: string;
+  overview: string;
+  employeeCount: number;
+  jobPostCount: number;
+  totalApplicants: number;
+  address: string;
+  city: string;
+  state: string;
+  country: string;
+  dateJoined: string;
+  lastActivity: string;
+  status: string;
+  jobPost: JobPost[];
+}
+
+export interface EmployerDetailsResponse {
+  success: boolean;
+  data: EmployerDetails;
+  message?: string;
+}

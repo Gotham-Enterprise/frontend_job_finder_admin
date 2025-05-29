@@ -115,7 +115,7 @@ const Employers: React.FC<EmployersProps> = ({ className = "" }) => {
   }, []);
 
   const viewEmployer = (employerId: string) => {
-    router.push(`/admin/employer/details/${employerId}`);
+    router.push(`/admin/employers/details/${employerId}`);
   };
 
   React.useEffect(() => {
