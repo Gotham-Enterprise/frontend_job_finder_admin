@@ -43,20 +43,20 @@ const navItems: NavItem[] = [
   {
     icon: <UserCircleIcon />,
     name: "Employers",
-    path: "/employers",
+    path: "/admin/employers",
   },
 
   {
     icon: <ListIcon />,
     name: "Job Postings",
-    path: "/job-postings",
+    path: "/admin/job-postings",
      //subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
   },
   
   {
     icon: <TaskIcon />,
     name: "Tickets",
-    path: "/tickets",
+    path: "/admin/tickets",
      //subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
   },
 
