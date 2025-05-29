@@ -27,16 +27,13 @@ export default function WorkExperience({ professionalBackground, formatDate }: W
                                 <div className="flex items-center mb-2 md:mb-0">
                                     <div className="w-3 h-3 bg-blue-500 rounded-full mr-3"></div>
                                     <h4 className="text-lg font-bold text-gray-900 dark:text-white">{job.title}</h4>
-                                </div>
-                                <div className="flex flex-wrap gap-2">
+                                </div>                               
+                                 <div className="flex flex-wrap gap-2">
                                     {job.isCurrentPosition && (
                                         <span className="inline-block px-3 py-1 text-xs font-medium text-blue-600 bg-blue-100 rounded-full dark:bg-blue-900 dark:text-blue-300">
                                             Current Position
                                         </span>
                                     )}
-                                    <span className="inline-block px-3 py-1 text-xs font-medium text-green-600 bg-green-100 rounded-full dark:bg-green-900 dark:text-green-300">
-                                        Full-Time
-                                    </span>
                                 </div>
                             </div>
                             

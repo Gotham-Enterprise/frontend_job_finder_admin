@@ -19,28 +19,39 @@ interface ViewDetailsProps {
 }
 
 export default function ViewDetails({ id }: ViewDetailsProps) {
-    const { data, isLoading, error } = useJobSeekerDetails(id);
-
-    const formatDate = (dateString: string | undefined) => {
-        if (!dateString) return 'N/A';
+    const { data, isLoading, error } = useJobSeekerDetails(id);    const formatDate = (dateString: string | undefined) => {
+        if (!dateString || dateString.trim() === '' || dateString.toLowerCase() === 'null') {
+            return 'Not specified';
+        }
         try {
-            return new Date(dateString).toLocaleDateString('en-US', {
+            const date = new Date(dateString);
+            if (isNaN(date.getTime())) {
+                return 'Not specified';
+            }
+            return date.toLocaleDateString('en-US', {
                 year: 'numeric',
                 month: 'short',
                 day: 'numeric'
             });
         } catch {
-            return 'N/A';
+            return 'Not specified';
         }
-    };
-
-    const getProficiencyLabel = (proficiency: string) => {
-        switch (proficiency) {
+    };    const getProficiencyLabel = (proficiency: string) => {
+        if (!proficiency || proficiency.trim() === '' || proficiency.toLowerCase() === 'null') {
+            return 'Not specified';
+        }
+        
+        switch (proficiency.toLowerCase()) {
             case 'basic': return 'Basic';
             case 'intermediate': return 'Intermediate';
             case 'advanced': return 'Advanced';
             case 'native': return 'Native';
-            default: return 'Unknown';
+            case 'fluent': return 'Fluent';
+            case 'conversational': return 'Conversational';
+            case 'beginner': return 'Beginner';
+            case 'elementary': return 'Elementary';
+            case 'proficient': return 'Proficient';
+            default: return proficiency.charAt(0).toUpperCase() + proficiency.slice(1).toLowerCase();
         }
     };
 
@@ -91,20 +102,18 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
             label: 'Experience',
             value: `${jobSeeker.professionalBackground?.length || 0} ${jobSeeker.professionalBackground?.length === 1 ? 'Position' : 'Positions'}`,
             className: 'text-gray-900 dark:text-white'
-        },
-        {
+        },        {
             label: 'Phone',
-            value: jobSeeker.phoneNumber || 'N/A',
+            value: jobSeeker.phoneNumber || 'Not provided',
             className: 'text-gray-900 dark:text-white'
         },
         {
             label: 'Email',
             value: jobSeeker.email,
             className: 'text-gray-900 dark:text-white break-all'
-        },
-        {
+        },        {
             label: 'Location',
-            value: [jobSeeker.city, jobSeeker.state].filter(Boolean).join(', ') || 'N/A',
+            value: [jobSeeker.city, jobSeeker.state].filter(Boolean).join(', ') || 'Not specified',
             className: 'text-gray-900 dark:text-white text-right'
         },
         {

@@ -56,26 +56,26 @@ export interface JobSeekerDetails {
   id: string;
   name: string;
   status: 'active' | 'inactive' | 'suspended';
-  profilePicture: {
+  profilePicture?: {
     fileName: string;
     url: string;
     expiresAt: string;
   };
   email: string;
-  phoneNumber: string;
-  address: string;
-  city: string;
-  state: string;
-  zipCode: string;
+  phoneNumber?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
   joined: string;
-  lastActivity: string;
-  personalSummary: string;
-  documents: Document[];
-  professionalBackground: ProfessionalBackground[];
-  educations: Education[];
-  licenses: License[];
-  skills: Skill[];
-  languages: Language[];
+  lastActivity?: string;
+  personalSummary?: string;
+  documents?: Document[];
+  professionalBackground?: ProfessionalBackground[];
+  educations?: Education[];
+  licenses?: License[];
+  skills?: Skill[];
+  languages?: Language[];
 }
 
 export interface Document {
@@ -110,8 +110,8 @@ export interface License {
   name: string;
   issueDate: string;
   expiryDate?: string;
-  licenseNumber: string;
-  issuingAuthority: string;
+  licenseNumber?: string;
+  issuingAuthority?: string;
 }
 
 export interface Skill {
@@ -122,30 +122,10 @@ export interface Skill {
 export interface Language {
   id: string;
   languageName: string;
-  proficiency: 'basic' | 'intermediate' | 'advanced' | 'native';
+  proficiency: string;
 }
 export interface JobSeekerDetailsResponse {
   success: boolean;
-  data: {
-    id: string;
-    name: string;
-    specialty: string;
-    occupation: string;
-    address: string;
-    city: string;
-    state: string;
-    zipCode: string;
-    jobApplications: number;
-    dateJoined: string;
-    resumeId: string | null;
-    hasResume: boolean;
-    lastActivity: string;
-    status: string;
-    profilePicture: {
-      fileName: string;
-      url: string;
-      expiresAt: string;
-    };
-  };
+  data: JobSeekerDetails;
   message?: string;
 }

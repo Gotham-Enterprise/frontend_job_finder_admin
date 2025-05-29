@@ -44,7 +44,9 @@ export default function Certifications({ licenses, formatDate }: CertificationsP
                                     </div>
                                 )}                                <div>
                                     <span className="font-medium text-gray-600 dark:text-gray-300">Issuing Authority:</span>
-                                    <span className="ml-2 text-gray-900 dark:text-white">{license.issuingAuthority}</span>
+                                    <span className="ml-2 text-gray-900 dark:text-white">
+                                        {license.issuingAuthority || 'Not specified'}
+                                    </span>
                                 </div>
                             </div>
                         </div>
