@@ -255,8 +255,7 @@ const Employers: React.FC<EmployersProps> = ({ className = "" }) => {
                 <TableCell className="text-center py-8 px-6" colSpan={8}>
                   <p className="text-gray-500 dark:text-gray-400">No employers found</p>
                 </TableCell>
-              </TableRow>
-            ) : (
+              </TableRow>            ) : (
               data.data.map((employer) => (
                 <TableRow key={employer.id} className="border-b border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50">
                   <TableCell className="py-4 px-6">
@@ -276,32 +275,28 @@ const Employers: React.FC<EmployersProps> = ({ className = "" }) => {
                       </div>
                     </div>
                   </TableCell>
-
                   <TableCell className="py-4 px-6">
                     <p className="text-sm text-gray-900 dark:text-white">
                       {employer.email}
                     </p>
-                  </TableCell>                  <TableCell className="py-4 px-6">
+                  </TableCell>
+                  <TableCell className="py-4 px-6">
                     <p className="text-sm text-gray-900 dark:text-white">
                       {employer.state || 'Not specified'}
                     </p>
                   </TableCell>
-
                   <TableCell className="py-4 px-6">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-medium text-gray-900 dark:text-white">
                         {employer.jobPostCount}
                       </span>
-                     
                     </div>
                   </TableCell>
-
                   <TableCell className="py-4 px-6">
                     <p className="text-sm text-gray-900 dark:text-white">
                       {formatDate(employer.dateJoined)}
                     </p>
                   </TableCell>
-
                   <TableCell className="py-4 px-6">
                     <p className="text-sm text-gray-900 dark:text-white">
                       {formatDate(employer.lastActivity) || (
@@ -309,13 +304,11 @@ const Employers: React.FC<EmployersProps> = ({ className = "" }) => {
                       )}
                     </p>
                   </TableCell>
-
                   <TableCell className="py-4 px-6">
                     <Badge variant={getStatusVariant(employer.status)}>
                       {employer.status}
                     </Badge>
                   </TableCell>
-
                   <TableCell className="py-4 px-6 text-right">
                     <div className="flex items-center gap-2">
                       <Button 

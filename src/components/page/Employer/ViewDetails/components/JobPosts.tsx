@@ -2,6 +2,7 @@
 
 import { JobPost } from "@/services/types/employer";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 interface JobPostsProps {
     jobPosts: JobPost[];
@@ -9,6 +10,7 @@ interface JobPostsProps {
 }
 
 export default function JobPosts({ jobPosts, formatDate }: JobPostsProps) {
+    const router = useRouter();
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 8;
     const totalPages = Math.ceil(jobPosts.length / itemsPerPage);
@@ -18,8 +20,11 @@ export default function JobPosts({ jobPosts, formatDate }: JobPostsProps) {
 
     const handlePageChange = (page: number) => {
         setCurrentPage(page);
-    };    
-    const formatPostingDate = (postingDate: string) => {
+    };      const formatPostingDate = (postingDate: string | null | undefined) => {
+        // Handle null/undefined values first
+        if (!postingDate || postingDate.length < 3) {
+            return "Not specified";
+        }
        
         const timeStrings = [
             "Today", 
@@ -30,28 +35,24 @@ export default function JobPosts({ jobPosts, formatDate }: JobPostsProps) {
             "Last Month"
         ];
         
-      
+        // Check if it's one of the predefined time strings
         if (timeStrings.includes(postingDate)) {
             return postingDate;
         }
         
-     
+        // Check if it's a relative time string (e.g., "2 days ago")
         if (postingDate.includes("ago")) {
             return postingDate;
         }
         
-        if (!postingDate || postingDate.length < 3) {
-            return "Not specified";
-        }
-        
-      
+        // Try to parse as a date
         try {
             const date = new Date(postingDate);
             if (!isNaN(date.getTime())) {
                 return formatDate(postingDate);
             }
         } catch (error) {
-           
+            // If parsing fails, return the original string
         }
         
         return postingDate;
@@ -146,15 +147,28 @@ export default function JobPosts({ jobPosts, formatDate }: JobPostsProps) {
                                     </div>
                                 </div>
                             </div>
-                            
-                            {job.description && (
+                              {job.description && (
                                 <div className="mb-4">
                                     <h6 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Job Description</h6>
                                     <p className="text-gray-700 dark:text-gray-300 leading-relaxed text-sm line-clamp-3">
                                         {job.description}
                                     </p>
                                 </div>
-                            )}                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-blue-200 dark:border-blue-700">
+                            )}
+
+                            {/* View Job Details Button */}
+                            <div className="mb-4">
+                                <button
+                                    onClick={() => router.push(`/admin/jobs/details/${job.id}`)}
+                                    className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800 transition-colors"
+                                >
+                                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                    </svg>
+                                    View Details
+                                </button>
+                            </div><div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-blue-200 dark:border-blue-700">
                                 <div className="text-center">
                                     <p className="text-xs text-gray-500 dark:text-gray-400">Applications</p>
                                     <p className="text-lg font-semibold text-blue-600 dark:text-blue-400">{job._count?.applicants || 0}</p>

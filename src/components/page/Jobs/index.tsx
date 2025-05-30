@@ -1,0 +1,236 @@
+"use client";
+import React, { useState } from 'react';
+import Link from 'next/link';
+import { formatDate } from '@/services/utils/dateUtils';
+
+// Sample jobs data
+const getSampleJobs = () => [
+  {
+    id: "1",
+    title: "Senior Frontend Developer",
+    companyName: "Tech Innovations Inc.",
+    location: "San Francisco, CA",
+    employmentType: "Full-time",
+    salaryRange: "$80,000 - $120,000",
+    status: "Active",
+    applicantCount: 15,
+    postedDate: "2024-12-15",
+    experienceLevel: "Senior Level"
+  },
+  {
+    id: "2",
+    title: "Backend Engineer",
+    companyName: "DataFlow Systems",
+    location: "New York, NY",
+    employmentType: "Full-time",
+    salaryRange: "$75,000 - $110,000",
+    status: "Active",
+    applicantCount: 23,
+    postedDate: "2024-12-14",
+    experienceLevel: "Mid Level"
+  },
+  {
+    id: "3",
+    title: "UI/UX Designer",
+    companyName: "Creative Studios",
+    location: "Remote",
+    employmentType: "Contract",
+    salaryRange: "$50 - $80/hour",
+    status: "Active",
+    applicantCount: 8,
+    postedDate: "2024-12-13",
+    experienceLevel: "Mid Level"
+  },
+  {
+    id: "4",
+    title: "DevOps Engineer",
+    companyName: "CloudTech Solutions",
+    location: "Seattle, WA",
+    employmentType: "Full-time",
+    salaryRange: "$90,000 - $130,000",
+    status: "Closed",
+    applicantCount: 31,
+    postedDate: "2024-12-10",
+    experienceLevel: "Senior Level"
+  },
+  {
+    id: "5",
+    title: "Junior Developer",
+    companyName: "StartUp Hub",
+    location: "Austin, TX",
+    employmentType: "Full-time",
+    salaryRange: "$45,000 - $65,000",
+    status: "Active",
+    applicantCount: 42,
+    postedDate: "2024-12-12",
+    experienceLevel: "Entry Level"
+  }
+];
+
+interface JobsProps {
+  className?: string;
+}
+
+const Jobs: React.FC<JobsProps> = ({ className = "" }) => {
+  const [searchQuery, setSearchQuery] = useState('');
+  const jobs = getSampleJobs();
+
+  const getStatusVariant = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'active':
+        return 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400';
+      case 'closed':
+        return 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400';
+      case 'draft':
+        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400';
+      case 'paused':
+        return 'bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400';
+      default:
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400';
+    }
+  };
+
+  const getEmploymentTypeVariant = (type: string) => {
+    switch (type.toLowerCase()) {
+      case 'full-time':
+        return 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400';
+      case 'part-time':
+        return 'bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400';
+      case 'contract':
+        return 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/20 dark:text-indigo-400';
+      case 'freelance':
+        return 'bg-pink-100 text-pink-800 dark:bg-pink-900/20 dark:text-pink-400';
+      default:
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400';
+    }
+  };
+
+  const filteredJobs = jobs.filter(job =>
+    job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    job.companyName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    job.location.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  return (
+    <div className={`rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] ${className}`}>
+      {/* Header */}
+      <div className="px-6 py-5 border-b border-gray-200 dark:border-gray-800">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h3 className="text-xl font-semibold text-gray-800 dark:text-white">
+              Job Posts
+            </h3>
+            <p className="text-sm text-gray-500 mt-1 dark:text-gray-400">
+              {jobs.length} total job posts
+            </p>
+          </div>
+        </div>
+        
+        {/* Search */}
+        <div className="mt-4">
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            <input
+              type="text"
+              placeholder="Search jobs by title, company, or location..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white dark:focus:ring-blue-400"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Jobs Grid */}
+      <div className="p-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+          {filteredJobs.map((job) => (
+            <div key={job.id} className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 p-6 rounded-lg border border-blue-200 dark:border-blue-800 hover:shadow-lg transition-shadow">
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex-1">
+                  <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-1">
+                    {job.title}
+                  </h4>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                    {job.companyName}
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <span className={`inline-block px-2 py-1 text-xs font-medium rounded-full ${getStatusVariant(job.status)}`}>
+                    {job.status}
+                  </span>
+                  <span className={`inline-block px-2 py-1 text-xs font-medium rounded-full ${getEmploymentTypeVariant(job.employmentType)}`}>
+                    {job.employmentType}
+                  </span>
+                </div>
+              </div>
+              
+              <div className="space-y-2 mb-4">
+                <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  <span>{job.location}</span>
+                </div>
+                
+                <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                  </svg>
+                  <span>{job.salaryRange}</span>
+                </div>
+                
+                <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                  <span>{job.experienceLevel}</span>
+                </div>
+              </div>
+              
+              <div className="flex items-center justify-between pt-4 border-t border-blue-200 dark:border-blue-700">
+                <div className="text-center">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Applications</p>
+                  <p className="text-lg font-semibold text-blue-600 dark:text-blue-400">{job.applicantCount}</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Posted</p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">{formatDate(job.postedDate)}</p>
+                </div>
+                <Link
+                  href={`/admin/jobs/details/${job.id}`}
+                  className="inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800 transition-colors"
+                >
+                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                  View
+                </Link>
+              </div>
+            </div>
+          ))}
+        </div>
+        
+        {filteredJobs.length === 0 && (
+          <div className="text-center py-12">
+            <div className="w-16 h-16 mx-auto mb-4 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center">
+              <svg className="w-8 h-8 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0V6a2 2 0 012 2v6a2 2 0 01-2 2H8a2 2 0 01-2-2V8a2 2 0 012-2V6" />
+              </svg>
+            </div>
+            <p className="text-gray-500 dark:text-gray-400">No jobs found</p>
+            <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">Try adjusting your search criteria</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default Jobs;

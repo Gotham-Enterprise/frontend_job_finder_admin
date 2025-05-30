@@ -336,9 +336,9 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
                       <p className="text-xs text-gray-500 dark:text-gray-400">
                         {jobSeeker.specialty}
                       </p>
-                    )}
-                  </TableCell>
-                  <TableCell className="py-4 px-6">                    <p className="text-sm text-gray-900 dark:text-white">
+                    )}                  </TableCell>
+                  <TableCell className="py-4 px-6">
+                    <p className="text-sm text-gray-900 dark:text-white">
                       {jobSeeker.state || jobSeeker.city || 'Not specified'}
                     </p>
                   </TableCell>

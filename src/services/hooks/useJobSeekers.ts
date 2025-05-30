@@ -19,6 +19,11 @@ export const useJobSeekers = (filters: JobSeekerFilters = {}) => {
     },
     staleTime: 1000 * 60 * 5, 
     retry: (failureCount, error: Error) => {
+      // Don't retry on authentication errors (401)
+      if (error.message.includes('HTTP 401')) {
+        console.error('Authentication error - not retrying:', error);
+        return false;
+      }
       console.error('Error fetching job seekers:', error);
       return failureCount < 3;
     },
@@ -32,7 +37,12 @@ export const useJobSeekerDetails = (id: string) => {
     queryFn: () => jobSeekerApi.getJobSeekerById(id),
     enabled: !!id, 
     staleTime: 1000 * 60 * 5,
-    retry: (failureCount, _error: Error) => {
+    retry: (failureCount, error: Error) => {
+      // Don't retry on authentication errors (401)
+      if (error.message.includes('HTTP 401')) {
+        console.error('Authentication error - not retrying:', error);
+        return false;
+      }
       return failureCount < 3;
     },
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
