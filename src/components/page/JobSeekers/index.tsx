@@ -94,7 +94,7 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
   ], []);  useEffect(() => {
     const timeoutId = setTimeout(() => {
       startTransition(() => {
-        setFilters(prev => ({ ...prev, search: searchInput, page: 1 }));
+        setFilters(prev => ({ ...prev, search: searchInput, page: 1 })); 
       });
     }, 500);
 

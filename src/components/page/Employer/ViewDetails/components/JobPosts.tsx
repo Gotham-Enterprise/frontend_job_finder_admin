@@ -20,11 +20,8 @@ export default function JobPosts({ jobPosts, formatDate }: JobPostsProps) {
 
     const handlePageChange = (page: number) => {
         setCurrentPage(page);
-    };      const formatPostingDate = (postingDate: string | null | undefined) => {
-        // Handle null/undefined values first
-        if (!postingDate || postingDate.length < 3) {
-            return "Not specified";
-        }
+    };    
+    const formatPostingDate = (postingDate: string) => {
        
         const timeStrings = [
             "Today", 
@@ -35,24 +32,28 @@ export default function JobPosts({ jobPosts, formatDate }: JobPostsProps) {
             "Last Month"
         ];
         
-        // Check if it's one of the predefined time strings
+      
         if (timeStrings.includes(postingDate)) {
             return postingDate;
         }
         
-        // Check if it's a relative time string (e.g., "2 days ago")
+     
         if (postingDate.includes("ago")) {
             return postingDate;
         }
         
-        // Try to parse as a date
+        if (!postingDate || postingDate.length < 3) {
+            return "Not specified";
+        }
+        
+      
         try {
             const date = new Date(postingDate);
             if (!isNaN(date.getTime())) {
                 return formatDate(postingDate);
             }
         } catch (error) {
-            // If parsing fails, return the original string
+           
         }
         
         return postingDate;

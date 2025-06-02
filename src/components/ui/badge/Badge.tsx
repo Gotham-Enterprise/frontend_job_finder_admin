@@ -12,12 +12,13 @@ type BadgeColor =
   | "dark";
 
 interface BadgeProps {
-  variant?: BadgeVariant; // Light or solid variant
-  size?: BadgeSize; // Badge size
-  color?: BadgeColor; // Badge color
-  startIcon?: React.ReactNode; // Icon at the start
-  endIcon?: React.ReactNode; // Icon at the end
-  children: React.ReactNode; // Badge content
+  variant?: BadgeVariant; 
+  size?: BadgeSize; 
+  color?: BadgeColor; 
+  startIcon?: React.ReactNode;
+  endIcon?: React.ReactNode;
+  children: React.ReactNode;
+  className?: string; 
 }
 
 const Badge: React.FC<BadgeProps> = ({
@@ -27,9 +28,9 @@ const Badge: React.FC<BadgeProps> = ({
   startIcon,
   endIcon,
   children,
-}) => {
-  const baseStyles =
-    "inline-flex items-center px-2.5 py-0.5 justify-center gap-1 rounded-full font-medium";
+  className = "",
+}) => {  const baseStyles =
+    "inline-flex items-center px-2.5 py-0.5 justify-center gap-1 rounded-full font-medium whitespace-nowrap";
 
   // Define size styles
   const sizeStyles = {
@@ -66,9 +67,8 @@ const Badge: React.FC<BadgeProps> = ({
   // Get styles based on size and color variant
   const sizeClass = sizeStyles[size];
   const colorStyles = variants[variant][color];
-
   return (
-    <span className={`${baseStyles} ${sizeClass} ${colorStyles}`}>
+    <span className={`${baseStyles} ${sizeClass} ${colorStyles} ${className}`}>
       {startIcon && <span className="mr-1">{startIcon}</span>}
       {children}
       {endIcon && <span className="ml-1">{endIcon}</span>}

@@ -19,9 +19,7 @@ export const useJobSeekers = (filters: JobSeekerFilters = {}) => {
     },
     staleTime: 1000 * 60 * 5, 
     retry: (failureCount, error: Error) => {
-      // Don't retry on authentication errors (401)
       if (error.message.includes('HTTP 401')) {
-        console.error('Authentication error - not retrying:', error);
         return false;
       }
       console.error('Error fetching job seekers:', error);
@@ -38,7 +36,7 @@ export const useJobSeekerDetails = (id: string) => {
     enabled: !!id, 
     staleTime: 1000 * 60 * 5,
     retry: (failureCount, error: Error) => {
-      // Don't retry on authentication errors (401)
+  
       if (error.message.includes('HTTP 401')) {
         console.error('Authentication error - not retrying:', error);
         return false;

@@ -49,7 +49,7 @@ const navItems: NavItem[] = [
   {
     icon: <ListIcon />,
     name: "Job Postings",
-    path: "/admin/job-postings",
+    path: "/admin/jobs",
      //subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
   },
   
