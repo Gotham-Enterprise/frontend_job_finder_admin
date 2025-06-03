@@ -60,7 +60,7 @@ export default function ProfileCard({ jobSeeker, contactInfo }: ProfileCardProps
                 <div className="w-full">
                     <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Documents</h4>
                     <div className="space-y-3">
-                        {jobSeeker.documents?.length > 0 ? (
+                        {Array.isArray(jobSeeker.documents) && jobSeeker.documents.length > 0 ? (
                             jobSeeker.documents.map((document, index) => (
                                 <div key={`${document.id || 'doc'}-${index}`} className={`flex items-center p-3 rounded-lg border ${
                                     index % 2 === 0 

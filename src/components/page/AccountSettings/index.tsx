@@ -8,9 +8,9 @@ import { Modal } from '@/components/ui/modal';
 import Button from '@/components/ui/button/Button';
 import Input from '@/components/ui/input/Input';
 import Label from '@/components/form/Label';
-import UserTable from './UserTable';
+import UserTable from './components/UserTable';
+import ProfileInformation from './components/ProfileInformation';
 
-// Helper functions for user display
 const getUserDisplayName = (user: User): string => {
   return `${user.firstName} ${user.lastName}`.trim();
 };
@@ -21,7 +21,6 @@ const getUserInitials = (user: User): string => {
   return firstInitial + lastInitial;
 };
 
-// Mock data for users table - replace with actual data source
 const mockUsers: User[] = [
   {
     id: '1',
@@ -128,7 +127,7 @@ const AccountSettings: React.FC = () => {
         firstName: currentUser.firstName || '',
         lastName: currentUser.lastName || '',
         email: currentUser.email || '',
-        phone: '', // Add phone field to User type if needed
+        phone: '', 
         jobPosition: currentUser.role || ''
       });
       setIsEditModalOpen(true);
@@ -162,50 +161,17 @@ const AccountSettings: React.FC = () => {
     
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-1 space-y-6">
-                    <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Profile Information</h2>
-              <Button
-                onClick={editProfile}
-                variant="outline"
-                size="sm"
-                className="px-4 py-2 dark:text-white dark:border-gray-700"
-              >
-                Edit Profile
-              </Button>
-            </div>
-            <div className="space-y-4">
-              <div className="flex items-center justify-center mb-4">
-                <AvatarText
-                  name={displayName || 'User'}
-                  className="h-16 w-16"
-                />
-              </div>
-                <div className="space-y-3">
-                <div>
-                  <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Full Name</Label>
-                  <p className="mt-1 text-gray-900 dark:text-white">{displayName || 'Not specified'}</p>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Job Position</Label>
-                  <p className="mt-1 text-gray-900 dark:text-white capitalize">{currentUser?.role || 'Not specified'}</p>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Email</Label>
-                  <p className="mt-1 text-gray-900 dark:text-white">{currentUser?.email || 'Not specified'}</p>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Phone Number</Label>
-                  <p className="mt-1 text-gray-900 dark:text-white">Not specified</p>
-                </div>
-              </div>
-            </div>
-          </div>
+            <ProfileInformation
+              user={currentUser!}
+              onEdit={editProfile}
+              userInitials={userInitials}
+              displayName={displayName}
+            />
 
          
                   <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] p-6">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Password & Login Details</h2>
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Account Details</h2>
               <Button
                 onClick={changePassword}
                 variant="outline"
@@ -227,14 +193,17 @@ const AccountSettings: React.FC = () => {
               </div>
             </div>
           </div>
-        </div>        {/* Right Column - Users Management Table */}
+        </div>      
+          {/* Right Column - Users Management Table */}
         <div className="lg:col-span-2">
           <UserTable users={mockUsers} onUserAction={userAction} />
         </div>
-      </div>{/* Edit Profile Modal */}
+      </div>
+      {/* Edit Profile Modal */}
       <Modal
         isOpen={isEditModalOpen}
-        onClose={() => setIsEditModalOpen(false)}        isFullscreen={false}
+        onClose={() => setIsEditModalOpen(false)}      
+          isFullscreen={false}
         className="max-w-2xl mx-auto mt-20 rounded-lg"
       >
         <div className="p-6 bg-white dark:bg-gray-800 rounded-lg">
