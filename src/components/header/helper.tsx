@@ -9,7 +9,7 @@ export const profileDropdownItems = [
   },
   {
     label: "Account settings", 
-    href: "/",
+    href: "/admin/account-settings",
     Icon: SettingsIcon,
   },
   {
