@@ -1,5 +1,5 @@
 import React from 'react';
-import JobDetails from '@/components/page/Jobs/ViewDetails';
+import JobDetails from '@/components/page/Jobs/';
 
 interface JobDetailsPageProps {
   params: Promise<{ id: string }>;
