@@ -1,5 +1,6 @@
 export { default as LoadingState } from './LoadingState';
 export { default as ErrorState } from './ErrorState';
+export { default as NotFoundState } from './NotFoundState';
 export { default as ComponentCard } from './ComponentCard';
 export { default as GridShape } from './GridShape';
 export { default as PageBreadCrumb } from './PageBreadCrumb';
