@@ -9,6 +9,7 @@ export const employerQueryKeys = {
   details: () => [...employerQueryKeys.all, 'detail'] as const,
   detail: (id: string) => [...employerQueryKeys.details(), id] as const,
   states: () => [...employerQueryKeys.all, 'states'] as const,
+  applicant: (id: string) => [...employerQueryKeys.all, 'applicant', id] as const,
 };
 
 export const useEmployers = (filters: EmployerFilters = {}) => {
@@ -32,6 +33,22 @@ export const useEmployerDetails = (id: string) => {
     enabled: !!id, 
     staleTime: 1000 * 60 * 5,
     retry: (failureCount, _error: Error) => {
+      return failureCount < 3;
+    },
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+  });
+};
+
+export const useApplicantDetails = (id: string) => {
+  return useQuery({
+    queryKey: employerQueryKeys.applicant(id),
+    queryFn: () => employerApi.getApplicantById(id),
+    enabled: !!id,
+    staleTime: 1000 * 60 * 5,
+    retry: (failureCount, error: Error) => {
+      if (error.message.includes('HTTP 401')) {
+        return false;
+      }
       return failureCount < 3;
     },
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
