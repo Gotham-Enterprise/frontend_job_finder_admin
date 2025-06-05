@@ -12,6 +12,7 @@ import {
     CompanyOverview,
     ContactInfo
 } from "./components";
+import BackToListButton from '@/components/ui/BackToListButton';
 
 interface ViewDetailsProps {
     id: string;
@@ -27,15 +28,10 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
     if (error) {
         return (
             <div className="px-4 pt-4 pb-2">
-                <Link 
-                    href="/admin/employers"
-                    className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-900 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700 dark:focus:ring-gray-700 transition-colors mb-6"
-                >
-                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                    </svg>
-                    Back to Employers
-                </Link>
+                <BackToListButton href="/admin/employers" className="mb-6">
+                Back to Employers
+                </BackToListButton>
+
                 <ErrorState 
                     message={`Error loading employer details: ${error.message}`}
                 />
@@ -46,15 +42,9 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
     if (!data?.success || !data?.data) {
         return (
             <div className="px-4 pt-4 pb-2">
-                <Link 
-                    href="/admin/employers"
-                    className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-900 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700 dark:focus:ring-gray-700 transition-colors mb-6"
-                >
-                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                    </svg>
-                    Back to Employers
-                </Link>
+                 <BackToListButton href="/admin/employers" className="mb-6">
+                Back to Employers
+                </BackToListButton>
                 <div className="text-center py-8">
                     <p className="text-gray-500 dark:text-gray-400">Employer not found</p>
                 </div>
@@ -152,15 +142,9 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
     return (
         <>
         <div className="px-4 pt-4 pb-2">
-            <Link 
-                href="/admin/employers"
-                className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-900 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700 dark:focus:ring-gray-700 transition-colors mb-6"
-            >
-                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
+        <BackToListButton href="/admin/employers" className="mb-6">
                 Back to Employers
-            </Link>
+                </BackToListButton>
         </div>
 
         <div className="p-4 grid grid-cols-1 xl:grid-cols-3 gap-6">

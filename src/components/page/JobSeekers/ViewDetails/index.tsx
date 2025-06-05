@@ -1,6 +1,5 @@
 "use client";
 import React from "react";
-import Link from "next/link";
 import { useJobSeekerDetails } from "@/services/hooks/useJobSeekers";
 import { formatDate } from "@/services/utils/dateUtils";
 import ErrorState from "../../../common/ErrorState";
@@ -14,6 +13,7 @@ import {
     Languages,
     Skills
 } from "./components";
+import BackToListButton from '@/components/ui/BackToListButton';
 
 interface ViewDetailsProps {
     id: string;
@@ -43,45 +43,29 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
 
     if (isLoading) {
         return <FullScreenSpinner isVisible={true} message="Loading job seeker details..." />;
-    }
-
-    if (error) {
+    }    if (error) {
         return (
             <div className="px-4 pt-4 pb-2">
-                <Link 
-                    href="/admin/job-seekers"
-                    className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-900 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700 dark:focus:ring-gray-700 transition-colors mb-6"
-                >
-                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                    </svg>
+                <BackToListButton href="/admin/job-seekers" className="mb-6">
                     Back to Job Seekers
-                </Link>
+                </BackToListButton>
                 <ErrorState 
                     message={`Error loading job seeker details: ${error.message}`}
                 />
             </div>
         );
-    }
-
-    if (!data?.success || !data?.data) {
+    }    if (!data?.success || !data?.data) {
         return (
             <div className="px-4 pt-4 pb-2">
-                <Link 
-                    href="/admin/job-seekers"
-                    className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-900 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700 dark:focus:ring-gray-700 transition-colors mb-6"
-                >
-                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                    </svg>
+                <BackToListButton href="/admin/job-seekers" className="mb-6">
                     Back to Job Seekers
-                </Link>
+                </BackToListButton>
                 <div className="text-center py-8">
                     <p className="text-gray-500 dark:text-gray-400">Job seeker not found</p>
                 </div>
             </div>
         );
-    }   
+    }
     
     const jobSeeker = data.data;
 
@@ -116,19 +100,12 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
         }
     ];
 
-    return (
-        <>
+    return (        <>
         <div className="px-4 pt-4 pb-2">
-            <Link 
-                href="/admin/job-seekers"
-                className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-900 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700 dark:focus:ring-gray-700 transition-colors"
-            >
-                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
+            <BackToListButton href="/admin/job-seekers">
                 Back to Job Seekers
-            </Link>
-        </div>        <div className="grid grid-cols-1 px-4 pt-6 xl:grid-cols-3 xl:gap-6">
+            </BackToListButton>
+        </div><div className="grid grid-cols-1 px-4 pt-6 xl:grid-cols-3 xl:gap-6">
             <div className="col-span-full xl:col-auto">
                 <ProfileCard jobSeeker={jobSeeker} contactInfo={contactInfo} />
             </div>            <div className="col-span-2 space-y-6">

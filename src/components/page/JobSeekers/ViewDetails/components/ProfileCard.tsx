@@ -1,7 +1,7 @@
 "use client";
 
 import ProfileCard from "@/components/ui/ProfileCard";
-import { ProfileData, ContactInfo } from "@/components/ui/ProfileCard/types";
+import { ProfileData, ContactInfo } from "@/services/types/ProfileCard";
 import { JobSeekerDetails } from "@/services/types/jobSeeker";
 
 interface JobSeekerProfileCardProps {
@@ -14,7 +14,6 @@ interface JobSeekerProfileCardProps {
 }
 
 export default function JobSeekerProfileCard({ jobSeeker, contactInfo }: JobSeekerProfileCardProps) {
-    // Transform JobSeekerDetails to ProfileData
     const profileData: ProfileData = {
         name: jobSeeker.name,
         title: jobSeeker.professionalBackground?.[0]?.title || 'Job Seeker',
@@ -25,7 +24,6 @@ export default function JobSeekerProfileCard({ jobSeeker, contactInfo }: JobSeek
         documents: jobSeeker.documents
     };
 
-    // Transform contact info to include any additional contact details
     const transformedContactInfo: ContactInfo[] = contactInfo.map(info => ({
         label: info.label,
         value: info.value,
