@@ -6,4 +6,6 @@ export { default as BackArrowIcon } from './BackArrow';
 export { default as LocationIcon } from './LocationIcon';
 export { default as DollarIcon } from './DollarIcon';
 export { default as ExperienceIcon } from './ExperienceIcon';
+export { default as JobIcon } from './JobIcon';
+export { default as EyeIcon } from './EyeIcon';
 export type { IconProps } from './Close';

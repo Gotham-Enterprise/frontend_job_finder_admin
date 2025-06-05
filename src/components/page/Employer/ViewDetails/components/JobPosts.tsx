@@ -7,7 +7,7 @@ import Button from "@/components/ui/button/Button";
 import { getJobStatusVariant, getEmploymentTypeVariant } from "@/services/utils/statusVariants";
 import NotFoundState from "@/components/common/NotFoundState";
 import Pagination from "@/components/tables/Pagination";
-import { LocationIcon, DollarIcon, ExperienceIcon } from "@/components/ui/icons";
+import { LocationIcon, DollarIcon, ExperienceIcon, JobIcon, EyeIcon } from "@/components/ui/icons";
 
 interface JobPostsProps {
     jobPosts: JobPost[];
@@ -43,8 +43,7 @@ export default function JobPosts({ jobPosts, formatDate }: JobPostsProps) {
             value: job.status || "Active",
             className: "text-sm text-gray-600 dark:text-gray-400"
         }
-    ];
-    const formatPostingDate = (postingDate: string) => {
+    ];    const formatPostingDate = (postingDate: string) => {
         const timeStrings = [
             "Today", 
             "Yesterday", 
@@ -54,16 +53,16 @@ export default function JobPosts({ jobPosts, formatDate }: JobPostsProps) {
             "Last Month"
         ];
         
+        if (!postingDate || postingDate.length < 3) {
+            return "Not specified";
+        }
+        
         if (timeStrings.includes(postingDate)) {
             return postingDate;
         }
         
         if (postingDate.includes("ago")) {
             return postingDate;
-        }
-        
-        if (!postingDate || postingDate.length < 3) {
-            return "Not specified";
         }
         
         try {
@@ -74,19 +73,17 @@ export default function JobPosts({ jobPosts, formatDate }: JobPostsProps) {
         } catch (error) {
            
         }
+
           return postingDate;
     };
 
     return (
-        <div className="rounded-xl bg-white p-6 shadow-lg border border-gray-100 dark:bg-gray-800 dark:border-gray-700">
-            <div className="flex items-center mb-6">
+        <div className="rounded-xl bg-white p-6 shadow-lg border border-gray-100 dark:bg-gray-800 dark:border-gray-700">            <div className="flex items-center mb-6">
                 <div className="w-10 h-10 rounded-lg bg-green-500 flex items-center justify-center mr-4">
-                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0V6a2 2 0 012 2v6a2 2 0 01-2 2H8a2 2 0 01-2-2V8a2 2 0 012-2V6" />
-                    </svg>
+                    <JobIcon className="w-5 h-5 text-white" />
                 </div>
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white">Job Posts ({jobPosts?.length || 0})</h3>
-            </div>             
+            </div>
              {jobPosts && jobPosts.length > 0 ? (
                 <>
                     <div className="space-y-4">
@@ -151,18 +148,12 @@ export default function JobPosts({ jobPosts, formatDate }: JobPostsProps) {
                                                     </span>
                                                 </div>
                                             ))}
-                                        </div>
-                                        <Button
+                                        </div>                                        <Button
                                             onClick={() => router.push(`/admin/jobs/details/${job.id}`)}
                                             variant="default"
                                             size="sm"
                                             className="lg:w-auto w-full"
-                                            startIcon={
-                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                                </svg>
-                                            }
+                                            startIcon={<EyeIcon className="w-4 h-4" />}
                                         >
                                             View Details
                                         </Button>
