@@ -1,8 +1,14 @@
 import React from 'react';
 import ApplicantDetails from '@/components/page/Applicant';
 
-export default function ApplicantDetailsPage() {
+interface ApplicantDetailsPageProps {
+  params: Promise<{ id: string }>;
+}
+
+export default async function ApplicantDetailsPage({ params }: ApplicantDetailsPageProps) {
+  const { id } = await params;
+  
   return (
-     <ApplicantDetails />
+     <ApplicantDetails id={id} />
   );
 }

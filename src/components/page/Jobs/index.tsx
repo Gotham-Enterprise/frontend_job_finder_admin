@@ -90,10 +90,8 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
             default:
                 return 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400';
         }
-    };
-
-    const viewApplicantDetails = (candidateId: string) => {
-        router.push(`/admin/applicant/${candidateId}`);
+    };    const viewApplicantDetails = (applicantId: string) => {
+        router.push(`/admin/applicant/details/${applicantId}`);
     };return (
         <>            
             <div className="px-4 pt-4 pb-2">
@@ -239,11 +237,10 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
                                                     {applicant.status}
                                                 </span>
                                             </div>
-                                            <div className="flex justify-end mt-3">
-                                                <Button
+                                            <div className="flex justify-end mt-3">                                                <Button
                                                     variant="outline"
                                                     size="sm"
-                                                    onClick={() => viewApplicantDetails(applicant.candidateId)}
+                                                    onClick={() => viewApplicantDetails(applicant.id)}
                                                     className="text-xs h-8 px-3 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-700 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30"
                                                     startIcon={
                                                         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
