@@ -1,4 +1,5 @@
 import { LoginCredentials, AuthResponse } from '../types/auth';
+import { showToast } from '../utils/toast';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -11,11 +12,12 @@ export const authApi = {  async login(credentials: LoginCredentials): Promise<Au
         },
         credentials: 'include', 
         body: JSON.stringify(credentials),
-      });
-
-      if (!response.ok) {
+      });      if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Login failed');
+        const errorMessage = errorData.message || 'Login failed';
+        
+        showToast.error('Login Error', errorMessage);
+        
       }
 
       return await response.json();
@@ -31,10 +33,11 @@ export const authApi = {  async login(credentials: LoginCredentials): Promise<Au
           'Content-Type': 'application/json',
         },
         credentials: 'include',
-      });
-
-      if (!response.ok) {
-        throw new Error('Logout failed');
+      });     
+       if (!response.ok) {
+        const errorMessage = 'Logout failed';
+        showToast.error('Logout Error', errorMessage);
+        
       }
     } catch (error) {
       throw error;

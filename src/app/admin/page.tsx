@@ -7,15 +7,13 @@ import CategoryDistribution from "@/components/job-statistics/CategoryDistributi
 import Image from "next/image";
 import { UserGreeting } from "@/components/admin/UserGreeting";
 
-
 export const metadata: Metadata = {
   title:
     "Admin Dashboard",
   description: "Admin",
 };
 
-export default function Admin() {
-  return (
+export default function Admin() {  return (
   <>
     <div className="flex flex-grow justify-between relative items-center mb-10 bg-secondary items-center h-30 justify-between overflow-hidden rounded-2xl dark:border-gray-800 dark:bg-primary px-10">
       <UserGreeting />           
@@ -29,6 +27,8 @@ export default function Admin() {
           />
         </div>
       </div>
+      
+      
       <div className="grid grid-cols-12 gap-4 md:gap-6">
         <div className="col-span-12 space-y-6 xl:col-span-7">
           <JobMetrics />

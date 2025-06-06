@@ -3,7 +3,9 @@ import './globals.css';
 
 import { SidebarProvider } from '@/context/SidebarContext';
 import { ThemeProvider } from '@/context/ThemeContext';
+import { ToastProvider } from '@/context/ToastContext';
 import QueryProvider from '@/services/providers/QueryProvider';
+import ToastContainer from '@/components/ui/toast/ToastContainer';
 
 const outfit = Outfit({
   subsets: ["latin"],
@@ -13,13 +15,15 @@ export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
-}>) {
-  return (
+}>) {  return (
     <html lang="en">
       <body className={`${outfit.className} dark:bg-gray-900`}>
         <QueryProvider>
           <ThemeProvider>
-            <SidebarProvider>{children}</SidebarProvider>
+            <ToastProvider>
+              <SidebarProvider>{children}</SidebarProvider>
+              <ToastContainer />
+            </ToastProvider>
           </ThemeProvider>
         </QueryProvider>
       </body>
