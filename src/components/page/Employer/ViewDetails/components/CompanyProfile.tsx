@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { EmployerDetails } from "@/services/types/employer";
 import { ReactNode } from "react";
-import Star from "@/components/ui/star";
+import { renderStars } from "@/services/utils/starUtils";
 
 interface CompanyProfileProps {
     employer: EmployerDetails;
@@ -14,39 +14,6 @@ interface CompanyProfileProps {
     }>;
     onSeeReviews?: () => void;
 }
-
-const renderStars = (rating: string) => {
-    const numRating = parseFloat(rating) || 0;
-    const stars = [];
-    const fullStars = Math.floor(numRating);
-    const hasHalfStar = numRating % 1 !== 0;
-    
-    for (let i = 0; i < fullStars; i++) {
-        stars.push(
-            <Star key={`full-${i}`} width={16} height={16} fill="#FFD700" stroke="#FFD700" />
-        );
-    }
-    
-    if (hasHalfStar && fullStars < 5) {
-        stars.push(
-            <div key="half" className="relative">
-                <Star width={16} height={16} fill="#E5E7EB" stroke="#E5E7EB" />
-                <div className="absolute inset-0 overflow-hidden" style={{ width: '50%' }}>
-                    <Star width={16} height={16} fill="#FFD700" stroke="#FFD700" />
-                </div>
-            </div>
-        );
-    }
-    
-    const remainingStars = 5 - Math.ceil(numRating);
-    for (let i = 0; i < remainingStars; i++) {
-        stars.push(
-            <Star key={`empty-${i}`} width={16} height={16} fill="#E5E7EB" stroke="#E5E7EB" />
-        );
-    }
-    
-    return stars;
-};
 
 export default function CompanyProfile({ employer, contactInfo, onSeeReviews }: CompanyProfileProps) {
     return (

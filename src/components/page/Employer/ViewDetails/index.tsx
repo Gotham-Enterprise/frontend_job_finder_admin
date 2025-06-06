@@ -1,12 +1,11 @@
 "use client";
+
 import React from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEmployerDetails } from "@/services/hooks/useEmployers";
 import { formatDate } from "@/services/utils/dateUtils";
 import ErrorState from "../../../common/ErrorState";
 import FullScreenSpinner from "../../../ui/FullScreenSpinner";
-import Star from "../../../ui/star";
 import {
     CompanyProfile,
     JobPosts,
@@ -56,43 +55,9 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
                 </div>
             </div>
         );
-    }
+    }    const employer = data.data;
 
-    const employer = data.data;
-
-    const renderStars = (rating: string) => {
-        const numRating = parseFloat(rating) || 0;
-        const stars = [];
-        const fullStars = Math.floor(numRating);
-        const hasHalfStar = numRating % 1 !== 0;
-        
-
-        for (let i = 0; i < fullStars; i++) {
-            stars.push(
-                <Star key={`full-${i}`} width={16} height={16} fill="#FFD700" stroke="#FFD700" />
-            );
-        }
-        
-        if (hasHalfStar && fullStars < 5) {
-            stars.push(
-                <div key="half" className="relative">
-                    <Star width={16} height={16} fill="#E5E7EB" stroke="#E5E7EB" />
-                    <div className="absolute inset-0 overflow-hidden" style={{ width: '50%' }}>
-                        <Star width={16} height={16} fill="#FFD700" stroke="#FFD700" />
-                    </div>
-                </div>
-            );
-        }
-        
-        const remainingStars = 5 - Math.ceil(numRating);
-        for (let i = 0; i < remainingStars; i++) {
-            stars.push(
-                <Star key={`empty-${i}`} width={16} height={16} fill="#E5E7EB" stroke="#E5E7EB" />
-            );
-        }
-        
-        return stars;
-    };    const contactInfo = [
+    const contactInfo = [
         {
             label: 'Job Posts',
             value: `${employer.jobPostCount} ${employer.jobPostCount === 1 ? 'Post' : 'Posts'}`,
