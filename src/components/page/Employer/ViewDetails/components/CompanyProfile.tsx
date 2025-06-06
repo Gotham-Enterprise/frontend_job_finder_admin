@@ -4,6 +4,7 @@ import Image from "next/image";
 import { EmployerDetails } from "@/services/types/employer";
 import { ReactNode } from "react";
 import { renderStars } from "@/services/utils/starUtils";
+import Button from "@/components/ui/button/Button";
 
 interface CompanyProfileProps {
     employer: EmployerDetails;
@@ -31,23 +32,23 @@ export default function CompanyProfile({ employer, contactInfo, onSeeReviews }: 
                     }`}></div>
                 </div>                    
                 <div className="text-center mb-6">
-                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">{employer.companyName}</h2>
-                    <div className="flex items-center justify-center gap-3">
-                        <div className="flex items-center gap-2 px-3 py-1 bg-yellow-50 dark:bg-yellow-900/20 rounded-full border border-yellow-200 dark:border-yellow-800">
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">{employer.companyName}</h2>                    <div className="flex items-center justify-center gap-3">
+                        <div className="flex items-center gap-2 px-3 py-1 bg-blue-50 dark:bg-blue-900/20 rounded-full border border-blue-200 dark:border-blue-800">
                             <div className="flex items-center gap-1">
                                 {renderStars(employer.averageRating)}
                             </div>
-                            <span className="text-sm font-medium text-yellow-600 dark:text-yellow-400">
+                            <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
                                 {employer.averageRating}/5.0
                             </span>
-                        </div>
-                        {onSeeReviews && (
-                            <button
+                        </div>{onSeeReviews && (
+                            <Button
                                 onClick={onSeeReviews}
-                                className="inline-block px-3 py-1 text-sm font-medium text-green-600 bg-green-100 rounded-full dark:bg-green-900 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-800 transition-colors duration-200 cursor-pointer"
+                                variant="ghost"
+                                size="lg"
+                                className="text-blue-600 dark:text-blue-300"
                             >
                                 See reviews
-                            </button>
+                            </Button>
                         )}
                     </div>
                 </div>

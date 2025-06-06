@@ -9,7 +9,8 @@ export default function CompanyReviewsPage() {
   const id = searchParams.get('id');
 
   if (!id) {
-    return (      <div className="flex items-center justify-center min-h-screen">
+    return (      
+    <div className="flex items-center justify-center min-h-screen">
         <NotFoundState 
           title="Access Required"
           message="Unable to access company reviews. Please contact support for assistance."
