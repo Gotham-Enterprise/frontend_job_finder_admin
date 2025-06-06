@@ -1,19 +1,18 @@
   "use client";
 
-import { useState } from "react";
 import { useCompanyReviews } from "@/services/hooks/useEmployers";
-import { CompanyReviewsData, CompanyReview } from "@/services/types/employer";
+import { CompanyReview } from "@/services/types/employer";
 import LoadingSkeleton from "@/components/ui/LoadingSkeleton";
 import ErrorState from "@/components/common/ErrorState";
 import BackButton from "@/components/ui/BackButton";
 import { renderStarRating } from "@/services/utils/starUtils";
 
 interface CompanyReviewsProps {
-  candidateId: string;
+  id: string;
 }
 
-export default function CompanyReviews({ candidateId }: CompanyReviewsProps) {
-  const { data, isLoading, error } = useCompanyReviews(candidateId);
+export default function CompanyReviews({ id }: CompanyReviewsProps) {
+  const { data, isLoading, error } = useCompanyReviews(id);
 
   if (isLoading) {
     return <LoadingSkeleton />;
@@ -140,7 +139,7 @@ export default function CompanyReviews({ candidateId }: CompanyReviewsProps) {
               </div>
             </div>
 
-            <div className="space-y-4 max-h-96 overflow-y-auto">
+            <div className="space-y-4">
               {companyData.companyReviews.length > 0 ? (
                 companyData.companyReviews.map((review: CompanyReview) => (
                   <div key={review.id} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 border border-gray-200 dark:border-gray-600">

@@ -22,8 +22,8 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
     const router = useRouter();
     const { data, isLoading, error } = useEmployerDetails(id);
 
-    const handleSeeReviews = () => {
-        router.push(`/admin/company-reviews?candidateId=${id}`);
+    const seeReviews = () => {
+        router.push(`/admin/company-reviews?id=${id}`);
     };
 
     if (isLoading) {
@@ -110,7 +110,7 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
                 <CompanyProfile 
                     employer={employer} 
                     contactInfo={contactInfo} 
-                    onSeeReviews={handleSeeReviews}
+                    onSeeReviews={seeReviews}
                 />
             </div><div className="col-span-2 space-y-6">
                 <CompanyOverview 

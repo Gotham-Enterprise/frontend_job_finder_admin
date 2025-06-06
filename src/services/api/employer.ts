@@ -151,9 +151,9 @@ export const employerApi = {
     }
   },
 
-  async getCompanyReviews(candidateId: string): Promise<CompanyReviewsResponse> {
+  async getCompanyReviews(id: string): Promise<CompanyReviewsResponse> {
     try {
-      const url = `${API_URL}/api/admin/employers/reviews/${candidateId}`;
+      const url = `${API_URL}/api/admin/employers/reviews/${id}`;
       
       const response = await fetch(url, {
         method: 'GET',

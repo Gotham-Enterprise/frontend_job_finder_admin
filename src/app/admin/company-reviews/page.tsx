@@ -6,9 +6,9 @@ import NotFoundState from "@/components/common/NotFoundState";
 
 export default function CompanyReviewsPage() {
   const searchParams = useSearchParams();
-  const candidateId = searchParams.get('candidateId');
+  const id = searchParams.get('id');
 
-  if (!candidateId) {
+  if (!id) {
     return (      <div className="flex items-center justify-center min-h-screen">
         <NotFoundState 
           title="Access Required"
@@ -19,5 +19,5 @@ export default function CompanyReviewsPage() {
     );
   }
 
-  return <CompanyReviews candidateId={candidateId} />;
+  return <CompanyReviews id={id} />;
 }
