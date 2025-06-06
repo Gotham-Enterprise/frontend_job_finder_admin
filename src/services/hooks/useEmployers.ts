@@ -10,6 +10,7 @@ export const employerQueryKeys = {
   detail: (id: string) => [...employerQueryKeys.details(), id] as const,
   states: () => [...employerQueryKeys.all, 'states'] as const,
   applicant: (id: string) => [...employerQueryKeys.all, 'applicant', id] as const,
+  reviews: (candidateId: string) => [...employerQueryKeys.all, 'reviews', candidateId] as const,
 };
 
 export const useEmployers = (filters: EmployerFilters = {}) => {
@@ -44,6 +45,22 @@ export const useApplicantDetails = (id: string) => {
     queryKey: employerQueryKeys.applicant(id),
     queryFn: () => employerApi.getApplicantById(id),
     enabled: !!id,
+    staleTime: 1000 * 60 * 5,
+    retry: (failureCount, error: Error) => {
+      if (error.message.includes('HTTP 401')) {
+        return false;
+      }
+      return failureCount < 3;
+    },
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+  });
+};
+
+export const useCompanyReviews = (candidateId: string) => {
+  return useQuery({
+    queryKey: employerQueryKeys.reviews(candidateId),
+    queryFn: () => employerApi.getCompanyReviews(candidateId),
+    enabled: !!candidateId,
     staleTime: 1000 * 60 * 5,
     retry: (failureCount, error: Error) => {
       if (error.message.includes('HTTP 401')) {

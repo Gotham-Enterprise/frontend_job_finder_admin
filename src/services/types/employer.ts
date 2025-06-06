@@ -76,3 +76,36 @@ export interface EmployerDetailsResponse {
   data: EmployerDetails;
   message?: string;
 }
+
+export interface CompanyReview {
+  id: string;
+  name: string;
+  review: string;
+  rating: number;
+}
+
+export interface CompanyReviewsData {
+  id: string;
+  companyName: string;
+  averageRating: string;
+  email: string;
+  state: string;
+  country: string;
+  address: string;
+  city: string;
+  phoneNumber: string;
+  overview: string;
+  employeeCount: number;
+  jobPostCount: number;
+  totalApplicants: number;
+  dateJoined: string;
+  lastActivity: string;
+  status: string;
+  companyReviews: CompanyReview[];
+}
+
+export interface CompanyReviewsResponse {
+  success: boolean;
+  data: CompanyReviewsData;
+  message?: string;
+}

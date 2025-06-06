@@ -1,6 +1,7 @@
 "use client";
 import React from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEmployerDetails } from "@/services/hooks/useEmployers";
 import { formatDate } from "@/services/utils/dateUtils";
 import ErrorState from "../../../common/ErrorState";
@@ -19,7 +20,12 @@ interface ViewDetailsProps {
 }
 
 export default function ViewDetails({ id }: ViewDetailsProps) {
+    const router = useRouter();
     const { data, isLoading, error } = useEmployerDetails(id);
+
+    const handleSeeReviews = () => {
+        router.push(`/admin/company-reviews?candidateId=${id}`);
+    };
 
     if (isLoading) {
         return <FullScreenSpinner isVisible={true} message="Loading employer details..." />;
@@ -101,17 +107,6 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
             label: 'Total Applications',
             value: `${employer.totalApplicants}`,
             className: 'text-green-600 dark:text-green-400'
-        },        {
-            label: 'Average Rating',
-            value: (
-                <div className="flex items-center gap-2">
-                    <div className="flex items-center gap-1">
-                        {renderStars(employer.averageRating)}
-                    </div>
-                    <span className="text-yellow-600 dark:text-yellow-400">{employer.averageRating}/5.0</span>
-                </div>
-            ),
-            className: 'text-yellow-600 dark:text-yellow-400'
         },
         {
             label: 'Email',
@@ -145,12 +140,14 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
         <BackToListButton href="/admin/employers" className="mb-6">
                 Back to Employers
                 </BackToListButton>
-        </div>
-
-        <div className="p-4 grid grid-cols-1 xl:grid-cols-3 gap-6">
+        </div>        <div className="p-4 grid grid-cols-1 xl:grid-cols-3 gap-6">
             <div className="col-span-full xl:col-auto">
-                <CompanyProfile employer={employer} contactInfo={contactInfo} />
-            </div>            <div className="col-span-2 space-y-6">
+                <CompanyProfile 
+                    employer={employer} 
+                    contactInfo={contactInfo} 
+                    onSeeReviews={handleSeeReviews}
+                />
+            </div><div className="col-span-2 space-y-6">
                 <CompanyOverview 
                     overview={employer.overview}
                 />

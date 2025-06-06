@@ -1,4 +1,4 @@
-import { EmployerFilters, EmployersResponse, EmployerStatesResponse, EmployerDetailsResponse } from '../types/employer';
+import { EmployerFilters, EmployersResponse, EmployerStatesResponse, EmployerDetailsResponse, CompanyReviewsResponse } from '../types/employer';
 import { ApplicantDetailsResponse } from '../types/applicant';
 import { authUtils } from '../utils/authUtils';
 
@@ -147,7 +147,42 @@ export const employerApi = {
       const data = await response.json();
       return data;
     } catch (error) {
-      console.error('Error fetching applicant details:', error);
+      console.error('Error fetching applicant details:', error);      throw error;
+    }
+  },
+
+  async getCompanyReviews(candidateId: string): Promise<CompanyReviewsResponse> {
+    try {
+      const url = `${API_URL}/api/admin/employers/reviews/${candidateId}`;
+      
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: authUtils.getAuthHeaders(),
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+        
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorMessage;
+        } catch (parseError) {
+          try {
+            const errorText = await response.text();
+            if (errorText) errorMessage = errorText;
+          } catch (textError) {
+            console.error('Could not get error response text:', textError);
+          }
+        }
+        
+        throw new Error(errorMessage);
+      }
+      
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error fetching company reviews:', error);
       throw error;
     }
   },
