@@ -1,6 +1,11 @@
-import { EmployerFilters, EmployersResponse, EmployerStatesResponse, EmployerDetailsResponse, CompanyReviewsResponse } from '../types/employer';
+import { EmployerFilters, 
+  EmployersResponse,
+   EmployerStatesResponse,
+   EmployerDetailsResponse,
+    CompanyReviewsResponse } from '../types/employer';
 import { ApplicantDetailsResponse } from '../types/applicant';
 import { authUtils } from '../utils/authUtils';
+import { showToast } from '../utils/toast';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -12,8 +17,8 @@ export const employerApi = {
       if (filters.page) queryParams.append('page', filters.page.toString());
       if (filters.limit) queryParams.append('limit', filters.limit.toString());
       if (filters.name) queryParams.append('name', filters.name);
-      if (filters.location) queryParams.append('location', filters.location);
-      if (filters.status) queryParams.append('status', filters.status);        
+      if (filters.location) queryParams.append('location', filters.location);     
+       if (filters.status) queryParams.append('status', filters.status);        
       const url = `${API_URL}/api/admin/employers?${queryParams.toString()}`;
       
       const response = await fetch(url, {
@@ -37,6 +42,7 @@ export const employerApi = {
           }
         }
         
+        showToast.error('Employer Error', errorMessage);
         throw new Error(errorMessage);
       }
 
@@ -46,9 +52,9 @@ export const employerApi = {
       throw error;
     }
   },
-
   async getEmployerStates(): Promise<EmployerStatesResponse> {
-    try {      const url = `${API_URL}/api/admin/employers/state/list`;
+    try {     
+       const url = `${API_URL}/api/admin/employers/state/list`;
       
       const response = await fetch(url, {
         method: 'GET',
@@ -71,6 +77,7 @@ export const employerApi = {
           }
         }
         
+        showToast.error('Employer States Error', errorMessage);
         throw new Error(errorMessage);
       }
 
@@ -147,7 +154,8 @@ export const employerApi = {
       const data = await response.json();
       return data;
     } catch (error) {
-      console.error('Error fetching applicant details:', error);      throw error;
+      console.error('Error fetching applicant details:', error);     
+       throw error;
     }
   },
 

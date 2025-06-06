@@ -40,7 +40,7 @@ export const authApi = {  async login(credentials: LoginCredentials): Promise<Au
         
       }
     } catch (error) {
-      throw error;
+      showToast.error('Logout Error', error instanceof Error ? error.message : 'An unexpected error occurred');
     }
   }
 };
