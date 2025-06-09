@@ -79,9 +79,7 @@ export default function JobPosts({ jobPosts, formatDate }: JobPostsProps) {
 
     return (
         <div className="rounded-xl bg-white p-6 shadow-lg border border-gray-100 dark:bg-gray-800 dark:border-gray-700">            <div className="flex items-center mb-6">
-                <div className="w-10 h-10 rounded-lg bg-green-500 flex items-center justify-center mr-4">
-                    <JobIcon className="w-5 h-5 text-white" />
-                </div>
+                
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white">Job Posts ({jobPosts?.length || 0})</h3>
             </div>
              {jobPosts && jobPosts.length > 0 ? (

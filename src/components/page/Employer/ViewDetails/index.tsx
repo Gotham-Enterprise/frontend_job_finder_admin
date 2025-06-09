@@ -8,9 +8,7 @@ import ErrorState from "../../../common/ErrorState";
 import FullScreenSpinner from "../../../ui/FullScreenSpinner";
 import {
     CompanyProfile,
-    JobPosts,
-    CompanyOverview,
-    ContactInfo
+    JobPosts
 } from "./components";
 import BackToListButton from '@/components/ui/BackToListButton';
 
@@ -111,14 +109,9 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
                     employer={employer} 
                     contactInfo={contactInfo} 
                     onSeeReviews={seeReviews}
-                />
-            </div><div className="col-span-2 space-y-6">
-                <CompanyOverview 
                     overview={employer.overview}
                 />
-                
-              
-                
+            </div><div className="col-span-2 space-y-6">
                 <JobPosts 
                     jobPosts={employer.jobPost || []}
                     formatDate={formatDate}
