@@ -19,7 +19,12 @@ const getUserDisplayName = (user: User): string => {
 const getUserInitials = (user: User): string => {
   const firstInitial = user.firstName?.charAt(0)?.toUpperCase() || '';
   const lastInitial = user.lastName?.charAt(0)?.toUpperCase() || '';
-  return firstInitial + lastInitial;
+  
+  if (firstInitial && lastInitial) {
+    return firstInitial + lastInitial;
+  }
+  
+  return firstInitial || lastInitial || user.username?.charAt(0)?.toUpperCase() || user.email?.charAt(0)?.toUpperCase() || 'U';
 };
 
 const mockUsers: User[] = [
@@ -117,19 +122,37 @@ const AccountSettings: React.FC = () => {
     currentPassword: '',
     newPassword: '',
     confirmPassword: ''
-  });
-  const currentUser = authUtils.getUser();
-  const displayName = currentUser ? getUserDisplayName(currentUser) : '';
-  const userInitials = currentUser ? getUserInitials(currentUser) : '';
+  });  const currentUser = authUtils.getUser();
+  
+  // Debug logging (remove in production)
+  console.log('Current user:', currentUser);
+  
+  // Use authUtils methods for better fallback handling
+  const displayName = authUtils.getUserDisplayName();
+  const userInitials = authUtils.getUserInitials();
+  
+  // Debug logging (remove in production)
+  console.log('Display name:', displayName);
+  console.log('User initials:', userInitials);
 
+  // Fallback user data for testing when no user is logged in
+  const testUser = currentUser || {
+    id: 'test-user',
+    email: 'test@example.com',
+    username: 'testuser',
+    firstName: 'Test',
+    lastName: 'User',
+    role: 'admin',
+    status: 'active'
+  } as User;
   const editProfile = () => {
-    if (currentUser) {
+    if (testUser) {
       setEditFormData({
-        firstName: currentUser.firstName || '',
-        lastName: currentUser.lastName || '',
-        email: currentUser.email || '',
+        firstName: testUser.firstName || '',
+        lastName: testUser.lastName || '',
+        email: testUser.email || '',
         phone: '', 
-        jobPosition: currentUser.role || ''
+        jobPosition: testUser.role || ''
       });
       setIsEditModalOpen(true);
     }
@@ -161,9 +184,8 @@ const AccountSettings: React.FC = () => {
 
     
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-1 space-y-6">
-            <ProfileInformation
-              user={currentUser!}
+        <div className="lg:col-span-1 space-y-6">            <ProfileInformation
+              user={testUser}
               onEdit={editProfile}
               userInitials={userInitials}
               displayName={displayName}

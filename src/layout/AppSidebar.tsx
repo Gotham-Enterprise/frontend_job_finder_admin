@@ -63,7 +63,11 @@ const navItems: NavItem[] = [
     icon: <TaskIcon />,
     name: "Blog",
     path: "/admin/blog",
-     subItems: [{ name: "Add New", path: "/", pro: false }],
+     subItems: [{ name: "All Posts", path: "/admin/blog", pro: false },
+      { name: "Add New", path: "/admin/blog/add-new", pro: false },
+      { name: "Categories", path: "/admin/blog/categories", pro: false },
+      { name: "Tags", path: "/admin/blog/tags", pro: false }
+     ],
   },
 
 ];
@@ -163,7 +167,7 @@ const AppSidebar: React.FC = () => {
                     : "0px",
               }}
             >
-              <ul className="mt-2 space-y-1 ml-9">
+              <ul className="mt-2 space-y-1">
                 {nav.subItems.map((subItem) => (
                   <li key={subItem.name}>
                     <Link

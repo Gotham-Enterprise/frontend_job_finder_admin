@@ -17,11 +17,10 @@ const ProfileInformation: FC<ProfileInformationProps> = ({
     onEdit,
     userInitials,
     displayName
-}) => {
-    const contactInfo = [
+}) => {    const contactInfo = [
         {
             label: 'Full Name',
-            value: displayName || 'Not available',
+            value: displayName && displayName.trim() !== '' ? displayName : 'Not available',
             className: 'text-gray-900 dark:text-white'
         },
         {
@@ -55,11 +54,10 @@ const ProfileInformation: FC<ProfileInformationProps> = ({
                     Edit Profile
                 </Button>
             </div>
-            <div className="space-y-4">
-                <div className="flex items-center justify-center mb-4">
+            <div className="space-y-4">                <div className="flex items-center justify-center mb-4">
                     <div className="w-20 h-20 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
                         <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                            {userInitials || '?'}
+                            {userInitials && userInitials.trim() !== '' ? userInitials : '?'}
                         </span>
                     </div>
                 </div>
