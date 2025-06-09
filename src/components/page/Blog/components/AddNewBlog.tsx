@@ -357,9 +357,7 @@ export default function AddNewBlog() {
                 Preview
               </Button>
             </div>
-          </div>
-
-          {/* Categories */}
+          </div>          {/* Categories */}
           <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
             <h3 className="text-base font-medium text-gray-900 dark:text-white mb-4">Categories</h3>
             <MultiSelect
@@ -367,6 +365,8 @@ export default function AddNewBlog() {
               options={categoryOptions}
               defaultSelected={blogPost.categories}
               onChange={(selected) => initInputChange('categories', selected)}
+              placeholder="Select categories..."
+              maxDisplayItems={2}
             />
           </div>
 
@@ -378,6 +378,8 @@ export default function AddNewBlog() {
               options={tagOptions}
               defaultSelected={blogPost.tags}
               onChange={(selected) => initInputChange('tags', selected)}
+              placeholder="Select tags..."
+              maxDisplayItems={3}
             />
           </div>
 
