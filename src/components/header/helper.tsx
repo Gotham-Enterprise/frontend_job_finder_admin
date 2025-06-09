@@ -12,9 +12,9 @@ export const profileDropdownItems = [
     href: "/admin/account-settings",
     Icon: SettingsIcon,
   },
-  {
-    label: "Support",
-    href: "#", 
-    Icon: UserIcon,
-  },
+  // {
+  //   label: "Support",
+  //   href: "#", 
+  //   Icon: UserIcon,
+  // },
 ];

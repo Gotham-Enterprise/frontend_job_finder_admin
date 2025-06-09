@@ -2,6 +2,7 @@
 
 import Button from '@/components/ui/button/Button';
 import { User } from '@/services/types/auth';
+import { PencilIcon } from '@/icons';
 import { FC } from 'react';
 
 interface ProfileInformationProps {
@@ -43,13 +44,14 @@ const ProfileInformation: FC<ProfileInformationProps> = ({
     return (
         <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] p-6">
             <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Profile Information</h2>
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Profile Information</h2>                  
                 <Button
                     onClick={onEdit}
-                    variant="outline"
+                    variant="ghost"
                     size="sm"
-                    className="px-4 py-2 dark:text-white dark:border-gray-700"
+                    className="whitespace-nowrap px-4 py-2 dark:text-white text-primary flex items-center"
                 >
+                    <PencilIcon className="flex-shrink-0" />
                     Edit Profile
                 </Button>
             </div>

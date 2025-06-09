@@ -84,7 +84,7 @@ export const AutoLogoutProvider: React.FC<AutoLogoutProviderProps> = ({ children
     }, INACTIVITY_TIMEOUT);
   };
 
-  const handleUserActivity = () => {
+  const userActivity = () => {
     if (authUtils.isAuthenticated()) {
       resetInactivityTimer();
     }
@@ -109,26 +109,26 @@ export const AutoLogoutProvider: React.FC<AutoLogoutProviderProps> = ({ children
       ];
 
       events.forEach(event => {
-        document.addEventListener(event, handleUserActivity, true);
+        document.addEventListener(event, userActivity, true);
       });
 
-      const handleStorageChange = (e: StorageEvent) => {
+      const storageChange = (e: StorageEvent) => {
         if (e.key === 'jobfinder_auth' && !e.newValue) {
           router.replace('/login');
         }
       };
 
-      window.addEventListener('storage', handleStorageChange);
+      window.addEventListener('storage', storageChange);
       return () => {
         if (inactivityTimerRef.current) {
           clearTimeout(inactivityTimerRef.current);
         }
         
         events.forEach(event => {
-          document.removeEventListener(event, handleUserActivity, true);
+          document.removeEventListener(event, userActivity, true);
         });
 
-        window.removeEventListener('storage', handleStorageChange);
+        window.removeEventListener('storage', storageChange);
       };
     }
   }, [router]);

@@ -8,6 +8,7 @@ import { Modal } from '@/components/ui/modal';
 import Button from '@/components/ui/button/Button';
 import Input from '@/components/ui/input/Input';
 import Label from '@/components/form/Label';
+import { PencilIcon } from '@/icons';
 import UserTable from './components/UserTable';
 import ProfileInformation from './components/ProfileInformation';
 
@@ -169,15 +170,16 @@ const AccountSettings: React.FC = () => {
             />
 
          
-                  <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] p-6">
+          <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] p-6">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Account Details</h2>
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Account Details</h2>                
               <Button
                 onClick={changePassword}
-                variant="outline"
+                variant="ghost"
                 size="sm"
-                className="px-4 py-2 dark:text-white dark:border-gray-700"
+                className="px-4 py-2 dark:text-white whitespace-nowrap text-primary flex items-center"
               >
+                <PencilIcon className="flex-shrink-0" />
                 Change Password
               </Button>
             </div>
@@ -242,17 +244,7 @@ const AccountSettings: React.FC = () => {
                 className="mt-1"
               />
             </div>
-            
-            <div>
-              <Label htmlFor="phone">Phone Number</Label>
-              <Input
-                id="phone"
-                type="tel"
-                value={editFormData.phone}
-                onChange={(e) => setEditFormData({ ...editFormData, phone: e.target.value })}
-                className="mt-1"
-              />
-            </div>
+          
             
             <div>
               <Label htmlFor="jobPosition">Job Position</Label>
@@ -267,8 +259,9 @@ const AccountSettings: React.FC = () => {
             
             <div className="flex justify-end space-x-3 pt-4">
               <Button
-                variant="outline"
+                variant="ghost"
                 onClick={() => setIsEditModalOpen(false)}
+                 className="dark:text-white"
               >
                 Cancel
               </Button>
@@ -278,7 +271,7 @@ const AccountSettings: React.FC = () => {
             </div>
           </div>
         </div>
-      </Modal>      {/* Change Password Modal */}
+      </Modal>    
       <Modal
         isOpen={isPasswordModalOpen}
         onClose={() => setIsPasswordModalOpen(false)}      
@@ -286,7 +279,7 @@ const AccountSettings: React.FC = () => {
         className="max-w-2xl mx-auto mt-20 rounded-lg"
       >
         <div className="p-6 bg-white dark:bg-gray-800 rounded-lg">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Change Password</h3>
+          <h3 className="text-lg font-semibold text-gray-900  dark:text-white mb-4">Change Password</h3>
           <div className="space-y-4">
             <div>
               <Label htmlFor="currentPassword">Current Password</Label>
@@ -323,7 +316,8 @@ const AccountSettings: React.FC = () => {
             
             <div className="flex justify-end space-x-3 pt-4">
               <Button
-                variant="outline"
+                variant="ghost"
+                className="dark:text-white"
                 onClick={() => setIsPasswordModalOpen(false)}
               >
                 Cancel
