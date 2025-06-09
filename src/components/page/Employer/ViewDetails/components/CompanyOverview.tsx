@@ -21,11 +21,11 @@ export default function CompanyOverview({ overview }: CompanyOverviewProps) {
             <div className="space-y-6">
                 {overview ? (
                     <div>
-                        <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">About the Company</h4>
-                        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
-                            <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-                                {overview}
-                            </p>
+                        <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">About the Company</h4>                        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+                            <div 
+                                className="text-gray-700 dark:text-gray-300 leading-relaxed prose prose-sm max-w-none dark:prose-invert"
+                                dangerouslySetInnerHTML={{ __html: overview }}
+                            />
                         </div>
                     </div>                ) : (
                     <NotFoundState 

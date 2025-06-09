@@ -1,10 +1,10 @@
 "use client";
 
 import Image from "next/image";
-import { ProfileCardProps } from "./types";
+import { ProfileCardProps, ContactInfo, Document, ProfileData } from "@/services/types/ProfileCard";
+import { getStatusIndicatorVariant, getProfileStatusBadgeVariant } from "@/services/utils/statusVariants";
 
-// Re-export types for convenience
-export type { ContactInfo, Document, ProfileData, ProfileCardProps } from "./types";
+export type { ContactInfo, Document, ProfileData, ProfileCardProps } from "@/services/types/ProfileCard";
 
 export default function ProfileCard({
     profileData,
@@ -16,56 +16,7 @@ export default function ProfileCard({
     avatarSize = 'lg',
     variant = 'default'
 }: ProfileCardProps) {
-    const getStatusVariant = (status: string) => {
-        switch (status?.toLowerCase()) {
-            case 'active':
-                return 'bg-green-500';
-            case 'inactive':
-                return 'bg-gray-400';
-            case 'under review':
-            case 'pending':
-                return 'bg-yellow-500';
-            case 'interview scheduled':
-            case 'interviewing':
-                return 'bg-blue-500';
-            case 'shortlisted':
-            case 'accepted':
-                return 'bg-green-500';
-            case 'rejected':
-            case 'declined':
-                return 'bg-red-500';
-            case 'hired':
-                return 'bg-purple-500';
-            default:
-                return 'bg-gray-400';
-        }
-    };
-
-    const getStatusBadgeVariant = (status: string) => {
-        switch (status?.toLowerCase()) {
-            case 'under review':
-            case 'pending':
-                return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400';
-            case 'interview scheduled':
-            case 'interviewing':
-                return 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400';
-            case 'shortlisted':
-            case 'accepted':
-            case 'active':
-                return 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400';
-            case 'rejected':
-            case 'declined':
-                return 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400';
-            case 'hired':
-                return 'bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400';
-            case 'inactive':
-                return 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400';
-            default:
-                return 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400';
-        }
-    };
-
-    const avatarSizes = {
+    const avatarSizes: Record<'sm' | 'md' | 'lg', { container: string; text: string }> = {
         sm: { container: 'w-16 h-16', text: 'text-lg' },
         md: { container: 'w-24 h-24', text: 'text-xl' },
         lg: { container: 'w-30 h-30', text: 'text-2xl' }
@@ -99,10 +50,8 @@ export default function ProfileCard({
                             </span>
                         </div>
                     )}
-                    
-        
-                    {showStatusIndicator && profileData.status && (
-                        <div className={`absolute bottom-1 right-1 w-6 h-6 rounded-full border-3 border-white dark:border-gray-800 shadow-sm ${getStatusVariant(profileData.status)}`}></div>
+                                {showStatusIndicator && profileData.status && (
+                        <div className={`absolute bottom-1 right-1 w-6 h-6 rounded-full border-3 border-white dark:border-gray-800 shadow-sm ${getStatusIndicatorVariant(profileData.status)}`}></div>
                     )}
                 </div>
 
@@ -117,17 +66,15 @@ export default function ProfileCard({
                             {profileData.title}
                         </span>
                     )}
-                    
-                    {profileData.status && (
+                      {profileData.status && (
                         <div className="mt-2">
-                            <span className={`inline-block px-3 py-1 text-sm font-medium rounded-full ${getStatusBadgeVariant(profileData.status)}`}>
+                            <span className={`inline-block px-3 py-1 text-sm font-medium rounded-full ${getProfileStatusBadgeVariant(profileData.status)}`}>
                                 {profileData.status}
                             </span>
                         </div>
                     )}
                 </div>
 
-                {/* Contact Info Section */}
                 {showContactInfo && contactInfo.length > 0 && (
                     <div className={`w-full space-y-4 ${variant === 'compact' ? 'mb-4' : 'mb-6'}`}>
                         {contactInfo.map((info, index) => (

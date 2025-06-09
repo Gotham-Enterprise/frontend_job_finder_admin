@@ -12,7 +12,9 @@ export const authApi = {  async login(credentials: LoginCredentials): Promise<Au
         },
         credentials: 'include', 
         body: JSON.stringify(credentials),
-      });      if (!response.ok) {
+      });     
+      
+      if (!response.ok) {
         const errorData = await response.json();
         const errorMessage = errorData.message || 'Login failed';
         

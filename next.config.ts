@@ -3,7 +3,10 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
 
   images: {
-    domains: ['https://jfapi.docbooked.com'],
+    domains: [
+      'jfapi.docbooked.com',
+      'gotham-job-finder-app-bucket.s3.amazonaws.com'
+    ],
   },
   webpack(config) {
     config.module.rules.push({

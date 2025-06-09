@@ -52,6 +52,7 @@ export const employerApi = {
       throw error;
     }
   },
+  
   async getEmployerStates(): Promise<EmployerStatesResponse> {
     try {     
        const url = `${API_URL}/api/admin/employers/state/list`;
