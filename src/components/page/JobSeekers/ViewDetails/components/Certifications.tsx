@@ -48,9 +48,7 @@ export default function Certifications({ licenses, formatDate }: CertificationsP
                     ))}
                 </div>
             ) : (
-                <div className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 p-6 rounded-lg border border-emerald-200 dark:border-emerald-800">
-                    <p className="text-gray-500 dark:text-gray-400 text-center">No licenses or certifications available</p>
-                </div>
+                <p className="text-gray-500 dark:text-gray-400 text-center">No licenses or certifications available</p>
             )}
         </div>
     );

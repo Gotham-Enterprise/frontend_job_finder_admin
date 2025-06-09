@@ -30,9 +30,7 @@ export default function Languages({ languages, getProficiencyLabel }: LanguagesP
                     ))}
                 </div>
             ) : (
-                <div className="bg-gradient-to-r from-pink-50 to-rose-50 dark:from-pink-900/20 dark:to-rose-900/20 p-6 rounded-lg border border-pink-200 dark:border-pink-800">
-                    <p className="text-gray-500 dark:text-gray-400 text-center">No language information available</p>
-                </div>
+                <p className="text-gray-500 dark:text-gray-400 text-center">No language information available</p>
             )}
         </div>
     );

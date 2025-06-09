@@ -23,9 +23,7 @@ export default function Skills({ skills }: SkillsProps) {
                     ))}
                 </ul>
             ) : (
-                <div className="bg-green-50 dark:bg-green-900/20 p-6 rounded-lg border border-green-200 dark:border-green-800">
-                    <p className="text-gray-500 dark:text-gray-400 text-center">No skills information available</p>
-                </div>
+                <p className="text-gray-500 dark:text-gray-400 text-center">No skills information available</p>
             )}
         </div>
     );
