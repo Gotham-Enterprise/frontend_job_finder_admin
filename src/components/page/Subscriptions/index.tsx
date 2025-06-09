@@ -1,14 +1,17 @@
 "use client";
-import React from 'react';
+import React, { useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import BackToListButton from '@/components/ui/BackToListButton';
 import Button from '@/components/ui/button/Button';
 import Badge from '@/components/ui/badge/Badge';
 import CreditCardIcon from '@/components/ui/icons/CreditCard';
+import { Modal } from '@/components/ui/modal';
+import { CheckLineIcon } from '@/icons';
 
 export default function SubscriptionsPage() {
   const searchParams = useSearchParams();
   const employerId = searchParams.get('employerId');
+  const [isViewPlanModalOpen, setIsViewPlanModalOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -55,8 +58,12 @@ export default function SubscriptionsPage() {
                   <span className="text-sm text-gray-600 dark:text-gray-400">
                     Billed monthly - <span className="font-medium text-blue-500">Auto renew</span> 
                   </span>
-                </div>
-                <Button className="dark:text-white text-primary whitespace-nowrap" variant="ghost" size="lg">
+                </div>                <Button 
+                  className="dark:text-white text-primary whitespace-nowrap" 
+                  variant="ghost" 
+                  size="lg"
+                  onClick={() => setIsViewPlanModalOpen(true)}
+                >
                   View plan
                 </Button>
               </div>
@@ -124,11 +131,67 @@ export default function SubscriptionsPage() {
               <div className="flex flex-col sm:flex-row gap-3 sm:justify-end">
                 <Button variant="default" size="default">
                   Upgrade Plan
-                </Button>
+                </Button>          </div>
+        </div>
+      </div>
+
+      <Modal 
+        isOpen={isViewPlanModalOpen} 
+        onClose={() => setIsViewPlanModalOpen(false)}
+        isFullscreen={false}
+        className="max-w-lg mx-4"
+      >
+        <div className="p-6">
+          {/* Modal Header */}
+          <div className="mb-6">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+              Your current Plan
+            </h2>
+          </div>
+
+          {/* Plan Details */}
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg p-4 mb-6 border border-blue-100 dark:border-blue-800">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  Small Business
+                </h3>
+              </div>
+              <div className="text-right">
+                <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                  $99
+                </span>
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  /month
+                </span>
               </div>
             </div>
           </div>
+
+          {/* Features List */}
+          <div className="space-y-3 mb-6">
+            {[
+              'Up to 3 Company employees',
+              '5 Job posting',
+              '100/month Emails',
+              '100/month Profile views',
+              '100/month Resume file downloads',
+              'Unlimited Resume database searches'
+            ].map((feature, index) => (              <div key={index} className="flex items-center gap-3">
+                <div className="flex-shrink-0">
+                  <CheckLineIcon className="w-5 h-5 text-green-500" />
+                </div>
+                <span className="text-sm text-gray-700 dark:text-gray-300">
+                  {feature}
+                </span>
+              </div>
+            ))}
+          </div>
+
+        
         </div>
+      </Modal>
+    </div>
       </div>
     </div>
   );
