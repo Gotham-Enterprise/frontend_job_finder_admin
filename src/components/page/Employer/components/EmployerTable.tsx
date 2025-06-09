@@ -18,15 +18,15 @@ const EmployerTable: React.FC<EmployerTableProps> = ({
   tableColumns,
   getStatusVariant,
   onViewEmployer,
+  onViewSubscription,
 }) => {
   return (
     <div className="overflow-x-auto">
       <Table>
         <TableHeading columns={tableColumns} />
-        <TableBody>
-          {isLoading ? (
+        <TableBody>          {isLoading ? (
             <TableRow>
-              <TableCell className="text-center py-8 px-6" colSpan={8}>
+              <TableCell className="text-center py-8 px-6" colSpan={9}>
                 <div className="flex items-center justify-center gap-3">
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-brand-500"></div>
                   <p className="text-gray-500 dark:text-gray-400">Loading...</p>
@@ -35,7 +35,7 @@ const EmployerTable: React.FC<EmployerTableProps> = ({
             </TableRow>
           ) : !data?.success || !data?.data?.length ? (
             <TableRow>
-              <TableCell className="text-center py-8 px-6" colSpan={8}>
+              <TableCell className="text-center py-8 px-6" colSpan={9}>
                 <p className="text-gray-500 dark:text-gray-400">No employers found</p>
               </TableCell>
             </TableRow>
@@ -87,11 +87,22 @@ const EmployerTable: React.FC<EmployerTableProps> = ({
                       <span className="text-gray-400 dark:text-gray-500 italic">No activity</span>
                     )}
                   </p>
-                </TableCell>
-                <TableCell className="py-4 px-6">
+                </TableCell>               
+                 <TableCell className="py-4 px-6">
                   <Badge variant={getStatusVariant(employer.status)}>
                     {employer.status}
                   </Badge>
+                </TableCell>
+                <TableCell className="py-4 px-6">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="whitespace-nowrap text-brand-400"
+                    startIcon={<EyeIcon />}
+                    onClick={() => onViewSubscription(employer.id)}
+                  >
+                    View subscription
+                  </Button>
                 </TableCell>
                 <TableCell className="py-4 px-6 text-right">
                   <div className="flex items-center gap-2">

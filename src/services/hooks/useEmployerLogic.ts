@@ -19,7 +19,6 @@ export const useEmployerLogic = () => {
 
   const { data, isLoading, error, refetch } = useEmployers(filters);
   const { data: statesData, isLoading: isStatesLoading } = useEmployerStates();
-
   const tableColumns = useMemo(() => [
     { key: 'companyName', label: 'Company' },
     { key: 'email', label: 'Email' },
@@ -28,6 +27,7 @@ export const useEmployerLogic = () => {
     { key: 'dateJoined', label: 'Date Joined' },
     { key: 'lastActivity', label: 'Last Activity' },
     { key: 'status', label: 'Status' },
+    { key: 'subscription', label: 'Subscription' },
     { key: 'actions', label: '', className: 'text-right' },
   ], []);
 
@@ -83,9 +83,12 @@ export const useEmployerLogic = () => {
       default: return 'light';
     }
   }, []);
-
   const viewEmployer = (employerId: string) => {
     router.push(`/admin/employers/details/${employerId}`);
+  };
+
+  const viewSubscription = (employerId: string) => {
+    router.push(`/admin/subscriptions?employerId=${employerId}`);
   };
 
   useEffect(() => {
@@ -97,7 +100,6 @@ export const useEmployerLogic = () => {
 
     return () => clearTimeout(timeoutId);
   }, [searchInput]);
-
   return {
     filters,
     searchInput,
@@ -122,5 +124,6 @@ export const useEmployerLogic = () => {
     initPageChange,
     getStatusVariant,
     viewEmployer,
+    viewSubscription,
   };
 };

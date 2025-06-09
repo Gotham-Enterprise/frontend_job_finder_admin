@@ -30,6 +30,7 @@ export interface EmployerTableProps {
   tableColumns: Array<{ key: string; label: string; className?: string }>;
   getStatusVariant: (status: string) => 'light' | 'solid';
   onViewEmployer: (employerId: string) => void;
+  onViewSubscription: (employerId: string) => void;
 }
 
 export interface EmployerTablePaginationProps {

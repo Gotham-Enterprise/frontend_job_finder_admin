@@ -30,12 +30,11 @@ const Employers: React.FC<EmployersProps> = ({ className = "" }) => {
     statusOptions,
     stateOptions,
     itemsPerPageOptions,
-    
-
-    filterChange,
+        filterChange,
     initPageChange,
     getStatusVariant,
     viewEmployer,
+    viewSubscription,
   } = useEmployerLogic();
 
   if (error && !isPending) {
@@ -68,14 +67,13 @@ const Employers: React.FC<EmployersProps> = ({ className = "" }) => {
         stateOptions={stateOptions}
         statusOptions={statusOptions}
         itemsPerPageOptions={itemsPerPageOptions}
-      />
-
-      <EmployerTable
+      />      <EmployerTable
         data={data}
         isLoading={isLoading}
         tableColumns={tableColumns}
         getStatusVariant={getStatusVariant}
         onViewEmployer={viewEmployer}
+        onViewSubscription={viewSubscription}
       />
 
       <EmployerTablePagination
