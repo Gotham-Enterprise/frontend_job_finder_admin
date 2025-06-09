@@ -117,12 +117,7 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
                     overview={employer.overview}
                 />
                 
-                <ContactInfo 
-                    address={employer.address}
-                    city={employer.city}
-                    state={employer.state}
-                    country={employer.country}
-                />
+              
                 
                 <JobPosts 
                     jobPosts={employer.jobPost || []}

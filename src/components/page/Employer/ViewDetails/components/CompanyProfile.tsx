@@ -30,9 +30,11 @@ export default function CompanyProfile({ employer, contactInfo, onSeeReviews }: 
                         employer.status === 'active' ? 'bg-green-500' : 
                         employer.status === 'inactive' ? 'bg-gray-400' : 'bg-red-500'
                     }`}></div>
-                </div>                    
+                </div>                
                 <div className="text-center mb-6">
-                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">{employer.companyName}</h2>                    <div className="flex items-center justify-center gap-3">
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">{employer.companyName}</h2>
+                    <p className="text-gray-500 text-sm dark:text-gray-400">{employer.address}</p>                    
+                    <div className="flex items-center justify-center gap-3">
                         <div className="flex items-center gap-2 px-3 py-1 bg-blue-50 dark:bg-blue-900/20 rounded-full border border-blue-200 dark:border-blue-800">
                             <div className="flex items-center gap-1">
                                 {renderStars(employer.averageRating)}
