@@ -6,6 +6,7 @@ export const authUtils = {
   saveAuthState(authState: AuthState): void {
     if (typeof window !== 'undefined') {
       localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(authState));
+      localStorage.setItem('jobfinder_last_activity', Date.now().toString());
     }
   },
 
@@ -18,10 +19,10 @@ export const authUtils = {
     }
     return null;
   },
-
   clearAuthState(): void {
     if (typeof window !== 'undefined') {
       localStorage.removeItem(AUTH_STORAGE_KEY);
+      localStorage.removeItem('jobfinder_last_activity');
     }
   },
 

@@ -8,7 +8,7 @@ import Link from "next/link";
 import React, { useState, FormEvent, useEffect } from "react";
 import Image from "next/image";
 import { useLogin } from "@/services/hooks/useAuth";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { authUtils } from "@/services/utils/authUtils";
 
 export default function SignInForm() {
@@ -17,16 +17,23 @@ export default function SignInForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [inactivityMessage, setInactivityMessage] = useState<string | null>(null);
   
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { mutate: login, isPending } = useLogin();
 
-
-useEffect(() => {
+  useEffect(() => {
     if (authUtils.isAuthenticated()) {
       router.push('/');
     }
-  }, [router]);
+    
+  
+    const reason = searchParams.get('reason');
+    if (reason === 'inactivity') {
+      setInactivityMessage("You have been automatically logged out due to 1 hour of inactivity. Please sign in again.");
+    }
+  }, [router, searchParams]);
 
   const initSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -67,8 +74,12 @@ useEffect(() => {
             <p className="text-sm text-gray-500 dark:text-gray-400">
               Enter your email and password to sign in!
             </p>
-          </div>
-          <div>
+          </div>          <div>
+            {inactivityMessage && (
+              <div className="p-3 mb-4 text-sm text-blue-600 bg-blue-100 rounded-lg dark:bg-blue-800/20 dark:text-blue-400">
+                {inactivityMessage}
+              </div>
+            )}
             {errorMessage && (
               <div className="p-3 mb-4 text-sm text-red-500 bg-red-100 rounded-lg dark:bg-red-800/20 dark:text-red-400">
                 {errorMessage}

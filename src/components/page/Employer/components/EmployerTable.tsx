@@ -22,9 +22,10 @@ const EmployerTable: React.FC<EmployerTableProps> = ({
 }) => {
   return (
     <div className="overflow-x-auto">
-      <Table>
+      <Table>        
         <TableHeading columns={tableColumns} />
-        <TableBody>          {isLoading ? (
+        <TableBody>
+          {isLoading ? (
             <TableRow>
               <TableCell className="text-center py-8 px-6" colSpan={9}>
                 <div className="flex items-center justify-center gap-3">

@@ -1,6 +1,8 @@
 "use client";
 
 import { useSidebar } from "@/context/SidebarContext";
+import { AutoLogoutProvider } from "@/context/AutoLogoutContext";
+import { InactivityStatus } from "@/components/InactivityStatus";
 import AppHeader from "@/layout/AppHeader";
 import AppSidebar from "@/layout/AppSidebar";
 import Backdrop from "@/layout/Backdrop";
@@ -26,19 +28,25 @@ export default function AdminLayout({
       router.replace("/login");
     }
   }, [router]);
-
   return (
-    <div className="min-h-screen xl:flex">
-      <AppSidebar />
-      <Backdrop />
-      <div
-        className={`flex-1 transition-all  duration-300 ease-in-out ${mainContentMargin}`}
-      >
-        <AppHeader />
-        <div className="p-4 mx-auto max-w-(--breakpoint-2xl) md:p-6">
-          {children}
+    <AutoLogoutProvider>
+      <div className="min-h-screen xl:flex">
+        <AppSidebar />
+        <Backdrop />       
+         <div
+          className={`flex-1 transition-all  duration-300 ease-in-out ${mainContentMargin}`}
+        >
+          <AppHeader />
+          <InactivityStatus 
+            className="mx-4 mb-4 md:mx-6 md:mb-6" 
+            showWarning={true}
+            warningThreshold={0.25}
+          />
+          <div className="p-4 mx-auto max-w-(--breakpoint-2xl) md:p-6">
+            {children}
+          </div>
         </div>
       </div>
-    </div>
+    </AutoLogoutProvider>
   );
 }
