@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import Input from "@/components/form/input/InputField";
 import TextArea from "@/components/form/input/TextArea";
+import RichTextEditor from "@/components/form/input/RichTextEditor";
 import Button from "@/components/ui/button/Button";
 import Label from "@/components/form/Label";
 import Select from "@/components/form/Select";
@@ -111,12 +112,13 @@ export default function AddNewBlog() {
         <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
           <p className="text-gray-700 dark:text-gray-300 font-medium">{blogPost.excerpt}</p>
         </div>
-      )}
-
-      <div className="prose prose-lg max-w-none dark:prose-invert">
-        <div className="whitespace-pre-wrap text-gray-900 dark:text-white">
-          {blogPost.content || 'No content yet...'}
-        </div>
+      )}      <div className="prose prose-lg max-w-none dark:prose-invert">
+        <div 
+          className="text-gray-900 dark:text-white blog-preview-content"
+          dangerouslySetInnerHTML={{ 
+            __html: blogPost.content || '<p class="text-gray-500 italic">No content yet...</p>' 
+          }}
+        />
       </div>
 
       {blogPost.tags.length > 0 && (
@@ -156,9 +158,8 @@ export default function AddNewBlog() {
               onChange={(e) => initInputChange('title', e.target.value)}
               className="text-2xl font-semibold border-none shadow-none focus:ring-0 p-0 bg-transparent"
             />
-          </div>
-
-          {/* Content Editor */}
+          </div>         
+           {/* Content Editor */}
           <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
             {/* Editor Tabs */}
             <div className="border-b border-gray-200 dark:border-gray-700">
@@ -184,19 +185,18 @@ export default function AddNewBlog() {
                   Preview
                 </button>
               </nav>
-            </div>
-
-            {/* Editor Content */}
-            <div className="p-6">
-              {activeTab === 'write' ? (
-                <TextArea
-                  placeholder="Tell your story..."
-                  rows={20}
-                  value={blogPost.content}
-                  onChange={(value) => initInputChange('content', value)}
-                  className="border-none shadow-none focus:ring-0 resize-none text-base"
+            </div>          
+            <div className="p-6">             
+                 <div className={activeTab === 'write' ? 'block' : 'hidden'}>
+                <RichTextEditor
+                  key="blog-editor"
+                  content={blogPost.content}
+                  onChange={(content) => initInputChange('content', content)}
+                  placeholder="Tell your story... Use the toolbar above to format text, add images, and create rich content."
+                  minHeight={500}
                 />
-              ) : (
+              </div>
+              {activeTab === 'preview' && (
                 <div className="min-h-[500px] p-4 bg-gray-50 dark:bg-gray-900 rounded-lg">
                   {renderPreview()}
                 </div>
@@ -204,21 +204,6 @@ export default function AddNewBlog() {
             </div>
           </div>
 
-          {/* Excerpt */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-            <Label className="text-base font-medium mb-4">Excerpt</Label>
-            <TextArea
-              placeholder="Write an excerpt (optional)"
-              rows={4}
-              value={blogPost.excerpt}
-              onChange={(value) => initInputChange('excerpt', value)}
-            />
-            <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-              Excerpts are optional hand-crafted summaries of your content.
-            </p>
-          </div>
-
-          {/* SEO Settings */}
           <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
             <button
               onClick={() => setShowSEOSettings(!showSEOSettings)}
@@ -357,7 +342,8 @@ export default function AddNewBlog() {
                 Preview
               </Button>
             </div>
-          </div>          {/* Categories */}
+          </div>         
+           {/* Categories */}
           <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
             <h3 className="text-base font-medium text-gray-900 dark:text-white mb-4">Categories</h3>
             <MultiSelect

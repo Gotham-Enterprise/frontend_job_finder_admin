@@ -42,8 +42,8 @@ const AllBlogPosts: React.FC<AllBlogPostsProps> = ({ className = "" }) => {
     filterChange,
     initPageChange,
     getStatusVariant,
-    handleSelectPost,
-    handleSelectAll,
+    selectPost,
+    selectAll,
     viewPost,
     editPost,
     deletePost,
@@ -94,8 +94,8 @@ const AllBlogPosts: React.FC<AllBlogPostsProps> = ({ className = "" }) => {
         onEditPost={editPost}
         onDeletePost={deletePost}
         selectedPosts={selectedPosts}
-        onSelectPost={handleSelectPost}
-        onSelectAll={handleSelectAll}
+        onSelectPost={selectPost}
+        onSelectAll={selectAll}
       />
 
       <BlogTablePagination

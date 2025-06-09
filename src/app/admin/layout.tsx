@@ -42,7 +42,7 @@ export default function AdminLayout({
             showWarning={true}
             warningThreshold={0.25}
           />
-          <div className="p-4 mx-auto max-w-(--breakpoint-2xl) md:p-6">
+          <div className="p-4 mx-auto md:p-6">
             {children}
           </div>
         </div>

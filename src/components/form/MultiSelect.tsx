@@ -42,15 +42,15 @@ const MultiSelect: React.FC<MultiSelectProps> = ({
   }, [isOpen]);
 
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
+    const clickOutSide = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsOpen(false);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('mousedown', clickOutSide);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('mousedown', clickOutSide);
     };
   }, []);
 
@@ -63,15 +63,15 @@ const MultiSelect: React.FC<MultiSelectProps> = ({
   }, [isOpen]);
 
   useEffect(() => {
-    const handleOtherDropdownOpen = (event: CustomEvent) => {
+    const otherDropdownOpen = (event: CustomEvent) => {
       if (event.detail.ref !== dropdownRef.current && isOpen) {
         setIsOpen(false);
       }
     };
 
-    document.addEventListener('multiselect-open', handleOtherDropdownOpen as EventListener);
+    document.addEventListener('multiselect-open', otherDropdownOpen as EventListener);
     return () => {
-      document.removeEventListener('multiselect-open', handleOtherDropdownOpen as EventListener);
+      document.removeEventListener('multiselect-open', otherDropdownOpen as EventListener);
     };
   }, [isOpen]);
 
@@ -196,7 +196,7 @@ const MultiSelect: React.FC<MultiSelectProps> = ({
                         className="flex items-center px-3 py-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150"
                         onClick={(e) => initSelect(option.value, e)}
                       >
-                        {/* Custom Checkbox */}
+                      
                         <div className="flex-shrink-0 mr-3">
                           <div
                             className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-all duration-200 ${
@@ -215,7 +215,7 @@ const MultiSelect: React.FC<MultiSelectProps> = ({
                             )}
                           </div>
                         </div>
-                        {/* Option Text */}
+                  
                         <div className="flex-1">
                           <div
                             className={`text-sm font-medium transition-colors duration-150 ${
@@ -227,7 +227,7 @@ const MultiSelect: React.FC<MultiSelectProps> = ({
                             {option.text}
                           </div>
                         </div>
-                        {/* Selected Indicator */}
+                      
                         {isSelected && (
                           <div className="flex-shrink-0 ml-2">
                             <svg
@@ -252,8 +252,6 @@ const MultiSelect: React.FC<MultiSelectProps> = ({
           )}
         </div>
       </div>
-
-      {/* Selected count indicator */}
       {selectedOptions.length > 0 && (
         <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
           {selectedOptions.length} item{selectedOptions.length !== 1 ? 's' : ''} selected
