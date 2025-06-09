@@ -9,9 +9,9 @@ interface CompanyReviewsListProps {
 export default function CompanyReviewsList({ companyData }: CompanyReviewsListProps) {
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 p-6">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-6">        
         <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-          Company Reviews ({companyData.companyReviews.length})
+          Company Reviews ({companyData.companyReviews?.length || 0})
         </h2>
         <div className="flex items-center">
           <div className="flex items-center">
@@ -21,10 +21,8 @@ export default function CompanyReviewsList({ companyData }: CompanyReviewsListPr
             {companyData.averageRating}
           </span>
         </div>
-      </div>
-
-      <div className="space-y-4">
-        {companyData.companyReviews.length > 0 ? (
+      </div>      <div className="space-y-4">
+        {companyData.companyReviews && companyData.companyReviews.length > 0 ? (
           companyData.companyReviews.map((review: CompanyReview) => (
             <div key={review.id} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 border border-gray-200 dark:border-gray-600">
               <div className="flex items-start justify-between mb-3">

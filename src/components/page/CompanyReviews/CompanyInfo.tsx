@@ -42,17 +42,17 @@ const getCompanyFields = (companyData: any): CompanyField[][] => {
       { 
         label: "Employees", 
         value: companyData.employeeCount, 
-        colorClass: "text-purple-600 dark:text-purple-400" 
+        colorClass: "text-sm font-semibold text-gray-900 dark:text-white" 
       },
       { 
         label: "Job Posts", 
         value: companyData.jobPostCount, 
-        colorClass: "text-green-600 dark:text-green-400" 
+        colorClass: "text-sm font-semibold text-gray-900 dark:text-white" 
       },
       { 
         label: "Total Applicants", 
         value: companyData.totalApplicants, 
-        colorClass: "text-orange-600 dark:text-orange-400" 
+        colorClass: "text-sm font-semibold text-gray-900 dark:text-white" 
       },
       { 
         label: "Status", 
@@ -82,9 +82,8 @@ export default function CompanyInfo({ companyData }: CompanyInfoProps) {
             </div>
             <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">
               {companyData.averageRating} / 5.0
-            </span>
-            <span className="ml-2 text-sm text-gray-500 dark:text-gray-500">
-              ({companyData.companyReviews.length} reviews)
+            </span>            <span className="ml-2 text-sm text-gray-500 dark:text-gray-500">
+              ({companyData.companyReviews?.length || 0} reviews)
             </span>
           </div>
         </div>

@@ -1,7 +1,6 @@
 "use client";
 
-import ProfileCard from "@/components/ui/ProfileCard";
-import { ContactInfo, ProfileData } from "@/components/ui/ProfileCard/types";
+import ProfileCard, { ContactInfo, ProfileData } from "@/components/ui/ProfileCard";
 
 interface ApplicantData {
     name: string;

@@ -31,7 +31,7 @@ export default function JobPosts({ jobPosts, formatDate }: JobPostsProps) {
         {
             label: "Applications:",
             value: job._count?.applicants || 0,
-            className: "text-lg font-semibold text-blue-600 dark:text-blue-400"
+            className: "text-sm text-gray-600 dark:text-gray-400"
         },
         {
             label: "Posted:",
@@ -93,7 +93,8 @@ export default function JobPosts({ jobPosts, formatDate }: JobPostsProps) {
                                         <div className="flex-1">
                                             <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between mb-3">
                                                 <h4 className="text-xl font-semibold text-gray-900 dark:text-white mb-2 lg:mb-0">{job.title}</h4>
-                                                <div className="flex flex-wrap gap-2">                                                    {job.status && (
+                                                <div className="flex flex-wrap gap-2">                                                    
+                                                    {job.status && (
                                                         <span className={`inline-flex items-center px-3 py-1 text-xs font-medium rounded-full ${getJobStatusVariant(job.status)}`}>
                                                             {job.status}
                                                         </span>
@@ -106,17 +107,20 @@ export default function JobPosts({ jobPosts, formatDate }: JobPostsProps) {
                                                 </div>
                                             </div>
                                             
-                                            <div className="flex flex-wrap items-center gap-6 text-sm text-gray-600 dark:text-gray-400">                                                {job.location && (
+                                            <div className="flex flex-wrap items-center gap-6 text-sm text-gray-600 dark:text-gray-400">                                                
+                                                {job.location && (
                                                     <div className="flex items-center gap-2">
                                                         <LocationIcon className="text-gray-400" />
                                                         <span>{job.location}</span>
                                                     </div>
-                                                )}                                                {job.salaryRange && (
+                                                )}                                                
+                                                {job.salaryRange && (
                                                     <div className="flex items-center gap-2">
                                                         <DollarIcon className="text-gray-400" />
                                                         <span>{job.salaryRange}</span>
                                                     </div>
-                                                )}                                                {job.experienceLevel && (
+                                                )}                                                
+                                                {job.experienceLevel && (
                                                     <div className="flex items-center gap-2">
                                                         <ExperienceIcon className="text-gray-400" />
                                                         <span>{job.experienceLevel}</span>
