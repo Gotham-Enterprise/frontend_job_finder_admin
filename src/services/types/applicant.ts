@@ -32,7 +32,8 @@ export interface ApplicantDetails {
 
 export interface EmployerQuestion {
   question: string;
-  answers: string[];
+  answers?: string[];
+  answer?: string | object; 
 }
 
 export interface ApplicantDetailsResponse {
