@@ -55,23 +55,46 @@ export default function AddNewBlog() {
       [field]: value
     }));
   };
-
   const saveDraft = () => {
     setBlogPost(prev => ({ ...prev, status: 'draft' }));
-    console.log('Saving draft:', { ...blogPost, status: 'draft' });
+    
 
+    const categoryNames = blogPost.categories.map(id => 
+      categoryOptions.find(option => option.value === id)?.text || id
+    );
+    const tagNames = blogPost.tags.map(id => 
+      tagOptions.find(option => option.value === id)?.text || id
+    );
+    
+    console.log('Saving draft:', { 
+      ...blogPost, 
+      status: 'draft',
+      categories: categoryNames,
+      tags: tagNames
+    });
   };
-
   const publishPost = () => {
     setBlogPost(prev => ({ ...prev, status: 'published' }));
-    console.log('Publishing post:', { ...blogPost, status: 'published' });
-
-  };  const initPreview = () => {
-    openBlogPreview(blogPost);
+    
+    const categoryNames = blogPost.categories.map(id => 
+      categoryOptions.find(option => option.value === id)?.text || id
+    );
+    const tagNames = blogPost.tags.map(id => 
+      tagOptions.find(option => option.value === id)?.text || id
+    );
+  
+  };
+  
+  const initPreview = () => {
+    openBlogPreview(blogPost, categoryOptions, tagOptions);
   };
 
   const renderPreview = () => (
-    <BlogPreview blogPost={blogPost} />
+    <BlogPreview 
+      blogPost={blogPost} 
+      categoryOptions={categoryOptions}
+      tagOptions={tagOptions}
+    />
   );
 
   return (

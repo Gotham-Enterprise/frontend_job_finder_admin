@@ -1,12 +1,33 @@
 "use client";
 import React from "react";
-import { BlogPost } from "@/services/types/blogPostType";
+import { BlogPost, CategoryOption, TagOption } from "@/services/types/blogPostType";
 
 interface BlogPreviewProps {
   blogPost: BlogPost;
+  categoryOptions?: CategoryOption[];
+  tagOptions?: TagOption[];
 }
 
-const BlogPreview: React.FC<BlogPreviewProps> = ({ blogPost }) => {
+const BlogPreview: React.FC<BlogPreviewProps> = ({ 
+  blogPost, 
+  categoryOptions = [], 
+  tagOptions = [] 
+}) => {
+  const getCategoryNames = (categoryIds: string[]) => {
+    return categoryIds
+      .map(id => categoryOptions.find(option => option.value === id)?.text)
+      .filter(Boolean);
+  };
+
+  const getTagNames = (tagIds: string[]) => {
+    return tagIds
+      .map(id => tagOptions.find(option => option.value === id)?.text)
+      .filter(Boolean);
+  };
+
+  const categoryNames = getCategoryNames(blogPost.categories);
+  const tagNames = getTagNames(blogPost.tags);
+
   return (
     <div className="max-w-4xl mx-auto p-6">
       <div className="mb-6">
@@ -15,13 +36,12 @@ const BlogPreview: React.FC<BlogPreviewProps> = ({ blogPost }) => {
         </span>
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
           {blogPost.title || 'Untitled Post'}
-        </h1>
-        <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-6">
+        </h1>        <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-6">
           <span>Published on {new Date(blogPost.publishDate).toLocaleDateString()}</span>
-          {blogPost.categories.length > 0 && (
+          {categoryNames.length > 0 && (
             <>
               <span className="mx-2">•</span>
-              <span>Categories: {blogPost.categories.join(', ')}</span>
+              <span>Categories: {categoryNames.join(', ')}</span>
             </>
           )}
         </div>
@@ -40,13 +60,11 @@ const BlogPreview: React.FC<BlogPreviewProps> = ({ blogPost }) => {
             __html: blogPost.content || '<p class="text-gray-500 italic">No content yet...</p>' 
           }}
         />
-      </div>
-
-      {blogPost.tags.length > 0 && (
+      </div>      {tagNames.length > 0 && (
         <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
           <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Tags:</h3>
           <div className="flex flex-wrap gap-2">
-            {blogPost.tags.map((tag, index) => (
+            {tagNames.map((tag, index) => (
               <span
                 key={index}
                 className="inline-block px-3 py-1 text-xs font-medium text-gray-600 bg-gray-200 rounded-full dark:bg-gray-700 dark:text-gray-300"

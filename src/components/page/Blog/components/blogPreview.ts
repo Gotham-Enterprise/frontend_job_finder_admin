@@ -7,7 +7,40 @@ interface BlogPost {
   tags: string[];
 }
 
-export const openBlogPreview = (blogPost: BlogPost) => {
+interface CategoryOption {
+  value: string;
+  text: string;
+  selected: boolean;
+}
+
+interface TagOption {
+  value: string;
+  text: string;
+  selected: boolean;
+}
+
+export const openBlogPreview = (
+  blogPost: BlogPost, 
+  categoryOptions: CategoryOption[] = [], 
+  tagOptions: TagOption[] = []
+) => {
+  // Helper function to get category names from IDs
+  const getCategoryNames = (categoryIds: string[]) => {
+    return categoryIds
+      .map(id => categoryOptions.find(option => option.value === id)?.text)
+      .filter(Boolean);
+  };
+
+  // Helper function to get tag names from IDs
+  const getTagNames = (tagIds: string[]) => {
+    return tagIds
+      .map(id => tagOptions.find(option => option.value === id)?.text)
+      .filter(Boolean);
+  };
+
+  const categoryNames = getCategoryNames(blogPost.categories);
+  const tagNames = getTagNames(blogPost.tags);
+
   const previewWindow = window.open('', '_blank');
   if (previewWindow) {
     // Generate HTML content for the preview
@@ -38,12 +71,11 @@ export const openBlogPreview = (blogPost: BlogPost) => {
             </span>
             <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-4">
               ${blogPost.title || 'Untitled Post'}
-            </h1>
-            <div class="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-6">
+            </h1>            <div class="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-6">
               <span>Published on ${new Date(blogPost.publishDate).toLocaleDateString()}</span>
-              ${blogPost.categories.length > 0 ? `
+              ${categoryNames.length > 0 ? `
                 <span class="mx-2">•</span>
-                <span>Categories: ${blogPost.categories.join(', ')}</span>
+                <span>Categories: ${categoryNames.join(', ')}</span>
               ` : ''}
             </div>
           </div>
@@ -58,13 +90,11 @@ export const openBlogPreview = (blogPost: BlogPost) => {
             <div class="text-gray-900 dark:text-white blog-preview-content">
               ${blogPost.content || '<p class="text-gray-500 italic">No content yet...</p>'}
             </div>
-          </div>
-
-          ${blogPost.tags.length > 0 ? `
+          </div>          ${tagNames.length > 0 ? `
             <div class="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
               <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Tags:</h3>
               <div class="flex flex-wrap gap-2">
-                ${blogPost.tags.map(tag => `
+                ${tagNames.map(tag => `
                   <span class="inline-block px-3 py-1 text-xs font-medium text-gray-600 bg-gray-200 rounded-full dark:bg-gray-700 dark:text-gray-300">
                     ${tag}
                   </span>
