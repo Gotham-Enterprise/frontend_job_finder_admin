@@ -76,7 +76,6 @@ export default function AddNewBlog() {
 
   return (
     <div className="mx-auto p-6">
-      {/* Header */}
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Add New Post</h1>
         <p className="text-gray-600 dark:text-gray-400">Create and publish a new blog post</p>
@@ -84,12 +83,11 @@ export default function AddNewBlog() {
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
          <div className="lg:col-span-3 space-y-6">
-          {/* Title */}          <BlogTitle
+          <BlogTitle
             title={blogPost.title}
             onChange={(title: string) => initInputChange('title', title)}
           />
           
-          {/* Content Editor */}
           <BlogContentEditor
             content={blogPost.content}
             onChange={(content: string) => initInputChange('content', content)}
@@ -98,7 +96,6 @@ export default function AddNewBlog() {
             renderPreview={renderPreview}
           />
 
-          {/* SEO Settings */}
           <BlogSEOSettings
             seoTitle={blogPost.seoTitle}
             seoDescription={blogPost.seoDescription}
@@ -110,7 +107,8 @@ export default function AddNewBlog() {
         </div>
 
         <div className="space-y-6">
-          {/* Publish Settings */}          <BlogPublishSettings
+          
+          <BlogPublishSettings
             status={blogPost.status}
             visibility={blogPost.visibility}
             password={blogPost.password}
@@ -124,14 +122,12 @@ export default function AddNewBlog() {
             onPublish={publishPost}
           />
           
-          {/* Categories */}
           <BlogCategoriesSelector
             categories={blogPost.categories}
             categoryOptions={categoryOptions}
             onChange={(selected: string[]) => initInputChange('categories', selected)}
           />
 
-          {/* Tags */}
           <BlogTagsSelector
             tags={blogPost.tags}
             tagOptions={tagOptions}
@@ -140,7 +136,6 @@ export default function AddNewBlog() {
         </div>
       </div>
 
-      {/* Preview Modal */}
       <Modal
         isOpen={previewModal.isOpen}
         onClose={previewModal.closeModal}
