@@ -84,7 +84,7 @@ export default function AddNewBlog() {
 
   };
 
-  const handlePreview = () => {
+  const initPreview = () => {
     previewModal.openModal();
   };
 
@@ -148,7 +148,7 @@ export default function AddNewBlog() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Main Content Area */}
+       
         <div className="lg:col-span-3 space-y-6">
           {/* Title */}
           <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">            <Input
@@ -244,9 +244,9 @@ export default function AddNewBlog() {
           </div>
         </div>
 
-        {/* Sidebar */}
+      
         <div className="space-y-6">
-          {/* Publish */}
+         
           <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
             <h3 className="text-base font-medium text-gray-900 dark:text-white mb-4">Publish</h3>
             
@@ -336,14 +336,14 @@ export default function AddNewBlog() {
               </Button>
               <Button
                 variant="ghost"
-                onClick={handlePreview}
+                onClick={initPreview}
                 className="w-full"
               >
                 Preview
               </Button>
             </div>
           </div>         
-           {/* Categories */}
+          
           <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
             <h3 className="text-base font-medium text-gray-900 dark:text-white mb-4">Categories</h3>
             <MultiSelect
@@ -356,7 +356,7 @@ export default function AddNewBlog() {
             />
           </div>
 
-          {/* Tags */}
+         
           <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
             <h3 className="text-base font-medium text-gray-900 dark:text-white mb-4">Tags</h3>
             <MultiSelect
@@ -369,30 +369,6 @@ export default function AddNewBlog() {
             />
           </div>
 
-          {/* Discussion */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-            <h3 className="text-base font-medium text-gray-900 dark:text-white mb-4">Discussion</h3>
-            <div className="space-y-3">
-              <label className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={blogPost.allowComments}
-                  onChange={(e) => initInputChange('allowComments', e.target.checked)}
-                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700"
-                />
-                <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">Allow comments</span>
-              </label>
-              <label className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={blogPost.allowPings}
-                  onChange={(e) => initInputChange('allowPings', e.target.checked)}
-                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700"
-                />
-                <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">Allow trackbacks and pingbacks</span>
-              </label>
-            </div>
-          </div>
         </div>
       </div>
 
