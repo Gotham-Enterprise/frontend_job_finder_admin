@@ -8,6 +8,11 @@ import Radio from "@/components/form/input/Radio";
 import Input from "@/components/form/input/InputField";
 import { EyeIcon } from "@/icons";
 
+const getStatusOptions = () => [
+  { value: 'draft', label: 'Draft' },
+  { value: 'published', label: 'Published' },
+];
+
 interface BlogPublishSettingsProps {
   status: 'draft' | 'published' | 'pending' | 'private';
   visibility: 'public' | 'private' | 'password';
@@ -37,28 +42,23 @@ const BlogPublishSettings: React.FC<BlogPublishSettingsProps> = ({
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-base font-medium text-gray-900 dark:text-white">Publish</h3>
+        <h3 className="text-base font-medium text-gray-900 dark:text-white">Publish</h3>        
         <Button
           variant="ghost"
           onClick={onPreview}
           size="lg"
-          className="text-blue-500 flex items-center gap-2"
+          className="text-blue-500"
         >
-          <EyeIcon className="w-4 h-4" />
+          <EyeIcon />
           Preview
         </Button>
       </div>
       
-      <div className="space-y-4">
+      <div className="space-y-4">        
         <div>
           <Label className="text-sm">Status</Label>
           <Select
-            options={[
-              { value: 'draft', label: 'Draft' },
-              { value: 'pending', label: 'Pending Review' },
-              { value: 'published', label: 'Published' },
-              { value: 'private', label: 'Private' }
-            ]}
+            options={getStatusOptions()}
             defaultValue={status}
             onChange={onStatusChange}
           />
@@ -66,7 +66,8 @@ const BlogPublishSettings: React.FC<BlogPublishSettingsProps> = ({
 
         <div>
           <Label className="text-sm">Visibility</Label>
-          <div className="space-y-2 mt-2">            <Radio
+          <div className="space-y-2 mt-2">            
+            <Radio
               id="public"
               name="visibility"
               value="public"
@@ -82,14 +83,7 @@ const BlogPublishSettings: React.FC<BlogPublishSettingsProps> = ({
               onChange={(value: string) => onVisibilityChange(value)}
               label="Private"
             />
-            <Radio
-              id="password"
-              name="visibility"
-              value="password"
-              checked={visibility === 'password'}
-              onChange={(value: string) => onVisibilityChange(value)}
-              label="Password Protected"
-            />
+          
           </div>
             {visibility === 'password' && (
             <div className="mt-2">

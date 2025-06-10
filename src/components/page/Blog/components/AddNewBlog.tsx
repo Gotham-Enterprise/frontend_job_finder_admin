@@ -14,9 +14,9 @@ import {
 } from "./AddNewBlog/";
 import { BlogPost, CategoryOption, TagOption } from "@/services/types/blogPostType";
 
-export default function AddNewBlog() {
-  const [blogPost, setBlogPost] = useState<BlogPost>({
+export default function AddNewBlog() {  const [blogPost, setBlogPost] = useState<BlogPost>({
     title: '',
+    permalink: '',
     content: '',
     excerpt: '',
     status: 'draft',
@@ -105,10 +105,11 @@ export default function AddNewBlog() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-         <div className="lg:col-span-3 space-y-6">
-          <BlogTitle
+         <div className="lg:col-span-3 space-y-6">          <BlogTitle
             title={blogPost.title}
+            permalink={blogPost.permalink}
             onChange={(title: string) => initInputChange('title', title)}
+            onPermalinkChange={(permalink: string) => initInputChange('permalink', permalink)}
           />
           
           <BlogContentEditor

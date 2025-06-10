@@ -1,5 +1,6 @@
 interface BlogPost {
   title: string;
+  permalink: string;
   content: string;
   excerpt: string;
   publishDate: string;
@@ -24,14 +25,14 @@ export const openBlogPreview = (
   categoryOptions: CategoryOption[] = [], 
   tagOptions: TagOption[] = []
 ) => {
-  // Helper function to get category names from IDs
+  
   const getCategoryNames = (categoryIds: string[]) => {
     return categoryIds
       .map(id => categoryOptions.find(option => option.value === id)?.text)
       .filter(Boolean);
   };
 
-  // Helper function to get tag names from IDs
+
   const getTagNames = (tagIds: string[]) => {
     return tagIds
       .map(id => tagOptions.find(option => option.value === id)?.text)
@@ -43,7 +44,7 @@ export const openBlogPreview = (
 
   const previewWindow = window.open('', '_blank');
   if (previewWindow) {
-    // Generate HTML content for the preview
+  
     const previewContent = `
       <!DOCTYPE html>
       <html lang="en">
@@ -68,10 +69,20 @@ export const openBlogPreview = (
           <div class="mb-6">
             <span class="inline-block px-3 py-1 text-xs font-medium text-blue-600 bg-blue-100 rounded-full dark:bg-blue-900 dark:text-blue-300 mb-3">
               Preview Mode
-            </span>
-            <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-4">
+            </span>            <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">
               ${blogPost.title || 'Untitled Post'}
-            </h1>            <div class="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-6">
+            </h1>
+            ${blogPost.permalink ? `
+              <div class="mb-4">
+                <span class="text-sm text-gray-500 dark:text-gray-400">
+                  Permalink: 
+                  <span class="text-blue-600 dark:text-blue-400 ml-1 font-mono">
+                    /blog/${blogPost.permalink}
+                  </span>
+                </span>
+              </div>
+            ` : ''}
+            <div class="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-6">
               <span>Published on ${new Date(blogPost.publishDate).toLocaleDateString()}</span>
               ${categoryNames.length > 0 ? `
                 <span class="mx-2">•</span>

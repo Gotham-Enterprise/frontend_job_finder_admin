@@ -32,11 +32,10 @@ const TagForm: React.FC<TagFormProps> = ({
             defaultValue={newTag.name}
             onChange={(e) => onInputChange('name', e.target.value)}
           />
-        </div>
-
-        <div>
+        </div>        <div>
           <Label>Slug</Label>
           <Input
+            key={newTag.slug} 
             type="text"
             placeholder="tag-slug"
             defaultValue={newTag.slug}

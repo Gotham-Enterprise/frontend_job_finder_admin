@@ -1,6 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import { useModal } from "@/hooks/useModal";
+import { generateSlug } from "@/services/utils";
 import {
   CategoryForm,
   CategoryList,
@@ -18,6 +19,7 @@ export default function AddNewCategories() {
 
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [isSlugManuallyEdited, setIsSlugManuallyEdited] = useState(false);
   const editModal = useModal();
 
 
@@ -61,22 +63,22 @@ export default function AddNewCategories() {
       description: 'Digital marketing and advertising',
       parent: '4',
       count: 9
-    }
-  ]);
-
-  const generateSlug = (name: string) => {
-    return name
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/(^-|-$)/g, '');
-  };
+    }  ]);
 
   const initInputChange = (field: keyof NewCategory, value: string) => {
     setNewCategory(prev => {
       const updated = { ...prev, [field]: value };
-      if (field === 'name' && !prev.slug) {
+      
+   
+      if (field === 'slug') {
+        setIsSlugManuallyEdited(true);
+      }
+
+
+      if (field === 'name' && !isSlugManuallyEdited) {
         updated.slug = generateSlug(value);
       }
+      
       return updated;
     });
   };
@@ -91,10 +93,11 @@ export default function AddNewCategories() {
       description: newCategory.description,
       parent: newCategory.parent,
       count: 0
-    };
-
+    };    
+    
     setCategories(prev => [...prev, category]);
     setNewCategory({ name: '', slug: '', description: '', parent: '' });
+    setIsSlugManuallyEdited(false); 
     console.log('Added category:', category);
   };
 

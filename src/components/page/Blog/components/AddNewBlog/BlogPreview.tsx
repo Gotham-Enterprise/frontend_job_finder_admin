@@ -33,10 +33,21 @@ const BlogPreview: React.FC<BlogPreviewProps> = ({
       <div className="mb-6">
         <span className="inline-block px-3 py-1 text-xs font-medium text-blue-600 bg-blue-100 rounded-full dark:bg-blue-900 dark:text-blue-300 mb-3">
           Preview Mode
-        </span>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
+        </span>        
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
           {blogPost.title || 'Untitled Post'}
-        </h1>        <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-6">
+        </h1>
+        {blogPost.permalink && (
+          <div className="mb-4">
+            <span className="text-sm text-gray-500 dark:text-gray-400">
+              Permalink: 
+              <span className="text-blue-600 dark:text-blue-400 ml-1 font-mono">
+                /blog/{blogPost.permalink}
+              </span>
+            </span>
+          </div>
+        )}
+        <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-6">
           <span>Published on {new Date(blogPost.publishDate).toLocaleDateString()}</span>
           {categoryNames.length > 0 && (
             <>

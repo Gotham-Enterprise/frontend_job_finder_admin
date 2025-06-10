@@ -1,5 +1,6 @@
 export interface BlogPost {
   title: string;
+  permalink: string;
   content: string;
   excerpt: string;
   status: 'draft' | 'published' | 'pending' | 'private';

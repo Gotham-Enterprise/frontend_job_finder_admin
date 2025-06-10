@@ -1,6 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import { useModal } from "@/hooks/useModal";
+import { generateSlug } from "@/services/utils";
 import {
   TagForm,
   TagList,
@@ -20,6 +21,7 @@ export default function Tags() {
   const [editingTag, setEditingTag] = useState<Tag | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [bulkTags, setBulkTags] = useState('');
+  const [isSlugManuallyEdited, setIsSlugManuallyEdited] = useState(false);
   const editModal = useModal();
   const bulkModal = useModal();
 
@@ -65,23 +67,21 @@ export default function Tags() {
       slug: 'nodejs',
       description: 'JavaScript runtime for server-side development',
       count: 15
-    }
-  ]);
-
-
-  const generateSlug = (name: string) => {
-    return name
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/(^-|-$)/g, '');
-  };
+    }  ]);
 
   const initInputChange = (field: keyof NewTag, value: string) => {
     setNewTag(prev => {
       const updated = { ...prev, [field]: value };
-      if (field === 'name' && !prev.slug) {
+      
+    
+      if (field === 'slug') {
+        setIsSlugManuallyEdited(true);
+      }
+    
+      if (field === 'name' && !isSlugManuallyEdited) {
         updated.slug = generateSlug(value);
       }
+      
       return updated;
     });
   };
@@ -95,11 +95,9 @@ export default function Tags() {
       slug: newTag.slug || generateSlug(newTag.name),
       description: newTag.description,
       count: 0
-    };
-
-    setTags(prev => [...prev, tag]);
+    };    setTags(prev => [...prev, tag]);
     setNewTag({ name: '', slug: '', description: '' });
-    console.log('Added tag:', tag);
+    setIsSlugManuallyEdited(false); 
   };
 
   const bulkAddTags = () => {
@@ -145,7 +143,7 @@ export default function Tags() {
   const deleteTag = (tagId: string) => {
     if (confirm('Are you sure you want to delete this tag?')) {
       setTags(prev => prev.filter(tag => tag.id !== tagId));
-      console.log('Deleted tag:', tagId);
+      
     }
   };
 
