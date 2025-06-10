@@ -245,7 +245,7 @@ export default function Tags() {
                 <Button
                   variant="outline"
                   onClick={bulkModal.openModal}
-                  className="w-full"
+                  className="w-full dark:text-white"
                 >
                   Bulk Add Tags
                 </Button>
@@ -401,86 +401,80 @@ export default function Tags() {
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Edit Tag Modal */}
+      </div>     
+       {/* Edit Tag Modal */}
       <Modal
         isOpen={editModal.isOpen}
         onClose={editModal.closeModal}
-        className="max-w-md"
+        isFullscreen={false}
+        className="max-w-2xl mx-auto mt-20 rounded-lg"
       >
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
-            Edit Tag
-          </h3>
+        <div className="p-6 bg-white dark:bg-gray-800 rounded-lg">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Edit Tag</h3>
+          <div className="space-y-4">
+            {editingTag && (
+              <>                <div>
+                  <Label htmlFor="editTagName">Name *</Label>
+                  <Input
+                    id="editTagName"
+                    type="text"
+                    placeholder="Tag name"
+                    defaultValue={editingTag.name}
+                    onChange={(e) => setEditingTag(prev => prev ? { ...prev, name: e.target.value } : null)}
+                    className="mt-1"
+                  />
+                </div>
 
-          {editingTag && (
-            <div className="space-y-4">              
-            <div>
-                <Label>Name *</Label>
-                <Input
-                  type="text"
-                  placeholder="Tag name"
-                  defaultValue={editingTag.name}
-                  onChange={(e) => setEditingTag(prev => prev ? { ...prev, name: e.target.value } : null)}
-                />
-              </div>
+                <div>
+                  <Label htmlFor="editTagSlug">Slug</Label>
+                  <Input
+                    id="editTagSlug"
+                    type="text"
+                    placeholder="tag-slug"
+                    defaultValue={editingTag.slug}
+                    onChange={(e) => setEditingTag(prev => prev ? { ...prev, slug: e.target.value } : null)}
+                    className="mt-1"
+                  />
+                </div>
 
-              <div>
-                <Label>Slug</Label>
-                <Input
-                  type="text"
-                  placeholder="tag-slug"
-                  defaultValue={editingTag.slug}
-                  onChange={(e) => setEditingTag(prev => prev ? { ...prev, slug: e.target.value } : null)}
-                />
-              </div>
+                <div>
+                  <Label htmlFor="editTagDescription">Description</Label>
+                  <TextArea
+                    placeholder="Tag description (optional)"
+                    rows={4}
+                    value={editingTag.description}
+                    onChange={(value) => setEditingTag(prev => prev ? { ...prev, description: value } : null)}
+                  />
+                </div>
 
-              <div>
-                <Label>Description</Label>
-                <TextArea
-                  placeholder="Tag description (optional)"
-                  rows={4}
-                  value={editingTag.description}
-                  onChange={(value) => setEditingTag(prev => prev ? { ...prev, description: value } : null)}
-                />
-              </div>
-
-              <div className="flex space-x-3 pt-4">
-                <Button
-                  variant="default"
-                  onClick={handleUpdateTag}
-                  className="flex-1"
-                >
-                  Update Tag
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={editModal.closeModal}
-                  className="flex-1"
-                >
-                  Cancel
-                </Button>
-              </div>
-            </div>
-          )}
+                <div className="flex justify-end space-x-3 pt-4">
+                  <Button
+                    variant="ghost"
+                    onClick={editModal.closeModal}
+                    className="dark:text-white"
+                  >
+                    Cancel
+                  </Button>
+                  <Button onClick={handleUpdateTag}>
+                    Update Tag
+                  </Button>
+                </div>
+              </>
+            )}
+          </div>
         </div>
-      </Modal>
-
-      {/* Bulk Add Tags Modal */}
+      </Modal>      
       <Modal
         isOpen={bulkModal.isOpen}
         onClose={bulkModal.closeModal}
-        className="max-w-md"
+        isFullscreen={false}
+        className="max-w-2xl mx-auto mt-20 rounded-lg"
       >
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
-            Bulk Add Tags
-          </h3>
-
+        <div className="p-6 bg-white dark:bg-gray-800 rounded-lg">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Bulk Add Tags</h3>
           <div className="space-y-4">
             <div>
-              <Label>Tags</Label>
+              <Label htmlFor="bulkTags">Tags</Label>
               <TextArea
                 placeholder="Enter tags separated by commas or new lines&#10;e.g., React, TypeScript, CSS&#10;or&#10;React&#10;TypeScript&#10;CSS"
                 rows={8}
@@ -492,21 +486,19 @@ export default function Tags() {
               </p>
             </div>
 
-            <div className="flex space-x-3 pt-4">
+            <div className="flex justify-end space-x-3 pt-4">
               <Button
-                variant="default"
+                variant="ghost"
+                onClick={bulkModal.closeModal}
+                className="dark:text-white"
+              >
+                Cancel
+              </Button>
+              <Button
                 onClick={handleBulkAddTags}
-                className="flex-1"
                 disabled={!bulkTags.trim()}
               >
                 Add Tags
-              </Button>
-              <Button
-                variant="outline"
-                onClick={bulkModal.closeModal}
-                className="flex-1"
-              >
-                Cancel
               </Button>
             </div>
           </div>

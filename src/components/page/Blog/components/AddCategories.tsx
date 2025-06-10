@@ -337,78 +337,77 @@ export default function AddNewCategories() {
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Edit Category Modal */}
+      </div>      {/* Edit Category Modal */}
       <Modal
         isOpen={editModal.isOpen}
         onClose={editModal.closeModal}
-        className="max-w-md"
+        isFullscreen={false}
+        className="max-w-2xl mx-auto mt-20 rounded-lg"
       >
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
-            Edit Category
-          </h3>
+        <div className="p-6 bg-white dark:bg-gray-800 rounded-lg">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Edit Category</h3>
+          <div className="space-y-4">
+            {editingCategory && (
+              <>
+                <div>
+                  <Label htmlFor="editCategoryName">Name *</Label>
+                  <Input
+                    id="editCategoryName"
+                    type="text"
+                    placeholder="Category name"
+                    value={editingCategory.name}
+                    onChange={(e) => setEditingCategory(prev => prev ? { ...prev, name: e.target.value } : null)}
+                    className="mt-1"
+                  />
+                </div>
 
-          {editingCategory && (
-            <div className="space-y-4">
-              <div>
-                <Label>Name *</Label>                <Input
-                  type="text"
-                  placeholder="Category name"
-                  defaultValue={editingCategory.name}
-                  onChange={(e) => setEditingCategory(prev => prev ? { ...prev, name: e.target.value } : null)}
-                />
-              </div>
+                <div>
+                  <Label htmlFor="editCategorySlug">Slug</Label>
+                  <Input
+                    id="editCategorySlug"
+                    type="text"
+                    placeholder="category-slug"
+                    value={editingCategory.slug}
+                    onChange={(e) => setEditingCategory(prev => prev ? { ...prev, slug: e.target.value } : null)}
+                    className="mt-1"
+                  />
+                </div>
 
-              <div>
-                <Label>Slug</Label>
-                <Input
-                  type="text"
-                  placeholder="category-slug"
-                  defaultValue={editingCategory.slug}
-                  onChange={(e) => setEditingCategory(prev => prev ? { ...prev, slug: e.target.value } : null)}
-                />
-              </div>
+                <div>
+                  <Label htmlFor="editCategoryParent">Parent Category</Label>
+                  <Select
+                    options={getParentCategoryOptions()}
+                    placeholder="None"
+                    defaultValue={editingCategory.parent}
+                    onChange={(value) => setEditingCategory(prev => prev ? { ...prev, parent: value } : null)}
+                  />
+                </div>
 
-              <div>
-                <Label>Parent Category</Label>
-                <Select
-                  options={getParentCategoryOptions()}
-                  placeholder="None"
-                  defaultValue={editingCategory.parent}
-                  onChange={(value) => setEditingCategory(prev => prev ? { ...prev, parent: value } : null)}
-                />
-              </div>
+                <div>
+                  <Label htmlFor="editCategoryDescription">Description</Label>
+                  <TextArea
+                    placeholder="Category description (optional)"
+                    rows={4}
+                    value={editingCategory.description}
+                    onChange={(value) => setEditingCategory(prev => prev ? { ...prev, description: value } : null)}
+                  />
+                </div>
 
-              <div>
-                <Label>Description</Label>
-                <TextArea
-                  placeholder="Category description (optional)"
-                  rows={4}
-                  value={editingCategory.description}
-                  onChange={(value) => setEditingCategory(prev => prev ? { ...prev, description: value } : null)}
-                />
-              </div>
-
-              <div className="flex space-x-3 pt-4">
-                <Button
-                  variant="default"
-                  onClick={handleUpdateCategory}
-                  className="flex-1"
-                >
-                  Update Category
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={editModal.closeModal}
-                  className="flex-1"
-                >
-                  Cancel
-                </Button>
-              </div>
-            </div>
-          )}
+                <div className="flex justify-end space-x-3 pt-4">
+                  <Button
+                    variant="ghost"
+                    onClick={editModal.closeModal}
+                    className="dark:text-white"
+                  >
+                    Cancel
+                  </Button>
+                  <Button onClick={handleUpdateCategory}>
+                    Update Category
+                  </Button>
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </Modal>
     </div>

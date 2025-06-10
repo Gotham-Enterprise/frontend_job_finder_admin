@@ -52,7 +52,6 @@ export const useDeleteBlogPost = () => {
   return useMutation({
     mutationFn: (postId: string) => blogApi.deleteBlogPost(postId),
     onSuccess: () => {
-      // Invalidate all blog posts queries to refresh the list
       queryClient.invalidateQueries({ queryKey: blogQueryKeys.lists() });
     },
     onError: (error) => {
@@ -67,7 +66,6 @@ export const useBulkDeleteBlogPosts = () => {
   return useMutation({
     mutationFn: (postIds: string[]) => blogApi.deleteBlogPosts(postIds),
     onSuccess: () => {
-      // Invalidate all blog posts queries to refresh the list
       queryClient.invalidateQueries({ queryKey: blogQueryKeys.lists() });
     },
     onError: (error) => {

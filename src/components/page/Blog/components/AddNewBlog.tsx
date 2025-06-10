@@ -1,33 +1,18 @@
 "use client";
 import React, { useState } from "react";
-import Input from "@/components/form/input/InputField";
-import TextArea from "@/components/form/input/TextArea";
-import RichTextEditor from "@/components/form/input/RichTextEditor";
-import Button from "@/components/ui/button/Button";
-import Label from "@/components/form/Label";
-import Select from "@/components/form/Select";
-import MultiSelect from "@/components/form/MultiSelect";
-import DatePicker from "@/components/form/date-picker";
-import Radio from "@/components/form/input/Radio";
 import { Modal } from "@/components/ui/modal";
 import { useModal } from "@/hooks/useModal";
-
-interface BlogPost {
-  title: string;
-  content: string;
-  excerpt: string;
-  status: 'draft' | 'published' | 'pending' | 'private';
-  visibility: 'public' | 'private' | 'password';
-  password?: string;
-  publishDate: string;
-  categories: string[];
-  tags: string[];
-  featuredImage?: string;
-  allowComments: boolean;
-  allowPings: boolean;
-  seoTitle: string;
-  seoDescription: string;
-}
+import { openBlogPreview } from "./blogPreview";
+import {
+  BlogTitle,
+  BlogContentEditor,
+  BlogSEOSettings,
+  BlogPublishSettings,
+  BlogCategoriesSelector,
+  BlogTagsSelector,
+  BlogPreview
+} from "./AddNewBlog/";
+import { BlogPost, CategoryOption, TagOption } from "@/services/types/blogPostType";
 
 export default function AddNewBlog() {
   const [blogPost, setBlogPost] = useState<BlogPost>({
@@ -44,12 +29,11 @@ export default function AddNewBlog() {
     seoTitle: '',
     seoDescription: ''
   });
-
   const [activeTab, setActiveTab] = useState<'write' | 'preview'>('write');
   const [showSEOSettings, setShowSEOSettings] = useState(false);
   const previewModal = useModal();
 
-  const categoryOptions = [
+  const categoryOptions: CategoryOption[] = [
     { value: '1', text: 'Technology', selected: false },
     { value: '2', text: 'Design', selected: false },
     { value: '3', text: 'Business', selected: false },
@@ -57,7 +41,7 @@ export default function AddNewBlog() {
     { value: '5', text: 'Development', selected: false }
   ];
 
-  const tagOptions = [
+  const tagOptions: TagOption[] = [
     { value: '1', text: 'React', selected: false },
     { value: '2', text: 'TypeScript', selected: false },
     { value: '3', text: 'JavaScript', selected: false },
@@ -82,61 +66,12 @@ export default function AddNewBlog() {
     setBlogPost(prev => ({ ...prev, status: 'published' }));
     console.log('Publishing post:', { ...blogPost, status: 'published' });
 
-  };
-
-  const initPreview = () => {
-    previewModal.openModal();
+  };  const initPreview = () => {
+    openBlogPreview(blogPost);
   };
 
   const renderPreview = () => (
-    <div className="max-w-4xl mx-auto p-6">
-      <div className="mb-6">
-        <span className="inline-block px-3 py-1 text-xs font-medium text-blue-600 bg-blue-100 rounded-full dark:bg-blue-900 dark:text-blue-300 mb-3">
-          Preview Mode
-        </span>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
-          {blogPost.title || 'Untitled Post'}
-        </h1>
-        <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-6">
-          <span>Published on {new Date(blogPost.publishDate).toLocaleDateString()}</span>
-          {blogPost.categories.length > 0 && (
-            <>
-              <span className="mx-2">•</span>
-              <span>Categories: {blogPost.categories.join(', ')}</span>
-            </>
-          )}
-        </div>
-      </div>
-
-      {blogPost.excerpt && (
-        <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-          <p className="text-gray-700 dark:text-gray-300 font-medium">{blogPost.excerpt}</p>
-        </div>
-      )}      <div className="prose prose-lg max-w-none dark:prose-invert">
-        <div 
-          className="text-gray-900 dark:text-white blog-preview-content"
-          dangerouslySetInnerHTML={{ 
-            __html: blogPost.content || '<p class="text-gray-500 italic">No content yet...</p>' 
-          }}
-        />
-      </div>
-
-      {blogPost.tags.length > 0 && (
-        <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
-          <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Tags:</h3>
-          <div className="flex flex-wrap gap-2">
-            {blogPost.tags.map((tag, index) => (
-              <span
-                key={index}
-                className="inline-block px-3 py-1 text-xs font-medium text-gray-600 bg-gray-200 rounded-full dark:bg-gray-700 dark:text-gray-300"
-              >
-                {tag}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
+    <BlogPreview blogPost={blogPost} />
   );
 
   return (
@@ -148,227 +83,60 @@ export default function AddNewBlog() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-       
-        <div className="lg:col-span-3 space-y-6">
-          {/* Title */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">            <Input
-              type="text"
-              placeholder="Enter title here"
-              defaultValue={blogPost.title}
-              onChange={(e) => initInputChange('title', e.target.value)}
-              className="text-2xl font-semibold border-none shadow-none focus:ring-0 p-0 bg-transparent"
-            />
-          </div>         
-           {/* Content Editor */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-            {/* Editor Tabs */}
-            <div className="border-b border-gray-200 dark:border-gray-700">
-              <nav className="flex space-x-8 px-6">
-                <button
-                  onClick={() => setActiveTab('write')}
-                  className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                    activeTab === 'write'
-                      ? 'border-blue-500 text-blue-600 dark:text-blue-400 dark:border-blue-400'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
-                  }`}
-                >
-                  Write
-                </button>
-                <button
-                  onClick={() => setActiveTab('preview')}
-                  className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                    activeTab === 'preview'
-                      ? 'border-blue-500 text-blue-600 dark:text-blue-400 dark:border-blue-400'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
-                  }`}
-                >
-                  Preview
-                </button>
-              </nav>
-            </div>          
-            <div className="p-6">             
-                 <div className={activeTab === 'write' ? 'block' : 'hidden'}>
-                <RichTextEditor
-                  key="blog-editor"
-                  content={blogPost.content}
-                  onChange={(content) => initInputChange('content', content)}
-                  placeholder="Tell your story... Use the toolbar above to format text, add images, and create rich content."
-                  minHeight={500}
-                />
-              </div>
-              {activeTab === 'preview' && (
-                <div className="min-h-[500px] p-4 bg-gray-50 dark:bg-gray-900 rounded-lg">
-                  {renderPreview()}
-                </div>
-              )}
-            </div>
-          </div>
+         <div className="lg:col-span-3 space-y-6">
+          {/* Title */}          <BlogTitle
+            title={blogPost.title}
+            onChange={(title: string) => initInputChange('title', title)}
+          />
+          
+          {/* Content Editor */}
+          <BlogContentEditor
+            content={blogPost.content}
+            onChange={(content: string) => initInputChange('content', content)}
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            renderPreview={renderPreview}
+          />
 
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-            <button
-              onClick={() => setShowSEOSettings(!showSEOSettings)}
-              className="w-full p-6 text-left flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-            >
-              <h3 className="text-base font-medium text-gray-900 dark:text-white">SEO Settings</h3>
-              <svg
-                className={`w-5 h-5 text-gray-500 transition-transform ${showSEOSettings ? 'rotate-180' : ''}`}
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-            
-            {showSEOSettings && (
-              <div className="px-6 pb-6 space-y-4">
-                <div>
-                  <Label>SEO Title</Label>                  <Input
-                    type="text"
-                    placeholder="SEO title"
-                    defaultValue={blogPost.seoTitle}
-                    onChange={(e) => initInputChange('seoTitle', e.target.value)}
-                  />
-                </div>
-                <div>
-                  <Label>SEO Description</Label>
-                  <TextArea
-                    placeholder="SEO description"
-                    rows={3}
-                    value={blogPost.seoDescription}
-                    onChange={(value) => initInputChange('seoDescription', value)}
-                  />
-                </div>
-              </div>
-            )}
-          </div>
+          {/* SEO Settings */}
+          <BlogSEOSettings
+            seoTitle={blogPost.seoTitle}
+            seoDescription={blogPost.seoDescription}
+            showSEOSettings={showSEOSettings}
+            onToggleShow={() => setShowSEOSettings(!showSEOSettings)}
+            onSeoTitleChange={(title: string) => initInputChange('seoTitle', title)}
+            onSeoDescriptionChange={(description: string) => initInputChange('seoDescription', description)}
+          />
         </div>
 
-      
         <div className="space-y-6">
-         
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-            <h3 className="text-base font-medium text-gray-900 dark:text-white mb-4">Publish</h3>
-            
-            <div className="space-y-4">
-              <div>
-                <Label className="text-sm">Status</Label>
-                <Select
-                  options={[
-                    { value: 'draft', label: 'Draft' },
-                    { value: 'pending', label: 'Pending Review' },
-                    { value: 'published', label: 'Published' },
-                    { value: 'private', label: 'Private' }
-                  ]}
-                  defaultValue={blogPost.status}
-                  onChange={(value) => initInputChange('status', value)}
-                />
-              </div>
-
-              <div>
-                <Label className="text-sm">Visibility</Label>
-                <div className="space-y-2 mt-2">
-                  <Radio
-                    id="public"
-                    name="visibility"
-                    value="public"
-                    checked={blogPost.visibility === 'public'}
-                    onChange={(value) => initInputChange('visibility', value)}
-                    label="Public"
-                  />
-                  <Radio
-                    id="private"
-                    name="visibility"
-                    value="private"
-                    checked={blogPost.visibility === 'private'}
-                    onChange={(value) => initInputChange('visibility', value)}
-                    label="Private"
-                  />
-                  <Radio
-                    id="password"
-                    name="visibility"
-                    value="password"
-                    checked={blogPost.visibility === 'password'}
-                    onChange={(value) => initInputChange('visibility', value)}
-                    label="Password Protected"
-                  />
-                </div>
-                
-                {blogPost.visibility === 'password' && (
-                  <div className="mt-2">                    <Input
-                      type="text"
-                      placeholder="Enter password"
-                      defaultValue={blogPost.password || ''}
-                      onChange={(e) => initInputChange('password', e.target.value)}
-                    />
-                  </div>
-                )}
-              </div>
-
-              <div>
-                <DatePicker
-                  id="publish-date"
-                  label="Publish Date"
-                  defaultDate={blogPost.publishDate}
-                  onChange={(dates, dateString) => {
-                    if (dateString) {
-                      initInputChange('publishDate', dateString);
-                    }
-                  }}
-                />
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-2 mt-6">
-              <Button
-                variant="default"
-                onClick={publishPost}
-                className="w-full"
-              >
-                Publish
-              </Button>
-              <Button
-                variant="outline"
-                onClick={saveDraft}
-                className="w-full"
-              >
-                Save Draft
-              </Button>
-              <Button
-                variant="ghost"
-                onClick={initPreview}
-                className="w-full"
-              >
-                Preview
-              </Button>
-            </div>
-          </div>         
+          {/* Publish Settings */}          <BlogPublishSettings
+            status={blogPost.status}
+            visibility={blogPost.visibility}
+            password={blogPost.password}
+            publishDate={blogPost.publishDate}
+            onStatusChange={(status: string) => initInputChange('status', status)}
+            onVisibilityChange={(visibility: string) => initInputChange('visibility', visibility)}
+            onPasswordChange={(password: string) => initInputChange('password', password)}
+            onPublishDateChange={(date: string) => initInputChange('publishDate', date)}
+            onPreview={initPreview}
+            onSaveDraft={saveDraft}
+            onPublish={publishPost}
+          />
           
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-            <h3 className="text-base font-medium text-gray-900 dark:text-white mb-4">Categories</h3>
-            <MultiSelect
-              label=""
-              options={categoryOptions}
-              defaultSelected={blogPost.categories}
-              onChange={(selected) => initInputChange('categories', selected)}
-              placeholder="Select categories..."
-              maxDisplayItems={2}
-            />
-          </div>
+          {/* Categories */}
+          <BlogCategoriesSelector
+            categories={blogPost.categories}
+            categoryOptions={categoryOptions}
+            onChange={(selected: string[]) => initInputChange('categories', selected)}
+          />
 
-         
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-            <h3 className="text-base font-medium text-gray-900 dark:text-white mb-4">Tags</h3>
-            <MultiSelect
-              label=""
-              options={tagOptions}
-              defaultSelected={blogPost.tags}
-              onChange={(selected) => initInputChange('tags', selected)}
-              placeholder="Select tags..."
-              maxDisplayItems={3}
-            />
-          </div>
-
+          {/* Tags */}
+          <BlogTagsSelector
+            tags={blogPost.tags}
+            tagOptions={tagOptions}
+            onChange={(selected: string[]) => initInputChange('tags', selected)}
+          />
         </div>
       </div>
 
