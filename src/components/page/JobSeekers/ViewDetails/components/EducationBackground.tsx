@@ -32,9 +32,7 @@ export default function EducationBackground({ educations, formatDate }: Educatio
                     ))}
                 </div>
             ) : (
-                <div className="bg-gradient-to-r from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 p-6 rounded-lg border border-orange-200 dark:border-orange-800">
-                    <p className="text-gray-500 dark:text-gray-400 text-center">No education information available</p>
-                </div>
+                <p className="text-gray-500 dark:text-gray-400 text-center">No education information available</p>
             )}
         </div>
     );

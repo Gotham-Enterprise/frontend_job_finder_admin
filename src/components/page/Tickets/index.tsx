@@ -627,6 +627,7 @@ const Tickets: React.FC<TicketsProps> = ({ className = "" }) => {
                   </TableCell>
                   <TableCell className="py-4 px-6 text-right">
                     <Button
+                      disabled={true}
                       variant="ghost"
                       size="sm"
                       className="text-brand-400"
