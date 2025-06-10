@@ -1,13 +1,20 @@
 "use client";
 
 import { JobPost } from "@/services/types/employer";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Button from "@/components/ui/button/Button";
 import { getJobStatusVariant, getEmploymentTypeVariant } from "@/services/utils/statusVariants";
 import NotFoundState from "@/components/common/NotFoundState";
 import Pagination from "@/components/tables/Pagination";
-import { LocationIcon, DollarIcon, ExperienceIcon, JobIcon, EyeIcon } from "@/components/ui/icons";
+import { LocationIcon, DollarIcon, ExperienceIcon, EyeIcon } from "@/components/ui/icons";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableRow,
+} from "@/components/ui/table";
+import TableHeading from "@/components/tables/tableHeader";
 
 interface JobPostsProps {
     jobPosts: JobPost[];
@@ -21,29 +28,22 @@ export default function JobPosts({ jobPosts, formatDate }: JobPostsProps) {
     const totalPages = Math.ceil(jobPosts.length / itemsPerPage);
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
-    const currentJobs = jobPosts.slice(startIndex, endIndex);
-
-    const initPageChange = (page: number) => {
+    const currentJobs = jobPosts.slice(startIndex, endIndex);    const initPageChange = (page: number) => {
         setCurrentPage(page);
     };
 
-    const getJobDetails = (job: JobPost) => [
-        {
-            label: "Applications:",
-            value: job._count?.applicants || 0,
-            className: "text-sm text-gray-600 dark:text-gray-400"
-        },
-        {
-            label: "Posted:",
-            value: formatPostingDate(job.postingDate),
-            className: "text-sm text-gray-600 dark:text-gray-400"
-        },
-        {
-            label: "Status:",
-            value: job.status || "Active",
-            className: "text-sm text-gray-600 dark:text-gray-400"
-        }
-    ];    const formatPostingDate = (postingDate: string) => {
+    const tableColumns = useMemo(() => [
+        { key: 'title', label: 'Job Title' },
+        { key: 'location', label: 'Location' },
+        { key: 'salary', label: 'Salary' },
+        { key: 'experience', label: 'Experience' },
+        { key: 'applications', label: 'Applications' },
+        { key: 'posted', label: 'Posted' },
+        { key: 'status', label: 'Status' },
+        { key: 'actions', label: '', className: 'text-right' },
+    ], []);
+
+    const formatPostingDate = (postingDate: string) => {
         const timeStrings = [
             "Today", 
             "Yesterday", 
@@ -75,108 +75,122 @@ export default function JobPosts({ jobPosts, formatDate }: JobPostsProps) {
         }
 
           return postingDate;
-    };
-
+    };   
+    
     return (
-        <div className="rounded-xl bg-white p-6 shadow-lg border border-gray-100 dark:bg-gray-800 dark:border-gray-700">            <div className="flex items-center mb-6">
-                
+        <div className="rounded-xl bg-white shadow-lg border border-gray-100 dark:bg-gray-800 dark:border-gray-700">
+            <div className="flex items-center p-6">
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white">Job Posts ({jobPosts?.length || 0})</h3>
             </div>
-             {jobPosts && jobPosts.length > 0 ? (
-                <>
-                    <div className="space-y-4">
-                        {currentJobs.map((job) => (
-                            <div key={job.id} className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm hover:shadow-md transition-all duration-200">
-                           
-                                <div className="p-6 border-b border-gray-100 dark:border-gray-700">
-                                    <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between">
-                                        <div className="flex-1">
-                                            <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between mb-3">
-                                                <h4 className="text-xl font-semibold text-gray-900 dark:text-white mb-2 lg:mb-0">{job.title}</h4>
-                                                <div className="flex flex-wrap gap-2">                                                    
-                                                    {job.status && (
-                                                        <span className={`inline-flex items-center px-3 py-1 text-xs font-medium rounded-full ${getJobStatusVariant(job.status)}`}>
-                                                            {job.status}
-                                                        </span>
-                                                    )}
-                                                    {job.employmentType && (
-                                                        <span className={`inline-flex items-center px-3 py-1 text-xs font-medium rounded-full ${getEmploymentTypeVariant(job.employmentType)}`}>
-                                                            {job.employmentType}
-                                                        </span>
-                                                    )}
-                                                </div>
-                                            </div>
-                                            
-                                            <div className="flex flex-wrap items-center gap-6 text-sm text-gray-600 dark:text-gray-400">                                                
-                                                {job.location && (
-                                                    <div className="flex items-center gap-2">
-                                                        <LocationIcon className="text-gray-400" />
-                                                        <span>{job.location}</span>
-                                                    </div>
-                                                )}                                                
-                                                {job.salaryRange && (
-                                                    <div className="flex items-center gap-2">
-                                                        <DollarIcon className="text-gray-400" />
-                                                        <span>{job.salaryRange}</span>
-                                                    </div>
-                                                )}                                                
-                                                {job.experienceLevel && (
-                                                    <div className="flex items-center gap-2">
-                                                        <ExperienceIcon className="text-gray-400" />
-                                                        <span>{job.experienceLevel}</span>
-                                                    </div>
+            
+            {jobPosts && jobPosts.length > 0 ? (
+                <>                    
+                <div className="overflow-x-auto">
+                        <Table className="border-collapse">
+                            <TableHeading  columns={tableColumns} />
+                            <TableBody>
+                                {currentJobs.map((job) => (
+                                    <TableRow key={job.id} className="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                                        <TableCell className="py-4 px-6">
+                                            <div className="flex flex-col">
+                                                <h4 className="font-semibold text-gray-900 dark:text-white mb-1">{job.title}</h4>
+                                                {job.description && (
+                                                    <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2">
+                                                        {job.description}
+                                                    </p>
                                                 )}
                                             </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                             
-                                {job.description && (
-                                    <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-700">
-                                        <p className="text-gray-700 dark:text-gray-300 leading-relaxed text-sm line-clamp-2">
-                                            {job.description}
-                                        </p>
-                                    </div>
-                                )}                                
-                                <div className="px-6 py-4 bg-gray-50 dark:bg-gray-800/50">
-                                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                                        <div className="flex items-center gap-8">
-                                            {getJobDetails(job).map((item, index) => (
-                                                <div key={index} className="flex items-center gap-2">
-                                                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{item.label}</span>
-                                                    <span className={item.className}>
-                                                        {item.value}
+                                        </TableCell>
+                                        <TableCell className="py-4 px-6">
+                                            <div className="flex items-center gap-2">
+                                                {job.location ? (
+                                                    <>
+                                                        <LocationIcon className="w-4 h-4 text-gray-400" />
+                                                        <span className="text-sm text-gray-900 dark:text-white">{job.location}</span>
+                                                    </>
+                                                ) : (
+                                                    <span className="text-sm text-gray-400 dark:text-gray-500">Not specified</span>
+                                                )}
+                                            </div>
+                                        </TableCell>
+                                        <TableCell className="py-4 px-6">
+                                            <div className="flex items-center gap-2">
+                                                {job.salaryRange ? (
+                                                    <>
+                                                        <DollarIcon className="w-4 h-4 text-gray-400" />
+                                                        <span className="text-sm text-gray-900 dark:text-white">{job.salaryRange}</span>
+                                                    </>
+                                                ) : (
+                                                    <span className="text-sm text-gray-400 dark:text-gray-500">Not specified</span>
+                                                )}
+                                            </div>
+                                        </TableCell>
+                                        <TableCell className="py-4 px-6">
+                                            <div className="flex items-center gap-2">
+                                                {job.experienceLevel ? (
+                                                    <>
+                                                        <ExperienceIcon className="w-4 h-4 text-gray-400" />
+                                                        <span className="text-sm text-gray-900 dark:text-white">{job.experienceLevel}</span>
+                                                    </>
+                                                ) : (
+                                                    <span className="text-sm text-gray-400 dark:text-gray-500">Not specified</span>
+                                                )}
+                                            </div>
+                                        </TableCell>
+                                        <TableCell className="py-4 px-6 text-center">
+                                            <span className="text-sm font-medium text-gray-900 dark:text-white">
+                                                {job._count?.applicants || 0}
+                                            </span>
+                                        </TableCell>
+                                        <TableCell className="py-4 px-6">
+                                            <p className="text-sm text-gray-900 dark:text-white">
+                                                {formatPostingDate(job.postingDate)}
+                                            </p>
+                                        </TableCell>                                        
+                                        <TableCell className="py-4 px-6">
+                                            <div className="flex flex-wrap gap-2">
+                                                {job.status && (
+                                                    <span className={`inline-flex items-center px-3 py-1 text-xs font-medium rounded-full ${getJobStatusVariant(job.status)}`}>
+                                                        {job.status}
                                                     </span>
-                                                </div>
-                                            ))}
-                                        </div>                                        <Button
-                                            onClick={() => router.push(`/admin/jobs/details/${job.id}`)}
-                                            variant="default"
-                                            size="sm"
-                                            className="lg:w-auto w-full"
-                                            startIcon={<EyeIcon className="w-4 h-4" />}
-                                        >
-                                            View Details
-                                        </Button>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>               
-
-                {totalPages > 1 && (
-                    <div className="flex items-center justify-between mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-                        <div className="text-sm text-gray-500 dark:text-gray-400">
-                            Showing {startIndex + 1} to {Math.min(endIndex, jobPosts.length)} of {jobPosts.length} job posts
-                        </div>
-                        <Pagination
-                            currentPage={currentPage}
-                            totalPages={totalPages}
-                            onPageChange={initPageChange}
-                        />
+                                                )}
+                                                {job.employmentType && (
+                                                    <span className={`inline-flex items-center px-3 py-1 text-xs font-medium rounded-full ${getEmploymentTypeVariant(job.employmentType)}`}>
+                                                        {job.employmentType}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </TableCell>
+                                        <TableCell className="py-4 px-6 text-right">
+                                            <Button
+                                                onClick={() => router.push(`/admin/jobs/details/${job.id}`)}
+                                                variant="ghost"
+                                                size="sm"
+                                                className="text-brand-400"
+                                                startIcon={<EyeIcon className="w-4 h-4" />}
+                                            >
+                                                View
+                                            </Button>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
                     </div>
-                )}</>
+
+                    {totalPages > 1 && (
+                        <div className="flex items-center justify-between mt-6 p-6 pt-6">
+                            <div className="text-sm text-gray-500 dark:text-gray-400">
+                                Showing {startIndex + 1} to {Math.min(endIndex, jobPosts.length)} of {jobPosts.length} job posts
+                            </div>
+                            <Pagination
+                                currentPage={currentPage}
+                                totalPages={totalPages}
+                                onPageChange={initPageChange}
+                            />
+                        </div>
+                    )}
+                </>
             ) : (
                 <NotFoundState 
                     title="No job posts available"
