@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { Modal } from "@/components/ui/modal";
 import { useModal } from "@/hooks/useModal";
 import { openBlogPreview } from "./blogPreview";
@@ -48,13 +48,20 @@ export default function AddNewBlog() {  const [blogPost, setBlogPost] = useState
     { value: '4', text: 'CSS', selected: false },
     { value: '5', text: 'Next.js', selected: false }
   ];
-
-  const initInputChange = (field: keyof BlogPost, value: any) => {
+  const initInputChange = useCallback((field: keyof BlogPost, value: any) => {
     setBlogPost(prev => ({
       ...prev,
       [field]: value
     }));
-  };
+  }, []);
+
+  const handleTitleChange = useCallback((title: string) => {
+    initInputChange('title', title);
+  }, [initInputChange]);
+
+  const handlePermalinkChange = useCallback((permalink: string) => {
+    initInputChange('permalink', permalink);
+  }, [initInputChange]);
   const saveDraft = () => {
     setBlogPost(prev => ({ ...prev, status: 'draft' }));
     
@@ -108,8 +115,8 @@ export default function AddNewBlog() {  const [blogPost, setBlogPost] = useState
          <div className="lg:col-span-3 space-y-6">          <BlogTitle
             title={blogPost.title}
             permalink={blogPost.permalink}
-            onChange={(title: string) => initInputChange('title', title)}
-            onPermalinkChange={(permalink: string) => initInputChange('permalink', permalink)}
+            onChange={handleTitleChange}
+            onPermalinkChange={handlePermalinkChange}
           />
           
           <BlogContentEditor
