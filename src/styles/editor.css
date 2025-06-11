@@ -4,6 +4,7 @@
   border: none !important;
   padding: 1rem;
   line-height: 1.6;
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
 }
 
 /* Force list styles to display properly */
@@ -99,19 +100,39 @@
 .ProseMirror h5,
 .ProseMirror h6 {
   margin: 1rem 0 0.5rem 0;
-  font-weight: 600;
+  font-weight: 700;
+  line-height: 1.25;
+  color: inherit;
 }
 
 .ProseMirror h1 {
-  font-size: 2rem;
+  font-size: 2.25rem;
+  font-weight: 800;
 }
 
 .ProseMirror h2 {
-  font-size: 1.5rem;
+  font-size: 1.875rem;
+  font-weight: 700;
 }
 
 .ProseMirror h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.ProseMirror h4 {
   font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.ProseMirror h5 {
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.ProseMirror h6 {
+  font-size: 1rem;
+  font-weight: 600;
 }
 
 .ProseMirror blockquote {
@@ -169,20 +190,48 @@
 }
 
 .ProseMirror a {
-  color: #3b82f6;
-  text-decoration: underline;
+  color: #3b82f6 !important;
+  text-decoration: underline !important;
+  text-decoration-color: #3b82f6 !important;
+  font-weight: 500;
+  transition: all 0.2s ease;
 }
 
 .ProseMirror a:hover {
-  color: #1d4ed8;
+  color: #1d4ed8 !important;
+  text-decoration-color: #1d4ed8 !important;
 }
 
 .dark .ProseMirror a {
-  color: #60a5fa;
+  color: #60a5fa !important;
+  text-decoration-color: #60a5fa !important;
 }
 
 .dark .ProseMirror a:hover {
-  color: #93c5fd;
+  color: #93c5fd !important;
+  text-decoration-color: #93c5fd !important;
+}
+
+/* Bold text styling */
+.ProseMirror strong,
+.ProseMirror b {
+  font-weight: 700 !important;
+}
+
+/* Italic text styling */
+.ProseMirror em,
+.ProseMirror i {
+  font-style: italic !important;
+}
+
+/* Underline text styling */
+.ProseMirror u {
+  text-decoration: underline !important;
+}
+
+/* Strike-through text styling */
+.ProseMirror s {
+  text-decoration: line-through !important;
 }
 
 /* Selection styles */
@@ -248,20 +297,30 @@
   background-color: #374151;
 }
 
-/* Preview styles to match editor spacing */
-.blog-preview-content p {
+/* Preview styles to match editor exactly */
+.blog-preview-content,
+.preview-container {
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+  line-height: 1.6;
+}
+
+.blog-preview-content p,
+.preview-container p {
   margin: 0.75rem 0;
 }
 
-.blog-preview-content p.mb-3 {
+.blog-preview-content p.mb-3,
+.preview-container p.mb-3 {
   margin-bottom: 0.75rem;
 }
 
-.blog-preview-content p + p {
+.blog-preview-content p + p,
+.preview-container p + p {
   margin-top: 0.75rem;
 }
 
-.blog-preview-content p:empty {
+.blog-preview-content p:empty,
+.preview-container p:empty {
   margin: 0.75rem 0;
   min-height: 1.2em;
 }
@@ -271,42 +330,376 @@
 .blog-preview-content h3,
 .blog-preview-content h4,
 .blog-preview-content h5,
-.blog-preview-content h6 {
-  margin: 1.5rem 0 0.75rem 0;
-  line-height: 1.3;
+.blog-preview-content h6,
+.preview-container h1,
+.preview-container h2,
+.preview-container h3,
+.preview-container h4,
+.preview-container h5,
+.preview-container h6 {
+  margin: 1rem 0 0.5rem 0;
+  font-weight: 700;
+  line-height: 1.25;
+  color: inherit;
+}
+
+.blog-preview-content h1,
+.preview-container h1 {
+  font-size: 2.25rem;
+  font-weight: 800;
+}
+
+.blog-preview-content h2,
+.preview-container h2 {
+  font-size: 1.875rem;
+  font-weight: 700;
+}
+
+.blog-preview-content h3,
+.preview-container h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.blog-preview-content h4,
+.preview-container h4 {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.blog-preview-content h5,
+.preview-container h5 {
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.blog-preview-content h6,
+.preview-container h6 {
+  font-size: 1rem;
+  font-weight: 600;
 }
 
 .blog-preview-content ul,
-.blog-preview-content ol {
+.blog-preview-content ol,
+.preview-container ul,
+.preview-container ol {
   margin: 0.75rem 0;
   padding-left: 1.5rem;
 }
 
-.blog-preview-content ul {
+.blog-preview-content ul,
+.preview-container ul {
   list-style-type: disc;
 }
 
-.blog-preview-content ol {
+.blog-preview-content ol,
+.preview-container ol {
   list-style-type: decimal;
 }
 
-.blog-preview-content li {
+.blog-preview-content li,
+.preview-container li {
   margin: 0.25rem 0;
   display: list-item;
 }
 
-.blog-preview-content ul li {
+.blog-preview-content ul li,
+.preview-container ul li {
   list-style-type: disc;
 }
 
-.blog-preview-content ol li {
+.blog-preview-content ol li,
+.preview-container ol li {
   list-style-type: decimal;
 }
 
-.blog-preview-content img {
+.blog-preview-content img,
+.preview-container img {
   margin: 1rem 0;
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.5rem;
 }
 
+.blog-preview-content a,
+.preview-container a {
+  color: #3b82f6 !important;
+  text-decoration: underline !important;
+  text-decoration-color: #3b82f6 !important;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.blog-preview-content a:hover,
+.preview-container a:hover {
+  color: #1d4ed8 !important;
+  text-decoration-color: #1d4ed8 !important;
+}
+
+.dark .blog-preview-content a,
+.dark .preview-container a {
+  color: #60a5fa !important;
+  text-decoration-color: #60a5fa !important;
+}
+
+.dark .blog-preview-content a:hover,
+.dark .preview-container a:hover {
+  color: #93c5fd !important;
+  text-decoration-color: #93c5fd !important;
+}
+
+/* Bold text styling for preview */
+.blog-preview-content strong,
+.blog-preview-content b,
+.preview-container strong,
+.preview-container b {
+  font-weight: 700 !important;
+}
+
+/* Italic text styling for preview */
+.blog-preview-content em,
+.blog-preview-content i,
+.preview-container em,
+.preview-container i {
+  font-style: italic !important;
+}
+
+/* Underline text styling for preview */
+.blog-preview-content u,
+.preview-container u {
+  text-decoration: underline !important;
+}
+
+/* Strike-through text styling for preview */
+.blog-preview-content s,
+.preview-container s {
+  text-decoration: line-through !important;
+}
+
+/* Blockquote styling for preview */
+.blog-preview-content blockquote,
+.preview-container blockquote {
+  border-left: 4px solid #e5e7eb;
+  padding-left: 1rem;
+  margin: 1rem 0;
+  font-style: italic;
+  color: #6b7280;
+}
+
+.dark .blog-preview-content blockquote,
+.dark .preview-container blockquote {
+  border-left-color: #4b5563;
+  color: #9ca3af;
+}
+
+/* Code styling for preview */
+.blog-preview-content code,
+.preview-container code {
+  background-color: #f3f4f6;
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
+  font-family: 'Courier New', monospace;
+  font-size: 0.875rem;
+}
+
+.dark .blog-preview-content code,
+.dark .preview-container code {
+  background-color: #374151;
+  color: #e5e7eb;
+}
+
+.blog-preview-content pre,
+.preview-container pre {
+  background-color: #f3f4f6;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin: 1rem 0;
+  overflow-x: auto;
+}
+
+.dark .blog-preview-content pre,
+.dark .preview-container pre {
+  background-color: #1f2937;
+}
+
+.blog-preview-content pre code,
+.preview-container pre code {
+  background: none;
+  padding: 0;
+  font-size: 0.875rem;
+  color: inherit;
+}
+
+
+/* Override Tailwind prose styles to ensure consistency */
+.prose .ProseMirror strong,
+.prose .ProseMirror b {
+  font-weight: 700 !important;
+}
+
+.prose .ProseMirror em,
+.prose .ProseMirror i {
+  font-style: italic !important;
+}
+
+.prose .ProseMirror u {
+  text-decoration: underline !important;
+}
+
+.prose .ProseMirror s {
+  text-decoration: line-through !important;
+}
+
+.prose .ProseMirror a {
+  color: #3b82f6 !important;
+  text-decoration: underline !important;
+  text-decoration-color: #3b82f6 !important;
+  font-weight: 500 !important;
+}
+
+.prose .ProseMirror a:hover {
+  color: #1d4ed8 !important;
+  text-decoration-color: #1d4ed8 !important;
+}
+
+.dark .prose .ProseMirror a {
+  color: #60a5fa !important;
+  text-decoration-color: #60a5fa !important;
+}
+
+.dark .prose .ProseMirror a:hover {
+  color: #93c5fd !important;
+  text-decoration-color: #93c5fd !important;
+}
+
+.prose .ProseMirror h1 {
+  font-size: 2.25rem !important;
+  font-weight: 800 !important;
+  line-height: 1.25 !important;
+}
+
+.prose .ProseMirror h2 {
+  font-size: 1.875rem !important;
+  font-weight: 700 !important;
+  line-height: 1.25 !important;
+}
+
+.prose .ProseMirror h3 {
+  font-size: 1.5rem !important;
+  font-weight: 600 !important;
+  line-height: 1.25 !important;
+}
+
+.prose .ProseMirror h4 {
+  font-size: 1.25rem !important;
+  font-weight: 600 !important;
+  line-height: 1.25 !important;
+}
+
+.prose .ProseMirror h5 {
+  font-size: 1.125rem !important;
+  font-weight: 600 !important;
+  line-height: 1.25 !important;
+}
+
+.prose .ProseMirror h6 {
+  font-size: 1rem !important;
+  font-weight: 600 !important;
+  line-height: 1.25 !important;
+}
+
+/* Ensure preview content overrides prose styles */
+.prose .blog-preview-content strong,
+.prose .blog-preview-content b,
+.prose .preview-container strong,
+.prose .preview-container b {
+  font-weight: 700 !important;
+}
+
+.prose .blog-preview-content em,
+.prose .blog-preview-content i,
+.prose .preview-container em,
+.prose .preview-container i {
+  font-style: italic !important;
+}
+
+.prose .blog-preview-content u,
+.prose .preview-container u {
+  text-decoration: underline !important;
+}
+
+.prose .blog-preview-content s,
+.prose .preview-container s {
+  text-decoration: line-through !important;
+}
+
+.prose .blog-preview-content a,
+.prose .preview-container a {
+  color: #3b82f6 !important;
+  text-decoration: underline !important;
+  text-decoration-color: #3b82f6 !important;
+  font-weight: 500 !important;
+}
+
+.prose .blog-preview-content a:hover,
+.prose .preview-container a:hover {
+  color: #1d4ed8 !important;
+  text-decoration-color: #1d4ed8 !important;
+}
+
+.dark .prose .blog-preview-content a,
+.dark .prose .preview-container a {
+  color: #60a5fa !important;
+  text-decoration-color: #60a5fa !important;
+}
+
+.dark .prose .blog-preview-content a:hover,
+.dark .prose .preview-container a:hover {
+  color: #93c5fd !important;
+  text-decoration-color: #93c5fd !important;
+}
+
+.prose .blog-preview-content h1,
+.prose .preview-container h1 {
+  font-size: 2.25rem !important;
+  font-weight: 800 !important;
+  line-height: 1.25 !important;
+}
+
+.prose .blog-preview-content h2,
+.prose .preview-container h2 {
+  font-size: 1.875rem !important;
+  font-weight: 700 !important;
+  line-height: 1.25 !important;
+}
+
+.prose .blog-preview-content h3,
+.prose .preview-container h3 {
+  font-size: 1.5rem !important;
+  font-weight: 600 !important;
+  line-height: 1.25 !important;
+}
+
+.prose .blog-preview-content h4,
+.prose .preview-container h4 {
+  font-size: 1.25rem !important;
+  font-weight: 600 !important;
+  line-height: 1.25 !important;
+}
+
+.prose .blog-preview-content h5,
+.prose .preview-container h5 {
+  font-size: 1.125rem !important;
+  font-weight: 600 !important;
+  line-height: 1.25 !important;
+}
+
+.prose .blog-preview-content h6,
+.prose .preview-container h6 {
+  font-size: 1rem !important;
+  font-weight: 600 !important;
+  line-height: 1.25 !important;
+}
 
 /* Template image placeholder styles */
 .ProseMirror img[data-template-image="true"] {
@@ -400,6 +793,268 @@
 }
 
 /* Preview mode: disable interactions for template and replaced images */
+/* Utility class for any preview container to match editor styling exactly */
+.rich-text-preview {
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+  line-height: 1.6;
+}
+
+.rich-text-preview p {
+  margin: 0.75rem 0;
+}
+
+.rich-text-preview p.mb-3 {
+  margin-bottom: 0.75rem;
+}
+
+.rich-text-preview p + p {
+  margin-top: 0.75rem;
+}
+
+.rich-text-preview p:empty {
+  margin: 0.75rem 0;
+  min-height: 1.2em;
+}
+
+.rich-text-preview h1,
+.rich-text-preview h2,
+.rich-text-preview h3,
+.rich-text-preview h4,
+.rich-text-preview h5,
+.rich-text-preview h6 {
+  margin: 1rem 0 0.5rem 0;
+  font-weight: 700;
+  line-height: 1.25;
+  color: inherit;
+}
+
+.rich-text-preview h1 {
+  font-size: 2.25rem;
+  font-weight: 800;
+}
+
+.rich-text-preview h2 {
+  font-size: 1.875rem;
+  font-weight: 700;
+}
+
+.rich-text-preview h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.rich-text-preview h4 {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.rich-text-preview h5 {
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.rich-text-preview h6 {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.rich-text-preview ul,
+.rich-text-preview ol {
+  margin: 0.75rem 0;
+  padding-left: 1.5rem;
+}
+
+.rich-text-preview ul {
+  list-style-type: disc;
+}
+
+.rich-text-preview ol {
+  list-style-type: decimal;
+}
+
+.rich-text-preview li {
+  margin: 0.25rem 0;
+  display: list-item;
+}
+
+.rich-text-preview ul li {
+  list-style-type: disc;
+}
+
+.rich-text-preview ol li {
+  list-style-type: decimal;
+}
+
+.rich-text-preview img {
+  margin: 1rem 0;
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.5rem;
+}
+
+.rich-text-preview a {
+  color: #3b82f6 !important;
+  text-decoration: underline !important;
+  text-decoration-color: #3b82f6 !important;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.rich-text-preview a:hover {
+  color: #1d4ed8 !important;
+  text-decoration-color: #1d4ed8 !important;
+}
+
+.dark .rich-text-preview a {
+  color: #60a5fa !important;
+  text-decoration-color: #60a5fa !important;
+}
+
+.dark .rich-text-preview a:hover {
+  color: #93c5fd !important;
+  text-decoration-color: #93c5fd !important;
+}
+
+.rich-text-preview strong,
+.rich-text-preview b {
+  font-weight: 700 !important;
+}
+
+.rich-text-preview em,
+.rich-text-preview i {
+  font-style: italic !important;
+}
+
+.rich-text-preview u {
+  text-decoration: underline !important;
+}
+
+.rich-text-preview s {
+  text-decoration: line-through !important;
+}
+
+.rich-text-preview blockquote {
+  border-left: 4px solid #e5e7eb;
+  padding-left: 1rem;
+  margin: 1rem 0;
+  font-style: italic;
+  color: #6b7280;
+}
+
+.dark .rich-text-preview blockquote {
+  border-left-color: #4b5563;
+  color: #9ca3af;
+}
+
+.rich-text-preview code {
+  background-color: #f3f4f6;
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
+  font-family: 'Courier New', monospace;
+  font-size: 0.875rem;
+}
+
+.dark .rich-text-preview code {
+  background-color: #374151;
+  color: #e5e7eb;
+}
+
+.rich-text-preview pre {
+  background-color: #f3f4f6;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin: 1rem 0;
+  overflow-x: auto;
+}
+
+.dark .rich-text-preview pre {
+  background-color: #1f2937;
+}
+
+.rich-text-preview pre code {
+  background: none;
+  padding: 0;
+  font-size: 0.875rem;
+  color: inherit;
+}
+
+/* Override prose styles when using rich-text-preview class */
+.prose .rich-text-preview h1 {
+  font-size: 2.25rem !important;
+  font-weight: 800 !important;
+  line-height: 1.25 !important;
+}
+
+.prose .rich-text-preview h2 {
+  font-size: 1.875rem !important;
+  font-weight: 700 !important;
+  line-height: 1.25 !important;
+}
+
+.prose .rich-text-preview h3 {
+  font-size: 1.5rem !important;
+  font-weight: 600 !important;
+  line-height: 1.25 !important;
+}
+
+.prose .rich-text-preview h4 {
+  font-size: 1.25rem !important;
+  font-weight: 600 !important;
+  line-height: 1.25 !important;
+}
+
+.prose .rich-text-preview h5 {
+  font-size: 1.125rem !important;
+  font-weight: 600 !important;
+  line-height: 1.25 !important;
+}
+
+.prose .rich-text-preview h6 {
+  font-size: 1rem !important;
+  font-weight: 600 !important;
+  line-height: 1.25 !important;
+}
+
+.prose .rich-text-preview strong,
+.prose .rich-text-preview b {
+  font-weight: 700 !important;
+}
+
+.prose .rich-text-preview em,
+.prose .rich-text-preview i {
+  font-style: italic !important;
+}
+
+.prose .rich-text-preview u {
+  text-decoration: underline !important;
+}
+
+.prose .rich-text-preview s {
+  text-decoration: line-through !important;
+}
+
+.prose .rich-text-preview a {
+  color: #3b82f6 !important;
+  text-decoration: underline !important;
+  text-decoration-color: #3b82f6 !important;
+  font-weight: 500 !important;
+}
+
+.prose .rich-text-preview a:hover {
+  color: #1d4ed8 !important;
+  text-decoration-color: #1d4ed8 !important;
+}
+
+.dark .prose .rich-text-preview a {
+  color: #60a5fa !important;
+  text-decoration-color: #60a5fa !important;
+}
+
+.dark .prose .rich-text-preview a:hover {
+  color: #93c5fd !important;
+  text-decoration-color: #93c5fd !important;
+}
+
 .preview-container img[data-template-image="true"],
 .preview-container img[data-template-image="replaced"] {
   cursor: not-allowed !important;

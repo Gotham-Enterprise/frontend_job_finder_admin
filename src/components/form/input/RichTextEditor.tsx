@@ -182,16 +182,17 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
     if (editor?.isActive("heading", { level: 5 })) return "Heading 5";
     if (editor?.isActive("heading", { level: 6 })) return "Heading 6";
     return "Paragraph";
-  };
-  const editor = useEditor({
+  };  const editor = useEditor({
     extensions: [
       StarterKit.configure({
         paragraph: false,
-      }),      Paragraph.configure({
+      }),
+      Paragraph.configure({
         HTMLAttributes: {
           class: 'mb-3', 
         },
-      }),      Image.configure({
+      }),
+      Image.configure({
         HTMLAttributes: {
           class: "max-w-full h-auto rounded-lg",
         },
@@ -204,6 +205,9 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
       Underline,
       Link.configure({
         openOnClick: false,
+        HTMLAttributes: {
+          class: 'text-blue-600 underline hover:text-blue-800 font-medium',
+        },
       }),
       TextStyle,
       Color,
@@ -212,9 +216,10 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
     onUpdate: ({ editor }) => {
       const html = editor.getHTML();
       onChange?.(html);
-    },editorProps: {
+    },
+    editorProps: {
       attributes: {
-        class: `prose prose-sm sm:prose lg:prose-lg xl:prose-2xl mx-auto focus:outline-none dark:prose-invert prose-ul:list-disc prose-ol:list-decimal prose-li:marker:text-current ${className}`,
+        class: `prose prose-sm sm:prose lg:prose-lg xl:prose-2xl mx-auto focus:outline-none dark:prose-invert prose-ul:list-disc prose-ol:list-decimal prose-li:marker:text-current prose-strong:font-bold prose-em:italic prose-a:text-blue-600 prose-a:underline prose-a:font-medium ${className}`,
         style: `min-height: ${minHeight}px;`,
       },
     },

@@ -399,21 +399,7 @@ export const contentTemplates: ContentTemplate[] = [  {
       }
     ]
   },
-  {
-    id: 'call-to-action',
-    name: 'Call to Action',
-    description: 'Highlighted section to encourage reader action',
-    preview: '📢 CTA',
-    category: 'mixed',
-    blocks: [
-      {
-        id: 'cta-container',
-        type: 'text',
-        content: '<div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 3rem 2rem; border-radius: 12px; text-align: center; margin: 3rem 0;"><h2 style="color: white; margin: 0 0 1rem 0;">Ready to Get Started?</h2><p style="font-size: 18px; margin: 0 0 2rem 0; opacity: 0.9;">Take action today and transform your [specific outcome].</p><div style="margin: 2rem 0;"><a href="#" style="display: inline-block; background: white; color: #667eea; padding: 1rem 2rem; border-radius: 8px; text-decoration: none; font-weight: 600; transition: transform 0.2s;">Get Started Now</a></div><p style="font-size: 14px; opacity: 0.8; margin: 1rem 0 0 0;">No commitment required • Free trial available</p></div>',
-        placeholder: 'Call to action section',
-      }
-    ]
-  }
+
 ];
 
 
@@ -444,7 +430,6 @@ export const generateTemplateHTML = (template: ContentTemplate): string => {
     return block.content;
   }).join('\n\n');
   
-  // Clean up any remaining onclick handlers since we handle clicks in the editor
   const cleanedContent = templateContent.replace(/onclick="[^"]*"/g, '');
   
   return cleanedContent;
