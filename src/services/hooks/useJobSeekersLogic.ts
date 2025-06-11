@@ -23,14 +23,13 @@ export const useJobSeekersLogic = () => {
   const { data: occupationsData, isLoading: isOccupationsLoading } = useOccupations();
   const { data: statesData, isLoading: isStatesLoading } = useStates();
   const { mutate: viewResume, isPending: isViewingResume } = useViewResume();
-
   const tableColumns = useMemo(() => [
     { key: 'name', label: 'Name' },
     { key: 'specialties', label: 'Occupation' },
     { key: 'state', label: 'State' },
     { key: 'resume', label: 'Resume' },
     { key: 'dateJoined', label: 'Date Joined' },
-    { key: 'experience', label: 'Experience' },
+    { key: 'lastActivity', label: 'Last Activity' },
     { key: 'status', label: 'Status' },
     { key: 'actions', label: '', className: 'text-right' },
   ], []);
