@@ -2,7 +2,7 @@ import PlusIcon from "./plus.svg";
 import CloseIcon from "./close.svg";
 import BoxIcon from "./box.svg";
 import CheckCircleIcon from "./check-circle.svg";
-import AlertIcon from "./alert.svg";
+import AlertIcon from "./info.svg";
 import InfoIcon from "./info.svg";
 import ErrorIcon from "./info-hexa.svg";
 import BoltIcon from "./bolt.svg";
@@ -52,6 +52,13 @@ import ChatIcon from "./chat.svg";
 import MoreDotIcon from "./more-dot.svg";
 import BellIcon from "./bell.svg";
 import FunnelIcon from "../components/ui/icons/Funnel";
+import AlignLeftIcon from "./align-left";
+import AlignCenterIcon from "./align-center";
+import AlignRightIcon from "./align-right";
+import QuoteIcon from "./quote";
+import CodeBlockIcon from "./code-block";
+import LinkIcon from "./link";
+import ImageIcon from "./image";
 
 export {
   DownloadIcon,
@@ -104,7 +111,15 @@ export {
   PlugInIcon,
   DocsIcon,
   MailIcon,
-  HorizontaLDots,  ChevronUpIcon,
+  HorizontaLDots,
+  ChevronUpIcon,
   ChatIcon,
   FunnelIcon,
+  AlignLeftIcon,
+  AlignCenterIcon,
+  AlignRightIcon,
+  QuoteIcon,
+  CodeBlockIcon,
+  LinkIcon,
+  ImageIcon,
 };

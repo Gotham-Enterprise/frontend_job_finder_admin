@@ -6,6 +6,69 @@
   line-height: 1.6;
 }
 
+/* Force list styles to display properly */
+.ProseMirror ul,
+.ProseMirror ol {
+  margin: 0.5rem 0 !important;
+  padding-left: 1.5rem !important;
+}
+
+.ProseMirror ul {
+  list-style-type: disc !important;
+}
+
+.ProseMirror ol {
+  list-style-type: decimal !important;
+}
+
+.ProseMirror li {
+  margin: 0.25rem 0 !important;
+  display: list-item !important;
+}
+
+.ProseMirror ul li {
+  list-style-type: disc !important;
+}
+
+.ProseMirror ol li {
+  list-style-type: decimal !important;
+}
+
+/* Override any prose styles that might interfere */
+.prose .ProseMirror ul,
+.prose .ProseMirror ol {
+  list-style: initial !important;
+  margin: 0.5rem 0 !important;
+  padding-left: 1.5rem !important;
+}
+
+.prose .ProseMirror ul li {
+  list-style-type: disc !important;
+}
+
+.prose .ProseMirror ol li {
+  list-style-type: decimal !important;
+}
+
+/* Nested list styles */
+.ProseMirror ul ul {
+  list-style-type: circle !important;
+  margin: 0.25rem 0 !important;
+}
+
+.ProseMirror ul ul ul {
+  list-style-type: square !important;
+}
+
+.ProseMirror ol ol {
+  list-style-type: lower-alpha !important;
+  margin: 0.25rem 0 !important;
+}
+
+.ProseMirror ol ol ol {
+  list-style-type: lower-roman !important;
+}
+
 .ProseMirror p {
   margin: 0.5rem 0;
 }
@@ -49,16 +112,6 @@
 
 .ProseMirror h3 {
   font-size: 1.25rem;
-}
-
-.ProseMirror ul,
-.ProseMirror ol {
-  margin: 0.5rem 0;
-  padding-left: 1.5rem;
-}
-
-.ProseMirror li {
-  margin: 0.25rem 0;
 }
 
 .ProseMirror blockquote {
@@ -227,8 +280,25 @@
   padding-left: 1.5rem;
 }
 
+.blog-preview-content ul {
+  list-style-type: disc;
+}
+
+.blog-preview-content ol {
+  list-style-type: decimal;
+}
+
 .blog-preview-content li {
   margin: 0.25rem 0;
+  display: list-item;
+}
+
+.blog-preview-content ul li {
+  list-style-type: disc;
+}
+
+.blog-preview-content ol li {
+  list-style-type: decimal;
 }
 
 .blog-preview-content img {
