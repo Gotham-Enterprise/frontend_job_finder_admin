@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useRef } from 'react';
+import React, { createContext, useContext, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { authUtils } from '@/services/utils/authUtils';
 import { useLogout } from '@/services/hooks/useAuth';
@@ -31,28 +31,15 @@ export const AutoLogoutProvider: React.FC<AutoLogoutProviderProps> = ({ children
   const { mutate: logout } = useLogout();
   const inactivityTimerRef = useRef<NodeJS.Timeout | null>(null);
   const lastActivityRef = useRef<number>(Date.now());
-
-  const updateLastActivity = () => {
+  const updateLastActivity = useCallback(() => {
     const now = Date.now();
     lastActivityRef.current = now;
     if (typeof window !== 'undefined') {
       localStorage.setItem(LAST_ACTIVITY_KEY, now.toString());
     }
-  };
-  const checkInactivity = () => {
-    if (typeof window === 'undefined') return;
-    
-    const lastActivity = localStorage.getItem(LAST_ACTIVITY_KEY);
-    const currentTime = Date.now();
-    
-    if (lastActivity) {
-      const timeSinceLastActivity = currentTime - parseInt(lastActivity, 10);
-        if (timeSinceLastActivity >= INACTIVITY_TIMEOUT) {
-        performAutoLogout();
-        return;
-      }
-    }
-  };  const performAutoLogout = async () => {
+  }, []);
+
+  const performAutoLogout = useCallback(async () => {
     if (!authUtils.isAuthenticated()) return;
      
     if (inactivityTimerRef.current) {
@@ -68,29 +55,43 @@ export const AutoLogoutProvider: React.FC<AutoLogoutProviderProps> = ({ children
     try {
       await logout();
     } catch (error) {
-
       console.warn('Auto-logout: Backend logout failed, but frontend state was cleared:', error);
     }
 
     router.replace('/login?reason=inactivity');
-  };
+  }, [logout, router]);
 
-  const resetInactivityTimer = () => {
+  const checkInactivity = useCallback(() => {
+    if (typeof window === 'undefined') return;
+    
+    const lastActivity = localStorage.getItem(LAST_ACTIVITY_KEY);
+    const currentTime = Date.now();
+    
+    if (lastActivity) {
+      const timeSinceLastActivity = currentTime - parseInt(lastActivity, 10);
+        if (timeSinceLastActivity >= INACTIVITY_TIMEOUT) {
+        performAutoLogout();
+        return;
+      }
+    }
+  }, [performAutoLogout]);
+
+  const resetInactivityTimer = useCallback(() => {
     if (inactivityTimerRef.current) {
       clearTimeout(inactivityTimerRef.current);
     }
 
-    updateLastActivity();    inactivityTimerRef.current = setTimeout(() => {
+    updateLastActivity();    
+    inactivityTimerRef.current = setTimeout(() => {
       performAutoLogout();
     }, INACTIVITY_TIMEOUT);
-  };
+  }, [updateLastActivity, performAutoLogout]);
 
-  const userActivity = () => {
+  const userActivity = useCallback(() => {
     if (authUtils.isAuthenticated()) {
       resetInactivityTimer();
     }
-  };
-
+  }, [resetInactivityTimer]);
   useEffect(() => {
     if (typeof window === 'undefined') return;
     if (!authUtils.isAuthenticated()) {
@@ -132,8 +133,7 @@ export const AutoLogoutProvider: React.FC<AutoLogoutProviderProps> = ({ children
         window.removeEventListener('storage', storageChange);
       };
     }
-  }, [router]);
-
+  }, [router, checkInactivity, resetInactivityTimer, userActivity]);
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
@@ -144,7 +144,7 @@ export const AutoLogoutProvider: React.FC<AutoLogoutProviderProps> = ({ children
     }, 60000); 
 
     return () => clearInterval(interval);
-  }, []);
+  }, [checkInactivity]);
 
   const contextValue: AutoLogoutContextType = {
     resetInactivityTimer,

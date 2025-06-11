@@ -79,7 +79,8 @@ export default function SubscriptionsPage() {  const searchParams = useSearchPar
                   <p className="text-gray-600 dark:text-gray-400">
                     October 23, 2024
                   </p>
-                </div>                <Button 
+                </div>               
+                 <Button 
                   variant="ghost" 
                   className="padding-0 text-primary dark:text-white whitespace-nowrap" 
                   size="lg"
@@ -176,7 +177,8 @@ export default function SubscriptionsPage() {  const searchParams = useSearchPar
               '100/month Profile views',
               '100/month Resume file downloads',
               'Unlimited Resume database searches'
-            ].map((feature, index) => (              <div key={index} className="flex items-center gap-3">
+            ].map((feature, index) => (              
+            <div key={index} className="flex items-center gap-3">
                 <div className="flex-shrink-0">
                   <CheckLineIcon className="w-5 h-5 text-green-500" />
                 </div>
@@ -200,12 +202,12 @@ export default function SubscriptionsPage() {  const searchParams = useSearchPar
       >
         <div className="p-6">
        
-          <div className="mb-6">
+          <div className="mb-6">            
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
               Cancel subscription
             </h2>
             <p className="text-gray-600 dark:text-gray-400">
-              Once your subscription expires on your next invoice date, you'll lose access to Gotham Enterprises ltd:
+              Once your subscription expires on your next invoice date, you&apos;ll lose access to Gotham Enterprises ltd:
             </p>
           </div>
 

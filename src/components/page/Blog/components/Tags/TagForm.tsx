@@ -42,7 +42,7 @@ const TagForm: React.FC<TagFormProps> = ({
             onChange={(e) => onInputChange('slug', e.target.value)}
           />
           <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-            The "slug" is the URL-friendly version of the name.
+            The &quot;slug&quot; is the URL-friendly version of the name.
           </p>
         </div>
 

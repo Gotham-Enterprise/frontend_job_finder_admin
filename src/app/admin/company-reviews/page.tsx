@@ -1,10 +1,12 @@
 "use client";
 
+import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import CompanyReviews from "@/components/page/CompanyReviews";
 import NotFoundState from "@/components/common/NotFoundState";
+import FullScreenSpinner from "@/components/ui/FullScreenSpinner";
 
-export default function CompanyReviewsPage() {
+function CompanyReviewsContent() {
   const searchParams = useSearchParams();
   const id = searchParams.get('id');
 
@@ -21,4 +23,12 @@ export default function CompanyReviewsPage() {
   }
 
   return <CompanyReviews id={id} />;
+}
+
+export default function CompanyReviewsPage() {
+  return (
+    <Suspense fallback={<FullScreenSpinner isVisible={true} message="Loading..." />}>
+      <CompanyReviewsContent />
+    </Suspense>
+  );
 }

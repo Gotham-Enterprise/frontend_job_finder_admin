@@ -1,5 +1,6 @@
 import React from 'react';
 import { formatDate } from '@/services/utils/dateUtils';
+import Image from "next/image";
 import {
   Table,
   TableBody,
@@ -85,11 +86,15 @@ const BlogTable: React.FC<BlogTableProps> = ({
                   <div className="flex items-center gap-3">
                     {post.featuredImage?.url ? (
                       <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-gray-200 dark:bg-gray-700 flex-shrink-0">
-                        <img
-                          src={post.featuredImage.url}
-                          alt={post.featuredImage.alt || post.title}
-                          className="w-full h-full object-cover"
-                        />
+                            <Image
+                                            width={231}
+                                            height={48}
+                                             className="w-full h-full object-cover"
+                                            src={post.featuredImage.url}
+                                            alt={post.featuredImage.alt || post.title}
+                                          />
+
+                     
                       </div>
                     ) : (
                       <div className="w-12 h-12 rounded-lg bg-gray-200 dark:bg-gray-700 flex items-center justify-center flex-shrink-0">
@@ -113,11 +118,14 @@ const BlogTable: React.FC<BlogTableProps> = ({
                 <TableCell className="py-4 px-6">
                   <div className="flex items-center gap-2">
                     {post.author?.avatar ? (
-                      <img
-                        src={post.author.avatar}
-                        alt={post.author.name}
-                        className="w-6 h-6 rounded-full"
-                      />
+                      <Image
+                      width={231}
+                      height={48}
+                       className="w-6 h-6 rounded-full"
+                       src={post.author.avatar}
+                       alt={post.author.name}
+                    />
+
                     ) : (
                       <div className="w-6 h-6 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center">
                         <span className="text-xs font-medium text-gray-600 dark:text-gray-300">

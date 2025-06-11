@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
 import { setGlobalToastFunction } from '../services/utils/toast';
 
 export interface Toast {
@@ -35,7 +35,11 @@ interface ToastProviderProps {
 export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
   const [toasts, setToasts] = useState<Toast[]>([]);
 
-  const addToast = (toast: Omit<Toast, 'id'>) => {
+  const removeToast = useCallback((id: string) => {
+    setToasts(prev => prev.filter(toast => toast.id !== id));
+  }, []);
+
+  const addToast = useCallback((toast: Omit<Toast, 'id'>) => {
     const id = Math.random().toString(36).substr(2, 9);
     const newToast = { ...toast, id };
     
@@ -46,19 +50,15 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
         removeToast(id);
       }, duration);
     }
-  };
+  }, [removeToast]);
 
   useEffect(() => {
     setGlobalToastFunction(addToast);
-  }, []);
+  }, [addToast]);
 
-  const removeToast = (id: string) => {
-    setToasts(prev => prev.filter(toast => toast.id !== id));
-  };
-
-  const clearToasts = () => {
+  const clearToasts = useCallback(() => {
     setToasts([]);
-  };
+  }, []);
 
   return (
     <ToastContext.Provider value={{ toasts, addToast, removeToast, clearToasts }}>

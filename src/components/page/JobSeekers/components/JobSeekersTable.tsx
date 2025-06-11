@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from "next/image";
 import { formatDate } from '@/services/utils/dateUtils';
 import {
   Table,
@@ -48,11 +49,14 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
                   <div className="flex items-center gap-3">
                     <div className="relative w-10 h-10 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700">
                       {jobSeeker.profilePicture?.url ? (
-                        <img
-                          src={jobSeeker.profilePicture.url}
-                          alt={jobSeeker.name}
-                          className="w-full h-full object-cover"
-                        />
+                      
+                          <Image
+                                            width={231}
+                                            height={48}
+                                            src={jobSeeker.profilePicture.url}
+                                            alt={jobSeeker.name}
+                                            className="w-full h-full object-cover"
+                                          />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-gray-500 dark:text-gray-400 text-sm font-medium">
                           {jobSeeker.name.split(' ').map((n: string) => n.charAt(0)).join('').substring(0, 2)}

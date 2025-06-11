@@ -277,7 +277,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
               isActive={editor.isActive("blockquote")}
               title="Quote"
             >
-              "
+              &quot;
             </ToolbarButton>
             <ToolbarButton
               onClick={() => editor.chain().focus().toggleCodeBlock().run()}
