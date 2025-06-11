@@ -27,3 +27,31 @@ export interface TagOption {
   text: string;
   selected: boolean;
 }
+
+export interface TemplateBlock {
+  id: string;
+  type: 'image' | 'text' | 'heading' | 'list' | 'quote';
+  content: string;
+  placeholder?: string;
+  props?: {
+    level?: number; 
+    alignment?: 'left' | 'center' | 'right';
+    style?: 'disc' | 'decimal'; 
+  };
+}
+
+export interface ContentTemplate {
+  id: string;
+  name: string;
+  description: string;
+  preview: string;
+  blocks: TemplateBlock[];
+  category: 'layout' | 'content' | 'mixed';
+}
+
+export interface TemplateCategory {
+  id: string;
+  name: string;
+  icon: string;
+  templates: ContentTemplate[];
+}

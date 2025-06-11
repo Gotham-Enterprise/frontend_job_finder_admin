@@ -183,21 +183,20 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
     if (editor?.isActive("heading", { level: 6 })) return "Heading 6";
     return "Paragraph";
   };
-
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
         paragraph: false,
-      }),
-      Paragraph.configure({
+      }),      Paragraph.configure({
         HTMLAttributes: {
           class: 'mb-3', 
         },
-      }),
-      Image.configure({
+      }),      Image.configure({
         HTMLAttributes: {
           class: "max-w-full h-auto rounded-lg",
         },
+        allowBase64: true,
+        inline: false,
       }),
       TextAlign.configure({
         types: ["heading", "paragraph"],
@@ -213,7 +212,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
     onUpdate: ({ editor }) => {
       const html = editor.getHTML();
       onChange?.(html);
-    },    editorProps: {
+    },editorProps: {
       attributes: {
         class: `prose prose-sm sm:prose lg:prose-lg xl:prose-2xl mx-auto focus:outline-none dark:prose-invert prose-ul:list-disc prose-ol:list-decimal prose-li:marker:text-current ${className}`,
         style: `min-height: ${minHeight}px;`,
@@ -269,7 +268,175 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
     if (url && editor) {
       editor.chain().focus().setLink({ href: url }).run();
     }
-  };
+  };   
+  useEffect(() => {
+    if (!editor) return;
+
+    const imageClick = (event: Event) => {
+      const target = event.target as HTMLImageElement;
+      
+      const templateImageAttr = target.getAttribute('data-template-image');
+      const isPlaceholder = target.src?.includes('image-placeholder.jpg');
+      const isTemplateImage = templateImageAttr === 'true' || templateImageAttr === 'replaced' || isPlaceholder;
+      
+      if (target.tagName === 'IMG' && isTemplateImage) {
+        
+        console.log('Template image detected, opening file picker...');
+        
+        event.preventDefault();
+        event.stopPropagation();
+
+
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.style.display = 'none';
+        
+        input.onchange = (e) => {
+          const file = (e.target as HTMLInputElement).files?.[0];
+          if (file) {
+            console.log('File selected:', file.name);
+            
+            const reader = new FileReader();
+            reader.onload = (loadEvent) => {
+              const newSrc = loadEvent.target?.result as string;
+              if (newSrc) {
+                console.log('File read, updating image...');
+                
+                try {
+                
+                  const { state } = editor.view;
+                  let imagePos = -1;
+                  let imageNode: any = null;
+                  
+                  state.doc.descendants((node: any, pos: number) => {
+                    if (node.type.name === 'image' && node.attrs.src === target.src) {
+                      imagePos = pos;
+                      imageNode = node;
+                      return false;
+                    }
+                  });
+                  
+                  if (imagePos >= 0 && imageNode) {
+                    console.log('Found image node at position:', imagePos);
+                    
+                    
+                    const newAttrs = {
+                      src: newSrc,
+                      alt: file.name,
+                      class: 'max-w-full h-auto rounded-lg'
+                    };
+                    
+                   
+                    const tr = state.tr.setNodeMarkup(imagePos, undefined, newAttrs);
+                    editor.view.dispatch(tr);
+                    
+             
+                    
+                   
+                    setTimeout(() => {
+                      const updatedImg = editor.view.dom.querySelector(`img[src="${newSrc}"]`) as HTMLImageElement;
+                      if (updatedImg) {
+                        updatedImg.setAttribute('data-template-image', 'replaced');
+                        console.log('Set data-template-image="replaced" on updated image');
+                      }
+                      editor.commands.focus();
+                    }, 100);
+                  } else {
+                  
+                    editor.chain()
+                      .focus()
+                      .setImage({ 
+                        src: newSrc, 
+                        alt: file.name
+                      })
+                      .run();
+                      
+                   
+                    setTimeout(() => {
+                      const newImg = editor.view.dom.querySelector(`img[src="${newSrc}"]`) as HTMLImageElement;
+                      if (newImg) {
+                        newImg.setAttribute('data-template-image', 'replaced');
+                      }
+                    }, 100);
+                  }
+                } catch (error) {
+                 
+                  editor.chain()
+                    .focus()
+                    .setImage({ 
+                      src: newSrc, 
+                      alt: file.name
+                    })
+                    .run();
+                }
+              }
+            };
+            reader.readAsDataURL(file);
+          }
+          
+        
+          if (document.body.contains(input)) {
+            document.body.removeChild(input);
+          }
+        };
+        
+       
+        document.body.appendChild(input);
+        input.click();
+      }
+    };
+
+    const editorElement = editor.view.dom;
+    editorElement.addEventListener('click', imageClick);
+
+    return () => {
+      editorElement.removeEventListener('click', imageClick);
+    };
+  }, [editor]);
+
+
+  useEffect(() => {
+    if (!editor) return;
+
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.type === 'childList') {
+          mutation.addedNodes.forEach((node) => {
+            if (node.nodeType === Node.ELEMENT_NODE) {
+              const element = node as Element;
+              const images = element.tagName === 'IMG' ? [element] : element.querySelectorAll('img');
+              
+              images.forEach((img: Element) => {
+                const imgEl = img as HTMLImageElement;
+                
+                if (imgEl.src?.includes('image-placeholder.jpg') && !imgEl.getAttribute('data-template-image')) {
+                  imgEl.setAttribute('data-template-image', 'true');
+                }
+               
+                if (!imgEl.src?.includes('image-placeholder.jpg') && !imgEl.getAttribute('data-template-image')) {
+                  
+                  if (imgEl.className.includes('max-w-full')) {
+                    imgEl.setAttribute('data-template-image', 'replaced');
+                  }
+                }
+              });
+            }
+          });
+        }
+      });
+    });
+
+    const editorElement = editor.view.dom;
+    observer.observe(editorElement, {
+      childList: true,
+      subtree: true
+    });
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [editor]);
 
   if (!editor) {
     return <div>Loading editor...</div>;
@@ -308,7 +475,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
               title="Bold"
             >
              <svg className="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                        <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" stroke-width="2" d="M8 5h4.5a3.5 3.5 0 1 1 0 7H8m0-7v7m0-7H6m2 7h6.5a3.5 3.5 0 1 1 0 7H8m0-7v7m0 0H6"></path>
+                        <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 5h4.5a3.5 3.5 0 1 1 0 7H8m0-7v7m0-7H6m2 7h6.5a3.5 3.5 0 1 1 0 7H8m0-7v7m0 0H6"></path>
                     </svg>
             </ToolbarButton>
             <ToolbarButton
@@ -317,7 +484,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
               title="Italic"
             >
              <svg className="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                        <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" stroke-width="2" d="m8.874 19 6.143-14M6 19h6.33m-.66-14H18"></path>
+                        <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m8.874 19 6.143-14M6 19h6.33m-.66-14H18"></path>
                     </svg>
             </ToolbarButton>
             <ToolbarButton
@@ -326,7 +493,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
               title="Underline"
             >
               <svg className="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                        <path stroke="currentColor" strokeLinecap="round" stroke-width="2" d="M6 19h12M8 5v9a4 4 0 0 0 8 0V5M6 5h4m4 0h4"></path>
+                        <path stroke="currentColor" strokeLinecap="round" strokeWidth="2" d="M6 19h12M8 5v9a4 4 0 0 0 8 0V5M6 5h4m4 0h4"></path>
                     </svg>
             </ToolbarButton>
             <ToolbarButton

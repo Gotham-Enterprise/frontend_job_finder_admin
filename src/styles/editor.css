@@ -164,6 +164,8 @@
   height: auto;
   border-radius: 0.5rem;
   margin: 1rem 0;
+  border: 2px dotted #ccc;
+  cursor: pointer;
 }
 
 .ProseMirror a {
@@ -303,4 +305,120 @@
 
 .blog-preview-content img {
   margin: 1rem 0;
+}
+
+
+/* Template image placeholder styles */
+.ProseMirror img[data-template-image="true"] {
+  border: 2px dashed #9ca3af !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  position: relative;
+  background-color: #f9fafb;
+  padding: 0.5rem;
+}
+
+.ProseMirror img[data-template-image="true"]:hover {
+  border-color: #3b82f6 !important;
+  background-color: #eff6ff;
+  transform: scale(1.01);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
+}
+
+/* Hover overlay for template images */
+.ProseMirror img[data-template-image="true"]::after {
+  content: '📷 Click to replace image';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 10;
+}
+
+.ProseMirror img[data-template-image="true"]:hover::after {
+  opacity: 1;
+}
+
+.ProseMirror img[data-template-image="replaced"] {
+  border: 2px dotted #ccc !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  position: relative;
+}
+
+.ProseMirror img[data-template-image="replaced"]:hover {
+  border-color: #ccc !important;
+  transform: scale(1.01);
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
+}
+
+.ProseMirror img[data-template-image="replaced"]::after {
+  content: '🔄 Click to replace image';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(16, 185, 129, 0.9);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 10;
+}
+
+.ProseMirror img[data-template-image="replaced"]:hover::after {
+  opacity: 1;
+}
+
+/* Styles for replaced images */
+.ProseMirror img[data-template-image="false"] {
+  border: none !important;
+  cursor: default !important;
+  background-color: transparent !important;
+  padding: 0 !important;
+}
+
+.ProseMirror img[data-template-image="false"]:hover {
+  transform: none !important;
+  box-shadow: none !important;
+  background-color: transparent !important;
+}
+
+/* Preview mode: disable interactions for template and replaced images */
+.preview-container img[data-template-image="true"],
+.preview-container img[data-template-image="replaced"] {
+  cursor: not-allowed !important;
+  filter: grayscale(10%);
+  opacity: 0.9;
+  border: 2px solid #e5e7eb !important;
+  background-color: #f3f4f6 !important;
+}
+
+.preview-container img[data-template-image="true"]:hover,
+.preview-container img[data-template-image="replaced"]:hover {
+  transform: none !important;
+  box-shadow: none !important;
+  border-color: #e5e7eb !important;
+  background-color: #f3f4f6 !important;
+}
+
+.preview-container img[data-template-image="true"]::after,
+.preview-container img[data-template-image="replaced"]::after {
+  content: '🔒 Image editing disabled in preview mode';
+  background: rgba(156, 163, 175, 0.9);
 }

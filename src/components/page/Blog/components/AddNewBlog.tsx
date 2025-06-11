@@ -6,6 +6,7 @@ import { openBlogPreview } from "./blogPreview";
 import {
   BlogTitle,
   BlogContentEditor,
+  BlogTemplatesSelector,
   BlogSEOSettings,
   BlogPublishSettings,
   BlogCategoriesSelector,
@@ -55,11 +56,11 @@ export default function AddNewBlog() {  const [blogPost, setBlogPost] = useState
     }));
   }, []);
 
-  const handleTitleChange = useCallback((title: string) => {
+  const titleChange = useCallback((title: string) => {
     initInputChange('title', title);
   }, [initInputChange]);
 
-  const handlePermalinkChange = useCallback((permalink: string) => {
+  const permalinkChange = useCallback((permalink: string) => {
     initInputChange('permalink', permalink);
   }, [initInputChange]);
   const saveDraft = () => {
@@ -115,16 +116,20 @@ export default function AddNewBlog() {  const [blogPost, setBlogPost] = useState
          <div className="lg:col-span-3 space-y-6">          <BlogTitle
             title={blogPost.title}
             permalink={blogPost.permalink}
-            onChange={handleTitleChange}
-            onPermalinkChange={handlePermalinkChange}
+            onChange={titleChange}
+            onPermalinkChange={permalinkChange}
           />
-          
-          <BlogContentEditor
+            <BlogContentEditor
             content={blogPost.content}
             onChange={(content: string) => initInputChange('content', content)}
             activeTab={activeTab}
             onTabChange={setActiveTab}
             renderPreview={renderPreview}
+          />
+
+          <BlogTemplatesSelector
+            currentContent={blogPost.content}
+            onTemplateSelect={(content: string) => initInputChange('content', content)}
           />
 
           <BlogSEOSettings

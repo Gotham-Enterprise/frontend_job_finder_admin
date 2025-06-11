@@ -54,10 +54,42 @@ const BlogContentEditor: React.FC<BlogContentEditorProps> = ({
             placeholder="Tell your story... Use the toolbar above to format text, add images, and create rich content."
             minHeight={500}
           />
-        </div>
-        {activeTab === 'preview' && (
+        </div>        {activeTab === 'preview' && (
           <div className="min-h-[500px] p-4 bg-gray-50 dark:bg-gray-900 rounded-lg">
-            {renderPreview()}
+            <style dangerouslySetInnerHTML={{
+              __html: `
+                .preview-container img[data-template-image="true"] {
+                  cursor: not-allowed !important;
+                  filter: grayscale(20%);
+                  opacity: 0.9;
+                  border: 2px solid #e5e7eb !important;
+                }
+                .preview-container img[data-template-image="true"]:hover {
+                  transform: none !important;
+                }
+              `
+            }} />
+            <div 
+              className="preview-container"
+              style={{ 
+                pointerEvents: 'auto',
+              }}
+              onClickCapture={(e) => {
+               
+                const target = e.target as HTMLElement;
+                if (target.tagName === 'IMG' && target.getAttribute('data-template-image') === 'true') {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }
+              }}
+            >
+              {renderPreview()}
+            </div>
+            <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+              <p className="text-sm text-blue-600 dark:text-blue-400">
+                📝 <strong>Preview Mode:</strong> Switch to "Write" mode to edit content and replace images.
+              </p>
+            </div>
           </div>
         )}
       </div>
