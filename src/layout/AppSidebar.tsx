@@ -5,18 +5,11 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useSidebar } from "../context/SidebarContext";
 import {
-  BoxCubeIcon,
-  CalenderIcon,
   ChevronDownIcon,
   GridIcon,
   GroupIcon,
   HorizontaLDots,
-  ListIcon,
-  PageIcon,
   PieChartIcon,
-  PlugInIcon,
-  TableIcon,
-  TaskIcon,
   UserCircleIcon,
 } from "../icons/index";
 import {
@@ -54,7 +47,9 @@ const navItems: NavItem[] = [
     icon: <BriefcaseIcon />,
     name: "Jobs",
     path: "/admin/jobs",
-     //subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
+     subItems: [
+      { name: "All Jobs", path: "/admin/jobs", pro: false },
+      { name: "Add New", path: "/admin/jobs/create-job/", pro: false }],
   },
   
   {
