@@ -59,7 +59,7 @@ const CompanySearch: React.FC<CompanySearchProps> = ({ onCompanySelect, onSkip }
     }
   ];
 
-  const handleSearch = () => {
+  const initSearch = () => {
     if (!searchQuery.trim()) return;
     
     setIsSearching(true);
@@ -80,7 +80,7 @@ const CompanySearch: React.FC<CompanySearchProps> = ({ onCompanySelect, onSkip }
     setSelectedCompany(company);
   };
 
-  const handleContinue = () => {
+  const initContinue = () => {
     if (selectedCompany) {
       onCompanySelect(selectedCompany);
     }
@@ -91,27 +91,26 @@ const CompanySearch: React.FC<CompanySearchProps> = ({ onCompanySelect, onSkip }
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-8">
         <div className="text-center mb-8">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-            Find Your Company
-          </h2>
-          <p className="text-gray-600 dark:text-gray-400">
-            Search for your company to create a job posting. If your company isn't listed, you can skip this step.
+            Search Employer
+          </h2>          <p className="text-gray-600 dark:text-gray-400">
+            Search for your company to create a job posting. If your company isn&apos;t listed, you can skip this step.
           </p>
-        </div>
-
-        {/* Search Section */}
+        </div>        
         <div className="mb-8">
-          <Label>Company Name, Industry, or Location</Label>
+          <Label>Company Name</Label>
           <div className="flex gap-4 mt-2">
             <div className="flex-1">
-              <Input
+              <input
+                type="text"
                 placeholder="Search for companies (e.g., HealthCare Plus, Hospital, New York)"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                onKeyPress={(e) => e.key === 'Enter' && initSearch()}
+                className="h-11 w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
               />
             </div>
             <Button 
-              onClick={handleSearch}
+              onClick={initSearch}
               disabled={!searchQuery.trim() || isSearching}
               className="px-8"
             >
@@ -119,8 +118,6 @@ const CompanySearch: React.FC<CompanySearchProps> = ({ onCompanySelect, onSkip }
             </Button>
           </div>
         </div>
-
-        {/* Search Results */}
         {companies.length > 0 && (
           <div className="mb-8">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
@@ -205,7 +202,7 @@ const CompanySearch: React.FC<CompanySearchProps> = ({ onCompanySelect, onSkip }
           </Button>
           
           <Button
-            onClick={handleContinue}
+            onClick={initContinue}
             disabled={!selectedCompany}
             className={`px-8 ${!selectedCompany ? 'opacity-50 cursor-not-allowed' : ''}`}
           >

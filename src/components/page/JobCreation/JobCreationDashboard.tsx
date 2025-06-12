@@ -279,7 +279,6 @@ const JobCreationDashboard: React.FC = () => {
     { value: 'this-month', label: 'This Month' },
   ];
 
-  // Step 1: Company Search
   if (currentStep === 1) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -287,9 +286,8 @@ const JobCreationDashboard: React.FC = () => {
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
               Create New Job Posting
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400">
-              Let's start by finding your company to ensure accurate job posting details.
+            </h1>            <p className="text-gray-600 dark:text-gray-400">
+              Let&apos;s start by finding your company to ensure accurate job posting details.
             </p>
           </div>
 
