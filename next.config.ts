@@ -5,7 +5,8 @@ const nextConfig: NextConfig = {
   images: {
     domains: [
       'jfapi.docbooked.com',
-      'gotham-job-finder-app-bucket.s3.amazonaws.com'
+      'gotham-job-finder-app-bucket.s3.amazonaws.com',
+      'gotham-job-finder-app-bucket.s3.us-east-2.amazonaws.com'
     ],
   },
   webpack(config) {
