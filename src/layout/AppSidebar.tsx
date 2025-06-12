@@ -18,11 +18,13 @@ import {
   TableIcon,
   TaskIcon,
   UserCircleIcon,
+} from "../icons/index";
+import {
   BriefcaseIcon,
   CareerLadderIcon,
   TicketIcon,
   BlogIcon,
-} from "../icons/index";
+} from "../components/ui/icons/index";
 
 
 type NavItem = {
