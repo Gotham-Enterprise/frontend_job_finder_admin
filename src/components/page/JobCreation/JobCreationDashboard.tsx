@@ -63,74 +63,47 @@ const JobCreationDashboard: React.FC = () => {
     autoRenew: false,
   });
 
-  // Fetch occupations with specialties
   const { data: occupationsData, isLoading: isLoadingOccupations } = useQuery({
     queryKey: ['occupations-with-specialties'],
     queryFn: () => jobCreationApi.getOccupationsWithSpecialties(),
     staleTime: 1000 * 60 * 10,
   });
 
-  // Create job mutation
   const createJobMutation = useMutation({
     mutationFn: (jobData: JobCreationRequest) => jobCreationApi.createJob(jobData),
     onSuccess: (response) => {
-      showToast.success('Job Created', `Job "${response.data.title}" created successfully!`);      // Reset form
-      setFormData({
-        title: '',
-        occupationId: '',
-        specialtyId: '',
-        country: '',
-        address: '',
-        city: '',
-        state: '',
-        zipCode: '',
-        workType: 'full-time',
-        workSetting: 'onsite',
-        shiftType: '',
-        timezone: '',
-        language: '',
-        clinicSize: '',
-        workFacility: '',
-        currency: 'USD',
-        salaryFrom: 0,
-        salaryTo: 0,
-        salaryType: 'yearly',
-        postingDate: 'today',
-        autoRenew: false,
-      });
-      setDescription('');
-      setSelectedOccupation(null);
+      showToast.success('Job Created', `Job "${response.data.title}" created successfully!`);
+      resetForm();
     },
     onError: (error: Error) => {
       showToast.error('Job Creation Failed', `Failed to create job: ${error.message}`);
     },
   });
 
-  // Update selected occupation when occupation changes
+
   useEffect(() => {
     if (formData.occupationId) {
       setSelectedOccupation(Number(formData.occupationId));
-      setFormData(prev => ({ ...prev, specialtyId: '' })); // Reset specialty when occupation changes
+      setFormData(prev => ({ ...prev, specialtyId: '' })); 
     }
   }, [formData.occupationId]);
 
-  // Get specialties for selected occupation
+
   const selectedOccupationData = occupationsData?.data?.find(
     occ => occ.id === selectedOccupation
   );
-
   const updateFormField = (field: keyof FormData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
-  const handleButtonClick = () => {
+
+  const publishJob = () => {
     const event = new Event('submit') as any;
-    handleSubmit(event);
+    formSubmit(event);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const formSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Basic validation
     if (!formData.title.trim()) {
       showToast.error('Validation Error', 'Job title is required');
       return;
@@ -198,10 +171,9 @@ const JobCreationDashboard: React.FC = () => {
       salaryType: formData.salaryType as any,
       description: description,
       postingDate: formData.postingDate as any,
-    };
-
-    createJobMutation.mutate(jobData);
+    };    createJobMutation.mutate(jobData);
   };
+
   const resetForm = () => {
     setFormData({
       title: '',
@@ -230,7 +202,7 @@ const JobCreationDashboard: React.FC = () => {
     setSelectedOccupation(null);
   };
 
-  // Options for form selects
+
   const countryOptions = [
     { value: '', label: 'Select Country' },
     { value: 'US', label: 'United States' },
@@ -273,21 +245,20 @@ const JobCreationDashboard: React.FC = () => {
     { value: 'enterprise', label: 'Enterprise (1000+ employees)' },
   ];
   const workFacilityOptions = [
-    // First column
+
     { value: 'hospital', label: 'Hospital' },
     { value: 'outpatient-office', label: 'Outpatient Office' },
     { value: 'community-health-clinic', label: 'Community Health Clinic' },
     { value: 'skilled-nursing-facility', label: 'Skilled Nursing Facility' },
     { value: 'surgical-center', label: 'Surgical Center' },
     { value: 'early-intervention-center', label: 'Early Intervention Center' },
-    // Second column
+
     { value: 'home-care', label: 'Home Care' },
     { value: 'school', label: 'School' },
     { value: 'correctional-facility', label: 'Correctional Facility' },
     { value: 'assistive-living-facility', label: 'Assistive Living Facility' },
     { value: 'detox-center', label: 'Detox Center' },
     { value: 'corporate', label: 'Corporate' },
-    // Third column
     { value: 'telehealth', label: 'Telehealth' },
     { value: 'hospice-center', label: 'Hospice Center' },
     { value: 'rehabilitation-center', label: 'Rehabilitation Center' },
@@ -333,7 +304,7 @@ const JobCreationDashboard: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="max-w-7xl mx-auto p-6">
-        {/* Header */}
+      
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
             Create New Job Posting
@@ -343,11 +314,11 @@ const JobCreationDashboard: React.FC = () => {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-8">
+        <form onSubmit={formSubmit} className="space-y-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Main Form - Left Column (2/3) */}
+          
             <div className="lg:col-span-2 space-y-8">
-              {/* Basic Information Card */}
+ 
               <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">
                   Basic Information
@@ -671,11 +642,10 @@ const JobCreationDashboard: React.FC = () => {
                     Actions
                   </h2>
                   
-                  <div className="space-y-4">
-                    <Button
+                  <div className="space-y-4">                    <Button
                       className="w-full"
                       disabled={createJobMutation.isPending}
-                      onClick={handleButtonClick}
+                      onClick={publishJob}
                     >
                       {createJobMutation.isPending ? 'Publishing...' : 'Publish'}
                     </Button>
@@ -690,8 +660,7 @@ const JobCreationDashboard: React.FC = () => {
                     >
                       Save Draft
                     </Button>
-                    
-                    <Button
+                      <Button
                       variant="ghost"
                       className="w-full"
                       onClick={resetForm}
