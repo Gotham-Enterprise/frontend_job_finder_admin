@@ -147,7 +147,7 @@ export default function AddNewCategories() {
     <div className="mx-auto p-6">
     
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Categories</h1>
+        <h1 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Categories</h1>
         <p className="text-gray-600 dark:text-gray-400">Manage your blog categories</p>
       </div>
 

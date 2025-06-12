@@ -774,3 +774,12 @@ span.flatpickr-weekday,
 .padding-0 {
   padding: 0 !important;
 }
+
+.prose ul li {
+  list-style: disc;
+  margin-left: 15px;
+}
+
+.prose h2 {
+  font-weight: 600;
+}

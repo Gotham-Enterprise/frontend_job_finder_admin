@@ -57,7 +57,7 @@ export default function ProfileCard({
 
        
                 <div className={`text-center ${variant === 'compact' ? 'mb-4' : 'mb-6'}`}>
-                    <h2 className={`${variant === 'compact' ? 'text-lg' : 'text-2xl'} font-bold text-gray-900 dark:text-white mb-2`}>
+                    <h2 className={`${variant === 'compact' ? 'text-lg' : 'text-lg'} font-bold text-gray-900 dark:text-white mb-2`}>
                         {profileData.name}
                     </h2>
                       <div className="flex items-center items-center justify-center gap-2">

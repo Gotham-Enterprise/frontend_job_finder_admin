@@ -51,6 +51,10 @@ import HorizontaLDots from "./horizontal-dots.svg";
 import ChatIcon from "./chat.svg";
 import MoreDotIcon from "./more-dot.svg";
 import BellIcon from "./bell.svg";
+import BriefcaseIcon from "./briefcase.svg";
+import CareerLadderIcon from "./career-ladder.svg";
+import TicketIcon from "./ticket.svg";
+import BlogIcon from "./blog.svg";
 import FunnelIcon from "../components/ui/icons/Funnel";
 import AlignLeftIcon from "./align-left";
 import AlignCenterIcon from "./align-center";
@@ -118,8 +122,11 @@ export {
   AlignLeftIcon,
   AlignCenterIcon,
   AlignRightIcon,
-  QuoteIcon,
-  CodeBlockIcon,
+  QuoteIcon,  CodeBlockIcon,
   LinkIcon,
   ImageIcon,
+  BriefcaseIcon,
+  CareerLadderIcon,
+  TicketIcon,
+  BlogIcon,
 };

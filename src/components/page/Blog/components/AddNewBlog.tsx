@@ -108,7 +108,7 @@ export default function AddNewBlog() {  const [blogPost, setBlogPost] = useState
   return (
     <div className="mx-auto p-6">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Add New Post</h1>
+        <h1 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Add New Post</h1>
         <p className="text-gray-600 dark:text-gray-400">Create and publish a new blog post</p>
       </div>
 

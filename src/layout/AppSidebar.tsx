@@ -18,6 +18,10 @@ import {
   TableIcon,
   TaskIcon,
   UserCircleIcon,
+  BriefcaseIcon,
+  CareerLadderIcon,
+  TicketIcon,
+  BlogIcon,
 } from "../icons/index";
 
 
@@ -44,29 +48,28 @@ const navItems: NavItem[] = [
     icon: <UserCircleIcon />,
     name: "Employers",
     path: "/admin/employers",
-  },
-  {
-    icon: <ListIcon />,
+  },  {
+    icon: <BriefcaseIcon />,
     name: "Jobs",
     path: "/admin/jobs",
      //subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
   },
   
   {
-    icon: <ListIcon />,
+    icon: <CareerLadderIcon />,
     name: "Careers",
     path: "/admin/careers",
      //subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
   },
   
   {
-    icon: <TaskIcon />,
+    icon: <TicketIcon />,
     name: "Tickets",
     path: "/admin/tickets",
      //subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
   },
   {
-    icon: <TaskIcon />,
+    icon: <BlogIcon />,
     name: "Blog",
     path: "/admin/blog",
      subItems: [{ name: "All Posts", path: "/admin/blog", pro: false },
