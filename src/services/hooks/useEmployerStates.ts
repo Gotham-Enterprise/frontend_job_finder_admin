@@ -1,12 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
-import { employerApi } from '../api/employer';
+import { stateApi } from '../api/state';
 import { employerQueryKeys } from './useEmployers';
 
-export const useEmployerStates = () => {
-  return useQuery({
+export const useEmployerStates = () => {  return useQuery({
     queryKey: employerQueryKeys.states(),
     queryFn: () => {
-      return employerApi.getEmployerStates();
+      return stateApi.getStateList();
     },
     staleTime: 1000 * 60 * 10, 
     retry: (failureCount, error: Error) => {

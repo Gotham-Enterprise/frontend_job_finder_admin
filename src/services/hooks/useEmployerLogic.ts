@@ -37,14 +37,13 @@ export const useEmployerLogic = () => {
     { value: 'inactive', label: 'Inactive' },
     { value: 'suspended', label: 'Suspended' },
   ], []);
-
   const stateOptions = useMemo(() => {
     const baseOptions = [{ value: '', label: 'All States' }];
     
-    if (statesData?.success && statesData.data) {
-      const dynamicOptions = statesData.data.map(state => ({
-        value: state,
-        label: state
+    if (statesData?.success && statesData.data?.states) {
+      const dynamicOptions = statesData.data.states.map(state => ({
+        value: state.abbreviation,
+        label: state.name
       }));
       return [...baseOptions, ...dynamicOptions];
     }

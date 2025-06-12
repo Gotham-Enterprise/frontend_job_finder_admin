@@ -58,9 +58,9 @@ export const useJobSeekersLogic = () => {
     const baseOptions = [{ value: '', label: 'All States' }];
     
     if (statesData?.success && statesData.data) {
-      const dynamicOptions = statesData.data.map(state => ({
-        value: state,
-        label: state
+      const dynamicOptions = statesData.data.states.map(state => ({
+        value: state.abbreviation,
+        label: state.name
       }));
       return [...baseOptions, ...dynamicOptions];
     }

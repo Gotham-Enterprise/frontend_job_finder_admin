@@ -6,7 +6,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL;
 export const stateApi = {
   async getStateList(): Promise<StateListResponse> {
     try {
-      const url = `${API_URL}/api/admin/jobseekers/state/list`;
+      const url = `${API_URL}/api/categories/us_states`;
       
       const response = await fetch(url, {
         method: 'GET',
