@@ -76,7 +76,7 @@ const CompanySearch: React.FC<CompanySearchProps> = ({ onCompanySelect, onSkip }
     }, 1000);
   };
 
-  const handleCompanySelect = (company: Company) => {
+  const companySelect = (company: Company) => {
     setSelectedCompany(company);
   };
 
@@ -132,7 +132,7 @@ const CompanySearch: React.FC<CompanySearchProps> = ({ onCompanySelect, onSkip }
                       ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
                       : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
                   }`}
-                  onClick={() => handleCompanySelect(company)}
+                  onClick={() => companySelect(company)}
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
@@ -185,9 +185,7 @@ const CompanySearch: React.FC<CompanySearchProps> = ({ onCompanySelect, onSkip }
             <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
               No companies found
             </h3>
-            <p className="text-gray-600 dark:text-gray-400">
-              Try adjusting your search terms or skip this step to continue.
-            </p>
+         
           </div>
         )}
 
