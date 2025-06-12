@@ -2,6 +2,7 @@ import { Node } from '@tiptap/core';
 import { ReactNodeViewRenderer } from '@tiptap/react';
 import { Node as ProseMirrorNode } from 'prosemirror-model';
 import React from 'react';
+import Image from 'next/image';
 
 interface TemplateImageProps {
   node: ProseMirrorNode;
@@ -38,22 +39,34 @@ const TemplateImageComponent: React.FC<TemplateImageProps> = ({ node, updateAttr
     };
     input.click();
   };
-
   return (
-    <img
-      src={src}
-      alt={alt || ''}
+    <div 
       onClick={imageClick}
       style={{
         cursor: isTemplate ? 'pointer' : 'default',
         border: isTemplate ? '2px dashed #ccc' : 'none',
         borderRadius: '8px',
+        display: 'inline-block',
+        position: 'relative',
         maxWidth: '100%',
-        height: 'auto',
       }}
       title={isTemplate ? 'Click to replace this image' : alt}
       className="template-image"
-    />
+    >
+      <Image
+        src={src || '/images/image-placeholder.jpg'}
+        alt={alt || ''}
+        width={0}
+        height={0}
+        sizes="100vw"
+        style={{
+          width: '100%',
+          height: 'auto',
+          borderRadius: '8px',
+        }}
+        unoptimized={src?.startsWith('data:') || false}
+      />
+    </div>
   );
 };
 

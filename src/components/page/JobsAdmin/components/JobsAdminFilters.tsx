@@ -69,7 +69,7 @@ const JobsAdminFilters: React.FC<JobsAdminFiltersProps> = ({
             placeholder="Select date posted"
             defaultDate={filters.datePosted || undefined}
             onChange={(dates, currentDateString) => {
-              // currentDateString will be in YYYY-MM-DD format
+             
               onFilterChange('datePosted', currentDateString || '');
             }}
           />

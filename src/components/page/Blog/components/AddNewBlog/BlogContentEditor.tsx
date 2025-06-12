@@ -84,10 +84,9 @@ const BlogContentEditor: React.FC<BlogContentEditorProps> = ({
               }}
             >
               {renderPreview()}
-            </div>
-            <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+            </div>            <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
               <p className="text-sm text-blue-600 dark:text-blue-400">
-                📝 <strong>Preview Mode:</strong> Switch to "Write" mode to edit content and replace images.
+                📝 <strong>Preview Mode:</strong> Switch to &ldquo;Write&rdquo; mode to edit content and replace images.
               </p>
             </div>
           </div>

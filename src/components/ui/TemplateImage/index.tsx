@@ -1,5 +1,6 @@
 "use client";
 import React, { useRef } from 'react';
+import Image from 'next/image';
 
 interface TemplateImageProps {
   src: string;
@@ -35,22 +36,21 @@ const TemplateImage: React.FC<TemplateImageProps> = ({
       reader.readAsDataURL(file);
     }
   };
-
   const defaultStyle: React.CSSProperties = {
+    position: 'relative',
     width: '100%',
     height: 'auto',
+    minHeight: '200px',
     borderRadius: '8px',
     cursor: 'pointer',
     transition: 'all 0.2s ease',
     border: '2px dashed #ccc',
+    overflow: 'hidden',
     ...style
   };
-
   return (
     <>
-      <img
-        src={src}
-        alt={alt}
+      <div 
         className={`template-image ${className}`}
         style={defaultStyle}
         onClick={imageClick}
@@ -63,7 +63,19 @@ const TemplateImage: React.FC<TemplateImageProps> = ({
           e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
         }}
         title="Click to upload your own image"
-      />
+      >
+        <Image
+          src={src}
+          alt={alt}
+          fill
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          style={{
+            objectFit: 'cover',
+            borderRadius: '8px',
+          }}
+          unoptimized={src.startsWith('data:')} 
+        />
+      </div>
       <input
         ref={fileInputRef}
         type="file"
