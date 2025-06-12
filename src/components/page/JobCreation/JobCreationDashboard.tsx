@@ -9,6 +9,9 @@ import Select from '@/components/form/Select';
 import Button from '@/components/ui/button/Button';
 import Label from '@/components/form/Label';
 import RichTextEditor from '@/components/form/input/RichTextEditor';
+import Radio from '@/components/form/input/Radio';
+import Checkbox from '@/components/form/input/Checkbox';
+import JobPostingTips from './JobPostingTips';
 
 interface FormData {
   title: string;
@@ -31,12 +34,12 @@ interface FormData {
   salaryTo: number;
   salaryType: string;
   postingDate: string;
+  autoRenew: boolean;
 }
 
 const JobCreationDashboard: React.FC = () => {
   const [selectedOccupation, setSelectedOccupation] = useState<number | null>(null);
-  const [description, setDescription] = useState('');
-  const [formData, setFormData] = useState<FormData>({
+  const [description, setDescription] = useState('');  const [formData, setFormData] = useState<FormData>({
     title: '',
     occupationId: '',
     specialtyId: '',
@@ -57,6 +60,7 @@ const JobCreationDashboard: React.FC = () => {
     salaryTo: 0,
     salaryType: 'yearly',
     postingDate: 'today',
+    autoRenew: false,
   });
 
   // Fetch occupations with specialties
@@ -70,8 +74,7 @@ const JobCreationDashboard: React.FC = () => {
   const createJobMutation = useMutation({
     mutationFn: (jobData: JobCreationRequest) => jobCreationApi.createJob(jobData),
     onSuccess: (response) => {
-      showToast.success('Job Created', `Job "${response.data.title}" created successfully!`);
-      // Reset form
+      showToast.success('Job Created', `Job "${response.data.title}" created successfully!`);      // Reset form
       setFormData({
         title: '',
         occupationId: '',
@@ -93,6 +96,7 @@ const JobCreationDashboard: React.FC = () => {
         salaryTo: 0,
         salaryType: 'yearly',
         postingDate: 'today',
+        autoRenew: false,
       });
       setDescription('');
       setSelectedOccupation(null);
@@ -198,7 +202,6 @@ const JobCreationDashboard: React.FC = () => {
 
     createJobMutation.mutate(jobData);
   };
-
   const resetForm = () => {
     setFormData({
       title: '',
@@ -221,6 +224,7 @@ const JobCreationDashboard: React.FC = () => {
       salaryTo: 0,
       salaryType: 'yearly',
       postingDate: 'today',
+      autoRenew: false,
     });
     setDescription('');
     setSelectedOccupation(null);
@@ -268,15 +272,28 @@ const JobCreationDashboard: React.FC = () => {
     { value: 'large', label: 'Large (201-1000 employees)' },
     { value: 'enterprise', label: 'Enterprise (1000+ employees)' },
   ];
-
   const workFacilityOptions = [
-    { value: '', label: 'Select Work Facility' },
+    // First column
     { value: 'hospital', label: 'Hospital' },
-    { value: 'clinic', label: 'Clinic' },
-    { value: 'private-practice', label: 'Private Practice' },
-    { value: 'nursing-home', label: 'Nursing Home' },
-    { value: 'urgent-care', label: 'Urgent Care' },
-    { value: 'home-health', label: 'Home Health' },
+    { value: 'outpatient-office', label: 'Outpatient Office' },
+    { value: 'community-health-clinic', label: 'Community Health Clinic' },
+    { value: 'skilled-nursing-facility', label: 'Skilled Nursing Facility' },
+    { value: 'surgical-center', label: 'Surgical Center' },
+    { value: 'early-intervention-center', label: 'Early Intervention Center' },
+    // Second column
+    { value: 'home-care', label: 'Home Care' },
+    { value: 'school', label: 'School' },
+    { value: 'correctional-facility', label: 'Correctional Facility' },
+    { value: 'assistive-living-facility', label: 'Assistive Living Facility' },
+    { value: 'detox-center', label: 'Detox Center' },
+    { value: 'corporate', label: 'Corporate' },
+    // Third column
+    { value: 'telehealth', label: 'Telehealth' },
+    { value: 'hospice-center', label: 'Hospice Center' },
+    { value: 'rehabilitation-center', label: 'Rehabilitation Center' },
+    { value: 'diagnostic-imaging-center', label: 'Diagnostic Imaging Center' },
+    { value: 'adult-day-care-center', label: 'Adult Day Care Center' },
+    { value: 'concierge-medicine', label: 'Concierge Medicine/House Calls' },
   ];
 
   const currencyOptions = [
@@ -492,15 +509,54 @@ const JobCreationDashboard: React.FC = () => {
                         defaultValue={formData.clinicSize}
                       />
                     </div>
-                  </div>
-
-                  <div>
+                  </div>                  <div>
                     <Label>Work Facility</Label>
-                    <Select
-                      options={workFacilityOptions}
-                      onChange={(value: string) => updateFormField('workFacility', value)}
-                      defaultValue={formData.workFacility}
-                    />
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
+                      {/* First Column */}
+                      <div className="space-y-3">
+                        {workFacilityOptions.slice(0, 6).map((option) => (
+                          <Radio
+                            key={option.value}
+                            id={`facility-${option.value}`}
+                            name="workFacility"
+                            value={option.value}
+                            checked={formData.workFacility === option.value}
+                            onChange={(value) => updateFormField('workFacility', value)}
+                            label={option.label}
+                          />
+                        ))}
+                      </div>
+                      
+                      {/* Second Column */}
+                      <div className="space-y-3">
+                        {workFacilityOptions.slice(6, 12).map((option) => (
+                          <Radio
+                            key={option.value}
+                            id={`facility-${option.value}`}
+                            name="workFacility"
+                            value={option.value}
+                            checked={formData.workFacility === option.value}
+                            onChange={(value) => updateFormField('workFacility', value)}
+                            label={option.label}
+                          />
+                        ))}
+                      </div>
+                      
+                      {/* Third Column */}
+                      <div className="space-y-3">
+                        {workFacilityOptions.slice(12, 18).map((option) => (
+                          <Radio
+                            key={option.value}
+                            id={`facility-${option.value}`}
+                            name="workFacility"
+                            value={option.value}
+                            checked={formData.workFacility === option.value}
+                            onChange={(value) => updateFormField('workFacility', value)}
+                            label={option.label}
+                          />
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -584,60 +640,68 @@ const JobCreationDashboard: React.FC = () => {
 
             {/* Sidebar - Right Column (1/3) */}
             <div className="lg:col-span-1">
-              <div className="sticky top-6 space-y-6">
-                {/* Posting Options Card */}
+              <div className="sticky top-6 space-y-6">                {/* Posting Options Card */}
                 <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
                   <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">
                     Posting Options
                   </h2>
                   
-                  <div>
-                    <Label>Posting Date</Label>
-                    <Select
-                      options={postingDateOptions}
-                      onChange={(value: string) => updateFormField('postingDate', value)}
-                      defaultValue={formData.postingDate}
-                    />
+                  <div className="space-y-4">
+                    <div>
+                      <Label>Posting Date</Label>
+                      <Select
+                        options={postingDateOptions}
+                        onChange={(value: string) => updateFormField('postingDate', value)}
+                        defaultValue={formData.postingDate}
+                      />
+                    </div>
+                    
+                    <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+                      <Checkbox
+                        id="auto-renew"
+                        checked={formData.autoRenew}
+                        onChange={(checked) => updateFormField('autoRenew', checked)}
+                        label="Auto renew job publishing on new subscription period"
+                      />
+                    </div>
                   </div>
-                </div>
-
-                {/* Actions Card */}
+                </div>                {/* Actions Card */}
                 <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
                   <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">
                     Actions
                   </h2>
                   
-                  <div className="space-y-4">                    <Button
+                  <div className="space-y-4">
+                    <Button
                       className="w-full"
-                      disabled={createJobMutation.isPending || !description}
+                      disabled={createJobMutation.isPending}
                       onClick={handleButtonClick}
                     >
-                      {createJobMutation.isPending ? 'Creating Job...' : 'Create Job Post'}
+                      {createJobMutation.isPending ? 'Publishing...' : 'Publish'}
                     </Button>
                     
                     <Button
                       variant="outline"
                       className="w-full"
+                      disabled={createJobMutation.isPending}
+                      onClick={() => {
+                        showToast.success('Draft Saved', 'Job posting saved as draft');
+                      }}
+                    >
+                      Save Draft
+                    </Button>
+                    
+                    <Button
+                      variant="ghost"
+                      className="w-full"
                       onClick={resetForm}
                     >
                       Reset Form
                     </Button>
-                  </div>
-                </div>
+                  </div>               
+                   </div>
 
-                {/* Tips Card */}
-                <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-800 p-6">
-                  <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-100 mb-4">
-                    💡 Tips for Better Job Posts
-                  </h3>
-                  <ul className="space-y-2 text-sm text-blue-800 dark:text-blue-200">
-                    <li>• Use clear, descriptive job titles</li>
-                    <li>• Include specific requirements and qualifications</li>
-                    <li>• Mention company benefits and culture</li>
-                    <li>• Be transparent about salary ranges</li>
-                    <li>• Use formatting to make descriptions scannable</li>
-                  </ul>
-                </div>
+                <JobPostingTips />
               </div>
             </div>
           </div>
