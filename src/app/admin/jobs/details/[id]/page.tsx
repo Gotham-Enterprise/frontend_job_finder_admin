@@ -1,5 +1,5 @@
 import React from 'react';
-import JobDetails from '@/components/page/Employer/Jobs/';
+import JobsAdminViewDetails from '@/components/page/JobsAdmin/ViewDetails';
 
 interface JobDetailsPageProps {
   params: Promise<{ id: string }>;
@@ -10,7 +10,7 @@ export default async function JobDetailsPage({ params }: JobDetailsPageProps) {
   
   return (
     <>
-      <JobDetails id={id} />
+      <JobsAdminViewDetails id={id} />
     </>
   );
 }
