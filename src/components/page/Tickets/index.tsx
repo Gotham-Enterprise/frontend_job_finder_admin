@@ -569,7 +569,7 @@ const Tickets: React.FC<TicketsProps> = ({ className = "" }) => {
               </TableRow>
             ) : (
               paginatedTickets.map((ticket) => (
-                <TableRow key={ticket.id} className="border-b border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                <TableRow key={ticket.id} className="border-b text-sm border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50">
                   <TableCell className="py-4 px-6">
                     <div className="flex flex-col">
                       <p className="font-medium text-gray-900 dark:text-white">

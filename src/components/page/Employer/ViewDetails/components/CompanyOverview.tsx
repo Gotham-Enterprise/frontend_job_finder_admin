@@ -20,7 +20,7 @@ export default function CompanyOverview({ overview }: CompanyOverviewProps) {
                       
                          <div className="bg-gradient-to-r rounded-lg">
                             <div 
-                                className="text-gray-700 dark:text-gray-300 leading-relaxed prose prose-sm max-w-none dark:prose-invert"
+                                className="text-gray-700 dark:text-gray-300 leading-relaxed flex-col gap-10 prose prose-sm max-w-none dark:prose-invert"
                                 dangerouslySetInnerHTML={{ __html: overview }}
                             />
                         </div>

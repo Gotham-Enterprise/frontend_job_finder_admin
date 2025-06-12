@@ -43,7 +43,7 @@ const EmployerTable: React.FC<EmployerTableProps> = ({
           ) : (
             data.data.map((employer: any) => (
               <TableRow key={employer.id} className="border-b border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                <TableCell className="py-4 px-6">
+                <TableCell className="py-4 px-6 text-sm">
                   <div className="flex items-center gap-3">
                     <div className="relative w-10 h-10 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700">
                       <div className="w-full h-full flex items-center justify-center text-gray-500 dark:text-gray-400 text-sm font-medium">

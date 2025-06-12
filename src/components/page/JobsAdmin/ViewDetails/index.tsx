@@ -45,11 +45,10 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
         );
     }
     
-    const job = data.data;
-
-    const profileData: ProfileData = {
+    const job = data.data;    const profileData: ProfileData = {
         name: job.title,
         title: job.occupation,
+        specialty: job.specialty,
         status: job.workType || 'Full-time',
     };
 
@@ -133,7 +132,7 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
         },
         {
             label: 'Applicants',
-            value: `${job.applicantCount || 0} applications`,
+            value: `${job.applicantCount || 0}`,
             className: 'text-blue-600 dark:text-blue-400',
             icon: (
                 <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/20 flex items-center justify-center">
@@ -173,7 +172,7 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
                             <h3 className="text-xl font-bold text-gray-900 dark:text-white">Job Description</h3>
                         </div>
                         
-                        <div className="prose prose-sm max-w-none dark:prose-invert">
+                        <div className="prose prose-sm flex flex-col gap-10 max-w-none dark:prose-invert">
                             <div 
                                 className="text-gray-700 dark:text-gray-300 leading-relaxed"
                                 dangerouslySetInnerHTML={{ __html: job.jobDescription || 'No job description provided' }}

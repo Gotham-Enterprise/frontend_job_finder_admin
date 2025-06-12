@@ -17,6 +17,7 @@ export interface Document {
 export interface ProfileData {
     name: string;
     title?: string;
+    specialty?: string;
     status?: string;
     profilePicture?: {
         url: string;

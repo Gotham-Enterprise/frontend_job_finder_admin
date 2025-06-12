@@ -75,7 +75,7 @@ const BlogTable: React.FC<BlogTableProps> = ({
             </TableRow>
           ) : (
             data.data.map((post: any) => (
-              <TableRow key={post.id} className="border-b border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50">
+              <TableRow key={post.id} className="border-b text-sm border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50">
                 <TableCell className="py-4 px-6 w-12">
                   <Checkbox
                     checked={selectedPosts.includes(post.id)}

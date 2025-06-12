@@ -60,11 +60,15 @@ export default function ProfileCard({
                     <h2 className={`${variant === 'compact' ? 'text-lg' : 'text-2xl'} font-bold text-gray-900 dark:text-white mb-2`}>
                         {profileData.name}
                     </h2>
-                    
-                   <div className="flex items-center items-center justify-center gap-2">
+                      <div className="flex items-center items-center justify-center gap-2">
                    {profileData.title && (
                         <span className="inline-block px-3 py-1 text-sm font-medium text-blue-600 bg-blue-100 rounded-full dark:bg-blue-900 dark:text-blue-300">
                             {profileData.title}
+                        </span>
+                    )}
+                    {profileData.specialty && (
+                        <span className="inline-block px-3 py-1 text-sm font-medium text-purple-600 bg-purple-100 rounded-full dark:bg-purple-900 dark:text-purple-300">
+                            {profileData.specialty}
                         </span>
                     )}
                       {profileData.status && (

@@ -67,7 +67,8 @@ const Employers: React.FC<EmployersProps> = ({ className = "" }) => {
         stateOptions={stateOptions}
         statusOptions={statusOptions}
         itemsPerPageOptions={itemsPerPageOptions}
-      />      <EmployerTable
+      />      
+      <EmployerTable
         data={data}
         isLoading={isLoading}
         tableColumns={tableColumns}

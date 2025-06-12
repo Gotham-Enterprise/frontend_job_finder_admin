@@ -22,7 +22,7 @@ const TableHeading: React.FC<TableHeadingProps> = ({
         {columns.map((column) => (
           <TableCell
             key={column.key}
-            className={`py-4 px-6 font-semibold text-gray-900 dark:text-white ${column.className || ''}`}
+            className={`py-4 px-6 font-semibold text-gray-900 dark:text-white text-sm ${column.className || ''}`}
           >
             {column.label}
           </TableCell>

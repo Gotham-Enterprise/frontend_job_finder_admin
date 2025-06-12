@@ -50,6 +50,7 @@ export interface JobsAdminDetails {
   companyId: string;
   title: string;
   occupation: string;
+  specialty?: string;
   location: string;
   isSalaryVisible: boolean;
   salaryRangeStart: number;

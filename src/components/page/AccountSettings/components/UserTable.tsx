@@ -100,7 +100,7 @@ const UserTable: React.FC<UserTableProps> = ({ users, onUserAction }) => {
       <div className="overflow-x-auto">
         <Table>
           <TableHeader className="border-b border-gray-100">
-            <TableRow className="border-b border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50">
+            <TableRow className="border-b text-sm border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50">
               <TableCell
                 isHeader
                 className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
@@ -129,7 +129,7 @@ const UserTable: React.FC<UserTableProps> = ({ users, onUserAction }) => {
           </TableHeader>
           <TableBody>
             {users.map((user) => (
-              <TableRow key={user.id} className="border-b border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50">
+              <TableRow key={user.id} className="border-b text-sm border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50">
                 <TableCell className="py-4 px-6">
                   <div className="flex items-center gap-3">
                     <div className="relative w-10 h-10 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700">

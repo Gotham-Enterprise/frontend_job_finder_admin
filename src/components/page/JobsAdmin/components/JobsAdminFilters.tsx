@@ -1,7 +1,7 @@
 import React from 'react';
 import Select from '../../../form/Select';
 import Label from '../../../form/Label';
-import Input from '../../../ui/input/Input';
+         import DatePicker from '../../../form/date-picker';
 import { JobsAdminFiltersProps } from '@/services/types/JobsAdminTypes';
 
 const JobsAdminFilters: React.FC<JobsAdminFiltersProps> = ({
@@ -60,17 +60,18 @@ const JobsAdminFilters: React.FC<JobsAdminFiltersProps> = ({
             onChange={(value: string) => onFilterChange('jobStatus', value)}
             options={jobStatusOptions}
           />
-        </div>
-        <div>
+        </div>        <div>
           <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Date Posted
           </Label>
-          <Input
-            type="text"
-            placeholder="May 15, 2025"
-            value={filters.datePosted || ''}
-            onChange={(e) => onFilterChange('datePosted', e.target.value)}
-            className="w-full"
+          <DatePicker
+            id="jobs-date-posted-filter"
+            placeholder="Select date posted"
+            defaultDate={filters.datePosted || undefined}
+            onChange={(dates, currentDateString) => {
+              // currentDateString will be in YYYY-MM-DD format
+              onFilterChange('datePosted', currentDateString || '');
+            }}
           />
         </div>
         <div>
