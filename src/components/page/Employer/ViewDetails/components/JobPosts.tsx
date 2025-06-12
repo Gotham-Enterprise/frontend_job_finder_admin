@@ -163,7 +163,7 @@ export default function JobPosts({ jobPosts, formatDate }: JobPostsProps) {
                                         </TableCell>
                                         <TableCell className="py-4 px-6 text-right">
                                             <Button
-                                                onClick={() => router.push(`/admin/jobs/details/${job.id}`)}
+                                                onClick={() => router.push(`/admin/employers/jobs/details/${job.id}`)}
                                                 variant="ghost"
                                                 size="sm"
                                                 className="text-brand-400"
