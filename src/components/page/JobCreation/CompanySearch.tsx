@@ -2,23 +2,10 @@ import React, { useState } from 'react';
 import Input from '@/components/form/input/InputField';
 import Button from '@/components/ui/button/Button';
 import Label from '@/components/form/Label';
+import {Company, CompanySearchProps} from '@/services/types/companySearch';
 
-interface Company {
-  id: number;
-  name: string;
-  logo?: string;
-  industry: string;
-  location: string;
-  employeeCount: string;
-  description: string;
-}
 
-interface CompanySearchProps {
-  onCompanySelect: (company: Company) => void;
-  onSkip: () => void;
-}
-
-const CompanySearch: React.FC<CompanySearchProps> = ({ onCompanySelect, onSkip }) => {
+const CompanySearch: React.FC<CompanySearchProps> = ({ onCompanySelect }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [companies, setCompanies] = useState<Company[]>([]);
@@ -93,7 +80,7 @@ const CompanySearch: React.FC<CompanySearchProps> = ({ onCompanySelect, onSkip }
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
             Search Employer
           </h2>          <p className="text-gray-600 dark:text-gray-400">
-            Search for your company to create a job posting. If your company isn&apos;t listed, you can skip this step.
+            Search for your company to create a job posting.
           </p>
         </div>        
         <div className="mb-8">
@@ -187,24 +174,14 @@ const CompanySearch: React.FC<CompanySearchProps> = ({ onCompanySelect, onSkip }
             </h3>
          
           </div>
-        )}
-
-        {/* Action Buttons */}
-        <div className="flex justify-between items-center pt-6 border-t border-gray-200 dark:border-gray-700">
-          <Button
-            variant="ghost"
-            onClick={onSkip}
-            className="text-gray-600 dark:text-gray-400"
-          >
-            Skip this step
-          </Button>
-          
+        )}       
+        <div className="flex justify-end items-center pt-6 border-t border-gray-200 dark:border-gray-700">
           <Button
             onClick={initContinue}
             disabled={!selectedCompany}
             className={`px-8 ${!selectedCompany ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
-            Continue with {selectedCompany?.name || 'Selected Company'}
+            Continue
           </Button>
         </div>
       </div>

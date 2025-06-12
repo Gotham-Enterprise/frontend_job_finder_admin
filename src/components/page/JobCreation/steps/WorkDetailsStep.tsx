@@ -3,21 +3,7 @@ import Input from '@/components/form/input/InputField';
 import Select from '@/components/form/Select';
 import Label from '@/components/form/Label';
 import Radio from '@/components/form/input/Radio';
-
-interface FormData {
-  workType: string;
-  workSetting: string;
-  shiftType: string;
-  timezone: string;
-  language: string;
-  clinicSize: string;
-  workFacility: string;
-}
-
-interface WorkDetailsStepProps {
-  formData: FormData;
-  onUpdateField: (field: keyof FormData, value: any) => void;
-}
+import { FormData, WorkDetailsStepProps } from '@/services/types/workDetail';
 
 const WorkDetailsStep: React.FC<WorkDetailsStepProps> = ({
   formData,

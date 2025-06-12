@@ -3,40 +3,7 @@ import BasicInfoStep from './BasicInfoStep';
 import LocationStep from './LocationStep';
 import WorkDetailsStep from './WorkDetailsStep';
 import CompensationStep from './CompensationStep';
-import JobDescriptionStep from './JobDescriptionStep';
-
-interface FormData {
-  title: string;
-  occupationId: string;
-  specialtyId: string;
-  country: string;
-  address: string;
-  city: string;
-  state: string;
-  zipCode: string;
-  workType: string;
-  workSetting: string;
-  shiftType: string;
-  timezone: string;
-  language: string;
-  clinicSize: string;
-  workFacility: string;
-  currency: string;
-  salaryFrom: number;
-  salaryTo: number;
-  salaryType: string;
-  postingDate: string;
-  autoRenew: boolean;
-}
-
-interface CombinedJobDetailsStepProps {
-  formData: FormData;
-  onUpdateField: (field: keyof FormData, value: any) => void;
-  occupationOptions: Array<{ value: string; label: string }>;
-  specialtyOptions: Array<{ value: string; label: string }>;
-  isLoadingOccupations: boolean;
-  selectedOccupation: number | null;
-}
+import {FormData, CombinedJobDetailsStepProps } from '@/services/types/combinedJobDetail';
 
 const CombinedJobDetailsStep: React.FC<CombinedJobDetailsStepProps> = ({
   formData,

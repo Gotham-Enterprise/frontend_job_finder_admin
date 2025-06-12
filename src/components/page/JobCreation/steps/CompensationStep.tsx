@@ -3,18 +3,8 @@ import Input from '@/components/form/input/InputField';
 import Select from '@/components/form/Select';
 import Label from '@/components/form/Label';
 import Radio from '@/components/form/input/Radio';
+import {FormData, CompensationStepProps} from '@/services/types/compensation';
 
-interface FormData {
-  currency: string;
-  salaryFrom: number;
-  salaryTo: number;
-  salaryType: string;
-}
-
-interface CompensationStepProps {
-  formData: FormData;
-  onUpdateField: (field: keyof FormData, value: any) => void;
-}
 
 const CompensationStep: React.FC<CompensationStepProps> = ({
   formData,

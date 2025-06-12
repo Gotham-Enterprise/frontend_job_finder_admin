@@ -2,21 +2,7 @@ import React from 'react';
 import Input from '@/components/form/input/InputField';
 import Select from '@/components/form/Select';
 import Label from '@/components/form/Label';
-
-interface FormData {
-  title: string;
-  occupationId: string;
-  specialtyId: string;
-}
-
-interface BasicInfoStepProps {
-  formData: FormData;
-  onUpdateField: (field: keyof FormData, value: any) => void;
-  occupationOptions: Array<{ value: string; label: string }>;
-  specialtyOptions: Array<{ value: string; label: string }>;
-  isLoadingOccupations: boolean;
-  selectedOccupation: number | null;
-}
+import {FormData, BasicInfoStepProps} from '@/services/types/basicInfo'
 
 const BasicInfoStep: React.FC<BasicInfoStepProps> = ({
   formData,
