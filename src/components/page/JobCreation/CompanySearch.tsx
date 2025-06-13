@@ -6,7 +6,7 @@ import {Company, CompanySearchProps} from '@/services/types/companySearch';
 import { useCompanySearch } from '@/services/hooks/useCompanySearch';
 
 
-const CompanySearch: React.FC<CompanySearchProps> = ({ onCompanySelect, onSkip }) => {
+const CompanySearch: React.FC<CompanySearchProps> = ({ onCompanySelect }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
 
@@ -146,14 +146,7 @@ const CompanySearch: React.FC<CompanySearchProps> = ({ onCompanySelect, onSkip }
               {error.message || 'An error occurred while searching. Please try again.'}
             </p>
           </div>
-        )}<div className="flex justify-between items-center pt-6 border-t border-gray-200 dark:border-gray-700">
-          <Button
-            onClick={onSkip}
-            variant="outline"
-            className="px-8"
-          >
-            Skip for now
-          </Button>
+        )}        <div className="flex justify-end items-center pt-6 border-t border-gray-200 dark:border-gray-700">
           <Button
             onClick={initContinue}
             disabled={!selectedCompany}

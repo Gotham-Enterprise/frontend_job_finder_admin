@@ -27,5 +27,4 @@ export interface CompanySearchFilters {
 
 export interface CompanySearchProps {
   onCompanySelect: (company: Company) => void;
-  onSkip: () => void;
 }

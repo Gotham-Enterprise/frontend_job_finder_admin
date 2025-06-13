@@ -110,9 +110,9 @@ const JobCreationDashboard: React.FC = () => {
     setCurrentStep(1); 
   };
 
-  const handleSkipCompany = () => {
+  const handleCancel = () => {
     setSelectedCompany(null);
-    setCurrentStep(1);
+    setCurrentStep(0);
   };
 
   const handleNextStep = () => {
@@ -278,7 +278,7 @@ const JobCreationDashboard: React.FC = () => {
   if (!selectedCompany && currentStep === 0) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <div className="max-w-7xl mx-auto p-6">
+        <div className="mx-auto p-6">
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
               Create New Job Posting
@@ -287,10 +287,8 @@ const JobCreationDashboard: React.FC = () => {
               Let&apos;s start by finding your company to ensure accurate job posting details.
             </p>
           </div>
-          
-          <CompanySearch 
+            <CompanySearch 
             onCompanySelect={handleCompanySelect}
-            onSkip={handleSkipCompany}
           />
         </div>
       </div>
@@ -299,7 +297,7 @@ const JobCreationDashboard: React.FC = () => {
   if (currentStep === 4) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <div className="max-w-7xl mx-auto p-6">
+        <div className="mx-auto p-6">
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
               Review Job Posting
@@ -342,10 +340,11 @@ const JobCreationDashboard: React.FC = () => {
                   <div><span className="font-medium">Work Setting:</span> {formData.workSetting}</div>
                   <div><span className="font-medium">Salary:</span> {formData.currency} {formData.salaryFrom.toLocaleString()} - {formData.salaryTo.toLocaleString()} ({formData.salaryType})</div>
                 </div>
-              </div>
-
-              {/* Navigation */}
+              </div>              {/* Navigation */}
               <div className="flex justify-between">
+                <Button variant="outline" onClick={handleCancel}>
+                  Cancel
+                </Button>
                 <Button variant="outline" onClick={handlePrevStep}>
                   Previous
                 </Button>
@@ -398,7 +397,7 @@ const JobCreationDashboard: React.FC = () => {
   // Steps 2-6: Form Steps
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="max-w-7xl mx-auto p-6">
+      <div className="mx-auto p-6">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
             Create New Job Posting
@@ -422,18 +421,25 @@ const JobCreationDashboard: React.FC = () => {
               specialtyOptions={specialtyOptions}
               isLoadingOccupations={isLoadingOccupations}
               selectedOccupation={selectedOccupation}
-            />
-
-            {/* Navigation */}
+            />            {/* Navigation */}
             <div className="flex justify-between mt-8">
-              <Button 
-                variant="outline" 
-                onClick={handlePrevStep}
-                disabled={currentStep <= 1}
-              >
-                Previous
-              </Button>
-                <div className="space-x-4">
+              <div className="flex space-x-4">
+                <Button 
+                  variant="outline" 
+                  onClick={handleCancel}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={handlePrevStep}
+                  disabled={currentStep <= 1}
+                >
+                  Previous
+                </Button>
+              </div>
+              
+              <div className="space-x-4">
                 {currentStep < 3 ? (
                   <Button onClick={handleNextStep}>
                     Next
