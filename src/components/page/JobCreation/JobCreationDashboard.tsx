@@ -38,17 +38,14 @@ interface FormData {
 }
 
 interface Company {
-  id: number;
-  name: string;
-  logo?: string;
-  industry: string;
-  location: string;
-  employeeCount: string;
-  description: string;
+  id: string;
+  companyName: string;
+  state: string;
+  sizeOfCompany: number;
 }
 
 const JobCreationDashboard: React.FC = () => {
-  const [currentStep, setCurrentStep] = useState(1);
+  const [currentStep, setCurrentStep] = useState(0);
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const [selectedOccupation, setSelectedOccupation] = useState<number | null>(null);
   const [description, setDescription] = useState('');
@@ -77,26 +74,24 @@ const JobCreationDashboard: React.FC = () => {
     autoRenew: false,
   });
 
-  // Fetch occupations with specialties
+
   const { data: occupationsData, isLoading: isLoadingOccupations } = useQuery({
     queryKey: ['occupations-with-specialties'],
     queryFn: () => jobCreationApi.getOccupationsWithSpecialties(),
     staleTime: 1000 * 60 * 10,
   });
 
-  // Create job mutation
   const createJobMutation = useMutation({
     mutationFn: (jobData: JobCreationRequest) => jobCreationApi.createJob(jobData),
     onSuccess: (response) => {
       showToast.success('Job Created', `Job "${response.data.title}" created successfully!`);
-      handleResetForm();
+      resetForm();
     },
     onError: (error: Error) => {
       showToast.error('Job Creation Failed', `Failed to create job: ${error.message}`);
     },
   });
 
-  // Update selected occupation when occupation changes
   useEffect(() => {
     if (formData.occupationId) {
       setSelectedOccupation(Number(formData.occupationId));
@@ -104,23 +99,20 @@ const JobCreationDashboard: React.FC = () => {
     }
   }, [formData.occupationId]);
 
-  // Get specialties for selected occupation
   const selectedOccupationData = occupationsData?.data?.find(
     occ => occ.id === selectedOccupation
   );
 
   const updateFormField = (field: keyof FormData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-  };
-
-  const handleCompanySelect = (company: Company) => {
+  };  const handleCompanySelect = (company: Company) => {
     setSelectedCompany(company);
-    setCurrentStep(2);
+    setCurrentStep(1); 
   };
 
   const handleSkipCompany = () => {
     setSelectedCompany(null);
-    setCurrentStep(2);
+    setCurrentStep(1);
   };
 
   const handleNextStep = () => {
@@ -131,11 +123,10 @@ const JobCreationDashboard: React.FC = () => {
 
   const handlePrevStep = () => {
     setCurrentStep(prev => prev - 1);
-  };
-  const validateCurrentStep = (): boolean => {
+  };  const validateCurrentStep = (): boolean => {
     switch (currentStep) {
-      case 2:
-        // Basic Info validation
+      case 1:
+       
         if (!formData.title.trim()) {
           showToast.error('Validation Error', 'Job title is required');
           return false;
@@ -179,9 +170,17 @@ const JobCreationDashboard: React.FC = () => {
           return false;
         }
         break;
-      case 3:
+      case 2:
+        // Description validation
         if (!description.trim()) {
           showToast.error('Validation Error', 'Job description is required');
+          return false;
+        }
+        break;
+      case 3:
+        // Manage step validation
+        if (!formData.postingDate) {
+          showToast.error('Validation Error', 'Please select when to post this job');
           return false;
         }
         break;
@@ -189,7 +188,7 @@ const JobCreationDashboard: React.FC = () => {
     return true;
   };
 
-  const handlePublishJob = () => {
+  const publishedJob = () => {
     if (!validateCurrentStep()) {
       return;
     }
@@ -221,7 +220,7 @@ const JobCreationDashboard: React.FC = () => {
     createJobMutation.mutate(jobData);
   };
 
-  const handleResetForm = () => {
+  const resetForm = () => {
     setFormData({
       title: '',
       occupationId: '',
@@ -244,17 +243,15 @@ const JobCreationDashboard: React.FC = () => {
       salaryType: 'yearly',
       postingDate: 'today',
       autoRenew: false,
-    });
-    setDescription('');
+    });    setDescription('');
     setSelectedOccupation(null);
     setSelectedCompany(null);
-    setCurrentStep(1);
-  };
-  const steps = [
-    { id: 1, title: 'Company', description: 'Find your company' },
-    { id: 2, title: 'Job Details', description: 'Basic info, location, work details & compensation' },
-    { id: 3, title: 'Description', description: 'Job description' },
-    { id: 4, title: 'Review', description: 'Final review' },
+    setCurrentStep(0);
+  };const steps = [
+    { id: 1, title: 'Job Details', description: 'Basic info, location, work details & compensation' },
+    { id: 2, title: 'Description', description: 'Job description and requirements' },
+    { id: 3, title: 'Manage', description: 'Posting schedule and auto-renewal settings' },
+    { id: 4, title: 'Review', description: 'Final review and publish' },
   ];
 
   const occupationOptions = [
@@ -277,21 +274,19 @@ const JobCreationDashboard: React.FC = () => {
     { value: 'today', label: 'Today' },
     { value: 'this-week', label: 'This Week' },
     { value: 'this-month', label: 'This Month' },
-  ];
-
-  if (currentStep === 1) {
+  ];  // Company Search Step (before stepper)
+  if (!selectedCompany && currentStep === 0) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <div className="max-w-7xl mx-auto p-6">
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
               Create New Job Posting
-            </h1>            <p className="text-gray-600 dark:text-gray-400">
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400">
               Let&apos;s start by finding your company to ensure accurate job posting details.
             </p>
           </div>
-
-          <StepProgress currentStep={currentStep} steps={steps} />
           
           <CompanySearch 
             onCompanySelect={handleCompanySelect}
@@ -300,8 +295,7 @@ const JobCreationDashboard: React.FC = () => {
         </div>
       </div>
     );
-  }
-  // Step 4: Review & Publish
+  }  // Review Step
   if (currentStep === 4) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -322,17 +316,16 @@ const JobCreationDashboard: React.FC = () => {
               {/* Company Info */}
               {selectedCompany && (
                 <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Company Information</h3>
-                  <div className="flex items-center gap-3">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Company Information</h3>                  <div className="flex items-center gap-3">
                     <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
                       <span className="text-blue-600 dark:text-blue-400 font-semibold">
-                        {selectedCompany.name.charAt(0)}
+                        {selectedCompany.companyName.charAt(0)}
                       </span>
                     </div>
                     <div>
-                      <h4 className="font-semibold text-gray-900 dark:text-white">{selectedCompany.name}</h4>
+                      <h4 className="font-semibold text-gray-900 dark:text-white">{selectedCompany.companyName}</h4>
                       <p className="text-sm text-gray-600 dark:text-gray-400">
-                        {selectedCompany.industry} • {selectedCompany.location}
+                        {selectedCompany.state} • Size: {selectedCompany.sizeOfCompany}
                       </p>
                     </div>
                   </div>
@@ -360,7 +353,7 @@ const JobCreationDashboard: React.FC = () => {
                   <Button variant="outline" onClick={() => showToast.success('Draft Saved', 'Job posting saved as draft')}>
                     Save Draft
                   </Button>
-                  <Button onClick={handlePublishJob} disabled={createJobMutation.isPending}>
+                  <Button onClick={publishedJob} disabled={createJobMutation.isPending}>
                     {createJobMutation.isPending ? 'Publishing...' : 'Publish Job'}
                   </Button>
                 </div>
@@ -440,8 +433,7 @@ const JobCreationDashboard: React.FC = () => {
               >
                 Previous
               </Button>
-              
-              <div className="space-x-4">
+                <div className="space-x-4">
                 {currentStep < 3 ? (
                   <Button onClick={handleNextStep}>
                     Next
@@ -460,16 +452,15 @@ const JobCreationDashboard: React.FC = () => {
               {/* Company Info */}
               {selectedCompany && (
                 <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Selected Company</h3>
-                  <div className="flex items-center gap-3">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Selected Company</h3>                  <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
                       <span className="text-blue-600 dark:text-blue-400 font-semibold text-sm">
-                        {selectedCompany.name.charAt(0)}
+                        {selectedCompany.companyName.charAt(0)}
                       </span>
                     </div>
                     <div>
-                      <h4 className="font-semibold text-gray-900 dark:text-white text-sm">{selectedCompany.name}</h4>
-                      <p className="text-xs text-gray-600 dark:text-gray-400">{selectedCompany.location}</p>
+                      <h4 className="font-semibold text-gray-900 dark:text-white text-sm">{selectedCompany.companyName}</h4>
+                      <p className="text-xs text-gray-600 dark:text-gray-400">{selectedCompany.state}</p>
                     </div>
                   </div>
                 </div>
@@ -489,7 +480,7 @@ const JobCreationDashboard: React.FC = () => {
                   <Button
                     variant="ghost"
                     className="w-full"
-                    onClick={handleResetForm}
+                    onClick={resetForm}
                   >
                     Reset Form
                   </Button>

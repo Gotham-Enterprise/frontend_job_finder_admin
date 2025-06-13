@@ -3,64 +3,24 @@ import Input from '@/components/form/input/InputField';
 import Button from '@/components/ui/button/Button';
 import Label from '@/components/form/Label';
 import {Company, CompanySearchProps} from '@/services/types/companySearch';
+import { useCompanySearch } from '@/services/hooks/useCompanySearch';
 
 
-const CompanySearch: React.FC<CompanySearchProps> = ({ onCompanySelect }) => {
+const CompanySearch: React.FC<CompanySearchProps> = ({ onCompanySelect, onSkip }) => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [isSearching, setIsSearching] = useState(false);
-  const [companies, setCompanies] = useState<Company[]>([]);
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
 
-  const mockCompanies: Company[] = [
-    {
-      id: 1,
-      name: "HealthCare Plus Medical Center",
-      industry: "Healthcare",
-      location: "New York, NY",
-      employeeCount: "500-1000",
-      description: "Leading healthcare provider specializing in comprehensive medical services"
-    },
-    {
-      id: 2,
-      name: "Metro General Hospital",
-      industry: "Healthcare",
-      location: "Los Angeles, CA",
-      employeeCount: "1000+",
-      description: "State-of-the-art hospital facility with multiple specialty departments"
-    },
-    {
-      id: 3,
-      name: "Family Care Clinic",
-      industry: "Healthcare",
-      location: "Chicago, IL",
-      employeeCount: "50-200",
-      description: "Community-focused clinic providing primary care services"
-    },
-    {
-      id: 4,
-      name: "Advanced Rehabilitation Center",
-      industry: "Healthcare",
-      location: "Houston, TX",
-      employeeCount: "100-500",
-      description: "Specialized rehabilitation and physical therapy services"
-    }
-  ];
+  // Use the API hook for searching companies
+  const { data: searchResponse, isLoading: isSearching, error } = useCompanySearch({
+    search: searchQuery.trim(),
+    page: 1,
+    limit: 10,
+  });
+  const companies = searchResponse?.data || [];
 
-  const initSearch = () => {
-    if (!searchQuery.trim()) return;
-    
-    setIsSearching(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-      const filteredCompanies = mockCompanies.filter(company => 
-        company.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        company.industry.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        company.location.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-      setCompanies(filteredCompanies);
-      setIsSearching(false);
-    }, 1000);
+  const handleSearchSubmit = () => {
+    // The search is automatically triggered by the useCompanySearch hook
+    // when searchQuery changes, so we don't need to do anything here
   };
 
   const companySelect = (company: Company) => {
@@ -86,18 +46,17 @@ const CompanySearch: React.FC<CompanySearchProps> = ({ onCompanySelect }) => {
         <div className="mb-8">
           <Label>Company Name</Label>
           <div className="flex gap-4 mt-2">
-            <div className="flex-1">
-              <input
+            <div className="flex-1">              <input
                 type="text"
-                placeholder="Search for companies (e.g., HealthCare Plus, Hospital, New York)"
+                placeholder="Search for companies (e.g., ABC Group, AutoMotive, Texas)"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && initSearch()}
+                onKeyPress={(e) => e.key === 'Enter' && handleSearchSubmit()}
                 className="h-11 w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
               />
             </div>
             <Button 
-              onClick={initSearch}
+              onClick={handleSearchSubmit}
               disabled={!searchQuery.trim() || isSearching}
               className="px-8"
             >
@@ -122,27 +81,23 @@ const CompanySearch: React.FC<CompanySearchProps> = ({ onCompanySelect }) => {
                   onClick={() => companySelect(company)}
                 >
                   <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
+                    <div className="flex-1">                      <div className="flex items-center gap-3 mb-2">
                         <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
                           <span className="text-blue-600 dark:text-blue-400 font-semibold text-sm">
-                            {company.name.charAt(0)}
+                            {company.companyName.charAt(0)}
                           </span>
                         </div>
                         <div>
                           <h4 className="font-semibold text-gray-900 dark:text-white">
-                            {company.name}
+                            {company.companyName}
                           </h4>
                           <p className="text-sm text-gray-600 dark:text-gray-400">
-                            {company.industry} • {company.location}
+                            {company.state}
                           </p>
                         </div>
                       </div>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                        {company.description}
-                      </p>
                       <span className="inline-block px-2 py-1 bg-gray-100 dark:bg-gray-700 text-xs rounded-full text-gray-600 dark:text-gray-400">
-                        {company.employeeCount} employees
+                        Company Size: {company.sizeOfCompany}
                       </span>
                     </div>
                     {selectedCompany?.id === company.id && (
@@ -159,10 +114,8 @@ const CompanySearch: React.FC<CompanySearchProps> = ({ onCompanySelect }) => {
               ))}
             </div>
           </div>
-        )}
-
-        {/* No Results */}
-        {companies.length === 0 && searchQuery && !isSearching && (
+        )}        {/* No Results */}
+        {companies.length === 0 && searchQuery && !isSearching && !error && (
           <div className="text-center py-8 mb-8">
             <div className="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
               <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -172,10 +125,35 @@ const CompanySearch: React.FC<CompanySearchProps> = ({ onCompanySelect }) => {
             <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
               No companies found
             </h3>
-         
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              Try adjusting your search terms or search for a different company.
+            </p>
           </div>
-        )}       
-        <div className="flex justify-end items-center pt-6 border-t border-gray-200 dark:border-gray-700">
+        )}
+
+        {/* Error State */}
+        {error && searchQuery && (
+          <div className="text-center py-8 mb-8">
+            <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+              Search Error
+            </h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              {error.message || 'An error occurred while searching. Please try again.'}
+            </p>
+          </div>
+        )}<div className="flex justify-between items-center pt-6 border-t border-gray-200 dark:border-gray-700">
+          <Button
+            onClick={onSkip}
+            variant="outline"
+            className="px-8"
+          >
+            Skip for now
+          </Button>
           <Button
             onClick={initContinue}
             disabled={!selectedCompany}
