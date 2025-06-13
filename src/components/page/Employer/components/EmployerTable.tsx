@@ -102,7 +102,7 @@ const EmployerTable: React.FC<EmployerTableProps> = ({
                     startIcon={<EyeIcon />}
                     onClick={() => onViewSubscription(employer.id)}
                   >
-                    View subscription
+                    {employer.currentPlan}
                   </Button>
                 </TableCell>
                 <TableCell className="py-4 px-6 text-right">
