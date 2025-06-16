@@ -1,7 +1,6 @@
 import { LoginCredentials, AuthResponse } from '../types/auth';
 import { showToast } from '../utils/toast';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+import { apiPost, apiGet } from './apiUtils';
 
 const ERROR_MESSAGES = {
   400: 'Invalid request data',
@@ -21,6 +20,7 @@ const clearLocalStorage = (): void => {
 };
 
 const performLoginRequest = async (credentials: LoginCredentials): Promise<Response> => {
+  const API_URL = process.env.NEXT_PUBLIC_API_URL;
   return fetch(`${API_URL}/api/auth/login`, {
     method: 'POST',
     headers: {
@@ -112,19 +112,8 @@ export const authApi = {
     }
   },  async logout(): Promise<void> {
     try {
-      const response = await fetch(`${API_URL}/api/auth/logout`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-      });
-
-      if (!response.ok) {
-        console.warn('Logout request failed:', response.status, response.statusText);
-      }
+      await apiGet('/api/auth/logout', { includeAuth: false });
     } catch (error) {
-
       console.warn('Logout: Network or other error during logout, continuing with local cleanup:', error);
     }
   }
