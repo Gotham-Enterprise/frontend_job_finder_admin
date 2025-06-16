@@ -28,12 +28,11 @@ export const useLogout = () => {
   return useMutation({
     mutationFn: () => authApi.logout(),
     onSuccess: () => {
-      authUtils.clearAuthState();
+      authUtils.forceAuthClear();
       router.push('/login');
     },
     onError: () => {
-      
-      authUtils.clearAuthState();
+      authUtils.forceAuthClear();
       router.push('/login');
     }
   });

@@ -18,11 +18,29 @@ export const authUtils = {
       }
     }
     return null;
-  },
-  clearAuthState(): void {
+  },  clearAuthState(): void {
     if (typeof window !== 'undefined') {
       localStorage.removeItem(AUTH_STORAGE_KEY);
       localStorage.removeItem('jobfinder_last_activity');
+      const keysToRemove = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('jobfinder_')) {
+          keysToRemove.push(key);
+        }
+      }
+      
+      keysToRemove.forEach(key => localStorage.removeItem(key));
+    }
+  },
+
+  forceAuthClear(): void {
+    this.clearAuthState();
+  
+    if (typeof document !== 'undefined') {
+      document.cookie.split(";").forEach(function(c) { 
+        document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+      });
     }
   },
 

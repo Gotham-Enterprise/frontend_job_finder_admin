@@ -37,25 +37,26 @@ export const AutoLogoutProvider: React.FC<AutoLogoutProviderProps> = ({ children
     if (typeof window !== 'undefined') {
       localStorage.setItem(LAST_ACTIVITY_KEY, now.toString());
     }
-  }, []);
-
-  const performAutoLogout = useCallback(async () => {
+  }, []);  const performAutoLogout = useCallback(async () => {
     if (!authUtils.isAuthenticated()) return;
      
     if (inactivityTimerRef.current) {
       clearTimeout(inactivityTimerRef.current);
     }
     
-    authUtils.clearAuthState();
+    try {
+      // First try to logout from backend to clear server session
+      await logout();
+    } catch (error) {
+      console.warn('Auto-logout: Backend logout failed, clearing frontend state anyway:', error);
+    }
+    
+    // Always clear frontend state regardless of backend logout success
+    // Use force clear to ensure everything is cleaned up
+    authUtils.forceAuthClear();
     
     if (typeof window !== 'undefined') {
       localStorage.removeItem(LAST_ACTIVITY_KEY);
-    }
-    
-    try {
-      await logout();
-    } catch (error) {
-      console.warn('Auto-logout: Backend logout failed, but frontend state was cleared:', error);
     }
 
     router.replace('/login?reason=inactivity');

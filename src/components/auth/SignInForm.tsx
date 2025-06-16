@@ -11,29 +11,107 @@ import { useLogin } from "@/services/hooks/useAuth";
 import { useRouter, useSearchParams } from "next/navigation";
 import { authUtils } from "@/services/utils/authUtils";
 
-export default function SignInForm() {
-  const [showPassword, setShowPassword] = useState(false);
+export default function SignInForm() {  const [showPassword, setShowPassword] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [inactivityMessage, setInactivityMessage] = useState<string | null>(null);
+  const [showSessionReset, setShowSessionReset] = useState(false);
   
   const router = useRouter();
   const searchParams = useSearchParams();
   const { mutate: login, isPending } = useLogin();
 
+  const sessionReset = async () => {
+    try {
+
+      authUtils.forceAuthClear();
+      
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/logout`, {
+        method: 'GET',
+        credentials: 'include',
+      }).catch(() => {
+       
+      });
+      
+      setErrorMessage(null);
+      setShowSessionReset(false);
+      setInactivityMessage("Session data has been cleared. Please try logging in again.");
+    } catch (error) {
+      console.error("Session reset error:", error);
+    }
+  };
   useEffect(() => {
+   
     if (authUtils.isAuthenticated()) {
       router.push('/');
+      return;
     }
     
   
     const reason = searchParams.get('reason');
     if (reason === 'inactivity') {
       setInactivityMessage("You have been automatically logged out due to 1 hour of inactivity. Please sign in again.");
+    
+      authUtils.forceAuthClear();
     }
-  }, [router, searchParams]);
+  }, [router, searchParams]); 
+
+  const errorMappings = [
+    {
+      patterns: ['Session conflict', 'already logged in', 'You are already logged in'],
+      message: "There was a session conflict. We've attempted to resolve it automatically. If the issue persists, try clearing your session data below.",
+      showReset: true
+    },
+    {
+      patterns: ['Invalid credentials'],
+      message: "Invalid email or password. Please check your credentials and try again."
+    },
+    {
+      patterns: ['Account access denied'],
+      message: "Your account access has been denied. Please contact support for assistance."
+    },
+    {
+      patterns: ['Rate limit exceeded'],
+      message: "Too many login attempts. Please wait a moment before trying again."
+    },
+    {
+      patterns: ['Server error', 'Service unavailable'],
+      message: "The service is temporarily unavailable. Please try again in a few moments."
+    },
+    {
+      patterns: ['Bad request'],
+      message: "Invalid login data. Please check your email and password format."
+    }
+  ];
+
+  const getErrorMessage = (error: Error): { message: string; showReset: boolean } => {
+    const errorMessage = error.message || '';
+    
+    for (const mapping of errorMappings) {
+      if (mapping.patterns.some(pattern => errorMessage.includes(pattern))) {
+        return {
+          message: mapping.message,
+          showReset: mapping.showReset || false
+        };
+      }
+    }
+
+    return {
+      message: error.message || "Login failed. Please check your credentials.",
+      showReset: false
+    };
+  };
+
+  const loginError = (error: Error) => {
+    console.error('Login error details:', error);
+    
+    const { message, showReset } = getErrorMessage(error);
+    
+    setErrorMessage(message);
+    setShowSessionReset(showReset);
+  };
 
   const initSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -41,9 +119,7 @@ export default function SignInForm() {
     
     try {
       login({ email, password }, {
-        onError: (error: Error) => {
-          setErrorMessage(error.message || "Login failed. Please check your credentials.");
-        }
+        onError: loginError
       });
     } catch (error) {
       console.error("Login error:", error);
@@ -79,10 +155,20 @@ export default function SignInForm() {
               <div className="p-3 mb-4 text-sm text-blue-600 bg-blue-100 rounded-lg dark:bg-blue-800/20 dark:text-blue-400">
                 {inactivityMessage}
               </div>
-            )}
-            {errorMessage && (
+            )}            {errorMessage && (
               <div className="p-3 mb-4 text-sm text-red-500 bg-red-100 rounded-lg dark:bg-red-800/20 dark:text-red-400">
                 {errorMessage}
+                {showSessionReset && (
+                  <div className="mt-2">
+                    <button
+                      type="button"
+                      onClick={sessionReset}
+                      className="text-xs text-blue-600 hover:text-blue-800 underline dark:text-blue-400 dark:hover:text-blue-300"
+                    >
+                      Clear session data and try again
+                    </button>
+                  </div>
+                )}
               </div>
             )}
             
