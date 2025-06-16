@@ -1,14 +1,17 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import Input from '@/components/form/input/InputField';
 import Select from '@/components/form/Select';
 import Label from '@/components/form/Label';
 import Radio from '@/components/form/input/Radio';
 import { FormData, WorkDetailsStepProps } from '@/services/types/workDetail';
+import { useShiftTypes } from '@/services/hooks/useShiftTypes';
 
 const WorkDetailsStep: React.FC<WorkDetailsStepProps> = ({
   formData,
   onUpdateField
 }) => {
+  const { data: shiftTypesData, isLoading: shiftTypesLoading, error: shiftTypesError } = useShiftTypes();
+
   const workTypeOptions = [
     { value: 'full-time', label: 'Full Time' },
     { value: 'part-time', label: 'Part Time' },
@@ -21,13 +24,27 @@ const WorkDetailsStep: React.FC<WorkDetailsStepProps> = ({
     { value: 'hybrid', label: 'Hybrid' },
   ];
 
-  const shiftTypeOptions = [
-    { value: '', label: 'Select Shift Type' },
-    { value: 'day', label: 'Day Shift' },
-    { value: 'night', label: 'Night Shift' },
-    { value: 'rotating', label: 'Rotating Shifts' },
-    { value: 'flexible', label: 'Flexible Hours' },
-  ];
+  const shiftTypeOptions = useMemo(() => {
+    const defaultOption = { value: '', label: 'Select Shift Type' };
+    
+    if (shiftTypesLoading) {
+      return [defaultOption, { value: 'loading', label: 'Loading...', disabled: true }];
+    }
+    
+    if (shiftTypesError || !shiftTypesData?.success) {
+      return [
+        defaultOption,
+        { value: 'error', label: 'Error loading shift types', disabled: true }
+      ];
+    }
+    
+    const apiOptions = shiftTypesData.data.map((shiftType) => ({
+      value: shiftType.id.toString(),
+      label: shiftType.name
+    }));
+    
+    return [defaultOption, ...apiOptions];
+  }, [shiftTypesData, shiftTypesLoading, shiftTypesError]);
 
   const languageOptions = [
     { value: '', label: 'Select Language' },
