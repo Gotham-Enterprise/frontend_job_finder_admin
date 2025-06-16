@@ -5,24 +5,38 @@ import Label from '@/components/form/Label';
 import Radio from '@/components/form/input/Radio';
 import { FormData, WorkDetailsStepProps } from '@/services/types/workDetail';
 import { useShiftTypes } from '@/services/hooks/useShiftTypes';
+import { useWorkTypes } from '@/services/hooks/useWorkTypes';
+import { useWorkSettings } from '@/services/hooks/useWorkSettings';
+import { WorkSetting } from '@/services/types/workSettings';
+
+interface SelectOption {
+  value: string;
+  label: string;
+  disabled?: boolean;
+}
 
 const WorkDetailsStep: React.FC<WorkDetailsStepProps> = ({
   formData,
   onUpdateField
 }) => {
   const { data: shiftTypesData, isLoading: shiftTypesLoading, error: shiftTypesError } = useShiftTypes();
-
-  const workTypeOptions = [
-    { value: 'full-time', label: 'Full Time' },
-    { value: 'part-time', label: 'Part Time' },
-    { value: 'contract', label: 'Contract' },
-  ];
-
-  const workSettingOptions = [
-    { value: 'onsite', label: 'Onsite' },
-    { value: 'remote', label: 'Remote' },
-    { value: 'hybrid', label: 'Hybrid' },
-  ];
+  const { data: workTypesData, isLoading: workTypesLoading, error: workTypesError } = useWorkTypes();
+  const { data: workSettingsData, isLoading: workSettingsLoading, error: workSettingsError } = useWorkSettings();
+  const workSettingOptions = useMemo(() => {
+    if (workSettingsLoading) {
+      return [{ value: 'loading', label: 'Loading...', disabled: true }];
+    }
+    
+    if (workSettingsError || !workSettingsData?.success) {
+      return [{ value: 'error', label: 'Error loading work settings', disabled: true }];
+    }
+      const apiOptions = workSettingsData.data.map((workSetting: WorkSetting) => ({
+      value: workSetting.id.toString(),
+      label: workSetting.name
+    }));
+    
+    return apiOptions;
+  }, [workSettingsData, workSettingsLoading, workSettingsError]);
 
   const shiftTypeOptions = useMemo(() => {
     const defaultOption = { value: '', label: 'Select Shift Type' };
@@ -42,9 +56,25 @@ const WorkDetailsStep: React.FC<WorkDetailsStepProps> = ({
       value: shiftType.id.toString(),
       label: shiftType.name
     }));
-    
-    return [defaultOption, ...apiOptions];
+      return [defaultOption, ...apiOptions];
   }, [shiftTypesData, shiftTypesLoading, shiftTypesError]);
+
+  const workTypeOptions = useMemo(() => {
+    if (workTypesLoading) {
+      return [{ value: 'loading', label: 'Loading...', disabled: true }];
+    }
+    
+    if (workTypesError || !workTypesData?.success) {
+      return [{ value: 'error', label: 'Error loading work types', disabled: true }];
+    }
+    
+    const apiOptions = workTypesData.data.map((workType) => ({
+      value: workType.id.toString(),
+      label: workType.name
+    }));
+    
+    return apiOptions;
+  }, [workTypesData, workTypesLoading, workTypesError]);
 
   const languageOptions = [
     { value: '', label: 'Select Language' },
@@ -111,7 +141,7 @@ const WorkDetailsStep: React.FC<WorkDetailsStepProps> = ({
           <div>
             <Label>Work Setting *</Label>
             <div className="space-y-2">
-              {workSettingOptions.map((option) => (
+              {workSettingOptions.map((option: SelectOption) => (
                 <Radio
                   key={option.value}
                   id={`workSetting-${option.value}`}
