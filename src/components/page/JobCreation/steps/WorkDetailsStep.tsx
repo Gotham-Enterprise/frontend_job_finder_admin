@@ -1,12 +1,13 @@
 import React, { useMemo } from 'react';
-import Input from '@/components/form/input/InputField';
 import Select from '@/components/form/Select';
+import MultiSelect from '@/components/form/MultiSelect';
 import Label from '@/components/form/Label';
 import Radio from '@/components/form/input/Radio';
-import { FormData, WorkDetailsStepProps } from '@/services/types/workDetail';
+import { WorkDetailsStepProps } from '@/services/types/workDetail';
 import { useShiftTypes } from '@/services/hooks/useShiftTypes';
 import { useWorkTypes } from '@/services/hooks/useWorkTypes';
 import { useWorkSettings } from '@/services/hooks/useWorkSettings';
+import { useLanguages } from '@/services/hooks/useLanguages';
 import { WorkSetting } from '@/services/types/workSettings';
 
 interface SelectOption {
@@ -22,6 +23,7 @@ const WorkDetailsStep: React.FC<WorkDetailsStepProps> = ({
   const { data: shiftTypesData, isLoading: shiftTypesLoading, error: shiftTypesError } = useShiftTypes();
   const { data: workTypesData, isLoading: workTypesLoading, error: workTypesError } = useWorkTypes();
   const { data: workSettingsData, isLoading: workSettingsLoading, error: workSettingsError } = useWorkSettings();
+  const { data: languagesData, isLoading: languagesLoading, error: languagesError } = useLanguages();
   const workSettingOptions = useMemo(() => {
     if (workSettingsLoading) {
       return [{ value: 'loading', label: 'Loading...', disabled: true }];
@@ -75,14 +77,23 @@ const WorkDetailsStep: React.FC<WorkDetailsStepProps> = ({
     
     return apiOptions;
   }, [workTypesData, workTypesLoading, workTypesError]);
-
-  const languageOptions = [
-    { value: '', label: 'Select Language' },
-    { value: 'english', label: 'English' },
-    { value: 'spanish', label: 'Spanish' },
-    { value: 'french', label: 'French' },
-    { value: 'bilingual', label: 'Bilingual' },
-  ];
+  const languageOptions = useMemo(() => {
+    if (languagesLoading) {
+      return [{ value: 'loading', text: 'Loading...', selected: false }];
+    }
+    
+    if (languagesError || !languagesData?.success) {
+      return [{ value: 'error', text: 'Error loading languages', selected: false }];
+    }
+    
+    const apiOptions = languagesData.data.map((language) => ({
+      value: language.id.toString(),
+      text: language.name,
+      selected: formData.language?.includes(language.id.toString()) || false
+    }));
+    
+    return apiOptions;
+  }, [languagesData, languagesLoading, languagesError, formData.language]);
 
   const clinicSizeOptions = [
     { value: '', label: 'Select Clinic Size' },
@@ -154,9 +165,8 @@ const WorkDetailsStep: React.FC<WorkDetailsStepProps> = ({
               ))}
             </div>
           </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        </div>        
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           <div>
             <Label>Shift Type</Label>
             <Select
@@ -164,25 +174,14 @@ const WorkDetailsStep: React.FC<WorkDetailsStepProps> = ({
               onChange={(value: string) => onUpdateField('shiftType', value)}
               defaultValue={formData.shiftType}
             />
-          </div>
-          <div>
-            <Label>Timezone</Label>
-            <Input
-              type="text"
-              placeholder="e.g. EST, PST, GMT"
-              defaultValue={formData.timezone}
-              onChange={(e) => onUpdateField('timezone', e.target.value)}
-            />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <Label>Required Language</Label>
-            <Select
+          </div>          <div>
+            <MultiSelect
+              label="Language"
               options={languageOptions}
-              onChange={(value: string) => onUpdateField('language', value)}
-              defaultValue={formData.language}
+              defaultSelected={formData.language || []}
+              onChange={(selected: string[]) => onUpdateField('language', selected)}
+              placeholder="Select languages..."
+              maxDisplayItems={2}
             />
           </div>
           <div>

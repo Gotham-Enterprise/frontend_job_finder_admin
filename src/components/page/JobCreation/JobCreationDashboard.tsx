@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { JobCreationForm, JobCreationRequest } from '@/services/types/jobCreation';
+import { JobCreationRequest } from '@/services/types/jobCreation';
 import { jobCreationApi } from '@/services/api/jobCreation';
 import { showToast } from '@/services/utils/toast';
 import Button from '@/components/ui/button/Button';
@@ -26,7 +26,7 @@ interface FormData {
   workSetting: string;
   shiftType: string;
   timezone: string;
-  language: string;
+  language: string[];
   clinicSize: string;
   workFacility: string;
   currency: string;
@@ -49,7 +49,6 @@ const JobCreationDashboard: React.FC = () => {
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const [selectedOccupation, setSelectedOccupation] = useState<number | null>(null);
   const [description, setDescription] = useState('');
-
   const [formData, setFormData] = useState<FormData>({
     title: '',
     occupationId: '',
@@ -63,7 +62,7 @@ const JobCreationDashboard: React.FC = () => {
     workSetting: 'onsite',
     shiftType: '',
     timezone: '',
-    language: '',
+    language: [],
     clinicSize: '',
     workFacility: '',
     currency: 'USD',
@@ -110,18 +109,18 @@ const JobCreationDashboard: React.FC = () => {
     setCurrentStep(1); 
   };
 
-  const handleCancel = () => {
+  const initCancel = () => {
     setSelectedCompany(null);
     setCurrentStep(0);
   };
 
-  const handleNextStep = () => {
+  const nextStep = () => {
     if (validateCurrentStep()) {
       setCurrentStep(prev => prev + 1);
     }
   };
 
-  const handlePrevStep = () => {
+  const prevStep = () => {
     setCurrentStep(prev => prev - 1);
   };  const validateCurrentStep = (): boolean => {
     switch (currentStep) {
@@ -203,10 +202,9 @@ const JobCreationDashboard: React.FC = () => {
       state: formData.state,
       zipCode: formData.zipCode,
       workType: formData.workType as any,
-      workSetting: formData.workSetting as any,
-      shiftType: formData.shiftType,
+      workSetting: formData.workSetting as any,      shiftType: formData.shiftType,
       timezone: formData.timezone,
-      language: formData.language,
+      language: formData.language.join(', '),
       clinicSize: formData.clinicSize,
       workFacility: formData.workFacility,
       currency: formData.currency,
@@ -231,10 +229,9 @@ const JobCreationDashboard: React.FC = () => {
       state: '',
       zipCode: '',
       workType: 'full-time',
-      workSetting: 'onsite',
-      shiftType: '',
+      workSetting: 'onsite',      shiftType: '',
       timezone: '',
-      language: '',
+      language: [],
       clinicSize: '',
       workFacility: '',
       currency: 'USD',
@@ -342,10 +339,10 @@ const JobCreationDashboard: React.FC = () => {
                 </div>
               </div>              {/* Navigation */}
               <div className="flex justify-between">
-                <Button variant="outline" onClick={handleCancel}>
+                <Button variant="outline" onClick={initCancel}>
                   Cancel
                 </Button>
-                <Button variant="outline" onClick={handlePrevStep}>
+                <Button variant="outline" onClick={prevStep}>
                   Previous
                 </Button>
                 <div className="space-x-4">
@@ -426,13 +423,13 @@ const JobCreationDashboard: React.FC = () => {
               <div className="flex space-x-4">
                 <Button 
                   variant="outline" 
-                  onClick={handleCancel}
+                  onClick={initCancel}
                 >
                   Cancel
                 </Button>
                 <Button 
                   variant="outline" 
-                  onClick={handlePrevStep}
+                  onClick={prevStep}
                   disabled={currentStep <= 1}
                 >
                   Previous
@@ -441,11 +438,11 @@ const JobCreationDashboard: React.FC = () => {
               
               <div className="space-x-4">
                 {currentStep < 3 ? (
-                  <Button onClick={handleNextStep}>
+                  <Button onClick={nextStep}>
                     Next
                   </Button>
                 ) : (
-                  <Button onClick={handleNextStep}>
+                  <Button onClick={nextStep}>
                     Review & Publish
                   </Button>
                 )}
@@ -472,7 +469,7 @@ const JobCreationDashboard: React.FC = () => {
                 </div>
               )}
 
-              {/* Quick Actions */}
+           
               <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Quick Actions</h3>
                 <div className="space-y-3">

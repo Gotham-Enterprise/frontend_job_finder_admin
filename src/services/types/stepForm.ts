@@ -8,10 +8,9 @@ export interface FormData {
   state: string;
   zipCode: string;
   workType: string;
-  workSetting: string;
-  shiftType: string;
+  workSetting: string;  shiftType: string;
   timezone: string;
-  language: string;
+  language: string[];
   clinicSize: string;
   workFacility: string;
   currency: string;

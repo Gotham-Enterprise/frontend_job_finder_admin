@@ -4,7 +4,7 @@ export interface FormData {
   workSetting: string;
   shiftType: string;
   timezone: string;
-  language: string;
+  language: string[];
   clinicSize: string;
   workFacility: string;
 }
