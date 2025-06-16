@@ -3,6 +3,7 @@ import Input from '@/components/form/input/InputField';
 import Select from '@/components/form/Select';
 import Label from '@/components/form/Label';
 import {FormData, CompensationStepProps} from '@/services/types/compensation';
+import { numericOnly, validateNumericInput } from '@/services/utils';
 
 
 const CompensationStep: React.FC<CompensationStepProps> = ({
@@ -21,26 +22,34 @@ const CompensationStep: React.FC<CompensationStepProps> = ({
       Salary Range
       </h2>
       <p className="mb-4">Provide a salary range for candidates. If the pay is a fixed amount, enter the same figure in both fields.</p>
-        <div className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
+        <div className="space-y-6">        
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">          
+            <div>
             <Label>From *</Label>
             <Input
-              type="number"
+              type="text"
               placeholder="50000"
               min="0"
               defaultValue={formData.salaryFrom.toString()}
-              onChange={(e) => onUpdateField('salaryFrom', parseInt(e.target.value) || 0)}
+              onChange={(e) => {
+                const value = e.target.value;
+                onUpdateField('salaryFrom', validateNumericInput(value));
+              }}
+              onKeyDown={numericOnly}
             />
           </div>
           <div>
             <Label>To *</Label>
             <Input
-              type="number"
+              type="text"
               placeholder="80000"
               min="0"
               defaultValue={formData.salaryTo.toString()}
-              onChange={(e) => onUpdateField('salaryTo', parseInt(e.target.value) || 0)}
+              onChange={(e) => {
+                const value = e.target.value;
+                onUpdateField('salaryTo', validateNumericInput(value));
+              }}
+              onKeyDown={numericOnly}
             />
           </div>
           <div>
