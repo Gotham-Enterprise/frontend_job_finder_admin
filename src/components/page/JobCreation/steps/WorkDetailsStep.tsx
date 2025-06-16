@@ -8,6 +8,7 @@ import { useShiftTypes } from '@/services/hooks/useShiftTypes';
 import { useWorkTypes } from '@/services/hooks/useWorkTypes';
 import { useWorkSettings } from '@/services/hooks/useWorkSettings';
 import { useLanguages } from '@/services/hooks/useLanguages';
+import { useClinicSizes } from '@/services/hooks/useClinicSizes';
 import { WorkSetting } from '@/services/types/workSettings';
 
 interface SelectOption {
@@ -19,11 +20,11 @@ interface SelectOption {
 const WorkDetailsStep: React.FC<WorkDetailsStepProps> = ({
   formData,
   onUpdateField
-}) => {
-  const { data: shiftTypesData, isLoading: shiftTypesLoading, error: shiftTypesError } = useShiftTypes();
+}) => {  const { data: shiftTypesData, isLoading: shiftTypesLoading, error: shiftTypesError } = useShiftTypes();
   const { data: workTypesData, isLoading: workTypesLoading, error: workTypesError } = useWorkTypes();
   const { data: workSettingsData, isLoading: workSettingsLoading, error: workSettingsError } = useWorkSettings();
   const { data: languagesData, isLoading: languagesLoading, error: languagesError } = useLanguages();
+  const { data: clinicSizesData, isLoading: clinicSizesLoading, error: clinicSizesError } = useClinicSizes();
   const workSettingOptions = useMemo(() => {
     if (workSettingsLoading) {
       return [{ value: 'loading', label: 'Loading...', disabled: true }];
@@ -94,14 +95,27 @@ const WorkDetailsStep: React.FC<WorkDetailsStepProps> = ({
     
     return apiOptions;
   }, [languagesData, languagesLoading, languagesError, formData.language]);
-
-  const clinicSizeOptions = [
-    { value: '', label: 'Select Clinic Size' },
-    { value: 'small', label: 'Small (1-50 employees)' },
-    { value: 'medium', label: 'Medium (51-200 employees)' },
-    { value: 'large', label: 'Large (201-1000 employees)' },
-    { value: 'enterprise', label: 'Enterprise (1000+ employees)' },
-  ];
+  const clinicSizeOptions = useMemo(() => {
+    const defaultOption = { value: '', label: 'Select Clinic Size' };
+    
+    if (clinicSizesLoading) {
+      return [defaultOption, { value: 'loading', label: 'Loading...', disabled: true }];
+    }
+    
+    if (clinicSizesError || !clinicSizesData?.success) {
+      return [
+        defaultOption,
+        { value: 'error', label: 'Error loading clinic sizes', disabled: true }
+      ];
+    }
+    
+    const apiOptions = clinicSizesData.data.map((clinicSize) => ({
+      value: clinicSize.id.toString(),
+      label: clinicSize.name
+    }));
+    
+    return [defaultOption, ...apiOptions];
+  }, [clinicSizesData, clinicSizesLoading, clinicSizesError]);
 
   const workFacilityOptions = [
     { value: 'hospital', label: 'Hospital' },
@@ -166,15 +180,7 @@ const WorkDetailsStep: React.FC<WorkDetailsStepProps> = ({
             </div>
           </div>
         </div>        
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <div>
-            <Label>Shift Type</Label>
-            <Select
-              options={shiftTypeOptions}
-              onChange={(value: string) => onUpdateField('shiftType', value)}
-              defaultValue={formData.shiftType}
-            />
-          </div>          <div>
+        <div className="grid grid-cols-1 lg:grid-cols-1 gap-4">
             <MultiSelect
               label="Language"
               options={languageOptions}
@@ -184,8 +190,18 @@ const WorkDetailsStep: React.FC<WorkDetailsStepProps> = ({
               maxDisplayItems={2}
             />
           </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div>
-            <Label>Clinic Size</Label>
+            <Label>Shift Type</Label>
+            <Select
+              options={shiftTypeOptions}
+              onChange={(value: string) => onUpdateField('shiftType', value)}
+              defaultValue={formData.shiftType}
+            />
+          </div>          
+       
+          <div>
+            <Label>Company Size</Label>
             <Select
               options={clinicSizeOptions}
               onChange={(value: string) => onUpdateField('clinicSize', value)}
