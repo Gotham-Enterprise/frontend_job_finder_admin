@@ -9,6 +9,7 @@ import { useWorkTypes } from '@/services/hooks/useWorkTypes';
 import { useWorkSettings } from '@/services/hooks/useWorkSettings';
 import { useLanguages } from '@/services/hooks/useLanguages';
 import { useClinicSizes } from '@/services/hooks/useClinicSizes';
+import { useWorkFacilities } from '@/services/hooks/useWorkFacilities';
 import { WorkSetting } from '@/services/types/workSettings';
 
 interface SelectOption {
@@ -25,6 +26,7 @@ const WorkDetailsStep: React.FC<WorkDetailsStepProps> = ({
   const { data: workSettingsData, isLoading: workSettingsLoading, error: workSettingsError } = useWorkSettings();
   const { data: languagesData, isLoading: languagesLoading, error: languagesError } = useLanguages();
   const { data: clinicSizesData, isLoading: clinicSizesLoading, error: clinicSizesError } = useClinicSizes();
+  const { data: workFacilitiesData, isLoading: workFacilitiesLoading, error: workFacilitiesError } = useWorkFacilities();
   const workSettingOptions = useMemo(() => {
     if (workSettingsLoading) {
       return [{ value: 'loading', label: 'Loading...', disabled: true }];
@@ -116,27 +118,23 @@ const WorkDetailsStep: React.FC<WorkDetailsStepProps> = ({
     
     return [defaultOption, ...apiOptions];
   }, [clinicSizesData, clinicSizesLoading, clinicSizesError]);
-
-  const workFacilityOptions = [
-    { value: 'hospital', label: 'Hospital' },
-    { value: 'outpatient-office', label: 'Outpatient Office' },
-    { value: 'community-health-clinic', label: 'Community Health Clinic' },
-    { value: 'skilled-nursing-facility', label: 'Skilled Nursing Facility' },
-    { value: 'surgical-center', label: 'Surgical Center' },
-    { value: 'early-intervention-center', label: 'Early Intervention Center' },
-    { value: 'home-care', label: 'Home Care' },
-    { value: 'school', label: 'School' },
-    { value: 'correctional-facility', label: 'Correctional Facility' },
-    { value: 'assistive-living-facility', label: 'Assistive Living Facility' },
-    { value: 'detox-center', label: 'Detox Center' },
-    { value: 'corporate', label: 'Corporate' },
-    { value: 'telehealth', label: 'Telehealth' },
-    { value: 'hospice-center', label: 'Hospice Center' },
-    { value: 'rehabilitation-center', label: 'Rehabilitation Center' },
-    { value: 'diagnostic-imaging-center', label: 'Diagnostic Imaging Center' },
-    { value: 'adult-day-care-center', label: 'Adult Day Care Center' },
-    { value: 'concierge-medicine', label: 'Concierge Medicine/House Calls' },
-  ];
+  
+  const workFacilityOptions = useMemo(() => {
+    if (workFacilitiesLoading) {
+      return [{ value: 'loading', label: 'Loading...', disabled: true }];
+    }
+    
+    if (workFacilitiesError || !workFacilitiesData?.success) {
+      return [{ value: 'error', label: 'Error loading work facilities', disabled: true }];
+    }
+    
+    const apiOptions = workFacilitiesData.data.map((workFacility) => ({
+      value: workFacility.id.toString(),
+      label: workFacility.name
+    }));
+    
+    return apiOptions;
+  }, [workFacilitiesData, workFacilitiesLoading, workFacilitiesError]);
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
