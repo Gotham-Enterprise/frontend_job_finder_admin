@@ -27,15 +27,32 @@ const StepForm: React.FC<StepFormProps> = ({
         selectedOccupation={selectedOccupation}
       />
     );
-  }
-  if (step === 2) {
+  }  if (step === 2) {
     return (
       <JobDescriptionStep
         description={description}
         onUpdateDescription={onUpdateDescription}
+        jobTitle={formData.title}
+        occupationId={formData.occupationId ? parseInt(formData.occupationId) : undefined}
+        specialtyId={formData.specialtyId ? parseInt(formData.specialtyId) : undefined}
+        workType={formData.workType}
+        workSetting={formData.workSetting}
+        locationCountry={formData.country}
+        locationState={formData.state}
+        locationCity={formData.city}
+        locationZipCode={formData.zipCode}
+        locationAddress={formData.address}
+        workFacility={formData.workFacility}
+        salaryCurrency={formData.currency}
+        salaryRangeStart={formData.salaryFrom}
+        salaryRangeEnd={formData.salaryTo}
+        salaryType={formData.salaryType}
+        shiftType={formData.shiftType}
+        languages={formData.language}
+        companySize={formData.clinicSize}
       />
     );
-  }  if (step === 3) {
+  }if (step === 3) {
     return (
       <ManageStep
         formData={{

@@ -12,30 +12,7 @@ import CompanySearch from './CompanySearch';
 import StepProgress from './StepProgress';
 import StepForm from './StepForm';
 import JobPostingTips from './JobPostingTips';
-
-interface FormData {
-  title: string;
-  occupationId: string;
-  specialtyId: string;
-  country: string;
-  address: string;
-  city: string;
-  state: string;
-  zipCode: string;
-  workType: string;
-  workSetting: string;
-  shiftType: string;
-  timezone: string;
-  language: string[];
-  clinicSize: string;
-  workFacility: string;
-  currency: string;
-  salaryFrom: number;
-  salaryTo: number;
-  salaryType: string;
-  postingDate: string;
-  autoRenew: boolean;
-}
+import { FormData } from '@/services/types/stepForm';
 
 interface Company {
   id: string;

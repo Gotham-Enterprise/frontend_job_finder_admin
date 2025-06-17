@@ -9,7 +9,7 @@ export const jobPostingApi = {
     };
     
     return apiPost<JobPostingResponse>(
-      `/api/job_posts_management/${companyId}`,
+      `/api/job_posts_management/admin/${companyId}`,
       fullPayload
     );
   }
