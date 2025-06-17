@@ -32,7 +32,6 @@ const QuestionDrawer: React.FC<QuestionDrawerProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 overflow-hidden">
-      {/* Backdrop */}
       <div 
         className={`absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 ease-out ${
           isVisible ? 'opacity-100' : 'opacity-0'
@@ -40,14 +39,12 @@ const QuestionDrawer: React.FC<QuestionDrawerProps> = ({
         onClick={onClose}
       ></div>
       
-      {/* Drawer Panel */}
       <div className={`absolute right-0 top-0 h-full w-full max-w-lg bg-white dark:bg-gray-900 shadow-2xl transform transition-all duration-300 ease-out ${
         isVisible 
           ? 'translate-x-0 opacity-100 scale-100' 
           : 'translate-x-full opacity-0 scale-95'
       }`}>
         <div className="flex flex-col h-full shadow-[-20px_0_25px_-5px_rgba(0,0,0,0.1)] dark:shadow-[-20px_0_25px_-5px_rgba(0,0,0,0.3)]">
-          {/* Header */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
             <div className="flex items-center space-x-3">
               <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/50 rounded-lg flex items-center justify-center">
@@ -73,10 +70,9 @@ const QuestionDrawer: React.FC<QuestionDrawerProps> = ({
               </svg>
             </button>
           </div>
-          
-          {/* Form Content */}
+
           <div className="flex-1 mt-5 px-6 py-6 overflow-y-auto bg-gray-50/50 dark:bg-gray-900/50">
-            <div className="space-y-8">              {/* Question Type */}
+            <div className="space-y-8">             
               <div className="space-y-3">
                 <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Question Type</Label>
                 <div className="relative">                  <select
@@ -98,7 +94,7 @@ const QuestionDrawer: React.FC<QuestionDrawerProps> = ({
                 </div>
               </div>
 
-              {/* Subtype Selection for Choice */}
+           
               {questionForm.type === 'choice' && (
                 <div className="space-y-3">
                   <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Answer Format</Label>
@@ -137,7 +133,7 @@ const QuestionDrawer: React.FC<QuestionDrawerProps> = ({
                     </div>
                   </div>
                 </div>
-              )}              {/* Subtype Selection for Text */}
+              )}             
               {questionForm.type === 'text' && (
                 <div className="space-y-4">
                   <div className="space-y-3">
@@ -172,7 +168,7 @@ const QuestionDrawer: React.FC<QuestionDrawerProps> = ({
                     </div>
                   </div>
 
-                  {/* Input Type Selection for Short Answer */}
+                
                   {!questionForm.allowMultiple && (
                     <div className="space-y-3">
                       <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Input Type</Label>
@@ -235,7 +231,7 @@ const QuestionDrawer: React.FC<QuestionDrawerProps> = ({
                 </div>
               )}
               
-              {/* Question Text */}
+           
               <div className="space-y-3">
                 <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Question Text</Label>
                 <textarea
@@ -250,7 +246,6 @@ const QuestionDrawer: React.FC<QuestionDrawerProps> = ({
                 </p>
               </div>
               
-              {/* Options for Choice type */}
               {questionForm.type === 'choice' && (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
@@ -299,7 +294,6 @@ const QuestionDrawer: React.FC<QuestionDrawerProps> = ({
                 </div>
               )}
               
-              {/* Settings */}
               <div className="space-y-4">
                 <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Settings</Label>
                 <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 space-y-4">
@@ -348,10 +342,11 @@ const QuestionDrawer: React.FC<QuestionDrawerProps> = ({
                     </div>
                   )}
 
-                  {/* Active Setting */}
+              
                   <div className="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-700">
                     <div className="flex items-start space-x-3">
-                      <div className="flex items-center pt-0.5">                        <Checkbox
+                      <div className="flex items-center pt-0.5">                        
+                        <Checkbox
                           checked={questionForm.isActive}
                           onChange={(checked) => onUpdateForm({ isActive: checked })}
                         />
@@ -373,7 +368,7 @@ const QuestionDrawer: React.FC<QuestionDrawerProps> = ({
                     </div>
                   </div>
 
-                  {/* Default Setting */}
+                
                   <div className="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-700">
                     <div className="flex items-start space-x-3">
                       <div className="flex items-center pt-0.5">                        
@@ -399,8 +394,7 @@ const QuestionDrawer: React.FC<QuestionDrawerProps> = ({
             </div>
           </div>
           
-          {/* Footer */}
-          <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+          <div className="flex items-center justify-end px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
           
             <div className="flex items-center gap-3">
               <button

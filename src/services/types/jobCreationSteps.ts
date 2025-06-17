@@ -1,5 +1,12 @@
 import { ApiJobQuestion, QuestionType, QuestionSubtype, mapQuestionTypeIdToType, mapSubtypeIdToSubtype } from './jobQuestions';
 
+export interface JobCreationDocument {
+  id: string;
+  documentName: string;
+  documentType: 'PDF' | 'DOC' | 'JPEG' | 'PNG';
+  documentDescription: string;
+}
+
 export interface JobCreationQuestion {
   id: string;
   question: string;
@@ -20,6 +27,7 @@ export interface JobCreationFormData {
   postingDate: string;
   autoRenew: boolean;
   questions?: JobCreationQuestion[];
+  documents?: JobCreationDocument[];
 }
 
 export interface ManageStepProps {
@@ -104,5 +112,13 @@ export const mapJobCreationQuestionToApiPayload = (question: JobCreationQuestion
     required: question.required,
     isActive: question.isActive,
     isDefault: question.isDefault || false
+  };
+};
+
+export const mapJobCreationDocumentToApiPayload = (document: JobCreationDocument) => {
+  return {
+    documentName: document.documentName,
+    documentType: document.documentType,
+    documentDescription: document.documentDescription
   };
 };

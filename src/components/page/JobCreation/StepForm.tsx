@@ -35,13 +35,14 @@ const StepForm: React.FC<StepFormProps> = ({
         onUpdateDescription={onUpdateDescription}
       />
     );
-  }
-  if (step === 3) {
+  }  if (step === 3) {
     return (
       <ManageStep
         formData={{
           postingDate: formData.postingDate,
-          autoRenew: formData.autoRenew
+          autoRenew: formData.autoRenew,
+          questions: formData.questions,
+          documents: formData.documents
         }}
         onUpdateField={onUpdateField}
       />

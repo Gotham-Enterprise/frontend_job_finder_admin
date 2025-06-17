@@ -1,3 +1,5 @@
+import { JobCreationDocument, JobCreationQuestion } from './jobCreationSteps';
+
 export interface FormData {
   title: string;
   occupationId: string;
@@ -19,6 +21,8 @@ export interface FormData {
   salaryType: string;
   postingDate: string;
   autoRenew: boolean;
+  questions?: JobCreationQuestion[];
+  documents?: JobCreationDocument[];
 }
 
 export interface StepFormProps {
