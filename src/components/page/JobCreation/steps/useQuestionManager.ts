@@ -12,13 +12,14 @@ export const useQuestionManager = (initialQuestions?: JobCreationQuestion[]) => 
   
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isDrawerVisible, setIsDrawerVisible] = useState(false);
-  const [editingQuestion, setEditingQuestion] = useState<JobCreationQuestion | null>(null);
-    const [questionForm, setQuestionForm] = useState<QuestionFormData>({
+  const [editingQuestion, setEditingQuestion] = useState<JobCreationQuestion | null>(null);  const [questionForm, setQuestionForm] = useState<QuestionFormData>({
     question: '',
     type: 'choice',
     subtypeValue: 1, 
     required: false,
     allowMultiple: false,
+    isActive: true,
+    isDefault: false,
     options: ['']
   });useEffect(() => {
     if (commonQuestionsData?.success && commonQuestionsData.data && !initialQuestions) {
@@ -29,14 +30,13 @@ export const useQuestionManager = (initialQuestions?: JobCreationQuestion[]) => 
     }
   }, [commonQuestionsData, commonQuestionsError, initialQuestions]);
 
-  const handleQuestionToggle = (questionId: string) => {
+  const questionToggle = (questionId: string) => {
     const updatedQuestions = questions.map(q =>
       q.id === questionId ? { ...q, isActive: !q.isActive } : q
     );
     setQuestions(updatedQuestions);
     return updatedQuestions;
-  };
-  const openQuestionEditor = (question?: JobCreationQuestion) => {
+  };  const openQuestionEditor = (question?: JobCreationQuestion) => {
     if (question) {
       setEditingQuestion(question);
       setQuestionForm({
@@ -44,7 +44,9 @@ export const useQuestionManager = (initialQuestions?: JobCreationQuestion[]) => 
         type: question.type,
         subtypeValue: question.questionSubTypeValueId || 1,
         required: question.required,
-        allowMultiple: question.allowMultiple || false,
+        allowMultiple: question.allowMultiple, 
+        isActive: question.isActive,
+        isDefault: question.isDefault, 
         options: question.options || ['']
       });
     } else {
@@ -55,6 +57,8 @@ export const useQuestionManager = (initialQuestions?: JobCreationQuestion[]) => 
         subtypeValue: 1,
         required: false,
         allowMultiple: false,
+        isActive: true,
+        isDefault: false,
         options: ['']
       });
     }
@@ -71,10 +75,8 @@ export const useQuestionManager = (initialQuestions?: JobCreationQuestion[]) => 
       setEditingQuestion(null);
     }, 300);
   };
-
   const saveQuestion = () => {
     let updatedQuestions;
-    
     if (editingQuestion) {
       updatedQuestions = questions.map(q =>
         q.id === editingQuestion.id
@@ -84,20 +86,23 @@ export const useQuestionManager = (initialQuestions?: JobCreationQuestion[]) => 
               type: questionForm.type,
               required: questionForm.required,
               allowMultiple: questionForm.allowMultiple,
-              options: questionForm.type === 'choice' ? questionForm.options.filter(opt => opt.trim() !== '') : undefined
+              isActive: questionForm.isActive,
+              isDefault: questionForm.isDefault,
+              options: questionForm.type === 'choice' ? questionForm.options.filter(opt => opt.trim() !== '') : undefined,
+              questionSubTypeValueId: questionForm.type === 'text' && !questionForm.allowMultiple ? questionForm.subtypeValue : null
             }
           : q
       );
-    } else {      const newQuestion: JobCreationQuestion = {
+    } else {
+      const newQuestion: JobCreationQuestion = {
         id: `custom-${Date.now()}`,
         question: questionForm.question,
         type: questionForm.type,
         required: questionForm.required,
         allowMultiple: questionForm.allowMultiple,
+        isActive: questionForm.isActive,
+        isDefault: questionForm.isDefault,
         options: questionForm.type === 'choice' ? questionForm.options.filter(opt => opt.trim() !== '') : undefined,
-        isDefault: false,
-        isActive: true,
-        
         questionSubTypeValueId: questionForm.type === 'text' && !questionForm.allowMultiple ? questionForm.subtypeValue : null
       };
       updatedQuestions = [...questions, newQuestion];
@@ -150,7 +155,7 @@ export const useQuestionManager = (initialQuestions?: JobCreationQuestion[]) => 
     questionForm,
     isLoadingCommonQuestions,
     commonQuestionsError,
-    handleQuestionToggle,
+    questionToggle,
     openQuestionEditor,
     closeQuestionEditor,
     saveQuestion,

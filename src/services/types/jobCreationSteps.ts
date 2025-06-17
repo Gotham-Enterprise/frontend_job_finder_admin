@@ -1,15 +1,14 @@
 import { ApiJobQuestion, QuestionType, QuestionSubtype, mapQuestionTypeIdToType, mapSubtypeIdToSubtype } from './jobQuestions';
 
-
 export interface JobCreationQuestion {
   id: string;
   question: string;
   type: QuestionType;
   subtype?: QuestionSubtype;
   required: boolean;
-  allowMultiple?: boolean;
+  allowMultiple: boolean;
   options?: string[];
-  isDefault?: boolean;
+  isDefault: boolean;
   isActive: boolean;
   originalId?: number;
   questionTypeId?: number;
@@ -32,11 +31,14 @@ export interface QuestionFormData {
   question: string;
   type: QuestionType;
   subtype?: QuestionSubtype;
-  subtypeValue?: number; // For questionSubTypeValueId
+  subtypeValue?: number; 
   required: boolean;
   allowMultiple: boolean;
+  isActive: boolean;
+  isDefault: boolean;
   options: string[];
 }
+
 
 export const mapApiQuestionToJobCreationQuestion = (apiQuestion: ApiJobQuestion): JobCreationQuestion => {
   const type = mapQuestionTypeIdToType(apiQuestion.questionTypeId);
@@ -48,12 +50,11 @@ export const mapApiQuestionToJobCreationQuestion = (apiQuestion: ApiJobQuestion)
     question: apiQuestion.questionText,
     type,
     subtype,
-    required: apiQuestion.required,
-    allowMultiple,
+    required: apiQuestion.required ?? false, 
+    allowMultiple: allowMultiple ?? false, 
     options: apiQuestion.options || [],
-    isDefault: apiQuestion.isDefault,
-    isActive: apiQuestion.isActive,
-    // Keep original API fields for reference
+    isDefault: apiQuestion.isDefault ?? false, 
+    isActive: apiQuestion.isActive ?? true, 
     originalId: apiQuestion.id,
     questionTypeId: apiQuestion.questionTypeId,
     questionSubTypeId: apiQuestion.questionSubTypeId,
@@ -61,38 +62,36 @@ export const mapApiQuestionToJobCreationQuestion = (apiQuestion: ApiJobQuestion)
   };
 };
 
-// Utility function to map internal Question back to API format
+
 export const mapJobCreationQuestionToApiPayload = (question: JobCreationQuestion) => {
-  // Determine questionTypeId based on type
-  let questionTypeId = 1; // Default to Choice
-  let questionSubTypeId = 2; // Default to Single Answer
+  let questionTypeId = 1; 
+  let questionSubTypeId = 2; 
   let questionSubTypeValueId: number | null = null;
 
   switch (question.type) {
     case 'choice':
       questionTypeId = 1;
-      questionSubTypeId = question.allowMultiple ? 1 : 2; // 1 = Multiple Answer, 2 = Single Answer
+      questionSubTypeId = question.allowMultiple ? 1 : 2;
       break;
     case 'text':
       questionTypeId = 2;
-      questionSubTypeId = question.allowMultiple ? 4 : 3; // 3 = Short Answer, 4 = Long Answer
-      // For short answer, include the subtype value
+      questionSubTypeId = question.allowMultiple ? 4 : 3; 
       if (!question.allowMultiple) {
-        questionSubTypeValueId = question.questionSubTypeValueId || 1; // Default to plain text
+        questionSubTypeValueId = question.questionSubTypeValueId || 1; 
       }
       break;
     case 'date':
       questionTypeId = 3;
-      questionSubTypeId = 5; // Date Picker
+      questionSubTypeId = 5; 
       break;
     case 'file':
       questionTypeId = 4;
-      questionSubTypeId = 6; // Upload File
+      questionSubTypeId = 6; 
       break;
     case 'rating':
       questionTypeId = 5;
-      questionSubTypeId = 7; // Rating
-      questionSubTypeValueId = 5; // 1-5 rating
+      questionSubTypeId = 7;
+      questionSubTypeValueId = 5;
       break;
   }
 

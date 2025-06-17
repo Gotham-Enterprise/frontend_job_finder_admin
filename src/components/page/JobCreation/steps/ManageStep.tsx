@@ -16,7 +16,7 @@ const ManageStep: React.FC<ManageStepProps> = ({
     questionForm,
     isLoadingCommonQuestions,
     commonQuestionsError,
-    handleQuestionToggle,
+    questionToggle,
     openQuestionEditor,
     closeQuestionEditor,
     saveQuestion,
@@ -28,7 +28,7 @@ const ManageStep: React.FC<ManageStepProps> = ({
   } = useQuestionManager(formData.questions);
 
   const initToggle = (questionId: string) => {
-    const updatedQuestions = handleQuestionToggle(questionId);
+    const updatedQuestions = questionToggle(questionId);
     onUpdateField('questions', updatedQuestions);
   };
 

@@ -26,21 +26,21 @@ export const QUESTION_TYPES = {
 } as const;
 
 export const QUESTION_SUBTYPES = {
-  MULTIPLE_ANSWER: 1,   // For questionTypeId = 1 (Choice)
-  SINGLE_ANSWER: 2,     // For questionTypeId = 1 (Choice)
-  SHORT_ANSWER: 3,      // For questionTypeId = 2 (Text)
-  LONG_ANSWER: 4,       // For questionTypeId = 2 (Text) 
-  DATE_PICKER: 5,       // For questionTypeId = 3 (Date)
-  UPLOAD_FILE: 6,       // For questionTypeId = 4 (File)
-  RATING: 7             // For questionTypeId = 5 (Rating)
+  MULTIPLE_ANSWER: 1,   
+  SINGLE_ANSWER: 2,   
+  SHORT_ANSWER: 3,     
+  LONG_ANSWER: 4,      
+  DATE_PICKER: 5,      
+  UPLOAD_FILE: 6,      
+  RATING: 7            
 } as const;
 
 export const QUESTION_SUBTYPE_VALUES = {
-  PLAIN_TEXT: 1,        // For text subtypes
-  EMAIL: 2,             // For text subtypes
-  URL: 3,               // For text subtypes
-  PHONE_NUMBER: 4,      // For text subtypes
-  RATING_1_TO_5: 5      // For rating subtypes
+  PLAIN_TEXT: 1,        
+  EMAIL: 2,            
+  URL: 3,              
+  PHONE_NUMBER: 4,     
+  RATING_1_TO_5: 5     
 } as const;
 
 
@@ -137,11 +137,11 @@ export const QUESTION_TYPE_MAPPING = {
 } as const;
 
 export const QUESTION_SUBTYPE_MAPPING = {
-  1: 'single',      // Single choice
-  2: 'single',      // Single choice (Yes/No)
-  3: 'text',        // Text input (numbers, currency)
-  4: 'textarea',    // Long text
-  5: 'date',        // Date picker
-  6: 'multiple',    // Multiple choice
-  7: 'file'         // File upload
+  1: 'single',     
+  2: 'single',    
+  3: 'text',        
+  4: 'textarea',   
+  5: 'date',     
+  6: 'multiple',  
+  7: 'file'       
 } as const;

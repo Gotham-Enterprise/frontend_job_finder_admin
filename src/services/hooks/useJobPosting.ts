@@ -1,5 +1,7 @@
 import { useMutation } from '@tanstack/react-query';
-import { jobPostingApi, JobPostingPayload } from '../api/jobPosting';
+import {JobPostingPayload} from '@/services/types/jobCreation';
+import { jobPostingApi } from '@/services/api/jobPosting';
+
 
 export const useCreateJobPost = () => {
   return useMutation({

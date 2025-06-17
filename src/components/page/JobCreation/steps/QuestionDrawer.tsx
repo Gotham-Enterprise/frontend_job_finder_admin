@@ -343,11 +343,57 @@ const QuestionDrawer: React.FC<QuestionDrawerProps> = ({
                         {questionForm.allowMultiple && (
                           <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400">
                             Multi-select
-                          </span>
-                        )}
+                          </span>                        )}
                       </div>
                     </div>
                   )}
+
+                  {/* Active Setting */}
+                  <div className="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-700">
+                    <div className="flex items-start space-x-3">
+                      <div className="flex items-center pt-0.5">                        <Checkbox
+                          checked={questionForm.isActive}
+                          onChange={(checked) => onUpdateForm({ isActive: checked })}
+                        />
+                      </div>
+                      <div>
+                        <span className="text-sm font-medium text-gray-900 dark:text-white">Active Question</span>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">Question is enabled and visible to candidates</p>
+                      </div>
+                    </div>                    <div className="flex-shrink-0">
+                      {!!questionForm.isActive ? (
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400">
+                          Active
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400">
+                          Inactive
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Default Setting */}
+                  <div className="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-700">
+                    <div className="flex items-start space-x-3">
+                      <div className="flex items-center pt-0.5">                        
+                        <Checkbox
+                          checked={questionForm.isDefault}
+                          onChange={(checked) => onUpdateForm({ isDefault: checked })}
+                        />
+                      </div>
+                      <div>
+                        <span className="text-sm font-medium text-gray-900 dark:text-white">Default Question</span>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">Question appears in all job postings by default</p>
+                      </div>
+                    </div>                    <div className="flex-shrink-0">
+                      {!!questionForm.isDefault && (
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400">
+                          Default
+                        </span>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -355,15 +401,7 @@ const QuestionDrawer: React.FC<QuestionDrawerProps> = ({
           
           {/* Footer */}
           <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-            <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
-              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              {questionForm.type === 'choice' ? 'Candidates will see radio buttons or checkboxes' : 
-               questionForm.type === 'text' ? 'Candidates will see a text input field' :
-               questionForm.type === 'date' ? 'Candidates will see a date picker' :
-               'Candidates can upload PDF files'}
-            </div>
+          
             <div className="flex items-center gap-3">
               <button
                 onClick={onClose}
