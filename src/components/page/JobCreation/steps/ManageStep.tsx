@@ -1,83 +1,104 @@
 import React from 'react';
-import Label from '@/components/form/Label';
-import Radio from '@/components/form/input/Radio';
-import Checkbox from '@/components/form/input/Checkbox';
-
-interface FormData {
-  postingDate: string;
-  autoRenew: boolean;
-}
-
-interface ManageStepProps {
-  formData: FormData;
-  onUpdateField: (field: keyof FormData, value: any) => void;
-}
+import { ManageStepProps } from '../../../../services/types/jobCreationSteps';
+import { useQuestionManager } from './useQuestionManager';
+import QuestionCard from './QuestionCard';
+import QuestionDrawer from './QuestionDrawer';
 
 const ManageStep: React.FC<ManageStepProps> = ({
   formData,
   onUpdateField
 }) => {
-  const postingDateOptions = [
-    { value: 'today', label: 'Post Immediately' },
-    { value: 'this-week', label: 'Post This Week' },
-    { value: 'this-month', label: 'Post This Month' }
-  ];
+  const {
+    questions,
+    isDrawerOpen,
+    isDrawerVisible,
+    editingQuestion,
+    questionForm,
+    isLoadingCommonQuestions,
+    commonQuestionsError,
+    handleQuestionToggle,
+    openQuestionEditor,
+    closeQuestionEditor,
+    saveQuestion,
+    deleteQuestion,
+    updateQuestionForm,
+    addOption,
+    updateOption,
+    removeOption
+  } = useQuestionManager(formData.questions);
 
+  const initToggle = (questionId: string) => {
+    const updatedQuestions = handleQuestionToggle(questionId);
+    onUpdateField('questions', updatedQuestions);
+  };
+
+  const initSave = () => {
+    const updatedQuestions = saveQuestion();
+    onUpdateField('questions', updatedQuestions);
+  };
+
+  const initDelete = (questionId: string) => {
+    const updatedQuestions = deleteQuestion(questionId);
+    onUpdateField('questions', updatedQuestions);
+  };
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-      <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">
-        Manage Job Posting
-      </h2>
-      
-      <div className="space-y-6">
+      <div className="flex justify-between items-center mb-6">
         <div>
-          <Label>When would you like to post this job? *</Label>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3">
-            {postingDateOptions.map((option) => (
-              <Radio
-                key={option.value}
-                id={`postingDate-${option.value}`}
-                name="postingDate"
-                value={option.value}
-                label={option.label}
-                checked={formData.postingDate === option.value}
-                onChange={(value) => onUpdateField('postingDate', value)}
-              />
-            ))}
-          </div>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-            Choose when you want this job posting to go live
-          </p>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            Manage questions for candidates
+          </h2>          {isLoadingCommonQuestions && (
+            <p className="text-sm text-blue-600 mt-1">Loading default questions...</p>
+          )}
+          {commonQuestionsError && (
+            <p className="text-sm text-amber-600 mt-1">Using fallback questions (API not available)</p>
+          )}
         </div>
-
-        {/* Auto Renewal */}
-        <div>
-          <Label>Auto-Renewal Settings</Label>
-          <div className="mt-3">
-            <Checkbox
-              id="autoRenew"
-              label="Automatically renew this job posting"
-              checked={formData.autoRenew}
-              onChange={(checked) => onUpdateField('autoRenew', checked)}
-            />
-          </div>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-            When enabled, this job posting will automatically renew every 30 days to maintain visibility
-          </p>
-        </div>
-
-        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-          <h3 className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-2">
-            📋 Posting Management
-          </h3>
-          <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
-            <li>• You can edit or pause this posting at any time after it goes live</li>
-            <li>• Job postings remain active for 30 days by default</li>
-            <li>• Auto-renewal helps maintain consistent visibility for hard-to-fill positions</li>
-            <li>• You'll receive notifications about posting performance and renewals</li>
-          </ul>
-        </div>
+        <button
+          onClick={() => openQuestionEditor()}
+          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center gap-2"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          </svg>
+          Add Question
+        </button>
       </div>
+      
+      <div className="space-y-4">
+        <p className="text-gray-600 dark:text-gray-400 mb-4">
+          Select from the suggested questions or add custom questions:
+        </p>
+        
+        {isLoadingCommonQuestions ? (
+          <div className="flex items-center justify-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          </div>
+        ) : (
+          questions.map((question) => (
+            <QuestionCard
+              key={question.id}
+              question={question}
+              onToggle={() => initToggle(question.id)}
+              onEdit={() => openQuestionEditor(question)}
+              onDelete={() => initDelete(question.id)}
+            />
+          ))
+        )}
+      </div>
+
+      <QuestionDrawer
+        isOpen={isDrawerOpen}
+        isVisible={isDrawerVisible}
+        editingQuestion={editingQuestion}
+        questionForm={questionForm}
+        onClose={closeQuestionEditor}
+        onSave={initSave}
+        onUpdateForm={updateQuestionForm}
+        onAddOption={addOption}
+        onUpdateOption={updateOption}
+        onRemoveOption={removeOption}
+      />
     </div>
   );
 };

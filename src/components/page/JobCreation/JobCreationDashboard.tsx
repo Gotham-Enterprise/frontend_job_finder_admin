@@ -134,7 +134,7 @@ const JobCreationDashboard: React.FC = () => {
           showToast.error('Validation Error', 'Occupation is required');
           return false;
         }
-        // Location validation
+       
         if (!formData.country) {
           showToast.error('Validation Error', 'Country is required');
           return false;
@@ -155,7 +155,7 @@ const JobCreationDashboard: React.FC = () => {
           showToast.error('Validation Error', 'Zip code is required');
           return false;
         }
-        // Compensation validation
+      
         if (formData.salaryFrom <= 0) {
           showToast.error('Validation Error', 'Minimum salary must be greater than 0');
           return false;
@@ -170,14 +170,14 @@ const JobCreationDashboard: React.FC = () => {
         }
         break;
       case 2:
-        // Description validation
+       
         if (!description.trim()) {
           showToast.error('Validation Error', 'Job description is required');
           return false;
         }
         break;
       case 3:
-        // Manage step validation
+       
         if (!formData.postingDate) {
           showToast.error('Validation Error', 'Please select when to post this job');
           return false;
@@ -202,7 +202,8 @@ const JobCreationDashboard: React.FC = () => {
       state: formData.state,
       zipCode: formData.zipCode,
       workType: formData.workType as any,
-      workSetting: formData.workSetting as any,      shiftType: formData.shiftType,
+      workSetting: formData.workSetting as any,      
+      shiftType: formData.shiftType,
       timezone: formData.timezone,
       language: formData.language.join(', '),
       clinicSize: formData.clinicSize,
@@ -229,7 +230,8 @@ const JobCreationDashboard: React.FC = () => {
       state: '',
       zipCode: '',
       workType: 'full-time',
-      workSetting: 'onsite',      shiftType: '',
+      workSetting: 'onsite',      
+      shiftType: '',
       timezone: '',
       language: [],
       clinicSize: '',
@@ -240,7 +242,9 @@ const JobCreationDashboard: React.FC = () => {
       salaryType: 'yearly',
       postingDate: 'today',
       autoRenew: false,
-    });    setDescription('');
+    });    
+    
+    setDescription('');
     setSelectedOccupation(null);
     setSelectedCompany(null);
     setCurrentStep(0);
@@ -271,7 +275,7 @@ const JobCreationDashboard: React.FC = () => {
     { value: 'today', label: 'Today' },
     { value: 'this-week', label: 'This Week' },
     { value: 'this-month', label: 'This Month' },
-  ];  // Company Search Step (before stepper)
+  ];
   if (!selectedCompany && currentStep === 0) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -290,7 +294,7 @@ const JobCreationDashboard: React.FC = () => {
         </div>
       </div>
     );
-  }  // Review Step
+  }  
   if (currentStep === 4) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -308,7 +312,7 @@ const JobCreationDashboard: React.FC = () => {
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2 space-y-6">
-              {/* Company Info */}
+             
               {selectedCompany && (
                 <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Company Information</h3>                  <div className="flex items-center gap-3">
@@ -327,7 +331,7 @@ const JobCreationDashboard: React.FC = () => {
                 </div>
               )}
 
-              {/* Job Summary */}
+           
               <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Job Summary</h3>
                 <div className="space-y-3">
@@ -337,7 +341,7 @@ const JobCreationDashboard: React.FC = () => {
                   <div><span className="font-medium">Work Setting:</span> {formData.workSetting}</div>
                   <div><span className="font-medium">Salary:</span> {formData.currency} {formData.salaryFrom.toLocaleString()} - {formData.salaryTo.toLocaleString()} ({formData.salaryType})</div>
                 </div>
-              </div>              {/* Navigation */}
+              </div>              
               <div className="flex justify-between">
                 <Button variant="outline" onClick={initCancel}>
                   Cancel
@@ -358,7 +362,7 @@ const JobCreationDashboard: React.FC = () => {
 
             <div className="lg:col-span-1">
               <div className="sticky top-6 space-y-6">
-                {/* Posting Options */}
+              
                 <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Publishing Options</h3>
                   
@@ -391,7 +395,6 @@ const JobCreationDashboard: React.FC = () => {
       </div>
     );
   }
-  // Steps 2-6: Form Steps
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="mx-auto p-6">
@@ -418,7 +421,7 @@ const JobCreationDashboard: React.FC = () => {
               specialtyOptions={specialtyOptions}
               isLoadingOccupations={isLoadingOccupations}
               selectedOccupation={selectedOccupation}
-            />            {/* Navigation */}
+            />           
             <div className="flex justify-between mt-8">
               <div className="flex space-x-4">
                 <Button 
@@ -452,7 +455,7 @@ const JobCreationDashboard: React.FC = () => {
 
           <div className="lg:col-span-1">
             <div className="sticky top-6 space-y-6">
-              {/* Company Info */}
+            
               {selectedCompany && (
                 <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Selected Company</h3>                  <div className="flex items-center gap-3">
