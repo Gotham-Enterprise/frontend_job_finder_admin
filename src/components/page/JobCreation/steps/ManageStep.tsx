@@ -73,13 +73,8 @@ const ManageStep: React.FC<ManageStepProps> = ({
           <div>
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
               Manage questions for candidates
-            </h2>          
-            {isLoadingCommonQuestions && (
-              <p className="text-sm text-blue-600 mt-1">Loading default questions...</p>
-            )}
-            {commonQuestionsError && (
-              <p className="text-sm text-amber-600 mt-1">Using fallback questions (API not available)</p>
-            )}
+            </h2>           
+        
           </div>
           <button
             onClick={() => openQuestionEditor()}
@@ -91,8 +86,7 @@ const ManageStep: React.FC<ManageStepProps> = ({
             Add Question
           </button>
         </div>
-        
-        <div className="space-y-4">
+          <div className="space-y-4">
           <p className="text-gray-600 dark:text-gray-400 mb-4">
             Select from the suggested questions or add custom questions:
           </p>
@@ -100,17 +94,36 @@ const ManageStep: React.FC<ManageStepProps> = ({
           {isLoadingCommonQuestions ? (
             <div className="flex items-center justify-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              <span className="ml-2 text-sm text-blue-600">Loading questions from API...</span>
+            </div>
+          ) : commonQuestionsError ? (
+            <div className="text-center py-4">
+              <p className="text-sm text-amber-600 mb-2">API not available, using fallback questions</p>
+              <p className="text-xs text-gray-500">Error: {commonQuestionsError.message}</p>
+            </div>
+          ) : null}
+            {questions && questions.length > 0 ? (
+            <div className="space-y-4">
+             
+              {questions.map((question) => (
+                <QuestionCard
+                  key={question.id}
+                  question={question}
+                  onToggle={() => initToggle(question.id)}
+                  onEdit={() => openQuestionEditor(question)}
+                  onDelete={() => initDelete(question.id)}
+                />
+              ))}
+            </div>
+          ) : isLoadingCommonQuestions ? (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+              <p className="text-gray-500 dark:text-gray-400">Loading questions...</p>
             </div>
           ) : (
-            questions.map((question) => (
-              <QuestionCard
-                key={question.id}
-                question={question}
-                onToggle={() => initToggle(question.id)}
-                onEdit={() => openQuestionEditor(question)}
-                onDelete={() => initDelete(question.id)}
-              />
-            ))
+            <div className="text-center py-8">
+              <p className="text-gray-500 dark:text-gray-400">No questions available</p>
+            </div>
           )}
         </div>
 

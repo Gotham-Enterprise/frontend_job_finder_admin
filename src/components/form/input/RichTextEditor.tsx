@@ -159,6 +159,7 @@ interface RichTextEditorProps {
   placeholder?: string;
   className?: string;
   minHeight?: number;
+  hideImageButton?: boolean; 
 }
 
 const RichTextEditor: React.FC<RichTextEditorProps> = ({
@@ -167,6 +168,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
   placeholder = "Start writing your blog post...",
   className = "",
   minHeight = 300,
+  hideImageButton = false, 
 }) => {
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [showImageUpload, setShowImageUpload] = useState(false);
@@ -576,14 +578,16 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
               onClick={addLink}
               title="Add Link"
             >
-              <LinkIcon className="w-5 h-5" />
-            </ToolbarButton>
-            <ToolbarButton
-              onClick={() => setShowImageUpload(!showImageUpload)}
-              title="Add Image"
-            >
-              <ImageIcon className="w-5 h-5" />
-            </ToolbarButton>
+              <LinkIcon className="w-5 h-5" />           
+               </ToolbarButton>
+            {!hideImageButton && (
+              <ToolbarButton
+                onClick={() => setShowImageUpload(!showImageUpload)}
+                title="Add Image"
+              >
+                <ImageIcon className="w-5 h-5" />
+              </ToolbarButton>
+            )}
           </div>
 
           <div className="relative">

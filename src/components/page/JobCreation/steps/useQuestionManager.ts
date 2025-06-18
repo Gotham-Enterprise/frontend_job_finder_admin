@@ -5,10 +5,9 @@ import { useCommonQuestions } from '../../../../services/hooks/useJobQuestions';
 
 export const useQuestionManager = (initialQuestions?: JobCreationQuestion[]) => {
   const { data: commonQuestionsData, isLoading: isLoadingCommonQuestions, error: commonQuestionsError } = useCommonQuestions();
-  
-  const [questions, setQuestions] = useState<JobCreationQuestion[]>(
-    initialQuestions || defaultQuestions
-  );
+    const [questions, setQuestions] = useState<JobCreationQuestion[]>(() => {
+    return (initialQuestions && initialQuestions.length > 0) ? initialQuestions : [];
+  });
   
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isDrawerVisible, setIsDrawerVisible] = useState(false);
@@ -21,12 +20,25 @@ export const useQuestionManager = (initialQuestions?: JobCreationQuestion[]) => 
     isActive: true,
     isDefault: false,
     options: ['']
-  });useEffect(() => {
-    if (commonQuestionsData?.success && commonQuestionsData.data && !initialQuestions) {
+  });  useEffect(() => {
+    const hasInitialQuestions = initialQuestions && initialQuestions.length > 0;
+    
+    console.log('useQuestionManager - API Response:', { 
+      success: commonQuestionsData?.success, 
+      dataLength: commonQuestionsData?.data?.length,
+      hasError: !!commonQuestionsError,
+      error: commonQuestionsError?.message,
+      hasInitialQuestions,
+      initialQuestionsLength: initialQuestions?.length || 0
+    });
+    
+    if (commonQuestionsData?.success && commonQuestionsData.data && !hasInitialQuestions) {
       const apiQuestions = commonQuestionsData.data.map(mapApiQuestionToJobCreationQuestion);
       setQuestions(apiQuestions);
-    } else if (commonQuestionsError && !initialQuestions) {
+    } else if (commonQuestionsError && !hasInitialQuestions) {
       setQuestions(defaultQuestions);
+    } else if (hasInitialQuestions) {
+      setQuestions(initialQuestions);
     }
   }, [commonQuestionsData, commonQuestionsError, initialQuestions]);
 
