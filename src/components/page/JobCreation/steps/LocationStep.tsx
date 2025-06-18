@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import Input from '@/components/form/input/InputField';
 import Select from '@/components/form/Select';
 import Label from '@/components/form/Label';
@@ -25,71 +25,88 @@ const LocationStep: React.FC<LocationStepProps> = ({
 }) => {
   const { data: statesData, isLoading: statesLoading, error: statesError } = useStates();
   const { validateLocation, isValidating, validationErrors, clearValidationErrors } = useLocationValidation();
-  const { addToast } = useToast();
-  const [fieldLoadingStates, setFieldLoadingStates] = useState({
+  const { addToast } = useToast();  const [fieldLoadingStates, setFieldLoadingStates] = useState({
     address: false,
     city: false,
   });
+
+  const addressTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const cityTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastToastTimeRef = useRef<number>(0);
 
 
   useEffect(() => {
     if (!formData.country) {
       onUpdateField('country', 'US');
     }
-  }, [formData.country, onUpdateField]); 
-  const validateLocationFields = useCallback(async (updatedData?: Partial<FormData>) => {
+  }, [formData.country, onUpdateField]);   const validateLocationFields = useCallback(async (updatedData?: Partial<FormData>) => {
+     const dataToValidate = updatedData ? { ...formData, ...updatedData } : formData;
    
-    const dataToValidate = updatedData ? { ...formData, ...updatedData } : formData;
-   
-    if (dataToValidate.address && dataToValidate.city && dataToValidate.zipCode) {
+    if (dataToValidate.address?.trim() && dataToValidate.city?.trim() && dataToValidate.zipCode?.trim()) {
  
       const result = await validateLocation({
-        address: dataToValidate.address,
-        city: dataToValidate.city,
+        address: dataToValidate.address.trim(),
+        city: dataToValidate.city.trim(),
         state: dataToValidate.state || '',
-        zipCode: dataToValidate.zipCode,
+        zipCode: dataToValidate.zipCode.trim(),
       });
 
       if (result.hasErrors) {
         const invalidFields = Object.keys(result.errors);
         if (invalidFields.length > 0) {
-          addToast({
-            variant: 'error',
-            title: 'Invalid Location Information',
-            message: `Please check: ${invalidFields.join(', ')}`,
-            duration: 5000,
-          });
+          const now = Date.now();
+          const timeSinceLastToast = now - lastToastTimeRef.current;
+          
+          if (timeSinceLastToast > 2000) {
+            lastToastTimeRef.current = now;
+            addToast({
+              variant: 'error',
+              title: 'Invalid Location Information',
+              message: `Please check: ${invalidFields.join(', ')}`,
+              duration: 5000,
+            });
+          }
         }
       }
     }
-  }, [formData, validateLocation, addToast]);  
-  const addressChange = useCallback(async (value: string) => {
+  }, [formData, validateLocation, addToast]);const addressChange = useCallback(async (value: string) => {
     onUpdateField('address', value);
     clearValidationErrors();
+
+    if (addressTimeoutRef.current) {
+      clearTimeout(addressTimeoutRef.current);
+    }
     
     if (value.trim()) {
       setFieldLoadingStates(prev => ({ ...prev, address: true }));
       
-  
-      setTimeout(async () => {
+    
+      addressTimeoutRef.current = setTimeout(async () => {
         setFieldLoadingStates(prev => ({ ...prev, address: false }));
         await validateLocationFields({ address: value });
-      }, 800);
+      }, 1500);
+    } else {
+      setFieldLoadingStates(prev => ({ ...prev, address: false }));
     }
-  }, [onUpdateField, clearValidationErrors, validateLocationFields]); 
+  }, [onUpdateField, clearValidationErrors, validateLocationFields]);
 
   const cityChange = useCallback(async (value: string) => {
     onUpdateField('city', value);
     clearValidationErrors();
     
+    if (cityTimeoutRef.current) {
+      clearTimeout(cityTimeoutRef.current);
+    }
+    
     if (value.trim()) {
       setFieldLoadingStates(prev => ({ ...prev, city: true }));
       
-    
-      setTimeout(async () => {
+      cityTimeoutRef.current = setTimeout(async () => {
         setFieldLoadingStates(prev => ({ ...prev, city: false }));
         await validateLocationFields({ city: value });
-      }, 800);
+      }, 1500);
+    } else {
+      setFieldLoadingStates(prev => ({ ...prev, city: false }));
     }
   }, [onUpdateField, clearValidationErrors, validateLocationFields]);
 
@@ -119,8 +136,18 @@ const LocationStep: React.FC<LocationStepProps> = ({
     ...(statesData?.data?.states?.map(state => ({
       value: state.abbreviation,
       label: state.name
-    })) || [])
-  ];
+    })) || [])  ];
+
+  useEffect(() => {
+    return () => {
+      if (addressTimeoutRef.current) {
+        clearTimeout(addressTimeoutRef.current);
+      }
+      if (cityTimeoutRef.current) {
+        clearTimeout(cityTimeoutRef.current);
+      }
+    };
+  }, []);
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
@@ -143,23 +170,22 @@ const LocationStep: React.FC<LocationStepProps> = ({
             placeholder="123 Main Street"
             defaultValue={formData.address}
             onChange={(e) => addressChange(e.target.value)}
-            disabled={fieldLoadingStates.address || isValidating}
             error={!!validationErrors.address}
             hint={validationErrors.address}
           />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">          <div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">           
+           <div>
             <Label>City *</Label>
             <Input
               placeholder="City"
               defaultValue={formData.city}
               onChange={(e) => cityChange(e.target.value)}
-              disabled={fieldLoadingStates.city || isValidating}
               error={!!validationErrors.city}
               hint={validationErrors.city}
             />
-          </div>          <div>
+          </div><div>
             <Label>State/Province *</Label>
             <Select
               options={stateOptions}
@@ -171,7 +197,8 @@ const LocationStep: React.FC<LocationStepProps> = ({
             {statesError && (
               <p className="text-red-500 text-sm mt-1">Error loading states</p>
             )}
-          </div>          <div>
+          </div>          
+          <div>
             <Label>ZIP/Postal Code *</Label>
             <Input
               placeholder="12345"
