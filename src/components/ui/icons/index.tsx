@@ -12,4 +12,5 @@ export { default as BriefcaseIcon } from './BriefcaseIcon';
 export { default as CareerLadderIcon } from './CareerLadderIcon';
 export { default as TicketIcon } from './TicketIcon';
 export { default as BlogIcon } from './BlogIcon';
+export { default as PlusIcon } from './PlusIcon';
 export type { IconProps } from './Close';

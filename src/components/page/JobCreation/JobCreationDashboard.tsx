@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { jobCreationApi } from '@/services/api/jobCreation';
 import { jobsAdminApi, JobCreationPayload } from '@/services/api/jobsAdmin';
 import { employerApi } from '@/services/api/employer';
+import { useEmployerDetails } from '@/services/hooks/useEmployers';
 import { QUESTION_TYPES, QUESTION_SUBTYPES, QUESTION_SUBTYPE_VALUES } from '@/services/types/jobQuestions';
 import { showToast } from '@/services/utils/toast';
 import { useWorkTypes } from '@/services/hooks/useWorkTypes';
@@ -36,7 +37,11 @@ const JobCreationDashboard: React.FC = () => {
   const [selectedOccupation, setSelectedOccupation] = useState<number | null>(null);
   const [description, setDescription] = useState('');
   const [isPublishing, setIsPublishing] = useState(false);
-  const [isLoadingEmployer, setIsLoadingEmployer] = useState(false);const [formData, setFormData] = useState<FormData>({
+  const { 
+    data: employerDetailsResponse, 
+    isLoading: isLoadingEmployer, 
+    error: employerError 
+  } = useEmployerDetails(employerId || '');const [formData, setFormData] = useState<FormData>({
     title: '',
     occupationId: '',
     specialtyId: '',
@@ -68,7 +73,6 @@ const JobCreationDashboard: React.FC = () => {
     staleTime: 1000 * 60 * 10,
   });
 
-  // Fetch options data for mapping IDs to names
   const { data: workTypesData } = useWorkTypes();
   const { data: workSettingsData } = useWorkSettings();
   const { data: workFacilitiesData } = useWorkFacilities();
@@ -98,42 +102,39 @@ const JobCreationDashboard: React.FC = () => {
       setSelectedOccupation(Number(formData.occupationId));
       setFormData(prev => ({ ...prev, specialtyId: '' }));
     }
-  }, [formData.occupationId]);
-
-  // Handle employer ID from URL parameters
+  }, [formData.occupationId]);  
   useEffect(() => {
-    const fetchEmployerById = async (id: string) => {
-      try {
-        setIsLoadingEmployer(true);
-        const response = await employerApi.getEmployerById(id);
-        
-        if (response.success && response.data) {
-          const employer = response.data;
-          const company: Company = {
-            id: employer.id,
-            companyName: employer.companyName,
-            state: employer.state,
-            sizeOfCompany: employer.employeeCount
-          };
-          
-          setSelectedCompany(company);
-          setCurrentStep(1); // Skip company search, go to step 1
-          showToast.success('Company Selected', `Pre-selected ${employer.companyName} for job creation`);
-        } else {
-          showToast.error('Error', 'Could not load the selected employer');
-        }
-      } catch (error) {
-        console.error('Error fetching employer:', error);
-        showToast.error('Error', 'Failed to load employer details');
-      } finally {
-        setIsLoadingEmployer(false);
-      }
-    };
-
-    if (employerId && !selectedCompany) {
-      fetchEmployerById(employerId);
+    if (employerDetailsResponse?.success && employerDetailsResponse.data && employerId && !selectedCompany) {
+      const employer = employerDetailsResponse.data;
+      const company: Company = {
+        id: employer.id,
+        companyName: employer.companyName,
+        state: employer.state,
+        sizeOfCompany: employer.employeeCount
+      };
+      
+      setSelectedCompany(company);
+      setCurrentStep(1); 
+      showToast.success('Company Selected', `Pre-selected ${employer.companyName} for job creation`);
+    } else if (employerError && employerId) {
+      console.error('Error fetching employer:', employerError);
+      showToast.error('Error', 'Failed to load employer details. Please search manually.');
+      setCurrentStep(0);
     }
-  }, [employerId, selectedCompany]);
+  }, [employerDetailsResponse, employerError, employerId, selectedCompany]);
+
+  useEffect(() => {
+    if (employerId && isLoadingEmployer) {
+      const timeoutId = setTimeout(() => {
+        if (isLoadingEmployer && !selectedCompany) {
+          showToast.error('Timeout', 'Loading took too long. Please search manually.');
+          setCurrentStep(0); 
+        }
+      }, 5000);
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, [employerId, isLoadingEmployer, selectedCompany]);
 
   const selectedOccupationData = occupationsData?.data?.find(
     occ => occ.id === selectedOccupation
@@ -142,7 +143,6 @@ const JobCreationDashboard: React.FC = () => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  // Helper functions to map IDs to names for payload
   const getWorkTypeName = (id: string): string => {
     if (!workTypesData?.success || !id) return '';
     const workType = workTypesData.data.find(wt => wt.id.toString() === id);
@@ -491,7 +491,7 @@ const JobCreationDashboard: React.FC = () => {
     { value: 'this-week', label: 'This Week' },
     { value: 'this-month', label: 'This Month' },
   ];
-  if (!selectedCompany && currentStep === 0) {
+  if (!selectedCompany && currentStep === 0 && !employerId && !isLoadingEmployer) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <div className="mx-auto p-6">
@@ -833,9 +833,33 @@ const JobCreationDashboard: React.FC = () => {
           </div>
         </div>      </div>
     
+      {/* Custom loading overlay for employer loading with skip option */}
+      {isLoadingEmployer && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-8 max-w-md mx-4 text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+              Loading Employer Details
+            </h3>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
+              Please wait while we load the selected employer information...
+            </p>            <Button
+              variant="outline"
+              onClick={() => {
+                // Skip loading and go to company search
+                setCurrentStep(0);
+              }}
+              className="w-full"
+            >
+              Skip and Search Manually
+            </Button>
+          </div>
+        </div>
+      )}
+    
       <FullScreenSpinner 
-        isVisible={isPublishing || isLoadingEmployer} 
-        message={isLoadingEmployer ? "Loading employer details..." : "Publishing job posting..."} 
+        isVisible={isPublishing} 
+        message="Publishing job posting..." 
       />
     </div>
   );

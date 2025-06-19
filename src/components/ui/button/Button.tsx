@@ -21,7 +21,8 @@ const Button: React.FC<ButtonProps> = ({
   className = "",
   disabled = false,
 }) => {  const buttonStyles = {
-    variants: {      variant: {
+    variants: {      
+      variant: {
         default:
           'bg-primary text-primary-foreground text-white shadow hover:bg-primary/90 [&>svg]:text-primary-foreground',
         destructive:

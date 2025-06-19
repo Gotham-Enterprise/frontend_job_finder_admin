@@ -1,8 +1,8 @@
 import React from 'react';
 import Button from '../../../ui/button/Button';
 import Input from '../../../ui/input/Input';
-import { DownloadIcon, FunnelIcon, PlusIcon } from '@/icons';
-import { SearchIcon } from '../../../ui/icons';
+import { DownloadIcon, FunnelIcon } from '@/icons';
+import { SearchIcon, PlusIcon } from '../../../ui/icons';
 import { EmployerHeaderProps } from '@/services/types/EmployerTypes';
 
 const EmployerHeader: React.FC<EmployerHeaderProps> = ({
@@ -16,6 +16,7 @@ const EmployerHeader: React.FC<EmployerHeaderProps> = ({
   onRefetch,
   selectedEmployerId,
   onCreateJob,
+  isCreatingJob,
 }) => {
   return (
     <div className="px-6 py-5 border-b border-gray-200 dark:border-gray-800">
@@ -42,19 +43,21 @@ const EmployerHeader: React.FC<EmployerHeaderProps> = ({
             startIcon={<FunnelIcon className="dark:text-white" />}
           >
             Filters
-          </Button>          <Button
+          </Button>            
+          <Button
             variant="default"
-            size="sm"
+            size="lg"
             onClick={onCreateJob}
-            startIcon={<PlusIcon className="w-4 h-4" />}
-            disabled={!selectedEmployerId}
-            className={`${
-              !selectedEmployerId 
+            disabled={!selectedEmployerId || isCreatingJob}
+            className={`whitespace-nowrap flex items-center gap-2 ${
+              !selectedEmployerId || isCreatingJob
                 ? 'opacity-50 cursor-not-allowed bg-gray-300 text-gray-500 border-gray-300' 
                 : 'bg-blue-600 hover:bg-blue-700 text-white border-blue-600'
             }`}
-          >
-            Create New Job
+          >            {!isCreatingJob && (
+              <PlusIcon className="flex-shrink-0" width={20} height={20} />
+            )}
+            {isCreatingJob ? 'Creating...' : 'Create new job'}
           </Button>
         </div>
       </div>

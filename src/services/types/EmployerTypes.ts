@@ -15,6 +15,7 @@ export interface EmployerHeaderProps {
   onRefetch: () => void;
   selectedEmployerId: string | null;
   onCreateJob: () => void;
+  isCreatingJob: boolean;
 }
 
 export interface EmployerFiltersProps {

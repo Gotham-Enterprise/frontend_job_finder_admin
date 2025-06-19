@@ -2,6 +2,7 @@
 import React from 'react';
 import { BoltIcon } from '@/icons';
 import ErrorState from '../../common/ErrorState';
+import FullScreenSpinner from '../../ui/FullScreenSpinner';
 import { useEmployerLogic } from '@/services/hooks/useEmployerLogic';
 import {
   EmployerHeader,
@@ -34,10 +35,10 @@ const Employers: React.FC<EmployersProps> = ({ className = "" }) => {  const {
     getStatusVariant,
     viewEmployer,
     viewSubscription,
-    
-    selectedEmployerId,
+      selectedEmployerId,
     employerSelect,
     onCreateJob,
+    isCreatingJob,
   } = useEmployerLogic();
 
   if (error && !isPending) {
@@ -62,6 +63,7 @@ const Employers: React.FC<EmployersProps> = ({ className = "" }) => {  const {
         onRefetch={refetch}
         selectedEmployerId={selectedEmployerId}
         onCreateJob={onCreateJob}
+        isCreatingJob={isCreatingJob}
       />
 
       <EmployerFilters
@@ -71,7 +73,9 @@ const Employers: React.FC<EmployersProps> = ({ className = "" }) => {  const {
         stateOptions={stateOptions}
         statusOptions={statusOptions}
         itemsPerPageOptions={itemsPerPageOptions}
-      />        <EmployerTable
+      />        
+      
+      <EmployerTable
         data={data}
         isLoading={isLoading}
         tableColumns={tableColumns}
@@ -80,12 +84,17 @@ const Employers: React.FC<EmployersProps> = ({ className = "" }) => {  const {
         onViewSubscription={viewSubscription}
         selectedEmployerId={selectedEmployerId}
         onEmployerSelect={employerSelect}
-      />
-
-      <EmployerTablePagination
+      />     
+      
+       <EmployerTablePagination
         data={data}
         filters={filters}
         onPageChange={initPageChange}
+      />
+      
+      <FullScreenSpinner 
+        isVisible={isCreatingJob} 
+        message="Preparing job creation..." 
       />
     </div>
   );

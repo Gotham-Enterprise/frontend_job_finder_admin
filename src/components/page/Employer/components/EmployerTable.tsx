@@ -23,7 +23,8 @@ const EmployerTable: React.FC<EmployerTableProps> = ({
   selectedEmployerId,
   onEmployerSelect,
 }) => {  return (
-    <div className="overflow-x-auto">      <Table>
+    <div className="overflow-x-auto">
+      <Table>
         <TableHeading columns={tableColumns} />
         <TableBody>
           {isLoading ? (

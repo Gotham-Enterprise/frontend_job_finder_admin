@@ -13,10 +13,10 @@ export const useEmployerLogic = () => {
     location: '',
     status: undefined,
   });
-  const [searchInput, setSearchInput] = useState('');
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [searchInput, setSearchInput] = useState('');  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [selectedEmployerId, setSelectedEmployerId] = useState<string | null>(null);
+  const [isCreatingJob, setIsCreatingJob] = useState(false);
 
   const { data, isLoading, error, refetch } = useEmployers(filters);
   const { data: statesData, isLoading: isStatesLoading } = useEmployerStates();  const tableColumns = useMemo(() => [
@@ -93,10 +93,12 @@ export const useEmployerLogic = () => {
   const employerSelect = (employerId: string, isSelected: boolean) => {
     setSelectedEmployerId(isSelected ? employerId : null);
   };
-
   const onCreateJob = () => {
     if (selectedEmployerId) {
-      router.push(`/admin/jobs/create-job?id=${selectedEmployerId}`);
+      setIsCreatingJob(true);
+      setTimeout(() => {
+        router.push(`/admin/jobs/create-job?id=${selectedEmployerId}`);
+      }, 100);
     }
   };
 
@@ -132,10 +134,10 @@ export const useEmployerLogic = () => {
     initPageChange,
     getStatusVariant,
     viewEmployer,
-    viewSubscription,
-
+    viewSubscription,    
     selectedEmployerId,
     employerSelect,
     onCreateJob,
+    isCreatingJob,
   };
 };
