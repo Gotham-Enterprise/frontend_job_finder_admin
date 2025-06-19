@@ -16,10 +16,11 @@ export const useEmployerLogic = () => {
   const [searchInput, setSearchInput] = useState('');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [selectedEmployerId, setSelectedEmployerId] = useState<string | null>(null);
 
   const { data, isLoading, error, refetch } = useEmployers(filters);
-  const { data: statesData, isLoading: isStatesLoading } = useEmployerStates();
-  const tableColumns = useMemo(() => [
+  const { data: statesData, isLoading: isStatesLoading } = useEmployerStates();  const tableColumns = useMemo(() => [
+    { key: 'select', label: '', className: 'w-16' },
     { key: 'companyName', label: 'Company' },
     { key: 'email', label: 'Email' },
     { key: 'state', label: 'States' },
@@ -85,9 +86,18 @@ export const useEmployerLogic = () => {
   const viewEmployer = (employerId: string) => {
     router.push(`/admin/employers/details/${employerId}`);
   };
-
   const viewSubscription = (employerId: string) => {
     router.push(`/admin/subscriptions?employerId=${employerId}`);
+  };
+
+  const employerSelect = (employerId: string, isSelected: boolean) => {
+    setSelectedEmployerId(isSelected ? employerId : null);
+  };
+
+  const onCreateJob = () => {
+    if (selectedEmployerId) {
+      router.push(`/admin/jobs/create-job?id=${selectedEmployerId}`);
+    }
   };
 
   useEffect(() => {
@@ -117,12 +127,15 @@ export const useEmployerLogic = () => {
     tableColumns,
     statusOptions,
     stateOptions,
-    itemsPerPageOptions,
-
+    itemsPerPageOptions,    
     filterChange,
     initPageChange,
     getStatusVariant,
     viewEmployer,
     viewSubscription,
+
+    selectedEmployerId,
+    employerSelect,
+    onCreateJob,
   };
 };

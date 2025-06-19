@@ -13,6 +13,8 @@ export interface EmployerHeaderProps {
   isFilterOpen: boolean;
   setIsFilterOpen: (value: boolean) => void;
   onRefetch: () => void;
+  selectedEmployerId: string | null;
+  onCreateJob: () => void;
 }
 
 export interface EmployerFiltersProps {
@@ -31,6 +33,8 @@ export interface EmployerTableProps {
   getStatusVariant: (status: string) => 'light' | 'solid';
   onViewEmployer: (employerId: string) => void;
   onViewSubscription: (employerId: string) => void;
+  selectedEmployerId: string | null;
+  onEmployerSelect: (employerId: string, isSelected: boolean) => void;
 }
 
 export interface EmployerTablePaginationProps {

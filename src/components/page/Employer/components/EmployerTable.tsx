@@ -9,6 +9,7 @@ import {
 import Badge from '../../../ui/badge/Badge';
 import Button from '../../../ui/button/Button';
 import TableHeading from '../../../tables/tableHeader';
+import Checkbox from '../../../form/input/Checkbox';
 import { EyeIcon } from '@/icons';
 import { EmployerTableProps } from '@/services/types/EmployerTypes';
 
@@ -19,15 +20,15 @@ const EmployerTable: React.FC<EmployerTableProps> = ({
   getStatusVariant,
   onViewEmployer,
   onViewSubscription,
-}) => {
-  return (
-    <div className="overflow-x-auto">
-      <Table>        
+  selectedEmployerId,
+  onEmployerSelect,
+}) => {  return (
+    <div className="overflow-x-auto">      <Table>
         <TableHeading columns={tableColumns} />
         <TableBody>
           {isLoading ? (
             <TableRow>
-              <TableCell className="text-center py-8 px-6" colSpan={9}>
+              <TableCell className="text-center py-8 px-6" colSpan={10}>
                 <div className="flex items-center justify-center gap-3">
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-brand-500"></div>
                   <p className="text-gray-500 dark:text-gray-400">Loading...</p>
@@ -36,13 +37,19 @@ const EmployerTable: React.FC<EmployerTableProps> = ({
             </TableRow>
           ) : !data?.success || !data?.data?.length ? (
             <TableRow>
-              <TableCell className="text-center py-8 px-6" colSpan={9}>
+              <TableCell className="text-center py-8 px-6" colSpan={10}>
                 <p className="text-gray-500 dark:text-gray-400">No employers found</p>
               </TableCell>
             </TableRow>
           ) : (
             data.data.map((employer: any) => (
               <TableRow key={employer.id} className="border-b border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                <TableCell className="py-4 px-6 text-center">
+                  <Checkbox
+                    checked={selectedEmployerId === employer.id}
+                    onChange={(checked) => onEmployerSelect(employer.id, checked)}
+                  />
+                </TableCell>
                 <TableCell className="py-4 px-6 text-sm">
                   <div className="flex items-center gap-3">
                     <div className="relative w-10 h-10 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700">

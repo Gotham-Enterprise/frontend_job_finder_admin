@@ -1,8 +1,10 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
+import { useSearchParams } from 'next/navigation';
 import { jobCreationApi } from '@/services/api/jobCreation';
 import { jobsAdminApi, JobCreationPayload } from '@/services/api/jobsAdmin';
+import { employerApi } from '@/services/api/employer';
 import { QUESTION_TYPES, QUESTION_SUBTYPES, QUESTION_SUBTYPE_VALUES } from '@/services/types/jobQuestions';
 import { showToast } from '@/services/utils/toast';
 import { useWorkTypes } from '@/services/hooks/useWorkTypes';
@@ -26,11 +28,15 @@ interface Company {
 }
 
 const JobCreationDashboard: React.FC = () => {
+  const searchParams = useSearchParams();
+  const employerId = searchParams.get('id');
+  
   const [currentStep, setCurrentStep] = useState(0);
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const [selectedOccupation, setSelectedOccupation] = useState<number | null>(null);
   const [description, setDescription] = useState('');
-  const [isPublishing, setIsPublishing] = useState(false);const [formData, setFormData] = useState<FormData>({
+  const [isPublishing, setIsPublishing] = useState(false);
+  const [isLoadingEmployer, setIsLoadingEmployer] = useState(false);const [formData, setFormData] = useState<FormData>({
     title: '',
     occupationId: '',
     specialtyId: '',
@@ -87,13 +93,47 @@ const JobCreationDashboard: React.FC = () => {
       showToast.error('Job Creation Failed', `Failed to create job: ${error.message}`);
     },
   });
-
   useEffect(() => {
     if (formData.occupationId) {
       setSelectedOccupation(Number(formData.occupationId));
       setFormData(prev => ({ ...prev, specialtyId: '' }));
     }
   }, [formData.occupationId]);
+
+  // Handle employer ID from URL parameters
+  useEffect(() => {
+    const fetchEmployerById = async (id: string) => {
+      try {
+        setIsLoadingEmployer(true);
+        const response = await employerApi.getEmployerById(id);
+        
+        if (response.success && response.data) {
+          const employer = response.data;
+          const company: Company = {
+            id: employer.id,
+            companyName: employer.companyName,
+            state: employer.state,
+            sizeOfCompany: employer.employeeCount
+          };
+          
+          setSelectedCompany(company);
+          setCurrentStep(1); // Skip company search, go to step 1
+          showToast.success('Company Selected', `Pre-selected ${employer.companyName} for job creation`);
+        } else {
+          showToast.error('Error', 'Could not load the selected employer');
+        }
+      } catch (error) {
+        console.error('Error fetching employer:', error);
+        showToast.error('Error', 'Failed to load employer details');
+      } finally {
+        setIsLoadingEmployer(false);
+      }
+    };
+
+    if (employerId && !selectedCompany) {
+      fetchEmployerById(employerId);
+    }
+  }, [employerId, selectedCompany]);
 
   const selectedOccupationData = occupationsData?.data?.find(
     occ => occ.id === selectedOccupation
@@ -791,12 +831,11 @@ const JobCreationDashboard: React.FC = () => {
               <JobPostingTips />
             </div>
           </div>
-        </div>
-      </div>
+        </div>      </div>
     
       <FullScreenSpinner 
-        isVisible={isPublishing} 
-        message="Publishing job posting..." 
+        isVisible={isPublishing || isLoadingEmployer} 
+        message={isLoadingEmployer ? "Loading employer details..." : "Publishing job posting..."} 
       />
     </div>
   );

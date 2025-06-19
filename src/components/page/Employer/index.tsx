@@ -11,8 +11,7 @@ import {
 } from './components';
 import { EmployersProps } from '@/services/types/EmployerTypes';
 
-const Employers: React.FC<EmployersProps> = ({ className = "" }) => {
-  const {
+const Employers: React.FC<EmployersProps> = ({ className = "" }) => {  const {
 
     filters,
     searchInput,
@@ -30,11 +29,15 @@ const Employers: React.FC<EmployersProps> = ({ className = "" }) => {
     statusOptions,
     stateOptions,
     itemsPerPageOptions,
-        filterChange,
+    filterChange,
     initPageChange,
     getStatusVariant,
     viewEmployer,
     viewSubscription,
+    
+    selectedEmployerId,
+    employerSelect,
+    onCreateJob,
   } = useEmployerLogic();
 
   if (error && !isPending) {
@@ -48,8 +51,7 @@ const Employers: React.FC<EmployersProps> = ({ className = "" }) => {
     );
   }
   return (
-    <div className={`rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] ${className}`}>
-      <EmployerHeader
+    <div className={`rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] ${className}`}>      <EmployerHeader
         totalCount={data?.metaData?.totalCount || 0}
         isPending={isPending}
         isLoading={isLoading}
@@ -58,6 +60,8 @@ const Employers: React.FC<EmployersProps> = ({ className = "" }) => {
         isFilterOpen={isFilterOpen}
         setIsFilterOpen={setIsFilterOpen}
         onRefetch={refetch}
+        selectedEmployerId={selectedEmployerId}
+        onCreateJob={onCreateJob}
       />
 
       <EmployerFilters
@@ -67,14 +71,15 @@ const Employers: React.FC<EmployersProps> = ({ className = "" }) => {
         stateOptions={stateOptions}
         statusOptions={statusOptions}
         itemsPerPageOptions={itemsPerPageOptions}
-      />      
-      <EmployerTable
+      />        <EmployerTable
         data={data}
         isLoading={isLoading}
         tableColumns={tableColumns}
         getStatusVariant={getStatusVariant}
         onViewEmployer={viewEmployer}
         onViewSubscription={viewSubscription}
+        selectedEmployerId={selectedEmployerId}
+        onEmployerSelect={employerSelect}
       />
 
       <EmployerTablePagination
