@@ -48,7 +48,6 @@ import PlugInIcon from "./plug-in.svg";
 import DocsIcon from "./docs.svg";
 import MailIcon from "./mail-line.svg";
 import HorizontaLDots from "./horizontal-dots.svg";
-import LocationIcon from "./location.svg";
 import ChatIcon from "./chat.svg";
 import MoreDotIcon from "./more-dot.svg";
 import BellIcon from "./bell.svg";
@@ -117,7 +116,6 @@ export {
   DocsIcon,
   MailIcon,
   HorizontaLDots,
-  LocationIcon,
   ChevronUpIcon,
   ChatIcon,
   FunnelIcon,
