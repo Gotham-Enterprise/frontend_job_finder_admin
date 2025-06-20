@@ -1,29 +1,6 @@
 "use client";
-import { useState } from "react";
 import Button from "@/components/ui/button/Button";
-
-interface Applicant {
-    id: string;
-    name: string;
-    email: string;
-    status: string;
-}
-
-interface MetaData {
-    page: number;
-    totalPages: number;
-    hasPreviousPage: boolean;
-    hasNextPage: boolean;
-}
-
-interface ApplicantsListProps {
-    applicants: Applicant[];
-    metaData: MetaData;
-    page: number;
-    setPage: (page: number | ((prev: number) => number)) => void;
-    getStatusVariant: (status: string) => string;
-    onViewApplicantDetails: (applicantId: string) => void;
-}
+import {  ApplicantsListProps } from '@/services/types/applicant';
 
 export default function ApplicantsList({ 
     applicants, 

@@ -123,7 +123,9 @@ export const jobsAdminApi = {
         benefits: string[];
       };
     }>('/api/ai/job-description', payload);
-  },  async createJob(companyId: string, payload: JobCreationPayload): Promise<{ success: boolean; jobId?: string; message?: string }> {
+  },  
+  
+  async createJob(companyId: string, payload: JobCreationPayload): Promise<{ success: boolean; jobId?: string; message?: string }> {
     
     const transformedPayload = transformJobPayload(payload);
     

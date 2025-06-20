@@ -41,3 +41,91 @@ export interface ApplicantDetailsResponse {
   data: ApplicantDetails;
   message?: string;
 }
+
+export interface ApplicantsHeaderProps {
+  totalCount: number;
+  isPending?: boolean;
+  isLoading?: boolean;
+  searchInput: string;
+  setSearchInput: (value: string) => void;
+  onRefetch?: () => void;
+  isCollapsed?: boolean;
+  onToggleCollapse?: () => void;
+}
+
+export interface Applicant {
+  id: string;
+  name: string;
+  email: string;
+  status: string;
+  appliedAt?: string;
+  resumeUrl?: string;
+  profilePicture?: { url: string };
+  phone?: string;
+  location?: string;
+  experience?: string;
+}
+
+export interface MetaData {
+  page: number;
+  totalPages: number;
+  hasPreviousPage: boolean;
+  hasNextPage: boolean;
+  totalCount: number;
+}
+
+export interface ApplicantsProps {
+  applicants: Applicant[];
+  metaData: MetaData;
+  isLoading?: boolean;
+  error?: Error | null;
+  onViewApplicant: (applicantId: string) => void;
+  onViewResume?: (resumeUrl: string) => void;
+  onPageChange: (page: number) => void;
+  getStatusVariant: (status: string) => string;
+  onRefetch?: () => void;
+  className?: string;
+}
+
+export interface ApplicantsTableProps {
+  applicants: Applicant[];
+  isLoading: boolean;
+  tableColumns: Array<{ key: string; label: string; sortable?: boolean }>;
+  getStatusVariant: (status: string) => string;
+  onViewApplicant: (applicantId: string) => void;
+  onViewResume?: (resumeUrl: string) => void;
+  isViewingResume?: boolean;
+}
+
+export interface ApplicantsTablePaginationProps {
+  data?: {
+    metaData?: MetaData;
+  } | null;
+  filters?: {
+    page: number;
+  };
+  onPageChange: (page: number) => void;
+}
+
+export interface LegacyApplicant {
+  id: string;
+  name: string;
+  email: string;
+  status: string;
+}
+
+export interface LegacyMetaData {
+  page: number;
+  totalPages: number;
+  hasPreviousPage: boolean;
+  hasNextPage: boolean;
+}
+
+export interface ApplicantsListProps {
+  applicants: LegacyApplicant[];
+  metaData: LegacyMetaData;
+  page: number;
+  setPage: (page: number | ((prev: number) => number)) => void;
+  getStatusVariant: (status: string) => string;
+  onViewApplicantDetails: (applicantId: string) => void;
+}
