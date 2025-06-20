@@ -37,7 +37,9 @@ export const AutoLogoutProvider: React.FC<AutoLogoutProviderProps> = ({ children
     if (typeof window !== 'undefined') {
       localStorage.setItem(LAST_ACTIVITY_KEY, now.toString());
     }
-  }, []);  const performAutoLogout = useCallback(async () => {
+  }, []);  
+  
+  const performAutoLogout = useCallback(async () => {
     if (!authUtils.isAuthenticated()) return;
      
     if (inactivityTimerRef.current) {
@@ -45,14 +47,11 @@ export const AutoLogoutProvider: React.FC<AutoLogoutProviderProps> = ({ children
     }
     
     try {
-      // First try to logout from backend to clear server session
       await logout();
     } catch (error) {
       console.warn('Auto-logout: Backend logout failed, clearing frontend state anyway:', error);
     }
-    
-    // Always clear frontend state regardless of backend logout success
-    // Use force clear to ensure everything is cleaned up
+
     authUtils.forceAuthClear();
     
     if (typeof window !== 'undefined') {
@@ -93,11 +92,14 @@ export const AutoLogoutProvider: React.FC<AutoLogoutProviderProps> = ({ children
       resetInactivityTimer();
     }
   }, [resetInactivityTimer]);
+
   useEffect(() => {
     if (typeof window === 'undefined') return;
     if (!authUtils.isAuthenticated()) {
       return;
     }
+    
+    
     checkInactivity();
     if (authUtils.isAuthenticated()) {
       resetInactivityTimer();
@@ -135,6 +137,8 @@ export const AutoLogoutProvider: React.FC<AutoLogoutProviderProps> = ({ children
       };
     }
   }, [router, checkInactivity, resetInactivityTimer, userActivity]);
+
+  
   useEffect(() => {
     if (typeof window === 'undefined') return;
 

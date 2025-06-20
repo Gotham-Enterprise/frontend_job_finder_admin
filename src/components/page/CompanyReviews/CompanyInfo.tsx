@@ -69,7 +69,7 @@ export default function CompanyInfo({ companyData }: CompanyInfoProps) {
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 p-6">
-      <div className="flex items-center mb-6">        <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-xl font-bold shadow-lg">
+      <div className="flex items-center mb-6">        <div className="w-16 h-16 bg-gradient-to-br bg-primary rounded-full flex items-center justify-center text-white text-xl font-bold shadow-lg">
           {companyData.companyName.split(' ').map((n: string) => n.charAt(0)).join('').substring(0, 2)}
         </div>
         <div className="ml-4">

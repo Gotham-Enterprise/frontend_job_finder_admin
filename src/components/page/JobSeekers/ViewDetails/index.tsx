@@ -20,6 +20,7 @@ interface ViewDetailsProps {
 }
 
 export default function ViewDetails({ id }: ViewDetailsProps) {
+    
     const { data, isLoading, error } = useJobSeekerDetails(id);
 
     const getProficiencyLabel = (proficiency: string) => {
@@ -96,11 +97,12 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
         {
             label: 'Last Active',
             value: formatDate(jobSeeker.lastActivity),
-            className: 'text-green-600 dark:text-green-400'
+            className: 'text-gray-900 dark:text-white'
         }
     ];
 
-    return (        <>
+    return (        
+    <>
         <div className="px-4 pt-4 pb-2">
             <BackToListButton href="/admin/job-seekers">
                 Back to Job Seekers

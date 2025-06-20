@@ -64,12 +64,12 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
         {
             label: 'Employees',
             value: `${employer.employeeCount}`,
-            className: 'text-blue-600 dark:text-blue-400'
+            className: 'text-gray-900 dark:text-white'
         },
         {
             label: 'Total Applications',
             value: `${employer.totalApplicants}`,
-            className: 'text-green-600 dark:text-green-400'
+            className: 'text-gray-900 dark:text-white'
         },
         {
             label: 'Email',
@@ -93,7 +93,7 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
         {
             label: 'Last Active',
             value: formatDate(employer.lastActivity),
-            className: 'text-green-600 dark:text-green-400'
+            className: 'text-gray-900 dark:text-white'
         }
     ];
 

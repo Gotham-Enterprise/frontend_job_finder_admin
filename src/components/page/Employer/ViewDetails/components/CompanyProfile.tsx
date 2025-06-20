@@ -23,8 +23,8 @@ export default function CompanyProfile({ employer, contactInfo, onSeeReviews, ov
         <div className="mb-6 rounded-xl bg-white p-6 shadow-lg border border-gray-100 dark:bg-gray-800 dark:border-gray-700 sm:p-8">
             <div className="flex flex-col items-center">                
                 <div className="relative mb-6 inline-block">
-                    <div className="w-30 h-30 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center border-4 border-blue-100 dark:border-blue-900 shadow-lg">
-                        <span className="text-2xl font-bold text-gray-500 dark:text-gray-400">
+                    <div className="w-30 h-30 bg-primary rounded-full flex items-center justify-center border-4 border-green-100 dark:border-green-900 shadow-lg">
+                        <span className="text-2xl font-bold text-white">
                             {employer.companyName.split(' ').map(n => n.charAt(0)).join('').substring(0, 2)}
                         </span>
                     </div>

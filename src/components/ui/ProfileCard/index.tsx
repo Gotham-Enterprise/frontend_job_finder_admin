@@ -43,7 +43,7 @@ export default function ProfileCard({
                             className={`${avatarSizes[avatarSize].container} rounded-full object-cover border-4 border-blue-100 dark:border-blue-900 shadow-lg`}
                         />
                     ) : (
-                        <div className={`${avatarSizes[avatarSize].container} bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center border-4 border-blue-100 dark:border-blue-900 shadow-lg`}>
+                        <div className={`${avatarSizes[avatarSize].container} bg-gradient-to-br bg-primary rounded-full flex items-center justify-center border-4 border-blue-100 dark:border-blue-900 shadow-lg`}>
                             <span className={`${avatarSizes[avatarSize].text} font-bold text-white`}>
                                 {getInitials(profileData.name)}
                             </span>
