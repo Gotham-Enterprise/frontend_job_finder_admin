@@ -12,16 +12,17 @@ export default function Skills({ skills }: SkillsProps) {
             <div className="flex items-center mb-6">
               
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white">Skills & Expertise</h3>
-            </div>
-              {skills && skills.length > 0 ? (
-                <ul className="space-y-3">
+            </div>            {skills && skills.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
                     {skills.map((skill) => (
-                        <li key={skill.id} className="flex items-center">
-                            <div className="w-1 h-1 bg-gray-500 rounded-full mr-3"></div>
-                            <span className="text-sm font-medium text-gray-900 dark:text-white">{skill.skillName}</span>
-                        </li>
+                        <span 
+                            key={skill.id} 
+                            className="inline-block px-3 py-1 text-sm font-medium text-blue-600 bg-blue-100 rounded-full dark:bg-blue-900 dark:text-blue-300"
+                        >
+                            {skill.skillName}
+                        </span>
                     ))}
-                </ul>
+                </div>
             ) : (
                 <p className="text-gray-500 dark:text-gray-400 text-center">No skills information available</p>
             )}
