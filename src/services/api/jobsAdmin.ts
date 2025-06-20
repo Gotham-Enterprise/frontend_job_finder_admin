@@ -1,49 +1,6 @@
 import { JobsAdminFilters, JobsAdminResponse, JobsAdminDetailsResponse, OccupationsResponse } from '../types/jobsAdmin';
 import { apiGet, apiPost } from './apiUtils';
-
-export interface JobCreationPayload {
-  companyId: string;
-  jobTitle: string;
-  occupationId: number;
-  specialtyId: number;
-  locationCountry: string;
-  locationState: string;
-  locationCity: string;
-  locationZipCode: string;
-  locationAddress: string;
-  workType: string;
-  workSetting: string;
-  workFacility: string;
-  salaryCurrency: string;
-  salaryRangeStart: number;
-  salaryRangeEnd: number;
-  salaryType: string;
-  autoRenew: boolean;
-  shiftType: string;
-  telemedicine?: string;
-  languages: number[];
-  companySize: string;
-  postingDate: string;
-  status: string;
-  jobDescription: string;
-  questions: Array<{
-    questionText: string;
-    questionTypeId: number;
-    questionSubTypeId: number;
-    questionSubTypeValueId?: number;
-    required: boolean;
-    isActive: boolean;
-    isDefault: boolean;
-    options?: string[];
-  }>;
-  documents: Array<{
-    documentName: string;
-    documentType: string;
-    documentDescription: string;
-  }>;
-}
-
-export type AITonesProps = 'formal' | 'casual' | 'enthusiastic' | 'optimistic' | 'conversational' | 'inspirational' | 'informative' | 'informal' | 'persuasive' | 'cooperative';
+import { AIJobDescriptionPayload, JobCreationPayload, AITonesProps } from '../types/jobCreation';
 
 export const AI_TONES = [
   { id: 'formal' as AITonesProps, label: 'Formal' },
@@ -58,27 +15,6 @@ export const AI_TONES = [
   { id: 'cooperative' as AITonesProps, label: 'Cooperative' },
 ] as const;
 
-export interface AIJobDescriptionPayload {
-  tone: AITonesProps;
-  jobTitle: string;
-  occupationId: number;
-  specialtyId: number;
-  workType?: string;
-  workSetting?: string;
-  locationCountry?: string;
-  locationState: string;
-  locationCity?: string;
-  locationZipCode: string;
-  locationAddress?: string;
-  workFacility?: string;
-  salaryCurrency?: string;
-  salaryRangeStart?: number;
-  salaryRangeEnd?: number;
-  salaryType?: string;
-  shiftType?: string;
-  languages?: number[];
-  companySize?: string;
-}
 
 export const jobsAdminApi = {
   async getJobs(filters: JobsAdminFilters = {}): Promise<JobsAdminResponse> {
