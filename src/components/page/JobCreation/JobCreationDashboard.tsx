@@ -172,12 +172,10 @@ const JobCreationDashboard: React.FC = () => {
     return clinicSize?.name || '';
   };
 
-  // Alternative mapping functions that use direct values as fallback
   const getWorkTypeNameSafe = (id: string): string => {
     const name = getWorkTypeName(id);
     if (name) return name;
     
-    // Fallback to common work type mappings
     const fallbackMap: { [key: string]: string } = {
       'full-time': 'Full-time',
       'part-time': 'Part-time',
@@ -191,8 +189,7 @@ const JobCreationDashboard: React.FC = () => {
   const getWorkSettingNameSafe = (id: string): string => {
     const name = getWorkSettingName(id);
     if (name) return name;
-    
-    // Fallback to common work setting mappings
+
     const fallbackMap: { [key: string]: string } = {
       'onsite': 'On-site',
       'remote': 'Remote',
@@ -205,7 +202,6 @@ const JobCreationDashboard: React.FC = () => {
     const name = getWorkFacilityName(id);
     if (name) return name;
     
-    // Fallback to common facility mappings
     const fallbackMap: { [key: string]: string } = {
       'hospital': 'Hospital',
       'clinic': 'Clinic',
@@ -219,7 +215,6 @@ const JobCreationDashboard: React.FC = () => {
     const name = getShiftTypeName(id);
     if (name) return name;
     
-    // Fallback to common shift type mappings
     const fallbackMap: { [key: string]: string } = {
       'day': 'Day',
       'night': 'Night',
@@ -234,7 +229,6 @@ const JobCreationDashboard: React.FC = () => {
     const name = getClinicSizeName(id);
     if (name) return name;
     
-    // Fallback to common company size mappings
     const fallbackMap: { [key: string]: string } = {
       'solo-practice': 'Solo Practice',
       '2-10': '2-10',
@@ -267,7 +261,6 @@ const JobCreationDashboard: React.FC = () => {
   };  const validateCurrentStep = (): boolean => {
     switch (currentStep) {
       case 1:
-        // Basic info validation
         if (!formData.title.trim()) {
           showToast.error('Validation Error', 'Job title is required');
           return false;
