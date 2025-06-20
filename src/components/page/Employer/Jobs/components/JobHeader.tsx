@@ -18,7 +18,7 @@ export default function JobHeader({ job, getJobStatusVariant }: JobHeaderProps) 
                         {job.title}
                     </h1>
                     <p className="text-lg text-gray-600 dark:text-gray-300 mb-4">
-                        {job.occupation || 'Company Name'}
+                        {job.occupation || 'Company Name'} 
                     </p>
                 </div>
                 <div className="flex flex-wrap gap-2">

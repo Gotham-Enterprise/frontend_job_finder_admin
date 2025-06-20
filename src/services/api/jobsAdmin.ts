@@ -123,9 +123,38 @@ export const jobsAdminApi = {
         benefits: string[];
       };
     }>('/api/ai/job-description', payload);
-  },
-
-  async createJob(companyId: string, payload: JobCreationPayload): Promise<{ success: boolean; jobId?: string; message?: string }> {
-    return apiPost<{ success: boolean; jobId?: string; message?: string }>(`/api/job_posts_management/admin/${companyId}`, payload);
+  },  async createJob(companyId: string, payload: JobCreationPayload): Promise<{ success: boolean; jobId?: string; message?: string }> {
+    
+    const transformedPayload = transformJobPayload(payload);
+    
+    try {
+      const response = await apiPost<{ success: boolean; jobId?: string; message?: string }>(`/api/job_posts_management/admin/${companyId}`, transformedPayload);
+      return response;
+    } catch (error) {
+     
+      throw error;
+    }
   }
+};
+
+
+export const transformJobPayload = (payload: JobCreationPayload): JobCreationPayload => {
+  return {
+    ...payload,
+  
+    locationCountry: payload.locationCountry === 'US' ? 'USA' : payload.locationCountry,
+    workType: payload.workType?.toLowerCase().replace('-', '') || 'full-time',
+    workSetting: payload.workSetting?.toLowerCase().replace('-', '') || 'onsite',
+    workFacility: payload.workFacility?.toLowerCase() || 'corporate',
+    shiftType: payload.shiftType?.toLowerCase() || 'morning',
+    companySize: payload.companySize || '50-100',
+    salaryRangeStart: Number(payload.salaryRangeStart),
+    salaryRangeEnd: Number(payload.salaryRangeEnd),
+    questions: payload.questions.map(q => ({
+      ...q,
+      questionTypeId: Number(q.questionTypeId),
+      questionSubTypeId: Number(q.questionSubTypeId),
+      questionSubTypeValueId: q.questionSubTypeValueId ? Number(q.questionSubTypeValueId) : undefined,
+    })),
+  };
 };

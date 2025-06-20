@@ -142,7 +142,6 @@ const JobCreationDashboard: React.FC = () => {
   const updateFormField = (field: keyof FormData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
-
   const getWorkTypeName = (id: string): string => {
     if (!workTypesData?.success || !id) return '';
     const workType = workTypesData.data.find(wt => wt.id.toString() === id);
@@ -171,7 +170,83 @@ const JobCreationDashboard: React.FC = () => {
     if (!clinicSizesData?.success || !id) return '';
     const clinicSize = clinicSizesData.data.find(cs => cs.id.toString() === id);
     return clinicSize?.name || '';
-  };const handleCompanySelect = (company: Company) => {
+  };
+
+  // Alternative mapping functions that use direct values as fallback
+  const getWorkTypeNameSafe = (id: string): string => {
+    const name = getWorkTypeName(id);
+    if (name) return name;
+    
+    // Fallback to common work type mappings
+    const fallbackMap: { [key: string]: string } = {
+      'full-time': 'Full-time',
+      'part-time': 'Part-time',
+      'contract': 'Contract',
+      'temporary': 'Temporary',
+      'per-diem': 'Per Diem'
+    };
+    return fallbackMap[id.toLowerCase()] || id;
+  };
+
+  const getWorkSettingNameSafe = (id: string): string => {
+    const name = getWorkSettingName(id);
+    if (name) return name;
+    
+    // Fallback to common work setting mappings
+    const fallbackMap: { [key: string]: string } = {
+      'onsite': 'On-site',
+      'remote': 'Remote',
+      'hybrid': 'Hybrid'
+    };
+    return fallbackMap[id.toLowerCase()] || id;
+  };
+
+  const getWorkFacilityNameSafe = (id: string): string => {
+    const name = getWorkFacilityName(id);
+    if (name) return name;
+    
+    // Fallback to common facility mappings
+    const fallbackMap: { [key: string]: string } = {
+      'hospital': 'Hospital',
+      'clinic': 'Clinic',
+      'corporate': 'Corporate',
+      'private-practice': 'Private Practice'
+    };
+    return fallbackMap[id.toLowerCase()] || id;
+  };
+
+  const getShiftTypeNameSafe = (id: string): string => {
+    const name = getShiftTypeName(id);
+    if (name) return name;
+    
+    // Fallback to common shift type mappings
+    const fallbackMap: { [key: string]: string } = {
+      'day': 'Day',
+      'night': 'Night',
+      'evening': 'Evening',
+      'morning': 'Morning',
+      'rotating': 'Rotating'
+    };
+    return fallbackMap[id.toLowerCase()] || id;
+  };
+
+  const getClinicSizeNameSafe = (id: string): string => {
+    const name = getClinicSizeName(id);
+    if (name) return name;
+    
+    // Fallback to common company size mappings
+    const fallbackMap: { [key: string]: string } = {
+      'solo-practice': 'Solo Practice',
+      '2-10': '2-10',
+      '11-50': '11-50',
+      '51-100': '51-100',
+      '101-500': '101-500',
+      '500+': '500+'
+    };
+    return fallbackMap[id.toLowerCase()] || id;
+  };
+  
+  const companySelect = (company: Company) => {
     setSelectedCompany(company);
     setCurrentStep(1); 
   };
@@ -321,17 +396,42 @@ const JobCreationDashboard: React.FC = () => {
         !clinicSizesData?.success) {
       showToast.error('Error', 'Option data is still loading. Please wait a moment and try again.');
       return;
-    }
+    }    // Validate that we can map all the selected values
+    const workTypeName = getWorkTypeNameSafe(formData.workType);
+    const workSettingName = getWorkSettingNameSafe(formData.workSetting);
+    const workFacilityName = getWorkFacilityNameSafe(formData.workFacility);
+    const shiftTypeName = getShiftTypeNameSafe(formData.shiftType);
+    const companySize = getClinicSizeNameSafe(formData.clinicSize);
 
-    // Validate that we can map all the selected values
-    const workTypeName = getWorkTypeName(formData.workType);
-    const workSettingName = getWorkSettingName(formData.workSetting);
-    const workFacilityName = getWorkFacilityName(formData.workFacility);
-    const shiftTypeName = getShiftTypeName(formData.shiftType);
-    const companySize = getClinicSizeName(formData.clinicSize);
-
-    if (!workTypeName || !workSettingName || !workFacilityName || !shiftTypeName || !companySize) {
-      showToast.error('Error', 'Some required fields have invalid values. Please review your selections.');
+    // Debug logging to identify which fields are failing
+    console.log('Form data validation debug:', {
+      workType: formData.workType,
+      workSetting: formData.workSetting,
+      workFacility: formData.workFacility,
+      shiftType: formData.shiftType,
+      clinicSize: formData.clinicSize,
+      workTypeName,
+      workSettingName,
+      workFacilityName,
+      shiftTypeName,
+      companySize
+    });
+    
+    console.log('Available options debug:', {
+      workTypes: workTypesData?.data?.map(wt => ({ id: wt.id, name: wt.name })),
+      workSettings: workSettingsData?.data?.map(ws => ({ id: ws.id, name: ws.name })),
+      workFacilities: workFacilitiesData?.data?.map(wf => ({ id: wf.id, name: wf.name })),
+      shiftTypes: shiftTypesData?.data?.map(st => ({ id: st.id, name: st.name })),
+      clinicSizes: clinicSizesData?.data?.map(cs => ({ id: cs.id, name: cs.name }))
+    });    if (!workTypeName || !workSettingName || !workFacilityName || !shiftTypeName || !companySize) {
+      const missingFields = [];
+      if (!workTypeName) missingFields.push('Work Type');
+      if (!workSettingName) missingFields.push('Work Setting');
+      if (!workFacilityName) missingFields.push('Work Facility');
+      if (!shiftTypeName) missingFields.push('Shift Type');
+      if (!companySize) missingFields.push('Company Size');
+      
+      showToast.error('Error', `Invalid values for: ${missingFields.join(', ')}. Please review your selections.`);
       return;
     }const payload: JobCreationPayload = {
       companyId: selectedCompany.id,
@@ -342,16 +442,15 @@ const JobCreationDashboard: React.FC = () => {
       locationState: formData.state,
       locationCity: formData.city,
       locationZipCode: formData.zipCode,
-      locationAddress: formData.address,
-      workType: getWorkTypeName(formData.workType),
-      workSetting: getWorkSettingName(formData.workSetting),
-      workFacility: getWorkFacilityName(formData.workFacility),
+      locationAddress: formData.address,      workType: getWorkTypeNameSafe(formData.workType),
+      workSetting: getWorkSettingNameSafe(formData.workSetting),
+      workFacility: getWorkFacilityNameSafe(formData.workFacility),
       salaryCurrency: formData.currency,
       salaryRangeStart: formData.salaryFrom,
       salaryRangeEnd: formData.salaryTo,
       salaryType: formData.salaryType,
       autoRenew: formData.autoRenew,
-      shiftType: getShiftTypeName(formData.shiftType),
+      shiftType: getShiftTypeNameSafe(formData.shiftType),
    
       languages: Array.isArray(formData.language) 
         ? formData.language.map(lang => {
@@ -359,7 +458,7 @@ const JobCreationDashboard: React.FC = () => {
             return isNaN(id) ? 0 : id;
           }).filter(id => id > 0)
         : [],
-      companySize: getClinicSizeName(formData.clinicSize),
+      companySize: getClinicSizeNameSafe(formData.clinicSize),
       postingDate: formData.postingDate,
       status: 'Skip & Publish',
       jobDescription: description,
@@ -489,8 +588,39 @@ const JobCreationDashboard: React.FC = () => {
   const postingDateOptions = [
     { value: 'today', label: 'Today' },
     { value: 'this-week', label: 'This Week' },
-    { value: 'this-month', label: 'This Month' },
+    { value: 'this-month', label: 'This Month' },  ];
+
+  const jobDetailsFields = [
+    { label: 'Job Title', value: formData.title },
+    { 
+      label: 'Occupation', 
+      value: occupationOptions.find(opt => opt.value === formData.occupationId)?.label || formData.occupationId 
+    },
+    { 
+      label: 'Specialty', 
+      value: specialtyOptions.find(opt => opt.value === formData.specialtyId)?.label || formData.specialtyId || 'Not specified' 
+    },
+    { label: 'Country', value: formData.country },
+    { label: 'Address', value: formData.address },
+    { label: 'City', value: formData.city },
+    { label: 'State', value: formData.state },
+    { label: 'Zip Code', value: formData.zipCode },
+    { label: 'Work Type', value: formData.workType },
+    { label: 'Work Setting', value: formData.workSetting },
+    { label: 'Work Facility', value: formData.workFacility },
+    { label: 'Shift Type', value: formData.shiftType },
+    { 
+      label: 'Languages', 
+      value: Array.isArray(formData.language) ? formData.language.join(', ') : formData.language || 'Not specified' 
+    },
+    { label: 'Company Size', value: formData.clinicSize },
+    { 
+      label: 'Salary', 
+      value: `${formData.currency} ${formData.salaryFrom.toLocaleString()} - ${formData.salaryTo.toLocaleString()} (${formData.salaryType})`,
+      fullWidth: true 
+    }
   ];
+
   if (!selectedCompany && currentStep === 0 && !employerId && !isLoadingEmployer) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -504,7 +634,7 @@ const JobCreationDashboard: React.FC = () => {
             </p>
           </div>
             <CompanySearch 
-            onCompanySelect={handleCompanySelect}
+            onCompanySelect={companySelect}
           />
         </div>
       </div>
@@ -551,23 +681,14 @@ const JobCreationDashboard: React.FC = () => {
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                   <span className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-medium">1</span>
                   Job Details
-                </h3>
+                </h3>                  
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                  <div><span className="font-medium text-gray-700 dark:text-gray-300">Job Title:</span> <span className="text-gray-900 dark:text-white">{formData.title}</span></div>
-                  <div><span className="font-medium text-gray-700 dark:text-gray-300">Occupation:</span> <span className="text-gray-900 dark:text-white">{occupationOptions.find(opt => opt.value === formData.occupationId)?.label || formData.occupationId}</span></div>
-                  <div><span className="font-medium text-gray-700 dark:text-gray-300">Specialty:</span> <span className="text-gray-900 dark:text-white">{specialtyOptions.find(opt => opt.value === formData.specialtyId)?.label || formData.specialtyId || 'Not specified'}</span></div>
-                  <div><span className="font-medium text-gray-700 dark:text-gray-300">Country:</span> <span className="text-gray-900 dark:text-white">{formData.country}</span></div>
-                  <div><span className="font-medium text-gray-700 dark:text-gray-300">Address:</span> <span className="text-gray-900 dark:text-white">{formData.address}</span></div>
-                  <div><span className="font-medium text-gray-700 dark:text-gray-300">City:</span> <span className="text-gray-900 dark:text-white">{formData.city}</span></div>
-                  <div><span className="font-medium text-gray-700 dark:text-gray-300">State:</span> <span className="text-gray-900 dark:text-white">{formData.state}</span></div>
-                  <div><span className="font-medium text-gray-700 dark:text-gray-300">Zip Code:</span> <span className="text-gray-900 dark:text-white">{formData.zipCode}</span></div>
-                  <div><span className="font-medium text-gray-700 dark:text-gray-300">Work Type:</span> <span className="text-gray-900 dark:text-white">{formData.workType}</span></div>
-                  <div><span className="font-medium text-gray-700 dark:text-gray-300">Work Setting:</span> <span className="text-gray-900 dark:text-white">{formData.workSetting}</span></div>
-                  <div><span className="font-medium text-gray-700 dark:text-gray-300">Work Facility:</span> <span className="text-gray-900 dark:text-white">{formData.workFacility}</span></div>
-                  <div><span className="font-medium text-gray-700 dark:text-gray-300">Shift Type:</span> <span className="text-gray-900 dark:text-white">{formData.shiftType}</span></div>
-                  <div><span className="font-medium text-gray-700 dark:text-gray-300">Languages:</span> <span className="text-gray-900 dark:text-white">{Array.isArray(formData.language) ? formData.language.join(', ') : formData.language || 'Not specified'}</span></div>
-                  <div><span className="font-medium text-gray-700 dark:text-gray-300">Company Size:</span> <span className="text-gray-900 dark:text-white">{formData.clinicSize}</span></div>
-                  <div className="md:col-span-2"><span className="font-medium text-gray-700 dark:text-gray-300">Salary:</span> <span className="text-gray-900 dark:text-white">{formData.currency} {formData.salaryFrom.toLocaleString()} - {formData.salaryTo.toLocaleString()} ({formData.salaryType})</span></div>
+                  {jobDetailsFields.map((field, index) => (
+                    <div key={index} className={field.fullWidth ? "md:col-span-2" : ""}>
+                      <span className="font-medium text-gray-700 dark:text-gray-300">{field.label}:</span>{" "}
+                      <span className="text-gray-900 dark:text-white">{field.value}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
 
@@ -686,7 +807,8 @@ const JobCreationDashboard: React.FC = () => {
                 <div className="space-x-4">                
                     <Button variant="outline" onClick={() => showToast.success('Draft Saved', 'Job posting saved as draft')}>
                     Save Draft
-                  </Button>                  <Button 
+                  </Button>                  
+                  <Button 
                     onClick={publishedJob} 
                     disabled={createJobMutation.isPending}
                   >
@@ -843,16 +965,8 @@ const JobCreationDashboard: React.FC = () => {
             </h3>
             <p className="text-gray-600 dark:text-gray-400 mb-6">
               Please wait while we load the selected employer information...
-            </p>            <Button
-              variant="outline"
-              onClick={() => {
-                // Skip loading and go to company search
-                setCurrentStep(0);
-              }}
-              className="w-full"
-            >
-              Skip and Search Manually
-            </Button>
+            </p>            
+           
           </div>
         </div>
       )}
