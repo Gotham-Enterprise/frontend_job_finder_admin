@@ -33,11 +33,11 @@ export const useJobSeekersLogic = () => {
     { key: 'status', label: 'Status' },
     { key: 'actions', label: '', className: 'text-right' },
   ], []);
-
   const statusOptions = useMemo(() => [
     { value: '', label: 'All Statuses' },
     { value: 'active', label: 'Active' },
     { value: 'inactive', label: 'Inactive' },
+    { value: 'pending', label: 'Pending' },
   ], []);
 
   const occupationOptions = useMemo(() => {
@@ -90,12 +90,12 @@ export const useJobSeekersLogic = () => {
       setFilters(prev => ({ ...prev, page: newPage }));
     });
   }, []);
-
   const getStatusVariant = useMemo(() => (status: string): 'light' | 'solid' => {
     switch (status) {
       case 'active': return 'solid';
       case 'inactive': return 'light';
       case 'suspended': return 'solid';
+      case 'pending': return 'light';
       default: return 'light';
     }
   }, []);

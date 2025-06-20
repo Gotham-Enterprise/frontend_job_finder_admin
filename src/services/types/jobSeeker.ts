@@ -9,10 +9,10 @@ export interface JobSeeker {
   zipCode: string;
   jobApplications: number;
   dateJoined: string;
-  resumeId: string | null;
+  resumeId: string | null; 
   hasResume: boolean;
   lastActivity: string;
-  status: 'active' | 'inactive' | 'suspended';
+  status: 'active' | 'inactive' | 'suspended' | 'pending';
   profilePicture: {
     fileName: string;
     url: string;
@@ -24,10 +24,9 @@ export interface JobSeekerFilters {
   page?: number;
   limit?: number;
   search?: string;
-  location?: string;
-  specialty?: string;
+  location?: string;  specialty?: string;
   occupationId?: number;
-  status?: 'active' | 'inactive' | 'suspended';
+  status?: 'active' | 'inactive' | 'suspended' | 'pending';
 }
 
 export interface JobSeekersResponse {

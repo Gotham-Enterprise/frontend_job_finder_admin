@@ -43,7 +43,8 @@ const JobSeekersHeader: React.FC<JobSeekersHeaderProps> = ({
             startIcon={<FunnelIcon className="dark:text-white" />}
           >
             Filters
-          </Button>          <Button
+          </Button>         
+           <Button
             variant="text-primary"
             size="sm"
             onClick={onClearFilters}

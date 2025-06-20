@@ -90,7 +90,9 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
         data={data}
         filters={filters}
         onPageChange={initPageChange}
-      />      <FullScreenSpinner 
+      />      
+      
+      <FullScreenSpinner 
         isVisible={isViewingResume} 
         message="Opening resume..." 
       />

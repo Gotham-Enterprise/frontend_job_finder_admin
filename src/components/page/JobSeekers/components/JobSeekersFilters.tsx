@@ -16,13 +16,13 @@ const JobSeekersFilters: React.FC<JobSeekersFiltersProps> = ({
 
   return (
     <div className="p-4 bg-gray-50 dark:bg-gray-800/50">
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        <div>
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">       
+         <div>
           <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Occupation
           </Label>
           <Select
-            defaultValue={filters.occupationId?.toString() || ''}
+            value={filters.occupationId?.toString() || ''}
             onChange={(value: string) => onFilterChange('occupationId', value === '' ? undefined : parseInt(value))}
             options={occupationOptions}
           />
@@ -32,7 +32,7 @@ const JobSeekersFilters: React.FC<JobSeekersFiltersProps> = ({
             State
           </Label>
           <Select
-            defaultValue={filters.location || ''}
+            value={filters.location || ''}
             onChange={(value: string) => onFilterChange('location', value)}
             options={stateOptions}
           />
@@ -42,7 +42,7 @@ const JobSeekersFilters: React.FC<JobSeekersFiltersProps> = ({
             Status
           </Label>
           <Select
-            defaultValue={filters.status || ''}
+            value={filters.status || ''}
             onChange={(value: string) => onFilterChange('status', value)}
             options={statusOptions}
           />
@@ -52,7 +52,7 @@ const JobSeekersFilters: React.FC<JobSeekersFiltersProps> = ({
             Items per page
           </Label>
           <Select
-            defaultValue={filters.limit?.toString() || '10'}
+            value={filters.limit?.toString() || '10'}
             onChange={(value: string) => onFilterChange('limit', parseInt(value))}
             options={itemsPerPageOptions}
           />

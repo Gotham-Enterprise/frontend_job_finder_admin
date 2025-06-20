@@ -16,6 +16,8 @@ export interface EmployerHeaderProps {
   selectedEmployerId: string | null;
   onCreateJob: () => void;
   isCreatingJob: boolean;
+  onClearFilters: () => void;
+  hasActiveFilters: boolean;
 }
 
 export interface EmployerFiltersProps {

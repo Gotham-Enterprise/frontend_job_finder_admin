@@ -92,8 +92,7 @@ export const useEmployerLogic = () => {
 
   const employerSelect = (employerId: string, isSelected: boolean) => {
     setSelectedEmployerId(isSelected ? employerId : null);
-  };
-  const onCreateJob = () => {
+  };  const onCreateJob = () => {
     if (selectedEmployerId) {
       setIsCreatingJob(true);
       setTimeout(() => {
@@ -101,6 +100,27 @@ export const useEmployerLogic = () => {
       }, 100);
     }
   };
+  const clearAllFilters = () => {
+    startTransition(() => {
+      setFilters({
+        page: 1,
+        limit: 10,
+        name: '',
+        location: '',
+        status: undefined,
+      });
+      setSearchInput('');
+      setSelectedEmployerId(null);
+    });
+  };
+  const hasActiveFilters = useMemo(() => {
+    return !!(
+      searchInput ||
+      filters.location ||
+      filters.status ||
+      selectedEmployerId
+    );
+  }, [searchInput, filters.location, filters.status, selectedEmployerId]);
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -139,5 +159,7 @@ export const useEmployerLogic = () => {
     employerSelect,
     onCreateJob,
     isCreatingJob,
+    clearAllFilters,
+    hasActiveFilters,
   };
 };

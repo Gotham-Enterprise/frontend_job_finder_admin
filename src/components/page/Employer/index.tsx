@@ -39,6 +39,8 @@ const Employers: React.FC<EmployersProps> = ({ className = "" }) => {  const {
     employerSelect,
     onCreateJob,
     isCreatingJob,
+    clearAllFilters,
+    hasActiveFilters,
   } = useEmployerLogic();
 
   if (error && !isPending) {
@@ -64,6 +66,8 @@ const Employers: React.FC<EmployersProps> = ({ className = "" }) => {  const {
         selectedEmployerId={selectedEmployerId}
         onCreateJob={onCreateJob}
         isCreatingJob={isCreatingJob}
+        onClearFilters={clearAllFilters}
+        hasActiveFilters={hasActiveFilters}
       />
 
       <EmployerFilters
