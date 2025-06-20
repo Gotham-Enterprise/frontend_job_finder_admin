@@ -19,13 +19,12 @@ const JobsAdminFilters: React.FC<JobsAdminFiltersProps> = ({
 
   return (
     <div className="p-4 bg-gray-50 dark:bg-gray-800/50">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-        <div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4">        <div>
           <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Occupation
           </Label>
           <Select
-            defaultValue={filters.occupationId?.toString() || ''}
+            value={filters.occupationId?.toString() || ''}
             onChange={(value: string) => onFilterChange('occupationId', value === '' ? undefined : parseInt(value))}
             options={occupationOptions}
           />
@@ -35,7 +34,7 @@ const JobsAdminFilters: React.FC<JobsAdminFiltersProps> = ({
             Specialty
           </Label>
           <Select
-            defaultValue={filters.specialtyId?.toString() || ''}
+            value={filters.specialtyId?.toString() || ''}
             onChange={(value: string) => onFilterChange('specialtyId', value === '' ? undefined : parseInt(value))}
             options={specialtyOptions}
             disabled={!selectedOccupationId}
@@ -46,7 +45,7 @@ const JobsAdminFilters: React.FC<JobsAdminFiltersProps> = ({
             State
           </Label>
           <Select
-            defaultValue={filters.state || ''}
+            value={filters.state || ''}
             onChange={(value: string) => onFilterChange('state', value)}
             options={stateOptions}
           />
@@ -56,15 +55,15 @@ const JobsAdminFilters: React.FC<JobsAdminFiltersProps> = ({
             Job Status
           </Label>
           <Select
-            defaultValue={filters.jobStatus || ''}
+            value={filters.jobStatus || ''}
             onChange={(value: string) => onFilterChange('jobStatus', value)}
             options={jobStatusOptions}
           />
-        </div>        <div>
+        </div><div>
           <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Date Posted
-          </Label>
-          <DatePicker
+          </Label>          <DatePicker
+            key={filters.datePosted || 'date-picker'}
             id="jobs-date-posted-filter"
             placeholder="Select date posted"
             defaultDate={filters.datePosted || undefined}
@@ -73,13 +72,12 @@ const JobsAdminFilters: React.FC<JobsAdminFiltersProps> = ({
               onFilterChange('datePosted', currentDateString || '');
             }}
           />
-        </div>
-        <div>
+        </div>        <div>
           <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Items per page
           </Label>
           <Select
-            defaultValue={filters.limit?.toString() || '10'}
+            value={filters.limit?.toString() || '10'}
             onChange={(value: string) => onFilterChange('limit', parseInt(value))}
             options={itemsPerPageOptions}
           />

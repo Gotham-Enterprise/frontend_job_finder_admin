@@ -138,6 +138,34 @@ export const useJobsAdminLogic = () => {
     router.push(`/admin/jobs/details/${jobId}`);
   };
 
+  const clearAllFilters = () => {
+    startTransition(() => {
+      setFilters({
+        page: 1,
+        limit: 10,
+        name: '',
+        state: '',
+        jobStatus: undefined,
+        datePosted: '',
+        occupationId: undefined,
+        specialtyId: undefined,
+      });
+      setSearchInput('');
+      setSelectedOccupationId(undefined);
+    });
+  };
+
+  const hasActiveFilters = useMemo(() => {
+    return !!(
+      searchInput ||
+      filters.state ||
+      filters.jobStatus ||
+      filters.datePosted ||
+      filters.occupationId ||
+      filters.specialtyId
+    );
+  }, [searchInput, filters.state, filters.jobStatus, filters.datePosted, filters.occupationId, filters.specialtyId]);
+
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       startTransition(() => {
@@ -178,5 +206,7 @@ export const useJobsAdminLogic = () => {
     getStatusVariant,
     getJobStatusVariant,
     viewJobDetails,
+    clearAllFilters,
+    hasActiveFilters,
   };
 };

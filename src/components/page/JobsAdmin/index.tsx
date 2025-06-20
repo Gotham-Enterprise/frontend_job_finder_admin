@@ -31,12 +31,13 @@ const JobsAdmin: React.FC<JobsAdminProps> = ({ className = "" }) => {
     occupationOptions,
     specialtyOptions,
     stateOptions,
-    itemsPerPageOptions,
-    filterChange,
+    itemsPerPageOptions,    filterChange,
     initPageChange,
     getStatusVariant,
     getJobStatusVariant,
     viewJobDetails,
+    clearAllFilters,
+    hasActiveFilters,
   } = useJobsAdminLogic();
 
   if (error && !isPending) {
@@ -51,8 +52,7 @@ const JobsAdmin: React.FC<JobsAdminProps> = ({ className = "" }) => {
   }
 
   return (
-    <div className={`rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] ${className}`}>
-      <JobsAdminHeader
+    <div className={`rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] ${className}`}>      <JobsAdminHeader
         totalCount={data?.metaData?.totalCount || 0}
         isPending={isPending}
         isLoading={isLoading}
@@ -61,6 +61,8 @@ const JobsAdmin: React.FC<JobsAdminProps> = ({ className = "" }) => {
         isFilterOpen={isFilterOpen}
         setIsFilterOpen={setIsFilterOpen}
         onRefetch={refetch}
+        clearAllFilters={clearAllFilters}
+        hasActiveFilters={hasActiveFilters}
       />
 
       <JobsAdminFilters

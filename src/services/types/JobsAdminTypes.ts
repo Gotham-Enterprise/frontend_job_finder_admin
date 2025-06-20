@@ -13,6 +13,8 @@ export interface JobsAdminHeaderProps {
   isFilterOpen: boolean;
   setIsFilterOpen: (value: boolean) => void;
   onRefetch: () => void;
+  clearAllFilters: () => void;
+  hasActiveFilters: boolean;
 }
 
 export interface JobsAdminFiltersProps {
