@@ -37,6 +37,8 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
     getStatusVariant,
     initViewResume,
     viewJobSeeker,
+    clearAllFilters,
+    hasActiveFilters,
   } = useJobSeekersLogic();
 
   if (error && !isPending) {
@@ -51,8 +53,7 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
   }
 
   return (
-    <div className={`rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] ${className}`}>
-      <JobSeekersHeader
+    <div className={`rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] ${className}`}>      <JobSeekersHeader
         totalCount={data?.metaData?.totalCount || 0}
         isPending={isPending}
         isLoading={isLoading}
@@ -61,6 +62,8 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
         isFilterOpen={isFilterOpen}
         setIsFilterOpen={setIsFilterOpen}
         onRefetch={refetch}
+        onClearFilters={clearAllFilters}
+        hasActiveFilters={hasActiveFilters}
       />
 
       <JobSeekersFilters

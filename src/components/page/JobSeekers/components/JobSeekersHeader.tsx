@@ -1,7 +1,7 @@
 import React from 'react';
 import Button from '../../../ui/button/Button';
 import Input from '../../../ui/input/Input';
-import { DownloadIcon, FunnelIcon } from '@/icons';
+import { TrashBinIcon, FunnelIcon } from '@/icons';
 import { SearchIcon } from '../../../ui/icons';
 import { JobSeekersHeaderProps } from '@/services/types/JobSeekersTypes';
 
@@ -14,6 +14,8 @@ const JobSeekersHeader: React.FC<JobSeekersHeaderProps> = ({
   isFilterOpen,
   setIsFilterOpen,
   onRefetch,
+  onClearFilters,
+  hasActiveFilters,
 }) => {
   return (
     <div className="px-6 py-5 border-b border-gray-200 dark:border-gray-800">
@@ -41,15 +43,14 @@ const JobSeekersHeader: React.FC<JobSeekersHeaderProps> = ({
             startIcon={<FunnelIcon className="dark:text-white" />}
           >
             Filters
-          </Button>
-          <Button
+          </Button>          <Button
             variant="text-primary"
             size="sm"
-            onClick={onRefetch}
-            startIcon={<DownloadIcon />}
-            disabled={isLoading}
+            onClick={onClearFilters}
+            startIcon={<TrashBinIcon />}
+            disabled={!hasActiveFilters || isLoading}
           >
-            Export
+            Clear
           </Button>
         </div>
       </div>

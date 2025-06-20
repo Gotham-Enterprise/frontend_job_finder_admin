@@ -13,6 +13,8 @@ export interface JobSeekersHeaderProps {
   isFilterOpen: boolean;
   setIsFilterOpen: (value: boolean) => void;
   onRefetch: () => void;
+  onClearFilters: () => void;
+  hasActiveFilters: boolean;
 }
 
 export interface JobSeekersFiltersProps {

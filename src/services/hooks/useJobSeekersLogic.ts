@@ -119,10 +119,32 @@ export const useJobSeekersLogic = () => {
       }
     });
   };
-
   const viewJobSeeker = (jobSeekerId: string) => {
     router.push(`/admin/job-seekers/details/${jobSeekerId}`);
   };
+
+  const clearAllFilters = () => {
+    startTransition(() => {
+      setFilters({
+        page: 1,
+        limit: 10,
+        search: '',
+        location: '',
+        occupationId: undefined,
+        status: undefined,
+      });
+      setSearchInput('');
+    });
+  };
+
+  const hasActiveFilters = useMemo(() => {
+    return !!(
+      searchInput ||
+      filters.location ||
+      filters.occupationId ||
+      filters.status
+    );
+  }, [searchInput, filters.location, filters.occupationId, filters.status]);
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -163,5 +185,7 @@ export const useJobSeekersLogic = () => {
     getStatusVariant,
     initViewResume,
     viewJobSeeker,
+    clearAllFilters,
+    hasActiveFilters,
   };
 };
