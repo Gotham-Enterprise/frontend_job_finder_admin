@@ -17,7 +17,8 @@ export const useJobsAdmin = (filters: JobsAdminFilters = {}) => {
     queryFn: () => {
       return jobsAdminApi.getJobs(filters);
     },
-    staleTime: 1000 * 60 * 5,
+    staleTime: 0,
+    gcTime: 1000 * 60 * 5, 
     retry: (failureCount, error: Error) => {
       if (error.message.includes('HTTP 401')) {
         return false;

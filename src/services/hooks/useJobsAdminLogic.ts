@@ -95,21 +95,35 @@ export const useJobsAdminLogic = () => {
     { value: '10', label: '10 per page' },
     { value: '20', label: '20 per page' },
     { value: '50', label: '50 per page' },
-  ], []);
-
-  const filterChange = useMemo(() => (key: keyof JobsAdminFilters, value: any) => {
+  ], []);  const filterChange = useMemo(() => (key: keyof JobsAdminFilters, value: any) => {
+    console.log(`Filter change - ${key}:`, value); // Debug log
+    
     startTransition(() => {
-      setFilters(prev => ({ 
-        ...prev, 
-        [key]: value === '' ? undefined : value,
-        page: 1,
+      let processedValue = value;
+ 
+      if (key === 'occupationId' || key === 'specialtyId') {
+        processedValue = value === '' ? undefined : parseInt(value);
+      } else if (key === 'limit') {
+        processedValue = parseInt(value);
+      } else if (key === 'jobStatus') {
+        processedValue = value === '' ? undefined : value;
+      } else {
+        processedValue = value === '' ? undefined : value;
+      }
+
+      const newFilters = { 
+        ...filters, 
+        [key]: processedValue,
+        page: 1, 
         ...(key === 'occupationId' && { specialtyId: undefined })
-      }));
+      };
+      setFilters(newFilters);
+      
       if (key === 'occupationId') {
         setSelectedOccupationId(value === '' ? undefined : parseInt(value));
       }
     });
-  }, []);
+  }, [filters]);
 
   const initPageChange = useMemo(() => (newPage: number) => {
     startTransition(() => {
