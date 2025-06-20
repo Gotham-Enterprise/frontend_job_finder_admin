@@ -34,14 +34,13 @@ export default function ProfileCard({
         <div className={`${baseCardClasses} ${className}`}>
             <div className="flex flex-col items-center">
               
-                <div className={`relative ${variant === 'compact' ? 'mb-4' : 'mb-6'} inline-block`}>
-                    {profileData.profilePicture?.url ? (
+                <div className={`relative ${variant === 'compact' ? 'mb-4' : 'mb-6'} inline-block`}>                    {profileData.profilePicture?.url ? (
                         <Image
                             width={avatarSize === 'lg' ? 120 : avatarSize === 'md' ? 96 : 64}
                             height={avatarSize === 'lg' ? 120 : avatarSize === 'md' ? 96 : 64}
                             src={profileData.profilePicture.url}
                             alt={profileData.name}
-                            className="rounded-full object-cover border-4 border-blue-100 dark:border-blue-900 shadow-lg"
+                            className={`${avatarSizes[avatarSize].container} rounded-full object-cover border-4 border-blue-100 dark:border-blue-900 shadow-lg`}
                         />
                     ) : (
                         <div className={`${avatarSizes[avatarSize].container} bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center border-4 border-blue-100 dark:border-blue-900 shadow-lg`}>
