@@ -6,7 +6,6 @@ import { openBlogPreview } from "./blogPreview";
 import {
   BlogTitle,
   BlogContentEditor,
-  BlogTemplatesSelector,
   BlogSEOSettings,
   BlogPublishSettings,
   BlogCategoriesSelector,
@@ -127,10 +126,6 @@ export default function AddNewBlog() {  const [blogPost, setBlogPost] = useState
             renderPreview={renderPreview}
           />
 
-          <BlogTemplatesSelector
-            currentContent={blogPost.content}
-            onTemplateSelect={(content: string) => initInputChange('content', content)}
-          />
 
           <BlogSEOSettings
             seoTitle={blogPost.seoTitle}
