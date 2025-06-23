@@ -117,7 +117,7 @@ export default function CompanyInfo({ companyData }: CompanyInfoProps) {
       </div>      <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-600">
         <div className="grid grid-cols-2 gap-4 text-center">
           <div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">Date Joined</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">Registration date</div>
             <div className="text-sm font-semibold text-gray-900 dark:text-white">
               {formatDate(companyData.dateJoined)}
             </div>

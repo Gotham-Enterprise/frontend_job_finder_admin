@@ -2,6 +2,9 @@ import { JobsAdminFilters, JobsAdminResponse, JobsAdminDetailsResponse, Occupati
 import { apiGet, apiPost } from './apiUtils';
 import { AIJobDescriptionPayload, JobCreationPayload, AITonesProps } from '../types/jobCreation';
 
+
+export type { AITonesProps, AIJobDescriptionPayload, JobCreationPayload };
+
 export const AI_TONES = [
   { id: 'formal' as AITonesProps, label: 'Formal' },
   { id: 'casual' as AITonesProps, label: 'Casual' },

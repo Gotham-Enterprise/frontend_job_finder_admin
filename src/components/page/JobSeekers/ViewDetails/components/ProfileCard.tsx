@@ -14,10 +14,9 @@ interface JobSeekerProfileCardProps {
 }
 
 export default function JobSeekerProfileCard({ jobSeeker, contactInfo }: JobSeekerProfileCardProps) {
-    
-    const profileData: ProfileData = {
+      const profileData: ProfileData = {
         name: jobSeeker.name,
-        title: jobSeeker.professionalBackground?.[0]?.title || 'Job Seeker',
+        title: jobSeeker.professionalBackground?.[0]?.jobTitle || 'Job Seeker',
         status: jobSeeker.status,
         profilePicture: jobSeeker.profilePicture ? {
             url: jobSeeker.profilePicture.url

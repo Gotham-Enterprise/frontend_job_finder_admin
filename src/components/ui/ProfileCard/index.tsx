@@ -96,7 +96,7 @@ export default function ProfileCard({
                  {showDocuments && profileData.documents && Array.isArray(profileData.documents) && profileData.documents.length > 0 && (
                     <div className="w-full">
                         <h4 className={`${variant === 'compact' ? 'text-base' : 'text-lg'} font-bold text-gray-900 dark:text-white mb-4`}>
-                            Documents
+                        Resume
                         </h4>
                         <div className="space-y-3">
                             {profileData.documents.map((document, index) => (

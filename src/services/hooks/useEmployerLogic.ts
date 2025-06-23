@@ -25,7 +25,7 @@ export const useEmployerLogic = () => {
     { key: 'email', label: 'Email' },
     { key: 'state', label: 'States' },
     { key: 'jobPostCount', label: 'Job Posts' },
-    { key: 'dateJoined', label: 'Date Joined' },
+    { key: 'dateJoined', label: 'Registration date' },
     { key: 'lastActivity', label: 'Last Activity' },
     { key: 'status', label: 'Status' },
     { key: 'subscription', label: 'Subscription' },

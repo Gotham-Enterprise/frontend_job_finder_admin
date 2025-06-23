@@ -2,22 +2,8 @@
 
 import { ProfessionalBackground } from "@/services/types/jobSeeker";
 
-interface ActualProfessionalBackground {
-    id: string;
-    jobTitle: string;
-    companyName: string;
-    startMonth: string;
-    startYear: string;
-    endMonth: string;
-    endYear: string;
-    isPresent: boolean;
-    employmentType: string;
-    workplaceModel: string;
-    description: string;
-}
-
 interface WorkExperienceProps {
-    professionalBackground?: ActualProfessionalBackground[];
+    professionalBackground?: ProfessionalBackground[];
     formatDate: (dateString: string | undefined) => string;
 }
 

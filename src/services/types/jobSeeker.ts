@@ -24,7 +24,8 @@ export interface JobSeekerFilters {
   page?: number;
   limit?: number;
   search?: string;
-  location?: string;  specialty?: string;
+  location?: string;  
+  specialty?: string;
   occupationId?: number;
   status?: 'active' | 'inactive' | 'suspended' | 'pending';
 }
@@ -87,12 +88,16 @@ export interface Document {
 
 export interface ProfessionalBackground {
   id: string;
-  title: string;
-  company: string;
-  startDate: string;
-  endDate?: string;
+  jobTitle: string;
+  companyName: string;
+  startMonth: string;
+  startYear: string;
+  endMonth: string;
+  endYear: string;
+  isPresent: boolean;
+  employmentType: string;
+  workplaceModel: string;
   description: string;
-  isCurrentPosition: boolean;
 }
 
 export interface Education {

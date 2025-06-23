@@ -19,11 +19,10 @@ const Pagination: React.FC<PaginationProps> = ({
     
       for (let i = 1; i <= totalPages; i++) {
         pages.push(i);
-      }
-    } else {
+      }    } else {
     
       let start = Math.max(1, currentPage - Math.floor(maxVisible / 2));
-      let end = Math.min(totalPages, start + maxVisible - 1);
+      const end = Math.min(totalPages, start + maxVisible - 1);
       
       if (end === totalPages) {
         start = Math.max(1, totalPages - maxVisible + 1);
@@ -47,7 +46,8 @@ const Pagination: React.FC<PaginationProps> = ({
         className="mr-2.5 flex items-center h-10 justify-center rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-gray-700 shadow-theme-xs hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] text-sm"
       >
         Previous
-      </button>      <div className="flex items-center gap-2">
+      </button>     
+       <div className="flex items-center gap-2">
         {pagesAroundCurrent[0] > 1 && (
           <>
             <button

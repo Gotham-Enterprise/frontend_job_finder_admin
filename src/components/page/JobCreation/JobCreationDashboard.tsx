@@ -3,8 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useSearchParams } from 'next/navigation';
 import { jobCreationApi } from '@/services/api/jobCreation';
-import { jobsAdminApi, JobCreationPayload } from '@/services/api/jobsAdmin';
-import { employerApi } from '@/services/api/employer';
+import { jobsAdminApi } from '@/services/api/jobsAdmin';
+import { JobCreationPayload } from '@/services/types/jobCreation';
 import { useEmployerDetails } from '@/services/hooks/useEmployers';
 import { QUESTION_TYPES, QUESTION_SUBTYPES, QUESTION_SUBTYPE_VALUES } from '@/services/types/jobQuestions';
 import { showToast } from '@/services/utils/toast';
@@ -383,40 +383,23 @@ const JobCreationDashboard: React.FC = () => {
       return;
     }
 
-    // Validate that we have the necessary option data loaded for mapping
     if (!workTypesData?.success || !workSettingsData?.success || 
         !workFacilitiesData?.success || !shiftTypesData?.success || 
         !clinicSizesData?.success) {
       showToast.error('Error', 'Option data is still loading. Please wait a moment and try again.');
       return;
-    }    // Validate that we can map all the selected values
+    }   
+    
+
     const workTypeName = getWorkTypeNameSafe(formData.workType);
     const workSettingName = getWorkSettingNameSafe(formData.workSetting);
     const workFacilityName = getWorkFacilityNameSafe(formData.workFacility);
     const shiftTypeName = getShiftTypeNameSafe(formData.shiftType);
     const companySize = getClinicSizeNameSafe(formData.clinicSize);
 
-    // Debug logging to identify which fields are failing
-    console.log('Form data validation debug:', {
-      workType: formData.workType,
-      workSetting: formData.workSetting,
-      workFacility: formData.workFacility,
-      shiftType: formData.shiftType,
-      clinicSize: formData.clinicSize,
-      workTypeName,
-      workSettingName,
-      workFacilityName,
-      shiftTypeName,
-      companySize
-    });
+ 
     
-    console.log('Available options debug:', {
-      workTypes: workTypesData?.data?.map(wt => ({ id: wt.id, name: wt.name })),
-      workSettings: workSettingsData?.data?.map(ws => ({ id: ws.id, name: ws.name })),
-      workFacilities: workFacilitiesData?.data?.map(wf => ({ id: wf.id, name: wf.name })),
-      shiftTypes: shiftTypesData?.data?.map(st => ({ id: st.id, name: st.name })),
-      clinicSizes: clinicSizesData?.data?.map(cs => ({ id: cs.id, name: cs.name }))
-    });    if (!workTypeName || !workSettingName || !workFacilityName || !shiftTypeName || !companySize) {
+    if (!workTypeName || !workSettingName || !workFacilityName || !shiftTypeName || !companySize) {
       const missingFields = [];
       if (!workTypeName) missingFields.push('Work Type');
       if (!workSettingName) missingFields.push('Work Setting');
@@ -948,7 +931,6 @@ const JobCreationDashboard: React.FC = () => {
           </div>
         </div>      </div>
     
-      {/* Custom loading overlay for employer loading with skip option */}
       {isLoadingEmployer && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white dark:bg-gray-800 rounded-lg p-8 max-w-md mx-4 text-center">
