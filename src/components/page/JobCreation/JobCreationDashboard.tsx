@@ -907,7 +907,7 @@ const JobCreationDashboard: React.FC = () => {
               )}
 
            
-              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+              {/* <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Quick Actions</h3>
                 <div className="space-y-3">
                   <Button
@@ -925,7 +925,7 @@ const JobCreationDashboard: React.FC = () => {
                     Reset Form
                   </Button>
                 </div>
-              </div>              
+              </div>               */}
               <JobPostingTips />
             </div>
           </div>
