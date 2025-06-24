@@ -13,8 +13,8 @@ import Select from '../../form/Select';
 import Label from '../../form/Label';
 import Pagination from '../../tables/Pagination';
 import TableHeading from '../../tables/tableHeader';
-import { Modal } from '../../ui/modal';
 import { BoltIcon, FunnelIcon, EyeIcon, PlusIcon } from '@/icons';
+import TicketDrawer from './TicketDrawer';
 import { SearchIcon } from '../../ui/icons';
 import ErrorState from '../../common/ErrorState';
 
@@ -171,6 +171,7 @@ const Tickets: React.FC<TicketsProps> = ({ className = "" }) => {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isDrawerVisible, setIsDrawerVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
@@ -421,12 +422,35 @@ const Tickets: React.FC<TicketsProps> = ({ className = "" }) => {
   }, [filteredTickets, filters.page, filters.limit]);
 
   const totalPages = Math.ceil(filteredTickets.length / filters.limit);
-
   const generateTicketNumber = () => {
     const date = new Date();
     const year = date.getFullYear();
     const nextNumber = tickets.length + 1;
     return `TK-${year}-${nextNumber.toString().padStart(3, '0')}`;
+  };
+
+  // Drawer functions
+  const openTicketDrawer = () => {
+    setIsAddModalOpen(true);
+    setTimeout(() => setIsDrawerVisible(true), 10);
+  };
+
+  const closeTicketDrawer = () => {
+    setIsDrawerVisible(false);
+    setTimeout(() => {
+      setIsAddModalOpen(false);
+      setNewTicket({
+        customerName: '',
+        contactNumber: '',
+        email: '',
+        priority: 'medium',
+        ticketType: '',
+        accountNumber: '',
+        assignedTo: '',
+        timezone: 'EST',
+        description: ''
+      });
+    }, 300);
   };
 
   const handleAddTicket = () => {
@@ -450,23 +474,8 @@ const Tickets: React.FC<TicketsProps> = ({ className = "" }) => {
       accountNumber: newTicket.accountNumber,
       timezone: newTicket.timezone,
       description: newTicket.description
-    };
-
-    setTickets(prev => [ticket, ...prev]);
-    setIsAddModalOpen(false);
-    
-    // Reset form
-    setNewTicket({
-      customerName: '',
-      contactNumber: '',
-      email: '',
-      priority: 'medium',
-      ticketType: '',
-      accountNumber: '',
-      assignedTo: '',
-      timezone: 'EST',
-      description: ''
-    });
+    };    setTickets(prev => [ticket, ...prev]);
+    closeTicketDrawer();
   };
 
   const viewTicket = (ticketId: string) => {
@@ -531,27 +540,27 @@ const Tickets: React.FC<TicketsProps> = ({ className = "" }) => {
                 </div>
               </div>
             </div>
-              {/* Action Buttons */}
-            <div className="flex items-center space-x-2 relative" ref={filterRef}>
+             
+            <div className="flex items-center gap-2 relative" ref={filterRef}>
               <Button
-                variant="ghost"
+                variant="outline"
                 size="sm"
                 onClick={() => setIsFilterOpen(!isFilterOpen)}
-                className="text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 border-0"
+               
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" role="presentation" className="mr-2">
+                <svg width="16" height="16" viewBox="0 0 24 24" role="presentation">
                   <path fill="currentcolor" fillRule="evenodd" d="M7 13h10l1-2H6zM3.99 6c-.55 0-.79.41-.55.9L4 8h16l.55-1.1c.25-.5.01-.9-.54-.9zm6.79 11.56a.87.87 0 0 0 .73.44h.99c.28 0 .61-.2.73-.44L14 16h-4z"></path>
                 </svg>
                 Filter
-              </Button>
-              <Button
-                variant="ghost"
+              </Button>             
+               <Button
+                variant="default"
                 size="sm"
-                onClick={() => setIsAddModalOpen(true)}
-                className="text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 border-0"
+                onClick={openTicketDrawer}
+              
               >
-                <PlusIcon className="w-4 h-4 mr-2" />
-                Create
+                <PlusIcon  />
+                Add new
               </Button>
               
               {/* Filters Dropdown Panel */}
@@ -642,7 +651,7 @@ const Tickets: React.FC<TicketsProps> = ({ className = "" }) => {
                                   }
                                 }}
                               />                              <div
-                                className={`px-2 py-1 rounded-[2px] text-sm font-medium border transition-colors ${
+                                className={`px-2 py-1 rounded-[2px] text-xs font-medium border transition-colors ${
                                   filters.status === status.value
                                     ? (status.value === 'resolved' || status.value === 'closed'
                                       ? 'bg-[#dcfff1] text-[#216e4e] border-[#dcfff1]'
@@ -678,7 +687,7 @@ const Tickets: React.FC<TicketsProps> = ({ className = "" }) => {
                                   }
                                 }}
                               />                              <div
-                                className={`px-2 py-1 rounded-[2px] text-sm font-medium border transition-colors ${
+                                className={`px-2 py-1 rounded-[2px] text-xs font-medium border transition-colors ${
                                   filters.priority === priority.value
                                     ? priority.value === 'highest'
                                       ? 'bg-red-100 text-red-700 border-red-200'
@@ -782,7 +791,7 @@ const Tickets: React.FC<TicketsProps> = ({ className = "" }) => {
                     </TableCell>{/* Status */}
                     <TableCell className="py-3 px-4">
                       <span 
-                        className={`inline-flex items-center px-2 py-1 rounded-[2px] text-sm font-medium ${
+                        className={`inline-flex items-center px-2 py-1 rounded-[2px] text-xs whitespace-nowrap font-medium ${
                           ticket.status === 'resolved' || ticket.status === 'closed'
                             ? 'bg-[#dcfff1] text-[#216e4e]'
                             : 'bg-[#e9f2ff] text-[#0055cc]'
@@ -867,159 +876,20 @@ const Tickets: React.FC<TicketsProps> = ({ className = "" }) => {
             />
           </div>
         </div>
-      )}
-
-      {/* Add Ticket Modal */}
-      <Modal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)}>
-        <div className="bg-white dark:bg-gray-900 rounded-lg max-w-2xl mx-auto m-4">
-          <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-              Create New Ticket
-            </h3>
-          </div>
-          
-          <div className="px-6 py-4 max-h-[70vh] overflow-y-auto">
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Ticket Number *
-                  </Label>
-                  <Input
-                    type="text"
-                    value={generateTicketNumber()}
-                    disabled
-                    className="bg-gray-100 dark:bg-gray-800"
-                  />
-                </div>
-                <div>
-                  <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Priority *
-                  </Label>
-                  <Select
-                    defaultValue={newTicket.priority}
-                    onChange={(value: string) => setNewTicket(prev => ({ ...prev, priority: value as 'highest' | 'high' | 'medium' | 'low' | 'lowest' }))}
-                    options={newTicketPriorityOptions}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Customer Name *
-                </Label>
-                <Input
-                  type="text"
-                  placeholder="Enter customer name"
-                  value={newTicket.customerName}
-                  onChange={(e) => setNewTicket(prev => ({ ...prev, customerName: e.target.value }))}
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Contact Number *
-                  </Label>
-                  <Input
-                    type="tel"
-                    placeholder="+1-555-0123"
-                    value={newTicket.contactNumber}
-                    onChange={(e) => setNewTicket(prev => ({ ...prev, contactNumber: e.target.value }))}
-                  />
-                </div>
-                <div>
-                  <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Email Address *
-                  </Label>
-                  <Input
-                    type="email"
-                    placeholder="customer@email.com"
-                    value={newTicket.email}
-                    onChange={(e) => setNewTicket(prev => ({ ...prev, email: e.target.value }))}
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Ticket Type *
-                  </Label>
-                  <Select
-                    defaultValue={newTicket.ticketType}
-                    onChange={(value: string) => setNewTicket(prev => ({ ...prev, ticketType: value }))}
-                    options={[{ value: '', label: 'Select ticket type' }, ...newTicketTypeOptions]}
-                  />
-                </div>
-                <div>
-                  <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Account Number / Customer ID
-                  </Label>
-                  <Input
-                    type="text"
-                    placeholder="ACC-123456"
-                    value={newTicket.accountNumber}
-                    onChange={(e) => setNewTicket(prev => ({ ...prev, accountNumber: e.target.value }))}
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Assign To
-                  </Label>
-                  <Select
-                    defaultValue={newTicket.assignedTo}
-                    onChange={(value: string) => setNewTicket(prev => ({ ...prev, assignedTo: value }))}
-                    options={newTicketAssignedToOptions}
-                  />
-                </div>
-                <div>
-                  <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Timezone
-                  </Label>
-                  <Select
-                    defaultValue={newTicket.timezone}
-                    onChange={(value: string) => setNewTicket(prev => ({ ...prev, timezone: value }))}
-                    options={timezoneOptions}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Description *
-                </Label>
-                <textarea
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white resize-none"
-                  rows={4}
-                  placeholder="Describe the issue or request..."
-                  value={newTicket.description}
-                  onChange={(e) => setNewTicket(prev => ({ ...prev, description: e.target.value }))}
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="px-6 py-4 flex justify-end gap-3 border-t border-gray-200 dark:border-gray-700">
-            <Button
-              variant="outline"
-              className="dark:text-white"
-              onClick={() => setIsAddModalOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="default"
-              onClick={handleAddTicket}
-            >
-              Create Ticket
-            </Button>
-          </div>
-        </div>
-      </Modal>
+      )}      {/* Add Ticket Drawer */}
+      <TicketDrawer
+        isOpen={isAddModalOpen}
+        isVisible={isDrawerVisible}
+        ticketForm={newTicket}
+        ticketNumber={generateTicketNumber()}
+        onClose={closeTicketDrawer}
+        onSave={handleAddTicket}
+        onUpdateForm={(updates) => setNewTicket(prev => ({ ...prev, ...updates }))}
+        priorityOptions={newTicketPriorityOptions}
+        typeOptions={newTicketTypeOptions}
+        assigneeOptions={newTicketAssignedToOptions}
+        timezoneOptions={timezoneOptions}
+      />
     </div>
   );
 };
