@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useMemo, useTransition } from 'react';
+import React, { useState, useEffect, useMemo, useTransition, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Table,
@@ -7,7 +7,6 @@ import {
   TableCell,
   TableRow,
 } from '../../ui/table';
-import Badge from '../../ui/badge/Badge';
 import Button from '../../ui/button/Button';
 import Input from '../../ui/input/Input';
 import Select from '../../form/Select';
@@ -27,7 +26,7 @@ interface Ticket {
   contactNumber: string;
   email: string;
   ticketType: string;
-  priority: 'high' | 'medium' | 'low';
+  priority: 'highest' | 'high' | 'medium' | 'low' | 'lowest';
   createdDate: string;
   lastUpdated: string;
   assignedTo: string;
@@ -57,10 +56,9 @@ const mockTickets: Ticket[] = [
     id: '1',
     ticketNo: 'TK-2024-001',
     customerName: 'John Doe',
-    contactNumber: '+1-555-0123',
-    email: 'john.doe@email.com',
+    contactNumber: '+1-555-0123',    email: 'john.doe@email.com',
     ticketType: 'Technical Support',
-    priority: 'high',
+    priority: 'highest',
     createdDate: '2024-06-01T09:30:00Z',
     lastUpdated: '2024-06-02T14:20:00Z',
     assignedTo: 'Sarah Wilson',
@@ -89,10 +87,9 @@ const mockTickets: Ticket[] = [
     id: '3',
     ticketNo: 'TK-2024-003',
     customerName: 'Robert Brown',
-    contactNumber: '+1-555-0125',
-    email: 'robert.brown@email.com',
+    contactNumber: '+1-555-0125',    email: 'robert.brown@email.com',
     ticketType: 'General Inquiry',
-    priority: 'low',
+    priority: 'lowest',
     createdDate: '2024-05-30T08:20:00Z',
     lastUpdated: '2024-06-01T10:30:00Z',
     assignedTo: 'Lisa Davis',
@@ -104,8 +101,7 @@ const mockTickets: Ticket[] = [
     id: '4',
     ticketNo: 'TK-2024-004',
     customerName: 'Emily Wilson',
-    contactNumber: '+1-555-0126',
-    email: 'emily.wilson@email.com',
+    contactNumber: '+1-555-0126',    email: 'emily.wilson@email.com',
     ticketType: 'Technical Support',
     priority: 'high',
     createdDate: '2024-06-02T13:45:00Z',
@@ -124,13 +120,28 @@ const mockTickets: Ticket[] = [
     email: 'michael.davis@email.com',
     ticketType: 'Account Management',
     priority: 'medium',
-    createdDate: '2024-05-29T16:00:00Z',
-    lastUpdated: '2024-05-30T09:15:00Z',
+    createdDate: '2024-05-29T16:00:00Z',    lastUpdated: '2024-05-30T09:15:00Z',
     assignedTo: 'Sarah Wilson',
     status: 'closed',
     accountNumber: 'ACC-901234',
     timezone: 'MST',
     description: 'Request to update account information'
+  },
+  {
+    id: '6',
+    ticketNo: 'TK-2024-006',
+    customerName: 'Alex Chen',
+    contactNumber: '+1-555-0128',
+    email: 'alex.chen@email.com',
+    ticketType: 'Technical Support',
+    priority: 'lowest',
+    createdDate: '2024-06-03T10:30:00Z',
+    lastUpdated: '2024-06-03T11:00:00Z',
+    assignedTo: 'Amanda Rodriguez',
+    status: 'open',
+    accountNumber: 'ACC-567890',
+    timezone: 'EST',
+    description: 'Minor UI text formatting issue'
   }
 ];
 
@@ -145,6 +156,7 @@ const mockAgents = [
 
 const Tickets: React.FC<TicketsProps> = ({ className = "" }) => {
   const router = useRouter();
+  const filterRef = useRef<HTMLDivElement>(null);
   const [tickets, setTickets] = useState<Ticket[]>(mockTickets);
   const [filters, setFilters] = useState<TicketFilters>({
     page: 1,
@@ -167,31 +179,29 @@ const Tickets: React.FC<TicketsProps> = ({ className = "" }) => {
     customerName: '',
     contactNumber: '',
     email: '',
-    priority: 'medium' as 'high' | 'medium' | 'low',
+    priority: 'medium' as 'highest' | 'high' | 'medium' | 'low' | 'lowest',
     ticketType: '',
     accountNumber: '',
     assignedTo: '',
-    timezone: 'EST',
-    description: ''
-  });
-
-  const tableColumns = useMemo(() => [
-    { key: 'ticketNo', label: 'Ticket No' },
-    { key: 'customerName', label: 'Customer Name' },
-    { key: 'contactNumber', label: 'Contact Number' },
-    { key: 'ticketType', label: 'Ticket Type' },
-    { key: 'createdDate', label: 'Created Date' },
-    { key: 'lastUpdated', label: 'Last Updated' },
-    { key: 'assignedTo', label: 'Assigned To' },
-    { key: 'status', label: 'Status' },
-    { key: 'actions', label: '', className: 'text-right' },
+    timezone: 'EST',    description: ''
+  });  const tableColumns = useMemo(() => [
+    { key: 'key', label: 'Key', className: 'w-32' },
+    { key: 'summary', label: 'Summary', className: 'min-w-80' },
+    { key: 'status', label: 'Status', className: 'w-28' },
+    { key: 'comments', label: 'Comments', className: 'w-24' },
+    { key: 'assignee', label: 'Assignee', className: 'w-32' },
+    { key: 'dueDate', label: 'Due Date', className: 'w-28' },
+    { key: 'updated', label: 'Updated', className: 'w-28' },
+    { key: 'priority', label: 'Priority', className: 'w-28' },
+    { key: 'actions', label: '', className: 'w-12' },
   ], []);
-
   const priorityOptions = useMemo(() => [
     { value: '', label: 'All Priorities' },
+    { value: 'highest', label: 'Highest' },
     { value: 'high', label: 'High' },
     { value: 'medium', label: 'Medium' },
     { value: 'low', label: 'Low' },
+    { value: 'lowest', label: 'Lowest' },
   ], []);
 
   const statusOptions = useMemo(() => [
@@ -228,11 +238,12 @@ const Tickets: React.FC<TicketsProps> = ({ className = "" }) => {
     { value: 'CST', label: 'Central Time (CST)' },
     { value: 'MST', label: 'Mountain Time (MST)' },
   ], []);
-
   const newTicketPriorityOptions = useMemo(() => [
+    { value: 'highest', label: 'Highest' },
     { value: 'high', label: 'High' },
     { value: 'medium', label: 'Medium' },
     { value: 'low', label: 'Low' },
+    { value: 'lowest', label: 'Lowest' },
   ], []);
 
   const newTicketTypeOptions = useMemo(() => [
@@ -246,7 +257,6 @@ const Tickets: React.FC<TicketsProps> = ({ className = "" }) => {
     { value: '', label: 'Unassigned' },
     ...mockAgents.map(agent => ({ value: agent, label: agent }))
   ], []);
-
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       startTransition(() => {
@@ -256,6 +266,23 @@ const Tickets: React.FC<TicketsProps> = ({ className = "" }) => {
 
     return () => clearTimeout(timeoutId);
   }, [searchInput]);
+
+  // Handle click outside to close filter dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (filterRef.current && !filterRef.current.contains(event.target as Node)) {
+        setIsFilterOpen(false);
+      }
+    };
+
+    if (isFilterOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isFilterOpen]);
 
   const filterChange = useMemo(() => (key: keyof TicketFilters, value: any) => {
     startTransition(() => {
@@ -271,51 +298,89 @@ const Tickets: React.FC<TicketsProps> = ({ className = "" }) => {
     startTransition(() => {
       setFilters(prev => ({ ...prev, page: newPage }));
     });
-  }, []);
-
-  const getPriorityVariant = useMemo(() => (priority: string): 'light' | 'solid' => {
+  }, []);  const getPriorityVariant = useMemo(() => (priority: string): 'light' | 'solid' => {
     switch (priority) {
+      case 'highest': return 'solid';
       case 'high': return 'solid';
-      case 'medium': return 'light';
+      case 'medium': return 'solid';
       case 'low': return 'light';
+      case 'lowest': return 'light';
       default: return 'light';
     }
-  }, []);
-  const getPriorityColor = useMemo(() => (priority: string): 'primary' | 'success' | 'error' | 'warning' | 'info' | 'light' | 'dark' => {
+  }, []);  const getPriorityColor = useMemo(() => (priority: string): 'primary' | 'success' | 'error' | 'warning' | 'info' | 'light' | 'dark' => {
     switch (priority) {
-      case 'high': return 'error';
-      case 'medium': return 'warning';
+      case 'highest': return 'error';
+      case 'high': return 'warning';
+      case 'medium': return 'primary';
       case 'low': return 'success';
+      case 'lowest': return 'light';
       default: return 'light';
     }
   }, []);
 
-  const getStatusVariant = useMemo(() => (status: string): 'light' | 'solid' => {
-    switch (status) {
-      case 'open': return 'solid';
-      case 'in-progress': return 'solid';
-      case 'resolved': return 'light';
-      case 'closed': return 'light';
-      default: return 'light';
+  const getPriorityBgColor = useMemo(() => (priority: string): string => {
+    switch (priority) {
+      case 'highest': return 'bg-red-100';
+      case 'high': return 'bg-orange-100';
+      case 'medium': return 'bg-yellow-100';
+      case 'low': return 'bg-green-100';
+      case 'lowest': return 'bg-gray-100';
+      default: return 'bg-gray-100';
     }
   }, []);
-  const getStatusColor = useMemo(() => (status: string): 'primary' | 'success' | 'error' | 'warning' | 'info' | 'light' | 'dark' => {
+
+  const getPriorityTextColor = useMemo(() => (priority: string): string => {
+    switch (priority) {
+      case 'highest': return 'text-red-700';
+      case 'high': return 'text-orange-700';
+      case 'medium': return 'text-yellow-700';
+      case 'low': return 'text-green-700';
+      case 'lowest': return 'text-gray-700';
+      default: return 'text-gray-700';
+    }
+  }, []);const getStatusVariant = useMemo(() => (status: string): 'light' | 'solid' => {
+    return 'solid';
+  }, []);const getStatusColor = useMemo(() => (status: string): 'primary' | 'success' | 'error' | 'warning' | 'info' | 'light' | 'dark' => {
     switch (status) {
-      case 'open': return 'error';
-      case 'in-progress': return 'warning';
-      case 'resolved': return 'success';
-      case 'closed': return 'light';
-      default: return 'light';
+      case 'resolved':
+      case 'closed': return 'success';
+      default: return 'primary';
     }
   }, []);
+
+
+  // Helper function to get user initials and color
+  const getUserAvatar = (name: string) => {
+    const initials = name.split(' ').map(n => n[0]).join('').toUpperCase();
+    const colors = [
+      'bg-blue-500', 'bg-green-500', 'bg-yellow-500', 'bg-red-500', 
+      'bg-purple-500', 'bg-pink-500', 'bg-indigo-500', 'bg-teal-500'
+    ];
+    const colorIndex = name.length % colors.length;
+    return { initials, color: colors[colorIndex] };
+  };
+
+  // Helper function to get ticket type icon
+  const getTicketTypeIcon = (type: string) => {
+    switch (type) {
+      case 'Technical Support':
+        return '🛠️';
+      case 'Billing':
+        return '💰';
+      case 'General Inquiry':
+        return '❓';
+      case 'Account Management':
+        return '👤';
+      default:
+        return '📋';
+    }
+  };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
       month: 'short',
       day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+      year: 'numeric'
     });
   };
 
@@ -418,145 +483,266 @@ const Tickets: React.FC<TicketsProps> = ({ className = "" }) => {
         retryIcon={<BoltIcon />}
       />
     );
-  }
+  }  return (
+    <div className={`bg-white dark:bg-gray-900 ${className}`}>
+   
+      {/* Header Section - JIRA Style */}
+      <div className="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
+        <div className="px-6 py-4">          {/* Top Header */}
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center space-x-2">
+              <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
+                List
+              </h1>
+            </div>
+          </div>{/* Second Row - Search and Controls */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              {/* Search Bar */}
+              <div className="relative w-64">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <SearchIcon className="h-4 w-4 text-gray-400" />
+                </div>
+                <Input
+                  type="text"
+                  placeholder="Search list"
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 text-sm border-gray-300 dark:border-gray-600 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              
+              {/* User Avatars */}
+              <div className="flex items-center -space-x-2">
+                {mockAgents.slice(0, 4).map((agent, index) => {
+                  const avatar = getUserAvatar(agent);
+                  return (
+                    <div
+                      key={agent}
+                      className={`w-8 h-8 rounded-full ${avatar.color} flex items-center justify-center text-white text-sm font-medium border-2 border-white dark:border-gray-900 cursor-pointer hover:z-10 transition-transform hover:scale-110`}
+                      title={agent}
+                    >
+                      {avatar.initials}
+                    </div>
+                  );
+                })}
+                <div className="w-8 h-8 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center text-gray-600 dark:text-gray-300 text-sm font-medium border-2 border-white dark:border-gray-900 cursor-pointer">
+                  +{Math.max(0, mockAgents.length - 4)}
+                </div>
+              </div>
+            </div>
+              {/* Action Buttons */}
+            <div className="flex items-center space-x-2 relative" ref={filterRef}>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsFilterOpen(!isFilterOpen)}
+                className="text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 border-0"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" role="presentation" className="mr-2">
+                  <path fill="currentcolor" fillRule="evenodd" d="M7 13h10l1-2H6zM3.99 6c-.55 0-.79.41-.55.9L4 8h16l.55-1.1c.25-.5.01-.9-.54-.9zm6.79 11.56a.87.87 0 0 0 .73.44h.99c.28 0 .61-.2.73-.44L14 16h-4z"></path>
+                </svg>
+                Filter
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsAddModalOpen(true)}
+                className="text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 border-0"
+              >
+                <PlusIcon className="w-4 h-4 mr-2" />
+                Create
+              </Button>
+              
+              {/* Filters Dropdown Panel */}
+              {isFilterOpen && (
+                <div className="absolute top-full right-0 mt-2 z-50 w-80 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg">
+                  <div className="p-4">
+                    <div className="mb-4">
+                      <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-3">FILTERS</h3>
+                        {/* Quick Filter Options */}
+                      <div className="space-y-3 mb-4">
+                        <div className="flex items-center space-x-2">
+                          <input type="checkbox" id="assigned-to-me" className="rounded border-gray-300" />
+                          <label htmlFor="assigned-to-me" className="text-sm text-gray-700 dark:text-gray-300">Assigned to me</label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <input type="checkbox" id="due-this-week" className="rounded border-gray-300" />
+                          <label htmlFor="due-this-week" className="text-sm text-gray-700 dark:text-gray-300">Due this week</label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <input type="checkbox" id="done-work-items" className="rounded border-gray-300" />
+                          <label htmlFor="done-work-items" className="text-sm text-gray-700 dark:text-gray-300">Done work items</label>
+                        </div>
+                      </div>
 
-  return (
-    <div className={`rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] ${className}`}>
-      <div className="px-6 py-5 border-b border-gray-200 dark:border-gray-800">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h3 className="text-xl font-semibold text-gray-800 dark:text-white">
-              Support Tickets
-            </h3>
-            <p className="text-sm text-gray-500 mt-1 dark:text-gray-400">
-              {filteredTickets.length} total tickets
-              {isPending && (
-                <span className="ml-2 text-xs text-blue-500 dark:text-blue-400">
-                  Updating...
-                </span>
+                      <hr className="border-gray-200 dark:border-gray-700 my-4" />
+
+                      {/* Date Range */}
+                      <div className="mb-4">
+                        <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Date range</h4>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="text-sm text-gray-500 dark:text-gray-400">Start date</label>
+                            <Input
+                              type="date"
+                              className="w-full text-sm"
+                              defaultValue="1993-02-18"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-sm text-gray-500 dark:text-gray-400">Due date</label>
+                            <Input
+                              type="date"
+                              className="w-full text-sm"
+                              defaultValue="1993-02-18"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Assignee */}
+                      <div className="mb-4">
+                        <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Assignee</h4>
+                        <div className="flex flex-wrap gap-1">
+                          {mockAgents.slice(0, 8).map((agent, index) => {
+                            const avatar = getUserAvatar(agent);
+                            return (
+                              <div
+                                key={agent}
+                                className={`w-6 h-6 rounded-full ${avatar.color} flex items-center justify-center text-white text-sm font-medium cursor-pointer hover:scale-110 transition-transform`}
+                                title={agent}
+                              >
+                                {avatar.initials}
+                              </div>
+                            );
+                          })}
+                          <div className="w-6 h-6 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-600 dark:text-gray-400 text-sm cursor-pointer">
+                            ⋯
+                          </div>
+                        </div>
+                      </div>                      {/* Status */}
+                      <div className="mb-4">
+                        <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Status</h4>
+                        <div className="flex flex-wrap gap-2">
+                          {statusOptions.slice(1).map((status) => (
+                            <label
+                              key={status.value}
+                              className="flex items-center cursor-pointer"
+                            >
+                              <input
+                                type="checkbox"
+                                className="sr-only"
+                                checked={filters.status === status.value}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    filterChange('status', status.value);
+                                  } else {
+                                    filterChange('status', '');
+                                  }
+                                }}
+                              />                              <div
+                                className={`px-2 py-1 rounded-[2px] text-sm font-medium border transition-colors ${
+                                  filters.status === status.value
+                                    ? (status.value === 'resolved' || status.value === 'closed'
+                                      ? 'bg-[#dcfff1] text-[#216e4e] border-[#dcfff1]'
+                                      : 'bg-[#e9f2ff] text-[#0055cc] border-[#e9f2ff]')
+                                    : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:bg-gray-700'
+                                }`}
+                              >
+                                {status.label}
+                              </div>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Priority */}
+                      <div className="mb-4">
+                        <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Priority</h4>
+                        <div className="flex flex-wrap gap-2">
+                          {priorityOptions.slice(1).map((priority) => (
+                            <label
+                              key={priority.value}
+                              className="flex items-center cursor-pointer"
+                            >
+                              <input
+                                type="checkbox"
+                                className="sr-only"
+                                checked={filters.priority === priority.value}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    filterChange('priority', priority.value);
+                                  } else {
+                                    filterChange('priority', '');
+                                  }
+                                }}
+                              />                              <div
+                                className={`px-2 py-1 rounded-[2px] text-sm font-medium border transition-colors ${
+                                  filters.priority === priority.value
+                                    ? priority.value === 'highest'
+                                      ? 'bg-red-100 text-red-700 border-red-200'
+                                      : priority.value === 'high'
+                                      ? 'bg-orange-100 text-orange-700 border-orange-200'
+                                      : priority.value === 'medium'
+                                      ? 'bg-yellow-100 text-yellow-700 border-yellow-200'
+                                      : priority.value === 'low'
+                                      ? 'bg-green-100 text-green-700 border-green-200'
+                                      : 'bg-gray-100 text-gray-700 border-gray-200'
+                                    : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:bg-gray-700'
+                                }`}
+                              >
+                                {priority.label}
+                              </div>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Created */}
+                      <div>
+                        <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Created</h4>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="text-sm text-gray-500 dark:text-gray-400">From</label>
+                            <Input
+                              type="date"
+                              className="w-full text-sm"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-sm text-gray-500 dark:text-gray-400">To</label>
+                            <Select
+                              options={[
+                                { value: '', label: 'Select date' },
+                                { value: 'today', label: 'Today' },
+                                { value: 'yesterday', label: 'Yesterday' },
+                                { value: 'this-week', label: 'This week' }
+                              ]}
+                              defaultValue=""
+                              onChange={(value) => {
+                                // Handle filter date change
+                                console.log('Date filter changed:', value);
+                              }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               )}
-            </p>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <Button
-              variant="outline"
-              className="dark:text-white"
-              size="sm"
-              onClick={() => setIsFilterOpen(!isFilterOpen)}
-              startIcon={<FunnelIcon className="dark:text-white" />}
-            >
-              Filters
-            </Button>            <Button
-              variant="default"
-              size="sm"
-              className="whitespace-nowrap"
-              onClick={() => setIsAddModalOpen(true)}
-              startIcon={<PlusIcon />}
-            >
-              Add Ticket
-            </Button>
-          </div>
-        </div>
-
-        {/* Search input */}
-        <div className="mt-4">
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <SearchIcon className="h-4 w-4" />
             </div>
-            <Input
-              type="text"
-              placeholder="Search tickets by customer name, ticket number, or email..."
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              className={`w-full pl-10 ${searchInput ? 'pr-10' : ''}`}
-            />
-            {searchInput && (
-              <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
-                <button
-                  type="button"
-                  onClick={() => setSearchInput('')}
-                  className="text-gray-400 hover:text-gray-600 dark:text-gray-300 dark:hover:text-white transition-colors"
-                >
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Filters */}
-        {isFilterOpen && (
-          <div className="p-4 bg-gray-50 dark:bg-gray-800/50">
-            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
-              <div>
-                <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Ticket Type
-                </Label>
-                <Select
-                  defaultValue={filters.ticketType || ''}
-                  onChange={(value: string) => filterChange('ticketType', value)}
-                  options={ticketTypeOptions}
-                />
-              </div>
-              <div>
-                <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Priority
-                </Label>
-                <Select
-                  defaultValue={filters.priority || ''}
-                  onChange={(value: string) => filterChange('priority', value)}
-                  options={priorityOptions}
-                />
-              </div>
-              <div>
-                <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Status
-                </Label>
-                <Select
-                  defaultValue={filters.status || ''}
-                  onChange={(value: string) => filterChange('status', value)}
-                  options={statusOptions}
-                />
-              </div>
-              <div>
-                <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Assigned To
-                </Label>
-                <Select
-                  defaultValue={filters.assignedTo || ''}
-                  onChange={(value: string) => filterChange('assignedTo', value)}
-                  options={assignedToOptions}
-                />
-              </div>
-              <div>
-                <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Items per page
-                </Label>
-                <Select
-                  defaultValue={filters.limit?.toString() || '10'}
-                  onChange={(value: string) => filterChange('limit', parseInt(value))}
-                  options={itemsPerPageOptions}
-                />
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Table section */}
-      <div className="overflow-x-auto">
+          </div>        </div>
+      </div>{/* Table Section */}
+      <div className="overflow-x-auto bg-white dark:bg-gray-900">
         <Table>
           <TableHeading columns={tableColumns} />
-          <TableBody>
-            {isLoading ? (
+          <TableBody>            {isLoading ? (
               <TableRow>
                 <TableCell className="text-center py-8 px-6" colSpan={9}>
                   <div className="flex items-center justify-center gap-3">
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-brand-500"></div>
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500"></div>
                     <p className="text-gray-500 dark:text-gray-400">Loading...</p>
                   </div>
                 </TableCell>
@@ -568,77 +754,100 @@ const Tickets: React.FC<TicketsProps> = ({ className = "" }) => {
                 </TableCell>
               </TableRow>
             ) : (
-              paginatedTickets.map((ticket) => (
-                <TableRow key={ticket.id} className="border-b text-sm border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                  <TableCell className="py-4 px-6">
-                    <div className="flex flex-col">
-                      <p className="font-medium text-gray-900 dark:text-white">
-                        {ticket.ticketNo}
-                      </p>                      <Badge 
-                        variant={getPriorityVariant(ticket.priority)} 
-                        color={getPriorityColor(ticket.priority)}
+              paginatedTickets.map((ticket) => {
+                const assigneeAvatar = getUserAvatar(ticket.assignedTo);
+                return (                  <TableRow 
+                    key={ticket.id} 
+                    className="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer"
+                  >                    {/* Key */}
+                    <TableCell className="py-3 px-4 whitespace-nowrap">
+                      <button 
+                        className="text-sm font-medium hover:underline focus:outline-none"
+                        style={{ color: '#44546f' }}
+                        onClick={() => viewTicket(ticket.id)}
                       >
-                        {ticket.priority.toUpperCase()}
-                      </Badge>
-                    </div>
-                  </TableCell>
-                  <TableCell className="py-4 px-6">
-                    <div>
-                      <p className="font-medium text-gray-900 dark:text-white">
-                        {ticket.customerName}
-                      </p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
-                        {ticket.email}
-                      </p>
-                    </div>
-                  </TableCell>
-                  <TableCell className="py-4 px-6">
-                    <p className="text-sm text-gray-900 dark:text-white">
-                      {ticket.contactNumber}
-                    </p>
-                  </TableCell>
-                  <TableCell className="py-4 px-6">
-                    <p className="text-sm text-gray-900 dark:text-white">
-                      {ticket.ticketType}
-                    </p>
-                  </TableCell>
-                  <TableCell className="py-4 px-6">
-                    <p className="text-sm text-gray-900 dark:text-white">
-                      {formatDate(ticket.createdDate)}
-                    </p>
-                  </TableCell>
-                  <TableCell className="py-4 px-6">
-                    <p className="text-sm text-gray-900 dark:text-white">
-                      {formatDate(ticket.lastUpdated)}
-                    </p>
-                  </TableCell>
-                  <TableCell className="py-4 px-6">
-                    <p className="text-sm text-gray-900 dark:text-white">
-                      {ticket.assignedTo}
-                    </p>
-                  </TableCell>                  
-                  <TableCell className="py-4 px-6">
-                    <Badge 
-                      variant={getStatusVariant(ticket.status)} 
-                      color={getStatusColor(ticket.status)}
-                    >
-                      {ticket.status.replace('-', ' ')}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="py-4 px-6 text-right">
-                    <Button
-                      disabled={true}
-                      variant="ghost"
-                      size="sm"
-                      className="text-brand-400"
-                      onClick={() => viewTicket(ticket.id)}
-                      startIcon={<EyeIcon />}
-                    >
-                      View
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))
+                        {ticket.ticketNo}
+                      </button>
+                    </TableCell>
+                     {/* Summary */}
+                    <TableCell className="py-3 px-4">
+                      <div className="flex flex-col">
+                        <span className="text-sm font-medium truncate max-w-md" style={{ color: '#44546f' }}>
+                          {ticket.description}
+                        </span>
+                        <span className="text-sm text-gray-500 dark:text-gray-400">
+                          Customer: {ticket.customerName}
+                        </span>
+                      </div>
+                    </TableCell>{/* Status */}
+                    <TableCell className="py-3 px-4">
+                      <span 
+                        className={`inline-flex items-center px-2 py-1 rounded-[2px] text-sm font-medium ${
+                          ticket.status === 'resolved' || ticket.status === 'closed'
+                            ? 'bg-[#dcfff1] text-[#216e4e]'
+                            : 'bg-[#e9f2ff] text-[#0055cc]'
+                        }`}
+                      >
+                        {ticket.status.replace('-', ' ').toUpperCase()}
+                      </span>
+                    </TableCell>
+                    
+                    {/* Comments */}
+                    <TableCell className="py-3 px-4 text-center">
+                      <button className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                        💬 <span className="text-sm">Add comment</span>
+                      </button>
+                    </TableCell>
+                      {/* Assignee */}
+                    <TableCell className="py-3 px-4">
+                      <div className="flex items-center space-x-2">
+                        <div
+                          className={`w-6 h-6 min-w-[24px] min-h-[24px] rounded-full ${assigneeAvatar.color} flex items-center justify-center text-white text-sm font-medium flex-shrink-0`}
+                          title={ticket.assignedTo}
+                        >
+                          {assigneeAvatar.initials}
+                        </div>                        <span className="text-sm truncate" style={{ color: '#44546f' }}>
+                          {ticket.assignedTo}
+                        </span>
+                      </div>
+                    </TableCell>                    {/* Due Date */}
+                    <TableCell className="py-3 px-4">
+                      <span className="text-sm" style={{ color: '#44546f' }}>
+                        {formatDate(ticket.createdDate)}
+                      </span>
+                    </TableCell>
+                    
+                    {/* Updated */}
+                    <TableCell className="py-3 px-4">
+                      <span className="text-sm" style={{ color: '#44546f' }}>
+                        {formatDate(ticket.lastUpdated)}
+                      </span>
+                    </TableCell>{/* Priority */}
+                    <TableCell className="py-3 px-4">
+                      <span 
+                        className={`inline-flex items-center px-2 py-1 rounded-[2px] text-sm font-medium ${
+                          getPriorityBgColor(ticket.priority)
+                        } ${getPriorityTextColor(ticket.priority)}`}
+                      >
+                        {ticket.priority.charAt(0).toUpperCase() + ticket.priority.slice(1)}
+                      </span>
+                    </TableCell>
+                    
+                    {/* Actions */}
+                    <TableCell className="py-3 px-4">
+                      <button 
+                        className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          // Add more actions menu
+                        }}
+                      >
+                        ⋯
+                      </button>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
             )}
           </TableBody>
         </Table>
@@ -646,7 +855,7 @@ const Tickets: React.FC<TicketsProps> = ({ className = "" }) => {
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-800">
+        <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
           <div className="flex items-center justify-between">
             <p className="text-sm text-gray-500 dark:text-gray-400">
               Showing {((filters.page - 1) * filters.limit) + 1} to {Math.min(filters.page * filters.limit, filteredTickets.length)} of {filteredTickets.length} tickets
@@ -686,9 +895,10 @@ const Tickets: React.FC<TicketsProps> = ({ className = "" }) => {
                 <div>
                   <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Priority *
-                  </Label>                  <Select
+                  </Label>
+                  <Select
                     defaultValue={newTicket.priority}
-                    onChange={(value: string) => setNewTicket(prev => ({ ...prev, priority: value as 'high' | 'medium' | 'low' }))}
+                    onChange={(value: string) => setNewTicket(prev => ({ ...prev, priority: value as 'highest' | 'high' | 'medium' | 'low' | 'lowest' }))}
                     options={newTicketPriorityOptions}
                   />
                 </div>
@@ -735,7 +945,8 @@ const Tickets: React.FC<TicketsProps> = ({ className = "" }) => {
                 <div>
                   <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Ticket Type *
-                  </Label>                  <Select
+                  </Label>
+                  <Select
                     defaultValue={newTicket.ticketType}
                     onChange={(value: string) => setNewTicket(prev => ({ ...prev, ticketType: value }))}
                     options={[{ value: '', label: 'Select ticket type' }, ...newTicketTypeOptions]}
@@ -758,7 +969,8 @@ const Tickets: React.FC<TicketsProps> = ({ className = "" }) => {
                 <div>
                   <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Assign To
-                  </Label>                  <Select
+                  </Label>
+                  <Select
                     defaultValue={newTicket.assignedTo}
                     onChange={(value: string) => setNewTicket(prev => ({ ...prev, assignedTo: value }))}
                     options={newTicketAssignedToOptions}
@@ -767,7 +979,8 @@ const Tickets: React.FC<TicketsProps> = ({ className = "" }) => {
                 <div>
                   <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Timezone
-                  </Label>                  <Select
+                  </Label>
+                  <Select
                     defaultValue={newTicket.timezone}
                     onChange={(value: string) => setNewTicket(prev => ({ ...prev, timezone: value }))}
                     options={timezoneOptions}
@@ -780,7 +993,7 @@ const Tickets: React.FC<TicketsProps> = ({ className = "" }) => {
                   Description *
                 </Label>
                 <textarea
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 dark:bg-gray-800 dark:text-white resize-none"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white resize-none"
                   rows={4}
                   placeholder="Describe the issue or request..."
                   value={newTicket.description}
@@ -790,14 +1003,15 @@ const Tickets: React.FC<TicketsProps> = ({ className = "" }) => {
             </div>
           </div>
 
-          <div className="px-6 py-4 flex justify-end gap-3">
+          <div className="px-6 py-4 flex justify-end gap-3 border-t border-gray-200 dark:border-gray-700">
             <Button
               variant="outline"
               className="dark:text-white"
               onClick={() => setIsAddModalOpen(false)}
             >
               Cancel
-            </Button>            <Button
+            </Button>
+            <Button
               variant="default"
               onClick={handleAddTicket}
             >
