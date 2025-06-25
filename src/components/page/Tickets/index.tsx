@@ -10,15 +10,15 @@ import {
 import Button from '../../ui/button/Button';
 import Input from '../../ui/input/Input';
 import Select from '../../form/Select';
-import Label from '../../form/Label';
 import Pagination from '../../tables/Pagination';
 import TableHeading from '../../tables/tableHeader';
 import { BoltIcon, FunnelIcon, EyeIcon, PlusIcon } from '@/icons';
 import TicketDrawer from './TicketDrawer';
 import { SearchIcon } from '../../ui/icons';
 import ErrorState from '../../common/ErrorState';
+import TicketCommentsDrawer from './TicketCommentsDrawer';
 
-// Mock data types
+
 interface Ticket {
   id: string;
   ticketNo: string;
@@ -31,9 +31,10 @@ interface Ticket {
   lastUpdated: string;
   assignedTo: string;
   status: 'open' | 'in-progress' | 'resolved' | 'closed';
-  accountNumber?: string;
-  timezone: string;
+  accountNumber?: string;  timezone: string;
   description: string;
+  reporter?: string;
+  labels?: string[];
 }
 
 interface TicketFilters {
@@ -50,13 +51,13 @@ interface TicketsProps {
   className?: string;
 }
 
-// Mock data
-const mockTickets: Ticket[] = [
-  {
+
+const mockTickets: Ticket[] = [  {
     id: '1',
     ticketNo: 'TK-2024-001',
     customerName: 'John Doe',
-    contactNumber: '+1-555-0123',    email: 'john.doe@email.com',
+    contactNumber: '+1-555-0123',    
+    email: 'john.doe@email.com',
     ticketType: 'Technical Support',
     priority: 'highest',
     createdDate: '2024-06-01T09:30:00Z',
@@ -65,7 +66,9 @@ const mockTickets: Ticket[] = [
     status: 'in-progress',
     accountNumber: 'ACC-123456',
     timezone: 'EST',
-    description: 'Unable to login to account after password reset'
+    description: 'Unable to login to account after password reset',
+    reporter: 'John Doe',
+    labels: ['login-issue', 'urgent']
   },
   {
     id: '2',
@@ -81,7 +84,9 @@ const mockTickets: Ticket[] = [
     status: 'open',
     accountNumber: 'ACC-789012',
     timezone: 'PST',
-    description: 'Incorrect charges on monthly bill'
+    description: 'Incorrect charges on monthly bill',
+    reporter: 'Jane Smith',
+    labels: ['billing', 'refund']
   },
   {
     id: '3',
@@ -101,7 +106,8 @@ const mockTickets: Ticket[] = [
     id: '4',
     ticketNo: 'TK-2024-004',
     customerName: 'Emily Wilson',
-    contactNumber: '+1-555-0126',    email: 'emily.wilson@email.com',
+    contactNumber: '+1-555-0126',    
+    email: 'emily.wilson@email.com',
     ticketType: 'Technical Support',
     priority: 'high',
     createdDate: '2024-06-02T13:45:00Z',
@@ -120,7 +126,8 @@ const mockTickets: Ticket[] = [
     email: 'michael.davis@email.com',
     ticketType: 'Account Management',
     priority: 'medium',
-    createdDate: '2024-05-29T16:00:00Z',    lastUpdated: '2024-05-30T09:15:00Z',
+    createdDate: '2024-05-29T16:00:00Z',    
+    lastUpdated: '2024-05-30T09:15:00Z',
     assignedTo: 'Sarah Wilson',
     status: 'closed',
     accountNumber: 'ACC-901234',
@@ -144,6 +151,31 @@ const mockTickets: Ticket[] = [
     description: 'Minor UI text formatting issue'
   }
 ];
+
+const mockComments = {
+  '1': [
+    {
+      id: 'c1',
+      author: 'Francheska Rivano',
+      content: 'Boss @Marvin Jay Lagang - dashboard development is done. I don\'t have the permission to assign to myself and move the status. Thank u',
+      timestamp: '2024-05-28T13:57:00Z'
+    },
+    {
+      id: 'c2',
+      author: 'Marvin Jay Lagang',
+      content: 'I reassigned it back to you. will review this. Thank you!',
+      timestamp: '2024-05-28T21:03:00Z'
+    }
+  ],
+  '2': [
+    {
+      id: 'c3',
+      author: 'Mike Johnson',
+      content: 'I\'ve reviewed the billing issue and it appears to be a system error. Processing refund now.',
+      timestamp: '2024-06-01T17:30:00Z'
+    }
+  ]
+};
 
 const mockAgents = [
   'Sarah Wilson',
@@ -169,13 +201,22 @@ const Tickets: React.FC<TicketsProps> = ({ className = "" }) => {
   });
   const [searchInput, setSearchInput] = useState('');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [isPending, startTransition] = useTransition();
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isPending, startTransition] = useTransition();  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isDrawerVisible, setIsDrawerVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+    // Comments drawer state
+  const [isCommentsDrawerOpen, setIsCommentsDrawerOpen] = useState(false);
+  const [isCommentsDrawerVisible, setIsCommentsDrawerVisible] = useState(false);
+  const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
+  const [ticketComments, setTicketComments] = useState<Record<string, Array<{
+    id: string;
+    author: string;
+    content: string;
+    timestamp: string;
+  }>>>(mockComments);
 
-  // New ticket form state
+
   const [newTicket, setNewTicket] = useState({
     customerName: '',
     contactNumber: '',
@@ -184,18 +225,22 @@ const Tickets: React.FC<TicketsProps> = ({ className = "" }) => {
     ticketType: '',
     accountNumber: '',
     assignedTo: '',
-    timezone: 'EST',    description: ''
-  });  const tableColumns = useMemo(() => [
+    timezone: 'EST',    
+    description: ''  }); 
+    
+    const tableColumns = useMemo(() => [
     { key: 'key', label: 'Key', className: 'w-32' },
     { key: 'summary', label: 'Summary', className: 'min-w-80' },
     { key: 'status', label: 'Status', className: 'w-28' },
     { key: 'comments', label: 'Comments', className: 'w-24' },
     { key: 'assignee', label: 'Assignee', className: 'w-32' },
-    { key: 'dueDate', label: 'Due Date', className: 'w-28' },
-    { key: 'updated', label: 'Updated', className: 'w-28' },
+    { key: 'created', label: 'Created', className: 'w-32' },
+    { key: 'updated', label: 'Updated', className: 'w-32' },
     { key: 'priority', label: 'Priority', className: 'w-28' },
     { key: 'actions', label: '', className: 'w-12' },
   ], []);
+
+
   const priorityOptions = useMemo(() => [
     { value: '', label: 'All Priorities' },
     { value: 'highest', label: 'Highest' },
@@ -268,7 +313,7 @@ const Tickets: React.FC<TicketsProps> = ({ className = "" }) => {
     return () => clearTimeout(timeoutId);
   }, [searchInput]);
 
-  // Handle click outside to close filter dropdown
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (filterRef.current && !filterRef.current.contains(event.target as Node)) {
@@ -350,7 +395,7 @@ const Tickets: React.FC<TicketsProps> = ({ className = "" }) => {
   }, []);
 
 
-  // Helper function to get user initials and color
+
   const getUserAvatar = (name: string) => {
     const initials = name.split(' ').map(n => n[0]).join('').toUpperCase();
     const colors = [
@@ -361,7 +406,7 @@ const Tickets: React.FC<TicketsProps> = ({ className = "" }) => {
     return { initials, color: colors[colorIndex] };
   };
 
-  // Helper function to get ticket type icon
+
   const getTicketTypeIcon = (type: string) => {
     switch (type) {
       case 'Technical Support':
@@ -429,7 +474,7 @@ const Tickets: React.FC<TicketsProps> = ({ className = "" }) => {
     return `TK-${year}-${nextNumber.toString().padStart(3, '0')}`;
   };
 
-  // Drawer functions
+
   const openTicketDrawer = () => {
     setIsAddModalOpen(true);
     setTimeout(() => setIsDrawerVisible(true), 10);
@@ -479,8 +524,67 @@ const Tickets: React.FC<TicketsProps> = ({ className = "" }) => {
   };
 
   const viewTicket = (ticketId: string) => {
-    // Navigate to ticket details page
     router.push(`/admin/tickets/details/${ticketId}`);
+  };
+
+  // Comments drawer handlers
+  const openCommentsDrawer = (ticket: Ticket) => {
+    setSelectedTicket(ticket);
+    setIsCommentsDrawerOpen(true);
+    setTimeout(() => setIsCommentsDrawerVisible(true), 10);
+  };
+
+  const closeCommentsDrawer = () => {
+    setIsCommentsDrawerVisible(false);
+    setTimeout(() => {
+      setIsCommentsDrawerOpen(false);
+      setSelectedTicket(null);
+    }, 300);
+  };
+
+  const handleStatusChange = (ticketId: string, newStatus: string) => {
+    setTickets(prev => prev.map(ticket => 
+      ticket.id === ticketId 
+        ? { ...ticket, status: newStatus as Ticket['status'], lastUpdated: new Date().toISOString() }
+        : ticket
+    ));
+  };
+
+  const handleAssigneeChange = (ticketId: string, newAssignee: string) => {
+    setTickets(prev => prev.map(ticket => 
+      ticket.id === ticketId 
+        ? { ...ticket, assignedTo: newAssignee, lastUpdated: new Date().toISOString() }
+        : ticket
+    ));
+  };
+
+  const handlePriorityChange = (ticketId: string, newPriority: string) => {
+    setTickets(prev => prev.map(ticket => 
+      ticket.id === ticketId 
+        ? { ...ticket, priority: newPriority as Ticket['priority'], lastUpdated: new Date().toISOString() }
+        : ticket
+    ));
+  };
+
+  const handleAddComment = (ticketId: string, comment: string) => {
+    const newComment = {
+      id: Date.now().toString(),
+      author: 'Current User', // This should come from user context
+      content: comment,
+      timestamp: new Date().toISOString()
+    };
+    
+    setTicketComments(prev => ({
+      ...prev,
+      [ticketId]: [...(prev[ticketId] || []), newComment]
+    }));
+
+    // Update ticket's last updated time
+    setTickets(prev => prev.map(ticket => 
+      ticket.id === ticketId 
+        ? { ...ticket, lastUpdated: new Date().toISOString() }
+        : ticket
+    ));
   };
 
   if (error && !isPending) {
@@ -495,16 +599,16 @@ const Tickets: React.FC<TicketsProps> = ({ className = "" }) => {
   }  return (
     <div className={`bg-white dark:bg-gray-900 ${className}`}>
    
-      {/* Header Section - JIRA Style */}
+     
       <div className="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
-        <div className="px-6 py-4">          {/* Top Header */}
+        <div className="px-6 py-4">         
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-2">
               <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
                 List
               </h1>
             </div>
-          </div>{/* Second Row - Search and Controls */}
+          </div>
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               {/* Search Bar */}
@@ -548,7 +652,7 @@ const Tickets: React.FC<TicketsProps> = ({ className = "" }) => {
                 onClick={() => setIsFilterOpen(!isFilterOpen)}
                
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" role="presentation">
+                <svg width="18" height="18" viewBox="0 0 24 24" role="presentation">
                   <path fill="currentcolor" fillRule="evenodd" d="M7 13h10l1-2H6zM3.99 6c-.55 0-.79.41-.55.9L4 8h16l.55-1.1c.25-.5.01-.9-.54-.9zm6.79 11.56a.87.87 0 0 0 .73.44h.99c.28 0 .61-.2.73-.44L14 16h-4z"></path>
                 </svg>
                 Filter
@@ -556,10 +660,13 @@ const Tickets: React.FC<TicketsProps> = ({ className = "" }) => {
                <Button
                 variant="default"
                 size="sm"
+                className="whitespace-nowrap flex items-center gap-2"
                 onClick={openTicketDrawer}
               
               >
-                <PlusIcon  />
+               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
                 Add new
               </Button>
               
@@ -651,7 +758,7 @@ const Tickets: React.FC<TicketsProps> = ({ className = "" }) => {
                                   }
                                 }}
                               />                              <div
-                                className={`px-2 py-1 rounded-[2px] text-xs font-medium border transition-colors ${
+                                className={`px-2 rounded-[2px] text-xs font-medium border transition-colors ${
                                   filters.status === status.value
                                     ? (status.value === 'resolved' || status.value === 'closed'
                                       ? 'bg-[#dcfff1] text-[#216e4e] border-[#dcfff1]'
@@ -730,7 +837,7 @@ const Tickets: React.FC<TicketsProps> = ({ className = "" }) => {
                               ]}
                               defaultValue=""
                               onChange={(value) => {
-                                // Handle filter date change
+                             
                                 console.log('Date filter changed:', value);
                               }}
                             />
@@ -742,12 +849,13 @@ const Tickets: React.FC<TicketsProps> = ({ className = "" }) => {
                 </div>
               )}
             </div>
-          </div>        </div>
-      </div>{/* Table Section */}
+          </div>        
+          </div>
+      </div>    
       <div className="overflow-x-auto bg-white dark:bg-gray-900">
         <Table>
           <TableHeading columns={tableColumns} />
-          <TableBody>            {isLoading ? (
+          <TableBody>{isLoading ? (
               <TableRow>
                 <TableCell className="text-center py-8 px-6" colSpan={9}>
                   <div className="flex items-center justify-center gap-3">
@@ -764,12 +872,10 @@ const Tickets: React.FC<TicketsProps> = ({ className = "" }) => {
               </TableRow>
             ) : (
               paginatedTickets.map((ticket) => {
-                const assigneeAvatar = getUserAvatar(ticket.assignedTo);
-                return (                  <TableRow 
+                const assigneeAvatar = getUserAvatar(ticket.assignedTo);                return (<TableRow 
                     key={ticket.id} 
                     className="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer"
-                  >                    {/* Key */}
-                    <TableCell className="py-3 px-4 whitespace-nowrap">
+                  ><TableCell className="py-3 px-4 whitespace-nowrap">
                       <button 
                         className="text-sm font-medium hover:underline focus:outline-none"
                         style={{ color: '#44546f' }}
@@ -777,9 +883,7 @@ const Tickets: React.FC<TicketsProps> = ({ className = "" }) => {
                       >
                         {ticket.ticketNo}
                       </button>
-                    </TableCell>
-                     {/* Summary */}
-                    <TableCell className="py-3 px-4">
+                    </TableCell><TableCell className="py-3 px-4">
                       <div className="flex flex-col">
                         <span className="text-sm font-medium truncate max-w-md" style={{ color: '#44546f' }}>
                           {ticket.description}
@@ -788,10 +892,9 @@ const Tickets: React.FC<TicketsProps> = ({ className = "" }) => {
                           Customer: {ticket.customerName}
                         </span>
                       </div>
-                    </TableCell>{/* Status */}
-                    <TableCell className="py-3 px-4">
+                    </TableCell><TableCell className="py-3 px-4">
                       <span 
-                        className={`inline-flex items-center px-2 py-1 rounded-[2px] text-xs whitespace-nowrap font-medium ${
+                        className={`inline-flex items-center px-2 rounded-[4px] text-xs whitespace-nowrap font-medium ${
                           ticket.status === 'resolved' || ticket.status === 'closed'
                             ? 'bg-[#dcfff1] text-[#216e4e]'
                             : 'bg-[#e9f2ff] text-[#0055cc]'
@@ -799,40 +902,44 @@ const Tickets: React.FC<TicketsProps> = ({ className = "" }) => {
                       >
                         {ticket.status.replace('-', ' ').toUpperCase()}
                       </span>
-                    </TableCell>
-                    
-                    {/* Comments */}
-                    <TableCell className="py-3 px-4 text-center">
-                      <button className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
-                        💬 <span className="text-sm">Add comment</span>
+                    </TableCell><TableCell className="py-3 px-4 text-center">
+                      <button 
+                        className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 flex items-center space-x-1" 
+                        onClick={() => openCommentsDrawer(ticket)}
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-3.582 8-8 8a8.955 8.955 0 01-2.697-.413l-3.206 1.068a.75.75 0 01-.954-.954l1.068-3.206A8.955 8.955 0 014 12a8 8 0 1116 0z" />
+                        </svg>
+                        <span className="text-sm">
+                          {ticketComments[ticket.id]?.length > 0 
+                            ? `${ticketComments[ticket.id].length} comment${ticketComments[ticket.id].length > 1 ? 's' : ''}`
+                            : 'Add comment'
+                          }
+                        </span>
                       </button>
-                    </TableCell>
-                      {/* Assignee */}
-                    <TableCell className="py-3 px-4">
+                    </TableCell><TableCell className="py-3 px-4">
                       <div className="flex items-center space-x-2">
                         <div
                           className={`w-6 h-6 min-w-[24px] min-h-[24px] rounded-full ${assigneeAvatar.color} flex items-center justify-center text-white text-sm font-medium flex-shrink-0`}
                           title={ticket.assignedTo}
                         >
                           {assigneeAvatar.initials}
-                        </div>                        <span className="text-sm truncate" style={{ color: '#44546f' }}>
+                        </div>
+                        <span className="text-sm truncate" style={{ color: '#44546f' }}>
                           {ticket.assignedTo}
                         </span>
                       </div>
-                    </TableCell>                    {/* Due Date */}
+                    </TableCell>
                     <TableCell className="py-3 px-4">
                       <span className="text-sm" style={{ color: '#44546f' }}>
                         {formatDate(ticket.createdDate)}
                       </span>
                     </TableCell>
-                    
-                    {/* Updated */}
                     <TableCell className="py-3 px-4">
                       <span className="text-sm" style={{ color: '#44546f' }}>
                         {formatDate(ticket.lastUpdated)}
                       </span>
-                    </TableCell>{/* Priority */}
-                    <TableCell className="py-3 px-4">
+                    </TableCell><TableCell className="py-3 px-4">
                       <span 
                         className={`inline-flex items-center px-2 py-1 rounded-[2px] text-sm font-medium ${
                           getPriorityBgColor(ticket.priority)
@@ -840,25 +947,22 @@ const Tickets: React.FC<TicketsProps> = ({ className = "" }) => {
                       >
                         {ticket.priority.charAt(0).toUpperCase() + ticket.priority.slice(1)}
                       </span>
-                    </TableCell>
-                    
-                    {/* Actions */}
-                    <TableCell className="py-3 px-4">
+                    </TableCell><TableCell className="py-3 px-4">
                       <button 
                         className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                         onClick={(e) => {
                           e.stopPropagation();
-                          // Add more actions menu
+                        
                         }}
                       >
-                        ⋯
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+                        </svg>
                       </button>
                     </TableCell>
-                  </TableRow>
-                );
+                  </TableRow>);
               })
-            )}
-          </TableBody>
+            )}</TableBody>
         </Table>
       </div>
 
@@ -889,6 +993,22 @@ const Tickets: React.FC<TicketsProps> = ({ className = "" }) => {
         typeOptions={newTicketTypeOptions}
         assigneeOptions={newTicketAssignedToOptions}
         timezoneOptions={timezoneOptions}
+      />
+
+      {/* Comments Drawer */}
+      <TicketCommentsDrawer
+        isOpen={isCommentsDrawerOpen}
+        isVisible={isCommentsDrawerVisible}
+        ticket={selectedTicket}
+        onClose={closeCommentsDrawer}
+        onStatusChange={handleStatusChange}
+        onAssigneeChange={handleAssigneeChange}
+        onPriorityChange={handlePriorityChange}
+        onAddComment={handleAddComment}
+        statusOptions={statusOptions}
+        priorityOptions={priorityOptions.slice(1)} // Remove "All Priorities" option
+        assigneeOptions={assignedToOptions.slice(1)} // Remove "All Agents" option
+        comments={selectedTicket ? (ticketComments[selectedTicket.id] || []) : []}
       />
     </div>
   );
