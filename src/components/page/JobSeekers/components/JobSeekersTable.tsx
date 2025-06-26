@@ -1,5 +1,4 @@
 import React from 'react';
-import Image from "next/image";
 import { formatDate } from '@/services/utils/dateUtils';
 import {
   Table,
@@ -12,6 +11,7 @@ import Button from '../../../ui/button/Button';
 import TableHeading from '../../../tables/tableHeader';
 import { EyeIcon } from '@/icons';
 import { JobSeekersTableProps } from '@/services/types/JobSeekersTypes';
+import Avatar from '../../../ui/avatar/Avatar';
 
 const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
   data,
@@ -47,22 +47,13 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
               <TableRow key={jobSeeker.id} className="border-b text-sm border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50">
                 <TableCell className="py-4 px-6">
                   <div className="flex items-center gap-3">
-                    <div className="relative w-10 h-10 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700">
-                      {jobSeeker.profilePicture?.url ? (
-                      
-                          <Image
-                                            width={231}
-                                            height={48}
-                                            src={jobSeeker.profilePicture.url}
-                                            alt={jobSeeker.name}
-                                            className="w-full h-full object-cover"
-                                          />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-gray-500 dark:text-gray-400 text-sm font-medium">
-                          {jobSeeker.name.split(' ').map((n: string) => n.charAt(0)).join('').substring(0, 2)}
-                        </div>
-                      )}
-                    </div>
+                    <Avatar
+                      src={jobSeeker.profilePicture?.url}
+                      alt={jobSeeker.name}
+                      name={jobSeeker.name}
+                      size="medium"
+                      className="flex-shrink-0"
+                    />
                     <div>
                       <p className="font-medium text-gray-900 dark:text-white">
                         {jobSeeker.name}

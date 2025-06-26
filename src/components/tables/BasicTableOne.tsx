@@ -8,6 +8,7 @@ import {
 } from "../ui/table";
 
 import Badge from "../ui/badge/Badge";
+import Avatar from "../ui/avatar/Avatar";
 import Image from "next/image";
 
 interface Order {
@@ -159,14 +160,13 @@ export default function BasicTableOne() {
                 <TableRow key={order.id}>
                   <TableCell className="px-5 py-4 sm:px-6 text-start">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 overflow-hidden rounded-full">
-                        <Image
-                          width={40}
-                          height={40}
-                          src={order.user.image}
-                          alt={order.user.name}
-                        />
-                      </div>
+                      <Avatar
+                        src={order.user.image}
+                        alt={order.user.name}
+                        name={order.user.name}
+                        size="medium"
+                        className="flex-shrink-0"
+                      />
                       <div>
                         <span className="block font-medium text-gray-800 text-theme-sm dark:text-white/90">
                           {order.user.name}

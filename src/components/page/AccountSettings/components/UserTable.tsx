@@ -6,6 +6,7 @@ import { Table, TableHeader, TableBody, TableRow, TableCell } from '@/components
 import { DotsIcon } from '@/components/ui/icons';
 import { Dropdown } from '@/components/ui/dropdown/Dropdown';
 import { DropdownItem } from '@/components/ui/dropdown/DropdownItem';
+import Avatar from '@/components/ui/avatar/Avatar';
 
 
 interface ExtendedUser extends User {
@@ -132,11 +133,11 @@ const UserTable: React.FC<UserTableProps> = ({ users, onUserAction }) => {
               <TableRow key={user.id} className="border-b text-sm border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50">
                 <TableCell className="py-4 px-6">
                   <div className="flex items-center gap-3">
-                    <div className="relative w-10 h-10 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700">
-                      <div className="w-full h-full flex items-center justify-center text-gray-500 dark:text-gray-400 text-sm font-medium">
-                        {getUserInitials(user)}
-                      </div>
-                    </div>
+                    <Avatar
+                      name={getUserDisplayName(user)}
+                      size="medium"
+                      className="flex-shrink-0"
+                    />
                     <div>
                       <p className="font-medium text-gray-900 dark:text-white">
                         {getUserDisplayName(user)}

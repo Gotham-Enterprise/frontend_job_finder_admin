@@ -2,10 +2,12 @@ import Image from "next/image";
 import React from "react";
 
 interface AvatarProps {
-  src: string; // URL of the avatar image
-  alt?: string; // Alt text for the avatar
-  size?: "xsmall" | "small" | "medium" | "large" | "xlarge" | "xxlarge"; // Avatar size
-  status?: "online" | "offline" | "busy" | "none"; // Status indicator
+  src?: string; 
+  alt?: string; 
+  name?: string; 
+  size?: "xsmall" | "small" | "medium" | "large" | "xlarge" | "xxlarge"; 
+  status?: "online" | "offline" | "busy" | "none"; 
+  className?: string;
 }
 
 const sizeClasses = {
@@ -35,22 +37,38 @@ const statusColorClasses = {
 const Avatar: React.FC<AvatarProps> = ({
   src,
   alt = "User Avatar",
+  name = "Unknown User",
   size = "medium",
   status = "none",
+  className = "",
 }) => {
-  return (
-    <div className={`relative  rounded-full ${sizeClasses[size]}`}>
-      {/* Avatar Image */}
-      <Image
-        width="0"
-        height="0"
-        sizes="100vw"
-        src={src}
-        alt={alt}
-        className="object-cover w-full rounded-full"
-      />
+  const getInitials = (name: string): string => {
+    return name
+      .split(' ')
+      .map((part) => part.charAt(0))
+      .join('')
+      .substring(0, 2)
+      .toUpperCase();
+  };
 
-      {/* Status Indicator */}
+  return (
+    <div className={`relative rounded-full overflow-hidden ${sizeClasses[size]} ${className}`}>
+      {src ? (
+     
+        <Image
+          width={48}
+          height={48}
+          src={src}
+          alt={alt}
+          className="object-cover w-full h-full rounded-full"
+        />
+      ) : (
+     
+        <div className="w-full h-full flex items-center justify-center bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 font-medium text-sm">
+          {getInitials(name)}
+        </div>
+      )}
+
       {status !== "none" && (
         <span
           className={`absolute bottom-0 right-0 rounded-full border-[1.5px] border-white dark:border-gray-900 ${

@@ -12,6 +12,7 @@ import TableHeading from '../../../tables/tableHeader';
 import Checkbox from '../../../form/input/Checkbox';
 import { EyeIcon } from '@/icons';
 import { EmployerTableProps } from '@/services/types/EmployerTypes';
+import Avatar from '../../../ui/avatar/Avatar';
 
 const EmployerTable: React.FC<EmployerTableProps> = ({
   data,
@@ -53,11 +54,11 @@ const EmployerTable: React.FC<EmployerTableProps> = ({
                 </TableCell>
                 <TableCell className="py-4 px-6 text-sm">
                   <div className="flex items-center gap-3">
-                    <div className="relative w-10 h-10 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700">
-                      <div className="w-full h-full flex items-center justify-center text-gray-500 dark:text-gray-400 text-sm font-medium">
-                        {employer.companyName.split(' ').map((n: string) => n.charAt(0)).join('').substring(0, 2)}
-                      </div>
-                    </div>
+                    <Avatar
+                      name={employer.companyName}
+                      size="medium"
+                      className="flex-shrink-0"
+                    />
                     <div>
                       <p className="font-medium text-gray-900 dark:text-white">
                         {employer.companyName}

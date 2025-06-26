@@ -1,5 +1,4 @@
 import React from 'react';
-import Image from "next/image";
 import {
   Table,
   TableBody,
@@ -10,6 +9,7 @@ import Button from '../../../../ui/button/Button';
 import TableHeading from '../../../../tables/tableHeader';
 import { EyeIcon } from '@/icons';
 import { ApplicantsTableProps } from '@/services/types/applicant';
+import Avatar from '../../../../ui/avatar/Avatar';
 
 const ApplicantsTable: React.FC<ApplicantsTableProps> = ({
   applicants,
@@ -55,21 +55,13 @@ const ApplicantsTable: React.FC<ApplicantsTableProps> = ({
               <TableRow key={applicant.id} className="border-b text-sm border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50">
                 <TableCell className="py-4 px-6">
                   <div className="flex items-center gap-3">
-                    <div className="relative w-10 h-10 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700">
-                      {applicant.profilePicture?.url ? (
-                        <Image
-                          width={40}
-                          height={40}
-                          src={applicant.profilePicture.url}
-                          alt={applicant.name}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-gray-500 dark:text-gray-400 text-sm font-medium">
-                          {applicant.name.split(' ').map((n: string) => n.charAt(0)).join('').substring(0, 2)}
-                        </div>
-                      )}
-                    </div>
+                    <Avatar
+                      src={applicant.profilePicture?.url}
+                      alt={applicant.name}
+                      name={applicant.name}
+                      size="medium"
+                      className="flex-shrink-0"
+                    />
                     <div>
                       <p className="font-medium text-gray-900 dark:text-white">
                         {applicant.name}
@@ -78,12 +70,14 @@ const ApplicantsTable: React.FC<ApplicantsTableProps> = ({
                         {applicant.email}
                       </p>
                     </div>
-                  </div>                </TableCell>
+                  </div>                
+                  </TableCell>
 
                 <TableCell className="py-4 px-6">
                   <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusVariant(applicant.status)}`}>
                     {applicant.status}
-                  </span>                </TableCell>
+                  </span>                
+                  </TableCell>
                 <TableCell className="py-4 px-6">
                   <div className="flex items-center gap-2">
                     <Button
