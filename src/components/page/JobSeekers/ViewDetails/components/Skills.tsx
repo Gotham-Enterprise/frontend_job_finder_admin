@@ -11,7 +11,7 @@ export default function Skills({ skills }: SkillsProps) {
         <div className="rounded-xl bg-white p-6 shadow-lg border border-gray-100 dark:bg-gray-800 dark:border-gray-700">
             <div className="flex items-center mb-6">
               
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white">Skills & Expertise</h3>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white">Skills</h3>
             </div>            {skills && skills.length > 0 ? (
                 <div className="flex flex-wrap gap-2">
                     {skills.map((skill) => (

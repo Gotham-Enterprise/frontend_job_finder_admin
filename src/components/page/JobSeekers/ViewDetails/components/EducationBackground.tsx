@@ -11,7 +11,7 @@ export default function EducationBackground({ educations, formatDate }: Educatio
     return (
         <div className="rounded-xl bg-white p-6 shadow-lg border border-gray-100 dark:bg-gray-800 dark:border-gray-700">
             <div className="flex items-center mb-6">
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white">Education Background</h3>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white">Education</h3>
             </div>
             
             {educations && educations.length > 0 ? (

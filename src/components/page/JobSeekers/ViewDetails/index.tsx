@@ -110,13 +110,18 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
         </div><div className="grid grid-cols-1 px-4 pt-6 xl:grid-cols-3 xl:gap-6">
             <div className="col-span-full xl:col-auto">
                 <ProfileCard jobSeeker={jobSeeker} contactInfo={contactInfo} />
-            </div>            <div className="col-span-2 space-y-6">
+            </div>            
+            
+            <div className="col-span-2 space-y-6">
+
+            <PersonalSummary personalSummary={jobSeeker.personalSummary} />
+
                 <WorkExperience 
                     professionalBackground={jobSeeker.professionalBackground}
                     formatDate={formatDate}
                 />
                 
-                <PersonalSummary personalSummary={jobSeeker.personalSummary} />
+               
                 
                 <EducationBackground 
                     educations={jobSeeker.educations}
@@ -128,14 +133,15 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
                     formatDate={formatDate}
                 />
                 
+            
+        
+                <Skills skills={jobSeeker.skills} />
+                
+           
                 <Languages 
                     languages={jobSeeker.languages}
                     getProficiencyLabel={getProficiencyLabel}
                 />
-                
-                <Skills skills={jobSeeker.skills} />
-                
-         
             </div>
         </div>
         </>

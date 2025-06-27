@@ -11,7 +11,7 @@ export default function Certifications({ licenses, formatDate }: CertificationsP
     return (
         <div className="rounded-xl bg-white p-6 shadow-lg border border-gray-100 dark:bg-gray-800 dark:border-gray-700">
             <div className="flex items-center mb-6">
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white">Licenses & Certification</h3>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white">Licenses</h3>
             </div>
               {licenses && licenses.length > 0 ? (
                 <div className="space-y-4">

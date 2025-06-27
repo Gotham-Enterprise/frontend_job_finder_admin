@@ -24,7 +24,7 @@ export default function WorkExperience({ professionalBackground, formatDate }: W
         <div className="rounded-xl bg-white p-6 shadow-lg border border-gray-100 dark:bg-gray-800 dark:border-gray-700">
             <div className="flex items-center mb-6">
                
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white">Professional Background</h3>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white">Work Experience</h3>
             </div>
             
             {professionalBackground && professionalBackground.length > 0 ? (
