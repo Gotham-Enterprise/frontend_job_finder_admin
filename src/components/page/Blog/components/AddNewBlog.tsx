@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useRef } from "react";
 import { Modal } from "@/components/ui/modal";
 import { useModal } from "@/hooks/useModal";
 import { openBlogPreview } from "./blogPreview";
@@ -32,6 +32,7 @@ export default function AddNewBlog() {  const [blogPost, setBlogPost] = useState
   const [activeTab, setActiveTab] = useState<'write' | 'preview'>('write');
   const [showSEOSettings, setShowSEOSettings] = useState(false);
   const previewModal = useModal();
+  const editorImageUploadRef = useRef<((file: File) => void) | null>(null);
 
   const categoryOptions: CategoryOption[] = [
     { value: '1', text: 'Technology', selected: false },
@@ -62,6 +63,15 @@ export default function AddNewBlog() {  const [blogPost, setBlogPost] = useState
   const permalinkChange = useCallback((permalink: string) => {
     initInputChange('permalink', permalink);
   }, [initInputChange]);
+
+  const imageUploadToEditor = useCallback((file: File) => {
+    if (editorImageUploadRef.current) {
+      editorImageUploadRef.current(file);
+      setActiveTab('write');
+    }
+  }, []);
+
+  
   const saveDraft = () => {
     setBlogPost(prev => ({ ...prev, status: 'draft' }));
     
@@ -72,13 +82,7 @@ export default function AddNewBlog() {  const [blogPost, setBlogPost] = useState
     const tagNames = blogPost.tags.map(id => 
       tagOptions.find(option => option.value === id)?.text || id
     );
-    
-    console.log('Saving draft:', { 
-      ...blogPost, 
-      status: 'draft',
-      categories: categoryNames,
-      tags: tagNames
-    });
+  
   };
   const publishPost = () => {
     setBlogPost(prev => ({ ...prev, status: 'published' }));
@@ -112,11 +116,13 @@ export default function AddNewBlog() {  const [blogPost, setBlogPost] = useState
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-         <div className="lg:col-span-3 space-y-6">          <BlogTitle
+         <div className="lg:col-span-3 space-y-6">         
+           <BlogTitle
             title={blogPost.title}
             permalink={blogPost.permalink}
             onChange={titleChange}
             onPermalinkChange={permalinkChange}
+            onImageUpload={imageUploadToEditor}
           />
             <BlogContentEditor
             content={blogPost.content}
@@ -124,6 +130,9 @@ export default function AddNewBlog() {  const [blogPost, setBlogPost] = useState
             activeTab={activeTab}
             onTabChange={setActiveTab}
             renderPreview={renderPreview}
+            onEditorReady={(imageUploadFn) => {
+              editorImageUploadRef.current = imageUploadFn;
+            }}
           />
 
 

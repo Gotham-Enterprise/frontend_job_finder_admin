@@ -8,6 +8,7 @@ interface BlogContentEditorProps {
   activeTab: 'write' | 'preview';
   onTabChange: (tab: 'write' | 'preview') => void;
   renderPreview: () => React.ReactNode;
+  onEditorReady?: (imageUploadFn: (file: File) => void) => void;
 }
 
 const BlogContentEditor: React.FC<BlogContentEditorProps> = ({
@@ -15,7 +16,8 @@ const BlogContentEditor: React.FC<BlogContentEditorProps> = ({
   onChange,
   activeTab,
   onTabChange,
-  renderPreview
+  renderPreview,
+  onEditorReady
 }) => {
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
@@ -53,8 +55,10 @@ const BlogContentEditor: React.FC<BlogContentEditorProps> = ({
             onChange={onChange}
             placeholder="Tell your story... Use the toolbar above to format text, add images, and create rich content."
             minHeight={500}
+            onEditorReady={onEditorReady}
           />
-        </div>        {activeTab === 'preview' && (
+        </div>       
+         {activeTab === 'preview' && (
           <div className="min-h-[500px] p-4 bg-gray-50 dark:bg-gray-900 rounded-lg">
             <style dangerouslySetInnerHTML={{
               __html: `

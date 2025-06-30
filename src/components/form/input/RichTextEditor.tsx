@@ -160,6 +160,7 @@ interface RichTextEditorProps {
   className?: string;
   minHeight?: number;
   hideImageButton?: boolean; 
+  onEditorReady?: (imageUploadFn: (file: File) => void) => void;
 }
 
 const RichTextEditor: React.FC<RichTextEditorProps> = ({
@@ -169,6 +170,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
   className = "",
   minHeight = 300,
   hideImageButton = false, 
+  onEditorReady,
 }) => {
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [showImageUpload, setShowImageUpload] = useState(false);
@@ -247,6 +249,13 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
     };
     reader.readAsDataURL(file);
   }, [editor]);
+
+  // Expose the imageUpload function to parent components
+  useEffect(() => {
+    if (editor && onEditorReady) {
+      onEditorReady(imageUpload);
+    }
+  }, [editor, onEditorReady, imageUpload]);
 
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
