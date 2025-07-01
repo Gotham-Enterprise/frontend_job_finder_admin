@@ -1,5 +1,5 @@
 import React from 'react';
-import { formatDate } from '@/services/utils/dateUtils';
+import { formatDate, formatDateTimeEST } from '@/services/utils/dateUtils';
 import {
   Table,
   TableBody,
@@ -9,7 +9,7 @@ import {
 import Badge from '../../../ui/badge/Badge';
 import Button from '../../../ui/button/Button';
 import TableHeading from '../../../tables/tableHeader';
-import { EyeIcon, PencilIcon } from '@/icons';
+import { EyeIcon, PencilIcon, TimeIcon } from '@/icons';
 import { JobsAdminTableProps } from '@/services/types/JobsAdminTypes';
 
 const JobsAdminTable: React.FC<JobsAdminTableProps> = ({
@@ -82,10 +82,28 @@ const JobsAdminTable: React.FC<JobsAdminTableProps> = ({
                     </p>
                   </div>
                 </TableCell>
-                <TableCell className="py-4 px-6">
-                  <p className="text-sm text-gray-900 dark:text-white">
-                    {formatDate(job.datePosted)}
-                  </p>
+                <TableCell className="py-4 px-6 whitespace-nowrap">
+                  {job.datePosted ? (() => {
+                    const datePosted = formatDateTimeEST(job.datePosted);
+                    if (typeof datePosted === 'string') {
+                      return (
+                        <p className="text-sm text-gray-900 dark:text-white">
+                          {datePosted}
+                        </p>
+                      );
+                    }
+                    return (
+                      <div className="text-sm text-gray-900 dark:text-white">
+                        <div>{datePosted.date}</div>
+                        <div className="flex items-center mt-1">
+                          <TimeIcon className="mr-1" />
+                          <span>{datePosted.time}</span>
+                        </div>
+                      </div>
+                    );
+                  })() : (
+                    <span className="text-gray-400 dark:text-gray-500 italic">Not specified</span>
+                  )}
                 </TableCell>
                 <TableCell className="py-4 px-6">
                   <Badge variant={getStatusVariant(job.status)}>
