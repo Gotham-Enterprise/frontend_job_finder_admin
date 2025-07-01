@@ -95,7 +95,7 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
                     <span className="text-gray-400 dark:text-gray-500 text-sm">No resume</span>
                   )}
                 </TableCell>
-                <TableCell className="py-4 px-6">
+                <TableCell className="py-4 px-6 whitespace-nowrap">
                   {jobSeeker.dateJoined ? (() => {
                     const dateJoined = formatDateTimeEST(jobSeeker.dateJoined);
                     if (typeof dateJoined === 'string') {
@@ -118,7 +118,7 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
                     <span className="text-gray-400 dark:text-gray-500 italic">Not specified</span>
                   )}
                 </TableCell>
-                <TableCell className="py-4 px-6">
+                <TableCell className="py-4 px-6 whitespace-nowrap">
                   {jobSeeker.lastActivity ? (() => {
                     const lastActivity = formatDateTimeEST(jobSeeker.lastActivity);
                     if (typeof lastActivity === 'string') {
