@@ -27,6 +27,7 @@ export const useJobSeekersLogic = () => {
     { key: 'name', label: 'Name' },
     { key: 'specialties', label: 'Occupation' },
     { key: 'state', label: 'State' },
+    { key: 'address', label: 'Location' },
     { key: 'resume', label: 'Resume' },
     { key: 'dateJoined', label: 'Registration date' },
     { key: 'lastActivity', label: 'Last Activity' },

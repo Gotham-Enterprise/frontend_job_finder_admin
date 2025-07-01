@@ -87,27 +87,9 @@ const EmployerTable: React.FC<EmployerTableProps> = ({
                   </div>
                 </TableCell>
                 <TableCell className="py-4 px-6">
-                  {employer.dateJoined ? (() => {
-                    const dateJoined = formatDateTimeEST(employer.dateJoined);
-                    if (typeof dateJoined === 'string') {
-                      return (
-                        <p className="text-sm text-gray-900 dark:text-white">
-                          {dateJoined}
-                        </p>
-                      );
-                    }
-                    return (
-                      <div className="text-sm text-gray-900 dark:text-white">
-                        <div>{dateJoined.date}</div>
-                        <div className="flex items-center mt-1">
-                          <TimeIcon className="mr-1" />
-                          <span>{dateJoined.time}</span>
-                        </div>
-                      </div>
-                    );
-                  })() : (
-                    <span className="text-gray-400 dark:text-gray-500 italic">Not specified</span>
-                  )}
+                  <p className="text-sm text-gray-900 dark:text-white">
+                    {formatDate(employer.dateJoined)}
+                  </p>
                 </TableCell>
                 <TableCell className="py-4 px-6">
                   {employer.lastActivity ? (() => {

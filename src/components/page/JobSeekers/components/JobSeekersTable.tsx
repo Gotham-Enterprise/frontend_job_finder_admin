@@ -29,7 +29,7 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
         <TableBody>
           {isLoading ? (
             <TableRow>
-              <TableCell className="text-center py-8 px-6" colSpan={8}>
+              <TableCell className="text-center py-8 px-6" colSpan={9}>
                 <div className="flex items-center justify-center gap-3">
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-brand-500"></div>
                   <p className="text-gray-500 dark:text-gray-400">Loading...</p>
@@ -38,7 +38,7 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
             </TableRow>
           ) : !data?.data?.length ? (
             <TableRow>
-              <TableCell className="text-center py-8 px-6" colSpan={8}>
+              <TableCell className="text-center py-8 px-6" colSpan={9}>
                 <p className="text-gray-500 dark:text-gray-400">No job seekers found</p>
               </TableCell>
             </TableRow>
@@ -72,6 +72,11 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
                 <TableCell className="py-4 px-6">
                   <p className="text-sm text-gray-900 dark:text-white">
                     {jobSeeker.state || 'Not specified'}
+                  </p>
+                </TableCell>
+                <TableCell className="py-4 px-6">
+                  <p className="text-sm text-gray-900 dark:text-white">
+                    {jobSeeker.address || 'Not specified'}
                   </p>
                 </TableCell>
                 <TableCell className="py-4 px-6 text-left">
