@@ -254,24 +254,25 @@ export default function SubscriptionsPage() {
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3 pt-4">
-            <Button 
+          <Button 
               variant="ghost" 
               size="default"
-               className="flex-1 text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
-              onClick={() => setIsCancelSubscriptionModalOpen(false)}
-            >
-              Stay subscribed
-            </Button>
-            <Button 
-              variant="default" 
-              size="default"
-              className="flex-1"
+               className="flex-1 text-primary dark:text-white dark:hover:bg-primary"
               onClick={() => {
                 setIsCancelSubscriptionModalOpen(false);
               }}
             >
               Cancel my subscription
             </Button>
+            <Button 
+              variant="default" 
+              size="default"
+               className="flex-1 text-primary dark:text-white dark:hover:bg-primary"
+              onClick={() => setIsCancelSubscriptionModalOpen(false)}
+            >
+              Stay subscribed
+            </Button>
+           
           </div>
         </div>
       </Modal>
