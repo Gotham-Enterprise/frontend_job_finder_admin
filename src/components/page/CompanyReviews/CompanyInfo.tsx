@@ -1,5 +1,6 @@
 import { renderStarRating } from "@/services/utils/starUtils";
-import { formatDate } from "@/services/utils/dateUtils";
+import { formatDate, formatDateTimeEST } from "@/services/utils/dateUtils";
+import { TimeIcon } from "@/icons";
 
 interface CompanyField {
   label: string;
@@ -124,9 +125,27 @@ export default function CompanyInfo({ companyData }: CompanyInfoProps) {
           </div>
           <div>
             <div className="text-sm text-gray-600 dark:text-gray-400">Last Activity</div>
-            <div className="text-sm font-semibold text-gray-900 dark:text-white">
-              {formatDate(companyData.lastActivity)}
-            </div>
+            {(() => {
+              const lastActivity = formatDateTimeEST(companyData.lastActivity);
+              if (typeof lastActivity === 'string') {
+                return (
+                  <div className="text-sm font-semibold text-gray-900 dark:text-white">
+                    {lastActivity}
+                  </div>
+                );
+              }
+              return (
+                <div>
+                  <div className="text-sm font-semibold text-gray-900 dark:text-white">
+                    {lastActivity.date}
+                  </div>
+                  <div className="flex items-center mt-1 text-sm font-semibold text-gray-900 dark:text-white">
+                    <TimeIcon className="mr-1" />
+                    <span>{lastActivity.time}</span>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         </div>
       </div>

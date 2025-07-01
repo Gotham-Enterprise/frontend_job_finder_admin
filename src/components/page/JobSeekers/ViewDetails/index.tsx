@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 import { useJobSeekerDetails } from "@/services/hooks/useJobSeekers";
-import { formatDate } from "@/services/utils/dateUtils";
+import { formatDate, formatDateTimeEST } from "@/services/utils/dateUtils";
 import ErrorState from "../../../common/ErrorState";
 import FullScreenSpinner from "../../../ui/FullScreenSpinner";
 import {
@@ -96,7 +96,13 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
         },
         {
             label: 'Last Active',
-            value: formatDate(jobSeeker.lastActivity),
+            value: (() => {
+                const lastActivity = formatDateTimeEST(jobSeeker.lastActivity);
+                if (typeof lastActivity === 'string') {
+                    return lastActivity;
+                }
+                return `${lastActivity.date} ${lastActivity.time}`;
+            })(),
             className: 'text-gray-900 dark:text-white'
         }
     ];

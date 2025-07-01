@@ -1,5 +1,5 @@
 import React from 'react';
-import { formatDate } from '@/services/utils/dateUtils';
+import { formatDate, formatDateTimeEST } from '@/services/utils/dateUtils';
 import {
   Table,
   TableBody,
@@ -9,7 +9,7 @@ import {
 import Badge from '../../../ui/badge/Badge';
 import Button from '../../../ui/button/Button';
 import TableHeading from '../../../tables/tableHeader';
-import { EyeIcon } from '@/icons';
+import { EyeIcon, TimeIcon } from '@/icons';
 import { JobSeekersTableProps } from '@/services/types/JobSeekersTypes';
 import Avatar from '../../../ui/avatar/Avatar';
 
@@ -96,11 +96,27 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
                   </p>
                 </TableCell>
                 <TableCell className="py-4 px-6">
-                  <p className="text-sm text-gray-900 dark:text-white">
-                    {jobSeeker.lastActivity ? formatDate(jobSeeker.lastActivity) : (
-                      <span className="text-gray-400 dark:text-gray-500 italic">No activity</span>
-                    )}
-                  </p>
+                  {jobSeeker.lastActivity ? (() => {
+                    const lastActivity = formatDateTimeEST(jobSeeker.lastActivity);
+                    if (typeof lastActivity === 'string') {
+                      return (
+                        <p className="text-sm text-gray-900 dark:text-white">
+                          {lastActivity}
+                        </p>
+                      );
+                    }
+                    return (
+                      <div className="text-sm text-gray-900 dark:text-white">
+                        <div>{lastActivity.date}</div>
+                        <div className="flex items-center mt-1">
+                          <TimeIcon className="mr-1" />
+                          <span>{lastActivity.time}</span>
+                        </div>
+                      </div>
+                    );
+                  })() : (
+                    <span className="text-gray-400 dark:text-gray-500 italic">No activity</span>
+                  )}
                 </TableCell>
                 <TableCell className="py-4 px-6">
                   <Badge variant={getStatusVariant(jobSeeker.status)}>

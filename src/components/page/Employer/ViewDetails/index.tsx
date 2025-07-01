@@ -3,7 +3,7 @@
 import React from "react";
 import { useRouter } from "next/navigation";
 import { useEmployerDetails } from "@/services/hooks/useEmployers";
-import { formatDate } from "@/services/utils/dateUtils";
+import { formatDate, formatDateTimeEST } from "@/services/utils/dateUtils";
 import ErrorState from "../../../common/ErrorState";
 import FullScreenSpinner from "../../../ui/FullScreenSpinner";
 import {
@@ -92,7 +92,13 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
         },
         {
             label: 'Last Active',
-            value: formatDate(employer.lastActivity),
+            value: (() => {
+                const lastActivity = formatDateTimeEST(employer.lastActivity);
+                if (typeof lastActivity === 'string') {
+                    return lastActivity;
+                }
+                return `${lastActivity.date} ${lastActivity.time}`;
+            })(),
             className: 'text-gray-900 dark:text-white'
         }
     ];
