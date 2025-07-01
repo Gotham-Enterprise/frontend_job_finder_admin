@@ -152,6 +152,10 @@ export const useJobsAdminLogic = () => {
     router.push(`/admin/jobs/details/${jobId}`);
   };
 
+  const editJobPost = (jobId: string) => {
+    router.push(`/admin/jobs/edit-job?id=${jobId}`);
+  };
+
   const clearAllFilters = () => {
     startTransition(() => {
       setFilters({
@@ -220,6 +224,7 @@ export const useJobsAdminLogic = () => {
     getStatusVariant,
     getJobStatusVariant,
     viewJobDetails,
+    editJobPost,
     clearAllFilters,
     hasActiveFilters,
   };

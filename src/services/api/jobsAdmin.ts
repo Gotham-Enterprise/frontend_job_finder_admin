@@ -1,5 +1,5 @@
 import { JobsAdminFilters, JobsAdminResponse, JobsAdminDetailsResponse, OccupationsResponse } from '../types/jobsAdmin';
-import { apiGet, apiPost } from './apiUtils';
+import { apiGet, apiPost, apiPut } from './apiUtils';
 import { AIJobDescriptionPayload, JobCreationPayload, AITonesProps } from '../types/jobCreation';
 
 
@@ -41,6 +41,10 @@ export const jobsAdminApi = {
     return apiGet<JobsAdminDetailsResponse>(`/api/admin/jobs/${id}`);
   },
 
+  async getJobForEdit(id: string): Promise<any> {
+    return apiGet<any>(`/api/jobs/${id}`);
+  },
+
   async getOccupations(): Promise<OccupationsResponse> {
     return apiGet<OccupationsResponse>('/api/categories/occupations?page=1&limit=0');
   },
@@ -70,6 +74,19 @@ export const jobsAdminApi = {
     
     try {
       const response = await apiPost<{ success: boolean; jobId?: string; message?: string }>(`/api/job_posts_management/admin/${companyId}`, transformedPayload);
+      return response;
+    } catch (error) {
+     
+      throw error;
+    }
+  },
+
+  async updateJob(companyId: string, jobPostId: string, payload: JobCreationPayload): Promise<{ success: boolean; jobId?: string; message?: string }> {
+    
+    const transformedPayload = transformJobPayload(payload);
+    
+    try {
+      const response = await apiPut<{ success: boolean; jobId?: string; message?: string }>(`/api/job_posts_management/admin/${companyId}/${jobPostId}`, transformedPayload);
       return response;
     } catch (error) {
      

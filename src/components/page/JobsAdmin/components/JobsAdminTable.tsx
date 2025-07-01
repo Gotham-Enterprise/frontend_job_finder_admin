@@ -9,7 +9,7 @@ import {
 import Badge from '../../../ui/badge/Badge';
 import Button from '../../../ui/button/Button';
 import TableHeading from '../../../tables/tableHeader';
-import { EyeIcon } from '@/icons';
+import { EyeIcon, PencilIcon } from '@/icons';
 import { JobsAdminTableProps } from '@/services/types/JobsAdminTypes';
 
 const JobsAdminTable: React.FC<JobsAdminTableProps> = ({
@@ -19,6 +19,7 @@ const JobsAdminTable: React.FC<JobsAdminTableProps> = ({
   getStatusVariant,
   getJobStatusVariant,
   onViewJobDetails,
+  onEditJobPost,
 }) => {
   return (
     <div className="overflow-x-auto">
@@ -97,15 +98,26 @@ const JobsAdminTable: React.FC<JobsAdminTableProps> = ({
                   </Badge>
                 </TableCell>
                 <TableCell className="py-4 px-6 text-right">
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="text-brand-400"
-                    onClick={() => onViewJobDetails(job.id)}
-                    startIcon={<EyeIcon />}
-                  >
-                    View
-                  </Button>
+                  <div className="flex items-center justify-end gap-2">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="text-brand-400"
+                      onClick={() => onViewJobDetails(job.id)}
+                      startIcon={<EyeIcon />}
+                    >
+                      View
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="text-blue-600 hover:text-blue-700"
+                      onClick={() => onEditJobPost(job.id)}
+                      startIcon={<PencilIcon />}
+                    >
+                      Edit
+                    </Button>
+                  </div>
                 </TableCell>
               </TableRow>
             ))

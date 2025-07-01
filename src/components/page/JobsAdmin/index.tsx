@@ -31,11 +31,13 @@ const JobsAdmin: React.FC<JobsAdminProps> = ({ className = "" }) => {
     occupationOptions,
     specialtyOptions,
     stateOptions,
-    itemsPerPageOptions,    filterChange,
+    itemsPerPageOptions,    
+    filterChange,
     initPageChange,
     getStatusVariant,
     getJobStatusVariant,
     viewJobDetails,
+    editJobPost,
     clearAllFilters,
     hasActiveFilters,
   } = useJobsAdminLogic();
@@ -84,6 +86,7 @@ const JobsAdmin: React.FC<JobsAdminProps> = ({ className = "" }) => {
         getStatusVariant={getStatusVariant}
         getJobStatusVariant={getJobStatusVariant}
         onViewJobDetails={viewJobDetails}
+        onEditJobPost={editJobPost}
       />
 
       <JobsAdminTablePagination

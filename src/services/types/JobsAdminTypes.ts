@@ -36,6 +36,7 @@ export interface JobsAdminTableProps {
   getStatusVariant: (status: string) => 'light' | 'solid';
   getJobStatusVariant: (jobStatus: string) => 'light' | 'solid';
   onViewJobDetails: (jobId: string) => void;
+  onEditJobPost: (jobId: string) => void;
 }
 
 export interface JobsAdminTablePaginationProps {
