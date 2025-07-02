@@ -75,8 +75,11 @@ const EmployerTable: React.FC<EmployerTableProps> = ({
                   </p>
                 </TableCell>
                 <TableCell className="py-4 px-6">
-                  <p className="text-sm text-gray-900 dark:text-white">
-                    {employer.state || 'Not specified'}
+                <p className="text-sm text-gray-900 dark:text-white">
+                    {employer.city && employer.state 
+                      ? `${employer.city}, ${employer.state}`
+                      : employer.city || employer.state || 'Not specified'
+                    }
                   </p>
                 </TableCell>
                 <TableCell className="py-4 px-6">
