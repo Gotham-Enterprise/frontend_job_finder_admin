@@ -9,7 +9,7 @@ import {
 import Badge from '../../../ui/badge/Badge';
 import Button from '../../../ui/button/Button';
 import TableHeading from '../../../tables/tableHeader';
-import { EyeIcon } from '@/icons';
+import { EyeIcon, TimeIcon } from '@/icons';
 import { JobApplicationsTableProps } from '@/services/types/JobApplicationsTypes';
 import Avatar from '../../../ui/avatar/Avatar';
 
@@ -104,6 +104,7 @@ const JobApplicationsTable: React.FC<JobApplicationsTableProps> = ({
                       <div className="text-sm text-gray-900 dark:text-white">
                         <div>{applicationDate.date}</div>
                         <div className="flex items-center mt-1">
+                        <TimeIcon className="mr-1" />
                           <span>{applicationDate.time}</span>
                         </div>
                       </div>

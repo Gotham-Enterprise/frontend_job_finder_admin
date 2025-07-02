@@ -11,6 +11,7 @@ import {
   HorizontaLDots,
   PieChartIcon,
   UserCircleIcon,
+  TaskIcon,
 } from "../icons/index";
 import {
   BriefcaseIcon,
@@ -52,7 +53,7 @@ const navItems: NavItem[] = [
       { name: "Add New", path: "/admin/jobs/create-job/", pro: false }],
   },
   {
-    icon: <CareerLadderIcon />,
+    icon: <TaskIcon />,
     name: "Applications",
     path: "/admin/applications",
      //subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
