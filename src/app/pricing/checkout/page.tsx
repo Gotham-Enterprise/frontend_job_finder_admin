@@ -7,7 +7,6 @@ import { useSubscriptionContext, SubscriptionData } from '@/context/Subscription
 
 export default function CheckoutPage() {
   const [couponCode, setCouponCode] = useState('');
-  const [isProcessing, setIsProcessing] = useState(false);
   
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -37,39 +36,11 @@ export default function CheckoutPage() {
     console.log('Applying coupon:', couponCode);
   };
 
-  const confirmAndPay = async () => {
+  const confirmAndPay = () => {
     if (!subscriptionData) return;
     
-    setIsProcessing(true);
-    try {
-      // Here you would integrate with your payment processing
-      // For now, we'll just simulate the process
-      
-      const finalPayload = {
-        subscriptionPlanId: subscriptionData.subscriptionPlanId,
-        stripePriceId: subscriptionData.stripePriceId,
-        companyId: subscriptionData.companyId,
-        paymentMethodType: subscriptionData.paymentMethodType,
-        paymentMethodToken: "tok_visa", // This would come from Stripe integration
-        isSetCardDefault: subscriptionData.isSetCardDefault
-      };
-      
-      console.log('Final payment payload:', finalPayload);
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Clear subscription data after successful payment
-      clearSubscriptionData();
-      
-      // Navigate to success page or back to dashboard
-      router.push(`/admin/subscriptions?employerId=${employerId}&success=true`);
-      
-    } catch (error) {
-      console.error('Payment failed:', error);
-    } finally {
-      setIsProcessing(false);
-    }
+    // Navigate to payment form page
+    router.push(`/pricing/checkout/payment?employerId=${employerId}&planId=${planId}`);
   };
 
   const changePlan = () => {
@@ -117,10 +88,16 @@ export default function CheckoutPage() {
         {/* Order Summary Card */}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
           {/* Order Summary Header */}
-          <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+          <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
               Order summary
             </h3>
+            <button
+              onClick={changePlan}
+              className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium"
+            >
+              Edit order
+            </button>
           </div>
 
           {/* Order Details */}
@@ -169,17 +146,9 @@ export default function CheckoutPage() {
               {/* Confirm and Pay Button */}
               <button
                 onClick={confirmAndPay}
-                disabled={isProcessing}
-                className="w-full py-3 px-4 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-semibold rounded-lg transition-colors duration-200 flex items-center justify-center"
+                className="w-full py-3 px-4 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-colors duration-200 flex items-center justify-center"
               >
-                {isProcessing ? (
-                  <>
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                    Processing...
-                  </>
-                ) : (
-                  'Confirm and pay'
-                )}
+                Confirm and pay
               </button>
 
               {/* Change Plan Button */}

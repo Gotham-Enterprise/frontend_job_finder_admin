@@ -59,3 +59,21 @@ export interface PricingPlansResponse {
   success: boolean;
   data: PricingPlansData;
 }
+
+export interface SubscriptionPurchaseRequest {
+  subscriptionPlanId: number;
+  stripePriceId: string;
+  companyId: string;
+  paymentMethodType: string;
+  paymentMethodToken: string;
+  isSetCardDefault: boolean;
+}
+
+export interface SubscriptionPurchaseResponse {
+  success: boolean;
+  message: string;
+  data?: {
+    subscriptionId: string;
+    status: string;
+  };
+}

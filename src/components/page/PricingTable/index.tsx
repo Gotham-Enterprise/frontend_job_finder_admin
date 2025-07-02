@@ -45,8 +45,7 @@ export default function PricingTable() {
         b.name.toUpperCase().includes(order.toUpperCase()) || 
         order.toUpperCase().includes(b.name.toUpperCase())
       );
-      
-      // If plan not found in order, put it at the end
+     
       if (aIndex === -1) return 1;
       if (bIndex === -1) return -1;
       
