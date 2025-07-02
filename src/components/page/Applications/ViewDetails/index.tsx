@@ -133,9 +133,9 @@ export default function JobApplicationDetails({ id }: ViewDetailsProps) {
                 </div>
               </div>
               
-              {application.hasResume && application.resumeUrl && (
-                <div>
-                  <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Resume</h3>
+              <div>
+                <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Resume</h3>
+                {application.hasResume && application.resumeUrl ? (
                   <div className="flex items-center gap-3">
                     <span className="text-sm text-gray-700 dark:text-gray-300">
                       {application.resumeFilename}
@@ -147,10 +147,31 @@ export default function JobApplicationDetails({ id }: ViewDetailsProps) {
                       View Resume
                     </button>
                   </div>
-                </div>
-              )}
+                ) : (
+                  <p className="text-sm text-gray-500 dark:text-gray-400">No resume uploaded</p>
+                )}
+              </div>
             </div>
           </div>
+
+          {/* Employer Questions Section */}
+          {application.employerQuestion && application.employerQuestion.length > 0 && (
+            <div className="rounded-xl bg-white shadow-lg border border-gray-100 dark:bg-gray-800 dark:border-gray-700 p-6">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Employer Questions</h2>
+              <div className="space-y-4">
+                {application.employerQuestion.map((item, index) => (
+                  <div key={index} className="border-l-4 border-blue-500 pl-4 py-2">
+                    <h4 className="font-medium text-gray-900 dark:text-white mb-1">
+                      {item.question}
+                    </h4>
+                    <p className="text-gray-700 dark:text-gray-300">
+                      {item.answers}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </>

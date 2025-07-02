@@ -58,9 +58,7 @@ const JobApplicationsTable: React.FC<JobApplicationsTableProps> = ({
                       <p className="font-medium text-gray-900 dark:text-white">
                         {jobApplication.name}
                       </p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
-                        {jobApplication.jobTitle}
-                      </p>
+                    
                     </div>
                   </div>
                 </TableCell>

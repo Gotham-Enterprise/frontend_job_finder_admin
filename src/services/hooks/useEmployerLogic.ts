@@ -23,7 +23,7 @@ export const useEmployerLogic = () => {
     { key: 'select', label: '', className: 'w-16' },
     { key: 'companyName', label: 'Company' },
     { key: 'email', label: 'Email' },
-    { key: 'state', label: 'States' },
+    { key: 'state', label: 'Location' },
     { key: 'jobPostCount', label: 'Job Posts' },
     { key: 'dateJoined', label: 'Registration date' },
     { key: 'lastActivity', label: 'Last Activity' },

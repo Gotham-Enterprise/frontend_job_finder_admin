@@ -26,7 +26,7 @@ export const useJobSeekersLogic = () => {
   const tableColumns = useMemo(() => [
     { key: 'name', label: 'Name' },
     { key: 'specialties', label: 'Occupation' },
-    { key: 'state', label: 'State' },
+    { key: 'state', label: 'Location' },
     { key: 'resume', label: 'Resume' },
     { key: 'dateJoined', label: 'Registration date' },
     { key: 'lastActivity', label: 'Last Activity' },

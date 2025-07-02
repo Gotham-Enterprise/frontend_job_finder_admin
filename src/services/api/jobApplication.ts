@@ -14,11 +14,11 @@ export const jobApplicationApi = {
 
     const endpoint = `/api/admin/applications?${queryParams.toString()}`;
     
+
     return apiGet<JobApplicationsResponse>(endpoint);
   },
 
   async viewResume(resumeUrl: string): Promise<any> {
-    // Since resumeUrl is already a signed URL, we can directly open it
     return Promise.resolve({ success: true, data: { fileUrl: resumeUrl } });
   },
 

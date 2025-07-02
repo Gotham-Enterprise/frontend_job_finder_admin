@@ -1,20 +1,34 @@
 import { useState, useMemo, useTransition, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useJobApplications, useViewApplicationResume } from '@/services/hooks/useJobApplications';
 import { useStates } from '@/services/hooks/useStates';
 import { JobApplicationFilters } from '@/services/types/jobApplication';
 
 export const useJobApplicationsLogic = () => {
   const router = useRouter();
-  const [filters, setFilters] = useState<JobApplicationFilters>({
-    page: 1,
-    limit: 10,
-    name: '',
-    location: '',
-    companyName: '',
-    status: '',
+  const searchParams = useSearchParams();
+  
+  // Initialize filters from URL parameters
+  const getInitialFilters = (): JobApplicationFilters => {
+    const nameParam = searchParams.get('name') || '';
+    // Decode the name parameter to handle encoded spaces and special characters
+    const decodedName = nameParam ? decodeURIComponent(nameParam) : '';
+    
+    return {
+      page: parseInt(searchParams.get('page') || '1', 10),
+      limit: parseInt(searchParams.get('limit') || '10', 10),
+      name: decodedName,
+      location: searchParams.get('location') || '',
+      companyName: searchParams.get('companyName') || '',
+      status: searchParams.get('status') || '',
+    };
+  };
+
+  const [filters, setFilters] = useState<JobApplicationFilters>(getInitialFilters);
+  const [searchInput, setSearchInput] = useState(() => {
+    const nameParam = searchParams.get('name') || '';
+    return nameParam ? decodeURIComponent(nameParam) : '';
   });
-  const [searchInput, setSearchInput] = useState('');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 

@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 import {  formatDateTimeEST } from '@/services/utils/dateUtils';
 import {
   Table,
@@ -58,9 +59,12 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
                       <p className="font-medium text-gray-900 dark:text-white">
                         {jobSeeker.name}
                       </p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                      <Link 
+                        href={`/admin/applications?name=${encodeURIComponent(jobSeeker.name.split(' ')[0])}`}
+                        className="text-sm text-blue-500 dark:text-blue-500 hover:text-brand-500 dark:hover:text-brand-400 cursor-pointer transition-colors duration-200"
+                      >
                         {jobSeeker.jobApplications} applications
-                      </p>
+                      </Link>
                     </div>
                   </div>
                 </TableCell>

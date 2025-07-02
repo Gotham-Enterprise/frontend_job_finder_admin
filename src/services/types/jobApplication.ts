@@ -39,6 +39,11 @@ export interface JobApplicationsResponse {
   message?: string;
 }
 
+export interface EmployerQuestion {
+  question: string;
+  answers: string;
+}
+
 export interface JobApplicationDetails {
   id: string;
   name: string;
@@ -54,6 +59,7 @@ export interface JobApplicationDetails {
   resumeFilename: string;
   resumeObjectKey: string;
   hasResume: boolean;
+  employerQuestion?: EmployerQuestion[];
 }
 
 export interface JobApplicationDetailsResponse {
