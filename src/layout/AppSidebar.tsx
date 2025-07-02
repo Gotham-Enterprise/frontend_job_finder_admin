@@ -51,7 +51,12 @@ const navItems: NavItem[] = [
       { name: "All Jobs", path: "/admin/jobs", pro: false },
       { name: "Add New", path: "/admin/jobs/create-job/", pro: false }],
   },
-  
+  {
+    icon: <CareerLadderIcon />,
+    name: "Applications",
+    path: "/admin/applications",
+     //subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
+  },
   {
     icon: <CareerLadderIcon />,
     name: "Careers",
