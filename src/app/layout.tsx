@@ -4,6 +4,7 @@ import './globals.css';
 import { SidebarProvider } from '@/context/SidebarContext';
 import { ThemeProvider } from '@/context/ThemeContext';
 import { ToastProvider } from '@/context/ToastContext';
+import { SubscriptionProvider } from '@/context/SubscriptionContext';
 import QueryProvider from '@/services/providers/QueryProvider';
 import ToastContainer from '@/components/ui/toast/ToastContainer';
 
@@ -21,7 +22,9 @@ export default function RootLayout({
         <QueryProvider>
           <ThemeProvider>
             <ToastProvider>
-              <SidebarProvider>{children}</SidebarProvider>
+              <SubscriptionProvider>
+                <SidebarProvider>{children}</SidebarProvider>
+              </SubscriptionProvider>
               <ToastContainer />
             </ToastProvider>
           </ThemeProvider>

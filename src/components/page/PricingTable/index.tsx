@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { usePricingPlans } from '@/services/hooks/usePricingPlans';
 import { PricingPlan, PlanInterval } from '@/services/types/subscription';
+import { useSubscriptionContext } from '@/context/SubscriptionContext';
 import FullScreenSpinner from '@/components/ui/FullScreenSpinner';
 
 const PLAN_INTERVALS: { value: PlanInterval; label: string; discount?: string }[] = [
@@ -15,7 +16,9 @@ const PLAN_INTERVALS: { value: PlanInterval; label: string; discount?: string }[
 
 export default function PricingTable() {
   const [selectedInterval, setSelectedInterval] = useState<PlanInterval>('MONTHLY');
+  const [selectedPlan, setSelectedPlan] = useState<PricingPlan | null>(null);
   const { plans, isLoading, error, refetchPlans } = usePricingPlans(selectedInterval);
+  const { setSubscriptionData } = useSubscriptionContext();
   
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -23,7 +26,32 @@ export default function PricingTable() {
 
   const onIntervalChange = (interval: PlanInterval) => {
     setSelectedInterval(interval);
-    // The hook will automatically refetch when selectedInterval changes via the useEffect
+  };
+
+  const getOrderedPlans = (plans: PricingPlan[]) => {
+    const planOrder = [
+      'SMALL BUSINESS',
+      'PROFESSIONAL PLAN', 
+      'MEDIUM BUSINESS PLAN',
+      'ENTERPRISE PLAN'
+    ];
+    
+    return [...plans].sort((a, b) => {
+      const aIndex = planOrder.findIndex(order => 
+        a.name.toUpperCase().includes(order.toUpperCase()) || 
+        order.toUpperCase().includes(a.name.toUpperCase())
+      );
+      const bIndex = planOrder.findIndex(order => 
+        b.name.toUpperCase().includes(order.toUpperCase()) || 
+        order.toUpperCase().includes(b.name.toUpperCase())
+      );
+      
+      // If plan not found in order, put it at the end
+      if (aIndex === -1) return 1;
+      if (bIndex === -1) return -1;
+      
+      return aIndex - bIndex;
+    });
   };
 
   const formatPrice = (priceInCents: number) => {
@@ -40,9 +68,33 @@ export default function PricingTable() {
   };
 
   const selectPlan = (plan: PricingPlan) => {
+  
+    setSelectedPlan(plan);
+    
+    const subscriptionData = {
+      subscriptionPlanId: plan.id,
+      stripePriceId: plan.stripePriceId,
+      companyId: employerId || "", 
+      paymentMethodType: "card",
+      paymentMethodToken: "", // Will be filled in payment step
+      isSetCardDefault: true,
+      planDetails: {
+        name: plan.name,
+        price: plan.monthlyCostInCents,
+        upfrontCost: plan.upfrontCostInCents,
+        interval: selectedInterval,
+        planInclusions: plan.planInclusions
+      }
+    };
+    
+    // Store in context instead of localStorage
+    setSubscriptionData(subscriptionData);
     
     console.log('Selected plan:', plan);
+    console.log('Subscription data prepared:', subscriptionData);
     
+    // Navigate to the order summary/checkout page
+    router.push(`/pricing/checkout?employerId=${employerId}&planId=${plan.id}`);
   };
 
   if (isLoading) {
@@ -120,7 +172,7 @@ export default function PricingTable() {
 
         {/* Pricing Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {plans.map((plan, index) => (
+          {getOrderedPlans(plans).map((plan, index) => (
             <div
               key={plan.id}
               className="relative bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 transition-all duration-300 hover:shadow-lg"
