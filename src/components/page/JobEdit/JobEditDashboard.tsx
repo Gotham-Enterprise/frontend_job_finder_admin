@@ -10,6 +10,7 @@ import { useWorkSettings } from '@/services/hooks/useWorkSettings';
 import { useWorkFacilities } from '@/services/hooks/useWorkFacilities';
 import { useShiftTypes } from '@/services/hooks/useShiftTypes';
 import { useClinicSizes } from '@/services/hooks/useClinicSizes';
+import { useLanguages } from '@/services/hooks/useLanguages';
 import Button from '@/components/ui/button/Button';
 import FullScreenSpinner from '@/components/ui/FullScreenSpinner';
 import StepProgress from '../JobCreation/StepProgress';
@@ -22,6 +23,16 @@ interface Company {
   companyName: string;
   state: string;
   sizeOfCompany: number;
+}
+
+interface Language {
+  id: number;
+  name: string;
+}
+
+interface Question {
+  id: string;
+  question: string;
 }
 
 interface JobEditData {
@@ -48,6 +59,18 @@ interface JobEditData {
     applicationId: string;
     companyName: string;
     companyLogo: string;
+    specialtyId?: number;
+    specialty?: string;
+    address?: string;
+    locationCity?: string;
+    locationState?: string;
+    locationCountry?: string;
+    locationZipCode?: string;
+    languages?: Language[];
+    shiftType?: string;
+    companySize?: string;
+    questions?: Question[];
+    documents?: any[];
   };
 }
 
@@ -89,7 +112,6 @@ const JobEditDashboard: React.FC = () => {
     documents: []
   });
 
-  // Fetch job data for editing
   const { 
     data: jobResponse, 
     isLoading: isLoadingJob, 
@@ -100,14 +122,20 @@ const JobEditDashboard: React.FC = () => {
     enabled: !!jobId,
   });
 
-  // Fetch occupations data
   const { data: occupationsData, isLoading: isLoadingOccupations } = useQuery({
     queryKey: ['occupations-with-specialties'],
     queryFn: () => jobCreationApi.getOccupationsWithSpecialties(),
     staleTime: 1000 * 60 * 10,
   });
 
-  // Update job mutation
+  const { data: workTypesData } = useWorkTypes();
+  const { data: workSettingsData } = useWorkSettings();
+  const { data: workFacilitiesData } = useWorkFacilities();
+  const { data: shiftTypesData } = useShiftTypes();
+  const { data: clinicSizesData } = useClinicSizes();
+  const { data: languagesData } = useLanguages();
+
+
   const updateJobMutation = useMutation({
     mutationFn: ({ companyId, payload }: { companyId: string; payload: any }) =>
       jobsAdminApi.updateJob(companyId, jobId!, payload),
@@ -130,25 +158,18 @@ const JobEditDashboard: React.FC = () => {
     },
   });
 
-  // Load job data when available
+
   useEffect(() => {
     if (jobResponse?.success && jobResponse.data) {
       const job = jobResponse.data;
       
-      // Set company information
+
       setSelectedCompany({
         id: job.companyId,
         companyName: job.companyName,
-        state: '', // Will be filled from location
+        state: job.locationState || '',
         sizeOfCompany: 0,
       });
-
-      // Parse location (assuming format: "City, State")
-      const locationParts = job.location.split(', ');
-      const city = locationParts[0] || '';
-      const state = locationParts[1] || '';
-
-      // Find occupation ID by name
       let occupationId = '';
       if (occupationsData?.success && occupationsData.data) {
         const foundOccupation = occupationsData.data.find(
@@ -160,50 +181,125 @@ const JobEditDashboard: React.FC = () => {
         }
       }
 
-      // Set form data based on the API response structure
-      setFormData({
+     
+      const mappedLanguages = job.languages?.map((lang: Language) => lang.id.toString()) || [];
+
+      const findWorkTypeId = (workTypeName: string): string => {
+        if (!workTypesData?.success || !workTypeName) return '';
+        const workType = workTypesData.data.find(wt => 
+          wt.name.toLowerCase() === workTypeName.toLowerCase() ||
+          wt.name.toLowerCase().replace(/[-\s]/g, '') === workTypeName.toLowerCase().replace(/[-\s]/g, '')
+        );
+        return workType?.id.toString() || '';
+      };
+
+      const findWorkSettingId = (workSettingName: string): string => {
+        if (!workSettingsData?.success || !workSettingName) return '';
+        const workSetting = workSettingsData.data.find(ws => 
+          ws.name.toLowerCase().replace(/[-\s]/g, '') === workSettingName.toLowerCase().replace(/[-\s]/g, '')
+        );
+        return workSetting?.id.toString() || '';
+      };
+
+      const findWorkFacilityId = (workFacilityName: string): string => {
+        if (!workFacilitiesData?.success || !workFacilityName) return '';
+        const workFacility = workFacilitiesData.data.find(wf => 
+          wf.name.toLowerCase() === workFacilityName.toLowerCase()
+        );
+        return workFacility?.id.toString() || '';
+      };
+
+      const findShiftTypeId = (shiftTypeName: string): string => {
+        if (!shiftTypesData?.success || !shiftTypeName) return '';
+        const shiftType = shiftTypesData.data.find(st => 
+          st.name.toLowerCase() === shiftTypeName.toLowerCase()
+        );
+        return shiftType?.id.toString() || '';
+      };
+
+      const findClinicSizeId = (clinicSizeName: string): string => {
+        if (!clinicSizesData?.success || !clinicSizeName) return '';
+        const clinicSize = clinicSizesData.data.find(cs => 
+          cs.name.toLowerCase() === clinicSizeName.toLowerCase()
+        );
+        return clinicSize?.id.toString() || '';
+      };
+
+ 
+      const formDataToSet = {
         title: job.title || '',
         occupationId: occupationId,
-        specialtyId: '',
-        country: 'US',
-        address: '',
-        city: city,
-        state: state,
-        zipCode: '',
-        workType: job.workType || 'full-time',
-        workSetting: job.workSetting || 'onsite',
-        shiftType: '',
+        specialtyId: job.specialtyId?.toString() || '',
+        country: job.locationCountry === 'USA' || job.locationCountry === 'United States' ? 'US' : job.locationCountry || 'US',
+        address: job.address || '',
+        city: job.locationCity || '',
+        state: job.locationState || '',
+        zipCode: job.locationZipCode || '',
+        workType: findWorkTypeId(job.workType),
+        workSetting: findWorkSettingId(job.workSetting),
+        shiftType: findShiftTypeId(job.shiftType),
         timezone: '',
-        language: [],
-        clinicSize: '',
-        workFacility: job.workFacility || '',
+        language: mappedLanguages,
+        clinicSize: findClinicSizeId(job.companySize),
+        workFacility: findWorkFacilityId(job.workFacility),
         currency: job.salaryCurrency || 'USD',
         salaryFrom: job.salaryRangeStart || 0,
         salaryTo: job.salaryRangeEnd || 0,
         salaryType: job.salaryType || 'yearly',
         postingDate: 'today',
         autoRenew: false,
-        questions: [],
-        documents: [],
-      });
+        questions: job.questions || [],
+        documents: job.documents || [],
+      };
+      
+      setFormData(formDataToSet);
 
-      // Set description from jobDescription (strip HTML if needed)
-      const plainDescription = job.jobDescription?.replace(/<[^>]*>/g, '') || '';
-      setDescription(plainDescription);
+      setDescription(job.jobDescription || '');
       setIsLoading(false);
     } else if (jobResponse && !jobResponse.success) {
       setIsLoading(false);
       showToast.error('Error', 'Failed to load job data');
     }
-  }, [jobResponse, occupationsData]);
+  }, [jobResponse, occupationsData, workTypesData, workSettingsData, workFacilitiesData, shiftTypesData, clinicSizesData]);
 
-  const handleUpdateJob = async () => {
+  const updateJob = async () => {
     if (!selectedCompany?.id) {
       showToast.error('Error', 'Company information is required');
       return;
     }
 
-    // Create payload similar to job creation
+    const languageIds = formData.language.map(id => parseInt(id)) || [];
+
+    const getWorkTypeName = (id: string): string => {
+      if (!workTypesData?.success || !id) return '';
+      const workType = workTypesData.data.find(wt => wt.id.toString() === id);
+      return workType?.name || '';
+    };
+
+    const getWorkSettingName = (id: string): string => {
+      if (!workSettingsData?.success || !id) return '';
+      const workSetting = workSettingsData.data.find(ws => ws.id.toString() === id);
+      return workSetting?.name || '';
+    };
+
+    const getWorkFacilityName = (id: string): string => {
+      if (!workFacilitiesData?.success || !id) return '';
+      const workFacility = workFacilitiesData.data.find(wf => wf.id.toString() === id);
+      return workFacility?.name || '';
+    };
+
+    const getShiftTypeName = (id: string): string => {
+      if (!shiftTypesData?.success || !id) return '';
+      const shiftType = shiftTypesData.data.find(st => st.id.toString() === id);
+      return shiftType?.name || '';
+    };
+
+    const getClinicSizeName = (id: string): string => {
+      if (!clinicSizesData?.success || !id) return '';
+      const clinicSize = clinicSizesData.data.find(cs => cs.id.toString() === id);
+      return clinicSize?.name || '';
+    };
+
     const payload = {
       companyId: selectedCompany.id,
       jobTitle: formData.title,
@@ -214,17 +310,17 @@ const JobEditDashboard: React.FC = () => {
       locationCity: formData.city,
       locationZipCode: formData.zipCode,
       locationAddress: formData.address,
-      workType: formData.workType,
-      workSetting: formData.workSetting,
-      workFacility: formData.workFacility,
+      workType: getWorkTypeName(formData.workType),
+      workSetting: getWorkSettingName(formData.workSetting),
+      workFacility: getWorkFacilityName(formData.workFacility),
       salaryCurrency: formData.currency,
       salaryRangeStart: formData.salaryFrom,
       salaryRangeEnd: formData.salaryTo,
       salaryType: formData.salaryType,
       autoRenew: formData.autoRenew,
-      shiftType: formData.shiftType,
-      languages: [],
-      companySize: formData.clinicSize,
+      shiftType: getShiftTypeName(formData.shiftType),
+      languages: languageIds,
+      companySize: getClinicSizeName(formData.clinicSize),
       postingDate: formData.postingDate,
       status: 'active',
       jobDescription: description,
@@ -238,7 +334,6 @@ const JobEditDashboard: React.FC = () => {
     });
   };
 
-  // Memoized options for dropdowns
   const occupationOptions = React.useMemo(() => {
     if (!occupationsData?.success || !occupationsData.data) return [];
     return occupationsData.data.map(occupation => ({
@@ -256,13 +351,11 @@ const JobEditDashboard: React.FC = () => {
     })) || [];
   }, [selectedOccupation, occupationsData]);
 
-  const handleFieldUpdate = (field: keyof FormData, value: any) => {
+  const updateField = (field: keyof FormData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     
-    // Update selected occupation when occupationId changes
     if (field === 'occupationId' && value) {
       setSelectedOccupation(parseInt(value));
-      // Reset specialty when occupation changes
       setFormData(prev => ({ ...prev, specialtyId: '' }));
     }
   };
@@ -349,7 +442,7 @@ const JobEditDashboard: React.FC = () => {
                 step={currentStep}
                 formData={formData}
                 description={description}
-                onUpdateField={handleFieldUpdate}
+                onUpdateField={updateField}
                 onUpdateDescription={setDescription}
                 occupationOptions={occupationOptions}
                 specialtyOptions={specialtyOptions}
@@ -381,7 +474,7 @@ const JobEditDashboard: React.FC = () => {
                   ) : (
                     <Button 
                       variant="default"
-                      onClick={handleUpdateJob}
+                      onClick={updateJob}
                       disabled={isUpdating || !formData.title}
                     >
                       {isUpdating ? 'Updating...' : 'Update Job Post'}

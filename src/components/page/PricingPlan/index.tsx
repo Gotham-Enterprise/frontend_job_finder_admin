@@ -10,7 +10,6 @@ export default function PricingPlan() {
     const employerId = searchParams.get('employerId');
     
     if (!employerId) {
-      console.error('EmployerId not found in URL parameters');
       return;
     }
     
