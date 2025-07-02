@@ -25,21 +25,10 @@ const JobApplicationsHeader: React.FC<JobApplicationsHeaderProps> = ({
             Job Applications
           </h3>
           <p className="text-sm text-gray-500 mt-1 dark:text-gray-400">
-            {isPending || isLoading ? (
-              <span className="flex items-center gap-2">
-                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-brand-500"></div>
-                Loading...
-              </span>
-            ) : (
-              <>
+          <>
                 {totalCount || 0} total job applications
-                {isPending && (
-                  <span className="ml-2 text-xs text-blue-500 dark:text-blue-400">
-                    Updating...
-                  </span>
-                )}
+                
               </>
-            )}
           </p>
         </div>
         
