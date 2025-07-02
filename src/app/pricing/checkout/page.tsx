@@ -16,7 +16,6 @@ export default function CheckoutPage() {
   const { subscriptionData, clearSubscriptionData, isSubscriptionDataReady } = useSubscriptionContext();
 
   useEffect(() => {
-    // If no subscription data is available, redirect back to pricing
     if (!isSubscriptionDataReady) {
       router.push(`/pricing?employerId=${employerId}`);
     }

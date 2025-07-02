@@ -63,7 +63,7 @@ export default function PricingTable() {
   };
 
   const navigateBack = () => {
-    router.back();
+    router.push('/');
   };
 
   const selectPlan = (plan: PricingPlan) => {
@@ -88,11 +88,7 @@ export default function PricingTable() {
     
     // Store in context instead of localStorage
     setSubscriptionData(subscriptionData);
-    
-    console.log('Selected plan:', plan);
-    console.log('Subscription data prepared:', subscriptionData);
-    
-    // Navigate to the order summary/checkout page
+   
     router.push(`/pricing/checkout?employerId=${employerId}&planId=${plan.id}`);
   };
 
