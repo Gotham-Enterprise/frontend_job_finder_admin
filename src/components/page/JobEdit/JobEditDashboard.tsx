@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { jobCreationApi } from '@/services/api/jobCreation';
 import { jobsAdminApi } from '@/services/api/jobsAdmin';
 import { showToast } from '@/services/utils/toast';
@@ -11,12 +11,15 @@ import { useWorkFacilities } from '@/services/hooks/useWorkFacilities';
 import { useShiftTypes } from '@/services/hooks/useShiftTypes';
 import { useClinicSizes } from '@/services/hooks/useClinicSizes';
 import { useLanguages } from '@/services/hooks/useLanguages';
+import { useStates } from '@/services/hooks/useStates';
 import Button from '@/components/ui/button/Button';
 import FullScreenSpinner from '@/components/ui/FullScreenSpinner';
 import StepProgress from '../JobCreation/StepProgress';
 import StepForm from '../JobCreation/StepForm';
 import JobPostingTips from '../JobCreation/JobPostingTips';
 import { FormData } from '@/services/types/stepForm';
+import { mapApiQuestionToJobCreationQuestion, mapJobCreationQuestionToApiPayload, JobCreationDocument } from '@/services/types/jobCreationSteps';
+import { ApiJobQuestion } from '@/services/types/jobQuestions';
 
 interface Company {
   id: string;
@@ -31,8 +34,26 @@ interface Language {
 }
 
 interface Question {
-  id: string;
-  question: string;
+  id: string; 
+  question?: string;
+  questionText?: string;
+  questionTypeId?: number;
+  questionSubTypeId?: number;
+  questionSubTypeValueId?: number | null;
+  options?: string[] | Array<{ optionText: string }>;
+  required?: boolean;
+  isActive?: boolean;
+  isDefault?: boolean;
+}
+
+interface ApiDocument {
+  id: number;
+  name?: string;
+  description?: string;
+  documentName?: string; 
+  documentDescription?: string;
+  fileName?: string; 
+  title?: string; 
 }
 
 interface JobEditData {
@@ -70,14 +91,17 @@ interface JobEditData {
     shiftType?: string;
     companySize?: string;
     questions?: Question[];
-    documents?: any[];
+    documents?: ApiDocument[];
   };
 }
 
 const JobEditDashboard: React.FC = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const pathname = usePathname();
   const jobId = searchParams.get('id');
+  
+  const isEditMode = pathname.includes('/admin/jobs/edit-job');
   
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
@@ -85,6 +109,7 @@ const JobEditDashboard: React.FC = () => {
   const [description, setDescription] = useState('');
   const [isUpdating, setIsUpdating] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefetching, setIsRefetching] = useState(false);
 
   const [formData, setFormData] = useState<FormData>({
     title: '',
@@ -115,7 +140,8 @@ const JobEditDashboard: React.FC = () => {
   const { 
     data: jobResponse, 
     isLoading: isLoadingJob, 
-    error: jobError 
+    error: jobError,
+    refetch: refetchJob 
   } = useQuery({
     queryKey: ['job-edit', jobId],
     queryFn: () => jobsAdminApi.getJobForEdit(jobId!),
@@ -134,6 +160,7 @@ const JobEditDashboard: React.FC = () => {
   const { data: shiftTypesData } = useShiftTypes();
   const { data: clinicSizesData } = useClinicSizes();
   const { data: languagesData } = useLanguages();
+  const { data: statesData } = useStates();
 
 
   const updateJobMutation = useMutation({
@@ -146,14 +173,14 @@ const JobEditDashboard: React.FC = () => {
       setIsUpdating(false);
       if (response.success) {
         showToast.success('Job Updated', 'Job updated successfully!');
-        router.push('/admin/jobs');
+        setIsRefetching(true);
+        refetchJob();
       } else {
         showToast.error('Update Failed', response.message || 'Failed to update job');
       }
     },
     onError: (error: any) => {
       setIsUpdating(false);
-      console.error('Update job error:', error);
       showToast.error('Update Failed', error.message || 'Failed to update job');
     },
   });
@@ -162,6 +189,13 @@ const JobEditDashboard: React.FC = () => {
   useEffect(() => {
     if (jobResponse?.success && jobResponse.data) {
       const job = jobResponse.data;
+    
+      if (isRefetching) {
+        setIsRefetching(false);
+        const currentQuestionsCount = formData.questions?.length || 0;
+        const apiQuestionsCount = job.questions?.length || 0;
+        
+      }
       
 
       setSelectedCompany({
@@ -225,7 +259,127 @@ const JobEditDashboard: React.FC = () => {
         return clinicSize?.id.toString() || '';
       };
 
+      const findStateAbbreviation = (stateName: string): string => {
+        if (!statesData?.success || !stateName) {
+         
+          return '';
+        }
+        const state = statesData.data.states.find(s => 
+          s.name.toLowerCase() === stateName.toLowerCase() ||
+          s.abbreviation.toLowerCase() === stateName.toLowerCase()
+        );
+      
+        return state?.abbreviation || stateName; 
+      };
+
  
+    
+      const mappedQuestions = job.questions?.map((question: Question) => {
+
+        const questionTextValue = question.question || question.questionText || '';
+ 
+        let questionTypeId = question.questionTypeId || 1;
+        let questionSubTypeId = question.questionSubTypeId || 2;
+  
+        let options: string[] = [];
+        if (question.options && Array.isArray(question.options)) {
+         
+          options = question.options.map(opt => 
+            typeof opt === 'string' ? opt : opt.optionText || ''
+          ).filter(opt => opt.trim() !== '');
+        }
+        
+       
+        
+        if (questionTypeId !== 1) {
+          options = [];
+        }
+        const apiQuestion: ApiJobQuestion = {
+          id: typeof question.id === 'string' ? parseInt(question.id.replace(/\D/g, '')) || Date.now() : question.id,
+          questionText: questionTextValue,
+          questionTypeId: questionTypeId,
+          questionSubTypeId: questionSubTypeId,
+          questionSubTypeValueId: question.questionSubTypeValueId || null,
+          options: options,
+          required: question.required !== false,
+          isActive: question.isActive !== false, 
+          isDefault: question.isDefault || false
+        };
+        
+        const mappedQuestion = mapApiQuestionToJobCreationQuestion(apiQuestion);
+      
+        return mappedQuestion;
+      }) || [];
+
+     
+      const mappedDocuments: JobCreationDocument[] = job.documents?.map((doc: ApiDocument) => {
+      
+ 
+        const getDocumentType = (name: string): 'PDF' | 'DOC' | 'JPEG' | 'PNG' => {
+          if (!name || name.trim() === '') return 'PDF'; // Default for empty names
+          const extension = name.split('.').pop()?.toUpperCase();
+          switch (extension) {
+            case 'PDF':
+              return 'PDF';
+            case 'DOC':
+            case 'DOCX':
+              return 'DOC';
+            case 'JPG':
+            case 'JPEG':
+              return 'JPEG';
+            case 'PNG':
+              return 'PNG';
+            default:
+              return 'PDF'; 
+          }
+        };
+
+    
+        let documentName = '';
+        const possibleNameFields = [doc.name, doc.documentName, doc.fileName, doc.title];
+        const validName = possibleNameFields.find(name => 
+          name && 
+          name.trim() !== '' && 
+          !name.startsWith('Document_') &&
+          name !== 'undefined' &&
+          name !== 'null'
+        );
+        
+        if (validName) {
+          documentName = validName;
+        } else {
+        
+          documentName = `Required Document ${doc.id}.pdf`;
+         
+        }
+
+        let documentDescription = '';
+        const possibleDescFields = [doc.description, doc.documentDescription];
+        const validDesc = possibleDescFields.find(desc => 
+          desc && 
+          desc.trim() !== '' &&
+          desc !== 'undefined' &&
+          desc !== 'null'
+        );
+        
+        if (validDesc) {
+          documentDescription = validDesc;
+        } else {
+          documentDescription = `Required document for this position (Document ID: ${doc.id})`;
+          
+        }
+
+        const mappedDoc = {
+          id: doc.id.toString(),
+          documentName: documentName,
+          documentType: getDocumentType(documentName),
+          documentDescription: documentDescription
+        };
+        
+       
+        return mappedDoc;
+      }) || [];
+
       const formDataToSet = {
         title: job.title || '',
         occupationId: occupationId,
@@ -233,7 +387,7 @@ const JobEditDashboard: React.FC = () => {
         country: job.locationCountry === 'USA' || job.locationCountry === 'United States' ? 'US' : job.locationCountry || 'US',
         address: job.address || '',
         city: job.locationCity || '',
-        state: job.locationState || '',
+        state: findStateAbbreviation(job.locationState || ''),
         zipCode: job.locationZipCode || '',
         workType: findWorkTypeId(job.workType),
         workSetting: findWorkSettingId(job.workSetting),
@@ -248,10 +402,9 @@ const JobEditDashboard: React.FC = () => {
         salaryType: job.salaryType || 'yearly',
         postingDate: 'today',
         autoRenew: false,
-        questions: job.questions || [],
-        documents: job.documents || [],
+        questions: mappedQuestions,
+        documents: mappedDocuments,
       };
-      
       setFormData(formDataToSet);
 
       setDescription(job.jobDescription || '');
@@ -260,9 +413,9 @@ const JobEditDashboard: React.FC = () => {
       setIsLoading(false);
       showToast.error('Error', 'Failed to load job data');
     }
-  }, [jobResponse, occupationsData, workTypesData, workSettingsData, workFacilitiesData, shiftTypesData, clinicSizesData]);
+  }, [jobResponse, occupationsData, workTypesData, workSettingsData, workFacilitiesData, shiftTypesData, clinicSizesData, statesData]);
 
-  const updateJob = async () => {
+  const updateJob = async (status: 'Publish' | 'Draft' = 'Publish') => {
     if (!selectedCompany?.id) {
       showToast.error('Error', 'Company information is required');
       return;
@@ -300,6 +453,71 @@ const JobEditDashboard: React.FC = () => {
       return clinicSize?.name || '';
     };
 
+    console.log('=== QUESTION PROCESSING DEBUG ===');
+    console.log('Total questions in form:', formData.questions?.length || 0);
+    formData.questions?.forEach((q, index) => {
+      console.log(`Question ${index}:`, {
+        id: q.id,
+        question: q.question,
+        hasOriginalId: !!q.originalId,
+        originalId: q.originalId,
+        type: q.type,
+        options: q.options
+      });
+    });
+
+    const apiQuestions = formData.questions?.map(question => {
+     const apiPayload = mapJobCreationQuestionToApiPayload(question);
+
+      if (apiPayload.questionTypeId === 1) {
+     
+        if (!apiPayload.options || apiPayload.options.length === 0) {
+         
+          return null; 
+        }
+      } else if (apiPayload.questionTypeId === 2) { 
+        
+        apiPayload.options = undefined;
+      }
+      
+      
+      const isExistingQuestion = question.originalId !== undefined;
+      const isNewQuestion = !isExistingQuestion && (question.id.startsWith('custom-') || question.id.startsWith('api-'));
+      
+    
+      if (isExistingQuestion) {
+      
+        const questionWithId = {
+          id: question.originalId,
+          ...apiPayload
+        };
+       
+        return questionWithId;
+      } else if (isNewQuestion) {
+       
+        return apiPayload;
+      } else {
+       
+        return apiPayload;
+      }
+    }).filter(q => q !== null) || []; 
+
+    const apiDocuments = formData.documents?.map(doc => {
+  
+ 
+      const documentPayload = {
+        id: parseInt(doc.id),
+        name: doc.documentName && doc.documentName.trim() !== '' 
+          ? doc.documentName 
+          : `Document_${doc.id}.pdf`, // Ensure name is not empty
+        description: doc.documentDescription && doc.documentDescription.trim() !== '' 
+          ? doc.documentDescription 
+          : `Required document for this position`
+      };
+      
+      return documentPayload;
+    }) || [];
+
     const payload = {
       companyId: selectedCompany.id,
       jobTitle: formData.title,
@@ -322,12 +540,25 @@ const JobEditDashboard: React.FC = () => {
       languages: languageIds,
       companySize: getClinicSizeName(formData.clinicSize),
       postingDate: formData.postingDate,
-      status: 'active',
+      status: status,
       jobDescription: description,
-      questions: formData.questions || [],
-      documents: formData.documents || [],
+      questions: apiQuestions,
+      documents: apiDocuments,
     };
 
+    let hasInvalidQuestions = false;
+    apiQuestions.forEach((q, index) => {
+      if (q.questionTypeId === 1 && (!q.options || q.options.length === 0)) {
+     
+        hasInvalidQuestions = true;
+      }
+    });
+    
+    if (hasInvalidQuestions) {
+      showToast.error('Invalid Questions', 'Some choice questions are missing options. Please edit them to add valid answer choices.');
+      return;
+    }
+  
     updateJobMutation.mutate({ 
       companyId: selectedCompany.id, 
       payload 
@@ -448,6 +679,7 @@ const JobEditDashboard: React.FC = () => {
                 specialtyOptions={specialtyOptions}
                 isLoadingOccupations={isLoadingOccupations}
                 selectedOccupation={selectedOccupation}
+                isEditMode={isEditMode}
               />
               
               {/* Navigation & Action Buttons */}
@@ -472,13 +704,22 @@ const JobEditDashboard: React.FC = () => {
                       Next
                     </Button>
                   ) : (
-                    <Button 
-                      variant="default"
-                      onClick={updateJob}
-                      disabled={isUpdating || !formData.title}
-                    >
-                      {isUpdating ? 'Updating...' : 'Update Job Post'}
-                    </Button>
+                    <div className="flex gap-3">
+                      <Button 
+                        variant="outline"
+                        onClick={() => updateJob('Draft')}
+                        disabled={isUpdating || !formData.title}
+                      >
+                        {isUpdating ? 'Saving...' : 'Save as Draft'}
+                      </Button>
+                      <Button 
+                        variant="default"
+                        onClick={() => updateJob('Publish')}
+                        disabled={isUpdating || !formData.title}
+                      >
+                        {isUpdating ? 'Publishing...' : 'Update Job Post'}
+                      </Button>
+                    </div>
                   )}
                 </div>
               </div>

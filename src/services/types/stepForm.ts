@@ -35,4 +35,5 @@ export interface StepFormProps {
   specialtyOptions: Array<{ value: string; label: string }>;
   isLoadingOccupations: boolean;
   selectedOccupation: number | null;
+  isEditMode?: boolean;
 }

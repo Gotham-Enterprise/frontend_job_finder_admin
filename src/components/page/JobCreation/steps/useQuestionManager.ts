@@ -23,15 +23,6 @@ export const useQuestionManager = (initialQuestions?: JobCreationQuestion[]) => 
   });  useEffect(() => {
     const hasInitialQuestions = initialQuestions && initialQuestions.length > 0;
     
-    console.log('useQuestionManager - API Response:', { 
-      success: commonQuestionsData?.success, 
-      dataLength: commonQuestionsData?.data?.length,
-      hasError: !!commonQuestionsError,
-      error: commonQuestionsError?.message,
-      hasInitialQuestions,
-      initialQuestionsLength: initialQuestions?.length || 0
-    });
-    
     if (commonQuestionsData?.success && commonQuestionsData.data && !hasInitialQuestions) {
       const apiQuestions = commonQuestionsData.data.map(mapApiQuestionToJobCreationQuestion);
       setQuestions(apiQuestions);
@@ -41,6 +32,12 @@ export const useQuestionManager = (initialQuestions?: JobCreationQuestion[]) => 
       setQuestions(initialQuestions);
     }
   }, [commonQuestionsData, commonQuestionsError, initialQuestions]);
+
+  useEffect(() => {
+    if (initialQuestions && initialQuestions.length > 0) {
+      setQuestions(initialQuestions);
+    }
+  }, [initialQuestions]);
 
   const questionToggle = (questionId: string) => {
     const updatedQuestions = questions.map(q =>

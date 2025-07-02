@@ -9,7 +9,8 @@ import DocumentDrawer from './DocumentDrawer';
 
 const ManageStep: React.FC<ManageStepProps> = ({
   formData,
-  onUpdateField
+  onUpdateField,
+  isEditMode = false
 }) => {
   const {
     questions,
@@ -78,7 +79,13 @@ const ManageStep: React.FC<ManageStepProps> = ({
           </div>
           <button
             onClick={() => openQuestionEditor()}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center gap-2"
+            disabled={isEditMode}
+            className={`px-4 py-2 ${
+              isEditMode 
+                ? 'bg-blue-300 cursor-not-allowed' 
+                : 'bg-blue-600 hover:bg-blue-700'
+            } text-white rounded-lg transition-colors flex items-center gap-2`}
+            title={isEditMode ? "Adding questions disabled in edit mode" : "Add Question"}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -112,6 +119,7 @@ const ManageStep: React.FC<ManageStepProps> = ({
                   onToggle={() => initToggle(question.id)}
                   onEdit={() => openQuestionEditor(question)}
                   onDelete={() => initDelete(question.id)}
+                  isEditMode={isEditMode}
                 />
               ))}
             </div>
@@ -153,7 +161,13 @@ const ManageStep: React.FC<ManageStepProps> = ({
           </div>
           <button
             onClick={() => openDocumentEditor()}
-            className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors flex items-center gap-2"
+            disabled={isEditMode}
+            className={`px-4 py-2 ${
+              isEditMode 
+                ? 'bg-green-300 cursor-not-allowed' 
+                : 'bg-green-600 hover:bg-green-700'
+            } text-white rounded-lg transition-colors flex items-center gap-2`}
+            title={isEditMode ? "Adding documents disabled in edit mode" : "Add Document"}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -170,6 +184,7 @@ const ManageStep: React.FC<ManageStepProps> = ({
                 document={document}
                 onEdit={() => openDocumentEditor(document)}
                 onDelete={() => initDocumentDelete(document.id)}
+                isEditMode={isEditMode}
               />
             ))
           ) : (
@@ -187,7 +202,13 @@ const ManageStep: React.FC<ManageStepProps> = ({
               </p>
               <button
                 onClick={() => openDocumentEditor()}
-                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors inline-flex items-center gap-2"
+                disabled={isEditMode}
+                className={`px-4 py-2 ${
+                  isEditMode 
+                    ? 'bg-green-300 cursor-not-allowed' 
+                    : 'bg-green-600 hover:bg-green-700'
+                } text-white rounded-lg transition-colors inline-flex items-center gap-2`}
+                title={isEditMode ? "Adding documents disabled in edit mode" : "Add Your First Document"}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />

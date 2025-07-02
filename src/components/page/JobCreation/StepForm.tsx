@@ -14,7 +14,8 @@ const StepForm: React.FC<StepFormProps> = ({
   occupationOptions,
   specialtyOptions,
   isLoadingOccupations,
-  selectedOccupation
+  selectedOccupation,
+  isEditMode = false
 }) => {
   if (step === 1) {
     return (
@@ -52,7 +53,7 @@ const StepForm: React.FC<StepFormProps> = ({
         companySize={formData.clinicSize}
       />
     );
-  }if (step === 3) {
+  }  if (step === 3) {
     return (
       <ManageStep
         formData={{
@@ -62,6 +63,7 @@ const StepForm: React.FC<StepFormProps> = ({
           documents: formData.documents
         }}
         onUpdateField={onUpdateField}
+        isEditMode={isEditMode}
       />
     );
   }

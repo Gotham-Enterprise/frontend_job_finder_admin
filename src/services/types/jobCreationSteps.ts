@@ -33,6 +33,7 @@ export interface JobCreationFormData {
 export interface ManageStepProps {
   formData: JobCreationFormData;
   onUpdateField: (field: keyof JobCreationFormData, value: any) => void;
+  isEditMode?: boolean;
 }
 
 export interface QuestionFormData {
@@ -108,7 +109,23 @@ export const mapJobCreationQuestionToApiPayload = (question: JobCreationQuestion
     questionTypeId,
     questionSubTypeId,
     questionSubTypeValueId,
-    options: question.options && question.options.length > 0 ? question.options : undefined,
+    options: (() => {
+      // Handle options based on question type
+      if (questionTypeId === 1) { // Choice questions
+        // For choice questions, use the actual user-provided options
+        // Only use options if they exist and are not empty
+        if (question.options && question.options.length > 0) {
+          return question.options.filter(opt => opt && opt.trim() !== '');
+        } else {
+          // If no valid options provided, this should be handled by validation
+          // Don't add default options automatically
+          return [];
+        }
+      } else {
+        // Non-choice questions (text, date, file, rating) don't need options
+        return question.options && question.options.length > 0 ? question.options : undefined;
+      }
+    })(),
     required: question.required,
     isActive: question.isActive,
     isDefault: question.isDefault || false
