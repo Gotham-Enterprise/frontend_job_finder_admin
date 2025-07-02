@@ -9,6 +9,7 @@ export interface SubscriptionDetails {
   brand: string;
   currentPlan: string;
   currentPlanId: number;
+  price: number;
 }
 
 export interface SubscriptionDetailsResponse {

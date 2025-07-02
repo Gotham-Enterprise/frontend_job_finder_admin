@@ -102,7 +102,7 @@ export default function SubscriptionsPage() {
                     {subscriptionData!.currentPlan}
                   </h2>
                   <p className="text-3xl font-bold text-blue-600 dark:text-blue-400 mt-2">
-                    {getPlanPrice(subscriptionData!.currentPlanId)}
+                    ${subscriptionData!.price.toFixed(2)}
                   </p>
                 </div>
                 <Badge variant="solid" color={getStatusColor(subscriptionData!.status)} size="md">
@@ -132,7 +132,8 @@ export default function SubscriptionsPage() {
                 <div>
                   <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-1">
                     Next payment
-                  </h3>                  <p className="text-gray-600 dark:text-gray-400">
+                  </h3>                  
+                  <p className="text-gray-600 dark:text-gray-400">
                     {formatDate(subscriptionData!.nextPaymentDate)}
                   </p>
                 </div>               
@@ -208,7 +209,7 @@ export default function SubscriptionsPage() {
                 </h3>
               </div>              <div className="text-right">
                 <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                  {getPlanPrice(subscriptionData!.currentPlanId)}
+                  ${subscriptionData!.price.toFixed(2)}
                 </span>
                 <span className="text-sm text-gray-600 dark:text-gray-400">
                   /month
