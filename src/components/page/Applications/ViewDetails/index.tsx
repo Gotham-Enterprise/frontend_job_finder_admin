@@ -7,6 +7,7 @@ import FullScreenSpinner from '@/components/ui/FullScreenSpinner';
 import ErrorState from '@/components/common/ErrorState';
 import BackToListButton from '@/components/ui/BackToListButton';
 import ProfileCard from '@/components/ui/ProfileCard';
+import { Accordion } from '@/components/ui/accordion';
 
 interface ViewDetailsProps {
   id?: string;
@@ -158,18 +159,43 @@ export default function JobApplicationDetails({ id }: ViewDetailsProps) {
           {application.employerQuestion && application.employerQuestion.length > 0 && (
             <div className="rounded-xl bg-white shadow-lg border border-gray-100 dark:bg-gray-800 dark:border-gray-700 p-6">
               <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Employer Questions</h2>
-              <div className="space-y-4">
-                {application.employerQuestion.map((item, index) => (
-                  <div key={index} className="border-l-4 border-blue-500 pl-4 py-2">
-                    <h4 className="font-medium text-gray-900 dark:text-white mb-1">
+              <Accordion
+                items={application.employerQuestion.map((item, index) => ({
+                  id: `question-${index}`,
+                  trigger: (
+                    <span className="font-medium text-gray-900 dark:text-white">
                       {item.question}
-                    </h4>
-                    <p className="text-gray-700 dark:text-gray-300">
-                      {item.answers}
+                    </span>
+                  ),
+                  content: (
+                    <p className="text-gray-700 dark:text-gray-300 mt-2">
+                      {(() => {
+                        // Check if the answer looks like a date and format it
+                        const dateRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z?$/;
+                        if (dateRegex.test(item.answers)) {
+                          const formattedDate = formatDateTimeEST(item.answers);
+                          if (typeof formattedDate === 'string') {
+                            return formattedDate;
+                          }
+                          return (
+                            <>
+                              <div>{formattedDate.date}</div>
+                              <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                                {formattedDate.time}
+                              </div>
+                            </>
+                          );
+                        }
+                        return item.answers;
+                      })()}
                     </p>
-                  </div>
-                ))}
-              </div>
+                  ),
+                }))}
+                type="single"
+                collapsible={true}
+                defaultValue="question-0"
+                className="mt-4"
+              />
             </div>
           )}
         </div>
