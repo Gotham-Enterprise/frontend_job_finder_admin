@@ -29,3 +29,33 @@ export interface SubscriptionPlan {
   billingPeriod: 'monthly' | 'yearly';
   features: PlanFeature[];
 }
+
+export type PlanInterval = 'MONTHLY' | 'QUARTERLY' | 'SEMI_ANNUALLY' | 'ANNUALLY';
+
+export interface PlanInclusions {
+  jobPost: number;
+  emailSending: number;
+  candidateProfileViews: number;
+  resumeDownload: number;
+  resumeSearch: string;
+}
+
+export interface PricingPlan {
+  id: number;
+  name: string;
+  description: string;
+  monthlyCostInCents: number;
+  upfrontCostInCents: number;
+  stripePriceId: string;
+  planInclusions: PlanInclusions;
+}
+
+export interface PricingPlansData {
+  interval: PlanInterval;
+  plansAndPricing: PricingPlan[];
+}
+
+export interface PricingPlansResponse {
+  success: boolean;
+  data: PricingPlansData;
+}

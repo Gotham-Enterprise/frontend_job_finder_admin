@@ -1,22 +1,28 @@
 "use client";
 import React, { useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import BackToListButton from '@/components/ui/BackToListButton';
 import Button from '@/components/ui/button/Button';
 import Badge from '@/components/ui/badge/Badge';
 import CreditCardIcon from '@/components/ui/icons/CreditCard';
 import { Modal } from '@/components/ui/modal';
+import FullScreenSpinner from '@/components/ui/FullScreenSpinner';
 import { CheckLineIcon, CloseLineIcon } from '@/icons';
 import { useSubscription } from '@/services/hooks/useSubscription';
 import { getPlanPrice, getPlanFeatures } from '@/services/utils/planUtils';
 
 export default function SubscriptionsPage() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const employerId = searchParams.get('employerId');
   const [isViewPlanModalOpen, setIsViewPlanModalOpen] = useState(false);
   const [isCancelSubscriptionModalOpen, setIsCancelSubscriptionModalOpen] = useState(false);
   
   const { subscriptionData, loading, error } = useSubscription(employerId);
+
+  const navigateToUpgradePlan = () => {
+    router.push(`/pricing?employerId=${employerId}`);
+  };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -39,14 +45,7 @@ export default function SubscriptionsPage() {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600 dark:text-gray-400">Loading subscription details...</p>
-        </div>
-      </div>
-    );
+    return <FullScreenSpinner isVisible={true} message="Loading subscription details..." />;
   }
   if (error || !subscriptionData) {
     return (
@@ -75,12 +74,25 @@ export default function SubscriptionsPage() {
       <div className="mx-auto p-6">
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700">
           <div className="p-8 border-b border-gray-200 dark:border-gray-700">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-              Subscription Details
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400">
-              Manage subscription plan and billing information
-            </p>
+            <div className="flex justify-between items-center">
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                  Subscription Details
+                </h1>
+                <p className="text-gray-600 dark:text-gray-400">
+                  Manage subscription plan and billing information
+                </p>
+              </div>
+              <Button
+                onClick={navigateToUpgradePlan}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg transition-colors duration-200 flex items-center gap-2"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                </svg>
+                Upgrade Plan
+              </Button>
+            </div>
           </div>
 
           <div className="p-8 space-y-6">
