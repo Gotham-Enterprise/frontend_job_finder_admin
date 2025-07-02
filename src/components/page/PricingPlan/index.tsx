@@ -1,13 +1,19 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 export default function PricingPlan() {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const navigateToUpgradePlan = () => {
-    // You can replace this with the actual employerId from your context/state
-    const employerId = 'cmcedclg2000h1hyb79s1fvqb'; // This should come from your app state
+    const employerId = searchParams.get('employerId');
+    
+    if (!employerId) {
+      console.error('EmployerId not found in URL parameters');
+      return;
+    }
+    
     router.push(`/pricing?employerId=${employerId}`);
   };
 
@@ -31,7 +37,7 @@ export default function PricingPlan() {
             Upgrade Plan
           </button>
         </div>
-        {/* Add your pricing plan components here */}
+       
       </div>
     </div>
   );
