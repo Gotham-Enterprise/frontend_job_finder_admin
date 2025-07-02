@@ -170,7 +170,7 @@ export default function JobApplicationDetails({ id }: ViewDetailsProps) {
                   content: (
                     <p className="text-gray-700 dark:text-gray-300 mt-2">
                       {(() => {
-                        // Check if the answer looks like a date and format it
+                       
                         const dateRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z?$/;
                         if (dateRegex.test(item.answers)) {
                           const formattedDate = formatDateTimeEST(item.answers);

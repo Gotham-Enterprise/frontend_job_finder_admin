@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { PricingPlan } from '@/services/types/subscription';
 import { useSubscriptionContext, SubscriptionData } from '@/context/SubscriptionContext';
+import FullScreenSpinner from '@/components/ui/FullScreenSpinner';
 
-export default function CheckoutPage() {
+function CheckoutContent() {
   const [couponCode, setCouponCode] = useState('');
   
   const searchParams = useSearchParams();
@@ -167,7 +168,7 @@ export default function CheckoutPage() {
         {/* Plan Features Summary */}
         <div className="mt-6 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
           <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-            What's included in {subscriptionData.planDetails.name}
+            What&aposs included in {subscriptionData.planDetails.name}
           </h4>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="flex items-center">
@@ -214,5 +215,13 @@ export default function CheckoutPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function CheckoutPage() {
+  return (
+    <Suspense fallback={<FullScreenSpinner isVisible={true} message="Loading checkout..." />}>
+      <CheckoutContent />
+    </Suspense>
   );
 }

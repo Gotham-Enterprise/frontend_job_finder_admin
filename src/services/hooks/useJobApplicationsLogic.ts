@@ -7,11 +7,9 @@ import { JobApplicationFilters } from '@/services/types/jobApplication';
 export const useJobApplicationsLogic = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  
-  // Initialize filters from URL parameters
+
   const getInitialFilters = (): JobApplicationFilters => {
     const nameParam = searchParams.get('name') || '';
-    // Decode the name parameter to handle encoded spaces and special characters
     const decodedName = nameParam ? decodeURIComponent(nameParam) : '';
     
     return {
@@ -118,13 +116,10 @@ export const useJobApplicationsLogic = () => {
         if (data?.success && data?.data?.fileUrl) {
           window.open(data.data.fileUrl, '_blank', 'noopener,noreferrer');
         } else {
-          // If the URL is already a direct link, open it directly
           window.open(resumeUrl, '_blank', 'noopener,noreferrer');
         }
       },
       onError: (error) => {
-        console.error('Error viewing resume:', error);
-        // Fallback: try to open the URL directly
         window.open(resumeUrl, '_blank', 'noopener,noreferrer');
       }
     });

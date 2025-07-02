@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { loadStripe } from '@stripe/stripe-js';
 import {
@@ -13,6 +13,7 @@ import {
 } from '@stripe/react-stripe-js';
 import { useSubscriptionContext } from '@/context/SubscriptionContext';
 import { subscriptionApi } from '@/services/api/subscription';
+import FullScreenSpinner from '@/components/ui/FullScreenSpinner';
 
 // Initialize Stripe
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY!);
@@ -296,7 +297,7 @@ function PaymentForm() {
                 {/* Features */}
                 <div className="pt-4 border-t border-gray-200 dark:border-gray-600">
                   <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-3">
-                    What's included
+                    What&aposs included
                   </h4>
                   <div className="space-y-2">
                     <div className="flex items-center text-sm">
@@ -337,7 +338,9 @@ function PaymentForm() {
 export default function PaymentPage() {
   return (
     <Elements stripe={stripePromise}>
-      <PaymentForm />
+      <Suspense fallback={<FullScreenSpinner isVisible={true} message="Loading payment..." />}>
+        <PaymentForm />
+      </Suspense>
     </Elements>
   );
 }
