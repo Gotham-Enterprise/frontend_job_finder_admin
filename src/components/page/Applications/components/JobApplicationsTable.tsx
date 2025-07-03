@@ -76,12 +76,12 @@ const JobApplicationsTable: React.FC<JobApplicationsTableProps> = ({
                   </p>
                 </TableCell>
                 <TableCell className="py-4 px-6 text-left">
-                  {jobApplication.hasResume && jobApplication.resumeUrl ? (
+                  {jobApplication.hasResume && jobApplication.resumeObjectKey ? (
                     <Button
                       variant="text-primary"
                       size="sm"
                       className="text-brand-400"
-                      onClick={() => onViewResume(jobApplication.resumeUrl)}
+                      onClick={() => onViewResume(jobApplication.resumeObjectKey)}
                       disabled={isViewingResume}
                     >
                       {isViewingResume ? 'Opening...' : 'View resume'}

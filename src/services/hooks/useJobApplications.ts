@@ -21,7 +21,6 @@ export const useJobApplications = (filters: JobApplicationFilters = {}) => {
       if (error.message.includes('HTTP 401')) {
         return false;
       }
-      console.error('Error fetching job applications:', error);
       return failureCount < 3;
     },
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
@@ -36,7 +35,6 @@ export const useJobApplicationDetails = (id: string) => {
     staleTime: 1000 * 60 * 5,
     retry: (failureCount, error: Error) => {
       if (error.message.includes('HTTP 401')) {
-        console.error('Authentication error - not retrying:', error);
         return false;
       }
       return failureCount < 3;
@@ -47,7 +45,7 @@ export const useJobApplicationDetails = (id: string) => {
 
 export const useViewApplicationResume = () => {
   return useMutation({
-    mutationFn: (resumeUrl: string) => jobApplicationApi.viewResume(resumeUrl),
+    mutationFn: (resumeObjectKey: string) => jobApplicationApi.viewResume(resumeObjectKey),
     onError: (error) => {
       console.error('Failed to view resume:', error);
     },

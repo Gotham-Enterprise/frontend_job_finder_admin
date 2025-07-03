@@ -32,7 +32,7 @@ export interface JobApplicationsTableProps {
   tableColumns: Array<{ key: string; label: string; className?: string }>;
   getStatusVariant: (status: string) => 'light' | 'solid';
   onViewJobApplication: (jobApplicationId: string) => void;
-  onViewResume: (resumeUrl: string) => void;
+  onViewResume: (resumeObjectKey: string) => void;
   isViewingResume: boolean;
 }
 

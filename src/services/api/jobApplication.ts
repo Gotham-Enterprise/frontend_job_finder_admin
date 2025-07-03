@@ -18,8 +18,9 @@ export const jobApplicationApi = {
     return apiGet<JobApplicationsResponse>(endpoint);
   },
 
-  async viewResume(resumeUrl: string): Promise<any> {
-    return Promise.resolve({ success: true, data: { fileUrl: resumeUrl } });
+  async viewResume(resumeObjectKey: string): Promise<any> {
+    const endpoint = `/api/file?type=resume&field=fileObjectKey&value=${encodeURIComponent(resumeObjectKey)}`;
+    return apiGet<any>(endpoint);
   },
 
   async getJobApplicationById(id: string): Promise<JobApplicationDetailsResponse> {

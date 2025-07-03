@@ -105,22 +105,24 @@ export const useJobApplicationsLogic = () => {
     }
   }, []);
 
-  const initViewResume = async (resumeUrl: string) => {
-    if (!resumeUrl) {
-      console.error('No resume URL provided');
+  const initViewResume = async (resumeObjectKey: string) => {
+    if (!resumeObjectKey) {
+      console.error('No resume object key provided');
       return;
     }
     
-    viewResume(resumeUrl, {
+    viewResume(resumeObjectKey, {
       onSuccess: (data: any) => {
         if (data?.success && data?.data?.fileUrl) {
           window.open(data.data.fileUrl, '_blank', 'noopener,noreferrer');
+        } else if (data?.fileUrl) {
+          window.open(data.fileUrl, '_blank', 'noopener,noreferrer');
         } else {
-          window.open(resumeUrl, '_blank', 'noopener,noreferrer');
+          console.error('No file URL found in response', data);
         }
       },
       onError: (error) => {
-        window.open(resumeUrl, '_blank', 'noopener,noreferrer');
+        console.error('Error viewing resume:', error);
       }
     });
   };
