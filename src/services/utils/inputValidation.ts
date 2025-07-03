@@ -38,6 +38,19 @@ export const sanitizeNumericInput = (value: string): string => {
   return cleaned;
 };
 
+export const sanitizeCurrencyInput = (value: string): string => {
+  let cleaned = value.replace(/[^0-9.]/g, '');
+  const parts = cleaned.split('.');
+  if (parts.length > 2) {
+    cleaned = parts[0] + '.' + parts.slice(1).join('');
+  }
+  if (parts[1] && parts[1].length > 2) {
+    cleaned = parts[0] + '.' + parts[1].substring(0, 2);
+  }
+  
+  return cleaned;
+};
+
 export const isValidNumericKeyPress = (e: React.KeyboardEvent): boolean => {
 
   if ([8, 9, 27, 13, 46].indexOf(e.keyCode) !== -1 ||

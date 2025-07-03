@@ -52,9 +52,15 @@ export const useCreateCoupon = () => {
     },
     onError: (error: any) => {
       
-      const errorMessage = error.response?.data?.message || 
-                          error.message || 
-                          'Failed to create coupon. Please try again.';
+      let errorMessage = 'Failed to create coupon. Please try again.';
+      
+      if (error.message === 'Request timeout') {
+        errorMessage = 'Request timed out. Please check your connection and try again.';
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
       
       showToast.error('Creation Failed', errorMessage);
     },

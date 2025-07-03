@@ -24,26 +24,32 @@ export const couponApi = {
   },
 
   async createCoupon(data: CreateCouponFormData): Promise<any> {
-    const queryParams = new URLSearchParams();
-    
-    queryParams.append('title', data.title);
-    queryParams.append('description', data.description);
-    queryParams.append('isOnlyAdminCanApply', data.isOnlyAdminCanApply.toString());
-    
+    const requestBody: any = {
+      title: data.title,
+      description: data.description,
+      isOnlyAdminCanApply: data.isOnlyAdminCanApply,
+    };
+
     if (data.discountType === 'amount' && data.amountOffInCents) {
-      queryParams.append('amountOffInCents', data.amountOffInCents.toString());
+      requestBody.amountOffInCents = data.amountOffInCents;
     }
     
     if (data.discountType === 'percentage' && data.percentOff) {
-      queryParams.append('percentOff', data.percentOff.toString());
+      requestBody.percentOff = data.percentOff;
     }
 
-    const endpoint = `/api/admin/coupons?${queryParams.toString()}`;
+    const endpoint = `/api/admin/coupons`;
 
     try {
-      return await apiPost<any>(endpoint, {});
+ 
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Request timeout')), 30000);
+      });
+
+      const apiPromise = apiPost<any>(endpoint, requestBody);
+      
+      return await Promise.race([apiPromise, timeoutPromise]);
     } catch (error: any) {
-      console.error('Error creating coupon:', error);
       throw error;
     }
   },

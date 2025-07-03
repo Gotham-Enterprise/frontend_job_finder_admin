@@ -6,7 +6,7 @@ import Label from '../../../form/Label';
 import Checkbox from '../../../form/input/Checkbox';
 import { Radio } from '../../../ui/radio';
 import { CreateCouponModalProps, CreateCouponFormData } from '@/services/types/CouponsTypes';
-import { sanitizeNumericInput, isValidNumericKeyPress } from '@/services/utils/inputValidation';
+import { sanitizeNumericInput, sanitizeCurrencyInput, isValidNumericKeyPress } from '@/services/utils/inputValidation';
 
 const CreateCouponModal: React.FC<CreateCouponModalProps> = ({
   isOpen,
@@ -40,7 +40,8 @@ const CreateCouponModal: React.FC<CreateCouponModalProps> = ({
       if (!formData.amountOffInCents || formData.amountOffInCents <= 0) {
         newErrors.amountOffInCents = 'Amount must be greater than 0';
       }
-    } else {
+     
+    } else if (formData.discountType === 'percentage') {
       if (!formData.percentOff || formData.percentOff <= 0 || formData.percentOff > 100) {
         newErrors.percentOff = 'Percentage must be between 0.1 and 100';
       }
@@ -65,34 +66,62 @@ const CreateCouponModal: React.FC<CreateCouponModalProps> = ({
   const submitForm = async () => {
     if (!validateForm()) return;
 
-    try {
-      const submitData: CreateCouponFormData = {
-        ...formData,
-        amountOffInCents: formData.discountType === 'amount' ? formData.amountOffInCents : undefined,
-        percentOff: formData.discountType === 'percentage' ? formData.percentOff : undefined,
-      };
+    const submitData: CreateCouponFormData = {
+      ...formData,
+      amountOffInCents: formData.discountType === 'amount' ? formData.amountOffInCents : undefined,
+      percentOff: formData.discountType === 'percentage' ? formData.percentOff : undefined,
+    };
 
-      await onSubmit(submitData);
-      resetForm();
-      onClose();
-    } catch (error) {
-      console.error('Error creating coupon:', error);
-    }
+    await onSubmit(submitData);
   };
 
   const updateFormField = <K extends keyof CreateCouponFormData>(
     field: K,
     value: CreateCouponFormData[K]
   ) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData(prev => {
+      const updated = { ...prev, [field]: value };
+      
+      if (field === 'discountType') {
+        if (value === 'percentage') {
+          updated.amountOffInCents = undefined;
+        } else if (value === 'amount') {
+          updated.percentOff = undefined;
+        }
+      }
+      
+      return updated;
+    });
+    
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: undefined }));
+    }
+    
+    if (field === 'discountType') {
+      setErrors(prev => ({
+        ...prev,
+        amountOffInCents: undefined,
+        percentOff: undefined,
+      }));
     }
   };
 
   const closeModal = () => {
     resetForm();
     onClose();
+  };
+
+  const isFormComplete = (): boolean => {
+    if (!formData.title.trim() || !formData.description.trim()) {
+      return false;
+    }
+    if (formData.discountType === 'amount') {
+      return !!(formData.amountOffInCents && formData.amountOffInCents > 0);
+    } else if (formData.discountType === 'percentage') {
+      return !!(formData.percentOff && formData.percentOff > 0 && formData.percentOff <= 100);
+    }
+
+    return false;
   };
 
   return (
@@ -196,11 +225,16 @@ const CreateCouponModal: React.FC<CreateCouponModalProps> = ({
                 <Input
                   id="percentOff"
                   type="text"
-                  min="0.1"
-                  max="100"
-                  step="0.1"
                   value={formData.percentOff || ''}
-                  onChange={(e) => updateFormField('percentOff', parseFloat(e.target.value) || undefined)}
+                  onChange={(e) => {
+                    const sanitizedValue = sanitizeNumericInput(e.target.value);
+                    updateFormField('percentOff', parseFloat(sanitizedValue) || undefined);
+                  }}
+                  onKeyDown={(e) => {
+                    if (!isValidNumericKeyPress(e)) {
+                      e.preventDefault();
+                    }
+                  }}
                   placeholder="e.g., 15.5"
                   className={errors.percentOff ? 'border-red-500 pr-8' : 'pr-8'}
                 />
@@ -224,9 +258,9 @@ const CreateCouponModal: React.FC<CreateCouponModalProps> = ({
                 <Input
                   id="amountOff"
                   type="text"
-                  value={formData.amountOffInCents ? (formData.amountOffInCents / 100).toFixed(2) : ''}
+                  value={formData.amountOffInCents ? (formData.amountOffInCents / 100).toString() : ''}
                   onChange={(e) => {
-                    const sanitizedValue = sanitizeNumericInput(e.target.value);
+                    const sanitizedValue = sanitizeCurrencyInput(e.target.value);
                     const dollarAmount = parseFloat(sanitizedValue) || 0;
                     updateFormField('amountOffInCents', Math.round(dollarAmount * 100));
                   }}
@@ -235,7 +269,7 @@ const CreateCouponModal: React.FC<CreateCouponModalProps> = ({
                       e.preventDefault();
                     }
                   }}
-                  placeholder="e.g., 150.00"
+                  placeholder="e.g., 1500.00"
                   className={`pl-8 ${errors.amountOffInCents ? 'border-red-500' : ''}`}
                 />
               </div>
@@ -258,8 +292,8 @@ const CreateCouponModal: React.FC<CreateCouponModalProps> = ({
           <Button
             variant="default"
             onClick={submitForm}
-            disabled={isLoading}
-            className="bg-brand-500 hover:bg-brand-600 text-white border-brand-500"
+            disabled={isLoading || !isFormComplete()}
+            className="bg-brand-500 hover:bg-brand-600 text-white border-brand-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? 'Creating...' : 'Create Coupon'}
           </Button>

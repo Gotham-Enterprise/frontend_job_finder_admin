@@ -53,8 +53,12 @@ const CouponsData: React.FC<CouponsProps> = ({ className = "" }) => {
   };
 
   const submitCreateCoupon = async (formData: CreateCouponFormData) => {
-    await createCouponMutation.mutateAsync(formData);
-    closeCreateModal();
+    try {
+      await createCouponMutation.mutateAsync(formData);
+      closeCreateModal();
+    } catch (error) {
+      console.error('Failed to create coupon:', error);
+    }
   };
 
   if (error && !isPending) {
