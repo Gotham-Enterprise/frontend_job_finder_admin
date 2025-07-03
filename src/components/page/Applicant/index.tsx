@@ -1,14 +1,15 @@
 "use client";
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams } from 'next/navigation';
 import { useApplicantDetails } from '@/services/hooks/useEmployers';
 import FullScreenSpinner from '@/components/ui/FullScreenSpinner';
 import ErrorState from '@/components/common/ErrorState';
 import BackButton from '@/components/ui/BackButton';
 import ApplicantProfileCard from './ApplicantProfileCard';
-import ApplicantDocuments from './ApplicantDocuments';
 import ApplicantQuestions from './ApplicantQuestions';
 import ApplicantAdditionalInfo from './ApplicantAdditionalInfo';
+import { jobApplicationApi } from '@/services/api/jobApplication';
+import { formatDateCustom } from '@/services/utils/dateUtils';
 
 interface ApplicantDetailsProps {
     id?: string;
@@ -17,6 +18,7 @@ interface ApplicantDetailsProps {
 export default function ApplicantDetails({ id }: ApplicantDetailsProps) {
     const params = useParams();
     const applicantId = id || (params?.id as string);
+    const [isViewingResume, setIsViewingResume] = useState(false);
 
     const { data, isLoading, error } = useApplicantDetails(applicantId);
 
@@ -48,9 +50,63 @@ export default function ApplicantDetails({ id }: ApplicantDetailsProps) {
     
     const applicant = data.data;
 
-    const initViewDocument = (url: string) => {
-        if (url) {
-            window.open(url, '_blank', 'noopener,noreferrer');
+    const formattedLocation = [applicant.city, applicant.state]
+        .filter(Boolean)
+        .join(', ') || 'Not specified';
+
+    const dateFormatOptions: Intl.DateTimeFormatOptions = {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    };
+    
+    const formattedDateJoined = formatDateCustom(applicant.dateJoined, dateFormatOptions);
+
+    const lastActiveDate = applicant.dateApplied ? new Date(applicant.dateApplied) : null;
+    const formattedLastActive = lastActiveDate ? 
+        `${formatDateCustom(applicant.dateApplied, dateFormatOptions)} ${lastActiveDate.toLocaleTimeString('en-US', {
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true
+        })}` : 'Not specified';
+
+    const enhancedApplicant = {
+        ...applicant,
+        location: formattedLocation,
+        joinedDate: formattedDateJoined,
+        lastActiveDate: formattedLastActive,
+        coverLetterFilename: applicant.coverLetterFilename,
+        introductionFilename: applicant.introductionFilename,
+        resume: applicant.resume ? {
+            fileUrl: applicant.resume.fileUrl,
+            fileName: applicant.resume.filename || "Resume",
+            fileObjectKey: applicant.resume.fileObjectKey
+        } : undefined
+    };
+
+    const initViewDocument = async (url: string, fileObjectKey?: string) => {
+        if (fileObjectKey) {
+            setIsViewingResume(true);
+            try {
+                const response = await jobApplicationApi.viewResume(fileObjectKey);
+                if (response?.success && response?.data?.fileUrl) {
+                    window.open(response.data.fileUrl, '_blank', 'noopener,noreferrer');
+                } else {
+                    if (url) {
+                        window.open(url, '_blank', 'noopener,noreferrer');
+                    }
+                }
+            } catch (error) {
+                if (url) {
+                    window.open(url, '_blank', 'noopener,noreferrer');
+                }
+            } finally {
+                setIsViewingResume(false);
+            }
+        } else {
+            if (url) {
+                window.open(url, '_blank', 'noopener,noreferrer');
+            }
         }
     };
 
@@ -62,17 +118,22 @@ export default function ApplicantDetails({ id }: ApplicantDetailsProps) {
 
             <div className="grid grid-cols-1 px-4 pt-6 xl:grid-cols-3 xl:gap-6">
                 <div className="col-span-full xl:col-auto">
-                    <ApplicantProfileCard applicant={applicant} />
+                    <ApplicantProfileCard 
+                        applicant={enhancedApplicant}
+                        onViewDocument={initViewDocument} 
+                        isViewingResume={isViewingResume}
+                    />
                 </div>
                 <div className="col-span-2 space-y-6">
-                    <ApplicantDocuments 
-                        applicant={applicant} 
-                        onViewDocument={initViewDocument} 
-                    />
                     <ApplicantQuestions employerQuestions={applicant.employerQuestion || []} />
                     <ApplicantAdditionalInfo applicant={applicant} />
                 </div>
             </div>
+            
+            <FullScreenSpinner 
+                isVisible={isViewingResume} 
+                message="Opening resume..." 
+            />
         </>
     );
 }
