@@ -7,7 +7,10 @@ import { showToast } from '../utils/toast';
 export const couponQueryKeys = {
   all: ['coupons'] as const,
   lists: () => [...couponQueryKeys.all, 'list'] as const,
-  list: (filters: CouponFilters) => [...couponQueryKeys.lists(), filters] as const,
+  list: (filters: CouponFilters) => {
+    const serializedFilters = JSON.stringify(filters, Object.keys(filters).sort());
+    return [...couponQueryKeys.lists(), serializedFilters] as const;
+  },
 };
 
 export const useCoupons = (filters: CouponFilters = {}) => {
@@ -18,10 +21,12 @@ export const useCoupons = (filters: CouponFilters = {}) => {
         const result = await couponApi.getCoupons(filters);
         return result;
       } catch (error: any) {
+
         throw error;
       }
     },
-    staleTime: 1000 * 60 * 5, 
+    staleTime: 0, 
+    gcTime: 1000 * 60 * 2, 
     retry: (failureCount, error: Error) => {
       if (error.message.includes('HTTP 401')) {
         return false;
@@ -33,6 +38,7 @@ export const useCoupons = (filters: CouponFilters = {}) => {
       return failureCount < 3;
     },
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    refetchOnWindowFocus: false,
   });
 };
 

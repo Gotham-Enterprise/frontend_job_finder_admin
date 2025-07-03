@@ -1,4 +1,4 @@
-import { useState, useMemo, useTransition, useEffect } from 'react';
+import { useState, useMemo, useTransition, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCoupons } from '@/services/hooks/useCoupons';
 import { CouponFilters } from '@/services/types/coupon';
@@ -17,7 +17,21 @@ export const useCouponsLogic = () => {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
-  const { data, isLoading, error, refetch } = useCoupons(filters);
+  const normalizedFilters = useMemo(() => {
+    const normalized: CouponFilters = {
+      page: filters.page || 1,
+      limit: filters.limit || 10,
+      sortBy: filters.sortBy || 'createdAt',
+      sortOrder: filters.sortOrder || 'desc',
+    };
+
+    if (filters.keyword) normalized.keyword = filters.keyword;
+    if (filters.isActive !== undefined) normalized.isActive = filters.isActive;
+    
+    return normalized;
+  }, [filters]);
+
+  const { data, isLoading, error, refetch } = useCoupons(normalizedFilters);
 
   const tableColumns = useMemo(() => [
     { key: 'title', label: 'Title' },
@@ -54,7 +68,7 @@ export const useCouponsLogic = () => {
     { value: '50', label: '50 per page' },
   ], []);
 
-  const filterChange = useMemo(() => (key: keyof CouponFilters, value: any) => {
+  const filterChange = useCallback((key: keyof CouponFilters, value: any) => {
     startTransition(() => {
       let processedValue = value;
       
@@ -62,15 +76,18 @@ export const useCouponsLogic = () => {
         processedValue = value === '' ? undefined : value === 'true';
       }
       
-      setFilters(prev => ({ 
-        ...prev, 
+      const newFilters = { 
+        ...filters, 
         [key]: processedValue === '' ? undefined : processedValue,
         page: 1
-      }));
+      };
+      
+      console.log('📝 Setting new filters:', newFilters);
+      setFilters(newFilters);
     });
-  }, []);
+  }, [filters]);
 
-  const initPageChange = useMemo(() => (newPage: number) => {
+  const initPageChange = useCallback((newPage: number) => {
     startTransition(() => {
       setFilters(prev => ({ ...prev, page: newPage }));
     });
@@ -130,6 +147,14 @@ export const useCouponsLogic = () => {
 
     return () => clearTimeout(timeoutId);
   }, [searchInput]);
+
+  useEffect(() => {
+    console.log('🔍 Filters updated in useCouponsLogic:', filters);
+  }, [filters]);
+
+  useEffect(() => {
+    console.log('🎯 Normalized filters updated:', normalizedFilters);
+  }, [normalizedFilters]);
 
   return {
     filters,
