@@ -22,7 +22,6 @@ export const useJobSeekers = (filters: JobSeekerFilters = {}) => {
       if (error.message.includes('HTTP 401')) {
         return false;
       }
-      console.error('Error fetching job seekers:', error);
       return failureCount < 3;
     },
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
@@ -38,7 +37,6 @@ export const useJobSeekerDetails = (id: string) => {
     retry: (failureCount, error: Error) => {
   
       if (error.message.includes('HTTP 401')) {
-        console.error('Authentication error - not retrying:', error);
         return false;
       }
       return failureCount < 3;

@@ -4,7 +4,9 @@ import Image from "next/image";
 import { useState } from "react";
 import { ProfileCardProps, ContactInfo, Document, ProfileData } from "@/services/types/ProfileCard";
 import { getStatusIndicatorVariant, getProfileStatusBadgeVariant } from "@/services/utils/statusVariants";
+import { jobApplicationApi } from "@/services/api/jobApplication";
 import Button from "../button/Button";
+import FullScreenSpinner from "../FullScreenSpinner";
 
 export type { ContactInfo, Document, ProfileData, ProfileCardProps } from "@/services/types/ProfileCard";
 
@@ -20,6 +22,7 @@ export default function ProfileCard({
 }: ProfileCardProps) {
     const [showAllResumes, setShowAllResumes] = useState(false);
     const [showAllDocuments, setShowAllDocuments] = useState(false);
+    const [viewingResumeObjectKey, setViewingResumeObjectKey] = useState<string | null>(null);
     
     const avatarSizes: Record<'sm' | 'md' | 'lg', { container: string; text: string }> = {
         sm: { container: 'w-16 h-16', text: 'text-lg' },
@@ -59,7 +62,7 @@ export default function ProfileCard({
             !doc.type?.toLowerCase().includes('cv') &&
             !doc.fileName?.toLowerCase().includes('resume') &&
             !doc.fileName?.toLowerCase().includes('cv') &&
-            doc.objectKey // Only include documents that have an objectKey
+            doc.objectKey
         );
         
         if (documents.length <= 3) {
@@ -76,6 +79,22 @@ export default function ProfileCard({
             return "space-y-2 max-h-64 overflow-y-auto scrollbar-thin scrollbar-thumb-blue-300 dark:scrollbar-thumb-blue-600 scrollbar-track-blue-50 dark:scrollbar-track-blue-900/20 pr-2 border border-blue-100 dark:border-blue-800 rounded-lg p-3 bg-blue-50/30 dark:bg-blue-900/10";
         }
         return "space-y-2";
+    };
+
+    const handleViewResume = async (objectKey: string) => {
+        if (!objectKey || viewingResumeObjectKey) return;
+        
+        setViewingResumeObjectKey(objectKey);
+        try {
+            const response = await jobApplicationApi.viewResume(objectKey);
+            if (response.success && response.data?.fileUrl) {
+                window.open(response.data.fileUrl, '_blank');
+            }
+        } catch (error) {
+            console.error('Error viewing resume:', error);
+        } finally {
+            setViewingResumeObjectKey(null);
+        }
     };
 
     const baseCardClasses = variant === 'compact' 
@@ -203,7 +222,7 @@ export default function ProfileCard({
                                 <div 
                                     key={`resume-${document.id || 'doc'}-${index}`} 
                                     className="flex items-center p-3 rounded-lg border bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:border-blue-300 dark:hover:border-blue-600 transition-all duration-200 cursor-pointer group shadow-sm hover:shadow-md"
-                                    onClick={() => window.open(document.url, '_blank')}
+                                    onClick={() => document.objectKey && handleViewResume(document.objectKey)}
                                 >
                                     <div className="w-7 h-7 rounded-sm flex items-center justify-center mr-3 bg-primary  transition-all duration-200 shadow-sm">
                                         <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -284,6 +303,10 @@ export default function ProfileCard({
                     </div>
                 )}
             </div>
+            <FullScreenSpinner 
+                isVisible={!!viewingResumeObjectKey} 
+                message="Opening Resume..." 
+            />
         </div>
     );
 }

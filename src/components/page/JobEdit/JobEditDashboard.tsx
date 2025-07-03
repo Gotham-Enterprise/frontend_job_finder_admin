@@ -507,7 +507,7 @@ const JobEditDashboard: React.FC = () => {
         id: parseInt(doc.id),
         name: doc.documentName && doc.documentName.trim() !== '' 
           ? doc.documentName 
-          : `Document_${doc.id}.pdf`, // Ensure name is not empty
+          : `Document_${doc.id}.pdf`,
         description: doc.documentDescription && doc.documentDescription.trim() !== '' 
           ? doc.documentDescription 
           : `Required document for this position`
@@ -629,8 +629,6 @@ const JobEditDashboard: React.FC = () => {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="container mx-auto py-8 px-4">
         <div className="max-w-7xl mx-auto">
-          
-          {/* Header */}
           <div className="mb-8">
             <div className="flex items-center justify-between mb-4">
               <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
@@ -649,8 +647,6 @@ const JobEditDashboard: React.FC = () => {
               </p>
             )}
           </div>
-
-          {/* Step Progress */}
           <div className="mb-8">
             <StepProgress 
               currentStep={currentStep} 
@@ -662,10 +658,7 @@ const JobEditDashboard: React.FC = () => {
             />
           </div>
 
-          {/* Main Content */}
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-            
-            {/* Step Form */}
             <div className="lg:col-span-3">
               <StepForm
                 step={currentStep}
@@ -680,7 +673,7 @@ const JobEditDashboard: React.FC = () => {
                 isEditMode={isEditMode}
               />
               
-              {/* Navigation & Action Buttons */}
+
               <div className="mt-8 flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   {currentStep > 1 && (
@@ -722,16 +715,12 @@ const JobEditDashboard: React.FC = () => {
                 </div>
               </div>
             </div>
-
-            {/* Tips Sidebar */}
             <div className="lg:col-span-1">
               <JobPostingTips />
             </div>
           </div>
         </div>
       </div>
-
-      {/* Loading Spinner */}
       <FullScreenSpinner 
         isVisible={isUpdating} 
         message="Updating job posting..." 
