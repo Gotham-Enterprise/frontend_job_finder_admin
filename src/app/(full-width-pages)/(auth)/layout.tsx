@@ -26,7 +26,7 @@ export default function AuthLayout({
                     alt="Logo"
                   />
                 </Link>
-                <p className="text-white text-2xl ml-10"><span className="text-primary"><strong>Explore</strong></span> nationwide Mental<br />Health & Healthcare jobs with us!</p>
+                <p className="text-white text-2xl ml-10"><span className="text-primary"><strong>Explore</strong></span> Nationwide Mental<br />Health & Healthcare jobs with us!</p>
               </div>
              
             </div>
