@@ -46,7 +46,7 @@ const CouponsTable: React.FC<CouponsTableProps> = ({
         <TableBody>
           {isLoading ? (
             <TableRow>
-              <TableCell className="text-center py-8 px-6" colSpan={9}>
+              <TableCell className="text-center py-8 px-6" colSpan={10}>
                 <div className="flex items-center justify-center gap-3">
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-brand-500"></div>
                   <p className="text-gray-500 dark:text-gray-400">Loading...</p>
@@ -55,7 +55,7 @@ const CouponsTable: React.FC<CouponsTableProps> = ({
             </TableRow>
           ) : !data?.data?.length ? (
             <TableRow>
-              <TableCell className="text-center py-8 px-6" colSpan={9}>
+              <TableCell className="text-center py-8 px-6" colSpan={10}>
                 <p className="text-gray-500 dark:text-gray-400">No coupons found</p>
               </TableCell>
             </TableRow>
@@ -129,6 +129,29 @@ const CouponsTable: React.FC<CouponsTableProps> = ({
                         <div className="flex items-center mt-1">
                           <TimeIcon className="mr-1" />
                           <span>{createdAt.time}</span>
+                        </div>
+                      </div>
+                    );
+                  })() : (
+                    <span className="text-gray-400 dark:text-gray-500 italic">Not specified</span>
+                  )}
+                </TableCell>
+                <TableCell className="py-4 px-6 whitespace-nowrap">
+                  {coupon.updatedAt ? (() => {
+                    const updatedAt = formatDateTimeEST(coupon.updatedAt);
+                    if (typeof updatedAt === 'string') {
+                      return (
+                        <p className="text-sm text-gray-900 dark:text-white">
+                          {updatedAt}
+                        </p>
+                      );
+                    }
+                    return (
+                      <div className="text-sm text-gray-900 dark:text-white">
+                        <div>{updatedAt.date}</div>
+                        <div className="flex items-center mt-1">
+                          <TimeIcon className="mr-1" />
+                          <span>{updatedAt.time}</span>
                         </div>
                       </div>
                     );

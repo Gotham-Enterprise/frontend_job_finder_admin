@@ -278,8 +278,8 @@ const JobEditDashboard: React.FC = () => {
 
         const questionTextValue = question.question || question.questionText || '';
  
-        let questionTypeId = question.questionTypeId || 1;
-        let questionSubTypeId = question.questionSubTypeId || 2;
+        const questionTypeId = question.questionTypeId || 1;
+        const questionSubTypeId = question.questionSubTypeId || 2;
   
         let options: string[] = [];
         if (question.options && Array.isArray(question.options)) {
@@ -413,7 +413,7 @@ const JobEditDashboard: React.FC = () => {
       setIsLoading(false);
       showToast.error('Error', 'Failed to load job data');
     }
-  }, [jobResponse, occupationsData, workTypesData, workSettingsData, workFacilitiesData, shiftTypesData, clinicSizesData, statesData]);
+  }, [jobResponse, occupationsData, workTypesData, workSettingsData, workFacilitiesData, shiftTypesData, clinicSizesData, statesData, formData.questions?.length, isRefetching]);
 
   const updateJob = async (status: 'Publish' | 'Draft' = 'Publish') => {
     if (!selectedCompany?.id) {
@@ -453,8 +453,6 @@ const JobEditDashboard: React.FC = () => {
       return clinicSize?.name || '';
     };
 
-    console.log('=== QUESTION PROCESSING DEBUG ===');
-    console.log('Total questions in form:', formData.questions?.length || 0);
     formData.questions?.forEach((q, index) => {
       console.log(`Question ${index}:`, {
         id: q.id,

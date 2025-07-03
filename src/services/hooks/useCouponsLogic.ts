@@ -28,6 +28,7 @@ export const useCouponsLogic = () => {
     { key: 'adminOnly', label: 'Admin Only' },
     { key: 'status', label: 'Status' },
     { key: 'createdAt', label: 'Created Date' },
+    { key: 'updatedAt', label: 'Updated Date' },
   ], []);
 
   const statusOptions = useMemo(() => [
