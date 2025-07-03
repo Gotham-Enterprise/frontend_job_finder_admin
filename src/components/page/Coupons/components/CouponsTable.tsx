@@ -76,8 +76,8 @@ const CouponsTable: React.FC<CouponsTableProps> = ({
                 </TableCell>
                 <TableCell className="py-4 px-6">
                   <div className="flex items-center gap-2">
-                    <code className="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-sm font-mono">
-                      {coupon.redemptionCode}
+                    <code className="bg-gray-100 dark:text-white dark:bg-gray-700 px-2 py-1 rounded text-sm font-mono">
+                    {coupon.redemptionCode}
                     </code>
                     <button
                       onClick={() => copyToClipboard(coupon.redemptionCode)}

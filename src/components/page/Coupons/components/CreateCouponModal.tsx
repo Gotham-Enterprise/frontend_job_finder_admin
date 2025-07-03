@@ -281,7 +281,7 @@ const CreateCouponModal: React.FC<CreateCouponModalProps> = ({
         </div>
 
         {/* Modal Actions */}
-        <div className="flex items-center justify-end space-x-3 mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-end space-x-3 mt-8 pt-6 border-t border-gray-200 dark:text-white dark:border-gray-700">
           <Button
             variant="outline"
             onClick={closeModal}
