@@ -13,4 +13,5 @@ export { default as CareerLadderIcon } from './CareerLadderIcon';
 export { default as TicketIcon } from './TicketIcon';
 export { default as BlogIcon } from './BlogIcon';
 export { default as PlusIcon } from './PlusIcon';
+export { default as CouponIcon } from './CouponIcon';
 export type { IconProps } from './Close';

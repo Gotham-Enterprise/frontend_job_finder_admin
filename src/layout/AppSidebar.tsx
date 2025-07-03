@@ -18,6 +18,7 @@ import {
   CareerLadderIcon,
   TicketIcon,
   BlogIcon,
+  CouponIcon,
 } from "../components/ui/icons/index";
 
 
@@ -72,7 +73,7 @@ const navItems: NavItem[] = [
      //subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
   },
   {
-    icon: <TicketIcon />,
+    icon: <CouponIcon />,
     name: "Coupons",
     path: "/admin/coupons", 
      //subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
