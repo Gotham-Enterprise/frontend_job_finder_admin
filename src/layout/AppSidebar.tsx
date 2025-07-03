@@ -71,6 +71,12 @@ const navItems: NavItem[] = [
     path: "/admin/comming-soon", // /admin/tickets
      //subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
   },
+  {
+    icon: <TicketIcon />,
+    name: "Coupons",
+    path: "/admin/coupons", 
+     //subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
+  },
 
   // {
   //   icon: <BlogIcon />,

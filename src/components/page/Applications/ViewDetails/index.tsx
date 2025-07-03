@@ -160,37 +160,50 @@ export default function JobApplicationDetails({ id }: ViewDetailsProps) {
             <div className="rounded-xl bg-white shadow-lg border border-gray-100 dark:bg-gray-800 dark:border-gray-700 p-6">
               <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Employer Questions</h2>
               <Accordion
-                items={application.employerQuestion.map((item, index) => ({
-                  id: `question-${index}`,
-                  trigger: (
-                    <span className="font-medium text-gray-900 dark:text-white">
-                      {item.question}
-                    </span>
-                  ),
-                  content: (
-                    <p className="text-gray-700 dark:text-gray-300 mt-2">
-                      {(() => {
-                       
-                        const dateRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z?$/;
-                        if (dateRegex.test(item.answers)) {
-                          const formattedDate = formatDateTimeEST(item.answers);
-                          if (typeof formattedDate === 'string') {
-                            return formattedDate;
-                          }
-                          return (
-                            <>
-                              <div>{formattedDate.date}</div>
-                              <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                                {formattedDate.time}
-                              </div>
-                            </>
-                          );
+                items={application.employerQuestion.map((item, index) => {
+                  const formatAnswer = (answer: string) => {
+                    const dateRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z?$/;
+                    if (dateRegex.test(answer)) {
+                      const formattedDate = formatDateTimeEST(answer);
+                      if (typeof formattedDate === 'string') {
+                        return { type: 'text' as const, content: formattedDate };
+                      }
+                      return { 
+                        type: 'date' as const, 
+                        content: {
+                          date: formattedDate.date,
+                          time: formattedDate.time
                         }
-                        return item.answers;
-                      })()}
-                    </p>
-                  ),
-                }))}
+                      };
+                    }
+                    return { type: 'text' as const, content: answer };
+                  };
+
+                  const formattedAnswer = formatAnswer(item.answers);
+
+                  return {
+                    id: `question-${index}`,
+                    trigger: (
+                      <span className="font-medium text-gray-900 dark:text-white">
+                        {item.question}
+                      </span>
+                    ),
+                    content: (
+                      <div className="text-gray-700 dark:text-gray-300 mt-2">
+                        {formattedAnswer.type === 'date' ? (
+                          <>
+                            <div>{(formattedAnswer.content as { date: string; time: string }).date}</div>
+                            <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                              {(formattedAnswer.content as { date: string; time: string }).time}
+                            </div>
+                          </>
+                        ) : (
+                          formattedAnswer.content as string
+                        )}
+                      </div>
+                    ),
+                  };
+                })}
                 type="single"
                 collapsible={true}
                 defaultValue="question-0"
