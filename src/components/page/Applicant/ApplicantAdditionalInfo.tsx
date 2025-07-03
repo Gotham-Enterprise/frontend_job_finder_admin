@@ -43,6 +43,7 @@ const getAddressFields = (applicant: ApplicantAdditionalInfoData): FieldConfig[]
     { label: 'Country', value: applicant.country }
 ];
 
+
 const getTimelineFields = (applicant: ApplicantAdditionalInfoData): FieldConfig[] => [
     { label: 'Applied', value: applicant.dateApplied || applicant.appliedAt, format: true },
     { label: 'Joined', value: applicant.dateJoined, format: true },
