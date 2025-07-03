@@ -1,33 +1,5 @@
 "use client";
-
-interface ApplicantData {
-    name: string;
-    jobTitle: string;
-    status: string;
-    email?: string;
-    phone?: string;
-    linkedinUrl?: string;
-    portfolioUrl?: string;
-    yearsOfExperience?: number;
-    preferredSalary?: string;
-    stateLicenses?: string;
-    resume?: {
-        fileUrl: string;
-        fileName?: string;
-        fileObjectKey?: string;
-    };
-    coverLetterUrl?: string;
-    introductionVideoUrl?: string;
-    location?: string;
-    joinedDate?: string;
-    lastActiveDate?: string;
-}
-
-interface ApplicantProfileCardProps {
-    applicant: ApplicantData;
-    onViewDocument: (url: string, fileObjectKey?: string) => void;
-    isViewingResume?: boolean;
-}
+import { ApplicantData, ApplicantProfileCardProps } from '@/services/types/applicant';
 
 export default function ApplicantProfileCard({ applicant, onViewDocument, isViewingResume = false }: ApplicantProfileCardProps) {
     const getInitials = (name: string) => {

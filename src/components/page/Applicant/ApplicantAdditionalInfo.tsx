@@ -1,23 +1,7 @@
 "use client";
 import React from 'react';
 import { formatDate } from '@/services/utils/dateUtils';
-
-interface ApplicantData {
-    address?: string;
-    city?: string;
-    state?: string;
-    zipCode?: string;
-    country?: string;
-    appliedAt?: string;
-    updatedAt?: string;
-    availabilityDate?: string;
-    workAuthorization?: string;
-    references?: string;
-}
-
-interface ApplicantAdditionalInfoProps {
-    applicant: ApplicantData;
-}
+import { ApplicantAdditionalInfoData, ApplicantAdditionalInfoProps } from '@/services/types/applicant';
 
 export default function ApplicantAdditionalInfo({ applicant }: ApplicantAdditionalInfoProps) {
     return (
@@ -64,9 +48,14 @@ export default function ApplicantAdditionalInfo({ applicant }: ApplicantAddition
                 <div>
                     <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Application Timeline</h3>
                     <div className="space-y-2 text-sm">
-                        {applicant.appliedAt && (
+                        {(applicant.dateApplied || applicant.appliedAt) && (
                             <p className="text-gray-600 dark:text-gray-300">
-                                <span className="font-medium">Applied:</span> {formatDate(applicant.appliedAt)}
+                                <span className="font-medium">Applied:</span> {formatDate(applicant.dateApplied || applicant.appliedAt)}
+                            </p>
+                        )}
+                        {applicant.dateJoined && (
+                            <p className="text-gray-600 dark:text-gray-300">
+                                <span className="font-medium">Joined:</span> {formatDate(applicant.dateJoined)}
                             </p>
                         )}
                         {applicant.updatedAt && (
@@ -77,6 +66,31 @@ export default function ApplicantAdditionalInfo({ applicant }: ApplicantAddition
                         {applicant.availabilityDate && (
                             <p className="text-gray-600 dark:text-gray-300">
                                 <span className="font-medium">Available From:</span> {formatDate(applicant.availabilityDate)}
+                            </p>
+                        )}
+                    </div>
+                </div>
+            </div>
+
+            {/* Additional row for job details */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                {/* Professional Information */}
+                <div>
+                    <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Professional Information</h3>
+                    <div className="space-y-2 text-sm">
+                        {applicant.jobTitle && (
+                            <p className="text-gray-600 dark:text-gray-300">
+                                <span className="font-medium">Job Title:</span> {applicant.jobTitle}
+                            </p>
+                        )}
+                        {applicant.companyName && (
+                            <p className="text-gray-600 dark:text-gray-300">
+                                <span className="font-medium">Company:</span> {applicant.companyName}
+                            </p>
+                        )}
+                        {applicant.stateLicenses && (
+                            <p className="text-gray-600 dark:text-gray-300">
+                                <span className="font-medium">State Licenses:</span> {applicant.stateLicenses}
                             </p>
                         )}
                         {applicant.workAuthorization && (

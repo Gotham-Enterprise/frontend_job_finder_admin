@@ -30,6 +30,35 @@ export interface ApplicantDetails {
   employerQuestion: EmployerQuestion[];
 }
 
+export interface ApplicantData {
+  name: string;
+  jobTitle: string;
+  status: string;
+  email?: string;
+  phone?: string;
+  linkedinUrl?: string;
+  portfolioUrl?: string;
+  yearsOfExperience?: number;
+  preferredSalary?: string;
+  stateLicenses?: string;
+  resume?: {
+    fileUrl: string;
+    fileName?: string;
+    fileObjectKey?: string;
+  };
+  coverLetterUrl?: string;
+  introductionVideoUrl?: string;
+  location?: string;
+  joinedDate?: string;
+  lastActiveDate?: string;
+}
+
+export interface ApplicantProfileCardProps {
+  applicant: ApplicantData;
+  onViewDocument: (url: string, fileObjectKey?: string) => void;
+  isViewingResume?: boolean;
+}
+
 export interface EmployerQuestion {
   question: string;
   answers?: string[];
@@ -128,4 +157,40 @@ export interface ApplicantsListProps {
   setPage: (page: number | ((prev: number) => number)) => void;
   getStatusVariant: (status: string) => string;
   onViewApplicantDetails: (applicantId: string) => void;
+}
+
+export interface ApplicantAdditionalInfoData {
+    address?: string;
+    city?: string;
+    state?: string;
+    zipCode?: string;
+    country?: string;
+    appliedAt?: string;
+    updatedAt?: string;
+    dateApplied?: string;
+    dateJoined?: string;
+    availabilityDate?: string;
+    workAuthorization?: string;
+    references?: string;
+    stateLicenses?: string;
+    companyName?: string;
+    jobTitle?: string;
+}
+
+export interface ApplicantAdditionalInfoProps {
+    applicant: ApplicantAdditionalInfoData;
+}
+
+export interface EmployerQuestionAnswer {
+    question: string;
+    answers?: { answer: string }[] | string[];
+    answer?: string | object; 
+}
+
+export interface ApplicantQuestionsProps {
+    employerQuestions: EmployerQuestionAnswer[];
+}
+
+export interface ApplicantDetailsProps {
+    id?: string;
 }

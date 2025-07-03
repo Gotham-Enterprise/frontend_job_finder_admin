@@ -1,33 +1,55 @@
 "use client";
 import React from 'react';
-
-interface EmployerQuestionAnswer {
-    question: string;
-    answers?: string[];
-    answer?: string | object; 
-}
-
-interface ApplicantQuestionsProps {
-    employerQuestions: EmployerQuestionAnswer[];
-}
+import Accordion from '@/components/ui/accordion/Accordion';
+import { formatDateCustom, isValidDate, formatDateTime } from '@/services/utils/dateUtils';
+import { EmployerQuestionAnswer, ApplicantQuestionsProps } from '@/services/types/applicant';
 
 export default function ApplicantQuestions({ employerQuestions }: ApplicantQuestionsProps) {
+   
+    
     if (!employerQuestions || employerQuestions.length === 0) {
-        return null;
+        console.log('No employer questions found');
+        return (
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 p-6">
+                <div className="flex items-center gap-3 mb-6">
+                    <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                        Employer Questions & Answers
+                    </h2>
+                </div>
+                <p className="text-gray-500 dark:text-gray-400 text-center py-4">
+                    No employer questions available
+                </p>
+            </div>
+        );
     }
 
     const validQuestions = employerQuestions.filter(qa => 
-        qa && typeof qa === 'object' && qa.question && typeof qa.question === 'string'
+        qa && typeof qa === 'object'
     );
 
+
+
     if (validQuestions.length === 0) {
-        return null;
+        return (
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 p-6">
+                <div className="flex items-center gap-3 mb-6">
+                    <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                        Employer Questions & Answers
+                    </h2>
+                </div>
+                <p className="text-gray-500 dark:text-gray-400 text-center py-4">
+                    No valid employer questions found
+                </p>
+            </div>
+        );
     }
 
     const getAnswersToRender = (qa: EmployerQuestionAnswer): string[] => {
         if (qa.answers && Array.isArray(qa.answers) && qa.answers.length > 0) {
             return qa.answers.map(ans => 
-                typeof ans === 'string' ? ans : JSON.stringify(ans)
+                typeof ans === 'string' ? ans : 
+                (ans && typeof ans === 'object' && 'answer' in ans) ? ans.answer : 
+                JSON.stringify(ans)
             );
         }
         
@@ -60,17 +82,44 @@ export default function ApplicantQuestions({ employerQuestions }: ApplicantQuest
             );
         }
 
+        const formatAnswerIfDate = (answer: string) => {
+            if (isValidDate(answer)) {
+                return formatDateTime(answer, answer);
+            }
+            return answer;
+        };
+
         return answers.map((answer, answerIndex) => (
-            <div key={answerIndex} className="bg-white dark:bg-gray-800 rounded-md p-3 border border-gray-200 dark:border-gray-600">
+            <div key={answerIndex} className="bg-white dark:bg-gray-800 rounded-md p-3 border border-gray-200 dark:border-gray-600 mb-2">
                 <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
                     <span className="font-medium text-gray-900 dark:text-white">
                         A{answerIndex + 1}:
                     </span>{' '}
-                    {answer}
+                    {formatAnswerIfDate(answer)}
                 </p>
             </div>
         ));
     };
+
+    const accordionItems = validQuestions.map((qa, index) => {
+        const answersToRender = getAnswersToRender(qa);
+        
+        return {
+            id: `question-${index}`,
+            trigger: (
+                <div className="flex-1">
+                    <h4 className="font-semibold text-gray-900 dark:text-white">
+                        Q{index + 1}: {qa.question || 'No questionn provided'}
+                    </h4>
+                </div>
+            ),
+            content: (
+                <div className="space-y-2">
+                    {renderAnswers(answersToRender)}
+                </div>
+            )
+        };
+    });
 
     return (
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 p-6">
@@ -80,25 +129,11 @@ export default function ApplicantQuestions({ employerQuestions }: ApplicantQuest
                 </h2>
             </div>
             
-            <div className="space-y-6">
-                {validQuestions.map((qa, index) => {
-                    const answersToRender = getAnswersToRender(qa);
-                    
-                    return (
-                        <div key={index} className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 border border-gray-200 dark:border-gray-600">
-                            <div className="mb-3">
-                                <h4 className="font-semibold text-gray-900 dark:text-white mb-2">
-                                    Q{index + 1}: {qa.question}
-                                </h4>
-                            </div>
-                            
-                            <div className="space-y-2">
-                                {renderAnswers(answersToRender)}
-                            </div>
-                        </div>
-                    );
-                })}
-            </div>
+            <Accordion 
+                items={accordionItems}
+                type="multiple"
+                className="bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600"
+            />
         </div>
     );
 }

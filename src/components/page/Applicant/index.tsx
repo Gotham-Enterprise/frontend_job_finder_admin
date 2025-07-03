@@ -10,10 +10,7 @@ import ApplicantQuestions from './ApplicantQuestions';
 import ApplicantAdditionalInfo from './ApplicantAdditionalInfo';
 import { jobApplicationApi } from '@/services/api/jobApplication';
 import { formatDateCustom } from '@/services/utils/dateUtils';
-
-interface ApplicantDetailsProps {
-    id?: string;
-}
+import { ApplicantDetailsProps } from '@/services/types/applicant';
 
 export default function ApplicantDetails({ id }: ApplicantDetailsProps) {
     const params = useParams();
@@ -77,6 +74,9 @@ export default function ApplicantDetails({ id }: ApplicantDetailsProps) {
         lastActiveDate: formattedLastActive,
         coverLetterFilename: applicant.coverLetterFilename,
         introductionFilename: applicant.introductionFilename,
+        companyName: applicant.companyName,
+        jobTitle: applicant.jobTitle,
+        stateLicenses: applicant.stateLicenses,
         resume: applicant.resume ? {
             fileUrl: applicant.resume.fileUrl,
             fileName: applicant.resume.filename || "Resume",
@@ -125,8 +125,8 @@ export default function ApplicantDetails({ id }: ApplicantDetailsProps) {
                     />
                 </div>
                 <div className="col-span-2 space-y-6">
-                    <ApplicantQuestions employerQuestions={applicant.employerQuestion || []} />
                     <ApplicantAdditionalInfo applicant={applicant} />
+                    <ApplicantQuestions employerQuestions={applicant.employerQuestion || []} />
                 </div>
             </div>
             
