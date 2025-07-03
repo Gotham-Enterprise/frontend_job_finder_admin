@@ -12,6 +12,8 @@ export interface Document {
     type: string;
     fileName: string;
     url: string;
+    objectKey?: string;
+    expiresAt?: string;
 }
 
 export interface ProfileData {

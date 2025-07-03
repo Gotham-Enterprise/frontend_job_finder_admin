@@ -58,11 +58,8 @@ export async function apiRequest<T = any>(
     if (contentType && contentType.includes('application/json')) {
       return response.json();
     }
-
-
     return response.text() as T;
   } catch (error) {
-    console.error(`API request failed for ${method} ${url}:`, error);
     throw error;
   }
 }
