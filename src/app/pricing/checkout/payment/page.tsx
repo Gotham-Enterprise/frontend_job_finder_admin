@@ -64,6 +64,31 @@ function PaymentForm() {
     });
   };
 
+  const calculateDiscount = (originalPriceInCents: number, coupon: any) => {
+    if (!coupon) return 0;
+    
+    if (coupon.amountOffInCents) {
+      return coupon.amountOffInCents;
+    }
+    
+    if (coupon.percentOff) {
+      return Math.round((originalPriceInCents * coupon.percentOff) / 100);
+    }
+    
+    return 0;
+  };
+
+  const calculateTotal = () => {
+    if (!subscriptionData) return 0;
+    
+    const originalPrice = subscriptionData.planDetails.price;
+    const discount = subscriptionData.appliedCoupon 
+      ? calculateDiscount(originalPrice, subscriptionData.appliedCoupon)
+      : 0;
+    
+    return Math.max(0, originalPrice - discount);
+  };
+
   const handleEditOrder = () => {
     router.push(`/pricing?employerId=${employerId}`);
   };
@@ -271,7 +296,7 @@ function PaymentForm() {
                       Processing...
                     </>
                   ) : (
-                    `Pay ${formatPrice(subscriptionData.planDetails.price)}`
+                    `Pay ${formatPrice(calculateTotal())}`
                   )}
                 </button>
               </form>
@@ -304,13 +329,32 @@ function PaymentForm() {
                   </span>
                 </div>
 
+                {/* Applied Coupon */}
+                {subscriptionData.appliedCoupon && (
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center text-green-600 dark:text-green-400">
+                      <div className="flex flex-col">
+                        <span className="font-medium">
+                          Coupon: {subscriptionData.appliedCoupon.title}
+                        </span>
+                        <span className="text-sm text-green-500 dark:text-green-400">
+                          Code: {subscriptionData.appliedCoupon.redemptionCode}
+                        </span>
+                      </div>
+                      <span className="font-semibold">
+                        -{formatPrice(calculateDiscount(subscriptionData.planDetails.price, subscriptionData.appliedCoupon))}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
                 {/* Total */}
                 <div className="flex justify-between items-center pt-4 border-t border-gray-200 dark:border-gray-600">
                   <span className="text-lg font-semibold text-gray-900 dark:text-white">
                     Total
                   </span>
                   <span className="text-lg font-bold text-gray-900 dark:text-white">
-                    {formatPrice(subscriptionData.planDetails.price)}
+                    {formatPrice(calculateTotal())}
                   </span>
                 </div>
 

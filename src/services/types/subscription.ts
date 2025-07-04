@@ -43,8 +43,8 @@ export interface SubscriptionDetails {
     id: string;
     name: string;
   };
-  coupon: any | null;
-  currentPaymentMethod: any | null;
+  coupon: CouponData | null;
+  currentPaymentMethod: PaymentMethodData | null;
 }
 
 export interface SubscriptionDetailsResponse {
@@ -115,13 +115,36 @@ export interface SubscriptionPurchaseResponse {
   };
 }
 
+export interface CouponData {
+  id: string;
+  title: string;
+  description: string;
+  isOnlyAdminCanApply: boolean;
+  amountOffInCents: number | null;
+  percentOff: number | null;
+  duration: string;
+  redemptionCode: string;
+  stripeCouponId: string;
+  createdAt?: string;
+  updatedAt?: string;
+  deactivatedAt?: string | null;
+}
+
+export interface PaymentMethodData {
+  id: string;
+  brand: string;
+  last4Digits: string;
+  expMonth: number;
+  expYear: number;
+  isDefault: boolean;
+  stripePaymentMethodId: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
 export interface CouponVerificationResponse {
   success: boolean;
   message?: string;
-  data?: {
-    couponCode: string;
-    discountAmount: number;
-    isValid: boolean;
-  };
+  data?: CouponData;
   error?: string;
 }

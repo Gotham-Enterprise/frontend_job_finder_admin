@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { PricingPlan, PlanInterval } from '@/services/types/subscription';
+import { PricingPlan, PlanInterval, CouponData } from '@/services/types/subscription';
 
 export interface SubscriptionData {
   subscriptionPlanId: number;
@@ -18,6 +18,7 @@ export interface SubscriptionData {
     interval: PlanInterval;
     planInclusions: any;
   };
+  appliedCoupon?: CouponData;
 }
 
 interface SubscriptionContextType {
@@ -25,6 +26,7 @@ interface SubscriptionContextType {
   setSubscriptionData: (data: SubscriptionData | null) => void;
   clearSubscriptionData: () => void;
   isSubscriptionDataReady: boolean;
+  copyToClipboard: (text: string, label: string) => Promise<void>;
 }
 
 const SubscriptionContext = createContext<SubscriptionContextType | undefined>(undefined);
@@ -44,6 +46,33 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     setSubscriptionDataState(null);
   };
 
+  const copyToClipboard = async (text: string, label: string): Promise<void> => {
+    try {
+      await navigator.clipboard.writeText(text);
+      // You can add a toast notification here if needed
+      console.log(`${label} copied to clipboard: ${text}`);
+    } catch (err) {
+      console.error(`Failed to copy ${label}:`, err);
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      textArea.style.position = 'fixed';
+      textArea.style.left = '-999999px';
+      textArea.style.top = '-999999px';
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      try {
+        document.execCommand('copy');
+        console.log(`${label} copied to clipboard (fallback): ${text}`);
+      } catch (fallbackErr) {
+        console.error(`Failed to copy ${label} (fallback):`, fallbackErr);
+      } finally {
+        document.body.removeChild(textArea);
+      }
+    }
+  };
+
   const isSubscriptionDataReady = subscriptionData !== null;
 
   return (
@@ -53,6 +82,7 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
         setSubscriptionData,
         clearSubscriptionData,
         isSubscriptionDataReady,
+        copyToClipboard,
       }}
     >
       {children}

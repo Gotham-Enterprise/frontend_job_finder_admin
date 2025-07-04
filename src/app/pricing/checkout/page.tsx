@@ -11,11 +11,7 @@ import FullScreenSpinner from '@/components/ui/FullScreenSpinner';
 function CheckoutContent() {
   const [couponCode, setCouponCode] = useState('');
   const [isVerifyingCoupon, setIsVerifyingCoupon] = useState(false);
-  const [appliedCoupon, setAppliedCoupon] = useState<{
-    code: string;
-    discountAmount: number;
-    isValid: boolean;
-  } | null>(null);
+  const [couponError, setCouponError] = useState<string | null>(null);
   
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -40,9 +36,28 @@ function CheckoutContent() {
     });
   };
 
+  const calculateDiscount = (originalPriceInCents: number, coupon: any) => {
+    if (!coupon) return 0;
+    
+    if (coupon.amountOffInCents) {
+      return coupon.amountOffInCents;
+    }
+    
+    if (coupon.percentOff) {
+      return Math.round((originalPriceInCents * coupon.percentOff) / 100);
+    }
+    
+    return 0;
+  };
+
   const calculateTotal = () => {
-    const originalPrice = subscriptionData?.planDetails.price || 0;
-    const discount = appliedCoupon?.discountAmount || 0;
+    if (!subscriptionData) return 0;
+    
+    const originalPrice = subscriptionData.planDetails.price;
+    const discount = subscriptionData.appliedCoupon 
+      ? calculateDiscount(originalPrice, subscriptionData.appliedCoupon)
+      : 0;
+    
     return Math.max(0, originalPrice - discount);
   };
 
@@ -56,43 +71,57 @@ function CheckoutContent() {
       return;
     }
 
+    if (subscriptionData?.appliedCoupon) {
+      addToast({
+        variant: 'warning',
+        title: 'Coupon Already Applied',
+        message: 'Only one coupon can be applied per order. Please remove the current coupon first.',
+      });
+      return;
+    }
+
     setIsVerifyingCoupon(true);
+    setCouponError(null);
     
     try {
       const response = await subscriptionApi.verifyCoupon(couponCode);
       
       if (response.success && response.data) {
-        setAppliedCoupon({
-          code: response.data.couponCode,
-          discountAmount: response.data.discountAmount,
-          isValid: response.data.isValid,
-        });
+        const discount = calculateDiscount(subscriptionData?.planDetails.price || 0, response.data);
+        
         addToast({
           variant: 'success',
           title: 'Coupon Applied',
-          message: `Coupon "${couponCode}" has been applied successfully!`,
+          message: `Coupon "${response.data.title}" has been applied successfully! You saved ${formatPrice(discount)}.`,
         });
         
         // Update subscription data with coupon
         if (subscriptionData) {
           setSubscriptionData({
             ...subscriptionData,
-            couponRedemptionCode: couponCode,
+            couponRedemptionCode: response.data.redemptionCode,
+            appliedCoupon: response.data,
           });
         }
+        
+        setCouponCode('');
       } else {
+        const errorMessage = response.error || 'The coupon code is invalid or expired';
+        setCouponError(errorMessage);
         addToast({
           variant: 'error',
           title: 'Invalid Coupon',
-          message: response.error || 'The coupon code is invalid or expired',
+          message: errorMessage,
         });
       }
     } catch (error) {
       console.error('Error verifying coupon:', error);
+      const errorMessage = 'Failed to verify coupon. Please try again.';
+      setCouponError(errorMessage);
       addToast({
         variant: 'error',
         title: 'Verification Failed',
-        message: 'Failed to verify coupon. Please try again.',
+        message: errorMessage,
       });
     } finally {
       setIsVerifyingCoupon(false);
@@ -100,13 +129,14 @@ function CheckoutContent() {
   };
 
   const removeCoupon = () => {
-    setAppliedCoupon(null);
     setCouponCode('');
+    setCouponError(null);
     
     if (subscriptionData) {
       setSubscriptionData({
         ...subscriptionData,
         couponRedemptionCode: undefined,
+        appliedCoupon: undefined,
       });
     }
 
@@ -119,6 +149,16 @@ function CheckoutContent() {
 
   const confirmAndPay = () => {
     if (!subscriptionData) return;
+    
+    // Check if there's a coupon error that would prevent payment
+    if (couponError) {
+      addToast({
+        variant: 'error',
+        title: 'Cannot Proceed',
+        message: 'Please resolve the coupon issue before proceeding to payment.',
+      });
+      return;
+    }
     
     // Navigate to payment form page
     router.push(`/pricing/checkout/payment?employerId=${employerId}&planId=${planId}`);
@@ -194,14 +234,21 @@ function CheckoutContent() {
             </div>
 
             {/* Applied Coupon */}
-            {appliedCoupon && (
-              <div className="flex justify-between items-center text-green-600 dark:text-green-400">
-                <span className="font-medium">
-                  Coupon: {appliedCoupon.code}
-                </span>
-                <span className="font-semibold">
-                  -{formatPrice(appliedCoupon.discountAmount)}
-                </span>
+            {subscriptionData?.appliedCoupon && (
+              <div className="space-y-2">
+                <div className="flex justify-between items-center text-green-600 dark:text-green-400">
+                  <div className="flex flex-col">
+                    <span className="font-medium">
+                      Coupon: {subscriptionData.appliedCoupon.title}
+                    </span>
+                    <span className="text-sm text-green-500 dark:text-green-400">
+                      Code: {subscriptionData.appliedCoupon.redemptionCode}
+                    </span>
+                  </div>
+                  <span className="font-semibold">
+                    -{formatPrice(calculateDiscount(subscriptionData.planDetails.price, subscriptionData.appliedCoupon))}
+                  </span>
+                </div>
               </div>
             )}
 
@@ -217,46 +264,73 @@ function CheckoutContent() {
 
             {/* Coupon Section */}
             <div className="pt-4 border-t border-gray-200 dark:border-gray-600">
-              {appliedCoupon ? (
-                <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
-                  <div className="flex items-center">
-                    <svg className="w-5 h-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                    </svg>
-                    <span className="text-green-700 dark:text-green-300 font-medium">
-                      Coupon "{appliedCoupon.code}" applied
-                    </span>
+              {subscriptionData?.appliedCoupon ? (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+                    <div className="flex items-center">
+                      <svg className="w-5 h-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                      <div>
+                        <div className="text-green-700 dark:text-green-300 font-medium">
+                          {subscriptionData.appliedCoupon.title}
+                        </div>
+                        <div className="text-green-600 dark:text-green-400 text-sm">
+                          {subscriptionData.appliedCoupon.description}
+                        </div>
+                        <div className="text-green-600 dark:text-green-400 text-xs">
+                          Code: {subscriptionData.appliedCoupon.redemptionCode}
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      onClick={removeCoupon}
+                      className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 text-sm font-medium"
+                    >
+                      Remove
+                    </button>
                   </div>
-                  <button
-                    onClick={removeCoupon}
-                    className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 text-sm font-medium"
-                  >
-                    Remove
-                  </button>
+                  <div className="text-sm text-gray-500 dark:text-gray-400 text-center">
+                    Only one coupon can be applied per order. Remove the current coupon to add a different one.
+                  </div>
                 </div>
               ) : (
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    placeholder="Coupon"
-                    value={couponCode}
-                    onChange={(e) => setCouponCode(e.target.value)}
-                    disabled={isVerifyingCoupon}
-                    className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50"
-                  />
-                  <button
-                    onClick={applyCoupon}
-                    disabled={isVerifyingCoupon || !couponCode.trim()}
-                    className="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-medium rounded-lg transition-colors duration-200 flex items-center"
-                  >
-                    {isVerifyingCoupon ? (
-                      <svg className="animate-spin h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                    ) : null}
-                    Add
-                  </button>
+                <div className="space-y-2">
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="Enter coupon code"
+                      value={couponCode}
+                      onChange={(e) => {
+                        setCouponCode(e.target.value);
+                        setCouponError(null); // Clear error when typing
+                      }}
+                      disabled={isVerifyingCoupon}
+                      className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50"
+                    />
+                    <button
+                      onClick={applyCoupon}
+                      disabled={isVerifyingCoupon || !couponCode.trim()}
+                      className="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-medium rounded-lg transition-colors duration-200 flex items-center min-w-[60px] justify-center"
+                    >
+                      {isVerifyingCoupon ? (
+                        <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                      ) : (
+                        'Add'
+                      )}
+                    </button>
+                  </div>
+                  {couponError && (
+                    <div className="text-red-600 dark:text-red-400 text-sm">
+                      {couponError}
+                    </div>
+                  )}
+                  <div className="text-sm text-gray-500 dark:text-gray-400">
+                    You can apply one coupon per order
+                  </div>
                 </div>
               )}
             </div>
@@ -266,10 +340,26 @@ function CheckoutContent() {
               {/* Confirm and Pay Button */}
               <button
                 onClick={confirmAndPay}
-                className="w-full py-3 px-4 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-colors duration-200 flex items-center justify-center"
+                disabled={!!couponError || isVerifyingCoupon}
+                className="w-full py-3 px-4 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-colors duration-200 flex items-center justify-center"
               >
-                Confirm and pay
+                {isVerifyingCoupon ? (
+                  <>
+                    <svg className="animate-spin h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Verifying coupon...
+                  </>
+                ) : (
+                  'Confirm and pay'
+                )}
               </button>
+              {couponError && (
+                <div className="text-red-600 dark:text-red-400 text-sm text-center">
+                  Please resolve the coupon issue to proceed
+                </div>
+              )}
 
               {/* Change Plan Button */}
               <button

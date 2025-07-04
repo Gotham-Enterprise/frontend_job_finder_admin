@@ -10,6 +10,8 @@ import FullScreenSpinner from '@/components/ui/FullScreenSpinner';
 import { CheckLineIcon, CloseLineIcon } from '@/icons';
 import { useToast } from '@/context/ToastContext';
 import { useSubscriptionByCompany } from '@/services/hooks/useSubscriptionByCompany';
+import { useSubscriptionContext } from '@/context/SubscriptionContext';
+import { formatDate, formatDateTime } from '@/services/utils/dateUtils';
 
 export default function SubscriptionsPage() {
   const searchParams = useSearchParams();
@@ -19,8 +21,47 @@ export default function SubscriptionsPage() {
   const [isViewPlanModalOpen, setIsViewPlanModalOpen] = useState(false);
   const [isCancelSubscriptionModalOpen, setIsCancelSubscriptionModalOpen] = useState(false);
   const { addToast } = useToast();
+  const { copyToClipboard } = useSubscriptionContext();
   
   const { subscriptionData, loading, error } = useSubscriptionByCompany(employerId);
+
+  const handleCopyRedemptionCode = async (redemptionCode: string) => {
+    try {
+      await copyToClipboard(redemptionCode, 'Redemption Code');
+      addToast({
+        variant: 'success',
+        title: 'Copied!',
+        message: 'Redemption code copied to clipboard',
+        duration: 3000,
+      });
+    } catch (error) {
+      addToast({
+        variant: 'error',
+        title: 'Copy Failed',
+        message: 'Failed to copy redemption code',
+        duration: 3000,
+      });
+    }
+  };
+
+  const handleCopyCompanyId = async (companyId: string) => {
+    try {
+      await copyToClipboard(companyId, 'Company ID');
+      addToast({
+        variant: 'success',
+        title: 'Copied!',
+        message: 'Company ID copied to clipboard',
+        duration: 3000,
+      });
+    } catch (error) {
+      addToast({
+        variant: 'error',
+        title: 'Copy Failed',
+        message: 'Failed to copy company ID',
+        duration: 3000,
+      });
+    }
+  };
 
   useEffect(() => {
     if (success === 'true') {
@@ -41,13 +82,27 @@ export default function SubscriptionsPage() {
     router.push(`/pricing?employerId=${employerId}`);
   };
 
-  const formatDate = (dateString: string | null) => {
+  const formatLocalDate = (dateString: string | null) => {
     if (!dateString) return 'Not set';
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
       day: 'numeric'
     });
+  };
+
+  const formatDiscountAmount = (amountOffInCents: number | null, percentOff: number | null) => {
+    if (amountOffInCents) {
+      return `$${(amountOffInCents / 100).toFixed(2)} off`;
+    }
+    if (percentOff) {
+      return `${percentOff}% off`;
+    }
+    return 'No discount';
+  };
+
+  const formatCardExpiry = (expMonth: number, expYear: number) => {
+    return `${expMonth.toString().padStart(2, '0')}/${expYear.toString().slice(-2)}`;
   };
 
   const formatPrice = (priceInCents: number) => {
@@ -370,6 +425,157 @@ export default function SubscriptionsPage() {
           </div>
         </div>
 
+        {/* Coupon and Payment Method Details */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Coupon Details */}
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">Coupon Details</h3>
+            {subscriptionData.coupon ? (
+              <div className="space-y-4">
+                <div className="flex justify-between items-center py-3 border-b border-gray-100 dark:border-gray-700">
+                  <span className="text-gray-600 dark:text-gray-400">Coupon Title</span>
+                  <span className="font-medium text-gray-900 dark:text-white">
+                    {subscriptionData.coupon.title}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center py-3 border-b border-gray-100 dark:border-gray-700">
+                  <span className="text-gray-600 dark:text-gray-400">Description</span>
+                  <span className="font-medium text-gray-900 dark:text-white text-right max-w-xs">
+                    {subscriptionData.coupon.description}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center py-3 border-b border-gray-100 dark:border-gray-700">
+                  <span className="text-gray-600 dark:text-gray-400">Redemption Code</span>
+                  <div className="flex items-center space-x-2">
+                    <span className="font-mono text-sm bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-gray-900 dark:text-white">
+                      {subscriptionData.coupon.redemptionCode}
+                    </span>
+                    <button
+                      onClick={() => subscriptionData.coupon && handleCopyRedemptionCode(subscriptionData.coupon.redemptionCode)}
+                      className="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
+                      title="Copy redemption code"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+                <div className="flex justify-between items-center py-3 border-b border-gray-100 dark:border-gray-700">
+                  <span className="text-gray-600 dark:text-gray-400">Discount Amount</span>
+                  <span className="font-medium text-green-600 dark:text-green-400">
+                    {formatDiscountAmount(subscriptionData.coupon.amountOffInCents, subscriptionData.coupon.percentOff)}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center py-3 border-b border-gray-100 dark:border-gray-700">
+                  <span className="text-gray-600 dark:text-gray-400">Duration</span>
+                  <span className="font-medium text-gray-900 dark:text-white">
+                    {subscriptionData.coupon.duration}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center py-3 border-b border-gray-100 dark:border-gray-700">
+                  <span className="text-gray-600 dark:text-gray-400">Admin Only</span>
+                  <Badge variant="solid" color={subscriptionData.coupon.isOnlyAdminCanApply ? "success" : "light"} size="sm">
+                    {subscriptionData.coupon.isOnlyAdminCanApply ? "Yes" : "No"}
+                  </Badge>
+                </div>
+                {subscriptionData.coupon.createdAt && (
+                  <div className="flex justify-between items-center py-3 border-b border-gray-100 dark:border-gray-700">
+                    <span className="text-gray-600 dark:text-gray-400">Created</span>
+                    <span className="font-medium text-gray-900 dark:text-white">
+                      {formatDateTime(subscriptionData.coupon.createdAt)}
+                    </span>
+                  </div>
+                )}
+                {subscriptionData.coupon.updatedAt && (
+                  <div className="flex justify-between items-center py-3 border-b border-gray-100 dark:border-gray-700">
+                    <span className="text-gray-600 dark:text-gray-400">Updated</span>
+                    <span className="font-medium text-gray-900 dark:text-white">
+                      {formatDateTime(subscriptionData.coupon.updatedAt)}
+                    </span>
+                  </div>
+                )}
+                {subscriptionData.coupon.deactivatedAt && (
+                  <div className="flex justify-between items-center py-3">
+                    <span className="text-gray-600 dark:text-gray-400">Deactivated</span>
+                    <span className="font-medium text-red-600 dark:text-red-400">
+                      {formatDateTime(subscriptionData.coupon.deactivatedAt)}
+                    </span>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="flex items-center justify-center py-8">
+                <div className="text-center">
+                  <svg className="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <p className="text-gray-500 dark:text-gray-400">No coupon applied</p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Payment Method Details */}
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">Payment Method Details</h3>
+            {subscriptionData.currentPaymentMethod ? (
+              <div className="space-y-4">
+                <div className="flex justify-between items-center py-3 border-b border-gray-100 dark:border-gray-700">
+                  <span className="text-gray-600 dark:text-gray-400">Card Brand</span>
+                  <div className="flex items-center space-x-2">
+                    <CreditCardIcon className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                    <span className="font-medium text-gray-900 dark:text-white capitalize">
+                      {subscriptionData.currentPaymentMethod.brand}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex justify-between items-center py-3 border-b border-gray-100 dark:border-gray-700">
+                  <span className="text-gray-600 dark:text-gray-400">Card Number</span>
+                  <span className="font-mono text-sm text-gray-900 dark:text-white">
+                    •••• •••• •••• {subscriptionData.currentPaymentMethod.last4Digits}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center py-3 border-b border-gray-100 dark:border-gray-700">
+                  <span className="text-gray-600 dark:text-gray-400">Expiry Date</span>
+                  <span className="font-mono text-sm text-gray-900 dark:text-white">
+                    {formatCardExpiry(subscriptionData.currentPaymentMethod.expMonth, subscriptionData.currentPaymentMethod.expYear)}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center py-3 border-b border-gray-100 dark:border-gray-700">
+                  <span className="text-gray-600 dark:text-gray-400">Default Card</span>
+                  <Badge variant="solid" color={subscriptionData.currentPaymentMethod.isDefault ? "success" : "light"} size="sm">
+                    {subscriptionData.currentPaymentMethod.isDefault ? "Yes" : "No"}
+                  </Badge>
+                </div>
+                <div className="flex justify-between items-center py-3 border-b border-gray-100 dark:border-gray-700">
+                  <span className="text-gray-600 dark:text-gray-400">Added</span>
+                  <span className="font-medium text-gray-900 dark:text-white">
+                    {formatDateTime(subscriptionData.currentPaymentMethod.createdAt)}
+                  </span>
+                </div>
+                {subscriptionData.currentPaymentMethod.updatedAt && (
+                  <div className="flex justify-between items-center py-3">
+                    <span className="text-gray-600 dark:text-gray-400">Updated</span>
+                    <span className="font-medium text-gray-900 dark:text-white">
+                      {formatDateTime(subscriptionData.currentPaymentMethod.updatedAt)}
+                    </span>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="flex items-center justify-center py-8">
+                <div className="text-center">
+                  <svg className="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                  </svg>
+                  <p className="text-gray-500 dark:text-gray-400">No payment method configured</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* Subscription Details */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Billing Information */}
@@ -379,35 +585,35 @@ export default function SubscriptionsPage() {
               <div className="flex justify-between items-center py-3 border-b border-gray-100 dark:border-gray-700">
                 <span className="text-gray-600 dark:text-gray-400">Subscription Start</span>
                 <span className="font-medium text-gray-900 dark:text-white">
-                  {formatDate(subscriptionData.currentSubscriptionStartDate)}
+                  {formatLocalDate(subscriptionData.currentSubscriptionStartDate)}
                 </span>
               </div>
               <div className="flex justify-between items-center py-3 border-b border-gray-100 dark:border-gray-700">
                 <span className="text-gray-600 dark:text-gray-400">Subscription End</span>
                 <span className="font-medium text-gray-900 dark:text-white">
-                  {formatDate(subscriptionData.currentSubscriptionEndDate)}
+                  {formatLocalDate(subscriptionData.currentSubscriptionEndDate)}
                 </span>
               </div>
               <div className="flex justify-between items-center py-3 border-b border-gray-100 dark:border-gray-700">
                 <span className="text-gray-600 dark:text-gray-400">Next Payment</span>
                 <span className="font-medium text-gray-900 dark:text-white">
-                  {formatDate(subscriptionData.nextPaymentDate)}
+                  {formatLocalDate(subscriptionData.nextPaymentDate)}
                 </span>
               </div>
               {subscriptionData.schedulledDowngradeDate && (
                 <div className="flex justify-between items-center py-3 border-b border-gray-100 dark:border-gray-700">
                   <span className="text-gray-600 dark:text-gray-400">Scheduled Downgrade</span>
                   <span className="font-medium text-orange-600 dark:text-orange-400">
-                    {formatDate(subscriptionData.schedulledDowngradeDate)}
+                    {formatLocalDate(subscriptionData.schedulledDowngradeDate)}
                   </span>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Company & Payment Method */}
+          {/* Company Information */}
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">Company & Payment</h3>
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">Company Information</h3>
             <div className="space-y-4">
               <div className="flex justify-between items-center py-3 border-b border-gray-100 dark:border-gray-700">
                 <span className="text-gray-600 dark:text-gray-400">Company Name</span>
@@ -415,31 +621,22 @@ export default function SubscriptionsPage() {
                   {subscriptionData.company.name}
                 </span>
               </div>
-              <div className="flex justify-between items-center py-3 border-b border-gray-100 dark:border-gray-700">
+              <div className="flex justify-between items-center py-3">
                 <span className="text-gray-600 dark:text-gray-400">Company ID</span>
-                <span className="font-mono text-sm text-gray-500 dark:text-gray-400">
-                  {subscriptionData.company.id}
-                </span>
-              </div>
-              <div className="py-3">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-gray-600 dark:text-gray-400">Payment Method</span>
-                </div>
-                {subscriptionData.currentPaymentMethod ? (
-                  <div className="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                    <CreditCardIcon className="w-6 h-6 text-gray-600 dark:text-gray-400" />
-                    <div>
-                      <p className="font-medium text-gray-900 dark:text-white">Payment method configured</p>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex items-center space-x-3 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
-                    <svg className="w-5 h-5 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.502 0L4.732 15.5c-.77.833.192 2.5 1.732 2.5z" />
+                <div className="flex items-center space-x-2">
+                  <span className="font-mono text-sm text-gray-500 dark:text-gray-400">
+                    {subscriptionData.company.id}
+                  </span>
+                  <button
+                    onClick={() => handleCopyCompanyId(subscriptionData.company.id)}
+                    className="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
+                    title="Copy company ID"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                     </svg>
-                    <span className="text-yellow-700 dark:text-yellow-300 text-sm">No payment method configured</span>
-                  </div>
-                )}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
