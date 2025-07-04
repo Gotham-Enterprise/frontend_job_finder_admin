@@ -125,6 +125,7 @@ export interface CouponData {
   duration: string;
   redemptionCode: string;
   stripeCouponId: string;
+  currency: string;
   createdAt?: string;
   updatedAt?: string;
   deactivatedAt?: string | null;

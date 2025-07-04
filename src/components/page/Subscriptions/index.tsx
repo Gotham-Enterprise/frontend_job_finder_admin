@@ -474,6 +474,12 @@ export default function SubscriptionsPage() {
                   </span>
                 </div>
                 <div className="flex justify-between items-center py-3 border-b border-gray-100 dark:border-gray-700">
+                  <span className="text-gray-600 dark:text-gray-400">Currency</span>
+                  <span className="font-medium text-gray-900 dark:text-white">
+                    {subscriptionData.coupon.currency}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center py-3 border-b border-gray-100 dark:border-gray-700">
                   <span className="text-gray-600 dark:text-gray-400">Admin Only</span>
                   <Badge variant="solid" color={subscriptionData.coupon.isOnlyAdminCanApply ? "success" : "light"} size="sm">
                     {subscriptionData.coupon.isOnlyAdminCanApply ? "Yes" : "No"}
