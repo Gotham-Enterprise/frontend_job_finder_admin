@@ -1,4 +1,4 @@
-import { SubscriptionDetailsResponse, PricingPlansResponse, PlanInterval, SubscriptionPurchaseRequest, SubscriptionPurchaseResponse } from '../types/subscription';
+import { SubscriptionDetailsResponse, PricingPlansResponse, PlanInterval, SubscriptionPurchaseRequest, SubscriptionPurchaseResponse, CouponVerificationResponse } from '../types/subscription';
 import { apiGet, apiPost } from './apiUtils';
 
 export const subscriptionApi = {
@@ -6,8 +6,16 @@ export const subscriptionApi = {
     return apiGet<SubscriptionDetailsResponse>(`/api/admin/employers/subscription/details/${employerId}`);
   },
 
+  async getSubscriptionByCompanyId(companyId: string): Promise<SubscriptionDetailsResponse> {
+    return apiGet<SubscriptionDetailsResponse>(`/api/admin/subscriptions/company/${companyId}`);
+  },
+
   async getSubscriptionPlans(interval: PlanInterval = 'MONTHLY'): Promise<PricingPlansResponse> {
     return apiGet<PricingPlansResponse>(`/api/categories/subscriptionPlans?interval=${interval}`);
+  },
+
+  async verifyCoupon(couponRedemptionCode: string): Promise<CouponVerificationResponse> {
+    return apiGet<CouponVerificationResponse>(`/api/admin/coupons/verify/${couponRedemptionCode}`);
   },
 
   async purchaseSubscription(purchaseData: SubscriptionPurchaseRequest): Promise<SubscriptionPurchaseResponse> {

@@ -1,15 +1,50 @@
 export interface SubscriptionDetails {
   id: string;
-  companyName: string;
-  email: string;
-  nextPaymentDate: string;
-  status: 'ACTIVE' | 'INACTIVE' | 'CANCELLED' | 'EXPIRED';
-  card: string;
-  last4Digits: string;
-  brand: string;
-  currentPlan: string;
+  stripeSubscriptionId: string;
+  companyId: string;
   currentPlanId: number;
-  price: number;
+  couponId: string | null;
+  currentPaymentMethodId: string | null;
+  status: 'ACTIVE' | 'INACTIVE' | 'CANCELLED' | 'EXPIRED';
+  currentSubscriptionStartDate: string;
+  currentSubscriptionEndDate: string;
+  nextPaymentDate: string | null;
+  schedulledDowngradeDate: string | null;
+  schedulledDowngradePlanId: number | null;
+  jobPostsUsed: number;
+  resumeSearchUsed: number;
+  profileViewsUsed: number;
+  emailSendingUsed: number;
+  resumeDownloadUsed: number;
+  employeesSeatsUsed: number;
+  isFeaturedEmployer: boolean;
+  createdAt: string;
+  updatedAt: string;
+  currentPlan: {
+    id: number;
+    name: string;
+    description: string;
+    stripeProductId: string;
+    stripePriceId: string;
+    priceInCents: number;
+    interval: 'MONTHLY' | 'QUARTERLY' | 'SEMI_ANNUALLY' | 'ANNUALLY';
+    isActive: boolean;
+    isTrialPlan: boolean;
+    jobPostCredit: number;
+    resumeSearchCredit: number | null;
+    profileViewsCredit: number;
+    emailSendingCredit: number;
+    resumeDownloadCredit: number;
+    employeesSeatsCredit: number;
+    createdAt: string;
+    updatedAt: string;
+  };
+  company: {
+    id: string;
+    name: string;
+  };
+  coupon: any | null;
+  currentPaymentMethod: any | null;
 }
 
 export interface SubscriptionDetailsResponse {
@@ -65,6 +100,7 @@ export interface SubscriptionPurchaseRequest {
   subscriptionPlanId: number;
   stripePriceId: string;
   companyId: string;
+  couponRedemptionCode?: string; // Optional
   paymentMethodType: string;
   paymentMethodToken: string;
   isSetCardDefault: boolean;
@@ -77,4 +113,15 @@ export interface SubscriptionPurchaseResponse {
     subscriptionId: string;
     status: string;
   };
+}
+
+export interface CouponVerificationResponse {
+  success: boolean;
+  message?: string;
+  data?: {
+    couponCode: string;
+    discountAmount: number;
+    isValid: boolean;
+  };
+  error?: string;
 }

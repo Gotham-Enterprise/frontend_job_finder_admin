@@ -63,7 +63,7 @@ export default function PricingTable() {
   };
 
   const navigateBack = () => {
-    router.back();
+    router.push(`/admin/employers`);
   };
 
   const selectPlan = (plan: PricingPlan) => {

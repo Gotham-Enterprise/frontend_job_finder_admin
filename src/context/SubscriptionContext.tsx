@@ -7,6 +7,7 @@ export interface SubscriptionData {
   subscriptionPlanId: number;
   stripePriceId: string;
   companyId: string;
+  couponRedemptionCode?: string;
   paymentMethodType: string;
   paymentMethodToken: string;
   isSetCardDefault: boolean;

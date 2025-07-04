@@ -4,17 +4,26 @@ import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { PricingPlan } from '@/services/types/subscription';
 import { useSubscriptionContext, SubscriptionData } from '@/context/SubscriptionContext';
+import { subscriptionApi } from '@/services/api/subscription';
+import { useToast } from '@/context/ToastContext';
 import FullScreenSpinner from '@/components/ui/FullScreenSpinner';
 
 function CheckoutContent() {
   const [couponCode, setCouponCode] = useState('');
+  const [isVerifyingCoupon, setIsVerifyingCoupon] = useState(false);
+  const [appliedCoupon, setAppliedCoupon] = useState<{
+    code: string;
+    discountAmount: number;
+    isValid: boolean;
+  } | null>(null);
   
   const searchParams = useSearchParams();
   const router = useRouter();
   const employerId = searchParams.get('employerId');
   const planId = searchParams.get('planId');
+  const { addToast } = useToast();
   
-  const { subscriptionData, clearSubscriptionData, isSubscriptionDataReady } = useSubscriptionContext();
+  const { subscriptionData, setSubscriptionData, clearSubscriptionData, isSubscriptionDataReady } = useSubscriptionContext();
 
   useEffect(() => {
     if (!isSubscriptionDataReady) {
@@ -31,9 +40,81 @@ function CheckoutContent() {
     });
   };
 
-  const applyCoupon = () => {
-    // Implement coupon logic here
-    console.log('Applying coupon:', couponCode);
+  const calculateTotal = () => {
+    const originalPrice = subscriptionData?.planDetails.price || 0;
+    const discount = appliedCoupon?.discountAmount || 0;
+    return Math.max(0, originalPrice - discount);
+  };
+
+  const applyCoupon = async () => {
+    if (!couponCode.trim()) {
+      addToast({
+        variant: 'warning',
+        title: 'Coupon Required',
+        message: 'Please enter a coupon code',
+      });
+      return;
+    }
+
+    setIsVerifyingCoupon(true);
+    
+    try {
+      const response = await subscriptionApi.verifyCoupon(couponCode);
+      
+      if (response.success && response.data) {
+        setAppliedCoupon({
+          code: response.data.couponCode,
+          discountAmount: response.data.discountAmount,
+          isValid: response.data.isValid,
+        });
+        addToast({
+          variant: 'success',
+          title: 'Coupon Applied',
+          message: `Coupon "${couponCode}" has been applied successfully!`,
+        });
+        
+        // Update subscription data with coupon
+        if (subscriptionData) {
+          setSubscriptionData({
+            ...subscriptionData,
+            couponRedemptionCode: couponCode,
+          });
+        }
+      } else {
+        addToast({
+          variant: 'error',
+          title: 'Invalid Coupon',
+          message: response.error || 'The coupon code is invalid or expired',
+        });
+      }
+    } catch (error) {
+      console.error('Error verifying coupon:', error);
+      addToast({
+        variant: 'error',
+        title: 'Verification Failed',
+        message: 'Failed to verify coupon. Please try again.',
+      });
+    } finally {
+      setIsVerifyingCoupon(false);
+    }
+  };
+
+  const removeCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponCode('');
+    
+    if (subscriptionData) {
+      setSubscriptionData({
+        ...subscriptionData,
+        couponRedemptionCode: undefined,
+      });
+    }
+
+    addToast({
+      variant: 'info',
+      title: 'Coupon Removed',
+      message: 'The coupon has been removed from your order',
+    });
   };
 
   const confirmAndPay = () => {
@@ -112,33 +193,72 @@ function CheckoutContent() {
               </span>
             </div>
 
+            {/* Applied Coupon */}
+            {appliedCoupon && (
+              <div className="flex justify-between items-center text-green-600 dark:text-green-400">
+                <span className="font-medium">
+                  Coupon: {appliedCoupon.code}
+                </span>
+                <span className="font-semibold">
+                  -{formatPrice(appliedCoupon.discountAmount)}
+                </span>
+              </div>
+            )}
+
             {/* Total */}
             <div className="flex justify-between items-center pt-4 border-t border-gray-200 dark:border-gray-600">
               <span className="text-lg font-semibold text-gray-900 dark:text-white">
                 Total
               </span>
               <span className="text-lg font-bold text-gray-900 dark:text-white">
-                {formatPrice(subscriptionData.planDetails.price)}
+                {formatPrice(calculateTotal())}
               </span>
             </div>
 
             {/* Coupon Section */}
             <div className="pt-4 border-t border-gray-200 dark:border-gray-600">
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  placeholder="Coupon"
-                  value={couponCode}
-                  onChange={(e) => setCouponCode(e.target.value)}
-                  className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                />
-                <button
-                  onClick={applyCoupon}
-                  className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors duration-200"
-                >
-                  Add
-                </button>
-              </div>
+              {appliedCoupon ? (
+                <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+                  <div className="flex items-center">
+                    <svg className="w-5 h-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                    <span className="text-green-700 dark:text-green-300 font-medium">
+                      Coupon "{appliedCoupon.code}" applied
+                    </span>
+                  </div>
+                  <button
+                    onClick={removeCoupon}
+                    className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 text-sm font-medium"
+                  >
+                    Remove
+                  </button>
+                </div>
+              ) : (
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="Coupon"
+                    value={couponCode}
+                    onChange={(e) => setCouponCode(e.target.value)}
+                    disabled={isVerifyingCoupon}
+                    className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50"
+                  />
+                  <button
+                    onClick={applyCoupon}
+                    disabled={isVerifyingCoupon || !couponCode.trim()}
+                    className="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-medium rounded-lg transition-colors duration-200 flex items-center"
+                  >
+                    {isVerifyingCoupon ? (
+                      <svg className="animate-spin h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                    ) : null}
+                    Add
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Action Buttons */}

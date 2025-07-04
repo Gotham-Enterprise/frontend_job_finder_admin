@@ -13,6 +13,7 @@ import {
 } from '@stripe/react-stripe-js';
 import { useSubscriptionContext } from '@/context/SubscriptionContext';
 import { subscriptionApi } from '@/services/api/subscription';
+import { useToast } from '@/context/ToastContext';
 import FullScreenSpinner from '@/components/ui/FullScreenSpinner';
 
 // Initialize Stripe
@@ -43,6 +44,7 @@ function PaymentForm() {
   const searchParams = useSearchParams();
   const employerId = searchParams.get('employerId');
   const planId = searchParams.get('planId');
+  const { addToast } = useToast();
   
   const { subscriptionData, clearSubscriptionData, isSubscriptionDataReady } = useSubscriptionContext();
 
@@ -104,6 +106,7 @@ function PaymentForm() {
         subscriptionPlanId: subscriptionData.subscriptionPlanId,
         stripePriceId: subscriptionData.stripePriceId,
         companyId: subscriptionData.companyId,
+        ...(subscriptionData.couponRedemptionCode && { couponRedemptionCode: subscriptionData.couponRedemptionCode }),
         paymentMethodType: subscriptionData.paymentMethodType,
         paymentMethodToken: token.id, // Use the actual Stripe token
         isSetCardDefault: subscriptionData.isSetCardDefault
@@ -118,6 +121,14 @@ function PaymentForm() {
         throw new Error(response.message || 'Purchase failed');
       }
 
+      // Show success toast
+      addToast({
+        variant: 'success',
+        title: 'Payment Successful!',
+        message: 'Your subscription has been activated successfully.',
+        duration: 6000,
+      });
+
       // Clear subscription data after successful payment
       clearSubscriptionData();
 
@@ -126,7 +137,16 @@ function PaymentForm() {
 
     } catch (error) {
       console.error('Payment failed:', error);
-      setError('Payment failed. Please try again.');
+      const errorMessage = error instanceof Error ? error.message : 'Payment failed. Please try again.';
+      setError(errorMessage);
+      
+      // Show error toast
+      addToast({
+        variant: 'error',
+        title: 'Payment Failed',
+        message: errorMessage,
+        duration: 6000,
+      });
     } finally {
       setIsProcessing(false);
     }
