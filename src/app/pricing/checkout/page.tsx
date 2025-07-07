@@ -95,7 +95,6 @@ function CheckoutContent() {
           message: `Coupon "${response.data.title}" has been applied successfully! You saved ${formatPrice(discount)}.`,
         });
         
-        // Update subscription data with coupon
         if (subscriptionData) {
           setSubscriptionData({
             ...subscriptionData,
@@ -150,7 +149,6 @@ function CheckoutContent() {
   const confirmAndPay = () => {
     if (!subscriptionData) return;
     
-    // Check if there's a coupon error that would prevent payment
     if (couponError) {
       addToast({
         variant: 'error',
@@ -160,7 +158,6 @@ function CheckoutContent() {
       return;
     }
     
-    // Navigate to payment form page
     router.push(`/pricing/checkout/payment?employerId=${employerId}&planId=${planId}`);
   };
 
@@ -303,7 +300,7 @@ function CheckoutContent() {
                       value={couponCode}
                       onChange={(e) => {
                         setCouponCode(e.target.value);
-                        setCouponError(null); // Clear error when typing
+                        setCouponError(null); 
                       }}
                       disabled={isVerifyingCoupon}
                       className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50"

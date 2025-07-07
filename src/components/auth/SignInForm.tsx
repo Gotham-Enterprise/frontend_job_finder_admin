@@ -105,8 +105,6 @@ export default function SignInForm() {  const [showPassword, setShowPassword] = 
   };
 
   const loginError = (error: Error) => {
-    console.error('Login error details:', error);
-    
     const { message, showReset } = getErrorMessage(error);
     
     setErrorMessage(message);
@@ -218,7 +216,7 @@ export default function SignInForm() {  const [showPassword, setShowPassword] = 
                     </span>
                   </div>
                   <Link
-                    href="/reset-password"
+                    href="/forgot-password"
                     className="text-sm text-brand-500 hover:text-brand-600 dark:text-brand-400"
                   >
                     Forgot password?

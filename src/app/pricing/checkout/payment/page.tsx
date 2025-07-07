@@ -16,7 +16,6 @@ import { subscriptionApi } from '@/services/api/subscription';
 import { useToast } from '@/context/ToastContext';
 import FullScreenSpinner from '@/components/ui/FullScreenSpinner';
 
-// Initialize Stripe
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY!);
 
 const CARD_ELEMENT_OPTIONS = {
@@ -133,20 +132,18 @@ function PaymentForm() {
         companyId: subscriptionData.companyId,
         ...(subscriptionData.couponRedemptionCode && { couponRedemptionCode: subscriptionData.couponRedemptionCode }),
         paymentMethodType: subscriptionData.paymentMethodType,
-        paymentMethodToken: token.id, // Use the actual Stripe token
+        paymentMethodToken: token.id, 
         isSetCardDefault: subscriptionData.isSetCardDefault
       };
 
       console.log('Final payment payload:', finalPayload);
 
-      // Make the actual API call to purchase subscription
       const response = await subscriptionApi.purchaseSubscription(finalPayload);
       
       if (!response.success) {
         throw new Error(response.message || 'Purchase failed');
       }
 
-      // Show success toast
       addToast({
         variant: 'success',
         title: 'Payment Successful!',
@@ -154,10 +151,9 @@ function PaymentForm() {
         duration: 6000,
       });
 
-      // Clear subscription data after successful payment
+    
       clearSubscriptionData();
 
-      // Navigate to success page
       router.push(`/admin/subscriptions?employerId=${employerId}&success=true`);
 
     } catch (error) {
@@ -165,7 +161,6 @@ function PaymentForm() {
       const errorMessage = error instanceof Error ? error.message : 'Payment failed. Please try again.';
       setError(errorMessage);
       
-      // Show error toast
       addToast({
         variant: 'error',
         title: 'Payment Failed',
@@ -277,14 +272,14 @@ function PaymentForm() {
                   </div>
                 </div>
 
-                {/* Error Message */}
+              
                 {error && (
                   <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
                     <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
                   </div>
                 )}
 
-                {/* Pay Button */}
+      
                 <button
                   type="submit"
                   disabled={!stripe || isProcessing}
@@ -303,7 +298,7 @@ function PaymentForm() {
             </div>
           </div>
 
-          {/* Order Summary - Right Side */}
+      
           <div className="lg:col-span-1">
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
               <div className="flex items-center justify-between mb-4">

@@ -2,7 +2,7 @@ import { useMutation } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { authApi } from '../api/auth';
 import { authUtils } from '../utils/authUtils';
-import { LoginCredentials, AuthResponse } from '../types/auth';
+import { LoginCredentials, AuthResponse, ForgotPasswordRequest, ResetPasswordRequest } from '../types/auth';
 
 export const useLogin = () => {
   const router = useRouter();
@@ -34,6 +34,31 @@ export const useLogout = () => {
     onError: () => {
       authUtils.forceAuthClear();
       router.push('/login');
+    }
+  });
+};
+
+export const useForgotPassword = () => {
+  return useMutation({
+    mutationFn: (request: ForgotPasswordRequest) => authApi.forgotPassword(request),
+    onSuccess: (data) => {
+      return data; 
+    },
+    onError: (error) => {
+      return error; 
+    }
+  });
+};
+
+export const useResetPassword = () => {
+  return useMutation({
+    mutationFn: ({ resetToken, request }: { resetToken: string; request: ResetPasswordRequest }) => 
+      authApi.resetPassword(resetToken, request),
+    onSuccess: (data) => {
+      return data; 
+    },
+    onError: (error) => {
+      return error; 
     }
   });
 };

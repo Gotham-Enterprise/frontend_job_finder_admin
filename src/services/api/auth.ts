@@ -1,6 +1,6 @@
-import { LoginCredentials, AuthResponse } from '../types/auth';
+import { LoginCredentials, AuthResponse, ForgotPasswordRequest, ForgotPasswordResponse, ResetPasswordRequest, ResetPasswordResponse } from '../types/auth';
 import { showToast } from '../utils/toast';
-import { apiPost, apiGet } from './apiUtils';
+import { apiPost, apiGet, apiPut } from './apiUtils';
 
 const ERROR_MESSAGES = {
   400: 'Invalid request data',
@@ -110,11 +110,32 @@ export const authApi = {
 
       throw error;
     }
-  },  async logout(): Promise<void> {
+  },
+
+  async logout(): Promise<void> {
     try {
       await apiGet('/api/auth/logout', { includeAuth: false });
     } catch (error) {
       console.warn('Logout: Network or other error during logout, continuing with local cleanup:', error);
+    }
+  },
+
+  async forgotPassword(request: ForgotPasswordRequest): Promise<ForgotPasswordResponse> {
+    try {
+      const requestWithAdmin = { ...request, isAdmin: true };
+      const response = await apiPost<ForgotPasswordResponse>('/api/auth/forgot-password', requestWithAdmin, { includeAuth: false });
+      return response;
+    } catch (error: any) {
+      throw error;
+    }
+  },
+
+  async resetPassword(resetToken: string, request: ResetPasswordRequest): Promise<ResetPasswordResponse> {
+    try {
+      const response = await apiPut<ResetPasswordResponse>(`/api/auth/reset-password/${resetToken}`, request, { includeAuth: false });
+      return response;
+    } catch (error: any) {
+      throw error;
     }
   }
 };

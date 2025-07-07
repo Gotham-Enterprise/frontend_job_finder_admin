@@ -3,6 +3,25 @@ export interface LoginCredentials {
   password: string;
 }
 
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+export interface ForgotPasswordResponse {
+  success: boolean;
+  message: string;
+}
+
+export interface ResetPasswordRequest {
+  password: string;
+  confirmPassword: string;
+}
+
+export interface ResetPasswordResponse {
+  success: boolean;
+  message: string;
+}
+
 export interface User {
   id: string;
   email: string;

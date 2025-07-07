@@ -49,11 +49,7 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
   const copyToClipboard = async (text: string, label: string): Promise<void> => {
     try {
       await navigator.clipboard.writeText(text);
-      // You can add a toast notification here if needed
-      console.log(`${label} copied to clipboard: ${text}`);
     } catch (err) {
-      console.error(`Failed to copy ${label}:`, err);
-      // Fallback for older browsers
       const textArea = document.createElement('textarea');
       textArea.value = text;
       textArea.style.position = 'fixed';
@@ -64,9 +60,8 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
       textArea.select();
       try {
         document.execCommand('copy');
-        console.log(`${label} copied to clipboard (fallback): ${text}`);
       } catch (fallbackErr) {
-        console.error(`Failed to copy ${label} (fallback):`, fallbackErr);
+
       } finally {
         document.body.removeChild(textArea);
       }

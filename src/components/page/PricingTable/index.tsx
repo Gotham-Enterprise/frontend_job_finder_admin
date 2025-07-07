@@ -75,7 +75,7 @@ export default function PricingTable() {
       stripePriceId: plan.stripePriceId,
       companyId: employerId || "", 
       paymentMethodType: "card",
-      paymentMethodToken: "", // Will be filled in payment step
+      paymentMethodToken: "",
       isSetCardDefault: true,
       planDetails: {
         name: plan.name,
@@ -86,7 +86,6 @@ export default function PricingTable() {
       }
     };
     
-    // Store in context instead of localStorage
     setSubscriptionData(subscriptionData);
    
     router.push(`/pricing/checkout?employerId=${employerId}&planId=${plan.id}`);
