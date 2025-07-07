@@ -195,15 +195,7 @@ const AccountSettings: React.FC = () => {
           <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] p-6">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Account Details</h2>                
-              <Button
-                onClick={changePassword}
-                variant="ghost"
-                size="sm"
-                className="px-4 py-2 dark:text-white whitespace-nowrap text-primary flex items-center"
-              >
-                <PencilIcon className="flex-shrink-0" />
-                Change Password
-              </Button>
+             
             </div>
             
             <div className="space-y-3">
