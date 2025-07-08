@@ -12,6 +12,8 @@ import { useToast } from '@/context/ToastContext';
 import { useSubscriptionByCompany } from '@/services/hooks/useSubscriptionByCompany';
 import { useSubscriptionContext } from '@/context/SubscriptionContext';
 import { formatDate, formatDateTime } from '@/services/utils/dateUtils';
+import { formatInterval } from '@/services/utils/planUtils';
+import { subscriptionApi } from '@/services/api/subscription';
 
 export default function SubscriptionsPage() {
   const searchParams = useSearchParams();
@@ -20,6 +22,8 @@ export default function SubscriptionsPage() {
   const success = searchParams.get('success');
   const [isViewPlanModalOpen, setIsViewPlanModalOpen] = useState(false);
   const [isCancelSubscriptionModalOpen, setIsCancelSubscriptionModalOpen] = useState(false);
+  const [isConfirmCancelModalOpen, setIsConfirmCancelModalOpen] = useState(false);
+  const [isCancellingSubscription, setIsCancellingSubscription] = useState(false);
   const { addToast } = useToast();
   const { copyToClipboard } = useSubscriptionContext();
   
@@ -61,6 +65,56 @@ export default function SubscriptionsPage() {
         duration: 3000,
       });
     }
+  };
+
+  const cancelSubscription = async () => {
+    if (!subscriptionData?.company.id) {
+      addToast({
+        variant: 'error',
+        title: 'Error',
+        message: 'Company ID not found',
+        duration: 3000,
+      });
+      return;
+    }
+
+    try {
+      setIsCancellingSubscription(true);
+      const response = await subscriptionApi.cancelSubscription(subscriptionData.company.id);
+      
+      if (response.success) {
+        addToast({
+          variant: 'success',
+          title: 'Subscription Cancelled',
+          message: response.message || 'Subscription has been successfully cancelled',
+          duration: 5000,
+        });
+        setIsConfirmCancelModalOpen(false);
+        setIsCancelSubscriptionModalOpen(false);
+        window.location.reload();
+      } else {
+        addToast({
+          variant: 'error',
+          title: 'Cancellation Failed',
+          message: response.message || 'Failed to cancel subscription',
+          duration: 5000,
+        });
+      }
+    } catch (error) {
+      addToast({
+        variant: 'error',
+        title: 'Error',
+        message: 'An error occurred while cancelling the subscription',
+        duration: 5000,
+      });
+    } finally {
+      setIsCancellingSubscription(false);
+    }
+  };
+
+  const handleShowCancelConfirmation = () => {
+    setIsCancelSubscriptionModalOpen(false);
+    setIsConfirmCancelModalOpen(true);
   };
 
   useEffect(() => {
@@ -136,6 +190,10 @@ export default function SubscriptionsPage() {
     if (!credit || credit === 9999999) return 'Unlimited';
     return credit.toLocaleString();
   };
+
+
+
+  const canCancelSubscription = subscriptionData && subscriptionData.currentPlan.priceInCents > 0;
 
   if (loading) {
     return <FullScreenSpinner isVisible={true} message="Loading subscription details..." />;
@@ -222,7 +280,7 @@ export default function SubscriptionsPage() {
                       {formatPrice(subscriptionData.currentPlan.priceInCents)}
                     </span>
                     <span className="text-gray-600 dark:text-gray-400">
-                      per {subscriptionData.currentPlan.interval.toLowerCase()}
+                      per {formatInterval(subscriptionData.currentPlan.interval)}
                     </span>
                   </div>
                 </div>
@@ -651,14 +709,25 @@ export default function SubscriptionsPage() {
         {/* Action Buttons */}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
           <div className="flex justify-center">
-            <Button 
-              variant="ghost" 
-              className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300" 
-              size="lg"
-              onClick={() => setIsCancelSubscriptionModalOpen(true)}
-            >
-              Cancel Subscription
-            </Button>
+            {canCancelSubscription ? (
+              <Button 
+                variant="ghost" 
+                className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300" 
+                size="lg"
+                onClick={() => setIsCancelSubscriptionModalOpen(true)}
+                disabled={isCancellingSubscription}
+              >
+                Cancel Subscription
+              </Button>
+            ) : (
+              <div className="text-center">
+                <p className="text-gray-500 dark:text-gray-400 text-sm">
+                  {subscriptionData?.currentPlan.priceInCents === 0 
+                    ? 'No subscription' 
+                    : 'No active paid subscription'}
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -687,7 +756,7 @@ export default function SubscriptionsPage() {
                   {formatPrice(subscriptionData.currentPlan.priceInCents)}
                 </span>
                 <span className="text-gray-600 dark:text-gray-400 ml-2">
-                  per {subscriptionData.currentPlan.interval.toLowerCase()}
+                  per {formatInterval(subscriptionData.currentPlan.interval)}
                 </span>
               </div>
               <div className="space-x-2">
@@ -824,6 +893,7 @@ export default function SubscriptionsPage() {
               size="default"
               className="flex-1"
               onClick={() => setIsCancelSubscriptionModalOpen(false)}
+              disabled={isCancellingSubscription}
             >
               Keep Subscription
             </Button>
@@ -831,12 +901,83 @@ export default function SubscriptionsPage() {
               variant="outline" 
               size="default"
               className="flex-1 border-red-600 text-red-600 hover:bg-red-50 dark:border-red-400 dark:text-red-400 dark:hover:bg-red-900/20"
-              onClick={() => {
-                // Handle cancellation logic here
-                setIsCancelSubscriptionModalOpen(false);
-              }}
+              onClick={handleShowCancelConfirmation}
+              disabled={isCancellingSubscription}
             >
               Cancel Subscription
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Final Confirmation Modal */}
+      <Modal 
+        isOpen={isConfirmCancelModalOpen} 
+        onClose={() => setIsConfirmCancelModalOpen(false)}
+        isFullscreen={false}
+        className="max-w-md mx-4"
+      >
+        <div className="p-6">
+          <div className="mb-6 text-center">
+            <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 dark:bg-red-900/20 mb-4">
+              <svg className="h-6 w-6 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+            </div>
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+              Confirm Cancellation?
+            </h2>
+            <p className="text-gray-600 dark:text-gray-400 text-sm">
+              This action cannot be undone. The subscription will be cancelled immediately and access will be revoked at the end of the current billing period.
+            </p>
+          </div>
+
+          <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 mb-6">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                  <strong>Warning:</strong> Once cancelled, you'll need to purchase a new subscription to regain access to premium features.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Button 
+              variant="ghost" 
+              size="default"
+              className="flex-1"
+              onClick={() => {
+                setIsConfirmCancelModalOpen(false);
+                setIsCancelSubscriptionModalOpen(true);
+              }}
+              disabled={isCancellingSubscription}
+            >
+              Go Back
+            </Button>
+            <Button 
+              variant="default" 
+              size="default"
+              className="flex-1 bg-primary text-white hover:bg-primary/90 whitespace-nowrap"
+              onClick={cancelSubscription}
+              disabled={isCancellingSubscription}
+            >
+              {isCancellingSubscription ? (
+                <div className="flex items-center gap-2 whitespace-nowrap">
+                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  </svg>
+                  Cancelling...
+                </div>
+              ) : (
+                'Yes, Cancel Subscription'
+              )}
             </Button>
           </div>
         </div>

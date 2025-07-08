@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import {  formatDateTimeEST } from '@/services/utils/dateUtils';
 import {
@@ -14,6 +14,55 @@ import { EyeIcon, TimeIcon } from '@/icons';
 import { JobSeekersTableProps } from '@/services/types/JobSeekersTypes';
 import Avatar from '../../../ui/avatar/Avatar';
 
+
+interface SpecialtyDisplayProps {
+  specialties: string[];
+  jobSeekerId: string;
+  expandedRows: Set<string>;
+  onToggleExpanded: (jobSeekerId: string) => void;
+}
+
+const SpecialtyDisplay: React.FC<SpecialtyDisplayProps> = ({ 
+  specialties, 
+  jobSeekerId, 
+  expandedRows, 
+  onToggleExpanded 
+}) => {
+  if (!specialties || specialties.length === 0) {
+    return <span className="text-gray-400 dark:text-gray-500 text-sm italic">Not specified</span>;
+  }
+
+  const isExpanded = expandedRows.has(jobSeekerId);
+  const shouldShowToggle = specialties.length > 2;
+  const displayedSpecialties = isExpanded ? specialties : specialties.slice(0, 2);
+
+  const toggleExpanded = () => {
+    onToggleExpanded(jobSeekerId);
+  };
+
+  return (
+    <div className="text-sm text-gray-900 dark:text-white">
+      <div className="space-y-1">
+        {displayedSpecialties.map((specialty, index) => (
+          <div key={index} className="text-sm">
+            {specialty}
+          </div>
+        ))}
+      </div>
+      {shouldShowToggle && (
+        <Button
+          variant="text-primary"
+          size="sm"
+          className="text-brand-400 mt-1 p-0 h-auto text-xs"
+          onClick={toggleExpanded}
+        >
+          {isExpanded ? 'See Less' : `See More (${specialties.length - 2} more)`}
+        </Button>
+      )}
+    </div>
+  );
+};
+
 const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
   data,
   isLoading,
@@ -23,6 +72,17 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
   onViewResume,
   isViewingResume,
 }) => {
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+
+  const handleToggleExpanded = (jobSeekerId: string) => {
+    const newExpandedRows = new Set(expandedRows);
+    if (expandedRows.has(jobSeekerId)) {
+      newExpandedRows.delete(jobSeekerId);
+    } else {
+      newExpandedRows.add(jobSeekerId);
+    }
+    setExpandedRows(newExpandedRows);
+  };
   return (
     <div className="overflow-x-auto">
       <Table>
@@ -30,7 +90,7 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
         <TableBody>
           {isLoading ? (
             <TableRow>
-              <TableCell className="text-center py-8 px-6" colSpan={8}>
+              <TableCell className="text-center py-8 px-6" colSpan={9}>
                 <div className="flex items-center justify-center gap-3">
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-brand-500"></div>
                   <p className="text-gray-500 dark:text-gray-400">Loading...</p>
@@ -39,7 +99,7 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
             </TableRow>
           ) : !data?.data?.length ? (
             <TableRow>
-              <TableCell className="text-center py-8 px-6" colSpan={8}>
+              <TableCell className="text-center py-8 px-6" colSpan={9}>
                 <p className="text-gray-500 dark:text-gray-400">No job seekers found</p>
               </TableCell>
             </TableRow>
@@ -70,8 +130,16 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
                 </TableCell>
                 <TableCell className="py-4 px-6">
                   <p className="text-sm text-gray-900 dark:text-white">
-                    {jobSeeker.occupation || jobSeeker.specialty || 'Not specified'}
+                    {jobSeeker.occupation || 'Not specified'}
                   </p>
+                </TableCell>
+                <TableCell className="py-4 px-6">
+                  <SpecialtyDisplay 
+                    specialties={Array.isArray(jobSeeker.specialty) ? jobSeeker.specialty : (jobSeeker.specialty ? [jobSeeker.specialty] : [])} 
+                    jobSeekerId={jobSeeker.id}
+                    expandedRows={expandedRows}
+                    onToggleExpanded={handleToggleExpanded}
+                  />
                 </TableCell>
                 <TableCell className="py-4 px-6">
                   <p className="text-sm text-gray-900 dark:text-white">

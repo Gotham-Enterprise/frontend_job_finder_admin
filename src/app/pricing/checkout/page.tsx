@@ -375,7 +375,7 @@ function CheckoutContent() {
         {/* Plan Features Summary */}
         <div className="mt-6 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
           <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-            What&aposs included in {subscriptionData.planDetails.name}
+            What's included in {subscriptionData.planDetails.name}
           </h4>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="flex items-center">

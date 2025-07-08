@@ -25,7 +25,8 @@ export const useJobSeekersLogic = () => {
   const { mutate: viewResume, isPending: isViewingResume } = useViewResume();
   const tableColumns = useMemo(() => [
     { key: 'name', label: 'Name' },
-    { key: 'specialties', label: 'Occupation' },
+    { key: 'occupation', label: 'Occupation' },
+    { key: 'specialty', label: 'Specialty' },
     { key: 'state', label: 'Location' },
     { key: 'resume', label: 'Resume' },
     { key: 'dateJoined', label: 'Registration date' },

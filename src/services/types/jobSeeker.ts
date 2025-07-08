@@ -1,7 +1,7 @@
 export interface JobSeeker {
   id: string;
   name: string;
-  specialty: string;
+  specialty: string[];
   occupation: string;
   address: string;
   city: string;

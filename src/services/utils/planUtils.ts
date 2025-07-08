@@ -62,3 +62,18 @@ export const getPlanPrice = (planId: number): string => {
 export const getPlanFeatures = (planId: number): string[] => {
   return getPlanConfig(planId).features;
 };
+
+export const formatInterval = (interval: string): string => {
+  switch (interval.toLowerCase()) {
+    case 'monthly':
+      return 'month';
+    case 'yearly':
+      return 'year';
+    case 'weekly':
+      return 'week';
+    case 'daily':
+      return 'day';
+    default:
+      return interval.toLowerCase();
+  }
+};

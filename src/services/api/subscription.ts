@@ -1,5 +1,5 @@
 import { SubscriptionDetailsResponse, PricingPlansResponse, PlanInterval, SubscriptionPurchaseRequest, SubscriptionPurchaseResponse, CouponVerificationResponse } from '../types/subscription';
-import { apiGet, apiPost } from './apiUtils';
+import { apiGet, apiPost, apiPut } from './apiUtils';
 
 export const subscriptionApi = {
   async getSubscriptionDetails(employerId: string): Promise<SubscriptionDetailsResponse> {
@@ -20,5 +20,9 @@ export const subscriptionApi = {
 
   async purchaseSubscription(purchaseData: SubscriptionPurchaseRequest): Promise<SubscriptionPurchaseResponse> {
     return apiPost<SubscriptionPurchaseResponse>('/api/admin/subscriptions/purchase', purchaseData);
+  },
+
+  async cancelSubscription(companyId: string): Promise<{ success: boolean; message: string }> {
+    return apiPut<{ success: boolean; message: string }>(`/api/admin/subscriptions/cancel/${companyId}`);
   },
 };
