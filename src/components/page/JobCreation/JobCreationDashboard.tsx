@@ -37,6 +37,7 @@ const JobCreationDashboard: React.FC = () => {
   const [selectedOccupation, setSelectedOccupation] = useState<number | null>(null);
   const [description, setDescription] = useState('');
   const [isPublishing, setIsPublishing] = useState(false);
+  const [isDraftSaving, setIsDraftSaving] = useState(false);
   const { 
     data: employerDetailsResponse, 
     isLoading: isLoadingEmployer, 
@@ -77,24 +78,41 @@ const JobCreationDashboard: React.FC = () => {
   const { data: workSettingsData } = useWorkSettings();
   const { data: workFacilitiesData } = useWorkFacilities();
   const { data: shiftTypesData } = useShiftTypes();
-  const { data: clinicSizesData } = useClinicSizes();const createJobMutation = useMutation({
+  const { data: clinicSizesData } = useClinicSizes();  const createJobMutation = useMutation({
     mutationFn: ({ companyId, payload }: { companyId: string; payload: JobCreationPayload }) => 
       jobsAdminApi.createJob(companyId, payload),
-    onMutate: () => {
-      setIsPublishing(true);
-    },
-    onSuccess: (response) => {
-      setIsPublishing(false);
-      if (response.success) {
-        showToast.success('Job Created', `Job published successfully!`);
-        resetForm();
+    onMutate: ({ payload }) => {
+      const isDraft = payload.status === 'Draft';
+      if (isDraft) {
+        setIsDraftSaving(true);
       } else {
-        showToast.error('Job Creation Failed', response.message || 'Failed to create job');
+        setIsPublishing(true);
       }
     },
-    onError: (error: Error) => {
+    onSuccess: (response, { payload }) => {
+      const isDraft = payload.status === 'Draft';
+      setIsDraftSaving(false);
       setIsPublishing(false);
-      showToast.error('Job Creation Failed', `Failed to create job: ${error.message}`);
+      
+      if (response.success) {
+        const message = isDraft 
+          ? `Job saved as draft at step ${payload.step || currentStep}!`
+          : 'Job published successfully!';
+        showToast.success(isDraft ? 'Draft Saved' : 'Job Created', message);
+        if (!isDraft) {
+          resetForm();
+        }
+      } else {
+        const actionType = isDraft ? 'save draft' : 'create job';
+        showToast.error(`Failed to ${actionType}`, response.message || `Failed to ${actionType}`);
+      }
+    },
+    onError: (error: Error, { payload }) => {
+      const isDraft = payload.status === 'Draft';
+      setIsDraftSaving(false);
+      setIsPublishing(false);
+      const actionType = isDraft ? 'save draft' : 'create job';
+      showToast.error(`Failed to ${actionType}`, `Failed to ${actionType}: ${error.message}`);
     },
   });
   useEffect(() => {
@@ -373,44 +391,15 @@ const JobCreationDashboard: React.FC = () => {
       default:
         return true;
     }
-  };  const publishedJob = () => {
-    if (!validateCurrentStep()) {
-      return;
-    }
-
-    if (!selectedCompany?.id) {
-      showToast.error('Error', 'No company selected');
-      return;
-    }
-
-    if (!workTypesData?.success || !workSettingsData?.success || 
-        !workFacilitiesData?.success || !shiftTypesData?.success || 
-        !clinicSizesData?.success) {
-      showToast.error('Error', 'Option data is still loading. Please wait a moment and try again.');
-      return;
-    }   
-    
-
+  };  const createJobPayload = (isDraft: boolean = false): JobCreationPayload => {
     const workTypeName = getWorkTypeNameSafe(formData.workType);
     const workSettingName = getWorkSettingNameSafe(formData.workSetting);
     const workFacilityName = getWorkFacilityNameSafe(formData.workFacility);
     const shiftTypeName = getShiftTypeNameSafe(formData.shiftType);
     const companySize = getClinicSizeNameSafe(formData.clinicSize);
 
- 
-    
-    if (!workTypeName || !workSettingName || !workFacilityName || !shiftTypeName || !companySize) {
-      const missingFields = [];
-      if (!workTypeName) missingFields.push('Work Type');
-      if (!workSettingName) missingFields.push('Work Setting');
-      if (!workFacilityName) missingFields.push('Work Facility');
-      if (!shiftTypeName) missingFields.push('Shift Type');
-      if (!companySize) missingFields.push('Company Size');
-      
-      showToast.error('Error', `Invalid values for: ${missingFields.join(', ')}. Please review your selections.`);
-      return;
-    }const payload: JobCreationPayload = {
-      companyId: selectedCompany.id,
+    return {
+      companyId: selectedCompany!.id,
       jobTitle: formData.title,
       occupationId: Number(formData.occupationId) || 0,
       specialtyId: Number(formData.specialtyId) || 0,
@@ -418,31 +407,31 @@ const JobCreationDashboard: React.FC = () => {
       locationState: formData.state,
       locationCity: formData.city,
       locationZipCode: formData.zipCode,
-      locationAddress: formData.address,      workType: getWorkTypeNameSafe(formData.workType),
-      workSetting: getWorkSettingNameSafe(formData.workSetting),
-      workFacility: getWorkFacilityNameSafe(formData.workFacility),
+      locationAddress: formData.address,
+      workType: workTypeName,
+      workSetting: workSettingName,
+      workFacility: workFacilityName,
       salaryCurrency: formData.currency,
       salaryRangeStart: formData.salaryFrom,
       salaryRangeEnd: formData.salaryTo,
       salaryType: formData.salaryType,
       autoRenew: formData.autoRenew,
-      shiftType: getShiftTypeNameSafe(formData.shiftType),
-   
+      shiftType: shiftTypeName,
       languages: Array.isArray(formData.language) 
         ? formData.language.map(lang => {
             const id = typeof lang === 'string' ? parseInt(lang) : lang;
             return isNaN(id) ? 0 : id;
           }).filter(id => id > 0)
         : [],
-      companySize: getClinicSizeNameSafe(formData.clinicSize),
+      companySize: companySize,
       postingDate: formData.postingDate,
-      status: 'Skip & Publish',
+      status: isDraft ? 'Draft' : 'Skip & Publish',
       jobDescription: description,
+      step: isDraft ? currentStep : undefined,
       questions: formData.questions 
         ? formData.questions
             .filter(q => q.isActive)
             .map(question => {
-            
               let questionTypeId: number;
               let questionSubTypeId: number;
               let questionSubTypeValueId: number | undefined;
@@ -459,7 +448,6 @@ const JobCreationDashboard: React.FC = () => {
                   questionSubTypeId = question.allowMultiple 
                     ? QUESTION_SUBTYPES.LONG_ANSWER 
                     : QUESTION_SUBTYPES.SHORT_ANSWER;
-                
                   questionSubTypeValueId = question.questionSubTypeValueId || QUESTION_SUBTYPE_VALUES.PLAIN_TEXT;
                   break;
                 case 'date':
@@ -492,7 +480,6 @@ const JobCreationDashboard: React.FC = () => {
               };
             })
         : [],
-  
       documents: formData.documents 
         ? formData.documents.map(doc => ({
             documentName: doc.documentName,
@@ -501,7 +488,82 @@ const JobCreationDashboard: React.FC = () => {
           }))
         : []
     };
+  };
 
+  const saveAsDraft = () => {
+    if (!selectedCompany?.id) {
+      showToast.error('Error', 'No company selected');
+      return;
+    }
+
+    if (!workTypesData?.success || !workSettingsData?.success || 
+        !workFacilitiesData?.success || !shiftTypesData?.success || 
+        !clinicSizesData?.success) {
+      showToast.error('Error', 'Option data is still loading. Please wait a moment and try again.');
+      return;
+    }
+
+    const workTypeName = getWorkTypeNameSafe(formData.workType);
+    const workSettingName = getWorkSettingNameSafe(formData.workSetting);
+    const workFacilityName = getWorkFacilityNameSafe(formData.workFacility);
+    const shiftTypeName = getShiftTypeNameSafe(formData.shiftType);
+    const companySize = getClinicSizeNameSafe(formData.clinicSize);
+
+    if (!workTypeName || !workSettingName || !workFacilityName || !shiftTypeName || !companySize) {
+      const missingFields = [];
+      if (!workTypeName) missingFields.push('Work Type');
+      if (!workSettingName) missingFields.push('Work Setting');
+      if (!workFacilityName) missingFields.push('Work Facility');
+      if (!shiftTypeName) missingFields.push('Shift Type');
+      if (!companySize) missingFields.push('Company Size');
+      
+      showToast.error('Error', `Invalid values for: ${missingFields.join(', ')}. Please review your selections.`);
+      return;
+    }
+
+    const payload = createJobPayload(true);
+    createJobMutation.mutate({ 
+      companyId: selectedCompany.id, 
+      payload 
+    });
+  };
+
+  const publishedJob = () => {
+    if (!validateCurrentStep()) {
+      return;
+    }
+
+    if (!selectedCompany?.id) {
+      showToast.error('Error', 'No company selected');
+      return;
+    }
+
+    if (!workTypesData?.success || !workSettingsData?.success || 
+        !workFacilitiesData?.success || !shiftTypesData?.success || 
+        !clinicSizesData?.success) {
+      showToast.error('Error', 'Option data is still loading. Please wait a moment and try again.');
+      return;
+    }
+
+    const workTypeName = getWorkTypeNameSafe(formData.workType);
+    const workSettingName = getWorkSettingNameSafe(formData.workSetting);
+    const workFacilityName = getWorkFacilityNameSafe(formData.workFacility);
+    const shiftTypeName = getShiftTypeNameSafe(formData.shiftType);
+    const companySize = getClinicSizeNameSafe(formData.clinicSize);
+
+    if (!workTypeName || !workSettingName || !workFacilityName || !shiftTypeName || !companySize) {
+      const missingFields = [];
+      if (!workTypeName) missingFields.push('Work Type');
+      if (!workSettingName) missingFields.push('Work Setting');
+      if (!workFacilityName) missingFields.push('Work Facility');
+      if (!shiftTypeName) missingFields.push('Shift Type');
+      if (!companySize) missingFields.push('Company Size');
+      
+      showToast.error('Error', `Invalid values for: ${missingFields.join(', ')}. Please review your selections.`);
+      return;
+    }
+
+    const payload = createJobPayload(false);
     createJobMutation.mutate({ 
       companyId: selectedCompany.id, 
       payload 
@@ -781,14 +843,14 @@ const JobCreationDashboard: React.FC = () => {
                 </Button>
                </div>
                 <div className="space-x-4">                
-                    <Button variant="outline" onClick={() => showToast.success('Draft Saved', 'Job posting saved as draft')}>
-                    Save Draft
+                    <Button variant="outline" onClick={saveAsDraft} disabled={createJobMutation.isPending}>
+                    {isDraftSaving ? 'Saving Draft...' : 'Save as Draft'}
                   </Button>                  
                   <Button 
                     onClick={publishedJob} 
                     disabled={createJobMutation.isPending}
                   >
-                    {createJobMutation.isPending ? 'Publishing...' : 'Publish Job'}
+                    {isPublishing ? 'Publishing...' : 'Publish Job'}
                   </Button>
                 </div>
               </div>
@@ -867,7 +929,14 @@ const JobCreationDashboard: React.FC = () => {
                   Previous
                 </Button>
               </div>
-                <div className="space-x-4">
+                <div className="flex space-x-4">
+                <Button 
+                  variant="outline" 
+                  onClick={saveAsDraft}
+                  disabled={createJobMutation.isPending}
+                >
+                  {isDraftSaving ? 'Saving Draft...' : 'Save as Draft'}
+                </Button>
                 {currentStep < 3 ? (
                   <Button 
                     onClick={nextStep}

@@ -168,6 +168,7 @@ export interface JobCreationPayload {
   postingDate: string;
   status: string;
   jobDescription: string;
+  step?: number;
   questions: Array<{
     questionText: string;
     questionTypeId: number;
