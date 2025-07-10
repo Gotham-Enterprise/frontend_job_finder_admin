@@ -10,31 +10,77 @@ export const useJobSeekersLogic = () => {
   const searchParams = useSearchParams();
 
   const getInitialFilters = (): JobSeekerFilters => {
-    const searchParam = searchParams.get('search') || '';
-    const decodedSearch = searchParam ? decodeURIComponent(searchParam) : '';
-    const statusParam = searchParams.get('status');
-    const validStatus = statusParam && ['active', 'inactive', 'pending', 'suspended'].includes(statusParam) 
-      ? statusParam as 'active' | 'inactive' | 'pending' | 'suspended' 
-      : undefined;
+    // First, try to get from URL parameters
+    const hasUrlParams = Array.from(searchParams.keys()).length > 0;
     
-    return {
-      page: parseInt(searchParams.get('page') || '1', 10),
-      limit: parseInt(searchParams.get('limit') || '100', 10),
-      search: decodedSearch,
-      location: searchParams.get('location') || '',
-      occupationId: searchParams.get('occupationId') ? parseInt(searchParams.get('occupationId')!, 10) : undefined,
-      status: validStatus,
+    if (hasUrlParams) {
+      const searchParam = searchParams.get('search') || '';
+      const decodedSearch = searchParam ? decodeURIComponent(searchParam) : '';
+      const statusParam = searchParams.get('status');
+      const validStatus = statusParam && ['active', 'inactive', 'pending', 'suspended'].includes(statusParam) 
+        ? statusParam as 'active' | 'inactive' | 'pending' | 'suspended' 
+        : undefined;
+      
+      const urlFilters = {
+        page: Math.max(1, parseInt(searchParams.get('page') || '1', 10)),
+        limit: parseInt(searchParams.get('limit') || '100', 10),
+        search: decodedSearch,
+        location: searchParams.get('location') || '',
+        occupationId: searchParams.get('occupationId') ? parseInt(searchParams.get('occupationId')!, 10) : undefined,
+        status: validStatus,
+      };
+      
+      return urlFilters;
+    }
+    
+    // If no URL parameters, try to restore from localStorage
+    if (typeof window !== 'undefined') {
+      const savedState = localStorage.getItem('jobseeker-search-state');
+      if (savedState) {
+        try {
+          const parsed = JSON.parse(savedState);
+          const restoredFilters = {
+            page: Math.max(1, parsed.page || 1),
+            limit: parsed.limit || 100,
+            search: parsed.search || '',
+            location: parsed.location || '',
+            occupationId: parsed.occupationId || undefined,
+            status: parsed.status || undefined,
+          };
+          return restoredFilters;
+        } catch (error) {
+          console.warn('Failed to parse saved job seeker state:', error);
+        }
+      }
+    }
+    
+    // Default fallback
+    const defaultFilters = {
+      page: 1,
+      limit: 100,
+      search: '',
+      location: '',
+      occupationId: undefined,
+      status: undefined,
     };
+    return defaultFilters;
   };
 
-  const [filters, setFilters] = useState<JobSeekerFilters>(getInitialFilters);
-  const [searchInput, setSearchInput] = useState(filters.search || '');
+  const initialFilters = getInitialFilters();
+  const [filters, setFilters] = useState<JobSeekerFilters>(() => {
+    return initialFilters;
+  });
+  const [searchInput, setSearchInput] = useState(() => {
+    const initial = initialFilters.search || '';
+    return initial;
+  });
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>(
-    filters.status ? [filters.status] : []
+    initialFilters.status ? [initialFilters.status] : []
   );
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [scrollPosition, setScrollPosition] = useState(0);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // URL update effect - separate from direct calls to avoid render issues
   useEffect(() => {
@@ -48,8 +94,54 @@ export const useJobSeekersLogic = () => {
     if (filters.status) params.set('status', filters.status);
     
     const newURL = params.toString() ? `?${params.toString()}` : '';
-    router.replace(`/admin/job-seekers${newURL}`, { scroll: false });
+    const currentURL = window.location.search;
+    
+    // Only update URL if it's different to avoid unnecessary navigations
+    if (newURL !== currentURL) {
+      router.replace(`/admin/job-seekers${newURL}`, { scroll: false });
+    }
   }, [filters, router]);
+
+  // Initialization effect - mark as initialized after component mounts
+  useEffect(() => {
+    setIsInitialized(true);
+  }, []);
+
+  // Restore scroll position when component mounts (only when state was restored from localStorage)
+  useEffect(() => {
+    const hasUrlParams = Array.from(searchParams.keys()).length > 0;
+    
+    if (!hasUrlParams && typeof window !== 'undefined') {
+      const savedPosition = localStorage.getItem('jobseeker-scroll-position');
+      if (savedPosition) {
+        const position = parseInt(savedPosition, 10);
+        setTimeout(() => {
+          window.scrollTo({ top: position, behavior: 'smooth' });
+        }, 100);
+      }
+    }
+  }, []); // Only run on mount
+
+  // Handle browser back/forward navigation
+  useEffect(() => {
+    const handlePopState = () => {
+      // Small delay to ensure the component has re-rendered with URL params
+      setTimeout(() => {
+        const hasUrlParams = Array.from(new URLSearchParams(window.location.search).keys()).length > 0;
+        
+        if (!hasUrlParams && typeof window !== 'undefined') {
+          const savedPosition = localStorage.getItem('jobseeker-scroll-position');
+          if (savedPosition) {
+            const position = parseInt(savedPosition, 10);
+            window.scrollTo({ top: position, behavior: 'smooth' });
+          }
+        }
+      }, 100);
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
   const saveScrollPosition = useCallback(() => {
     if (typeof window !== 'undefined') {
@@ -196,8 +288,10 @@ export const useJobSeekersLogic = () => {
     });
   }, [viewResume]);
   const viewJobSeeker = useCallback((jobSeekerId: string) => {
+    // Save current state and scroll position before navigating
     saveScrollPosition();
     saveSearchState();
+    
     router.push(`/admin/job-seekers/details/${jobSeekerId}`);
   }, [router, saveScrollPosition, saveSearchState]);
 
@@ -215,6 +309,7 @@ export const useJobSeekersLogic = () => {
     setSelectedStatuses([]);
     if (typeof window !== 'undefined') {
       localStorage.removeItem('jobseeker-scroll-position');
+      localStorage.removeItem('jobseeker-search-state');
     }
   }, []);
 
@@ -228,18 +323,42 @@ export const useJobSeekersLogic = () => {
   }, [searchInput, filters.location, filters.occupationId, selectedStatuses.length]);
 
   useEffect(() => {
+    // Don't trigger search during initial component mount to avoid resetting page
+    if (!isInitialized) return;
+    
     const timeoutId = setTimeout(() => {
       startTransition(() => {
-        setFilters(prev => ({ ...prev, search: searchInput, page: 1 }));
+        // Only reset to page 1 if this is a new search (different from current filters.search)
+        const shouldResetPage = searchInput !== filters.search;
+        setFilters(prev => ({ 
+          ...prev, 
+          search: searchInput, 
+          page: shouldResetPage ? 1 : prev.page 
+        }));
       });
     }, 500);
 
     return () => clearTimeout(timeoutId);
-  }, [searchInput]);
+  }, [searchInput, isInitialized, filters.search]);
 
   useEffect(() => {
-    if (data && !isLoading && searchParams.toString()) {
-      restoreScrollPosition();
+    if (data && !isLoading) {
+      // Check if we need to restore scroll position after data loads
+      const hasUrlParams = searchParams.toString();
+      
+      if (hasUrlParams) {
+        // If we have URL params, restore scroll position
+        restoreScrollPosition();
+      } else {
+        // If no URL params, we might have restored from localStorage, so restore scroll too
+        const savedPosition = localStorage.getItem('jobseeker-scroll-position');
+        if (savedPosition) {
+          const position = parseInt(savedPosition, 10);
+          setTimeout(() => {
+            window.scrollTo({ top: position, behavior: 'smooth' });
+          }, 100);
+        }
+      }
     }
   }, [data, isLoading, searchParams, restoreScrollPosition]);
 

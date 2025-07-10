@@ -129,8 +129,6 @@ export const useEmployerLogic = () => {
   const statusToggle = useCallback((statuses: string[]) => {
     setSelectedStatuses(statuses);
     startTransition(() => {
-      // Convert multiple statuses to single status for the filter
-      // For now, we'll use the first selected status or undefined if none
       const status = statuses.length > 0 ? statuses[0] : undefined;
       setFilters(prev => ({ ...prev, status, page: 1 }));
     });

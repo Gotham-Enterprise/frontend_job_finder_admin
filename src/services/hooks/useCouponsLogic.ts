@@ -96,7 +96,6 @@ export const useCouponsLogic = () => {
         const isActive = statuses[0] === 'true';
         setFilters(prev => ({ ...prev, isActive, page: 1 }));
       } else {
-        // Multiple statuses selected, remove the filter
         setFilters(prev => ({ ...prev, isActive: undefined, page: 1 }));
       }
     });
