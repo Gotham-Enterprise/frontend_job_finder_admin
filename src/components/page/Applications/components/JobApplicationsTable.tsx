@@ -58,7 +58,9 @@ const JobApplicationsTable: React.FC<JobApplicationsTableProps> = ({
                       <p className="font-medium text-gray-900 dark:text-white">
                         {jobApplication.name}
                       </p>
-                    
+                      <p className="text-sm text-gray-900 dark:text-white">
+                    {jobApplication.occupation || 'Not specified'}
+                  </p>
                     </div>
                   </div>
                 </TableCell>
@@ -66,9 +68,7 @@ const JobApplicationsTable: React.FC<JobApplicationsTableProps> = ({
                   <p className="text-sm text-gray-900 dark:text-white">
                     {jobApplication.companyName}
                   </p>
-                  <p className="text-sm text-gray-900 dark:text-white">
-                    {jobApplication.occupation || 'Not specified'}
-                  </p>
+               
                 </TableCell>
                 <TableCell className="py-4 px-6">
                   <p className="text-sm text-gray-900 dark:text-white">

@@ -941,7 +941,7 @@ export default function SubscriptionsPage() {
               </div>
               <div className="ml-3">
                 <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                  <strong>Warning:</strong> Once cancelled, you'll need to purchase a new subscription to regain access to premium features.
+                  <strong>Warning:</strong> Once cancelled, you&apos;ll need to purchase a new subscription to regain access to premium features.
                 </p>
               </div>
             </div>

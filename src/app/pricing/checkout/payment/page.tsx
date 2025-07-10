@@ -356,7 +356,7 @@ function PaymentForm() {
                 {/* Features */}
                 <div className="pt-4 border-t border-gray-200 dark:border-gray-600">
                   <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-3">
-                    What's included
+                    What&apos;s included
                   </h4>
                   <div className="space-y-2">
                     <div className="flex items-center text-sm">
