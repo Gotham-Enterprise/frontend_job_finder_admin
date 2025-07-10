@@ -34,7 +34,6 @@ export const useJobApplicationsLogic = () => {
   const { data: statesData, isLoading: isStatesLoading } = useStates();
   const { mutate: viewResume, isPending: isViewingResume } = useViewApplicationResume();
 
-  // Save state to localStorage for preservation
   useEffect(() => {
     const state = {
       filters,
@@ -44,14 +43,12 @@ export const useJobApplicationsLogic = () => {
     localStorage.setItem('jobApplicationsListState', JSON.stringify(state));
   }, [filters, searchInput]);
 
-  // Restore scroll position from localStorage
   useEffect(() => {
     const savedState = localStorage.getItem('jobApplicationsListState');
     if (savedState) {
       try {
         const parsed = JSON.parse(savedState);
         if (parsed.scrollPosition) {
-          // Restore scroll position after a brief delay to ensure content is loaded
           setTimeout(() => {
             window.scrollTo({ top: parsed.scrollPosition, behavior: 'instant' });
           }, 100);
@@ -156,7 +153,6 @@ export const useJobApplicationsLogic = () => {
   };
 
   const viewJobApplication = (jobApplicationId: string) => {
-    // Save current state and scroll position before navigation
     const state = {
       filters,
       searchInput,

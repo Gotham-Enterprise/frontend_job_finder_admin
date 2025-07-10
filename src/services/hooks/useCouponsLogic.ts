@@ -82,7 +82,6 @@ export const useCouponsLogic = () => {
         page: 1
       };
       
-      console.log('📝 Setting new filters:', newFilters);
       setFilters(newFilters);
     });
   }, [filters]);

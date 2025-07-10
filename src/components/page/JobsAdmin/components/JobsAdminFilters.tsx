@@ -12,7 +12,6 @@ const JobsAdminFilters: React.FC<JobsAdminFiltersProps> = ({
   specialtyOptions,
   stateOptions,
   jobStatusOptions,
-  itemsPerPageOptions,
   selectedOccupationId,
 }) => {
   if (!isOpen) return null;

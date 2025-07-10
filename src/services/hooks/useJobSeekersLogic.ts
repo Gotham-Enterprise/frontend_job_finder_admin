@@ -8,8 +8,7 @@ import { JobSeekerFilters } from '@/services/types/jobSeeker';
 export const useJobSeekersLogic = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  
-  // Helper function to get initial filters from URL
+
   const getInitialFilters = (): JobSeekerFilters => {
     const searchParam = searchParams.get('search') || '';
     const decodedSearch = searchParam ? decodeURIComponent(searchParam) : '';
@@ -34,7 +33,6 @@ export const useJobSeekersLogic = () => {
   const [isPending, startTransition] = useTransition();
   const [scrollPosition, setScrollPosition] = useState(0);
 
-  // Update URL when filters change
   const updateURL = (newFilters: JobSeekerFilters) => {
     const params = new URLSearchParams();
     
@@ -49,7 +47,6 @@ export const useJobSeekersLogic = () => {
     router.replace(`/admin/job-seekers${newURL}`, { scroll: false });
   };
 
-  // Save scroll position to localStorage
   const saveScrollPosition = () => {
     if (typeof window !== 'undefined') {
       const position = window.scrollY;
@@ -58,13 +55,11 @@ export const useJobSeekersLogic = () => {
     }
   };
 
-  // Restore scroll position from localStorage
   const restoreScrollPosition = () => {
     if (typeof window !== 'undefined') {
       const savedPosition = localStorage.getItem('jobseeker-scroll-position');
       if (savedPosition) {
         const position = parseInt(savedPosition, 10);
-        // Use setTimeout to ensure DOM is ready
         setTimeout(() => {
           window.scrollTo({ top: position, behavior: 'smooth' });
         }, 100);
@@ -72,7 +67,6 @@ export const useJobSeekersLogic = () => {
     }
   };
 
-  // Save current search state to localStorage
   const saveSearchState = () => {
     if (typeof window !== 'undefined') {
       const stateToSave = {
@@ -211,7 +205,6 @@ export const useJobSeekersLogic = () => {
       setFilters(newFilters);
       setSearchInput('');
       updateURL(newFilters);
-      // Clear scroll position when clearing filters
       if (typeof window !== 'undefined') {
         localStorage.removeItem('jobseeker-scroll-position');
       }
@@ -239,14 +232,12 @@ export const useJobSeekersLogic = () => {
     return () => clearTimeout(timeoutId);
   }, [searchInput]);
 
-  // Effect to restore scroll position when data is loaded
   useEffect(() => {
     if (data && !isLoading && searchParams.toString()) {
       restoreScrollPosition();
     }
   }, [data, isLoading]);
 
-  // Effect to save search state whenever filters change
   useEffect(() => {
     if (filters.search || filters.location || filters.occupationId || filters.status || (filters.page && filters.page > 1)) {
       saveSearchState();

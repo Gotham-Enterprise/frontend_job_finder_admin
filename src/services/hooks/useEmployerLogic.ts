@@ -7,8 +7,7 @@ import { EmployerFilters } from '@/services/types/employer';
 export const useEmployerLogic = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  
-  // Initialize filters from URL params
+
   const initializeFilters = (): EmployerFilters => {
     const urlPage = searchParams.get('page');
     const urlLimit = searchParams.get('limit');
@@ -32,7 +31,6 @@ export const useEmployerLogic = () => {
   const [selectedEmployerId, setSelectedEmployerId] = useState<string | null>(null);
   const [isCreatingJob, setIsCreatingJob] = useState(false);
 
-  // Update URL when filters change
   useEffect(() => {
     const params = new URLSearchParams();
     
@@ -48,7 +46,6 @@ export const useEmployerLogic = () => {
     router.replace(newUrl, { scroll: false });
   }, [filters, router]);
 
-  // Save state to localStorage for preservation
   useEffect(() => {
     const state = {
       filters,
@@ -59,14 +56,12 @@ export const useEmployerLogic = () => {
     localStorage.setItem('employerListState', JSON.stringify(state));
   }, [filters, searchInput, selectedEmployerId]);
 
-  // Restore scroll position from localStorage
   useEffect(() => {
     const savedState = localStorage.getItem('employerListState');
     if (savedState) {
       try {
         const parsed = JSON.parse(savedState);
         if (parsed.scrollPosition) {
-          // Restore scroll position after a brief delay to ensure content is loaded
           setTimeout(() => {
             window.scrollTo({ top: parsed.scrollPosition, behavior: 'instant' });
           }, 100);
@@ -143,7 +138,6 @@ export const useEmployerLogic = () => {
     }
   }, []);
   const viewEmployer = (employerId: string) => {
-    // Save current state and scroll position before navigation
     const state = {
       filters,
       searchInput,

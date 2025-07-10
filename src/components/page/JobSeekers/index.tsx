@@ -14,7 +14,6 @@ import {
 } from './components';
 
 const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
-  // Initialize preserved navigation
   const { saveNavigationState, clearNavigationState } = usePreservedNavigation({
     enabled: true,
     statePath: 'jobseeker-search-state',

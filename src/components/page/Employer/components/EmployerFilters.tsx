@@ -9,7 +9,6 @@ const EmployerFilters: React.FC<EmployerFiltersProps> = ({
   onFilterChange,
   stateOptions,
   statusOptions,
-  itemsPerPageOptions,
 }) => {
   if (!isOpen) return null;
 

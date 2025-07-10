@@ -3,9 +3,9 @@ import { useRouter } from 'next/navigation';
 
 interface UsePreservedNavigationOptions {
   enabled?: boolean;
-  statePath: string; // e.g., 'jobseeker-search-state'
-  scrollPath: string; // e.g., 'jobseeker-scroll-position'
-  listPagePath: string; // e.g., '/admin/job-seekers'
+  statePath: string;
+  scrollPath: string; 
+  listPagePath: string; 
 }
 
 export const usePreservedNavigation = (options: UsePreservedNavigationOptions) => {
@@ -16,11 +16,9 @@ export const usePreservedNavigation = (options: UsePreservedNavigationOptions) =
     if (!enabled || typeof window === 'undefined') return;
 
     const handlePopState = (event: PopStateEvent) => {
-      // Check if we're navigating back to the list page
       const currentPath = window.location.pathname;
       
       if (currentPath === listPagePath) {
-        // Small delay to ensure the page has loaded
         setTimeout(() => {
           const savedPosition = localStorage.getItem(scrollPath);
           if (savedPosition) {
@@ -31,7 +29,6 @@ export const usePreservedNavigation = (options: UsePreservedNavigationOptions) =
       }
     };
 
-    // Listen for browser back/forward button
     window.addEventListener('popstate', handlePopState);
 
     return () => {
@@ -41,11 +38,7 @@ export const usePreservedNavigation = (options: UsePreservedNavigationOptions) =
 
   const saveNavigationState = (filters: any) => {
     if (!enabled || typeof window === 'undefined') return;
-    
-    // Save filters
     localStorage.setItem(statePath, JSON.stringify(filters));
-    
-    // Save scroll position
     const position = window.scrollY;
     localStorage.setItem(scrollPath, position.toString());
   };
