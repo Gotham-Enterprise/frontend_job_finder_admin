@@ -18,7 +18,7 @@ export const useEmployerLogic = () => {
     
     return {
       page: urlPage ? parseInt(urlPage) : 1,
-      limit: urlLimit ? parseInt(urlLimit) : 50,
+      limit: urlLimit ? parseInt(urlLimit) : 100,
       name: urlName || '',
       location: urlLocation || '',
       status: urlStatus || undefined,
@@ -37,7 +37,7 @@ export const useEmployerLogic = () => {
     const params = new URLSearchParams();
     
     if ((filters.page ?? 1) > 1) params.set('page', (filters.page ?? 1).toString());
-    if ((filters.limit ?? 50) !== 50) params.set('limit', (filters.limit ?? 50).toString());
+    if ((filters.limit ?? 100) !== 100) params.set('limit', (filters.limit ?? 100).toString());
     if (filters.name) params.set('name', filters.name);
     if (filters.location) params.set('location', filters.location);
     if (filters.status) params.set('status', filters.status);
@@ -115,6 +115,7 @@ export const useEmployerLogic = () => {
     { value: '10', label: '10 per page' },
     { value: '20', label: '20 per page' },
     { value: '50', label: '50 per page' },
+    { value: '100', label: '100 per page' },
   ], []);
 
   const filterChange = useMemo(() => (key: keyof EmployerFilters, value: any) => {
@@ -171,7 +172,7 @@ export const useEmployerLogic = () => {
     startTransition(() => {
       setFilters({
         page: 1,
-        limit: 50,
+        limit: 100,
         name: '',
         location: '',
         status: undefined,

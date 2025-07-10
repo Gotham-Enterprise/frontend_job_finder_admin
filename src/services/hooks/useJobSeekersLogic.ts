@@ -20,7 +20,7 @@ export const useJobSeekersLogic = () => {
     
     return {
       page: parseInt(searchParams.get('page') || '1', 10),
-      limit: parseInt(searchParams.get('limit') || '50', 10),
+      limit: parseInt(searchParams.get('limit') || '100', 10),
       search: decodedSearch,
       location: searchParams.get('location') || '',
       occupationId: searchParams.get('occupationId') ? parseInt(searchParams.get('occupationId')!, 10) : undefined,
@@ -39,7 +39,7 @@ export const useJobSeekersLogic = () => {
     const params = new URLSearchParams();
     
     if (newFilters.page && newFilters.page > 1) params.set('page', newFilters.page.toString());
-    if (newFilters.limit && newFilters.limit !== 50) params.set('limit', newFilters.limit.toString());
+    if (newFilters.limit && newFilters.limit !== 100) params.set('limit', newFilters.limit.toString());
     if (newFilters.search) params.set('search', encodeURIComponent(newFilters.search));
     if (newFilters.location) params.set('location', newFilters.location);
     if (newFilters.occupationId) params.set('occupationId', newFilters.occupationId.toString());
@@ -141,6 +141,7 @@ export const useJobSeekersLogic = () => {
     { value: '10', label: '10 per page' },
     { value: '20', label: '20 per page' },
     { value: '50', label: '50 per page' },
+    { value: '100', label: '100 per page' },
   ], []);
 
   const filterChange = useMemo(() => (key: keyof JobSeekerFilters, value: any) => {
@@ -201,7 +202,7 @@ export const useJobSeekersLogic = () => {
     startTransition(() => {
       const newFilters = {
         page: 1,
-        limit: 50,
+        limit: 100,
         search: '',
         location: '',
         occupationId: undefined,

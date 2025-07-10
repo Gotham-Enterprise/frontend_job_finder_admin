@@ -21,7 +21,7 @@ const useGoBack = (options: UseGoBackOptions = {}) => {
           const params = new URLSearchParams();
           
           if (state.page && state.page > 1) params.set('page', state.page.toString());
-          if (state.limit && state.limit !== 50) params.set('limit', state.limit.toString());
+          if (state.limit && state.limit !== 100) params.set('limit', state.limit.toString());
           if (state.search) params.set('search', encodeURIComponent(state.search));
           if (state.location) params.set('location', state.location);
           if (state.occupationId) params.set('occupationId', state.occupationId.toString());
@@ -48,7 +48,7 @@ const useGoBack = (options: UseGoBackOptions = {}) => {
           
           if (state.filters) {
             if (state.filters.page && state.filters.page > 1) params.set('page', state.filters.page.toString());
-            if (state.filters.limit && state.filters.limit !== 50) params.set('limit', state.filters.limit.toString());
+            if (state.filters.limit && state.filters.limit !== 100) params.set('limit', state.filters.limit.toString());
             if (state.filters.name) params.set('name', encodeURIComponent(state.filters.name));
             if (state.filters.location) params.set('location', state.filters.location);
             if (state.filters.status) params.set('status', state.filters.status);
@@ -74,7 +74,7 @@ const useGoBack = (options: UseGoBackOptions = {}) => {
           
           if (state.filters) {
             if (state.filters.page && state.filters.page > 1) params.set('page', state.filters.page.toString());
-            if (state.filters.limit && state.filters.limit !== 50) params.set('limit', state.filters.limit.toString());
+            if (state.filters.limit && state.filters.limit !== 100) params.set('limit', state.filters.limit.toString());
             if (state.filters.name) params.set('name', encodeURIComponent(state.filters.name));
             if (state.filters.location) params.set('location', state.filters.location);
             if (state.filters.companyName) params.set('companyName', encodeURIComponent(state.filters.companyName));
@@ -101,7 +101,7 @@ const useGoBack = (options: UseGoBackOptions = {}) => {
           
           if (state.filters) {
             if (state.filters.page && state.filters.page > 1) params.set('page', state.filters.page.toString());
-            if (state.filters.limit && state.filters.limit !== 50) params.set('limit', state.filters.limit.toString());
+            if (state.filters.limit && state.filters.limit !== 100) params.set('limit', state.filters.limit.toString());
             if (state.filters.name) params.set('name', encodeURIComponent(state.filters.name));
             if (state.filters.state) params.set('state', state.filters.state);
             if (state.filters.jobStatus) params.set('jobStatus', state.filters.jobStatus);

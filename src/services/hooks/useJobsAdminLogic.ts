@@ -20,7 +20,7 @@ export const useJobsAdminLogic = () => {
     
     return {
       page: urlPage ? parseInt(urlPage) : 1,
-      limit: urlLimit ? parseInt(urlLimit) : 50,
+      limit: urlLimit ? parseInt(urlLimit) : 100,
       name: urlName || '',
       state: urlState || '',
       jobStatus: (urlJobStatus === 'Draft' || urlJobStatus === 'Published') ? urlJobStatus : undefined,
@@ -40,7 +40,7 @@ export const useJobsAdminLogic = () => {
     const params = new URLSearchParams();
     
     if ((filters.page ?? 1) > 1) params.set('page', (filters.page ?? 1).toString());
-    if ((filters.limit ?? 50) !== 50) params.set('limit', (filters.limit ?? 50).toString());
+    if ((filters.limit ?? 100) !== 100) params.set('limit', (filters.limit ?? 100).toString());
     if (filters.name) params.set('name', filters.name);
     if (filters.state) params.set('state', filters.state);
     if (filters.jobStatus) params.set('jobStatus', filters.jobStatus);
@@ -153,6 +153,7 @@ export const useJobsAdminLogic = () => {
     { value: '10', label: '10 per page' },
     { value: '20', label: '20 per page' },
     { value: '50', label: '50 per page' },
+    { value: '100', label: '100 per page' },
   ], []);  const filterChange = useMemo(() => (key: keyof JobsAdminFilters, value: any) => {
     console.log(`Filter change - ${key}:`, value); // Debug log
     
@@ -226,7 +227,7 @@ export const useJobsAdminLogic = () => {
     startTransition(() => {
       setFilters({
         page: 1,
-        limit: 50,
+        limit: 100,
         name: '',
         state: '',
         jobStatus: undefined,

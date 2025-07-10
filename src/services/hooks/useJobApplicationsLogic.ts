@@ -14,7 +14,7 @@ export const useJobApplicationsLogic = () => {
     
     return {
       page: parseInt(searchParams.get('page') || '1', 10),
-      limit: parseInt(searchParams.get('limit') || '50', 10),
+      limit: parseInt(searchParams.get('limit') || '100', 10),
       name: decodedName,
       location: searchParams.get('location') || '',
       companyName: searchParams.get('companyName') || '',
@@ -101,6 +101,7 @@ export const useJobApplicationsLogic = () => {
     { value: '10', label: '10 per page' },
     { value: '20', label: '20 per page' },
     { value: '50', label: '50 per page' },
+    { value: '100', label: '100 per page' },
   ], []);
 
   const filterChange = useMemo(() => (key: keyof JobApplicationFilters, value: any) => {
@@ -170,7 +171,7 @@ export const useJobApplicationsLogic = () => {
     startTransition(() => {
       setFilters({
         page: 1,
-        limit: 50,
+        limit: 100,
         name: '',
         location: '',
         companyName: '',
