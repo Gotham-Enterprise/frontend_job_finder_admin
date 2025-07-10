@@ -1,4 +1,4 @@
-import { useState, useMemo, useTransition, useEffect } from 'react';
+import { useState, useMemo, useTransition, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useJobApplications, useViewApplicationResume } from '@/services/hooks/useJobApplications';
 import { useStates } from '@/services/hooks/useStates';
@@ -9,56 +9,130 @@ export const useJobApplicationsLogic = () => {
   const searchParams = useSearchParams();
 
   const getInitialFilters = (): JobApplicationFilters => {
-    const nameParam = searchParams.get('name') || '';
-    const decodedName = nameParam ? decodeURIComponent(nameParam) : '';
+    // First, try to get from URL parameters
+    const hasUrlParams = Array.from(searchParams.keys()).length > 0;
     
+    if (hasUrlParams) {
+      const nameParam = searchParams.get('name') || '';
+      const decodedName = nameParam ? decodeURIComponent(nameParam) : '';
+      
+      return {
+        page: Math.max(1, parseInt(searchParams.get('page') || '1', 10)),
+        limit: parseInt(searchParams.get('limit') || '100', 10),
+        name: decodedName,
+        location: searchParams.get('location') || '',
+        companyName: searchParams.get('companyName') || '',
+        status: searchParams.get('status') || '',
+      };
+    }
+    
+    // If no URL parameters, try to restore from localStorage
+    if (typeof window !== 'undefined') {
+      const savedState = localStorage.getItem('job-applications-search-state');
+      if (savedState) {
+        try {
+          const parsed = JSON.parse(savedState);
+          return {
+            page: Math.max(1, parsed.page || 1),
+            limit: parsed.limit || 100,
+            name: parsed.name || '',
+            location: parsed.location || '',
+            companyName: parsed.companyName || '',
+            status: parsed.status || '',
+          };
+        } catch (error) {
+          console.warn('Failed to parse saved job applications state:', error);
+        }
+      }
+    }
+    
+    // Default fallback
     return {
-      page: parseInt(searchParams.get('page') || '1', 10),
-      limit: parseInt(searchParams.get('limit') || '100', 10),
-      name: decodedName,
-      location: searchParams.get('location') || '',
-      companyName: searchParams.get('companyName') || '',
-      status: searchParams.get('status') || '',
+      page: 1,
+      limit: 100,
+      name: '',
+      location: '',
+      companyName: '',
+      status: '',
     };
   };
 
-  const [filters, setFilters] = useState<JobApplicationFilters>(getInitialFilters);
+  const initialFilters = getInitialFilters();
+  const [filters, setFilters] = useState<JobApplicationFilters>(() => {
+    return initialFilters;
+  });
   const [searchInput, setSearchInput] = useState(() => {
-    const nameParam = searchParams.get('name') || '';
-    return nameParam ? decodeURIComponent(nameParam) : '';
+    const initial = initialFilters.name || '';
+    return initial;
   });
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
-  const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
+  const [selectedStatuses, setSelectedStatuses] = useState<string[]>(
+    initialFilters.status ? [initialFilters.status] : []
+  );
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // Initialization effect - mark as initialized after component mounts
+  useEffect(() => {
+    setIsInitialized(true);
+  }, []);
 
   const { data, isLoading, error, refetch } = useJobApplications(filters);
   const { data: statesData, isLoading: isStatesLoading } = useStates();
   const { mutate: viewResume, isPending: isViewingResume } = useViewApplicationResume();
 
+  // URL update effect - separate from direct calls to avoid render issues
   useEffect(() => {
-    const state = {
-      filters,
-      searchInput,
-      scrollPosition: window.scrollY,
-    };
-    localStorage.setItem('jobApplicationsListState', JSON.stringify(state));
-  }, [filters, searchInput]);
+    const params = new URLSearchParams();
+    
+    if (filters.page && filters.page > 1) params.set('page', filters.page.toString());
+    if (filters.limit && filters.limit !== 100) params.set('limit', filters.limit.toString());
+    if (filters.name) params.set('name', encodeURIComponent(filters.name));
+    if (filters.location) params.set('location', filters.location);
+    if (filters.companyName) params.set('companyName', filters.companyName);
+    if (filters.status) params.set('status', filters.status);
+    
+    const newURL = params.toString() ? `?${params.toString()}` : '';
+    const currentURL = window.location.search;
+    
+    // Only update URL if it's different to avoid unnecessary navigations
+    if (newURL !== currentURL) {
+      router.replace(`/admin/applications${newURL}`, { scroll: false });
+    }
+  }, [filters, router]);
 
-  useEffect(() => {
-    const savedState = localStorage.getItem('jobApplicationsListState');
-    if (savedState) {
-      try {
-        const parsed = JSON.parse(savedState);
-        if (parsed.scrollPosition) {
-          setTimeout(() => {
-            window.scrollTo({ top: parsed.scrollPosition, behavior: 'instant' });
-          }, 100);
-        }
-      } catch (error) {
-        console.warn('Failed to restore scroll position:', error);
+  const saveScrollPosition = useCallback(() => {
+    if (typeof window !== 'undefined') {
+      const position = window.scrollY;
+      localStorage.setItem('job-applications-scroll-position', position.toString());
+    }
+  }, []);
+
+  const restoreScrollPosition = useCallback(() => {
+    if (typeof window !== 'undefined') {
+      const savedPosition = localStorage.getItem('job-applications-scroll-position');
+      if (savedPosition) {
+        const position = parseInt(savedPosition, 10);
+        setTimeout(() => {
+          window.scrollTo({ top: position, behavior: 'smooth' });
+        }, 100);
       }
     }
   }, []);
+
+  const saveSearchState = useCallback(() => {
+    if (typeof window !== 'undefined') {
+      const stateToSave = {
+        page: filters.page,
+        limit: filters.limit,
+        name: filters.name,
+        location: filters.location,
+        companyName: filters.companyName,
+        status: filters.status,
+      };
+      localStorage.setItem('job-applications-search-state', JSON.stringify(stateToSave));
+    }
+  }, [filters]);
 
   const tableColumns = useMemo(() => [
     { key: 'name', label: 'Applicant' },
@@ -167,31 +241,31 @@ export const useJobApplicationsLogic = () => {
     });
   };
 
-  const viewJobApplication = (jobApplicationId: string) => {
-    const state = {
-      filters,
-      searchInput,
-      scrollPosition: window.scrollY,
-    };
-    localStorage.setItem('jobApplicationsListState', JSON.stringify(state));
+  const viewJobApplication = useCallback((jobApplicationId: string) => {
+    // Save current state and scroll position before navigating
+    saveScrollPosition();
+    saveSearchState();
     
     router.push(`/admin/applications/details/${jobApplicationId}`);
-  };
+  }, [router, saveScrollPosition, saveSearchState]);
 
-  const clearAllFilters = () => {
-    startTransition(() => {
-      setFilters({
-        page: 1,
-        limit: 100,
-        name: '',
-        location: '',
-        companyName: '',
-        status: '',
-      });
-      setSearchInput('');
-      setSelectedStatuses([]);
-    });
-  };
+  const clearAllFilters = useCallback(() => {
+    const newFilters = {
+      page: 1,
+      limit: 100,
+      name: '',
+      location: '',
+      companyName: '',
+      status: '',
+    };
+    setFilters(newFilters);
+    setSearchInput('');
+    setSelectedStatuses([]);
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('job-applications-scroll-position');
+      localStorage.removeItem('job-applications-search-state');
+    }
+  }, []);
 
   const hasActiveFilters = useMemo(() => {
     return !!(
@@ -203,14 +277,50 @@ export const useJobApplicationsLogic = () => {
   }, [searchInput, filters.location, filters.companyName, selectedStatuses]);
 
   useEffect(() => {
+    if (data && !isLoading) {
+      // Check if we need to restore scroll position after data loads
+      const hasUrlParams = searchParams.toString();
+      
+      if (hasUrlParams) {
+        // If we have URL params, restore scroll position
+        restoreScrollPosition();
+      } else {
+        // If no URL params, we might have restored from localStorage, so restore scroll too
+        const savedPosition = localStorage.getItem('job-applications-scroll-position');
+        if (savedPosition) {
+          const position = parseInt(savedPosition, 10);
+          setTimeout(() => {
+            window.scrollTo({ top: position, behavior: 'smooth' });
+          }, 100);
+        }
+      }
+    }
+  }, [data, isLoading, searchParams, restoreScrollPosition]);
+
+  useEffect(() => {
+    if (filters.name || filters.location || filters.companyName || filters.status || (filters.page && filters.page > 1)) {
+      saveSearchState();
+    }
+  }, [filters, saveSearchState]);
+
+  useEffect(() => {
+    // Don't trigger search during initial component mount to avoid resetting page
+    if (!isInitialized) return;
+    
     const timeoutId = setTimeout(() => {
       startTransition(() => {
-        setFilters(prev => ({ ...prev, name: searchInput, page: 1 }));
+        // Only reset to page 1 if this is a new search (different from current filters.name)
+        const shouldResetPage = searchInput !== filters.name;
+        setFilters(prev => ({ 
+          ...prev, 
+          name: searchInput, 
+          page: shouldResetPage ? 1 : prev.page 
+        }));
       });
     }, 500);
 
     return () => clearTimeout(timeoutId);
-  }, [searchInput]);
+  }, [searchInput, isInitialized, filters.name]);
 
   return {
     filters,
@@ -242,5 +352,8 @@ export const useJobApplicationsLogic = () => {
     clearAllFilters,
     hasActiveFilters,
     selectedStatuses,
+    saveScrollPosition,
+    restoreScrollPosition,
+    saveSearchState,
   };
 };

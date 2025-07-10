@@ -22,15 +22,12 @@ const StatusToggleFilter: React.FC<StatusToggleFilterProps> = ({
 }) => {
   const toggleStatus = (status: string) => {
     if (selectedStatuses.includes(status)) {
-      // Remove the status
       onChange(selectedStatuses.filter(s => s !== status));
     } else {
-      // Add the status
       onChange([...selectedStatuses, status]);
     }
   };
 
-  // Filter out the "All Statuses" option
   const statusOptions = options.filter(option => option.value !== '');
 
   return (

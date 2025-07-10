@@ -32,12 +32,10 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
   const searchInputRef = useRef<HTMLInputElement>(null);
   const optionsRef = useRef<HTMLDivElement>(null);
 
-  // Get the selected option label
   const selectedOption = useMemo(() => {
     return options.find(option => option.value === value);
   }, [options, value]);
 
-  // Filter options based on search query
   const filteredOptions = useMemo(() => {
     if (!searchQuery) return options;
     return options.filter(option =>
@@ -45,7 +43,6 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
     );
   }, [options, searchQuery]);
 
-  // Define selectOption with useCallback to avoid dependency issues
   const selectOption = useCallback((optionValue: string) => {
     onChange(optionValue);
     setIsOpen(false);
@@ -53,7 +50,6 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
     setFocusedIndex(-1);
   }, [onChange]);
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const clickOutside = (event: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
@@ -67,14 +63,12 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
     return () => document.removeEventListener('mousedown', clickOutside);
   }, []);
 
-  // Focus search input when dropdown opens
   useEffect(() => {
     if (isOpen && searchInputRef.current) {
       searchInputRef.current.focus();
     }
   }, [isOpen]);
 
-  // Handle keyboard navigation
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (!isOpen) return;
@@ -110,7 +104,6 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
     }
   }, [isOpen, focusedIndex, filteredOptions, selectOption]);
 
-  // Scroll focused option into view
   useEffect(() => {
     if (isOpen && focusedIndex >= 0 && optionsRef.current) {
       const focusedElement = optionsRef.current.children[focusedIndex + 1] as HTMLElement; // +1 to skip search input

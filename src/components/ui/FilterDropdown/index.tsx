@@ -58,12 +58,10 @@ const FilterDropdown: React.FC<FilterDropdownProps> = ({
       
       const triggerRect = trigger.getBoundingClientRect();
       const dropdownRect = dropdown.getBoundingClientRect();
-      
-      // Position dropdown below the trigger
+
       const top = triggerRect.bottom + window.scrollY + 8;
       let left = triggerRect.left + window.scrollX;
-      
-      // Adjust if dropdown goes off-screen
+
       if (left + dropdownRect.width > window.innerWidth) {
         left = window.innerWidth - dropdownRect.width - 16;
       }
