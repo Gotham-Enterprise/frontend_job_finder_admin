@@ -36,19 +36,20 @@ export const useJobSeekersLogic = () => {
   const [isPending, startTransition] = useTransition();
   const [scrollPosition, setScrollPosition] = useState(0);
 
-  const updateURL = useCallback((newFilters: JobSeekerFilters) => {
+  // URL update effect - separate from direct calls to avoid render issues
+  useEffect(() => {
     const params = new URLSearchParams();
     
-    if (newFilters.page && newFilters.page > 1) params.set('page', newFilters.page.toString());
-    if (newFilters.limit && newFilters.limit !== 100) params.set('limit', newFilters.limit.toString());
-    if (newFilters.search) params.set('search', encodeURIComponent(newFilters.search));
-    if (newFilters.location) params.set('location', newFilters.location);
-    if (newFilters.occupationId) params.set('occupationId', newFilters.occupationId.toString());
-    if (newFilters.status) params.set('status', newFilters.status);
+    if (filters.page && filters.page > 1) params.set('page', filters.page.toString());
+    if (filters.limit && filters.limit !== 100) params.set('limit', filters.limit.toString());
+    if (filters.search) params.set('search', encodeURIComponent(filters.search));
+    if (filters.location) params.set('location', filters.location);
+    if (filters.occupationId) params.set('occupationId', filters.occupationId.toString());
+    if (filters.status) params.set('status', filters.status);
     
     const newURL = params.toString() ? `?${params.toString()}` : '';
     router.replace(`/admin/job-seekers${newURL}`, { scroll: false });
-  }, [router]);
+  }, [filters, router]);
 
   const saveScrollPosition = useCallback(() => {
     if (typeof window !== 'undefined') {
@@ -141,40 +142,30 @@ export const useJobSeekersLogic = () => {
     { value: '100', label: '100 per page' },
   ], []);
 
-  const filterChange = useMemo(() => (key: keyof JobSeekerFilters, value: any) => {
+  const filterChange = useCallback((key: keyof JobSeekerFilters, value: any) => {
     startTransition(() => {
-      const newFilters = { 
-        ...filters, 
+      setFilters(prev => ({ 
+        ...prev, 
         [key]: value === '' ? undefined : value,
         page: 1
-      };
-      setFilters(newFilters);
-      updateURL(newFilters);
+      }));
     });
-  }, [filters, updateURL]);
+  }, []);
 
   const statusToggleChange = useCallback((statuses: string[]) => {
     setSelectedStatuses(statuses);
     startTransition(() => {
-      // For now, we'll use the first selected status for the API call
-      // Later you might want to update the API to handle multiple statuses
-      const newFilters = { 
-        ...filters, 
+      setFilters(prev => ({ 
+        ...prev, 
         status: statuses.length > 0 ? statuses[0] as any : undefined,
         page: 1
-      };
-      setFilters(newFilters);
-      updateURL(newFilters);
+      }));
     });
-  }, [filters, updateURL]);
+  }, []);
 
-  const initPageChange = useMemo(() => (newPage: number) => {
-    startTransition(() => {
-      const newFilters = { ...filters, page: newPage };
-      setFilters(newFilters);
-      updateURL(newFilters);
-    });
-  }, [filters, updateURL]);
+  const initPageChange = useCallback((newPage: number) => {
+    setFilters(prev => ({ ...prev, page: newPage }));
+  }, []);
   const getStatusVariant = useMemo(() => (status: string): 'light' | 'solid' => {
     switch (status) {
       case 'active': return 'solid';
@@ -211,24 +202,21 @@ export const useJobSeekersLogic = () => {
   }, [router, saveScrollPosition, saveSearchState]);
 
   const clearAllFilters = useCallback(() => {
-    startTransition(() => {
-      const newFilters = {
-        page: 1,
-        limit: 100,
-        search: '',
-        location: '',
-        occupationId: undefined,
-        status: undefined,
-      };
-      setFilters(newFilters);
-      setSearchInput('');
-      setSelectedStatuses([]);
-      updateURL(newFilters);
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('jobseeker-scroll-position');
-      }
-    });
-  }, [startTransition, updateURL]);
+    const newFilters = {
+      page: 1,
+      limit: 100,
+      search: '',
+      location: '',
+      occupationId: undefined,
+      status: undefined,
+    };
+    setFilters(newFilters);
+    setSearchInput('');
+    setSelectedStatuses([]);
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('jobseeker-scroll-position');
+    }
+  }, []);
 
   const hasActiveFilters = useMemo(() => {
     return !!(
@@ -242,14 +230,12 @@ export const useJobSeekersLogic = () => {
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       startTransition(() => {
-        const newFilters = { ...filters, search: searchInput, page: 1 };
-        setFilters(newFilters);
-        updateURL(newFilters);
+        setFilters(prev => ({ ...prev, search: searchInput, page: 1 }));
       });
     }, 500);
 
     return () => clearTimeout(timeoutId);
-  }, [searchInput, filters, updateURL]);
+  }, [searchInput]);
 
   useEffect(() => {
     if (data && !isLoading && searchParams.toString()) {

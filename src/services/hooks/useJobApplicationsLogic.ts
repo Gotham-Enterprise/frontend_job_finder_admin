@@ -29,6 +29,7 @@ export const useJobApplicationsLogic = () => {
   });
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
 
   const { data, isLoading, error, refetch } = useJobApplications(filters);
   const { data: statesData, isLoading: isStatesLoading } = useStates();
@@ -70,7 +71,6 @@ export const useJobApplicationsLogic = () => {
   ], []);
 
   const statusOptions = useMemo(() => [
-    { value: '', label: 'All Statuses' },
     { value: 'New Application', label: 'New Application' },
     { value: 'Under Review', label: 'Under Review' },
     { value: 'Interview Scheduled', label: 'Interview Scheduled' },
@@ -108,6 +108,21 @@ export const useJobApplicationsLogic = () => {
         [key]: value === '' ? undefined : value,
         page: 1
       }));
+    });
+  }, []);
+
+  const handleStatusToggle = useMemo(() => (statuses: string[]) => {
+    setSelectedStatuses(statuses);
+    
+    startTransition(() => {
+      if (statuses.length === 0) {
+        setFilters(prev => ({ ...prev, status: '', page: 1 }));
+      } else if (statuses.length === 1) {
+        setFilters(prev => ({ ...prev, status: statuses[0], page: 1 }));
+      } else {
+        // Multiple statuses selected, remove the filter
+        setFilters(prev => ({ ...prev, status: '', page: 1 }));
+      }
     });
   }, []);
 
@@ -174,6 +189,7 @@ export const useJobApplicationsLogic = () => {
         status: '',
       });
       setSearchInput('');
+      setSelectedStatuses([]);
     });
   };
 
@@ -182,9 +198,9 @@ export const useJobApplicationsLogic = () => {
       searchInput ||
       filters.location ||
       filters.companyName ||
-      filters.status
+      selectedStatuses.length > 0
     );
-  }, [searchInput, filters.location, filters.companyName, filters.status]);
+  }, [searchInput, filters.location, filters.companyName, selectedStatuses]);
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -218,11 +234,13 @@ export const useJobApplicationsLogic = () => {
     itemsPerPageOptions,
 
     filterChange,
+    handleStatusToggle,
     initPageChange,
     getStatusVariant,
     initViewResume,
     viewJobApplication,
     clearAllFilters,
     hasActiveFilters,
+    selectedStatuses,
   };
 };

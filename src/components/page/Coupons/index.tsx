@@ -31,8 +31,6 @@ const CouponsData: React.FC<CouponsProps> = ({ className = "" }) => {
     
     tableColumns,
     statusOptions,
-    sortByOptions,
-    sortOrderOptions,
     itemsPerPageOptions,
     
     filterChange,
@@ -40,6 +38,8 @@ const CouponsData: React.FC<CouponsProps> = ({ className = "" }) => {
     viewCoupon,
     clearAllFilters,
     hasActiveFilters,
+    selectedStatuses,
+    handleStatusToggle,
   } = useCouponsLogic();
 
   const createCouponMutation = useCreateCoupon();
@@ -85,15 +85,17 @@ const CouponsData: React.FC<CouponsProps> = ({ className = "" }) => {
         onClearFilters={clearAllFilters}
         hasActiveFilters={hasActiveFilters}
         onCreateCoupon={openCreateModal}
-      />
-
-      <CouponsFilters
-        isOpen={isFilterOpen}
-        filters={filters}
-        onFilterChange={filterChange}
-        statusOptions={statusOptions}
-        sortByOptions={sortByOptions}
-        sortOrderOptions={sortOrderOptions}
+        filterContent={
+          <CouponsFilters
+            isOpen={isFilterOpen}
+            filters={filters}
+            onFilterChange={filterChange}
+            statusOptions={statusOptions}
+            selectedStatuses={selectedStatuses}
+            onStatusToggle={handleStatusToggle}
+            hasActiveFilters={hasActiveFilters}
+          />
+        }
       />
 
       <CouponsTable

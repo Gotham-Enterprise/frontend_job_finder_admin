@@ -15,6 +15,7 @@ export interface JobApplicationsHeaderProps {
   onRefetch: () => void;
   onClearFilters: () => void;
   hasActiveFilters: boolean;
+  filterContent?: React.ReactNode;
 }
 
 export interface JobApplicationsFiltersProps {
@@ -23,6 +24,9 @@ export interface JobApplicationsFiltersProps {
   onFilterChange: (key: keyof JobApplicationFilters, value: any) => void;
   stateOptions: Array<{ value: string; label: string }>;
   statusOptions: Array<{ value: string; label: string }>;
+  selectedStatuses: string[];
+  onStatusToggle: (statuses: string[]) => void;
+  hasActiveFilters: boolean;
 }
 
 export interface JobApplicationsTableProps {

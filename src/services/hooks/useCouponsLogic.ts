@@ -16,6 +16,7 @@ export const useCouponsLogic = () => {
   const [searchInput, setSearchInput] = useState('');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
 
   const normalizedFilters = useMemo(() => {
     const normalized: CouponFilters = {
@@ -46,7 +47,6 @@ export const useCouponsLogic = () => {
   ], []);
 
   const statusOptions = useMemo(() => [
-    { value: '', label: 'All Status' },
     { value: 'true', label: 'Active' },
     { value: 'false', label: 'Inactive' },
   ], []);
@@ -85,6 +85,22 @@ export const useCouponsLogic = () => {
       setFilters(newFilters);
     });
   }, [filters]);
+
+  const handleStatusToggle = useCallback((statuses: string[]) => {
+    setSelectedStatuses(statuses);
+    
+    startTransition(() => {
+      if (statuses.length === 0) {
+        setFilters(prev => ({ ...prev, isActive: undefined, page: 1 }));
+      } else if (statuses.length === 1) {
+        const isActive = statuses[0] === 'true';
+        setFilters(prev => ({ ...prev, isActive, page: 1 }));
+      } else {
+        // Multiple statuses selected, remove the filter
+        setFilters(prev => ({ ...prev, isActive: undefined, page: 1 }));
+      }
+    });
+  }, []);
 
   const initPageChange = useCallback((newPage: number) => {
     startTransition(() => {
@@ -125,17 +141,16 @@ export const useCouponsLogic = () => {
         sortOrder: 'desc',
       });
       setSearchInput('');
+      setSelectedStatuses([]);
     });
   };
 
   const hasActiveFilters = useMemo(() => {
     return !!(
       searchInput ||
-      filters.isActive !== undefined ||
-      filters.sortBy !== 'createdAt' ||
-      filters.sortOrder !== 'desc'
+      selectedStatuses.length > 0
     );
-  }, [searchInput, filters.isActive, filters.sortBy, filters.sortOrder]);
+  }, [searchInput, selectedStatuses]);
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -181,5 +196,7 @@ export const useCouponsLogic = () => {
     formatDate,
     clearAllFilters,
     hasActiveFilters,
+    selectedStatuses,
+    handleStatusToggle,
   };
 };
