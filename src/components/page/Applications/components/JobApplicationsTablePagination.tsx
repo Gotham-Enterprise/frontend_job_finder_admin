@@ -24,7 +24,7 @@ const JobApplicationsTablePagination: React.FC<JobApplicationsTablePaginationPro
         </div>
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-700 dark:text-gray-300">Items per page:</span>
+            <span className="text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">Items per page:</span>
             <Select
               value={filters.limit?.toString() || '50'}
               onChange={(value: string) => onFilterChange('limit', parseInt(value))}
