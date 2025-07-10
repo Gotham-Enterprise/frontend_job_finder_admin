@@ -2,7 +2,6 @@
 import React from 'react';
 import { BoltIcon } from '@/icons';
 import ErrorState from '../../common/ErrorState';
-import FullScreenSpinner from '../../ui/FullScreenSpinner';
 import { useJobSeekersLogic } from '@/services/hooks/useJobSeekersLogic';
 import { usePreservedNavigation } from '@/hooks/usePreservedNavigation';
 import { JobSeekersProps } from '@/services/types/JobSeekersTypes';

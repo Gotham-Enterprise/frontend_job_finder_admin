@@ -10,45 +10,132 @@ export const useJobSeekersLogic = () => {
   const searchParams = useSearchParams();
 
   const getInitialFilters = (): JobSeekerFilters => {
-    const searchParam = searchParams.get('search') || '';
-    const decodedSearch = searchParam ? decodeURIComponent(searchParam) : '';
-    const statusParam = searchParams.get('status');
-    const validStatus = statusParam && ['active', 'inactive', 'pending', 'suspended'].includes(statusParam) 
-      ? statusParam as 'active' | 'inactive' | 'pending' | 'suspended' 
-      : undefined;
+    const hasUrlParams = Array.from(searchParams.keys()).length > 0;
     
-    return {
-      page: parseInt(searchParams.get('page') || '1', 10),
-      limit: parseInt(searchParams.get('limit') || '100', 10),
-      search: decodedSearch,
-      location: searchParams.get('location') || '',
-      occupationId: searchParams.get('occupationId') ? parseInt(searchParams.get('occupationId')!, 10) : undefined,
-      status: validStatus,
+    if (hasUrlParams) {
+      const searchParam = searchParams.get('search') || '';
+      const decodedSearch = searchParam ? decodeURIComponent(searchParam) : '';
+      const statusParam = searchParams.get('status');
+      const validStatus = statusParam && ['active', 'inactive', 'pending', 'suspended'].includes(statusParam) 
+        ? statusParam as 'active' | 'inactive' | 'pending' | 'suspended' 
+        : undefined;
+      
+      const urlFilters = {
+        page: Math.max(1, parseInt(searchParams.get('page') || '1', 10)),
+        limit: parseInt(searchParams.get('limit') || '100', 10),
+        search: decodedSearch,
+        location: searchParams.get('location') || '',
+        occupationId: searchParams.get('occupationId') ? parseInt(searchParams.get('occupationId')!, 10) : undefined,
+        status: validStatus,
+      };
+      
+      return urlFilters;
+    }
+    
+    if (typeof window !== 'undefined') {
+      const savedState = localStorage.getItem('jobseeker-search-state');
+      if (savedState) {
+        try {
+          const parsed = JSON.parse(savedState);
+          const restoredFilters = {
+            page: Math.max(1, parsed.page || 1),
+            limit: parsed.limit || 100,
+            search: parsed.search || '',
+            location: parsed.location || '',
+            occupationId: parsed.occupationId || undefined,
+            status: parsed.status || undefined,
+          };
+          return restoredFilters;
+        } catch (error) {
+          console.warn('Failed to parse saved job seeker state:', error);
+        }
+      }
+    }
+    
+    const defaultFilters = {
+      page: 1,
+      limit: 100,
+      search: '',
+      location: '',
+      occupationId: undefined,
+      status: undefined,
     };
+    return defaultFilters;
   };
 
-  const [filters, setFilters] = useState<JobSeekerFilters>(getInitialFilters);
-  const [searchInput, setSearchInput] = useState(filters.search || '');
+  const initialFilters = getInitialFilters();
+  const [filters, setFilters] = useState<JobSeekerFilters>(() => {
+    return initialFilters;
+  });
+  const [searchInput, setSearchInput] = useState(() => {
+    const initial = initialFilters.search || '';
+    return initial;
+  });
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>(
-    filters.status ? [filters.status] : []
+    initialFilters.status ? [initialFilters.status] : []
   );
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [scrollPosition, setScrollPosition] = useState(0);
+  const [isInitialized, setIsInitialized] = useState(false);
 
-  const updateURL = useCallback((newFilters: JobSeekerFilters) => {
+  useEffect(() => {
     const params = new URLSearchParams();
     
-    if (newFilters.page && newFilters.page > 1) params.set('page', newFilters.page.toString());
-    if (newFilters.limit && newFilters.limit !== 100) params.set('limit', newFilters.limit.toString());
-    if (newFilters.search) params.set('search', encodeURIComponent(newFilters.search));
-    if (newFilters.location) params.set('location', newFilters.location);
-    if (newFilters.occupationId) params.set('occupationId', newFilters.occupationId.toString());
-    if (newFilters.status) params.set('status', newFilters.status);
+    if (filters.page && filters.page > 1) params.set('page', filters.page.toString());
+    if (filters.limit && filters.limit !== 100) params.set('limit', filters.limit.toString());
+    if (filters.search) params.set('search', encodeURIComponent(filters.search));
+    if (filters.location) params.set('location', filters.location);
+    if (filters.occupationId) params.set('occupationId', filters.occupationId.toString());
+    if (filters.status) params.set('status', filters.status);
     
     const newURL = params.toString() ? `?${params.toString()}` : '';
-    router.replace(`/admin/job-seekers${newURL}`, { scroll: false });
-  }, [router]);
+    const currentURL = window.location.search;
+  
+    if (newURL !== currentURL) {
+      router.replace(`/admin/job-seekers${newURL}`, { scroll: false });
+    }
+  }, [filters, router]);
+
+  useEffect(() => {
+    setIsInitialized(true);
+  }, []);
+
+
+  useEffect(() => {
+    const hasUrlParams = Array.from(searchParams.keys()).length > 0;
+    
+    if (!hasUrlParams && typeof window !== 'undefined') {
+      const savedPosition = localStorage.getItem('jobseeker-scroll-position');
+      if (savedPosition) {
+        const position = parseInt(savedPosition, 10);
+        setTimeout(() => {
+          window.scrollTo({ top: position, behavior: 'smooth' });
+        }, 100);
+      }
+    }
+  }, []); 
+
+
+  useEffect(() => {
+    const handlePopState = () => {
+   
+      setTimeout(() => {
+        const hasUrlParams = Array.from(new URLSearchParams(window.location.search).keys()).length > 0;
+        
+        if (!hasUrlParams && typeof window !== 'undefined') {
+          const savedPosition = localStorage.getItem('jobseeker-scroll-position');
+          if (savedPosition) {
+            const position = parseInt(savedPosition, 10);
+            window.scrollTo({ top: position, behavior: 'smooth' });
+          }
+        }
+      }, 100);
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
   const saveScrollPosition = useCallback(() => {
     if (typeof window !== 'undefined') {
@@ -141,40 +228,30 @@ export const useJobSeekersLogic = () => {
     { value: '100', label: '100 per page' },
   ], []);
 
-  const filterChange = useMemo(() => (key: keyof JobSeekerFilters, value: any) => {
+  const filterChange = useCallback((key: keyof JobSeekerFilters, value: any) => {
     startTransition(() => {
-      const newFilters = { 
-        ...filters, 
+      setFilters(prev => ({ 
+        ...prev, 
         [key]: value === '' ? undefined : value,
         page: 1
-      };
-      setFilters(newFilters);
-      updateURL(newFilters);
+      }));
     });
-  }, [filters, updateURL]);
+  }, []);
 
   const statusToggleChange = useCallback((statuses: string[]) => {
     setSelectedStatuses(statuses);
     startTransition(() => {
-      // For now, we'll use the first selected status for the API call
-      // Later you might want to update the API to handle multiple statuses
-      const newFilters = { 
-        ...filters, 
+      setFilters(prev => ({ 
+        ...prev, 
         status: statuses.length > 0 ? statuses[0] as any : undefined,
         page: 1
-      };
-      setFilters(newFilters);
-      updateURL(newFilters);
+      }));
     });
-  }, [filters, updateURL]);
+  }, []);
 
-  const initPageChange = useMemo(() => (newPage: number) => {
-    startTransition(() => {
-      const newFilters = { ...filters, page: newPage };
-      setFilters(newFilters);
-      updateURL(newFilters);
-    });
-  }, [filters, updateURL]);
+  const initPageChange = useCallback((newPage: number) => {
+    setFilters(prev => ({ ...prev, page: newPage }));
+  }, []);
   const getStatusVariant = useMemo(() => (status: string): 'light' | 'solid' => {
     switch (status) {
       case 'active': return 'solid';
@@ -205,30 +282,30 @@ export const useJobSeekersLogic = () => {
     });
   }, [viewResume]);
   const viewJobSeeker = useCallback((jobSeekerId: string) => {
+    
     saveScrollPosition();
     saveSearchState();
+    
     router.push(`/admin/job-seekers/details/${jobSeekerId}`);
   }, [router, saveScrollPosition, saveSearchState]);
 
   const clearAllFilters = useCallback(() => {
-    startTransition(() => {
-      const newFilters = {
-        page: 1,
-        limit: 100,
-        search: '',
-        location: '',
-        occupationId: undefined,
-        status: undefined,
-      };
-      setFilters(newFilters);
-      setSearchInput('');
-      setSelectedStatuses([]);
-      updateURL(newFilters);
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('jobseeker-scroll-position');
-      }
-    });
-  }, [startTransition, updateURL]);
+    const newFilters = {
+      page: 1,
+      limit: 100,
+      search: '',
+      location: '',
+      occupationId: undefined,
+      status: undefined,
+    };
+    setFilters(newFilters);
+    setSearchInput('');
+    setSelectedStatuses([]);
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('jobseeker-scroll-position');
+      localStorage.removeItem('jobseeker-search-state');
+    }
+  }, []);
 
   const hasActiveFilters = useMemo(() => {
     return !!(
@@ -240,20 +317,42 @@ export const useJobSeekersLogic = () => {
   }, [searchInput, filters.location, filters.occupationId, selectedStatuses.length]);
 
   useEffect(() => {
+ 
+    if (!isInitialized) return;
+    
     const timeoutId = setTimeout(() => {
       startTransition(() => {
-        const newFilters = { ...filters, search: searchInput, page: 1 };
-        setFilters(newFilters);
-        updateURL(newFilters);
+      
+        const shouldResetPage = searchInput !== filters.search;
+        setFilters(prev => ({ 
+          ...prev, 
+          search: searchInput, 
+          page: shouldResetPage ? 1 : prev.page 
+        }));
       });
     }, 500);
 
     return () => clearTimeout(timeoutId);
-  }, [searchInput]);
+  }, [searchInput, isInitialized, filters.search]);
 
   useEffect(() => {
-    if (data && !isLoading && searchParams.toString()) {
-      restoreScrollPosition();
+    if (data && !isLoading) {
+  
+      const hasUrlParams = searchParams.toString();
+      
+      if (hasUrlParams) {
+      
+        restoreScrollPosition();
+      } else {
+    
+        const savedPosition = localStorage.getItem('jobseeker-scroll-position');
+        if (savedPosition) {
+          const position = parseInt(savedPosition, 10);
+          setTimeout(() => {
+            window.scrollTo({ top: position, behavior: 'smooth' });
+          }, 100);
+        }
+      }
     }
   }, [data, isLoading, searchParams, restoreScrollPosition]);
 

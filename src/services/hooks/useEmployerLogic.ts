@@ -8,72 +8,163 @@ export const useEmployerLogic = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const initializeFilters = (): EmployerFilters => {
-    const urlPage = searchParams.get('page');
-    const urlLimit = searchParams.get('limit');
-    const urlName = searchParams.get('name');
-    const urlLocation = searchParams.get('location');
-    const urlStatus = searchParams.get('status');
+  const getInitialFilters = (): EmployerFilters => {
+    // First, try to get from URL parameters
+    const hasUrlParams = Array.from(searchParams.keys()).length > 0;
     
+    if (hasUrlParams) {
+      const urlPage = searchParams.get('page');
+      const urlLimit = searchParams.get('limit');
+      const urlName = searchParams.get('name');
+      const urlLocation = searchParams.get('location');
+      const urlStatus = searchParams.get('status');
+      
+      return {
+        page: Math.max(1, parseInt(urlPage || '1', 10)),
+        limit: parseInt(urlLimit || '100', 10),
+        name: urlName || '',
+        location: urlLocation || '',
+        status: urlStatus || undefined,
+      };
+    }
+    
+    // If no URL parameters, try to restore from localStorage
+    if (typeof window !== 'undefined') {
+      const savedState = localStorage.getItem('employer-search-state');
+      if (savedState) {
+        try {
+          const parsed = JSON.parse(savedState);
+          return {
+            page: Math.max(1, parsed.page || 1),
+            limit: parsed.limit || 100,
+            name: parsed.name || '',
+            location: parsed.location || '',
+            status: parsed.status || undefined,
+          };
+        } catch (error) {
+          console.warn('Failed to parse saved employer state:', error);
+        }
+      }
+    }
+    
+    // Default fallback
     return {
-      page: urlPage ? parseInt(urlPage) : 1,
-      limit: urlLimit ? parseInt(urlLimit) : 100,
-      name: urlName || '',
-      location: urlLocation || '',
-      status: urlStatus || undefined,
+      page: 1,
+      limit: 100,
+      name: '',
+      location: '',
+      status: undefined,
     };
   };
 
-  const [filters, setFilters] = useState<EmployerFilters>(initializeFilters);
-  const [searchInput, setSearchInput] = useState(filters.name || '');
+  const initialFilters = getInitialFilters();
+  const [filters, setFilters] = useState<EmployerFilters>(() => {
+    return initialFilters;
+  });
+  const [searchInput, setSearchInput] = useState(() => {
+    const initial = initialFilters.name || '';
+    return initial;
+  });
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [selectedEmployerId, setSelectedEmployerId] = useState<string | null>(null);
   const [isCreatingJob, setIsCreatingJob] = useState(false);
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>(
-    filters.status ? [filters.status] : []
+    initialFilters.status ? [initialFilters.status] : []
   );
+  const [isInitialized, setIsInitialized] = useState(false);
 
+  // Initialization effect - mark as initialized after component mounts
+  useEffect(() => {
+    setIsInitialized(true);
+  }, []);
+
+  // Restore scroll position when component mounts (only when state was restored from localStorage)
+  useEffect(() => {
+    const hasUrlParams = Array.from(searchParams.keys()).length > 0;
+    
+    if (!hasUrlParams && typeof window !== 'undefined') {
+      const savedPosition = localStorage.getItem('employer-scroll-position');
+      if (savedPosition) {
+        const position = parseInt(savedPosition, 10);
+        setTimeout(() => {
+          window.scrollTo({ top: position, behavior: 'smooth' });
+        }, 100);
+      }
+    }
+  }, []); // Only run on mount
+
+  // Handle browser back/forward navigation
+  useEffect(() => {
+    const handlePopState = () => {
+      // Small delay to ensure the component has re-rendered with URL params
+      setTimeout(() => {
+        const hasUrlParams = Array.from(new URLSearchParams(window.location.search).keys()).length > 0;
+        
+        if (!hasUrlParams && typeof window !== 'undefined') {
+          const savedPosition = localStorage.getItem('employer-scroll-position');
+          if (savedPosition) {
+            const position = parseInt(savedPosition, 10);
+            window.scrollTo({ top: position, behavior: 'smooth' });
+          }
+        }
+      }, 100);
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  // URL update effect - separate from direct calls to avoid render issues
   useEffect(() => {
     const params = new URLSearchParams();
     
-    if ((filters.page ?? 1) > 1) params.set('page', (filters.page ?? 1).toString());
-    if ((filters.limit ?? 100) !== 100) params.set('limit', (filters.limit ?? 100).toString());
+    if (filters.page && filters.page > 1) params.set('page', filters.page.toString());
+    if (filters.limit && filters.limit !== 100) params.set('limit', filters.limit.toString());
     if (filters.name) params.set('name', filters.name);
     if (filters.location) params.set('location', filters.location);
     if (filters.status) params.set('status', filters.status);
     
-    const queryString = params.toString();
-    const newUrl = `/admin/employers${queryString ? `?${queryString}` : ''}`;
+    const newURL = params.toString() ? `?${params.toString()}` : '';
+    const currentURL = window.location.search;
     
-    router.replace(newUrl, { scroll: false });
+    // Only update URL if it's different to avoid unnecessary navigations
+    if (newURL !== currentURL) {
+      router.replace(`/admin/employers${newURL}`, { scroll: false });
+    }
   }, [filters, router]);
 
-  useEffect(() => {
-    const state = {
-      filters,
-      searchInput,
-      selectedEmployerId,
-      scrollPosition: window.scrollY,
-    };
-    localStorage.setItem('employerListState', JSON.stringify(state));
-  }, [filters, searchInput, selectedEmployerId]);
+  const saveScrollPosition = useCallback(() => {
+    if (typeof window !== 'undefined') {
+      const position = window.scrollY;
+      localStorage.setItem('employer-scroll-position', position.toString());
+    }
+  }, []);
 
-  useEffect(() => {
-    const savedState = localStorage.getItem('employerListState');
-    if (savedState) {
-      try {
-        const parsed = JSON.parse(savedState);
-        if (parsed.scrollPosition) {
-          setTimeout(() => {
-            window.scrollTo({ top: parsed.scrollPosition, behavior: 'instant' });
-          }, 100);
-        }
-      } catch (error) {
-        console.warn('Failed to restore scroll position:', error);
+  const restoreScrollPosition = useCallback(() => {
+    if (typeof window !== 'undefined') {
+      const savedPosition = localStorage.getItem('employer-scroll-position');
+      if (savedPosition) {
+        const position = parseInt(savedPosition, 10);
+        setTimeout(() => {
+          window.scrollTo({ top: position, behavior: 'smooth' });
+        }, 100);
       }
     }
   }, []);
+
+  const saveSearchState = useCallback(() => {
+    if (typeof window !== 'undefined') {
+      const stateToSave = {
+        page: filters.page,
+        limit: filters.limit,
+        name: filters.name,
+        location: filters.location,
+        status: filters.status,
+      };
+      localStorage.setItem('employer-search-state', JSON.stringify(stateToSave));
+    }
+  }, [filters]);
 
   const { data, isLoading, error, refetch } = useEmployers(filters);
   const { data: statesData, isLoading: isStatesLoading } = useEmployerStates();  const tableColumns = useMemo(() => [
@@ -129,8 +220,6 @@ export const useEmployerLogic = () => {
   const statusToggle = useCallback((statuses: string[]) => {
     setSelectedStatuses(statuses);
     startTransition(() => {
-      // Convert multiple statuses to single status for the filter
-      // For now, we'll use the first selected status or undefined if none
       const status = statuses.length > 0 ? statuses[0] : undefined;
       setFilters(prev => ({ ...prev, status, page: 1 }));
     });
@@ -150,17 +239,13 @@ export const useEmployerLogic = () => {
       default: return 'light';
     }
   }, []);
-  const viewEmployer = (employerId: string) => {
-    const state = {
-      filters,
-      searchInput,
-      selectedEmployerId,
-      scrollPosition: window.scrollY,
-    };
-    localStorage.setItem('employerListState', JSON.stringify(state));
+  const viewEmployer = useCallback((employerId: string) => {
+    // Save current state and scroll position before navigating
+    saveScrollPosition();
+    saveSearchState();
     
     router.push(`/admin/employers/details/${employerId}`);
-  };
+  }, [router, saveScrollPosition, saveSearchState]);
   const viewSubscription = (employerId: string) => {
     router.push(`/admin/subscriptions?employerId=${employerId}`);
   };
@@ -175,20 +260,23 @@ export const useEmployerLogic = () => {
       }, 100);
     }
   };
-  const clearAllFilters = () => {
-    startTransition(() => {
-      setFilters({
-        page: 1,
-        limit: 100,
-        name: '',
-        location: '',
-        status: undefined,
-      });
-      setSearchInput('');
-      setSelectedEmployerId(null);
-      setSelectedStatuses([]);
-    });
-  };
+  const clearAllFilters = useCallback(() => {
+    const newFilters = {
+      page: 1,
+      limit: 100,
+      name: '',
+      location: '',
+      status: undefined,
+    };
+    setFilters(newFilters);
+    setSearchInput('');
+    setSelectedEmployerId(null);
+    setSelectedStatuses([]);
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('employer-scroll-position');
+      localStorage.removeItem('employer-search-state');
+    }
+  }, []);
   const hasActiveFilters = useMemo(() => {
     return !!(
       searchInput ||
@@ -200,14 +288,50 @@ export const useEmployerLogic = () => {
   }, [searchInput, filters.location, filters.status, selectedEmployerId, selectedStatuses]);
 
   useEffect(() => {
+    if (data && !isLoading) {
+      // Check if we need to restore scroll position after data loads
+      const hasUrlParams = searchParams.toString();
+      
+      if (hasUrlParams) {
+        // If we have URL params, restore scroll position
+        restoreScrollPosition();
+      } else {
+        // If no URL params, we might have restored from localStorage, so restore scroll too
+        const savedPosition = localStorage.getItem('employer-scroll-position');
+        if (savedPosition) {
+          const position = parseInt(savedPosition, 10);
+          setTimeout(() => {
+            window.scrollTo({ top: position, behavior: 'smooth' });
+          }, 100);
+        }
+      }
+    }
+  }, [data, isLoading, searchParams, restoreScrollPosition]);
+
+  useEffect(() => {
+    if (filters.name || filters.location || filters.status || (filters.page && filters.page > 1)) {
+      saveSearchState();
+    }
+  }, [filters, saveSearchState]);
+
+  useEffect(() => {
+    // Don't trigger search during initial component mount to avoid resetting page
+    if (!isInitialized) return;
+    
     const timeoutId = setTimeout(() => {
       startTransition(() => {
-        setFilters(prev => ({ ...prev, name: searchInput, page: 1 }));
+        // Only reset to page 1 if this is a new search (different from current filters.name)
+        const shouldResetPage = searchInput !== filters.name;
+        setFilters(prev => ({ 
+          ...prev, 
+          name: searchInput, 
+          page: shouldResetPage ? 1 : prev.page 
+        }));
       });
     }, 500);
 
     return () => clearTimeout(timeoutId);
-  }, [searchInput]);
+  }, [searchInput, isInitialized, filters.name]);
   return {
     filters,
     searchInput,
@@ -240,5 +364,8 @@ export const useEmployerLogic = () => {
     clearAllFilters,
     hasActiveFilters,
     selectedStatuses,
+    saveScrollPosition,
+    restoreScrollPosition,
+    saveSearchState,
   };
 };

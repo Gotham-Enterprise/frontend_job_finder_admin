@@ -39,12 +39,14 @@ const JobApplications: React.FC<JobApplicationsProps> = ({ className = "" }) => 
     stateOptions,
     itemsPerPageOptions,
     filterChange,
+    handleStatusToggle,
     initPageChange,
     getStatusVariant,
     initViewResume,
     viewJobApplication,
     clearAllFilters,
     hasActiveFilters,
+    selectedStatuses,
   } = useJobApplicationsLogic();
 
   if (error && !isPending) {
@@ -71,14 +73,18 @@ const JobApplications: React.FC<JobApplicationsProps> = ({ className = "" }) => 
         onRefetch={refetch}
         onClearFilters={clearAllFilters}
         hasActiveFilters={hasActiveFilters}
-      />
-
-      <JobApplicationsFilters
-        isOpen={isFilterOpen}
-        filters={filters}
-        onFilterChange={filterChange}
-        stateOptions={stateOptions}
-        statusOptions={statusOptions}
+        filterContent={
+          <JobApplicationsFilters
+            isOpen={isFilterOpen}
+            filters={filters}
+            onFilterChange={filterChange}
+            stateOptions={stateOptions}
+            statusOptions={statusOptions}
+            selectedStatuses={selectedStatuses}
+            onStatusToggle={handleStatusToggle}
+            hasActiveFilters={hasActiveFilters}
+          />
+        }
       />
 
       <JobApplicationsTable

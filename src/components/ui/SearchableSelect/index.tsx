@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { SearchIcon } from '../icons';
 
 interface SearchableSelectOption {
@@ -32,12 +32,10 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
   const searchInputRef = useRef<HTMLInputElement>(null);
   const optionsRef = useRef<HTMLDivElement>(null);
 
-  // Get the selected option label
   const selectedOption = useMemo(() => {
     return options.find(option => option.value === value);
   }, [options, value]);
 
-  // Filter options based on search query
   const filteredOptions = useMemo(() => {
     if (!searchQuery) return options;
     return options.filter(option =>
@@ -45,7 +43,13 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
     );
   }, [options, searchQuery]);
 
-  // Close dropdown when clicking outside
+  const selectOption = useCallback((optionValue: string) => {
+    onChange(optionValue);
+    setIsOpen(false);
+    setSearchQuery('');
+    setFocusedIndex(-1);
+  }, [onChange]);
+
   useEffect(() => {
     const clickOutside = (event: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
@@ -59,14 +63,12 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
     return () => document.removeEventListener('mousedown', clickOutside);
   }, []);
 
-  // Focus search input when dropdown opens
   useEffect(() => {
     if (isOpen && searchInputRef.current) {
       searchInputRef.current.focus();
     }
   }, [isOpen]);
 
-  // Handle keyboard navigation
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (!isOpen) return;
@@ -100,9 +102,8 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
       document.addEventListener('keydown', handleKeyDown);
       return () => document.removeEventListener('keydown', handleKeyDown);
     }
-  }, [isOpen, focusedIndex, filteredOptions]);
+  }, [isOpen, focusedIndex, filteredOptions, selectOption]);
 
-  // Scroll focused option into view
   useEffect(() => {
     if (isOpen && focusedIndex >= 0 && optionsRef.current) {
       const focusedElement = optionsRef.current.children[focusedIndex + 1] as HTMLElement; // +1 to skip search input
@@ -127,11 +128,6 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
     setIsOpen(false);
     setSearchQuery('');
     setFocusedIndex(-1);
-  };
-
-  const selectOption = (optionValue: string) => {
-    onChange(optionValue);
-    closeDropdown();
   };
 
   const clearSearch = () => {

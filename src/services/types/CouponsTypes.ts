@@ -15,6 +15,7 @@ export interface CouponsHeaderProps {
   onClearFilters: () => void;
   hasActiveFilters: boolean;
   onCreateCoupon: () => void;
+  filterContent?: React.ReactNode;
 }
 
 export interface CouponsFiltersProps {
@@ -22,8 +23,9 @@ export interface CouponsFiltersProps {
   filters: CouponFilters;
   onFilterChange: (key: keyof CouponFilters, value: any) => void;
   statusOptions: Array<{ value: string; label: string }>;
-  sortByOptions: Array<{ value: string; label: string }>;
-  sortOrderOptions: Array<{ value: string; label: string }>;
+  selectedStatuses: string[];
+  onStatusToggle: (statuses: string[]) => void;
+  hasActiveFilters: boolean;
 }
 
 export interface CouponsTableProps {
