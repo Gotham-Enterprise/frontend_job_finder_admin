@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { SearchIcon } from '../icons';
 
 interface SearchableSelectOption {
@@ -44,6 +44,14 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
       option.label.toLowerCase().includes(searchQuery.toLowerCase())
     );
   }, [options, searchQuery]);
+
+  // Define selectOption with useCallback to avoid dependency issues
+  const selectOption = useCallback((optionValue: string) => {
+    onChange(optionValue);
+    setIsOpen(false);
+    setSearchQuery('');
+    setFocusedIndex(-1);
+  }, [onChange]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -100,7 +108,7 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
       document.addEventListener('keydown', handleKeyDown);
       return () => document.removeEventListener('keydown', handleKeyDown);
     }
-  }, [isOpen, focusedIndex, filteredOptions]);
+  }, [isOpen, focusedIndex, filteredOptions, selectOption]);
 
   // Scroll focused option into view
   useEffect(() => {
@@ -127,11 +135,6 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
     setIsOpen(false);
     setSearchQuery('');
     setFocusedIndex(-1);
-  };
-
-  const selectOption = (optionValue: string) => {
-    onChange(optionValue);
-    closeDropdown();
   };
 
   const clearSearch = () => {

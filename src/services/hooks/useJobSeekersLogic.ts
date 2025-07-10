@@ -249,7 +249,7 @@ export const useJobSeekersLogic = () => {
     }, 500);
 
     return () => clearTimeout(timeoutId);
-  }, [searchInput]);
+  }, [searchInput, filters, updateURL]);
 
   useEffect(() => {
     if (data && !isLoading && searchParams.toString()) {
