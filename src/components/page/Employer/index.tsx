@@ -1,9 +1,10 @@
 "use client";
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BoltIcon } from '@/icons';
 import ErrorState from '../../common/ErrorState';
 import FullScreenSpinner from '../../ui/FullScreenSpinner';
 import { useEmployerLogic } from '@/services/hooks/useEmployerLogic';
+import { usePreservedNavigation } from '@/hooks/usePreservedNavigation';
 import {
   EmployerHeader,
   EmployerFilters,
@@ -12,7 +13,14 @@ import {
 } from './components';
 import { EmployersProps } from '@/services/types/EmployerTypes';
 
-const Employers: React.FC<EmployersProps> = ({ className = "" }) => {  const {
+const Employers: React.FC<EmployersProps> = ({ className = "" }) => {
+  usePreservedNavigation({
+    statePath: 'employer-search-state',
+    scrollPath: 'employer-scroll-position',
+    listPagePath: '/admin/employers'
+  });
+  
+  const {
 
     filters,
     searchInput,
@@ -76,7 +84,6 @@ const Employers: React.FC<EmployersProps> = ({ className = "" }) => {  const {
         onFilterChange={filterChange}
         stateOptions={stateOptions}
         statusOptions={statusOptions}
-        itemsPerPageOptions={itemsPerPageOptions}
       />        
       
       <EmployerTable
@@ -94,6 +101,8 @@ const Employers: React.FC<EmployersProps> = ({ className = "" }) => {  const {
         data={data}
         filters={filters}
         onPageChange={initPageChange}
+        itemsPerPageOptions={itemsPerPageOptions}
+        onFilterChange={filterChange}
       />
       
       <FullScreenSpinner 

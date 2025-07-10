@@ -24,7 +24,6 @@ export interface JobSeekersFiltersProps {
   occupationOptions: Array<{ value: string; label: string }>;
   stateOptions: Array<{ value: string; label: string }>;
   statusOptions: Array<{ value: string; label: string }>;
-  itemsPerPageOptions: Array<{ value: string; label: string }>;
 }
 
 export interface JobSeekersTableProps {
@@ -41,4 +40,6 @@ export interface JobSeekersTablePaginationProps {
   data: any;
   filters: JobSeekerFilters;
   onPageChange: (page: number) => void;
+  itemsPerPageOptions: Array<{ value: string; label: string }>;
+  onFilterChange: (key: keyof JobSeekerFilters, value: any) => void;
 }

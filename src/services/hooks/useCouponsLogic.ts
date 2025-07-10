@@ -7,7 +7,7 @@ export const useCouponsLogic = () => {
   const router = useRouter();
   const [filters, setFilters] = useState<CouponFilters>({
     page: 1,
-    limit: 10,
+    limit: 50,
     keyword: '',
     isActive: undefined,
     sortBy: 'createdAt',
@@ -20,7 +20,7 @@ export const useCouponsLogic = () => {
   const normalizedFilters = useMemo(() => {
     const normalized: CouponFilters = {
       page: filters.page || 1,
-      limit: filters.limit || 10,
+      limit: filters.limit || 50,
       sortBy: filters.sortBy || 'createdAt',
       sortOrder: filters.sortOrder || 'desc',
     };
@@ -62,7 +62,6 @@ export const useCouponsLogic = () => {
   ], []);
 
   const itemsPerPageOptions = useMemo(() => [
-    { value: '5', label: '5 per page' },
     { value: '10', label: '10 per page' },
     { value: '20', label: '20 per page' },
     { value: '50', label: '50 per page' },
@@ -119,7 +118,7 @@ export const useCouponsLogic = () => {
     startTransition(() => {
       setFilters({
         page: 1,
-        limit: 10,
+        limit: 50,
         keyword: '',
         isActive: undefined,
         sortBy: 'createdAt',

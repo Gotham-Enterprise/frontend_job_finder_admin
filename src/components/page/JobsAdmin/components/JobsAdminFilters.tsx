@@ -19,7 +19,7 @@ const JobsAdminFilters: React.FC<JobsAdminFiltersProps> = ({
 
   return (
     <div className="p-4 bg-gray-50 dark:bg-gray-800/50">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4">        <div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4">        <div>
           <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Occupation
           </Label>
@@ -71,15 +71,6 @@ const JobsAdminFilters: React.FC<JobsAdminFiltersProps> = ({
              
               onFilterChange('datePosted', currentDateString || '');
             }}
-          />
-        </div>        <div>
-          <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Items per page
-          </Label>
-          <Select
-            value={filters.limit?.toString() || '10'}
-            onChange={(value: string) => onFilterChange('limit', parseInt(value))}
-            options={itemsPerPageOptions}
           />
         </div>
       </div>

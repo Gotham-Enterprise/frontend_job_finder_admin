@@ -11,7 +11,7 @@ import { CheckLineIcon, CloseLineIcon } from '@/icons';
 import { useToast } from '@/context/ToastContext';
 import { useSubscriptionByCompany } from '@/services/hooks/useSubscriptionByCompany';
 import { useSubscriptionContext } from '@/context/SubscriptionContext';
-import { formatDate, formatDateTime } from '@/services/utils/dateUtils';
+import { formatDateTime } from '@/services/utils/dateUtils';
 import { formatInterval } from '@/services/utils/planUtils';
 import { subscriptionApi } from '@/services/api/subscription';
 

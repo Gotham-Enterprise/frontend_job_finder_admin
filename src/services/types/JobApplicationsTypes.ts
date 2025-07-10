@@ -23,7 +23,6 @@ export interface JobApplicationsFiltersProps {
   onFilterChange: (key: keyof JobApplicationFilters, value: any) => void;
   stateOptions: Array<{ value: string; label: string }>;
   statusOptions: Array<{ value: string; label: string }>;
-  itemsPerPageOptions: Array<{ value: string; label: string }>;
 }
 
 export interface JobApplicationsTableProps {
@@ -40,4 +39,6 @@ export interface JobApplicationsTablePaginationProps {
   data: any;
   filters: JobApplicationFilters;
   onPageChange: (page: number) => void;
+  itemsPerPageOptions: Array<{ value: string; label: string }>;
+  onFilterChange: (key: keyof JobApplicationFilters, value: any) => void;
 }

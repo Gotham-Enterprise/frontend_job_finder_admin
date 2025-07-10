@@ -1,25 +1,84 @@
 import { useState, useMemo, useTransition, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useJobsAdmin, useJobsAdminOccupations } from '@/services/hooks/useJobsAdmin';
 import { useStates } from '@/services/hooks/useStates';
 import { JobsAdminFilters, Specialty } from '@/services/types/jobsAdmin';
 
 export const useJobsAdminLogic = () => {
   const router = useRouter();
-  const [filters, setFilters] = useState<JobsAdminFilters>({
-    page: 1,
-    limit: 10,
-    name: '',
-    state: '',
-    jobStatus: undefined,
-    datePosted: '',
-    occupationId: undefined,
-    specialtyId: undefined,
-  });
-  const [searchInput, setSearchInput] = useState('');
+  const searchParams = useSearchParams();
+
+  const initializeFilters = (): JobsAdminFilters => {
+    const urlPage = searchParams.get('page');
+    const urlLimit = searchParams.get('limit');
+    const urlName = searchParams.get('name');
+    const urlState = searchParams.get('state');
+    const urlJobStatus = searchParams.get('jobStatus');
+    const urlDatePosted = searchParams.get('datePosted');
+    const urlOccupationId = searchParams.get('occupationId');
+    const urlSpecialtyId = searchParams.get('specialtyId');
+    
+    return {
+      page: urlPage ? parseInt(urlPage) : 1,
+      limit: urlLimit ? parseInt(urlLimit) : 50,
+      name: urlName || '',
+      state: urlState || '',
+      jobStatus: (urlJobStatus === 'Draft' || urlJobStatus === 'Published') ? urlJobStatus : undefined,
+      datePosted: urlDatePosted || '',
+      occupationId: urlOccupationId ? parseInt(urlOccupationId) : undefined,
+      specialtyId: urlSpecialtyId ? parseInt(urlSpecialtyId) : undefined,
+    };
+  };
+
+  const [filters, setFilters] = useState<JobsAdminFilters>(initializeFilters);
+  const [searchInput, setSearchInput] = useState(filters.name || '');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
-  const [selectedOccupationId, setSelectedOccupationId] = useState<number | undefined>(undefined);
+  const [selectedOccupationId, setSelectedOccupationId] = useState<number | undefined>(filters.occupationId);
+
+  useEffect(() => {
+    const params = new URLSearchParams();
+    
+    if ((filters.page ?? 1) > 1) params.set('page', (filters.page ?? 1).toString());
+    if ((filters.limit ?? 50) !== 50) params.set('limit', (filters.limit ?? 50).toString());
+    if (filters.name) params.set('name', filters.name);
+    if (filters.state) params.set('state', filters.state);
+    if (filters.jobStatus) params.set('jobStatus', filters.jobStatus);
+    if (filters.datePosted) params.set('datePosted', filters.datePosted);
+    if (filters.occupationId) params.set('occupationId', filters.occupationId.toString());
+    if (filters.specialtyId) params.set('specialtyId', filters.specialtyId.toString());
+    
+    const queryString = params.toString();
+    const newUrl = `/admin/jobs${queryString ? `?${queryString}` : ''}`;
+    
+    router.replace(newUrl, { scroll: false });
+  }, [filters, router]);
+
+  useEffect(() => {
+    const state = {
+      filters,
+      searchInput,
+      selectedOccupationId,
+      scrollPosition: window.scrollY,
+    };
+    localStorage.setItem('jobsAdminListState', JSON.stringify(state));
+  }, [filters, searchInput, selectedOccupationId]);
+
+  useEffect(() => {
+    const savedState = localStorage.getItem('jobsAdminListState');
+    if (savedState) {
+      try {
+        const parsed = JSON.parse(savedState);
+        if (parsed.scrollPosition) {
+          setTimeout(() => {
+            window.scrollTo({ top: parsed.scrollPosition, behavior: 'instant' });
+          }, 100);
+        }
+      } catch (error) {
+        console.warn('Failed to restore scroll position:', error);
+      }
+    }
+  }, []);
 
   const { data, isLoading, error, refetch } = useJobsAdmin(filters);
   const { data: occupationsData, isLoading: isOccupationsLoading } = useJobsAdminOccupations();
@@ -91,7 +150,6 @@ export const useJobsAdminLogic = () => {
   }, [statesData]);
 
   const itemsPerPageOptions = useMemo(() => [
-    { value: '5', label: '5 per page' },
     { value: '10', label: '10 per page' },
     { value: '20', label: '20 per page' },
     { value: '50', label: '50 per page' },
@@ -149,6 +207,14 @@ export const useJobsAdminLogic = () => {
   }, []);
 
   const viewJobDetails = (jobId: string) => {
+    const state = {
+      filters,
+      searchInput,
+      selectedOccupationId,
+      scrollPosition: window.scrollY,
+    };
+    localStorage.setItem('jobsAdminListState', JSON.stringify(state));
+    
     router.push(`/admin/jobs/details/${jobId}`);
   };
 
@@ -160,7 +226,7 @@ export const useJobsAdminLogic = () => {
     startTransition(() => {
       setFilters({
         page: 1,
-        limit: 10,
+        limit: 50,
         name: '',
         state: '',
         jobStatus: undefined,

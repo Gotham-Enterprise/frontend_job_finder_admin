@@ -1,8 +1,9 @@
 "use client";
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BoltIcon } from '@/icons';
 import ErrorState from '../../common/ErrorState';
 import { useJobsAdminLogic } from '@/services/hooks/useJobsAdminLogic';
+import { usePreservedNavigation } from '@/hooks/usePreservedNavigation';
 import { JobsAdminProps } from '@/services/types/JobsAdminTypes';
 import {
   JobsAdminHeader,
@@ -12,6 +13,12 @@ import {
 } from './components';
 
 const JobsAdmin: React.FC<JobsAdminProps> = ({ className = "" }) => {
+  usePreservedNavigation({
+    statePath: 'jobsAdmin-search-state',
+    scrollPath: 'jobsAdmin-scroll-position',
+    listPagePath: '/admin/jobs'
+  });
+  
   const {
     filters,
     searchInput,
@@ -75,7 +82,6 @@ const JobsAdmin: React.FC<JobsAdminProps> = ({ className = "" }) => {
         specialtyOptions={specialtyOptions}
         stateOptions={stateOptions}
         jobStatusOptions={jobStatusOptions}
-        itemsPerPageOptions={itemsPerPageOptions}
         selectedOccupationId={selectedOccupationId}
       />
 
@@ -93,6 +99,8 @@ const JobsAdmin: React.FC<JobsAdminProps> = ({ className = "" }) => {
         data={data}
         filters={filters}
         onPageChange={initPageChange}
+        itemsPerPageOptions={itemsPerPageOptions}
+        onFilterChange={filterChange}
       />
     </div>
   );

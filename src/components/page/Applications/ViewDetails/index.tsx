@@ -26,7 +26,7 @@ export default function JobApplicationDetails({ id }: ViewDetailsProps) {
   if (error) {
     return (
       <div className="px-4 pt-4 pb-2">
-        <BackToListButton href="/admin/applications" className="mb-6">
+        <BackToListButton href="/admin/applications" className="mb-6" preserveState={true}>
           Back to Applications
         </BackToListButton>
         <ErrorState 
@@ -39,7 +39,7 @@ export default function JobApplicationDetails({ id }: ViewDetailsProps) {
   if (!data?.success || !data?.data) {
     return (
       <div className="px-4 pt-4 pb-2">
-        <BackToListButton href="/admin/applications" className="mb-6">
+        <BackToListButton href="/admin/applications" className="mb-6" preserveState={true}>
           Back to Applications
         </BackToListButton>
         <div className="text-center py-8">
@@ -93,7 +93,7 @@ export default function JobApplicationDetails({ id }: ViewDetailsProps) {
   return (        
     <>
       <div className="px-4 pt-4 pb-2">
-        <BackToListButton href="/admin/applications">
+        <BackToListButton href="/admin/applications" preserveState={true}>
           Back to Applications
         </BackToListButton>
       </div>

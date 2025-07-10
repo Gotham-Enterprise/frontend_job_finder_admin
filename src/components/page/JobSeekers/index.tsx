@@ -4,6 +4,7 @@ import { BoltIcon } from '@/icons';
 import ErrorState from '../../common/ErrorState';
 import FullScreenSpinner from '../../ui/FullScreenSpinner';
 import { useJobSeekersLogic } from '@/services/hooks/useJobSeekersLogic';
+import { usePreservedNavigation } from '@/hooks/usePreservedNavigation';
 import { JobSeekersProps } from '@/services/types/JobSeekersTypes';
 import {
   JobSeekersHeader,
@@ -13,6 +14,14 @@ import {
 } from './components';
 
 const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
+  // Initialize preserved navigation
+  const { saveNavigationState, clearNavigationState } = usePreservedNavigation({
+    enabled: true,
+    statePath: 'jobseeker-search-state',
+    scrollPath: 'jobseeker-scroll-position',
+    listPagePath: '/admin/job-seekers',
+  });
+
   const {
     filters,
     searchInput,
@@ -73,7 +82,6 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
         occupationOptions={occupationOptions}
         stateOptions={stateOptions}
         statusOptions={statusOptions}
-        itemsPerPageOptions={itemsPerPageOptions}
       />
 
       <JobSeekersTable
@@ -90,6 +98,8 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
         data={data}
         filters={filters}
         onPageChange={initPageChange}
+        itemsPerPageOptions={itemsPerPageOptions}
+        onFilterChange={filterChange}
       />      
       
       <FullScreenSpinner 

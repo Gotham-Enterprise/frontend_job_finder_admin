@@ -15,7 +15,7 @@ const EmployerFilters: React.FC<EmployerFiltersProps> = ({
 
   return (
     <div className="p-4 bg-gray-50 dark:bg-gray-800/50">
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-4">        <div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">        <div>
           <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             State
           </Label>
@@ -33,15 +33,6 @@ const EmployerFilters: React.FC<EmployerFiltersProps> = ({
             value={filters.status || ''}
             onChange={(value: string) => onFilterChange('status', value)}
             options={statusOptions}
-          />
-        </div>        <div>
-          <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Items per page
-          </Label>
-          <Select
-            value={filters.limit?.toString() || '10'}
-            onChange={(value: string) => onFilterChange('limit', parseInt(value))}
-            options={itemsPerPageOptions}
           />
         </div>
       </div>

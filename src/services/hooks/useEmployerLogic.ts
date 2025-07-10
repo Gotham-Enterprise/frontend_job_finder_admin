@@ -1,22 +1,81 @@
 import { useState, useMemo, useTransition, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useEmployers } from '@/services/hooks/useEmployers';
 import { useEmployerStates } from '@/services/hooks/useEmployerStates';
 import { EmployerFilters } from '@/services/types/employer';
 
 export const useEmployerLogic = () => {
   const router = useRouter();
-  const [filters, setFilters] = useState<EmployerFilters>({
-    page: 1,
-    limit: 10,
-    name: '',
-    location: '',
-    status: undefined,
-  });
-  const [searchInput, setSearchInput] = useState('');  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const searchParams = useSearchParams();
+  
+  // Initialize filters from URL params
+  const initializeFilters = (): EmployerFilters => {
+    const urlPage = searchParams.get('page');
+    const urlLimit = searchParams.get('limit');
+    const urlName = searchParams.get('name');
+    const urlLocation = searchParams.get('location');
+    const urlStatus = searchParams.get('status');
+    
+    return {
+      page: urlPage ? parseInt(urlPage) : 1,
+      limit: urlLimit ? parseInt(urlLimit) : 50,
+      name: urlName || '',
+      location: urlLocation || '',
+      status: urlStatus || undefined,
+    };
+  };
+
+  const [filters, setFilters] = useState<EmployerFilters>(initializeFilters);
+  const [searchInput, setSearchInput] = useState(filters.name || '');
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [selectedEmployerId, setSelectedEmployerId] = useState<string | null>(null);
   const [isCreatingJob, setIsCreatingJob] = useState(false);
+
+  // Update URL when filters change
+  useEffect(() => {
+    const params = new URLSearchParams();
+    
+    if ((filters.page ?? 1) > 1) params.set('page', (filters.page ?? 1).toString());
+    if ((filters.limit ?? 50) !== 50) params.set('limit', (filters.limit ?? 50).toString());
+    if (filters.name) params.set('name', filters.name);
+    if (filters.location) params.set('location', filters.location);
+    if (filters.status) params.set('status', filters.status);
+    
+    const queryString = params.toString();
+    const newUrl = `/admin/employers${queryString ? `?${queryString}` : ''}`;
+    
+    router.replace(newUrl, { scroll: false });
+  }, [filters, router]);
+
+  // Save state to localStorage for preservation
+  useEffect(() => {
+    const state = {
+      filters,
+      searchInput,
+      selectedEmployerId,
+      scrollPosition: window.scrollY,
+    };
+    localStorage.setItem('employerListState', JSON.stringify(state));
+  }, [filters, searchInput, selectedEmployerId]);
+
+  // Restore scroll position from localStorage
+  useEffect(() => {
+    const savedState = localStorage.getItem('employerListState');
+    if (savedState) {
+      try {
+        const parsed = JSON.parse(savedState);
+        if (parsed.scrollPosition) {
+          // Restore scroll position after a brief delay to ensure content is loaded
+          setTimeout(() => {
+            window.scrollTo({ top: parsed.scrollPosition, behavior: 'instant' });
+          }, 100);
+        }
+      } catch (error) {
+        console.warn('Failed to restore scroll position:', error);
+      }
+    }
+  }, []);
 
   const { data, isLoading, error, refetch } = useEmployers(filters);
   const { data: statesData, isLoading: isStatesLoading } = useEmployerStates();  const tableColumns = useMemo(() => [
@@ -53,7 +112,6 @@ export const useEmployerLogic = () => {
   }, [statesData]);
 
   const itemsPerPageOptions = useMemo(() => [
-    { value: '5', label: '5 per page' },
     { value: '10', label: '10 per page' },
     { value: '20', label: '20 per page' },
     { value: '50', label: '50 per page' },
@@ -84,6 +142,15 @@ export const useEmployerLogic = () => {
     }
   }, []);
   const viewEmployer = (employerId: string) => {
+    // Save current state and scroll position before navigation
+    const state = {
+      filters,
+      searchInput,
+      selectedEmployerId,
+      scrollPosition: window.scrollY,
+    };
+    localStorage.setItem('employerListState', JSON.stringify(state));
+    
     router.push(`/admin/employers/details/${employerId}`);
   };
   const viewSubscription = (employerId: string) => {
@@ -104,7 +171,7 @@ export const useEmployerLogic = () => {
     startTransition(() => {
       setFilters({
         page: 1,
-        limit: 10,
+        limit: 50,
         name: '',
         location: '',
         status: undefined,

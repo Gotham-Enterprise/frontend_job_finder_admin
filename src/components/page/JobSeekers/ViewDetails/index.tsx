@@ -47,7 +47,7 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
     }    if (error) {
         return (
             <div className="px-4 pt-4 pb-2">
-                <BackToListButton href="/admin/job-seekers" className="mb-6">
+                <BackToListButton href="/admin/job-seekers" className="mb-6" preserveState={true}>
                     Back to Job Seekers
                 </BackToListButton>
                 <ErrorState 
@@ -58,7 +58,7 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
     }    if (!data?.success || !data?.data) {
         return (
             <div className="px-4 pt-4 pb-2">
-                <BackToListButton href="/admin/job-seekers" className="mb-6">
+                <BackToListButton href="/admin/job-seekers" className="mb-6" preserveState={true}>
                     Back to Job Seekers
                 </BackToListButton>
                 <div className="text-center py-8">
@@ -110,7 +110,7 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
     return (        
     <>
         <div className="px-4 pt-4 pb-2">
-            <BackToListButton href="/admin/job-seekers">
+            <BackToListButton href="/admin/job-seekers" preserveState={true}>
                 Back to Job Seekers
             </BackToListButton>
         </div><div className="grid grid-cols-1 px-4 pt-6 xl:grid-cols-3 xl:gap-6">

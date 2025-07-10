@@ -22,7 +22,7 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
     if (error) {
         return (
             <div className="px-4 pt-4 pb-2">
-                <BackToListButton href="/admin/jobs">
+                <BackToListButton href="/admin/jobs" preserveState={true}>
                     Back to Jobs
                 </BackToListButton>
                 <ErrorState 
@@ -35,7 +35,7 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
     if (!data?.success || !data?.data) {
         return (
             <div className="px-4 pt-4 pb-2">
-                <BackToListButton href="/admin/jobs">
+                <BackToListButton href="/admin/jobs" preserveState={true}>
                     Back to Jobs
                 </BackToListButton>
                 <div className="text-center py-8">
@@ -104,7 +104,7 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
     return (
         <>
             <div className="px-4 pt-4 pb-2">
-                <BackToListButton href="/admin/jobs">
+                <BackToListButton href="/admin/jobs" preserveState={true}>
                     Back to Jobs
                 </BackToListButton>
             </div>

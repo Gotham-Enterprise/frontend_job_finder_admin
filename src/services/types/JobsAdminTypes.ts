@@ -25,7 +25,6 @@ export interface JobsAdminFiltersProps {
   specialtyOptions: Array<{ value: string; label: string }>;
   stateOptions: Array<{ value: string; label: string }>;
   jobStatusOptions: Array<{ value: string; label: string }>;
-  itemsPerPageOptions: Array<{ value: string; label: string }>;
   selectedOccupationId?: number;
 }
 
@@ -43,4 +42,6 @@ export interface JobsAdminTablePaginationProps {
   data: any;
   filters: JobsAdminFilters;
   onPageChange: (page: number) => void;
+  itemsPerPageOptions: Array<{ value: string; label: string }>;
+  onFilterChange: (key: keyof JobsAdminFilters, value: any) => void;
 }

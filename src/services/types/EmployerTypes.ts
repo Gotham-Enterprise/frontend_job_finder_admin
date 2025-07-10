@@ -26,7 +26,6 @@ export interface EmployerFiltersProps {
   onFilterChange: (key: keyof EmployerFilters, value: any) => void;
   stateOptions: Array<{ value: string; label: string }>;
   statusOptions: Array<{ value: string; label: string }>;
-  itemsPerPageOptions: Array<{ value: string; label: string }>;
 }
 
 export interface EmployerTableProps {
@@ -44,4 +43,6 @@ export interface EmployerTablePaginationProps {
   data: any;
   filters: EmployerFilters;
   onPageChange: (page: number) => void;
+  itemsPerPageOptions: Array<{ value: string; label: string }>;
+  onFilterChange: (key: keyof EmployerFilters, value: any) => void;
 }

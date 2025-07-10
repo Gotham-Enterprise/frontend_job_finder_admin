@@ -14,7 +14,7 @@ export const useJobApplicationsLogic = () => {
     
     return {
       page: parseInt(searchParams.get('page') || '1', 10),
-      limit: parseInt(searchParams.get('limit') || '10', 10),
+      limit: parseInt(searchParams.get('limit') || '50', 10),
       name: decodedName,
       location: searchParams.get('location') || '',
       companyName: searchParams.get('companyName') || '',
@@ -33,6 +33,34 @@ export const useJobApplicationsLogic = () => {
   const { data, isLoading, error, refetch } = useJobApplications(filters);
   const { data: statesData, isLoading: isStatesLoading } = useStates();
   const { mutate: viewResume, isPending: isViewingResume } = useViewApplicationResume();
+
+  // Save state to localStorage for preservation
+  useEffect(() => {
+    const state = {
+      filters,
+      searchInput,
+      scrollPosition: window.scrollY,
+    };
+    localStorage.setItem('jobApplicationsListState', JSON.stringify(state));
+  }, [filters, searchInput]);
+
+  // Restore scroll position from localStorage
+  useEffect(() => {
+    const savedState = localStorage.getItem('jobApplicationsListState');
+    if (savedState) {
+      try {
+        const parsed = JSON.parse(savedState);
+        if (parsed.scrollPosition) {
+          // Restore scroll position after a brief delay to ensure content is loaded
+          setTimeout(() => {
+            window.scrollTo({ top: parsed.scrollPosition, behavior: 'instant' });
+          }, 100);
+        }
+      } catch (error) {
+        console.warn('Failed to restore scroll position:', error);
+      }
+    }
+  }, []);
 
   const tableColumns = useMemo(() => [
     { key: 'name', label: 'Applicant' },
@@ -70,7 +98,6 @@ export const useJobApplicationsLogic = () => {
   }, [statesData]);
 
   const itemsPerPageOptions = useMemo(() => [
-    { value: '5', label: '5 per page' },
     { value: '10', label: '10 per page' },
     { value: '20', label: '20 per page' },
     { value: '50', label: '50 per page' },
@@ -128,6 +155,14 @@ export const useJobApplicationsLogic = () => {
   };
 
   const viewJobApplication = (jobApplicationId: string) => {
+    // Save current state and scroll position before navigation
+    const state = {
+      filters,
+      searchInput,
+      scrollPosition: window.scrollY,
+    };
+    localStorage.setItem('jobApplicationsListState', JSON.stringify(state));
+    
     router.push(`/admin/applications/details/${jobApplicationId}`);
   };
 
@@ -135,7 +170,7 @@ export const useJobApplicationsLogic = () => {
     startTransition(() => {
       setFilters({
         page: 1,
-        limit: 10,
+        limit: 50,
         name: '',
         location: '',
         companyName: '',

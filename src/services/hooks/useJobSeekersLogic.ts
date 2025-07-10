@@ -1,5 +1,5 @@
 import { useState, useMemo, useTransition, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useJobSeekers, useViewResume } from '@/services/hooks/useJobSeekers';
 import { useOccupations } from '@/services/hooks/useOccupations';
 import { useStates } from '@/services/hooks/useStates';
@@ -7,17 +7,85 @@ import { JobSeekerFilters } from '@/services/types/jobSeeker';
 
 export const useJobSeekersLogic = () => {
   const router = useRouter();
-  const [filters, setFilters] = useState<JobSeekerFilters>({
-    page: 1,
-    limit: 10,
-    search: '',
-    location: '',
-    occupationId: undefined,
-    status: undefined,
-  });
-  const [searchInput, setSearchInput] = useState('');
+  const searchParams = useSearchParams();
+  
+  // Helper function to get initial filters from URL
+  const getInitialFilters = (): JobSeekerFilters => {
+    const searchParam = searchParams.get('search') || '';
+    const decodedSearch = searchParam ? decodeURIComponent(searchParam) : '';
+    const statusParam = searchParams.get('status');
+    const validStatus = statusParam && ['active', 'inactive', 'pending', 'suspended'].includes(statusParam) 
+      ? statusParam as 'active' | 'inactive' | 'pending' | 'suspended' 
+      : undefined;
+    
+    return {
+      page: parseInt(searchParams.get('page') || '1', 10),
+      limit: parseInt(searchParams.get('limit') || '50', 10),
+      search: decodedSearch,
+      location: searchParams.get('location') || '',
+      occupationId: searchParams.get('occupationId') ? parseInt(searchParams.get('occupationId')!, 10) : undefined,
+      status: validStatus,
+    };
+  };
+
+  const [filters, setFilters] = useState<JobSeekerFilters>(getInitialFilters);
+  const [searchInput, setSearchInput] = useState(filters.search || '');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [scrollPosition, setScrollPosition] = useState(0);
+
+  // Update URL when filters change
+  const updateURL = (newFilters: JobSeekerFilters) => {
+    const params = new URLSearchParams();
+    
+    if (newFilters.page && newFilters.page > 1) params.set('page', newFilters.page.toString());
+    if (newFilters.limit && newFilters.limit !== 50) params.set('limit', newFilters.limit.toString());
+    if (newFilters.search) params.set('search', encodeURIComponent(newFilters.search));
+    if (newFilters.location) params.set('location', newFilters.location);
+    if (newFilters.occupationId) params.set('occupationId', newFilters.occupationId.toString());
+    if (newFilters.status) params.set('status', newFilters.status);
+    
+    const newURL = params.toString() ? `?${params.toString()}` : '';
+    router.replace(`/admin/job-seekers${newURL}`, { scroll: false });
+  };
+
+  // Save scroll position to localStorage
+  const saveScrollPosition = () => {
+    if (typeof window !== 'undefined') {
+      const position = window.scrollY;
+      localStorage.setItem('jobseeker-scroll-position', position.toString());
+      setScrollPosition(position);
+    }
+  };
+
+  // Restore scroll position from localStorage
+  const restoreScrollPosition = () => {
+    if (typeof window !== 'undefined') {
+      const savedPosition = localStorage.getItem('jobseeker-scroll-position');
+      if (savedPosition) {
+        const position = parseInt(savedPosition, 10);
+        // Use setTimeout to ensure DOM is ready
+        setTimeout(() => {
+          window.scrollTo({ top: position, behavior: 'smooth' });
+        }, 100);
+      }
+    }
+  };
+
+  // Save current search state to localStorage
+  const saveSearchState = () => {
+    if (typeof window !== 'undefined') {
+      const stateToSave = {
+        page: filters.page,
+        limit: filters.limit,
+        search: filters.search,
+        location: filters.location,
+        occupationId: filters.occupationId,
+        status: filters.status,
+      };
+      localStorage.setItem('jobseeker-search-state', JSON.stringify(stateToSave));
+    }
+  };
 
   const { data, isLoading, error, refetch } = useJobSeekers(filters);
   const { data: occupationsData, isLoading: isOccupationsLoading } = useOccupations();
@@ -70,7 +138,6 @@ export const useJobSeekersLogic = () => {
   }, [statesData]);
 
   const itemsPerPageOptions = useMemo(() => [
-    { value: '5', label: '5 per page' },
     { value: '10', label: '10 per page' },
     { value: '20', label: '20 per page' },
     { value: '50', label: '50 per page' },
@@ -78,19 +145,23 @@ export const useJobSeekersLogic = () => {
 
   const filterChange = useMemo(() => (key: keyof JobSeekerFilters, value: any) => {
     startTransition(() => {
-      setFilters(prev => ({ 
-        ...prev, 
+      const newFilters = { 
+        ...filters, 
         [key]: value === '' ? undefined : value,
         page: 1
-      }));
+      };
+      setFilters(newFilters);
+      updateURL(newFilters);
     });
-  }, []);
+  }, [filters]);
 
   const initPageChange = useMemo(() => (newPage: number) => {
     startTransition(() => {
-      setFilters(prev => ({ ...prev, page: newPage }));
+      const newFilters = { ...filters, page: newPage };
+      setFilters(newFilters);
+      updateURL(newFilters);
     });
-  }, []);
+  }, [filters]);
   const getStatusVariant = useMemo(() => (status: string): 'light' | 'solid' => {
     switch (status) {
       case 'active': return 'solid';
@@ -121,20 +192,28 @@ export const useJobSeekersLogic = () => {
     });
   };
   const viewJobSeeker = (jobSeekerId: string) => {
+    saveScrollPosition();
+    saveSearchState();
     router.push(`/admin/job-seekers/details/${jobSeekerId}`);
   };
 
   const clearAllFilters = () => {
     startTransition(() => {
-      setFilters({
+      const newFilters = {
         page: 1,
-        limit: 10,
+        limit: 50,
         search: '',
         location: '',
         occupationId: undefined,
         status: undefined,
-      });
+      };
+      setFilters(newFilters);
       setSearchInput('');
+      updateURL(newFilters);
+      // Clear scroll position when clearing filters
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('jobseeker-scroll-position');
+      }
     });
   };
 
@@ -150,12 +229,28 @@ export const useJobSeekersLogic = () => {
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       startTransition(() => {
-        setFilters(prev => ({ ...prev, search: searchInput, page: 1 }));
+        const newFilters = { ...filters, search: searchInput, page: 1 };
+        setFilters(newFilters);
+        updateURL(newFilters);
       });
     }, 500);
 
     return () => clearTimeout(timeoutId);
   }, [searchInput]);
+
+  // Effect to restore scroll position when data is loaded
+  useEffect(() => {
+    if (data && !isLoading && searchParams.toString()) {
+      restoreScrollPosition();
+    }
+  }, [data, isLoading]);
+
+  // Effect to save search state whenever filters change
+  useEffect(() => {
+    if (filters.search || filters.location || filters.occupationId || filters.status || (filters.page && filters.page > 1)) {
+      saveSearchState();
+    }
+  }, [filters]);
 
   return {
     filters,
@@ -188,5 +283,8 @@ export const useJobSeekersLogic = () => {
     viewJobSeeker,
     clearAllFilters,
     hasActiveFilters,
+    saveScrollPosition,
+    restoreScrollPosition,
+    saveSearchState,
   };
 };

@@ -94,7 +94,6 @@ const CouponsData: React.FC<CouponsProps> = ({ className = "" }) => {
         statusOptions={statusOptions}
         sortByOptions={sortByOptions}
         sortOrderOptions={sortOrderOptions}
-        itemsPerPageOptions={itemsPerPageOptions}
       />
 
       <CouponsTable
@@ -108,6 +107,8 @@ const CouponsData: React.FC<CouponsProps> = ({ className = "" }) => {
         data={data}
         filters={filters}
         onPageChange={initPageChange}
+        itemsPerPageOptions={itemsPerPageOptions}
+        onFilterChange={filterChange}
       />
 
       <CreateCouponModal

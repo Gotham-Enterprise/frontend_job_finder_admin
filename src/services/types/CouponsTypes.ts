@@ -24,7 +24,6 @@ export interface CouponsFiltersProps {
   statusOptions: Array<{ value: string; label: string }>;
   sortByOptions: Array<{ value: string; label: string }>;
   sortOrderOptions: Array<{ value: string; label: string }>;
-  itemsPerPageOptions: Array<{ value: string; label: string }>;
 }
 
 export interface CouponsTableProps {
@@ -38,6 +37,8 @@ export interface CouponsTablePaginationProps {
   data: any;
   filters: CouponFilters;
   onPageChange: (page: number) => void;
+  itemsPerPageOptions: Array<{ value: string; label: string }>;
+  onFilterChange: (key: keyof CouponFilters, value: any) => void;
 }
 
 export interface CreateCouponFormData {

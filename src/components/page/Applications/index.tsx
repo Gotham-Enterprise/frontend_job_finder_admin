@@ -1,9 +1,10 @@
 "use client";
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BoltIcon } from '@/icons';
 import ErrorState from '../../common/ErrorState';
 import FullScreenSpinner from '../../ui/FullScreenSpinner';
 import { useJobApplicationsLogic } from '@/services/hooks/useJobApplicationsLogic';
+import { usePreservedNavigation } from '@/hooks/usePreservedNavigation';
 import { JobApplicationsProps } from '@/services/types/JobApplicationsTypes';
 import {
   JobApplicationsHeader,
@@ -13,6 +14,12 @@ import {
 } from './components';
 
 const JobApplications: React.FC<JobApplicationsProps> = ({ className = "" }) => {
+  usePreservedNavigation({
+    statePath: 'jobApplications-search-state',
+    scrollPath: 'jobApplications-scroll-position',
+    listPagePath: '/admin/applications'
+  });
+  
   const {
     filters,
     searchInput,
@@ -72,7 +79,6 @@ const JobApplications: React.FC<JobApplicationsProps> = ({ className = "" }) => 
         onFilterChange={filterChange}
         stateOptions={stateOptions}
         statusOptions={statusOptions}
-        itemsPerPageOptions={itemsPerPageOptions}
       />
 
       <JobApplicationsTable
@@ -89,6 +95,8 @@ const JobApplications: React.FC<JobApplicationsProps> = ({ className = "" }) => 
         data={data}
         filters={filters}
         onPageChange={initPageChange}
+        itemsPerPageOptions={itemsPerPageOptions}
+        onFilterChange={filterChange}
       />      
       
       <FullScreenSpinner 
