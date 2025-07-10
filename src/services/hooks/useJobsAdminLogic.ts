@@ -1,4 +1,4 @@
-import { useState, useMemo, useTransition, useEffect } from 'react';
+import { useState, useMemo, useTransition, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useJobsAdmin, useJobsAdminOccupations } from '@/services/hooks/useJobsAdmin';
 import { useStates } from '@/services/hooks/useStates';
@@ -35,6 +35,9 @@ export const useJobsAdminLogic = () => {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [selectedOccupationId, setSelectedOccupationId] = useState<number | undefined>(filters.occupationId);
+  const [selectedJobStatuses, setSelectedJobStatuses] = useState<string[]>(
+    filters.jobStatus ? [filters.jobStatus] : []
+  );
 
   useEffect(() => {
     const params = new URLSearchParams();
@@ -155,7 +158,7 @@ export const useJobsAdminLogic = () => {
     { value: '50', label: '50 per page' },
     { value: '100', label: '100 per page' },
   ], []);  const filterChange = useMemo(() => (key: keyof JobsAdminFilters, value: any) => {
-    console.log(`Filter change - ${key}:`, value); // Debug log
+ 
     
     startTransition(() => {
       let processedValue = value;
@@ -183,6 +186,14 @@ export const useJobsAdminLogic = () => {
       }
     });
   }, [filters]);
+
+  const jobStatusToggle = useCallback((statuses: string[]) => {
+    setSelectedJobStatuses(statuses);
+    startTransition(() => {
+      const jobStatus = statuses.length > 0 ? statuses[0] as 'Draft' | 'Published' : undefined;
+      setFilters(prev => ({ ...prev, jobStatus, page: 1 }));
+    });
+  }, []);
 
   const initPageChange = useMemo(() => (newPage: number) => {
     startTransition(() => {
@@ -237,6 +248,7 @@ export const useJobsAdminLogic = () => {
       });
       setSearchInput('');
       setSelectedOccupationId(undefined);
+      setSelectedJobStatuses([]);
     });
   };
 
@@ -247,9 +259,10 @@ export const useJobsAdminLogic = () => {
       filters.jobStatus ||
       filters.datePosted ||
       filters.occupationId ||
-      filters.specialtyId
+      filters.specialtyId ||
+      selectedJobStatuses.length > 0
     );
-  }, [searchInput, filters.state, filters.jobStatus, filters.datePosted, filters.occupationId, filters.specialtyId]);
+  }, [searchInput, filters.state, filters.jobStatus, filters.datePosted, filters.occupationId, filters.specialtyId, selectedJobStatuses]);
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -287,6 +300,7 @@ export const useJobsAdminLogic = () => {
     itemsPerPageOptions,
 
     filterChange,
+    jobStatusToggle,
     initPageChange,
     getStatusVariant,
     getJobStatusVariant,
@@ -294,5 +308,6 @@ export const useJobsAdminLogic = () => {
     editJobPost,
     clearAllFilters,
     hasActiveFilters,
+    selectedJobStatuses,
   };
 };

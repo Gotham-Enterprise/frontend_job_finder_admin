@@ -1,5 +1,6 @@
 import React from 'react';
-import Select from '../../../form/Select';
+import SearchableSelect from '../../../ui/SearchableSelect';
+import StatusToggleFilter from '../../../ui/StatusToggleFilter';
 import Label from '../../../form/Label';
 import { EmployerFiltersProps } from '@/services/types/EmployerTypes';
 
@@ -9,29 +10,39 @@ const EmployerFilters: React.FC<EmployerFiltersProps> = ({
   onFilterChange,
   stateOptions,
   statusOptions,
+  selectedStatuses,
+  onStatusToggle,
+  hasActiveFilters,
 }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="p-4 bg-gray-50 dark:bg-gray-800/50">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">        <div>
-          <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 gap-6">
+        <div className="space-y-2">
+          <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
             State
           </Label>
-          <Select
+          <SearchableSelect
             value={filters.location || ''}
             onChange={(value: string) => onFilterChange('location', value)}
             options={stateOptions}
+            placeholder="Select state..."
+            searchPlaceholder="Search states..."
+            className="w-full"
           />
         </div>
-        <div>
-          <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <div className="space-y-2">
+          <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
             Status
           </Label>
-          <Select
-            value={filters.status || ''}
-            onChange={(value: string) => onFilterChange('status', value)}
-            options={statusOptions}
+          <StatusToggleFilter
+            selectedStatuses={selectedStatuses}
+            onChange={onStatusToggle}
+            options={statusOptions.map(option => ({
+              value: option.value,
+              label: option.label
+            }))}
           />
         </div>
       </div>

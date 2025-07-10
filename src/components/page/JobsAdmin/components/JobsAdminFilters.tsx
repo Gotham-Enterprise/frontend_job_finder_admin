@@ -1,11 +1,11 @@
 import React from 'react';
-import Select from '../../../form/Select';
+import SearchableSelect from '../../../ui/SearchableSelect';
+import StatusToggleFilter from '../../../ui/StatusToggleFilter';
 import Label from '../../../form/Label';
-         import DatePicker from '../../../form/date-picker';
+import DatePicker from '../../../form/date-picker';
 import { JobsAdminFiltersProps } from '@/services/types/JobsAdminTypes';
 
 const JobsAdminFilters: React.FC<JobsAdminFiltersProps> = ({
-  isOpen,
   filters,
   onFilterChange,
   occupationOptions,
@@ -13,61 +13,76 @@ const JobsAdminFilters: React.FC<JobsAdminFiltersProps> = ({
   stateOptions,
   jobStatusOptions,
   selectedOccupationId,
+  hasActiveFilters,
+  selectedJobStatuses,
+  onJobStatusToggle,
 }) => {
-  if (!isOpen) return null;
-
   return (
-    <div className="p-4 bg-gray-50 dark:bg-gray-800/50">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4">        <div>
-          <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 gap-6">
+        <div className="space-y-2">
+          <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
             Occupation
           </Label>
-          <Select
+          <SearchableSelect
             value={filters.occupationId?.toString() || ''}
             onChange={(value: string) => onFilterChange('occupationId', value === '' ? undefined : parseInt(value))}
             options={occupationOptions}
+            placeholder="Select occupation..."
+            searchPlaceholder="Search occupations..."
+            className="w-full"
           />
         </div>
-        <div>
-          <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <div className="space-y-2">
+          <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
             Specialty
           </Label>
-          <Select
+          <SearchableSelect
             value={filters.specialtyId?.toString() || ''}
             onChange={(value: string) => onFilterChange('specialtyId', value === '' ? undefined : parseInt(value))}
             options={specialtyOptions}
             disabled={!selectedOccupationId}
+            placeholder="Select specialty..."
+            searchPlaceholder="Search specialties..."
+            className="w-full"
           />
         </div>
-        <div>
-          <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <div className="space-y-2">
+          <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
             State
           </Label>
-          <Select
+          <SearchableSelect
             value={filters.state || ''}
             onChange={(value: string) => onFilterChange('state', value)}
             options={stateOptions}
+            placeholder="Select state..."
+            searchPlaceholder="Search states..."
+            className="w-full"
           />
         </div>
-        <div>
-          <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <div className="space-y-2">
+          <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
             Job Status
           </Label>
-          <Select
-            value={filters.jobStatus || ''}
-            onChange={(value: string) => onFilterChange('jobStatus', value)}
-            options={jobStatusOptions}
+          <StatusToggleFilter
+            selectedStatuses={selectedJobStatuses}
+            onChange={onJobStatusToggle}
+            options={jobStatusOptions.map(option => ({
+              value: option.value,
+              label: option.label
+            }))}
           />
-        </div><div>
-          <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        </div>
+        <div className="space-y-2">
+          <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
             Date Posted
-          </Label>          <DatePicker
+          </Label>
+          <DatePicker
             key={filters.datePosted || 'date-picker'}
             id="jobs-date-posted-filter"
             placeholder="Select date posted"
             defaultDate={filters.datePosted || undefined}
             onChange={(dates, currentDateString) => {
-             
               onFilterChange('datePosted', currentDateString || '');
             }}
           />

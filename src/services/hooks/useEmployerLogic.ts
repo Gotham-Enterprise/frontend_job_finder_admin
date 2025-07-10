@@ -1,4 +1,4 @@
-import { useState, useMemo, useTransition, useEffect } from 'react';
+import { useState, useMemo, useTransition, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEmployers } from '@/services/hooks/useEmployers';
 import { useEmployerStates } from '@/services/hooks/useEmployerStates';
@@ -30,6 +30,9 @@ export const useEmployerLogic = () => {
   const [isPending, startTransition] = useTransition();
   const [selectedEmployerId, setSelectedEmployerId] = useState<string | null>(null);
   const [isCreatingJob, setIsCreatingJob] = useState(false);
+  const [selectedStatuses, setSelectedStatuses] = useState<string[]>(
+    filters.status ? [filters.status] : []
+  );
 
   useEffect(() => {
     const params = new URLSearchParams();
@@ -123,6 +126,16 @@ export const useEmployerLogic = () => {
     });
   }, []);
 
+  const statusToggle = useCallback((statuses: string[]) => {
+    setSelectedStatuses(statuses);
+    startTransition(() => {
+      // Convert multiple statuses to single status for the filter
+      // For now, we'll use the first selected status or undefined if none
+      const status = statuses.length > 0 ? statuses[0] : undefined;
+      setFilters(prev => ({ ...prev, status, page: 1 }));
+    });
+  }, []);
+
   const initPageChange = useMemo(() => (newPage: number) => {
     startTransition(() => {
       setFilters(prev => ({ ...prev, page: newPage }));
@@ -173,6 +186,7 @@ export const useEmployerLogic = () => {
       });
       setSearchInput('');
       setSelectedEmployerId(null);
+      setSelectedStatuses([]);
     });
   };
   const hasActiveFilters = useMemo(() => {
@@ -180,9 +194,10 @@ export const useEmployerLogic = () => {
       searchInput ||
       filters.location ||
       filters.status ||
-      selectedEmployerId
+      selectedEmployerId ||
+      selectedStatuses.length > 0
     );
-  }, [searchInput, filters.location, filters.status, selectedEmployerId]);
+  }, [searchInput, filters.location, filters.status, selectedEmployerId, selectedStatuses]);
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -213,6 +228,7 @@ export const useEmployerLogic = () => {
     stateOptions,
     itemsPerPageOptions,    
     filterChange,
+    statusToggle,
     initPageChange,
     getStatusVariant,
     viewEmployer,
@@ -223,5 +239,6 @@ export const useEmployerLogic = () => {
     isCreatingJob,
     clearAllFilters,
     hasActiveFilters,
+    selectedStatuses,
   };
 };

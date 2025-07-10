@@ -18,12 +18,14 @@ export interface JobSeekersHeaderProps {
 }
 
 export interface JobSeekersFiltersProps {
-  isOpen: boolean;
   filters: JobSeekerFilters;
   onFilterChange: (key: keyof JobSeekerFilters, value: any) => void;
   occupationOptions: Array<{ value: string; label: string }>;
   stateOptions: Array<{ value: string; label: string }>;
   statusOptions: Array<{ value: string; label: string }>;
+  selectedStatuses: string[];
+  onStatusToggleChange: (statuses: string[]) => void;
+  hasActiveFilters: boolean;
 }
 
 export interface JobSeekersTableProps {

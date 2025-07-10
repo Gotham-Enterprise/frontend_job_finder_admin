@@ -18,7 +18,6 @@ export interface JobsAdminHeaderProps {
 }
 
 export interface JobsAdminFiltersProps {
-  isOpen: boolean;
   filters: JobsAdminFilters;
   onFilterChange: (key: keyof JobsAdminFilters, value: any) => void;
   occupationOptions: Array<{ value: string; label: string }>;
@@ -26,6 +25,9 @@ export interface JobsAdminFiltersProps {
   stateOptions: Array<{ value: string; label: string }>;
   jobStatusOptions: Array<{ value: string; label: string }>;
   selectedOccupationId?: number;
+  hasActiveFilters: boolean;
+  selectedJobStatuses: string[];
+  onJobStatusToggle: (statuses: string[]) => void;
 }
 
 export interface JobsAdminTableProps {

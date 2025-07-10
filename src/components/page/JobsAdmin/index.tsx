@@ -40,6 +40,7 @@ const JobsAdmin: React.FC<JobsAdminProps> = ({ className = "" }) => {
     stateOptions,
     itemsPerPageOptions,    
     filterChange,
+    jobStatusToggle,
     initPageChange,
     getStatusVariant,
     getJobStatusVariant,
@@ -47,6 +48,7 @@ const JobsAdmin: React.FC<JobsAdminProps> = ({ className = "" }) => {
     editJobPost,
     clearAllFilters,
     hasActiveFilters,
+    selectedJobStatuses,
   } = useJobsAdminLogic();
 
   if (error && !isPending) {
@@ -61,7 +63,8 @@ const JobsAdmin: React.FC<JobsAdminProps> = ({ className = "" }) => {
   }
 
   return (
-    <div className={`rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] ${className}`}>      <JobsAdminHeader
+    <div className={`rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] ${className}`}>
+      <JobsAdminHeader
         totalCount={data?.metaData?.totalCount || 0}
         isPending={isPending}
         isLoading={isLoading}
@@ -72,17 +75,20 @@ const JobsAdmin: React.FC<JobsAdminProps> = ({ className = "" }) => {
         onRefetch={refetch}
         clearAllFilters={clearAllFilters}
         hasActiveFilters={hasActiveFilters}
-      />
-
-      <JobsAdminFilters
-        isOpen={isFilterOpen}
-        filters={filters}
-        onFilterChange={filterChange}
-        occupationOptions={occupationOptions}
-        specialtyOptions={specialtyOptions}
-        stateOptions={stateOptions}
-        jobStatusOptions={jobStatusOptions}
-        selectedOccupationId={selectedOccupationId}
+        filterDropdownContent={
+          <JobsAdminFilters
+            filters={filters}
+            onFilterChange={filterChange}
+            occupationOptions={occupationOptions}
+            specialtyOptions={specialtyOptions}
+            stateOptions={stateOptions}
+            jobStatusOptions={jobStatusOptions}
+            selectedOccupationId={selectedOccupationId}
+            hasActiveFilters={hasActiveFilters}
+            selectedJobStatuses={selectedJobStatuses}
+            onJobStatusToggle={jobStatusToggle}
+          />
+        }
       />
 
       <JobsAdminTable

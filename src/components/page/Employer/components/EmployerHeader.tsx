@@ -1,9 +1,15 @@
-import React from 'react';
-import Button from '../../../ui/button/Button';
+import React, { useRef } from 'react';
 import Input from '../../../ui/input/Input';
-import { TrashBinIcon, FunnelIcon } from '@/icons';
+import FilterDropdown from '../../../ui/FilterDropdown';
 import { SearchIcon, PlusIcon } from '../../../ui/icons';
 import { EmployerHeaderProps } from '@/services/types/EmployerTypes';
+
+// Filter Icon
+const FilterIcon = () => (
+  <svg viewBox="0 0 20 20" fill="currentColor" width="20" height="20" aria-hidden="true">
+    <path d="M17.8571 2.87669C18.107 3.41157 18.0246 4.04275 17.6457 4.49555L12.4892 10.6589V15.3856C12.4892 16.0185 12.097 16.5852 11.5048 16.8082L9.56669 17.5381C9.09976 17.7139 8.57627 17.6494 8.16598 17.3655C7.75569 17.0816 7.51084 16.6144 7.51084 16.1155V10.6589L2.35425 4.49555C1.97542 4.04275 1.89302 3.41157 2.14291 2.87669C2.39279 2.34182 2.92977 2 3.52013 2H16.4799C17.0702 2 17.6072 2.34182 17.8571 2.87669ZM16.4799 3.52012H3.52013L8.91611 9.96964C8.99036 10.0584 9.03096 10.1698 9.03096 10.2848V16.1155L10.969 15.3856V10.2848C10.969 10.1698 11.0096 10.0584 11.0839 9.96964L16.4799 3.52012Z" fill="currentColor" fillRule="evenodd" clipRule="evenodd" />
+  </svg>
+);
 
 const EmployerHeader: React.FC<EmployerHeaderProps> = ({
   totalCount,
@@ -19,7 +25,9 @@ const EmployerHeader: React.FC<EmployerHeaderProps> = ({
   isCreatingJob,
   onClearFilters,
   hasActiveFilters,
+  filterContent,
 }) => {
+  const filterButtonRef = useRef<HTMLButtonElement>(null);
   return (
     <div className="px-6 py-5 border-b border-gray-200 dark:border-gray-800">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -36,40 +44,45 @@ const EmployerHeader: React.FC<EmployerHeaderProps> = ({
             )}
           </p>
         </div>          
-        <div className="flex items-center gap-3">
-          <Button
-            variant="outline"
-            className="dark:text-white"
-            size="sm"
+        <div className="flex items-center gap-2">
+          <button
+            ref={filterButtonRef}
             onClick={() => setIsFilterOpen(!isFilterOpen)}
-            startIcon={<FunnelIcon className="dark:text-white" />}
+            className={`
+              flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border transition-colors
+              ${isFilterOpen 
+                ? 'bg-primary/10 border-primary/20 text-primary' 
+                : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700'
+              }
+            `}
           >
-            Filters
-          </Button>
-          <Button
-            variant="text-primary"
-            size="sm"
-            onClick={onClearFilters}
-            startIcon={<TrashBinIcon />}
-            disabled={!hasActiveFilters || isLoading}
-          >
-            Clear
-          </Button>
-          <Button
-            variant="default"
-            size="lg"
+            <FilterIcon />
+            <span>Filter</span>
+            {hasActiveFilters && (
+              <span className="ml-1 bg-primary text-white text-xs rounded-full px-1.5 py-0.5 min-w-[18px] h-4 flex items-center justify-center font-medium">
+                {/* You can add filter count here if needed */}
+              </span>
+            )}
+          </button>
+          
+          <button
             onClick={onCreateJob}
             disabled={!selectedEmployerId || isCreatingJob}
-            className={`whitespace-nowrap flex items-center gap-2 ${
-              !selectedEmployerId || isCreatingJob
-                ? 'opacity-50 cursor-not-allowed bg-gray-300 text-gray-500 border-gray-300' 
-                : 'bg-blue-600 hover:bg-blue-700 text-white border-blue-600'
-            }`}
-          >{!isCreatingJob && (
-              <PlusIcon className="flex-shrink-0" width={20} height={20} />
+            className={`
+              flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border transition-colors
+              ${!selectedEmployerId || isCreatingJob
+                ? 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed dark:bg-gray-800 dark:border-gray-700 dark:text-gray-500' 
+                : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700'
+              }
+            `}
+          >
+            {!isCreatingJob && (
+              <PlusIcon className="flex-shrink-0" width={16} height={16} />
             )}
-            {isCreatingJob ? 'Creating...' : 'Create new job'}
-          </Button>
+            <span className="whitespace-nowrap">
+              {isCreatingJob ? 'Creating...' : 'Create new job'}
+            </span>
+          </button>
         </div>
       </div>
       
@@ -100,6 +113,18 @@ const EmployerHeader: React.FC<EmployerHeaderProps> = ({
           )}
         </div>
       </div>
+
+      {filterContent && (
+        <FilterDropdown
+          isOpen={isFilterOpen}
+          onClose={() => setIsFilterOpen(false)}
+          triggerRef={filterButtonRef}
+          onClearAll={onClearFilters}
+          hasActiveFilters={hasActiveFilters}
+        >
+          {filterContent}
+        </FilterDropdown>
+      )}
     </div>
   );
 };

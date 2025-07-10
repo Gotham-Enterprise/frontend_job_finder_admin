@@ -1,11 +1,23 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import Button from '../../../ui/button/Button';
 import Input from '../../../ui/input/Input';
-import { FunnelIcon, TrashBinIcon } from '@/icons';
+import FilterDropdown from '../../../ui/FilterDropdown';
+import { TrashBinIcon } from '@/icons';
 import { SearchIcon } from '../../../ui/icons';
 import { JobsAdminHeaderProps } from '@/services/types/JobsAdminTypes';
 
-const JobsAdminHeader: React.FC<JobsAdminHeaderProps> = ({
+// Filter Icon
+const FilterIcon = () => (
+  <svg viewBox="0 0 20 20" fill="currentColor" width="20" height="20" aria-hidden="true">
+    <path d="M17.8571 2.87669C18.107 3.41157 18.0246 4.04275 17.6457 4.49555L12.4892 10.6589V15.3856C12.4892 16.0185 12.097 16.5852 11.5048 16.8082L9.56669 17.5381C9.09976 17.7139 8.57627 17.6494 8.16598 17.3655C7.75569 17.0816 7.51084 16.6144 7.51084 16.1155V10.6589L2.35425 4.49555C1.97542 4.04275 1.89302 3.41157 2.14291 2.87669C2.39279 2.34182 2.92977 2 3.52013 2H16.4799C17.0702 2 17.6072 2.34182 17.8571 2.87669ZM16.4799 3.52012H3.52013L8.91611 9.96964C8.99036 10.0584 9.03096 10.1698 9.03096 10.2848V16.1155L10.969 15.3856V10.2848C10.969 10.1698 11.0096 10.0584 11.0839 9.96964L16.4799 3.52012Z" fill="currentColor" fillRule="evenodd" clipRule="evenodd" />
+  </svg>
+);
+
+interface JobsAdminHeaderWithDropdownProps extends JobsAdminHeaderProps {
+  filterDropdownContent?: React.ReactNode;
+}
+
+const JobsAdminHeader: React.FC<JobsAdminHeaderWithDropdownProps> = ({
   totalCount,
   isPending,
   isLoading,
@@ -16,7 +28,10 @@ const JobsAdminHeader: React.FC<JobsAdminHeaderProps> = ({
   onRefetch,
   clearAllFilters,
   hasActiveFilters,
+  filterDropdownContent,
 }) => {
+  const filterButtonRef = useRef<HTMLButtonElement>(null);
+
   return (
     <div className="px-6 py-5 border-b border-gray-200 dark:border-gray-800">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -27,23 +42,35 @@ const JobsAdminHeader: React.FC<JobsAdminHeaderProps> = ({
           <p className="text-sm text-gray-500 mt-1 dark:text-gray-400">
             {totalCount || 0} total jobs
             {isPending && (
-              <span className="ml-2 text-xs text-blue-500 dark:text-blue-400">
+              <span className="ml-2 text-xs text-primary">
                 Updating...
               </span>
             )}
           </p>
         </div>
         
-        <div className="flex items-center gap-3">
-          <Button
-            variant="outline"
-            className="dark:text-white"
-            size="sm"
+        <div className="flex items-center gap-2">
+          <button
+            ref={filterButtonRef}
             onClick={() => setIsFilterOpen(!isFilterOpen)}
-            startIcon={<FunnelIcon className="dark:text-white" />}
+            className={`
+              flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border transition-colors
+              ${isFilterOpen 
+                ? 'bg-primary/10 border-primary/20 text-primary' 
+                : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700'
+              }
+            `}
           >
-            Filters
-          </Button>          <Button
+            <FilterIcon />
+            <span>Filter</span>
+            {hasActiveFilters && (
+              <span className="ml-1 bg-primary text-white text-xs rounded-full px-1.5 py-0.5 min-w-[18px] h-4 flex items-center justify-center font-medium">
+                {/* You can add filter count here if needed */}
+              </span>
+            )}
+          </button>
+          
+          <Button
             variant="text-primary"
             size="sm"
             onClick={clearAllFilters}
@@ -83,6 +110,18 @@ const JobsAdminHeader: React.FC<JobsAdminHeaderProps> = ({
           )}
         </div>
       </div>
+
+      {filterDropdownContent && (
+        <FilterDropdown
+          isOpen={isFilterOpen}
+          onClose={() => setIsFilterOpen(false)}
+          triggerRef={filterButtonRef}
+          onClearAll={clearAllFilters}
+          hasActiveFilters={hasActiveFilters}
+        >
+          {filterDropdownContent}
+        </FilterDropdown>
+      )}
     </div>
   );
 };

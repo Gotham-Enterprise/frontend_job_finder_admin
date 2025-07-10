@@ -29,6 +29,9 @@ export const useJobSeekersLogic = () => {
 
   const [filters, setFilters] = useState<JobSeekerFilters>(getInitialFilters);
   const [searchInput, setSearchInput] = useState(filters.search || '');
+  const [selectedStatuses, setSelectedStatuses] = useState<string[]>(
+    filters.status ? [filters.status] : []
+  );
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [scrollPosition, setScrollPosition] = useState(0);
@@ -148,7 +151,22 @@ export const useJobSeekersLogic = () => {
       setFilters(newFilters);
       updateURL(newFilters);
     });
-  }, [filters, startTransition, updateURL]);
+  }, [filters, updateURL]);
+
+  const statusToggleChange = useCallback((statuses: string[]) => {
+    setSelectedStatuses(statuses);
+    startTransition(() => {
+      // For now, we'll use the first selected status for the API call
+      // Later you might want to update the API to handle multiple statuses
+      const newFilters = { 
+        ...filters, 
+        status: statuses.length > 0 ? statuses[0] as any : undefined,
+        page: 1
+      };
+      setFilters(newFilters);
+      updateURL(newFilters);
+    });
+  }, [filters, updateURL]);
 
   const initPageChange = useMemo(() => (newPage: number) => {
     startTransition(() => {
@@ -156,7 +174,7 @@ export const useJobSeekersLogic = () => {
       setFilters(newFilters);
       updateURL(newFilters);
     });
-  }, [filters, startTransition, updateURL]);
+  }, [filters, updateURL]);
   const getStatusVariant = useMemo(() => (status: string): 'light' | 'solid' => {
     switch (status) {
       case 'active': return 'solid';
@@ -204,6 +222,7 @@ export const useJobSeekersLogic = () => {
       };
       setFilters(newFilters);
       setSearchInput('');
+      setSelectedStatuses([]);
       updateURL(newFilters);
       if (typeof window !== 'undefined') {
         localStorage.removeItem('jobseeker-scroll-position');
@@ -216,9 +235,9 @@ export const useJobSeekersLogic = () => {
       searchInput ||
       filters.location ||
       filters.occupationId ||
-      filters.status
+      selectedStatuses.length > 0
     );
-  }, [searchInput, filters.location, filters.occupationId, filters.status]);
+  }, [searchInput, filters.location, filters.occupationId, selectedStatuses.length]);
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -230,7 +249,7 @@ export const useJobSeekersLogic = () => {
     }, 500);
 
     return () => clearTimeout(timeoutId);
-  }, [searchInput, filters, startTransition, updateURL]);
+  }, [searchInput]);
 
   useEffect(() => {
     if (data && !isLoading && searchParams.toString()) {
@@ -248,6 +267,8 @@ export const useJobSeekersLogic = () => {
     filters,
     searchInput,
     setSearchInput,
+    selectedStatuses,
+    setSelectedStatuses,
     isFilterOpen,
     setIsFilterOpen,
     isPending,
@@ -269,6 +290,7 @@ export const useJobSeekersLogic = () => {
     itemsPerPageOptions,
 
     filterChange,
+    statusToggleChange,
     initPageChange,
     getStatusVariant,
     initViewResume,

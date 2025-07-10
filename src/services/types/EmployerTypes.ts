@@ -18,6 +18,7 @@ export interface EmployerHeaderProps {
   isCreatingJob: boolean;
   onClearFilters: () => void;
   hasActiveFilters: boolean;
+  filterContent?: React.ReactNode;
 }
 
 export interface EmployerFiltersProps {
@@ -26,6 +27,9 @@ export interface EmployerFiltersProps {
   onFilterChange: (key: keyof EmployerFilters, value: any) => void;
   stateOptions: Array<{ value: string; label: string }>;
   statusOptions: Array<{ value: string; label: string }>;
+  selectedStatuses: string[];
+  onStatusToggle: (statuses: string[]) => void;
+  hasActiveFilters: boolean;
 }
 
 export interface EmployerTableProps {

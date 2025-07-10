@@ -25,6 +25,8 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
     filters,
     searchInput,
     setSearchInput,
+    selectedStatuses,
+    setSelectedStatuses,
     isFilterOpen,
     setIsFilterOpen,
     isPending,
@@ -41,6 +43,7 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
     stateOptions,
     itemsPerPageOptions,
     filterChange,
+    statusToggleChange,
     initPageChange,
     getStatusVariant,
     initViewResume,
@@ -51,7 +54,7 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
 
   if (error && !isPending) {
     return (
-      <ErrorState 
+      <ErrorState
         className={className}
         message={`Error loading job seekers: ${error.message}`}
         onRetry={() => refetch()}
@@ -61,7 +64,8 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
   }
 
   return (
-    <div className={`rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] ${className}`}>      <JobSeekersHeader
+    <div className={`rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] ${className}`}>
+      <JobSeekersHeader
         totalCount={data?.metaData?.totalCount || 0}
         isPending={isPending}
         isLoading={isLoading}
@@ -72,15 +76,18 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
         onRefetch={refetch}
         onClearFilters={clearAllFilters}
         hasActiveFilters={hasActiveFilters}
-      />
-
-      <JobSeekersFilters
-        isOpen={isFilterOpen}
-        filters={filters}
-        onFilterChange={filterChange}
-        occupationOptions={occupationOptions}
-        stateOptions={stateOptions}
-        statusOptions={statusOptions}
+        filterDropdownContent={
+          <JobSeekersFilters
+            filters={filters}
+            onFilterChange={filterChange}
+            occupationOptions={occupationOptions}
+            stateOptions={stateOptions}
+            statusOptions={statusOptions}
+            selectedStatuses={selectedStatuses}
+            onStatusToggleChange={statusToggleChange}
+            hasActiveFilters={hasActiveFilters}
+          />
+        }
       />
 
       <JobSeekersTable
@@ -99,11 +106,6 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
         onPageChange={initPageChange}
         itemsPerPageOptions={itemsPerPageOptions}
         onFilterChange={filterChange}
-      />      
-      
-      <FullScreenSpinner 
-        isVisible={isViewingResume} 
-        message="Opening resume..." 
       />
     </div>
   );

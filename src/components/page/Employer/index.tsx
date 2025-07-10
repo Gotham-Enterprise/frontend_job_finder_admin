@@ -39,6 +39,8 @@ const Employers: React.FC<EmployersProps> = ({ className = "" }) => {
     stateOptions,
     itemsPerPageOptions,
     filterChange,
+    statusToggle,
+    selectedStatuses,
     initPageChange,
     getStatusVariant,
     viewEmployer,
@@ -61,8 +63,24 @@ const Employers: React.FC<EmployersProps> = ({ className = "" }) => {
       />
     );
   }
+
+  // Create filter content for the FilterDropdown
+  const filterContent = (
+    <EmployerFilters
+      isOpen={true}
+      filters={filters}
+      onFilterChange={filterChange}
+      stateOptions={stateOptions}
+      statusOptions={statusOptions}
+      selectedStatuses={selectedStatuses}
+      onStatusToggle={statusToggle}
+      hasActiveFilters={hasActiveFilters}
+    />
+  );
+
   return (
-    <div className={`rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] ${className}`}>      <EmployerHeader
+    <div className={`rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] ${className}`}>
+      <EmployerHeader
         totalCount={data?.metaData?.totalCount || 0}
         isPending={isPending}
         isLoading={isLoading}
@@ -76,15 +94,8 @@ const Employers: React.FC<EmployersProps> = ({ className = "" }) => {
         isCreatingJob={isCreatingJob}
         onClearFilters={clearAllFilters}
         hasActiveFilters={hasActiveFilters}
+        filterContent={filterContent}
       />
-
-      <EmployerFilters
-        isOpen={isFilterOpen}
-        filters={filters}
-        onFilterChange={filterChange}
-        stateOptions={stateOptions}
-        statusOptions={statusOptions}
-      />        
       
       <EmployerTable
         data={data}
