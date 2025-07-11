@@ -30,19 +30,18 @@ const Badge: React.FC<BadgeProps> = ({
   children,
   className = "",
 }) => {  const baseStyles =
-    "inline-flex items-center px-2.5 py-0.5 justify-center gap-1 rounded-full font-medium whitespace-nowrap";
+    "inline-flex items-center px-2.5 py-0.5 text-sm justify-center gap-1 rounded-sm font-medium whitespace-nowrap";
 
-  // Define size styles
+
   const sizeStyles = {
-    sm: "text-theme-xs", // Smaller padding and font size
-    md: "text-sm", // Default padding and font size
+    sm: "text-theme-xs", 
+    md: "text-sm", 
   };
 
-  // Define color styles for variants
   const variants = {
     light: {
       primary:
-        "bg-brand-50 text-brand-500 dark:bg-brand-500/15 dark:text-brand-400",
+        "bg-green-100 text-green-800 dark:bg-brand-500/15 dark:text-brand-400",
       success:
         "bg-success-50 text-success-600 dark:bg-success-500/15 dark:text-success-500",
       error:
