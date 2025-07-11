@@ -18,15 +18,32 @@ export const useJobSeekersLogic = () => {
       const validStatus = statusParam && ['active', 'inactive', 'pending', 'suspended'].includes(statusParam) 
         ? statusParam as 'active' | 'inactive' | 'pending' | 'suspended' 
         : undefined;
+      const urlPage = searchParams.get('page');
+      const urlLocation = searchParams.get('location');
+      const urlOccupationId = searchParams.get('occupationId');
       
       const urlFilters = {
-        page: Math.max(1, parseInt(searchParams.get('page') || '1', 10)),
+        page: Math.max(1, parseInt(urlPage || '1', 10)),
         limit: parseInt(searchParams.get('limit') || '100', 10),
         search: decodedSearch,
-        location: searchParams.get('location') || '',
-        occupationId: searchParams.get('occupationId') ? parseInt(searchParams.get('occupationId')!, 10) : undefined,
+        location: urlLocation || '',
+        occupationId: urlOccupationId ? parseInt(urlOccupationId, 10) : undefined,
         status: validStatus,
       };
+      
+      // Check if this is fresh navigation (only page 1 or simple URL params)
+      const isSimpleNavigation = 
+        (!urlPage || urlPage === '1') &&
+        !decodedSearch &&
+        !urlLocation &&
+        !urlOccupationId &&
+        !validStatus;
+      
+      if (isSimpleNavigation && typeof window !== 'undefined') {
+        // Clear localStorage for fresh navigation
+        localStorage.removeItem('jobseeker-search-state');
+        localStorage.removeItem('jobseeker-scroll-position');
+      }
       
       return urlFilters;
     }
@@ -381,7 +398,21 @@ export const useJobSeekersLogic = () => {
   }, [data, isLoading, searchParams, restoreScrollPosition]);
 
   useEffect(() => {
-    if (filters.search || filters.location || filters.occupationId || filters.status || (filters.page && filters.page > 1)) {
+    // Check if we're on page 1 with no filters (fresh navigation)
+    const isOnPageOneWithNoFilters = 
+      filters.page === 1 &&
+      !filters.search &&
+      !filters.location &&
+      !filters.occupationId &&
+      !filters.status;
+    
+    if (isOnPageOneWithNoFilters) {
+      // Clear localStorage when on page 1 with no filters
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('jobseeker-search-state');
+        localStorage.removeItem('jobseeker-scroll-position');
+      }
+    } else if (filters.search || filters.location || filters.occupationId || filters.status || (filters.page && filters.page > 1)) {
       saveSearchState();
     }
   }, [filters, saveSearchState]);

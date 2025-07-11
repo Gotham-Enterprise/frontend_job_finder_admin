@@ -14,15 +14,35 @@ export const useJobApplicationsLogic = () => {
     if (hasUrlParams) {
       const nameParam = searchParams.get('name') || '';
       const decodedName = nameParam ? decodeURIComponent(nameParam) : '';
+      const urlPage = searchParams.get('page');
+      const urlLocation = searchParams.get('location');
+      const urlCompanyName = searchParams.get('companyName');
+      const urlStatus = searchParams.get('status');
       
-      return {
-        page: Math.max(1, parseInt(searchParams.get('page') || '1', 10)),
+      const urlFilters = {
+        page: Math.max(1, parseInt(urlPage || '1', 10)),
         limit: parseInt(searchParams.get('limit') || '100', 10),
         name: decodedName,
-        location: searchParams.get('location') || '',
-        companyName: searchParams.get('companyName') || '',
-        status: searchParams.get('status') || '',
+        location: urlLocation || '',
+        companyName: urlCompanyName || '',
+        status: urlStatus || '',
       };
+      
+      // Check if this is fresh navigation (only page 1 or simple URL params)
+      const isSimpleNavigation = 
+        (!urlPage || urlPage === '1') &&
+        !decodedName &&
+        !urlLocation &&
+        !urlCompanyName &&
+        !urlStatus;
+      
+      if (isSimpleNavigation && typeof window !== 'undefined') {
+        // Clear localStorage for fresh navigation
+        localStorage.removeItem('jobApplications-search-state');
+        localStorage.removeItem('jobApplications-scroll-position');
+      }
+      
+      return urlFilters;
     }
 
     if (typeof window !== 'undefined') {
@@ -339,7 +359,21 @@ export const useJobApplicationsLogic = () => {
   }, [data, isLoading, searchParams, restoreScrollPosition]);
 
   useEffect(() => {
-    if (filters.name || filters.location || filters.companyName || filters.status || (filters.page && filters.page > 1)) {
+    // Check if we're on page 1 with no filters (fresh navigation)
+    const isOnPageOneWithNoFilters = 
+      filters.page === 1 &&
+      !filters.name &&
+      !filters.location &&
+      !filters.companyName &&
+      !filters.status;
+    
+    if (isOnPageOneWithNoFilters) {
+      // Clear localStorage when on page 1 with no filters
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('jobApplications-search-state');
+        localStorage.removeItem('jobApplications-scroll-position');
+      }
+    } else if (filters.name || filters.location || filters.companyName || filters.status || (filters.page && filters.page > 1)) {
       saveSearchState();
     }
   }, [filters, saveSearchState]);

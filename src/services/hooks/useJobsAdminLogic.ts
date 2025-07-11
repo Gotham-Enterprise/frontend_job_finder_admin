@@ -30,6 +30,19 @@ export const useJobsAdminLogic = () => {
         occupationId: urlOccupationId ? parseInt(urlOccupationId) : undefined,
         specialtyId: urlSpecialtyId ? parseInt(urlSpecialtyId) : undefined,
       };
+
+      const isSimpleNavigation = 
+        (!urlPage || urlPage === '1') &&
+        !urlName &&
+        !urlState &&
+        !urlDatePosted &&
+        !urlOccupationId &&
+        !urlSpecialtyId;
+      
+      if (isSimpleNavigation && typeof window !== 'undefined') {
+        localStorage.removeItem('jobsAdmin-search-state');
+        localStorage.removeItem('jobsAdmin-scroll-position');
+      }
       
       return urlFilters;
     }
@@ -153,7 +166,6 @@ export const useJobsAdminLogic = () => {
 
  
   useEffect(() => {
-    // Don't update URL during initial mount to avoid interfering with restoration
     if (!isInitialized) return;
     
     const params = new URLSearchParams();
@@ -169,8 +181,7 @@ export const useJobsAdminLogic = () => {
     
     const newURL = params.toString() ? `?${params.toString()}` : '';
     const currentURL = window.location.search;
-    
-    // Only update URL if it's different to avoid unnecessary navigations
+s
     if (newURL !== currentURL) {
       router.replace(`/admin/jobs${newURL}`, { scroll: false });
     }
@@ -302,7 +313,6 @@ export const useJobsAdminLogic = () => {
       const newFilters = { 
         ...filters, 
         [key]: processedValue,
-        // Only reset page to 1 for filter changes, not for page or limit changes
         ...(key !== 'page' && key !== 'limit' && { page: 1 }),
         ...(key === 'occupationId' && { specialtyId: undefined })
       };
@@ -321,7 +331,6 @@ export const useJobsAdminLogic = () => {
       setFilters(prev => ({ 
         ...prev, 
         jobStatus, 
-        // Only reset page if the status actually changed
         ...(prev.jobStatus !== jobStatus && { page: 1 })
       }));
     });
@@ -351,14 +360,12 @@ export const useJobsAdminLogic = () => {
   }, []);
 
   const viewJobDetails = useCallback((jobId: string) => {
-    // Save current state and scroll position before navigating
+
     saveScrollPosition();
     saveSearchState();
-    
-    // Set flag to preserve state when returning
+
     if (typeof window !== 'undefined') {
       sessionStorage.setItem('jobsAdmin-preserve-state', 'true');
-      // Save the specific item ID for auto-scroll
       sessionStorage.setItem('jobsAdmin-selected-item', jobId);
     }
     
@@ -404,59 +411,60 @@ export const useJobsAdminLogic = () => {
 
   useEffect(() => {
     if (data && !isLoading) {
-      // Check if we need to restore scroll position after data loads
       const hasUrlParams = searchParams.toString();
       
       if (hasUrlParams) {
-        // If we have URL params, restore scroll position
         restoreScrollPosition();
       } else {
-        // If no URL params, we might have restored from localStorage, so restore scroll too
-        const savedPosition = localStorage.getItem('jobsAdmin-scroll-position');
-        if (savedPosition) {
-          const position = parseInt(savedPosition, 10);
-          setTimeout(() => {
-            window.scrollTo({ top: position, behavior: 'smooth' });
-          }, 100);
-        }
+        import('@/services/utils/autoScroll').then(({ restoreScrollWithItemHighlight }) => {
+          restoreScrollWithItemHighlight(
+            'jobsAdmin-selected-item',
+            'jobsAdmin-scroll-position'
+          );
+        });
       }
     }
   }, [data, isLoading, searchParams, restoreScrollPosition]);
 
   useEffect(() => {
-    // Only save state after initialization to avoid interfering with restoration
     if (!isInitialized) return;
+    const isOnPageOneWithNoFilters = 
+      filters.page === 1 &&
+      !filters.name &&
+      !filters.state &&
+      !filters.jobStatus &&
+      !filters.datePosted &&
+      !filters.occupationId &&
+      !filters.specialtyId;
     
-    if (filters.name || filters.state || filters.jobStatus || filters.datePosted || filters.occupationId || filters.specialtyId || (filters.page && filters.page > 1)) {
+    if (isOnPageOneWithNoFilters) {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('jobsAdmin-search-state');
+        localStorage.removeItem('jobsAdmin-scroll-position');
+      }
+    } else if (filters.name || filters.state || filters.jobStatus || filters.datePosted || filters.occupationId || filters.specialtyId || (filters.page && filters.page > 1)) {
       saveSearchState();
     }
   }, [filters, saveSearchState, isInitialized]);
 
   useEffect(() => {
-    // Don't trigger search during initial component mount to avoid resetting page
     if (!isInitialized) return;
-    
-    // Don't trigger search if we're just restoring from state and haven't made a real change
     if (hasRestoredFromState && searchInput === initialSearchValue) {
       return;
     }
-    
-    // Don't trigger if the searchInput matches what's already in filters (prevents loops)
+
     if (searchInput === filters.name) {
       return;
     }
-    
-    // Only proceed if there's an actual change from user input
+
     const timeoutId = setTimeout(() => {
       startTransition(() => {
         setFilters(prev => ({ 
           ...prev, 
           name: searchInput, 
-          // Only reset to page 1 if the search value actually changed from previous value
           ...(searchInput !== prev.name && { page: 1 })
         }));
-        
-        // Clear the restored flag after first real search
+
         if (hasRestoredFromState) {
           setHasRestoredFromState(false);
         }

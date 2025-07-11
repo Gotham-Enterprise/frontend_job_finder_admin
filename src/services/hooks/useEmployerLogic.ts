@@ -10,8 +10,7 @@ export const useEmployerLogic = () => {
 
   const getInitialFilters = (): EmployerFilters => {
     const hasUrlParams = Array.from(searchParams.keys()).length > 0;
-    
-    // If we have URL parameters, always use them (user refreshed page or came from direct link)
+
     if (hasUrlParams) {
       const urlPage = searchParams.get('page');
       const urlLimit = searchParams.get('limit');
@@ -19,21 +18,32 @@ export const useEmployerLogic = () => {
       const urlLocation = searchParams.get('location');
       const urlStatus = searchParams.get('status');
       
-      return {
+      const urlFilters = {
         page: Math.max(1, parseInt(urlPage || '1', 10)),
         limit: parseInt(urlLimit || '100', 10),
         name: urlName || '',
         location: urlLocation || '',
         status: urlStatus || undefined,
       };
+      
+      const isSimpleNavigation = 
+        (!urlPage || urlPage === '1') &&
+        !urlName &&
+        !urlLocation &&
+        !urlStatus;
+      
+      if (isSimpleNavigation && typeof window !== 'undefined') {
+        localStorage.removeItem('employer-search-state');
+        localStorage.removeItem('employer-scroll-position');
+      }
+      
+      return urlFilters;
     }
-    
-    // Check if this is a preserved navigation (coming from details/back button)
+
     if (typeof window !== 'undefined') {
       const navigationFlag = sessionStorage.getItem('employer-preserve-state');
       
       if (navigationFlag === 'true') {
-        // Clear the flag after use
         sessionStorage.removeItem('employer-preserve-state');
         
         const savedState = localStorage.getItem('employer-search-state');
@@ -52,7 +62,6 @@ export const useEmployerLogic = () => {
           }
         }
       } else {
-        // Fresh navigation - clear localStorage and start clean
         localStorage.removeItem('employer-search-state');
         localStorage.removeItem('employer-scroll-position');
       }
@@ -251,11 +260,8 @@ export const useEmployerLogic = () => {
   const viewEmployer = useCallback((employerId: string) => {
     saveScrollPosition();
     saveSearchState();
-    
-    // Set flag to preserve state when returning
     if (typeof window !== 'undefined') {
       sessionStorage.setItem('employer-preserve-state', 'true');
-      // Save the specific item ID for auto-scroll
       sessionStorage.setItem('employer-selected-item', employerId);
     }
     
@@ -309,7 +315,6 @@ export const useEmployerLogic = () => {
       if (hasUrlParams) {
         restoreScrollPosition();
       } else {
-        // Import and use the auto-scroll utility
         import('@/services/utils/autoScroll').then(({ restoreScrollWithItemHighlight }) => {
           restoreScrollWithItemHighlight(
             'employer-selected-item',
@@ -321,7 +326,18 @@ export const useEmployerLogic = () => {
   }, [data, isLoading, searchParams, restoreScrollPosition]);
 
   useEffect(() => {
-    if (filters.name || filters.location || filters.status || (filters.page && filters.page > 1)) {
+    const isOnPageOneWithNoFilters = 
+      filters.page === 1 &&
+      !filters.name &&
+      !filters.location &&
+      !filters.status;
+    
+    if (isOnPageOneWithNoFilters) {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('employer-search-state');
+        localStorage.removeItem('employer-scroll-position');
+      }
+    } else if (filters.name || filters.location || filters.status || (filters.page && filters.page > 1)) {
       saveSearchState();
     }
   }, [filters, saveSearchState]);
