@@ -106,7 +106,7 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
 
   useEffect(() => {
     if (isOpen && focusedIndex >= 0 && optionsRef.current) {
-      const focusedElement = optionsRef.current.children[focusedIndex + 1] as HTMLElement; // +1 to skip search input
+      const focusedElement = optionsRef.current.children[focusedIndex + 1] as HTMLElement;
       if (focusedElement) {
         focusedElement.scrollIntoView({
           block: 'nearest',

@@ -122,7 +122,7 @@ export const useJobSeekersLogic = () => {
         }, 100);
       }
     }
-  }, []); 
+  }, [searchParams]);
 
 
   useEffect(() => {

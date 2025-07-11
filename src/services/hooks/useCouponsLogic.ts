@@ -8,7 +8,6 @@ export const useCouponsLogic = () => {
   const searchParams = useSearchParams();
 
   const getInitialFilters = (): CouponFilters => {
-    // First, try to get from URL parameters
     const hasUrlParams = Array.from(searchParams.keys()).length > 0;
     
     if (hasUrlParams) {
@@ -28,8 +27,7 @@ export const useCouponsLogic = () => {
         sortOrder: (urlSortOrder as 'asc' | 'desc') || 'desc',
       };
     }
-    
-    // If no URL parameters, try to restore from localStorage
+
     if (typeof window !== 'undefined') {
       const savedState = localStorage.getItem('coupons-search-state');
       if (savedState) {
@@ -48,8 +46,7 @@ export const useCouponsLogic = () => {
         }
       }
     }
-    
-    // Default fallback
+
     return {
       page: 1,
       limit: 100,
@@ -78,16 +75,13 @@ export const useCouponsLogic = () => {
   const [isInitialized, setIsInitialized] = useState(false);
   const [hasRestoredFromState, setHasRestoredFromState] = useState(false);
 
-  // Initialization effect - mark as initialized after component mounts
   useEffect(() => {
     setIsInitialized(true);
-    // Mark as restored if we had initial filters with data
     if (initialFilters.keyword || (initialFilters.page && initialFilters.page > 1)) {
       setHasRestoredFromState(true);
     }
   }, [initialFilters.keyword, initialFilters.page]);
 
-  // Restore scroll position when component mounts (only when state was restored from localStorage)
   useEffect(() => {
     const hasUrlParams = Array.from(searchParams.keys()).length > 0;
     
@@ -100,12 +94,10 @@ export const useCouponsLogic = () => {
         }, 100);
       }
     }
-  }, []); // Only run on mount
+  }, [searchParams]); 
 
-  // Handle browser back/forward navigation
   useEffect(() => {
     const handlePopState = () => {
-      // Small delay to ensure the component has re-rendered with URL params
       setTimeout(() => {
         const hasUrlParams = Array.from(new URLSearchParams(window.location.search).keys()).length > 0;
         
@@ -123,7 +115,6 @@ export const useCouponsLogic = () => {
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
-  // URL update effect - separate from direct calls to avoid render issues
   useEffect(() => {
     const params = new URLSearchParams();
     
@@ -136,8 +127,6 @@ export const useCouponsLogic = () => {
     
     const newURL = params.toString() ? `?${params.toString()}` : '';
     const currentURL = window.location.search;
-    
-    // Only update URL if it's different to avoid unnecessary navigations
     if (newURL !== currentURL) {
       router.replace(`/admin/coupons${newURL}`, { scroll: false });
     }
@@ -272,13 +261,8 @@ export const useCouponsLogic = () => {
   }, []);
 
   const viewCoupon = useCallback((couponId: string) => {
-    // Save current state and scroll position before navigating
     saveScrollPosition();
     saveSearchState();
-    
-    console.log('View coupon:', couponId);
-    // Add navigation logic here when detail page exists
-    // router.push(`/admin/coupons/details/${couponId}`);
   }, [saveScrollPosition, saveSearchState]);
 
   const formatDiscount = (coupon: any) => {
@@ -324,25 +308,19 @@ export const useCouponsLogic = () => {
     );
   }, [searchInput, selectedStatuses]);
 
-  // Search effect with initialization check
   useEffect(() => {
-    // Don't trigger search during initial component mount to avoid resetting page
     if (!isInitialized) return;
-    
-    // Don't trigger search if we're just restoring from state and haven't made a real change
+
     if (hasRestoredFromState && searchInput === initialFilters.keyword) return;
     
     const timeoutId = setTimeout(() => {
       startTransition(() => {
-        // Only reset to page 1 if this is a new search (different from current filters.keyword)
         const shouldResetPage = searchInput !== filters.keyword;
         setFilters(prev => ({ 
           ...prev, 
           keyword: searchInput, 
           page: shouldResetPage ? 1 : prev.page 
         }));
-        
-        // Clear the restored flag after first real search
         if (hasRestoredFromState) {
           setHasRestoredFromState(false);
         }
@@ -351,25 +329,19 @@ export const useCouponsLogic = () => {
 
     return () => clearTimeout(timeoutId);
   }, [searchInput, isInitialized, filters.keyword, hasRestoredFromState, initialFilters.keyword]);
-
-  // Save state when filters change
   useEffect(() => {
     if (filters.keyword || filters.isActive !== undefined || (filters.page && filters.page > 1)) {
       saveSearchState();
     }
   }, [filters, saveSearchState]);
 
-  // Data loading effect for scroll restoration
   useEffect(() => {
     if (data && !isLoading) {
-      // Check if we need to restore scroll position after data loads
       const hasUrlParams = searchParams.toString();
       
       if (hasUrlParams) {
-        // If we have URL params, restore scroll position
         restoreScrollPosition();
       } else {
-        // If no URL params, we might have restored from localStorage, so restore scroll too
         const savedPosition = localStorage.getItem('coupons-scroll-position');
         if (savedPosition) {
           const position = parseInt(savedPosition, 10);

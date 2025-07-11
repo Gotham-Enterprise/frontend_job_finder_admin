@@ -62,3 +62,16 @@ export const useResetPassword = () => {
     }
   });
 };
+
+export const useTokenResetPassword = () => {
+  return useMutation({
+    mutationFn: ({ resetToken, request }: { resetToken: string; request: ResetPasswordRequest }) => 
+      authApi.resetPassword(resetToken, request),
+    onSuccess: (data) => {
+      return data; 
+    },
+    onError: (error) => {
+      return error; 
+    }
+  });
+};
