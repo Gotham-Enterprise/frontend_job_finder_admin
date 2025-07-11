@@ -9,7 +9,6 @@ export const useEmployerLogic = () => {
   const searchParams = useSearchParams();
 
   const getInitialFilters = (): EmployerFilters => {
-    // First, try to get from URL parameters
     const hasUrlParams = Array.from(searchParams.keys()).length > 0;
     
     if (hasUrlParams) {
@@ -28,7 +27,6 @@ export const useEmployerLogic = () => {
       };
     }
     
-    // If no URL parameters, try to restore from localStorage
     if (typeof window !== 'undefined') {
       const savedState = localStorage.getItem('employer-search-state');
       if (savedState) {
@@ -47,7 +45,6 @@ export const useEmployerLogic = () => {
       }
     }
     
-    // Default fallback
     return {
       page: 1,
       limit: 100,
@@ -73,13 +70,16 @@ export const useEmployerLogic = () => {
     initialFilters.status ? [initialFilters.status] : []
   );
   const [isInitialized, setIsInitialized] = useState(false);
+  const [hasRestoredFromState, setHasRestoredFromState] = useState(false);
 
-  // Initialization effect - mark as initialized after component mounts
   useEffect(() => {
     setIsInitialized(true);
-  }, []);
 
-  // Restore scroll position when component mounts (only when state was restored from localStorage)
+    if (initialFilters.name || (initialFilters.page && initialFilters.page > 1)) {
+      setHasRestoredFromState(true);
+    }
+  }, [initialFilters.name, initialFilters.page]);
+
   useEffect(() => {
     const hasUrlParams = Array.from(searchParams.keys()).length > 0;
     
@@ -92,12 +92,10 @@ export const useEmployerLogic = () => {
         }, 100);
       }
     }
-  }, []); // Only run on mount
+  }, [searchParams]); 
 
-  // Handle browser back/forward navigation
   useEffect(() => {
     const handlePopState = () => {
-      // Small delay to ensure the component has re-rendered with URL params
       setTimeout(() => {
         const hasUrlParams = Array.from(new URLSearchParams(window.location.search).keys()).length > 0;
         
@@ -115,7 +113,6 @@ export const useEmployerLogic = () => {
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
-  // URL update effect - separate from direct calls to avoid render issues
   useEffect(() => {
     const params = new URLSearchParams();
     
@@ -127,8 +124,7 @@ export const useEmployerLogic = () => {
     
     const newURL = params.toString() ? `?${params.toString()}` : '';
     const currentURL = window.location.search;
-    
-    // Only update URL if it's different to avoid unnecessary navigations
+
     if (newURL !== currentURL) {
       router.replace(`/admin/employers${newURL}`, { scroll: false });
     }
@@ -240,7 +236,6 @@ export const useEmployerLogic = () => {
     }
   }, []);
   const viewEmployer = useCallback((employerId: string) => {
-    // Save current state and scroll position before navigating
     saveScrollPosition();
     saveSearchState();
     
@@ -289,14 +284,11 @@ export const useEmployerLogic = () => {
 
   useEffect(() => {
     if (data && !isLoading) {
-      // Check if we need to restore scroll position after data loads
       const hasUrlParams = searchParams.toString();
       
       if (hasUrlParams) {
-        // If we have URL params, restore scroll position
         restoreScrollPosition();
       } else {
-        // If no URL params, we might have restored from localStorage, so restore scroll too
         const savedPosition = localStorage.getItem('employer-scroll-position');
         if (savedPosition) {
           const position = parseInt(savedPosition, 10);
@@ -315,23 +307,27 @@ export const useEmployerLogic = () => {
   }, [filters, saveSearchState]);
 
   useEffect(() => {
-    // Don't trigger search during initial component mount to avoid resetting page
     if (!isInitialized) return;
+
+    if (hasRestoredFromState && searchInput === initialFilters.name) return;
     
     const timeoutId = setTimeout(() => {
       startTransition(() => {
-        // Only reset to page 1 if this is a new search (different from current filters.name)
         const shouldResetPage = searchInput !== filters.name;
         setFilters(prev => ({ 
           ...prev, 
           name: searchInput, 
           page: shouldResetPage ? 1 : prev.page 
         }));
+
+        if (hasRestoredFromState) {
+          setHasRestoredFromState(false);
+        }
       });
     }, 500);
 
     return () => clearTimeout(timeoutId);
-  }, [searchInput, isInitialized, filters.name]);
+  }, [searchInput, isInitialized, filters.name, hasRestoredFromState, initialFilters.name]);
   return {
     filters,
     searchInput,

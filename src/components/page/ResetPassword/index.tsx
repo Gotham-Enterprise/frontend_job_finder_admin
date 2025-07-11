@@ -5,7 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import Input from '@/components/ui/input/Input';
 import Button from '@/components/ui/button/Button';
 import Label from '@/components/form/Label';
-import { useResetPassword } from '@/services/hooks/useAuth';
+import { useTokenResetPassword } from '@/services/hooks/useAuth';
 import { showToast } from '@/services/utils/toast';
 
 export default function ResetPassword() {
@@ -18,7 +18,7 @@ export default function ResetPassword() {
   const params = useParams();
   const resetToken = params.token as string;
 
-  const { mutate: resetPassword, isPending } = useResetPassword();
+  const { mutate: resetPassword, isPending } = useTokenResetPassword();
 
   const isFormValid = password.length >= 8 && confirmPassword.length >= 8 && password === confirmPassword;
 

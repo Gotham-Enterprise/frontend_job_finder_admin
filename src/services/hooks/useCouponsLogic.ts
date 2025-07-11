@@ -1,22 +1,169 @@
 import { useState, useMemo, useTransition, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useCoupons } from '@/services/hooks/useCoupons';
 import { CouponFilters } from '@/services/types/coupon';
 
 export const useCouponsLogic = () => {
   const router = useRouter();
-  const [filters, setFilters] = useState<CouponFilters>({
-    page: 1,
-    limit: 100,
-    keyword: '',
-    isActive: undefined,
-    sortBy: 'createdAt',
-    sortOrder: 'desc',
+  const searchParams = useSearchParams();
+
+  const getInitialFilters = (): CouponFilters => {
+    const hasUrlParams = Array.from(searchParams.keys()).length > 0;
+    
+    if (hasUrlParams) {
+      const urlPage = searchParams.get('page');
+      const urlLimit = searchParams.get('limit');
+      const urlKeyword = searchParams.get('keyword');
+      const urlIsActive = searchParams.get('isActive');
+      const urlSortBy = searchParams.get('sortBy');
+      const urlSortOrder = searchParams.get('sortOrder');
+      
+      return {
+        page: Math.max(1, parseInt(urlPage || '1', 10)),
+        limit: parseInt(urlLimit || '100', 10),
+        keyword: urlKeyword || '',
+        isActive: urlIsActive === 'true' ? true : urlIsActive === 'false' ? false : undefined,
+        sortBy: (urlSortBy as 'createdAt' | 'updatedAt') || 'createdAt',
+        sortOrder: (urlSortOrder as 'asc' | 'desc') || 'desc',
+      };
+    }
+
+    if (typeof window !== 'undefined') {
+      const savedState = localStorage.getItem('coupons-search-state');
+      if (savedState) {
+        try {
+          const parsed = JSON.parse(savedState);
+          return {
+            page: Math.max(1, parsed.page || 1),
+            limit: parsed.limit || 100,
+            keyword: parsed.keyword || '',
+            isActive: parsed.isActive,
+            sortBy: parsed.sortBy || 'createdAt',
+            sortOrder: parsed.sortOrder || 'desc',
+          };
+        } catch (error) {
+          console.warn('Failed to parse saved coupons state:', error);
+        }
+      }
+    }
+
+    return {
+      page: 1,
+      limit: 100,
+      keyword: '',
+      isActive: undefined,
+      sortBy: 'createdAt',
+      sortOrder: 'desc',
+    };
+  };
+
+  const initialFilters = getInitialFilters();
+  const [filters, setFilters] = useState<CouponFilters>(() => {
+    return initialFilters;
   });
-  const [searchInput, setSearchInput] = useState('');
+  const [searchInput, setSearchInput] = useState(() => {
+    const initial = initialFilters.keyword || '';
+    return initial;
+  });
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
-  const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
+  const [selectedStatuses, setSelectedStatuses] = useState<string[]>(() => {
+    if (initialFilters.isActive === true) return ['true'];
+    if (initialFilters.isActive === false) return ['false'];
+    return [];
+  });
+  const [isInitialized, setIsInitialized] = useState(false);
+  const [hasRestoredFromState, setHasRestoredFromState] = useState(false);
+
+  useEffect(() => {
+    setIsInitialized(true);
+    if (initialFilters.keyword || (initialFilters.page && initialFilters.page > 1)) {
+      setHasRestoredFromState(true);
+    }
+  }, [initialFilters.keyword, initialFilters.page]);
+
+  useEffect(() => {
+    const hasUrlParams = Array.from(searchParams.keys()).length > 0;
+    
+    if (!hasUrlParams && typeof window !== 'undefined') {
+      const savedPosition = localStorage.getItem('coupons-scroll-position');
+      if (savedPosition) {
+        const position = parseInt(savedPosition, 10);
+        setTimeout(() => {
+          window.scrollTo({ top: position, behavior: 'smooth' });
+        }, 100);
+      }
+    }
+  }, [searchParams]); 
+
+  useEffect(() => {
+    const handlePopState = () => {
+      setTimeout(() => {
+        const hasUrlParams = Array.from(new URLSearchParams(window.location.search).keys()).length > 0;
+        
+        if (!hasUrlParams && typeof window !== 'undefined') {
+          const savedPosition = localStorage.getItem('coupons-scroll-position');
+          if (savedPosition) {
+            const position = parseInt(savedPosition, 10);
+            window.scrollTo({ top: position, behavior: 'smooth' });
+          }
+        }
+      }, 100);
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams();
+    
+    if (filters.page && filters.page > 1) params.set('page', filters.page.toString());
+    if (filters.limit && filters.limit !== 100) params.set('limit', filters.limit.toString());
+    if (filters.keyword) params.set('keyword', filters.keyword);
+    if (filters.isActive !== undefined) params.set('isActive', filters.isActive.toString());
+    if (filters.sortBy && filters.sortBy !== 'createdAt') params.set('sortBy', filters.sortBy);
+    if (filters.sortOrder && filters.sortOrder !== 'desc') params.set('sortOrder', filters.sortOrder);
+    
+    const newURL = params.toString() ? `?${params.toString()}` : '';
+    const currentURL = window.location.search;
+    if (newURL !== currentURL) {
+      router.replace(`/admin/coupons${newURL}`, { scroll: false });
+    }
+  }, [filters, router]);
+
+  const saveScrollPosition = useCallback(() => {
+    if (typeof window !== 'undefined') {
+      const position = window.scrollY;
+      localStorage.setItem('coupons-scroll-position', position.toString());
+    }
+  }, []);
+
+  const restoreScrollPosition = useCallback(() => {
+    if (typeof window !== 'undefined') {
+      const savedPosition = localStorage.getItem('coupons-scroll-position');
+      if (savedPosition) {
+        const position = parseInt(savedPosition, 10);
+        setTimeout(() => {
+          window.scrollTo({ top: position, behavior: 'smooth' });
+        }, 100);
+      }
+    }
+  }, []);
+
+  const saveSearchState = useCallback(() => {
+    if (typeof window !== 'undefined') {
+      const stateToSave = {
+        page: filters.page,
+        limit: filters.limit,
+        keyword: filters.keyword,
+        isActive: filters.isActive,
+        sortBy: filters.sortBy,
+        sortOrder: filters.sortOrder,
+      };
+      localStorage.setItem('coupons-search-state', JSON.stringify(stateToSave));
+    }
+  }, [filters]);
 
   const normalizedFilters = useMemo(() => {
     const normalized: CouponFilters = {
@@ -74,12 +221,18 @@ export const useCouponsLogic = () => {
       
       if (key === 'isActive') {
         processedValue = value === '' ? undefined : value === 'true';
+      } else if (key === 'limit') {
+        processedValue = parseInt(value);
+      } else if (key === 'page') {
+        processedValue = parseInt(value);
+      } else {
+        processedValue = value === '' ? undefined : value;
       }
       
       const newFilters = { 
         ...filters, 
-        [key]: processedValue === '' ? undefined : processedValue,
-        page: 1
+        [key]: processedValue,
+        page: key === 'page' ? processedValue : 1
       };
       
       setFilters(newFilters);
@@ -107,9 +260,10 @@ export const useCouponsLogic = () => {
     });
   }, []);
 
-  const viewCoupon = (couponId: string) => {
-    console.log('View coupon:', couponId);
-  };
+  const viewCoupon = useCallback((couponId: string) => {
+    saveScrollPosition();
+    saveSearchState();
+  }, [saveScrollPosition, saveSearchState]);
 
   const formatDiscount = (coupon: any) => {
     if (coupon.amountOffInCents) {
@@ -129,20 +283,23 @@ export const useCouponsLogic = () => {
     });
   };
 
-  const clearAllFilters = () => {
-    startTransition(() => {
-      setFilters({
-        page: 1,
-        limit: 100,
-        keyword: '',
-        isActive: undefined,
-        sortBy: 'createdAt',
-        sortOrder: 'desc',
-      });
-      setSearchInput('');
-      setSelectedStatuses([]);
-    });
-  };
+  const clearAllFilters = useCallback(() => {
+    const newFilters = {
+      page: 1,
+      limit: 100,
+      keyword: '',
+      isActive: undefined,
+      sortBy: 'createdAt' as const,
+      sortOrder: 'desc' as const,
+    };
+    setFilters(newFilters);
+    setSearchInput('');
+    setSelectedStatuses([]);
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('coupons-scroll-position');
+      localStorage.removeItem('coupons-search-state');
+    }
+  }, []);
 
   const hasActiveFilters = useMemo(() => {
     return !!(
@@ -152,14 +309,49 @@ export const useCouponsLogic = () => {
   }, [searchInput, selectedStatuses]);
 
   useEffect(() => {
+    if (!isInitialized) return;
+
+    if (hasRestoredFromState && searchInput === initialFilters.keyword) return;
+    
     const timeoutId = setTimeout(() => {
       startTransition(() => {
-        setFilters(prev => ({ ...prev, keyword: searchInput, page: 1 }));
+        const shouldResetPage = searchInput !== filters.keyword;
+        setFilters(prev => ({ 
+          ...prev, 
+          keyword: searchInput, 
+          page: shouldResetPage ? 1 : prev.page 
+        }));
+        if (hasRestoredFromState) {
+          setHasRestoredFromState(false);
+        }
       });
     }, 500);
 
     return () => clearTimeout(timeoutId);
-  }, [searchInput]);
+  }, [searchInput, isInitialized, filters.keyword, hasRestoredFromState, initialFilters.keyword]);
+  useEffect(() => {
+    if (filters.keyword || filters.isActive !== undefined || (filters.page && filters.page > 1)) {
+      saveSearchState();
+    }
+  }, [filters, saveSearchState]);
+
+  useEffect(() => {
+    if (data && !isLoading) {
+      const hasUrlParams = searchParams.toString();
+      
+      if (hasUrlParams) {
+        restoreScrollPosition();
+      } else {
+        const savedPosition = localStorage.getItem('coupons-scroll-position');
+        if (savedPosition) {
+          const position = parseInt(savedPosition, 10);
+          setTimeout(() => {
+            window.scrollTo({ top: position, behavior: 'smooth' });
+          }, 100);
+        }
+      }
+    }
+  }, [data, isLoading, searchParams, restoreScrollPosition]);
 
   useEffect(() => {
     console.log('🔍 Filters updated in useCouponsLogic:', filters);
@@ -197,5 +389,8 @@ export const useCouponsLogic = () => {
     hasActiveFilters,
     selectedStatuses,
     handleStatusToggle,
+    saveScrollPosition,
+    restoreScrollPosition,
+    saveSearchState,
   };
 };

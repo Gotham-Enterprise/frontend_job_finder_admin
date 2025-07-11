@@ -2,7 +2,7 @@ import { useMutation } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { authApi } from '../api/auth';
 import { authUtils } from '../utils/authUtils';
-import { LoginCredentials, AuthResponse, ForgotPasswordRequest, ResetPasswordRequest } from '../types/auth';
+import { LoginCredentials, AuthResponse, ForgotPasswordRequest, ResetPasswordRequest, ChangePasswordRequest } from '../types/auth';
 
 export const useLogin = () => {
   const router = useRouter();
@@ -51,6 +51,19 @@ export const useForgotPassword = () => {
 };
 
 export const useResetPassword = () => {
+  return useMutation({
+    mutationFn: (request: ChangePasswordRequest) => 
+      authApi.changePassword(request),
+    onSuccess: (data) => {
+      return data; 
+    },
+    onError: (error) => {
+      return error; 
+    }
+  });
+};
+
+export const useTokenResetPassword = () => {
   return useMutation({
     mutationFn: ({ resetToken, request }: { resetToken: string; request: ResetPasswordRequest }) => 
       authApi.resetPassword(resetToken, request),

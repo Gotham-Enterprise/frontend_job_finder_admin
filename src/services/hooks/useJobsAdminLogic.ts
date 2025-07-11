@@ -22,25 +22,40 @@ export const useJobsAdminLogic = () => {
       const urlOccupationId = searchParams.get('occupationId');
       const urlSpecialtyId = searchParams.get('specialtyId');
       
-      return {
-        page: Math.max(1, parseInt(urlPage || '1', 10)),
-        limit: parseInt(urlLimit || '100', 10),
-        name: urlName || '',
-        state: urlState || '',
-        jobStatus: (urlJobStatus === 'Draft' || urlJobStatus === 'Published') ? urlJobStatus : undefined,
-        datePosted: urlDatePosted || '',
-        occupationId: urlOccupationId ? parseInt(urlOccupationId) : undefined,
-        specialtyId: urlSpecialtyId ? parseInt(urlSpecialtyId) : undefined,
+      // Get saved state as fallback for missing URL parameters
+      let savedState = null;
+      if (typeof window !== 'undefined') {
+        const savedStateStr = localStorage.getItem('jobsAdmin-search-state');
+        if (savedStateStr) {
+          try {
+            savedState = JSON.parse(savedStateStr);
+          } catch (error) {
+            console.warn('Failed to parse saved jobs admin state:', error);
+          }
+        }
+      }
+      
+      const urlFilters: JobsAdminFilters = {
+        page: urlPage ? Math.max(1, parseInt(urlPage, 10)) : (savedState?.page || 1),
+        limit: urlLimit ? parseInt(urlLimit, 10) : (savedState?.limit || 100),
+        name: urlName || (savedState?.name || ''),
+        state: urlState || (savedState?.state || ''),
+        jobStatus: (urlJobStatus === 'Draft' || urlJobStatus === 'Published') ? urlJobStatus as 'Draft' | 'Published' : (savedState?.jobStatus || undefined),
+        datePosted: urlDatePosted || (savedState?.datePosted || ''),
+        occupationId: urlOccupationId ? parseInt(urlOccupationId) : (savedState?.occupationId || undefined),
+        specialtyId: urlSpecialtyId ? parseInt(urlSpecialtyId) : (savedState?.specialtyId || undefined),
       };
+      
+      return urlFilters;
     }
     
     // If no URL parameters, try to restore from localStorage
     if (typeof window !== 'undefined') {
-      const savedState = localStorage.getItem('jobs-admin-search-state');
+      const savedState = localStorage.getItem('jobsAdmin-search-state');
       if (savedState) {
         try {
           const parsed = JSON.parse(savedState);
-          return {
+          const restoredFilters = {
             page: Math.max(1, parsed.page || 1),
             limit: parsed.limit || 100,
             name: parsed.name || '',
@@ -50,6 +65,8 @@ export const useJobsAdminLogic = () => {
             occupationId: parsed.occupationId || undefined,
             specialtyId: parsed.specialtyId || undefined,
           };
+          
+          return restoredFilters;
         } catch (error) {
           console.warn('Failed to parse saved jobs admin state:', error);
         }
@@ -70,13 +87,8 @@ export const useJobsAdminLogic = () => {
   };
 
   const initialFilters = getInitialFilters();
-  const [filters, setFilters] = useState<JobsAdminFilters>(() => {
-    return initialFilters;
-  });
-  const [searchInput, setSearchInput] = useState(() => {
-    const initial = initialFilters.name || '';
-    return initial;
-  });
+  const [filters, setFilters] = useState<JobsAdminFilters>(initialFilters);
+  const [searchInput, setSearchInput] = useState(initialFilters.name || '');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [selectedOccupationId, setSelectedOccupationId] = useState<number | undefined>(initialFilters.occupationId);
@@ -84,14 +96,80 @@ export const useJobsAdminLogic = () => {
     initialFilters.jobStatus ? [initialFilters.jobStatus] : []
   );
   const [isInitialized, setIsInitialized] = useState(false);
+  const [hasRestoredFromState, setHasRestoredFromState] = useState(false);
+  const [initialSearchValue, setInitialSearchValue] = useState(initialFilters.name || '');
 
   // Initialization effect - mark as initialized after component mounts
   useEffect(() => {
     setIsInitialized(true);
+    // Mark as restored if we had initial filters with data
+    const hasUrlParams = Array.from(searchParams.keys()).length > 0;
+    if (hasUrlParams || initialFilters.name || (initialFilters.page && initialFilters.page > 1)) {
+      setHasRestoredFromState(true);
+    }
+  }, [initialFilters.name, initialFilters.page, searchParams]);
+
+  // Handle incomplete URL restoration - update URL with missing parameters from localStorage
+  useEffect(() => {
+    if (!isInitialized) return;
+    
+    const hasUrlParams = Array.from(searchParams.keys()).length > 0;
+    const urlPage = searchParams.get('page');
+    
+    // If we have URL params but missing the page param, and our filters have a page > 1,
+    // this means we restored from localStorage and need to update the URL
+    if (hasUrlParams && !urlPage && filters.page && filters.page > 1) {
+      const params = new URLSearchParams(window.location.search);
+      params.set('page', filters.page.toString());
+      
+      const newURL = `?${params.toString()}`;
+      router.replace(`/admin/jobs${newURL}`, { scroll: false });
+    }
+  }, [isInitialized, searchParams, filters.page, router]);
+
+  // Restore scroll position when component mounts (only when state was restored from localStorage)
+  useEffect(() => {
+    const hasUrlParams = Array.from(searchParams.keys()).length > 0;
+    
+    if (!hasUrlParams && typeof window !== 'undefined') {
+      const savedPosition = localStorage.getItem('jobsAdmin-scroll-position');
+      if (savedPosition) {
+        const position = parseInt(savedPosition, 10);
+        setTimeout(() => {
+          window.scrollTo({ top: position, behavior: 'smooth' });
+        }, 100);
+      }
+    }
+    // Only run on mount - intentionally ignoring searchParams to avoid re-running
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Handle browser back/forward navigation
+  useEffect(() => {
+    const handlePopState = () => {
+      // Small delay to ensure the component has re-rendered with URL params
+      setTimeout(() => {
+        const hasUrlParams = Array.from(new URLSearchParams(window.location.search).keys()).length > 0;
+        
+        if (!hasUrlParams && typeof window !== 'undefined') {
+          const savedPosition = localStorage.getItem('jobsAdmin-scroll-position');
+          if (savedPosition) {
+            const position = parseInt(savedPosition, 10);
+            window.scrollTo({ top: position, behavior: 'smooth' });
+          }
+        }
+      }, 100);
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [searchParams]);
 
   // URL update effect - separate from direct calls to avoid render issues
   useEffect(() => {
+    // Don't update URL during initial mount to avoid interfering with restoration
+    if (!isInitialized) return;
+    
     const params = new URLSearchParams();
     
     if (filters.page && filters.page > 1) params.set('page', filters.page.toString());
@@ -110,18 +188,18 @@ export const useJobsAdminLogic = () => {
     if (newURL !== currentURL) {
       router.replace(`/admin/jobs${newURL}`, { scroll: false });
     }
-  }, [filters, router]);
+  }, [filters, router, isInitialized]);
 
   const saveScrollPosition = useCallback(() => {
     if (typeof window !== 'undefined') {
       const position = window.scrollY;
-      localStorage.setItem('jobs-admin-scroll-position', position.toString());
+      localStorage.setItem('jobsAdmin-scroll-position', position.toString());
     }
   }, []);
 
   const restoreScrollPosition = useCallback(() => {
     if (typeof window !== 'undefined') {
-      const savedPosition = localStorage.getItem('jobs-admin-scroll-position');
+      const savedPosition = localStorage.getItem('jobsAdmin-scroll-position');
       if (savedPosition) {
         const position = parseInt(savedPosition, 10);
         setTimeout(() => {
@@ -143,7 +221,7 @@ export const useJobsAdminLogic = () => {
         occupationId: filters.occupationId,
         specialtyId: filters.specialtyId,
       };
-      localStorage.setItem('jobs-admin-search-state', JSON.stringify(stateToSave));
+      localStorage.setItem('jobsAdmin-search-state', JSON.stringify(stateToSave));
     }
   }, [filters]);
 
@@ -222,8 +300,6 @@ export const useJobsAdminLogic = () => {
     { value: '50', label: '50 per page' },
     { value: '100', label: '100 per page' },
   ], []);  const filterChange = useMemo(() => (key: keyof JobsAdminFilters, value: any) => {
- 
-    
     startTransition(() => {
       let processedValue = value;
  
@@ -240,7 +316,8 @@ export const useJobsAdminLogic = () => {
       const newFilters = { 
         ...filters, 
         [key]: processedValue,
-        page: 1, 
+        // Only reset page to 1 for filter changes, not for page or limit changes
+        ...(key !== 'page' && key !== 'limit' && { page: 1 }),
         ...(key === 'occupationId' && { specialtyId: undefined })
       };
       setFilters(newFilters);
@@ -255,7 +332,12 @@ export const useJobsAdminLogic = () => {
     setSelectedJobStatuses(statuses);
     startTransition(() => {
       const jobStatus = statuses.length > 0 ? statuses[0] as 'Draft' | 'Published' : undefined;
-      setFilters(prev => ({ ...prev, jobStatus, page: 1 }));
+      setFilters(prev => ({ 
+        ...prev, 
+        jobStatus, 
+        // Only reset page if the status actually changed
+        ...(prev.jobStatus !== jobStatus && { page: 1 })
+      }));
     });
   }, []);
 
@@ -310,8 +392,8 @@ export const useJobsAdminLogic = () => {
     setSelectedOccupationId(undefined);
     setSelectedJobStatuses([]);
     if (typeof window !== 'undefined') {
-      localStorage.removeItem('jobs-admin-scroll-position');
-      localStorage.removeItem('jobs-admin-search-state');
+      localStorage.removeItem('jobsAdmin-scroll-position');
+      localStorage.removeItem('jobsAdmin-search-state');
     }
   }, []);
 
@@ -337,7 +419,7 @@ export const useJobsAdminLogic = () => {
         restoreScrollPosition();
       } else {
         // If no URL params, we might have restored from localStorage, so restore scroll too
-        const savedPosition = localStorage.getItem('jobs-admin-scroll-position');
+        const savedPosition = localStorage.getItem('jobsAdmin-scroll-position');
         if (savedPosition) {
           const position = parseInt(savedPosition, 10);
           setTimeout(() => {
@@ -349,29 +431,47 @@ export const useJobsAdminLogic = () => {
   }, [data, isLoading, searchParams, restoreScrollPosition]);
 
   useEffect(() => {
+    // Only save state after initialization to avoid interfering with restoration
+    if (!isInitialized) return;
+    
     if (filters.name || filters.state || filters.jobStatus || filters.datePosted || filters.occupationId || filters.specialtyId || (filters.page && filters.page > 1)) {
       saveSearchState();
     }
-  }, [filters, saveSearchState]);
+  }, [filters, saveSearchState, isInitialized]);
 
   useEffect(() => {
     // Don't trigger search during initial component mount to avoid resetting page
     if (!isInitialized) return;
     
+    // Don't trigger search if we're just restoring from state and haven't made a real change
+    if (hasRestoredFromState && searchInput === initialSearchValue) {
+      return;
+    }
+    
+    // Don't trigger if the searchInput matches what's already in filters (prevents loops)
+    if (searchInput === filters.name) {
+      return;
+    }
+    
+    // Only proceed if there's an actual change from user input
     const timeoutId = setTimeout(() => {
       startTransition(() => {
-        // Only reset to page 1 if this is a new search (different from current filters.name)
-        const shouldResetPage = searchInput !== filters.name;
         setFilters(prev => ({ 
           ...prev, 
           name: searchInput, 
-          page: shouldResetPage ? 1 : prev.page 
+          // Only reset to page 1 if the search value actually changed from previous value
+          ...(searchInput !== prev.name && { page: 1 })
         }));
+        
+        // Clear the restored flag after first real search
+        if (hasRestoredFromState) {
+          setHasRestoredFromState(false);
+        }
       });
     }, 500);
 
     return () => clearTimeout(timeoutId);
-  }, [searchInput, isInitialized, filters.name]);
+  }, [searchInput, isInitialized, filters.name, hasRestoredFromState, initialSearchValue]);
 
   return {
     filters,

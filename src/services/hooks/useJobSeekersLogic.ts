@@ -76,8 +76,16 @@ export const useJobSeekersLogic = () => {
   );
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
-  const [scrollPosition, setScrollPosition] = useState(0);
+  const [scrollPosition, setScrollPosition] = useState(0  );
   const [isInitialized, setIsInitialized] = useState(false);
+  const [hasRestoredFromState, setHasRestoredFromState] = useState(false);
+
+  useEffect(() => {
+    setIsInitialized(true);
+    if (initialFilters.search || (initialFilters.page && initialFilters.page > 1)) {
+      setHasRestoredFromState(true);
+    }
+  }, [initialFilters.search, initialFilters.page]);
 
   useEffect(() => {
     const params = new URLSearchParams();
@@ -114,7 +122,7 @@ export const useJobSeekersLogic = () => {
         }, 100);
       }
     }
-  }, []); 
+  }, [searchParams]);
 
 
   useEffect(() => {
@@ -317,23 +325,27 @@ export const useJobSeekersLogic = () => {
   }, [searchInput, filters.location, filters.occupationId, selectedStatuses.length]);
 
   useEffect(() => {
- 
     if (!isInitialized) return;
+
+    if (hasRestoredFromState && searchInput === initialFilters.search) return;
     
     const timeoutId = setTimeout(() => {
       startTransition(() => {
-      
         const shouldResetPage = searchInput !== filters.search;
         setFilters(prev => ({ 
           ...prev, 
           search: searchInput, 
           page: shouldResetPage ? 1 : prev.page 
         }));
+
+        if (hasRestoredFromState) {
+          setHasRestoredFromState(false);
+        }
       });
     }, 500);
 
     return () => clearTimeout(timeoutId);
-  }, [searchInput, isInitialized, filters.search]);
+  }, [searchInput, isInitialized, filters.search, hasRestoredFromState, initialFilters.search]);
 
   useEffect(() => {
     if (data && !isLoading) {
