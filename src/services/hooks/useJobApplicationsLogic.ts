@@ -28,7 +28,7 @@ export const useJobApplicationsLogic = () => {
     
     // If no URL parameters, try to restore from localStorage
     if (typeof window !== 'undefined') {
-      const savedState = localStorage.getItem('job-applications-search-state');
+      const savedState = localStorage.getItem('jobApplications-search-state');
       if (savedState) {
         try {
           const parsed = JSON.parse(savedState);
@@ -71,10 +71,51 @@ export const useJobApplicationsLogic = () => {
     initialFilters.status ? [initialFilters.status] : []
   );
   const [isInitialized, setIsInitialized] = useState(false);
+  const [hasRestoredFromState, setHasRestoredFromState] = useState(false);
 
   // Initialization effect - mark as initialized after component mounts
   useEffect(() => {
     setIsInitialized(true);
+    // Mark as restored if we had initial filters with data
+    if (initialFilters.name || (initialFilters.page && initialFilters.page > 1)) {
+      setHasRestoredFromState(true);
+    }
+  }, [initialFilters.name, initialFilters.page]);
+
+  // Restore scroll position when component mounts (only when state was restored from localStorage)
+  useEffect(() => {
+    const hasUrlParams = Array.from(searchParams.keys()).length > 0;
+    
+    if (!hasUrlParams && typeof window !== 'undefined') {
+      const savedPosition = localStorage.getItem('jobApplications-scroll-position');
+      if (savedPosition) {
+        const position = parseInt(savedPosition, 10);
+        setTimeout(() => {
+          window.scrollTo({ top: position, behavior: 'smooth' });
+        }, 100);
+      }
+    }
+  }, []); // Only run on mount
+
+  // Handle browser back/forward navigation
+  useEffect(() => {
+    const handlePopState = () => {
+      // Small delay to ensure the component has re-rendered with URL params
+      setTimeout(() => {
+        const hasUrlParams = Array.from(new URLSearchParams(window.location.search).keys()).length > 0;
+        
+        if (!hasUrlParams && typeof window !== 'undefined') {
+          const savedPosition = localStorage.getItem('jobApplications-scroll-position');
+          if (savedPosition) {
+            const position = parseInt(savedPosition, 10);
+            window.scrollTo({ top: position, behavior: 'smooth' });
+          }
+        }
+      }, 100);
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
   const { data, isLoading, error, refetch } = useJobApplications(filters);
@@ -104,13 +145,13 @@ export const useJobApplicationsLogic = () => {
   const saveScrollPosition = useCallback(() => {
     if (typeof window !== 'undefined') {
       const position = window.scrollY;
-      localStorage.setItem('job-applications-scroll-position', position.toString());
+      localStorage.setItem('jobApplications-scroll-position', position.toString());
     }
   }, []);
 
   const restoreScrollPosition = useCallback(() => {
     if (typeof window !== 'undefined') {
-      const savedPosition = localStorage.getItem('job-applications-scroll-position');
+      const savedPosition = localStorage.getItem('jobApplications-scroll-position');
       if (savedPosition) {
         const position = parseInt(savedPosition, 10);
         setTimeout(() => {
@@ -130,7 +171,7 @@ export const useJobApplicationsLogic = () => {
         companyName: filters.companyName,
         status: filters.status,
       };
-      localStorage.setItem('job-applications-search-state', JSON.stringify(stateToSave));
+      localStorage.setItem('jobApplications-search-state', JSON.stringify(stateToSave));
     }
   }, [filters]);
 
@@ -262,8 +303,8 @@ export const useJobApplicationsLogic = () => {
     setSearchInput('');
     setSelectedStatuses([]);
     if (typeof window !== 'undefined') {
-      localStorage.removeItem('job-applications-scroll-position');
-      localStorage.removeItem('job-applications-search-state');
+      localStorage.removeItem('jobApplications-scroll-position');
+      localStorage.removeItem('jobApplications-search-state');
     }
   }, []);
 
@@ -286,7 +327,7 @@ export const useJobApplicationsLogic = () => {
         restoreScrollPosition();
       } else {
         // If no URL params, we might have restored from localStorage, so restore scroll too
-        const savedPosition = localStorage.getItem('job-applications-scroll-position');
+        const savedPosition = localStorage.getItem('jobApplications-scroll-position');
         if (savedPosition) {
           const position = parseInt(savedPosition, 10);
           setTimeout(() => {
@@ -307,6 +348,9 @@ export const useJobApplicationsLogic = () => {
     // Don't trigger search during initial component mount to avoid resetting page
     if (!isInitialized) return;
     
+    // Don't trigger search if we're just restoring from state and haven't made a real change
+    if (hasRestoredFromState && searchInput === initialFilters.name) return;
+    
     const timeoutId = setTimeout(() => {
       startTransition(() => {
         // Only reset to page 1 if this is a new search (different from current filters.name)
@@ -316,11 +360,16 @@ export const useJobApplicationsLogic = () => {
           name: searchInput, 
           page: shouldResetPage ? 1 : prev.page 
         }));
+        
+        // Clear the restored flag after first real search
+        if (hasRestoredFromState) {
+          setHasRestoredFromState(false);
+        }
       });
     }, 500);
 
     return () => clearTimeout(timeoutId);
-  }, [searchInput, isInitialized, filters.name]);
+  }, [searchInput, isInitialized, filters.name, hasRestoredFromState, initialFilters.name]);
 
   return {
     filters,

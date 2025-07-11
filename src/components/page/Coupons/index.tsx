@@ -4,6 +4,7 @@ import { BoltIcon } from '@/icons';
 import ErrorState from '../../common/ErrorState';
 import { useCouponsLogic } from '@/services/hooks/useCouponsLogic';
 import { useCreateCoupon } from '@/services/hooks/useCoupons';
+import { usePreservedNavigation } from '@/hooks/usePreservedNavigation';
 import { CouponsProps, CreateCouponFormData } from '@/services/types/CouponsTypes';
 import {
   CouponsHeader,
@@ -14,6 +15,12 @@ import {
 } from './components';
 
 const CouponsData: React.FC<CouponsProps> = ({ className = "" }) => {
+  usePreservedNavigation({
+    statePath: 'coupons-search-state',
+    scrollPath: 'coupons-scroll-position',
+    listPagePath: '/admin/coupons'
+  });
+  
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   
   const {

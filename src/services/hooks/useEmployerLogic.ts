@@ -73,11 +73,16 @@ export const useEmployerLogic = () => {
     initialFilters.status ? [initialFilters.status] : []
   );
   const [isInitialized, setIsInitialized] = useState(false);
+  const [hasRestoredFromState, setHasRestoredFromState] = useState(false);
 
   // Initialization effect - mark as initialized after component mounts
   useEffect(() => {
     setIsInitialized(true);
-  }, []);
+    // Mark as restored if we had initial filters with data
+    if (initialFilters.name || (initialFilters.page && initialFilters.page > 1)) {
+      setHasRestoredFromState(true);
+    }
+  }, [initialFilters.name, initialFilters.page]);
 
   // Restore scroll position when component mounts (only when state was restored from localStorage)
   useEffect(() => {
@@ -318,6 +323,9 @@ export const useEmployerLogic = () => {
     // Don't trigger search during initial component mount to avoid resetting page
     if (!isInitialized) return;
     
+    // Don't trigger search if we're just restoring from state and haven't made a real change
+    if (hasRestoredFromState && searchInput === initialFilters.name) return;
+    
     const timeoutId = setTimeout(() => {
       startTransition(() => {
         // Only reset to page 1 if this is a new search (different from current filters.name)
@@ -327,11 +335,16 @@ export const useEmployerLogic = () => {
           name: searchInput, 
           page: shouldResetPage ? 1 : prev.page 
         }));
+        
+        // Clear the restored flag after first real search
+        if (hasRestoredFromState) {
+          setHasRestoredFromState(false);
+        }
       });
     }, 500);
 
     return () => clearTimeout(timeoutId);
-  }, [searchInput, isInitialized, filters.name]);
+  }, [searchInput, isInitialized, filters.name, hasRestoredFromState, initialFilters.name]);
   return {
     filters,
     searchInput,
