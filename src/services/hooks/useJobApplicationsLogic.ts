@@ -28,7 +28,6 @@ export const useJobApplicationsLogic = () => {
         status: urlStatus || '',
       };
       
-      // Check if this is fresh navigation (only page 1 or simple URL params)
       const isSimpleNavigation = 
         (!urlPage || urlPage === '1') &&
         !decodedName &&
@@ -37,7 +36,6 @@ export const useJobApplicationsLogic = () => {
         !urlStatus;
       
       if (isSimpleNavigation && typeof window !== 'undefined') {
-        // Clear localStorage for fresh navigation
         localStorage.removeItem('jobApplications-search-state');
         localStorage.removeItem('jobApplications-scroll-position');
       }
@@ -208,12 +206,11 @@ export const useJobApplicationsLogic = () => {
 
   const statusOptions = useMemo(() => [
     { value: 'New Application', label: 'New Application' },
-    { value: 'Under Review', label: 'Under Review' },
-    { value: 'Interview Scheduled', label: 'Interview Scheduled' },
-    { value: 'Offer Extended', label: 'Offer Extended' },
-    { value: 'Hired', label: 'Hired' },
-    { value: 'Rejected', label: 'Rejected' },
-    { value: 'Withdrawn', label: 'Withdrawn' },
+    { value: 'Assessment', label: 'Assessment' },
+    { value: 'Pre-Screening', label: 'Pre-Screening' },
+    { value: 'Training', label: 'Training' },
+    { value: 'Completed', label: 'Completed' },
+    { value: 'Interview', label: 'Interview' },
   ], []);
 
   const stateOptions = useMemo(() => {
@@ -331,6 +328,20 @@ export const useJobApplicationsLogic = () => {
     }
   }, []);
 
+  const clearIndividualFilter = useCallback((filterType: string) => {
+    switch (filterType) {
+      case 'location':
+        filterChange('location', '');
+        break;
+      case 'status':
+        setSelectedStatuses([]);
+        filterChange('status', '');
+        break;
+      default:
+        break;
+    }
+  }, [filterChange]);
+
   const hasActiveFilters = useMemo(() => {
     return !!(
       searchInput ||
@@ -359,7 +370,6 @@ export const useJobApplicationsLogic = () => {
   }, [data, isLoading, searchParams, restoreScrollPosition]);
 
   useEffect(() => {
-    // Check if we're on page 1 with no filters (fresh navigation)
     const isOnPageOneWithNoFilters = 
       filters.page === 1 &&
       !filters.name &&
@@ -368,7 +378,6 @@ export const useJobApplicationsLogic = () => {
       !filters.status;
     
     if (isOnPageOneWithNoFilters) {
-      // Clear localStorage when on page 1 with no filters
       if (typeof window !== 'undefined') {
         localStorage.removeItem('jobApplications-search-state');
         localStorage.removeItem('jobApplications-scroll-position');
@@ -428,6 +437,7 @@ export const useJobApplicationsLogic = () => {
     initViewResume,
     viewJobApplication,
     clearAllFilters,
+    clearIndividualFilter,
     hasActiveFilters,
     selectedStatuses,
     saveScrollPosition,

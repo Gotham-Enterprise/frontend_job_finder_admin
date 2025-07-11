@@ -30,8 +30,6 @@ export const useJobSeekersLogic = () => {
         occupationId: urlOccupationId ? parseInt(urlOccupationId, 10) : undefined,
         status: validStatus,
       };
-      
-      // Check if this is fresh navigation (only page 1 or simple URL params)
       const isSimpleNavigation = 
         (!urlPage || urlPage === '1') &&
         !decodedSearch &&
@@ -40,7 +38,6 @@ export const useJobSeekersLogic = () => {
         !validStatus;
       
       if (isSimpleNavigation && typeof window !== 'undefined') {
-        // Clear localStorage for fresh navigation
         localStorage.removeItem('jobseeker-search-state');
         localStorage.removeItem('jobseeker-scroll-position');
       }
@@ -345,6 +342,23 @@ export const useJobSeekersLogic = () => {
     }
   }, []);
 
+  const clearIndividualFilter = useCallback((filterType: string) => {
+    switch (filterType) {
+      case 'occupationId':
+        filterChange('occupationId', undefined);
+        break;
+      case 'location':
+        filterChange('location', '');
+        break;
+      case 'status':
+        setSelectedStatuses([]);
+        filterChange('status', undefined);
+        break;
+      default:
+        break;
+    }
+  }, [filterChange]);
+
   const hasActiveFilters = useMemo(() => {
     return !!(
       searchInput ||
@@ -398,7 +412,6 @@ export const useJobSeekersLogic = () => {
   }, [data, isLoading, searchParams, restoreScrollPosition]);
 
   useEffect(() => {
-    // Check if we're on page 1 with no filters (fresh navigation)
     const isOnPageOneWithNoFilters = 
       filters.page === 1 &&
       !filters.search &&
@@ -407,7 +420,6 @@ export const useJobSeekersLogic = () => {
       !filters.status;
     
     if (isOnPageOneWithNoFilters) {
-      // Clear localStorage when on page 1 with no filters
       if (typeof window !== 'undefined') {
         localStorage.removeItem('jobseeker-search-state');
         localStorage.removeItem('jobseeker-scroll-position');
@@ -450,6 +462,7 @@ export const useJobSeekersLogic = () => {
     initViewResume,
     viewJobSeeker,
     clearAllFilters,
+    clearIndividualFilter,
     hasActiveFilters,
     saveScrollPosition,
     restoreScrollPosition,

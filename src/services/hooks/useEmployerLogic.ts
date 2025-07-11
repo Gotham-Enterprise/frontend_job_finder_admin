@@ -298,6 +298,21 @@ export const useEmployerLogic = () => {
       localStorage.removeItem('employer-search-state');
     }
   }, []);
+
+  const clearIndividualFilter = useCallback((filterType: string) => {
+    switch (filterType) {
+      case 'location':
+        filterChange('location', '');
+        break;
+      case 'status':
+        setSelectedStatuses([]);
+        filterChange('status', undefined);
+        break;
+      default:
+        break;
+    }
+  }, [filterChange]);
+
   const hasActiveFilters = useMemo(() => {
     return !!(
       searchInput ||
@@ -394,6 +409,7 @@ export const useEmployerLogic = () => {
     onCreateJob,
     isCreatingJob,
     clearAllFilters,
+    clearIndividualFilter,
     hasActiveFilters,
     selectedStatuses,
     saveScrollPosition,

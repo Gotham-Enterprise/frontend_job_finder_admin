@@ -142,7 +142,7 @@ export const useJobsAdminLogic = () => {
       }
     }
   
-  }, []);
+  }, [searchParams]);
 
   useEffect(() => {
     const handlePopState = () => {
@@ -397,6 +397,42 @@ export const useJobsAdminLogic = () => {
     }
   }, []);
 
+  const clearIndividualFilter = useCallback((filterKey: keyof JobsAdminFilters) => {
+    startTransition(() => {
+      const updatedFilters = { ...filters };
+      
+      switch (filterKey) {
+        case 'name':
+          updatedFilters.name = '';
+          setSearchInput('');
+          break;
+        case 'state':
+          updatedFilters.state = '';
+          break;
+        case 'jobStatus':
+          updatedFilters.jobStatus = undefined;
+          setSelectedJobStatuses([]);
+          break;
+        case 'datePosted':
+          updatedFilters.datePosted = '';
+          break;
+        case 'occupationId':
+          updatedFilters.occupationId = undefined;
+          updatedFilters.specialtyId = undefined; 
+          setSelectedOccupationId(undefined);
+          break;
+        case 'specialtyId':
+          updatedFilters.specialtyId = undefined;
+          break;
+        default:
+          break;
+      }
+      
+      updatedFilters.page = 1;
+      setFilters(updatedFilters);
+    });
+  }, [filters]);
+
   const hasActiveFilters = useMemo(() => {
     return !!(
       searchInput ||
@@ -507,6 +543,7 @@ export const useJobsAdminLogic = () => {
     viewJobDetails,
     editJobPost,
     clearAllFilters,
+    clearIndividualFilter,
     hasActiveFilters,
     selectedJobStatuses,
     saveScrollPosition,
