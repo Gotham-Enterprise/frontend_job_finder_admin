@@ -181,7 +181,7 @@ export const useJobsAdminLogic = () => {
     
     const newURL = params.toString() ? `?${params.toString()}` : '';
     const currentURL = window.location.search;
-s
+    
     if (newURL !== currentURL) {
       router.replace(`/admin/jobs${newURL}`, { scroll: false });
     }
