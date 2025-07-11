@@ -146,15 +146,25 @@ const EmployerTable: React.FC<EmployerTableProps> = ({
                   </Badge>
                 </TableCell>
                 <TableCell className="py-4 px-6">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="whitespace-nowrap text-brand-400"
-                    startIcon={<EyeIcon />}
+                  <span 
                     onClick={() => onViewSubscription(employer.id)}
+                    className="cursor-pointer inline-block hover:opacity-80 transition-opacity"
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        onViewSubscription(employer.id);
+                      }
+                    }}
                   >
-                    {employer.currentPlan}
-                  </Button>
+                    <Badge 
+                      variant="light" 
+                      className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-700"
+                    >
+                      {employer.currentPlan}
+                    </Badge>
+                  </span>
                 </TableCell>
                 <TableCell className="py-4 px-6 text-right">
                   <div className="flex items-center gap-2">
