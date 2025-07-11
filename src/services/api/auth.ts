@@ -1,4 +1,4 @@
-import { LoginCredentials, AuthResponse, ForgotPasswordRequest, ForgotPasswordResponse, ResetPasswordRequest, ResetPasswordResponse } from '../types/auth';
+import { LoginCredentials, AuthResponse, ForgotPasswordRequest, ForgotPasswordResponse, ResetPasswordRequest, ResetPasswordResponse, ChangePasswordRequest } from '../types/auth';
 import { showToast } from '../utils/toast';
 import { apiPost, apiGet, apiPut } from './apiUtils';
 
@@ -133,6 +133,15 @@ export const authApi = {
   async resetPassword(resetToken: string, request: ResetPasswordRequest): Promise<ResetPasswordResponse> {
     try {
       const response = await apiPut<ResetPasswordResponse>(`/api/auth/reset-password/${resetToken}`, request, { includeAuth: false });
+      return response;
+    } catch (error: any) {
+      throw error;
+    }
+  },
+
+  async changePassword(request: ChangePasswordRequest): Promise<ResetPasswordResponse> {
+    try {
+      const response = await apiPut<ResetPasswordResponse>('/api/auth/change-password', request, { includeAuth: true });
       return response;
     } catch (error: any) {
       throw error;

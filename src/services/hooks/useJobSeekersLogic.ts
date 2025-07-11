@@ -80,10 +80,8 @@ export const useJobSeekersLogic = () => {
   const [isInitialized, setIsInitialized] = useState(false);
   const [hasRestoredFromState, setHasRestoredFromState] = useState(false);
 
-  // Initialization effect - mark as initialized after component mounts
   useEffect(() => {
     setIsInitialized(true);
-    // Mark as restored if we had initial filters with data
     if (initialFilters.search || (initialFilters.page && initialFilters.page > 1)) {
       setHasRestoredFromState(true);
     }
@@ -327,23 +325,19 @@ export const useJobSeekersLogic = () => {
   }, [searchInput, filters.location, filters.occupationId, selectedStatuses.length]);
 
   useEffect(() => {
-    // Don't trigger search during initial component mount to avoid resetting page
     if (!isInitialized) return;
-    
-    // Don't trigger search if we're just restoring from state and haven't made a real change
+
     if (hasRestoredFromState && searchInput === initialFilters.search) return;
     
     const timeoutId = setTimeout(() => {
       startTransition(() => {
-        // Only reset to page 1 if this is a new search (different from current filters.search)
         const shouldResetPage = searchInput !== filters.search;
         setFilters(prev => ({ 
           ...prev, 
           search: searchInput, 
           page: shouldResetPage ? 1 : prev.page 
         }));
-        
-        // Clear the restored flag after first real search
+
         if (hasRestoredFromState) {
           setHasRestoredFromState(false);
         }

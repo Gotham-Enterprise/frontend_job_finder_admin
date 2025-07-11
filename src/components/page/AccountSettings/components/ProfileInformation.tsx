@@ -3,7 +3,7 @@
 import Button from '@/components/ui/button/Button';
 import { User } from '@/services/types/auth';
 import { PencilIcon } from '@/icons';
-import { FC } from 'react';
+import { FC, useState, useEffect } from 'react';
 
 interface ProfileInformationProps {
     user: User | null;
@@ -17,7 +17,14 @@ const ProfileInformation: FC<ProfileInformationProps> = ({
     onEdit,
     userInitials,
     displayName
-}) => {    const contactInfo = [
+}) => {
+    const [isClient, setIsClient] = useState(false);
+
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
+
+    const contactInfo = [
         {
             label: 'Full Name',
             value: displayName && displayName.trim() !== '' ? displayName : 'Not available',
@@ -57,7 +64,7 @@ const ProfileInformation: FC<ProfileInformationProps> = ({
             <div className="space-y-4">                <div className="flex items-center justify-center mb-4">
                     <div className="w-20 h-20 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
                         <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                            {userInitials && userInitials.trim() !== '' ? userInitials : '?'}
+                            {isClient ? (userInitials && userInitials.trim() !== '' ? userInitials : '?') : '?'}
                         </span>
                     </div>
                 </div>
