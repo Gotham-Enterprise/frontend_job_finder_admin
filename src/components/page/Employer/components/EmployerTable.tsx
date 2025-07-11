@@ -45,7 +45,12 @@ const EmployerTable: React.FC<EmployerTableProps> = ({
             </TableRow>
           ) : (
             data.data.map((employer: any) => (
-              <TableRow key={employer.id} className="border-b border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50">
+              <TableRow 
+                key={employer.id} 
+                data-item-id={employer.id}
+                data-employer-id={employer.id}
+                className="border-b border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50"
+              >
                 <TableCell className="py-4 px-6 text-center">
                   <Checkbox
                     checked={selectedEmployerId === employer.id}

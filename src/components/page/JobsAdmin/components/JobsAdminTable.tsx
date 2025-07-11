@@ -43,7 +43,12 @@ const JobsAdminTable: React.FC<JobsAdminTableProps> = ({
             </TableRow>          
             ) : (
             data.data.map((job: any) => (
-              <TableRow key={job.id} className="border-b text-sm border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50">
+              <TableRow 
+                key={job.id} 
+                data-item-id={job.id}
+                data-job-id={job.id}
+                className="border-b text-sm border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50"
+              >
                 <TableCell className="py-4 px-6">
                   <div className="flex flex-col gap-2">
                     <p className="font-medium text-gray-900 dark:text-white">

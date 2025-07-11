@@ -11,6 +11,7 @@ export const useEmployerLogic = () => {
   const getInitialFilters = (): EmployerFilters => {
     const hasUrlParams = Array.from(searchParams.keys()).length > 0;
     
+    // If we have URL parameters, always use them (user refreshed page or came from direct link)
     if (hasUrlParams) {
       const urlPage = searchParams.get('page');
       const urlLimit = searchParams.get('limit');
@@ -27,21 +28,33 @@ export const useEmployerLogic = () => {
       };
     }
     
+    // Check if this is a preserved navigation (coming from details/back button)
     if (typeof window !== 'undefined') {
-      const savedState = localStorage.getItem('employer-search-state');
-      if (savedState) {
-        try {
-          const parsed = JSON.parse(savedState);
-          return {
-            page: Math.max(1, parsed.page || 1),
-            limit: parsed.limit || 100,
-            name: parsed.name || '',
-            location: parsed.location || '',
-            status: parsed.status || undefined,
-          };
-        } catch (error) {
-          console.warn('Failed to parse saved employer state:', error);
+      const navigationFlag = sessionStorage.getItem('employer-preserve-state');
+      
+      if (navigationFlag === 'true') {
+        // Clear the flag after use
+        sessionStorage.removeItem('employer-preserve-state');
+        
+        const savedState = localStorage.getItem('employer-search-state');
+        if (savedState) {
+          try {
+            const parsed = JSON.parse(savedState);
+            return {
+              page: Math.max(1, parsed.page || 1),
+              limit: parsed.limit || 100,
+              name: parsed.name || '',
+              location: parsed.location || '',
+              status: parsed.status || undefined,
+            };
+          } catch (error) {
+            console.warn('Failed to parse saved employer state:', error);
+          }
         }
+      } else {
+        // Fresh navigation - clear localStorage and start clean
+        localStorage.removeItem('employer-search-state');
+        localStorage.removeItem('employer-scroll-position');
       }
     }
     
@@ -239,6 +252,13 @@ export const useEmployerLogic = () => {
     saveScrollPosition();
     saveSearchState();
     
+    // Set flag to preserve state when returning
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('employer-preserve-state', 'true');
+      // Save the specific item ID for auto-scroll
+      sessionStorage.setItem('employer-selected-item', employerId);
+    }
+    
     router.push(`/admin/employers/details/${employerId}`);
   }, [router, saveScrollPosition, saveSearchState]);
   const viewSubscription = (employerId: string) => {
@@ -289,13 +309,13 @@ export const useEmployerLogic = () => {
       if (hasUrlParams) {
         restoreScrollPosition();
       } else {
-        const savedPosition = localStorage.getItem('employer-scroll-position');
-        if (savedPosition) {
-          const position = parseInt(savedPosition, 10);
-          setTimeout(() => {
-            window.scrollTo({ top: position, behavior: 'smooth' });
-          }, 100);
-        }
+        // Import and use the auto-scroll utility
+        import('@/services/utils/autoScroll').then(({ restoreScrollWithItemHighlight }) => {
+          restoreScrollWithItemHighlight(
+            'employer-selected-item',
+            'employer-scroll-position'
+          );
+        });
       }
     }
   }, [data, isLoading, searchParams, restoreScrollPosition]);

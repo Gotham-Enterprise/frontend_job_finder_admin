@@ -14,6 +14,9 @@ const useGoBack = (options: UseGoBackOptions = {}) => {
 
   const goBack = () => {
     if (preserveJobSeekersState && typeof window !== 'undefined') {
+      // Set preservation flag
+      sessionStorage.setItem('jobseeker-preserve-state', 'true');
+      
       const savedState = localStorage.getItem('jobseeker-search-state');
       if (savedState) {
         try {
@@ -40,6 +43,9 @@ const useGoBack = (options: UseGoBackOptions = {}) => {
     }
 
     if (preserveEmployersState && typeof window !== 'undefined') {
+      // Set preservation flag
+      sessionStorage.setItem('employer-preserve-state', 'true');
+      
       const savedState = localStorage.getItem('employerListState');
       if (savedState) {
         try {
@@ -66,6 +72,9 @@ const useGoBack = (options: UseGoBackOptions = {}) => {
     }
 
     if (preserveApplicationsState && typeof window !== 'undefined') {
+      // Set preservation flag
+      sessionStorage.setItem('jobApplications-preserve-state', 'true');
+      
       const savedState = localStorage.getItem('jobApplicationsListState');
       if (savedState) {
         try {
@@ -93,6 +102,9 @@ const useGoBack = (options: UseGoBackOptions = {}) => {
     }
 
     if (preserveJobsState && typeof window !== 'undefined') {
+
+      sessionStorage.setItem('jobsAdmin-preserve-state', 'true');
+      
       const savedState = localStorage.getItem('jobsAdminListState');
       if (savedState) {
         try {

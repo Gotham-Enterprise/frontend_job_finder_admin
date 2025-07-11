@@ -169,6 +169,18 @@ export default function BackToListButton({
         if (onClick) {
             onClick();
         } else if (preserveState && (href === '/admin/job-seekers' || href === '/admin/employers' || href === '/admin/applications' || href === '/admin/jobs')) {
+            // Set preservation flags when navigating back
+            if (typeof window !== 'undefined') {
+                if (href === '/admin/job-seekers') {
+                    sessionStorage.setItem('jobseeker-preserve-state', 'true');
+                } else if (href === '/admin/employers') {
+                    sessionStorage.setItem('employer-preserve-state', 'true');
+                } else if (href === '/admin/applications') {
+                    sessionStorage.setItem('jobApplications-preserve-state', 'true');
+                } else if (href === '/admin/jobs') {
+                    sessionStorage.setItem('jobsAdmin-preserve-state', 'true');
+                }
+            }
             goBackWithState();
         } else {
             router.back();
