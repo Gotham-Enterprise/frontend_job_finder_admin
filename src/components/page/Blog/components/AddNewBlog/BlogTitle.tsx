@@ -3,6 +3,10 @@ import React, { useState, useEffect, useCallback, useRef, useMemo } from "react"
 import Input from "@/components/form/input/InputField";
 import { generateSlug, sanitizePermalink } from "@/services/utils";
 import { Modal } from "@/components/ui/modal";
+import ImageUploadWithResize from "@/components/ui/ImageUploadWithResize";
+import { ProcessedImage } from "@/services/utils/imageResizer";
+import VisualLayoutBuilder from "@/components/page/Blog/components/VisualLayoutBuilder/VisualLayoutBuilder";
+import { BlogLayout } from "@/services/types/visualLayoutTypes";
 
 interface BlogTitleProps {
   title: string;
@@ -10,6 +14,9 @@ interface BlogTitleProps {
   onChange: (title: string) => void;
   onPermalinkChange: (permalink: string) => void;
   onImageUpload?: (file: File) => void;
+  onProcessedImageUpload?: (processedImage: ProcessedImage) => void;
+  onLayoutChange?: (layout: BlogLayout) => void;
+  onBlogSave?: (payload: any) => void;
 }
 
 const BlogTitle: React.FC<BlogTitleProps> = ({ 
@@ -17,12 +24,17 @@ const BlogTitle: React.FC<BlogTitleProps> = ({
   permalink, 
   onChange, 
   onPermalinkChange,
-  onImageUpload
+  onImageUpload,
+  onProcessedImageUpload,
+  onLayoutChange,
+  onBlogSave
 }) => {
   const [isPermalinkManuallyEdited, setIsPermalinkManuallyEdited] = useState(false);
   const [permalinkInput, setPermalinkInput] = useState(permalink);
   const [origin, setOrigin] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isResizeModalOpen, setIsResizeModalOpen] = useState(false);
+  const [isLayoutBuilderOpen, setIsLayoutBuilderOpen] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -103,6 +115,14 @@ const BlogTitle: React.FC<BlogTitleProps> = ({
     }
   }, [onImageUpload]);
 
+  // Handle processed image from resize modal
+  const handleProcessedImageSelect = useCallback((processedImage: ProcessedImage) => {
+    setSelectedImage(processedImage.file);
+    setPreviewUrl(processedImage.dataUrl);
+    onProcessedImageUpload?.(processedImage);
+    setIsResizeModalOpen(false);
+  }, [onProcessedImageUpload]);
+
   const onDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     setIsDragOver(false);
@@ -141,6 +161,24 @@ const BlogTitle: React.FC<BlogTitleProps> = ({
     setIsModalOpen(false);
   }, []);
 
+  const openLayoutBuilder = useCallback(() => {
+    setIsLayoutBuilderOpen(true);
+  }, []);
+
+  const closeLayoutBuilder = useCallback(() => {
+    setIsLayoutBuilderOpen(false);
+  }, []);
+
+  const saveLayoutFromBuilder = useCallback((layout: BlogLayout) => {
+    onLayoutChange?.(layout);
+    setIsLayoutBuilderOpen(false);
+  }, [onLayoutChange]);
+
+  const saveBlogFromBuilder = useCallback((payload: any) => {
+    onBlogSave?.(payload);
+    console.log('Blog payload from layout builder:', payload);
+  }, [onBlogSave]);
+
   const removeImage = useCallback(() => {
     setSelectedImage(null);
     if (previewUrl) {
@@ -173,15 +211,50 @@ const BlogTitle: React.FC<BlogTitleProps> = ({
       {/* Image Upload Section */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
+          <div className="flex gap-2">
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="px-4 flex flex-row gap-2 py-2 text-sm font-medium text-white bg-primary rounded-lg hover:bg-bg-primary focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition-colors"
+            >
+              <svg className="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path fillRule="evenodd" d="M13 10a1 1 0 0 1 1-1h.01a1 1 0 1 1 0 2H14a1 1 0 0 1-1-1Z" clipRule="evenodd"></path><path fillRule="evenodd" d="M2 6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v12c0 .556-.227 1.06-.593 1.422A.999.999 0 0 1 20.5 20H4a2.002 2.002 0 0 1-2-2V6Zm6.892 12 3.833-5.356-3.99-4.322a1 1 0 0 0-1.549.097L4 12.879V6h16v9.95l-3.257-3.619a1 1 0 0 0-1.557.088L11.2 18H8.892Z" clipRule="evenodd"></path></svg>
+              Quick Upload
+            </button>
+            
+            <button
+              onClick={() => setIsResizeModalOpen(true)}
+              className="px-4 flex flex-row gap-2 py-2 text-sm font-medium text-blue-600 border border-blue-600 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition-colors"
+            >
+              <svg className="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path fillRule="evenodd" d="M13 10a1 1 0 0 1 1-1h.01a1 1 0 1 1 0 2H14a1 1 0 0 1-1-1Z" clipRule="evenodd"></path><path fillRule="evenodd" d="M2 6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v12c0 .556-.227 1.06-.593 1.422A.999.999 0 0 1 20.5 20H4a2.002 2.002 0 0 1-2-2V6Zm6.892 12 3.833-5.356-3.99-4.322a1 1 0 0 0-1.549.097L4 12.879V6h16v9.95l-3.257-3.619a1 1 0 0 0-1.557.088L11.2 18H8.892Z" clipRule="evenodd"></path></svg>
+              Upload & Resize
+            </button>
+          </div>
+          
           <button
-            onClick={() => setIsModalOpen(true)}
-            className="px-4 flex flex-row gap-2 py-2 text-sm font-medium text-white bg-primary rounded-lg hover:bg-bg-primary focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition-colors"
+            onClick={() => setIsLayoutBuilderOpen(true)}
+            className="px-4 flex flex-row gap-2 py-2 text-sm font-medium text-purple-600 border border-purple-600 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/20 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition-colors"
           >
-            <svg className="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M13 10a1 1 0 0 1 1-1h.01a1 1 0 1 1 0 2H14a1 1 0 0 1-1-1Z" clip-rule="evenodd"></path><path fill-rule="evenodd" d="M2 6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v12c0 .556-.227 1.06-.593 1.422A.999.999 0 0 1 20.5 20H4a2.002 2.002 0 0 1-2-2V6Zm6.892 12 3.833-5.356-3.99-4.322a1 1 0 0 0-1.549.097L4 12.879V6h16v9.95l-3.257-3.619a1 1 0 0 0-1.557.088L11.2 18H8.892Z" clip-rule="evenodd"></path></svg>
-            Add Media
+            <svg className="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+              <path fillRule="evenodd" d="M4.857 3A1.857 1.857 0 0 0 3 4.857v4.286C3 10.169 3.831 11 4.857 11h4.286A1.857 1.857 0 0 0 11 9.143V4.857A1.857 1.857 0 0 0 9.143 3H4.857Zm10 0A1.857 1.857 0 0 0 13 4.857v4.286c0 1.026.831 1.857 1.857 1.857h4.286A1.857 1.857 0 0 0 21 9.143V4.857A1.857 1.857 0 0 0 19.143 3h-4.286Zm-10 10A1.857 1.857 0 0 0 3 14.857v4.286C3 20.169 3.831 21 4.857 21h4.286A1.857 1.857 0 0 0 11 19.143v-4.286A1.857 1.857 0 0 0 9.143 13H4.857Zm10 0A1.857 1.857 0 0 0 13 14.857v4.286c0 1.026.831 1.857 1.857 1.857h4.286A1.857 1.857 0 0 0 21 19.143v-4.286A1.857 1.857 0 0 0 19.143 13h-4.286Z" clipRule="evenodd"/>
+            </svg>
+            Layout Builder
           </button>
         </div>
-      
+
+        {previewUrl && (
+          <div className="relative inline-block">
+            <img
+              src={previewUrl}
+              alt="Selected"
+              className="max-w-full h-32 object-cover rounded-lg border border-gray-200 dark:border-gray-600"
+            />
+            <button
+              onClick={removeImage}
+              className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
+            >
+              ×
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Image Upload Modal */}
@@ -242,6 +315,48 @@ const BlogTitle: React.FC<BlogTitleProps> = ({
             >
               Cancel
             </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Image Resize Modal */}
+      <Modal isOpen={isResizeModalOpen} onClose={() => setIsResizeModalOpen(false)} isFullscreen={true}>
+        <div className="h-full">
+          <ImageUploadWithResize
+            isOpen={isResizeModalOpen}
+            onImageSelect={handleProcessedImageSelect}
+            onClose={() => setIsResizeModalOpen(false)}
+          />
+        </div>
+      </Modal>
+
+      {/* Visual Layout Builder Modal */}
+      <Modal isOpen={isLayoutBuilderOpen} onClose={closeLayoutBuilder} isFullscreen={true}>
+        <div className="h-full bg-gray-50 dark:bg-gray-900">
+          <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+              Visual Layout Builder
+            </h2>
+            <button
+              onClick={closeLayoutBuilder}
+              className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          
+          <div className="h-[calc(100vh-80px)]">
+            <VisualLayoutBuilder
+              onLayoutChange={saveLayoutFromBuilder}
+              onSave={saveBlogFromBuilder}
+              blogData={{
+                title,
+                permalink,
+                // Add any other blog data you want to pass
+              }}
+            />
           </div>
         </div>
       </Modal>

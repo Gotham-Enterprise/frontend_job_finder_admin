@@ -21,6 +21,8 @@ import {
   ChevronDownIcon 
 } from "../../../icons";
 import "../../../styles/editor.css";
+import ImageUploadWithResize from "../../ui/ImageUploadWithResize";
+import { ProcessedImage } from "../../../services/utils/imageResizer";
 
 const ToolbarButton: React.FC<{
   onClick: () => void;
@@ -174,6 +176,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
 }) => {
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [showImageUpload, setShowImageUpload] = useState(false);
+  const [showImageResizeModal, setShowImageResizeModal] = useState(false);
   const [showFormatDropdown, setShowFormatDropdown] = useState(false);
   const [showListDropdown, setShowListDropdown] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -248,6 +251,16 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
       }
     };
     reader.readAsDataURL(file);
+  }, [editor]);
+
+  // Handle processed image from resize modal
+  const handleProcessedImageSelect = useCallback((processedImage: ProcessedImage) => {
+    if (editor) {
+      editor.chain().focus().setImage({ 
+        src: processedImage.dataUrl,
+        alt: processedImage.file.name 
+      }).run();
+    }
   }, [editor]);
 
   // Expose the imageUpload function to parent components
@@ -590,12 +603,23 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
               <LinkIcon className="w-5 h-5" />           
                </ToolbarButton>
             {!hideImageButton && (
-              <ToolbarButton
-                onClick={() => setShowImageUpload(!showImageUpload)}
-                title="Add Image"
-              >
-                <ImageIcon className="w-5 h-5" />
-              </ToolbarButton>
+              <>
+                <ToolbarButton
+                  onClick={() => setShowImageUpload(!showImageUpload)}
+                  title="Quick Image Upload"
+                >
+                  <ImageIcon className="w-5 h-5" />
+                </ToolbarButton>
+                <ToolbarButton
+                  onClick={() => setShowImageResizeModal(true)}
+                  title="Upload & Resize Image"
+                >
+                  <div className="flex items-center gap-1">
+                    <ImageIcon className="w-4 h-4" />
+                    <span className="text-xs">📐</span>
+                  </div>
+                </ToolbarButton>
+              </>
             )}
           </div>
 
@@ -711,6 +735,14 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
           </div>
         )}
       </div>
+
+      {/* Image Upload with Resize Modal */}
+      <ImageUploadWithResize
+        isOpen={showImageResizeModal}
+        onClose={() => setShowImageResizeModal(false)}
+        onImageSelect={handleProcessedImageSelect}
+        title="Upload and Resize Image for Blog"
+      />
     </div>
   );
 };

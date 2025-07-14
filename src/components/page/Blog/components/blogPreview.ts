@@ -336,7 +336,7 @@ export const openBlogPreview = (
         </style>
       </head>
       <body class="bg-gray-50 dark:bg-gray-900">
-        <div class="max-w-4xl mx-auto p-6">
+        <div class="mx-auto p-6">
           <div class="mb-6">
             <span class="inline-block px-3 py-1 text-xs font-medium text-blue-600 bg-blue-100 rounded-full dark:bg-blue-900 dark:text-blue-300 mb-3">
               Preview Mode

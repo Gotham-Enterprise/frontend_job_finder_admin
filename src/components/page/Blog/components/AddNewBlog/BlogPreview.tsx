@@ -29,7 +29,7 @@ const BlogPreview: React.FC<BlogPreviewProps> = ({
   const tagNames = getTagNames(blogPost.tags);
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
+    <div className="mx-auto p-6">
       <div className="mb-6">
         <span className="inline-block px-3 py-1 text-xs font-medium text-blue-600 bg-blue-100 rounded-full dark:bg-blue-900 dark:text-blue-300 mb-3">
           Preview Mode
