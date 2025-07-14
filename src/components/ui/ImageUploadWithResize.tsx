@@ -40,7 +40,6 @@ const ImageUploadWithResize: React.FC<ImageUploadWithResizeProps> = ({
   });
   const [useCustomResize, setUseCustomResize] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = useCallback(async (file: File) => {
     setError(null);
@@ -78,13 +77,6 @@ const ImageUploadWithResize: React.FC<ImageUploadWithResizeProps> = ({
       setIsProcessing(false);
     }
   }, []);
-
-  const handleFileInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      handleFileSelect(file);
-    }
-  }, [handleFileSelect]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -178,36 +170,25 @@ const ImageUploadWithResize: React.FC<ImageUploadWithResizeProps> = ({
         )}
 
         {!selectedFile ? (
-          // File Upload Area
+          // File Upload Area - Simplified for drop only
           <div
             onDrop={handleDrop}
             onDragOver={handleDragOver}
-            className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8 text-center cursor-pointer hover:border-blue-400 transition-colors"
-            onClick={() => fileInputRef.current?.click()}
+            className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8 text-center transition-colors"
           >
             <div className="space-y-4">
               <div className="mx-auto h-12 w-12 text-gray-400">
                 <ImageIcon />
               </div>
               <div>
-                <p className="text-lg font-medium text-gray-700 dark:text-gray-300">
-                  Upload an image
-                </p>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Drag and drop or click to select
+                  Drop files here
                 </p>
               </div>
               <p className="text-xs text-gray-400">
                 Supports JPEG, PNG, WebP, GIF up to 10MB
               </p>
             </div>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleFileInputChange}
-              className="hidden"
-            />
           </div>
         ) : (
           // Image Processing Area
@@ -404,7 +385,7 @@ const ImageUploadWithResize: React.FC<ImageUploadWithResizeProps> = ({
                 onClick={() => setSelectedFile(null)}
                 className="text-gray-600 dark:text-gray-400"
               >
-                Choose Different Image
+                Drop Different Image
               </Button>
               <div className="flex gap-3">
                 <Button

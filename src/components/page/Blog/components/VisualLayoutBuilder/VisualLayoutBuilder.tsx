@@ -178,18 +178,16 @@ const BlockRenderer: React.FC<BlockRenderProps> = ({
                 alt={imageContent.alt || 'Image'}
                 className="w-full h-auto rounded"
                 style={{ aspectRatio: imageContent.aspectRatio }}
-                onClick={() => onImageUpload(block.id)}
               />
             ) : (
               <div 
-                className="w-full h-48 bg-gray-200 dark:bg-gray-700 rounded flex items-center justify-center text-gray-500 dark:text-gray-400 cursor-pointer hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-                onClick={() => onImageUpload(block.id)}
+                className="w-full h-48 bg-gray-200 dark:bg-gray-700 rounded flex items-center justify-center text-gray-500 dark:text-gray-400"
               >
                 <div className="text-center">
                   <svg className="w-12 h-12 mx-auto mb-2" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
                   </svg>
-                  <p>Click to add image</p>
+                  <p>Image placeholder</p>
                 </div>
               </div>
             )}
@@ -612,7 +610,7 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
     onUpdate: (blockId: string, content: any) => void;
     onStyleUpdate: (blockId: string, styles: any) => void;
   }> = ({ block, isVisible, onClose, onUpdate, onStyleUpdate }) => {
-    const [activeTab, setActiveTab] = useState<'style' | 'settings' | 'interactions'>('style');
+    const [activeTab, setActiveTab] = useState<'style' | 'settings'>('style');
     const [expandedSections, setExpandedSections] = useState<{[key: string]: boolean}>({
       typography: true,
       spacing: false,
@@ -1299,16 +1297,6 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
             >
               Settings
             </button>
-            <button
-              onClick={() => setActiveTab('interactions')}
-              className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
-                activeTab === 'interactions'
-                  ? 'text-white border-b-2 border-blue-500 bg-gray-700'
-                  : 'text-gray-400 hover:text-gray-300'
-              }`}
-            >
-              Interactions
-            </button>
           </div>
 
           {/* Panel Content */}
@@ -1317,14 +1305,6 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
             {activeTab === 'settings' && (
               <div className="p-4">
                 {renderContentControls()}
-              </div>
-            )}
-            {activeTab === 'interactions' && (
-              <div className="p-4">
-                <div className="text-center text-gray-500 text-sm">
-                  <div className="text-2xl mb-2">⚡</div>
-                  <p>Interactions coming soon</p>
-                </div>
               </div>
             )}
           </div>
