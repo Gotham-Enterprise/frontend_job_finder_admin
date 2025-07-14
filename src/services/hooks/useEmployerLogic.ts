@@ -10,7 +10,7 @@ export const useEmployerLogic = () => {
 
   const getInitialFilters = (): EmployerFilters => {
     const hasUrlParams = Array.from(searchParams.keys()).length > 0;
-    
+
     if (hasUrlParams) {
       const urlPage = searchParams.get('page');
       const urlLimit = searchParams.get('limit');
@@ -18,30 +18,52 @@ export const useEmployerLogic = () => {
       const urlLocation = searchParams.get('location');
       const urlStatus = searchParams.get('status');
       
-      return {
+      const urlFilters = {
         page: Math.max(1, parseInt(urlPage || '1', 10)),
         limit: parseInt(urlLimit || '100', 10),
         name: urlName || '',
         location: urlLocation || '',
         status: urlStatus || undefined,
       };
+      
+      const isSimpleNavigation = 
+        (!urlPage || urlPage === '1') &&
+        !urlName &&
+        !urlLocation &&
+        !urlStatus;
+      
+      if (isSimpleNavigation && typeof window !== 'undefined') {
+        localStorage.removeItem('employer-search-state');
+        localStorage.removeItem('employer-scroll-position');
+      }
+      
+      return urlFilters;
     }
-    
+
     if (typeof window !== 'undefined') {
-      const savedState = localStorage.getItem('employer-search-state');
-      if (savedState) {
-        try {
-          const parsed = JSON.parse(savedState);
-          return {
-            page: Math.max(1, parsed.page || 1),
-            limit: parsed.limit || 100,
-            name: parsed.name || '',
-            location: parsed.location || '',
-            status: parsed.status || undefined,
-          };
-        } catch (error) {
-          console.warn('Failed to parse saved employer state:', error);
+      const navigationFlag = sessionStorage.getItem('employer-preserve-state');
+      
+      if (navigationFlag === 'true') {
+        sessionStorage.removeItem('employer-preserve-state');
+        
+        const savedState = localStorage.getItem('employer-search-state');
+        if (savedState) {
+          try {
+            const parsed = JSON.parse(savedState);
+            return {
+              page: Math.max(1, parsed.page || 1),
+              limit: parsed.limit || 100,
+              name: parsed.name || '',
+              location: parsed.location || '',
+              status: parsed.status || undefined,
+            };
+          } catch (error) {
+            console.warn('Failed to parse saved employer state:', error);
+          }
         }
+      } else {
+        localStorage.removeItem('employer-search-state');
+        localStorage.removeItem('employer-scroll-position');
       }
     }
     
@@ -238,6 +260,10 @@ export const useEmployerLogic = () => {
   const viewEmployer = useCallback((employerId: string) => {
     saveScrollPosition();
     saveSearchState();
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('employer-preserve-state', 'true');
+      sessionStorage.setItem('employer-selected-item', employerId);
+    }
     
     router.push(`/admin/employers/details/${employerId}`);
   }, [router, saveScrollPosition, saveSearchState]);
@@ -272,6 +298,21 @@ export const useEmployerLogic = () => {
       localStorage.removeItem('employer-search-state');
     }
   }, []);
+
+  const clearIndividualFilter = useCallback((filterType: string) => {
+    switch (filterType) {
+      case 'location':
+        filterChange('location', '');
+        break;
+      case 'status':
+        setSelectedStatuses([]);
+        filterChange('status', undefined);
+        break;
+      default:
+        break;
+    }
+  }, [filterChange]);
+
   const hasActiveFilters = useMemo(() => {
     return !!(
       searchInput ||
@@ -289,19 +330,29 @@ export const useEmployerLogic = () => {
       if (hasUrlParams) {
         restoreScrollPosition();
       } else {
-        const savedPosition = localStorage.getItem('employer-scroll-position');
-        if (savedPosition) {
-          const position = parseInt(savedPosition, 10);
-          setTimeout(() => {
-            window.scrollTo({ top: position, behavior: 'smooth' });
-          }, 100);
-        }
+        import('@/services/utils/autoScroll').then(({ restoreScrollWithItemHighlight }) => {
+          restoreScrollWithItemHighlight(
+            'employer-selected-item',
+            'employer-scroll-position'
+          );
+        });
       }
     }
   }, [data, isLoading, searchParams, restoreScrollPosition]);
 
   useEffect(() => {
-    if (filters.name || filters.location || filters.status || (filters.page && filters.page > 1)) {
+    const isOnPageOneWithNoFilters = 
+      filters.page === 1 &&
+      !filters.name &&
+      !filters.location &&
+      !filters.status;
+    
+    if (isOnPageOneWithNoFilters) {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('employer-search-state');
+        localStorage.removeItem('employer-scroll-position');
+      }
+    } else if (filters.name || filters.location || filters.status || (filters.page && filters.page > 1)) {
       saveSearchState();
     }
   }, [filters, saveSearchState]);
@@ -358,6 +409,7 @@ export const useEmployerLogic = () => {
     onCreateJob,
     isCreatingJob,
     clearAllFilters,
+    clearIndividualFilter,
     hasActiveFilters,
     selectedStatuses,
     saveScrollPosition,

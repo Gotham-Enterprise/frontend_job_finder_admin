@@ -26,6 +26,7 @@ export interface JobSeekersFiltersProps {
   selectedStatuses: string[];
   onStatusToggleChange: (statuses: string[]) => void;
   hasActiveFilters: boolean;
+  clearIndividualFilter: (filterType: string) => void;
 }
 
 export interface JobSeekersTableProps {

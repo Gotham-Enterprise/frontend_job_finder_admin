@@ -19,6 +19,7 @@ export interface JobsAdminHeaderProps {
 export interface JobsAdminFiltersProps {
   filters: JobsAdminFilters;
   onFilterChange: (key: keyof JobsAdminFilters, value: any) => void;
+  onClearIndividualFilter: (key: keyof JobsAdminFilters) => void;
   occupationOptions: Array<{ value: string; label: string }>;
   specialtyOptions: Array<{ value: string; label: string }>;
   stateOptions: Array<{ value: string; label: string }>;

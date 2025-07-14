@@ -47,6 +47,7 @@ const JobsAdmin: React.FC<JobsAdminProps> = ({ className = "" }) => {
     viewJobDetails,
     editJobPost,
     clearAllFilters,
+    clearIndividualFilter,
     hasActiveFilters,
     selectedJobStatuses,
   } = useJobsAdminLogic();
@@ -79,6 +80,7 @@ const JobsAdmin: React.FC<JobsAdminProps> = ({ className = "" }) => {
           <JobsAdminFilters
             filters={filters}
             onFilterChange={filterChange}
+            onClearIndividualFilter={clearIndividualFilter}
             occupationOptions={occupationOptions}
             specialtyOptions={specialtyOptions}
             stateOptions={stateOptions}

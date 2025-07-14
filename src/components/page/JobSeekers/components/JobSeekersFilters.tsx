@@ -13,14 +13,25 @@ const JobSeekersFilters: React.FC<JobSeekersFiltersProps> = ({
   selectedStatuses,
   onStatusToggleChange,
   hasActiveFilters,
+  clearIndividualFilter,
 }) => {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 gap-6">
         <div className="space-y-2">
-          <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-            Occupation
-          </Label>
+          <div className="flex items-center justify-between">
+            <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              Occupation
+            </Label>
+            {filters.occupationId && (
+              <button
+                onClick={() => clearIndividualFilter('occupationId')}
+                className="text-xs text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100 font-medium cursor-pointer hover:underline"
+              >
+                Clear
+              </button>
+            )}
+          </div>
           <SearchableSelect
             value={filters.occupationId?.toString() || ''}
             onChange={(value: string) => onFilterChange('occupationId', value === '' ? undefined : parseInt(value))}
@@ -31,9 +42,19 @@ const JobSeekersFilters: React.FC<JobSeekersFiltersProps> = ({
           />
         </div>
         <div className="space-y-2">
-          <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-            State
-          </Label>
+          <div className="flex items-center justify-between">
+            <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              State
+            </Label>
+            {filters.location && (
+              <button
+                onClick={() => clearIndividualFilter('location')}
+                className="text-xs text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100 font-medium cursor-pointer hover:underline"
+              >
+                Clear
+              </button>
+            )}
+          </div>
           <SearchableSelect
             value={filters.location || ''}
             onChange={(value: string) => onFilterChange('location', value)}
@@ -44,9 +65,19 @@ const JobSeekersFilters: React.FC<JobSeekersFiltersProps> = ({
           />
         </div>
         <div className="space-y-2">
-          <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-            Status
-          </Label>
+          <div className="flex items-center justify-between">
+            <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              Status
+            </Label>
+            {selectedStatuses.length > 0 && (
+              <button
+                onClick={() => clearIndividualFilter('status')}
+                className="text-xs text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100 font-medium cursor-pointer hover:underline"
+              >
+                Clear
+              </button>
+            )}
+          </div>
           <StatusToggleFilter
             selectedStatuses={selectedStatuses}
             onChange={onStatusToggleChange}

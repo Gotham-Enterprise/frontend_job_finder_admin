@@ -105,7 +105,12 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
             </TableRow>
           ) : (
             data.data.map((jobSeeker: any) => (
-              <TableRow key={jobSeeker.id} className="border-b text-sm border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50">
+              <TableRow 
+                key={jobSeeker.id} 
+                data-item-id={jobSeeker.id}
+                data-jobseeker-id={jobSeeker.id}
+                className="border-b text-sm border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50"
+              >
                 <TableCell className="py-4 px-6">
                   <div className="flex items-center gap-3">
                     <Avatar

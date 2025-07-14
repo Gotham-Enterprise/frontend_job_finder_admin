@@ -11,7 +11,6 @@ export const useJobSeekersLogic = () => {
 
   const getInitialFilters = (): JobSeekerFilters => {
     const hasUrlParams = Array.from(searchParams.keys()).length > 0;
-    
     if (hasUrlParams) {
       const searchParam = searchParams.get('search') || '';
       const decodedSearch = searchParam ? decodeURIComponent(searchParam) : '';
@@ -19,36 +18,59 @@ export const useJobSeekersLogic = () => {
       const validStatus = statusParam && ['active', 'inactive', 'pending', 'suspended'].includes(statusParam) 
         ? statusParam as 'active' | 'inactive' | 'pending' | 'suspended' 
         : undefined;
+      const urlPage = searchParams.get('page');
+      const urlLocation = searchParams.get('location');
+      const urlOccupationId = searchParams.get('occupationId');
       
       const urlFilters = {
-        page: Math.max(1, parseInt(searchParams.get('page') || '1', 10)),
+        page: Math.max(1, parseInt(urlPage || '1', 10)),
         limit: parseInt(searchParams.get('limit') || '100', 10),
         search: decodedSearch,
-        location: searchParams.get('location') || '',
-        occupationId: searchParams.get('occupationId') ? parseInt(searchParams.get('occupationId')!, 10) : undefined,
+        location: urlLocation || '',
+        occupationId: urlOccupationId ? parseInt(urlOccupationId, 10) : undefined,
         status: validStatus,
       };
+      const isSimpleNavigation = 
+        (!urlPage || urlPage === '1') &&
+        !decodedSearch &&
+        !urlLocation &&
+        !urlOccupationId &&
+        !validStatus;
+      
+      if (isSimpleNavigation && typeof window !== 'undefined') {
+        localStorage.removeItem('jobseeker-search-state');
+        localStorage.removeItem('jobseeker-scroll-position');
+      }
       
       return urlFilters;
     }
-    
+
     if (typeof window !== 'undefined') {
-      const savedState = localStorage.getItem('jobseeker-search-state');
-      if (savedState) {
-        try {
-          const parsed = JSON.parse(savedState);
-          const restoredFilters = {
-            page: Math.max(1, parsed.page || 1),
-            limit: parsed.limit || 100,
-            search: parsed.search || '',
-            location: parsed.location || '',
-            occupationId: parsed.occupationId || undefined,
-            status: parsed.status || undefined,
-          };
-          return restoredFilters;
-        } catch (error) {
-          console.warn('Failed to parse saved job seeker state:', error);
+      const navigationFlag = sessionStorage.getItem('jobseeker-preserve-state');
+      
+      if (navigationFlag === 'true') {
+        sessionStorage.removeItem('jobseeker-preserve-state');
+        
+        const savedState = localStorage.getItem('jobseeker-search-state');
+        if (savedState) {
+          try {
+            const parsed = JSON.parse(savedState);
+            const restoredFilters = {
+              page: Math.max(1, parsed.page || 1),
+              limit: parsed.limit || 100,
+              search: parsed.search || '',
+              location: parsed.location || '',
+              occupationId: parsed.occupationId || undefined,
+              status: parsed.status || undefined,
+            };
+            return restoredFilters;
+          } catch (error) {
+            console.warn('Failed to parse saved job seeker state:', error);
+          }
         }
+      } else {
+        localStorage.removeItem('jobseeker-search-state');
+        localStorage.removeItem('jobseeker-scroll-position');
       }
     }
     
@@ -293,6 +315,11 @@ export const useJobSeekersLogic = () => {
     
     saveScrollPosition();
     saveSearchState();
+
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('jobseeker-preserve-state', 'true');
+      sessionStorage.setItem('jobseeker-selected-item', jobSeekerId);
+    }
     
     router.push(`/admin/job-seekers/details/${jobSeekerId}`);
   }, [router, saveScrollPosition, saveSearchState]);
@@ -314,6 +341,23 @@ export const useJobSeekersLogic = () => {
       localStorage.removeItem('jobseeker-search-state');
     }
   }, []);
+
+  const clearIndividualFilter = useCallback((filterType: string) => {
+    switch (filterType) {
+      case 'occupationId':
+        filterChange('occupationId', undefined);
+        break;
+      case 'location':
+        filterChange('location', '');
+        break;
+      case 'status':
+        setSelectedStatuses([]);
+        filterChange('status', undefined);
+        break;
+      default:
+        break;
+    }
+  }, [filterChange]);
 
   const hasActiveFilters = useMemo(() => {
     return !!(
@@ -357,19 +401,30 @@ export const useJobSeekersLogic = () => {
         restoreScrollPosition();
       } else {
     
-        const savedPosition = localStorage.getItem('jobseeker-scroll-position');
-        if (savedPosition) {
-          const position = parseInt(savedPosition, 10);
-          setTimeout(() => {
-            window.scrollTo({ top: position, behavior: 'smooth' });
-          }, 100);
-        }
+        import('@/services/utils/autoScroll').then(({ restoreScrollWithItemHighlight }) => {
+          restoreScrollWithItemHighlight(
+            'jobseeker-selected-item',
+            'jobseeker-scroll-position'
+          );
+        });
       }
     }
   }, [data, isLoading, searchParams, restoreScrollPosition]);
 
   useEffect(() => {
-    if (filters.search || filters.location || filters.occupationId || filters.status || (filters.page && filters.page > 1)) {
+    const isOnPageOneWithNoFilters = 
+      filters.page === 1 &&
+      !filters.search &&
+      !filters.location &&
+      !filters.occupationId &&
+      !filters.status;
+    
+    if (isOnPageOneWithNoFilters) {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('jobseeker-search-state');
+        localStorage.removeItem('jobseeker-scroll-position');
+      }
+    } else if (filters.search || filters.location || filters.occupationId || filters.status || (filters.page && filters.page > 1)) {
       saveSearchState();
     }
   }, [filters, saveSearchState]);
@@ -407,6 +462,7 @@ export const useJobSeekersLogic = () => {
     initViewResume,
     viewJobSeeker,
     clearAllFilters,
+    clearIndividualFilter,
     hasActiveFilters,
     saveScrollPosition,
     restoreScrollPosition,

@@ -140,7 +140,6 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
 
   return (
     <div ref={containerRef} className={`relative ${className}`}>
-      {/* Trigger Button */}
       <button
         type="button"
         onClick={openDropdown}
@@ -170,11 +169,10 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
         </svg>
       </button>
 
-      {/* Dropdown */}
       {isOpen && (
         <div className="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-64 overflow-hidden">
           <div ref={optionsRef} className="flex flex-col">
-            {/* Search Input */}
+        
             <div className="p-3 border-b border-gray-200 dark:border-gray-700">
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
