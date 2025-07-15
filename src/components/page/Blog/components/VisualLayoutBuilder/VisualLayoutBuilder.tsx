@@ -652,6 +652,35 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
       borders: true,
     });
 
+    // Global scroll prevention for number inputs
+    useEffect(() => {
+      const handleGlobalScroll = (e: WheelEvent) => {
+        const target = e.target as HTMLElement;
+        if (target.closest('.property-panel') && (target.tagName === 'INPUT' && (target as HTMLInputElement).type === 'number')) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+      };
+
+      const handleGlobalKeyDown = (e: KeyboardEvent) => {
+        const target = e.target as HTMLElement;
+        if (target.closest('.property-panel') && target.tagName === 'INPUT' && (target as HTMLInputElement).type === 'number') {
+          if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+            e.preventDefault();
+            e.stopPropagation();
+          }
+        }
+      };
+
+      document.addEventListener('wheel', handleGlobalScroll, { passive: false });
+      document.addEventListener('keydown', handleGlobalKeyDown, { passive: false });
+
+      return () => {
+        document.removeEventListener('wheel', handleGlobalScroll);
+        document.removeEventListener('keydown', handleGlobalKeyDown);
+      };
+    }, []);
+
     if (!block) return null;
 
     const handleContentChange = (field: string, value: any) => {
@@ -1596,7 +1625,7 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
 
     const renderStyleControls = () => (
       <div 
-        className="space-y-1 p-4 pb-8"
+        className="space-y-1 p-4 pb-8 overflow-x-hidden"
         onWheel={(e) => {
           e.stopPropagation();
           // Allow scrolling within the panel but prevent bubbling
@@ -1656,20 +1685,51 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
                     <option value="bolder">900 - Black</option>
                   </select>
                 </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-400 mb-1">Size</label>
-                  <div className="flex">
-                    <input
-                      type="number"
-                      value={parseInt(block.styles.fontSize?.replace('px', '') || '16')}
-                      onChange={(e) => handleStyleChange('fontSize', `${e.target.value}px`)}
-                      className="flex-1 px-3 py-2 text-sm bg-gray-700 border border-gray-600 rounded-l text-white focus:border-blue-500 focus:outline-none"
-                      min="8"
-                      max="72"
-                    />
-                    <span className="px-2 py-2 text-xs bg-gray-600 border border-l-0 border-gray-600 rounded-r text-gray-300">px</span>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-400 mb-1">Size</label>
+                    <div className="flex">
+                      <div className="flex items-center bg-gray-700 border border-gray-600 rounded-l">
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            const currentValue = parseInt(block.styles.fontSize?.replace('px', '') || '16');
+                            const newValue = Math.max(8, currentValue - 1);
+                            handleStyleChange('fontSize', `${newValue}px`);
+                          }}
+                          className="px-2 py-2 text-gray-300 hover:text-white hover:bg-gray-600 transition-colors"
+                        >
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+                          </svg>
+                        </button>
+                        <input
+                          type="text"
+                          value={parseInt(block.styles.fontSize?.replace('px', '') || '16')}
+                          onChange={(e) => {
+                            const value = parseInt(e.target.value) || 16;
+                            handleStyleChange('fontSize', `${Math.max(8, Math.min(72, value))}px`);
+                          }}
+                          className="w-16 px-2 py-2 text-sm bg-transparent text-white text-center focus:outline-none"
+                        />
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            const currentValue = parseInt(block.styles.fontSize?.replace('px', '') || '16');
+                            const newValue = Math.min(72, currentValue + 1);
+                            handleStyleChange('fontSize', `${newValue}px`);
+                          }}
+                          className="px-2 py-2 text-gray-300 hover:text-white hover:bg-gray-600 transition-colors"
+                        >
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                          </svg>
+                        </button>
+                      </div>
+                      <span className="px-2 py-2 text-xs bg-gray-600 border border-l-0 border-gray-600 rounded-r text-gray-300">px</span>
+                    </div>
                   </div>
-                </div>
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-400 mb-1">Color</label>
@@ -1740,72 +1800,207 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
                 <div className="relative">
                   <div className="grid grid-cols-3 gap-1">
                     <div></div>
-                    <input
-                      type="number"
-                      placeholder="0"
-                      value={block.styles.margin?.top || 0}
-                      onChange={(e) => handleStyleChange('margin', { 
-                        ...block.styles.margin, 
-                        top: parseInt(e.target.value) || 0 
-                      })}
-                      onWheel={(e) => {
-                        e.stopPropagation();
-                        e.preventDefault();
-                      }}
-                      onFocus={(e) => {
-                        e.stopPropagation();
-                        e.target.addEventListener('wheel', (event) => event.preventDefault());
-                      }}
-                      onBlur={(e) => {
-                        e.target.removeEventListener('wheel', (event) => event.preventDefault());
-                      }}
-                      className="px-2 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white text-center"
-                      min="0"
-                    />
+                    <div className="flex items-center bg-gray-700 border border-gray-600 rounded">
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          const currentValue = block.styles.margin?.top || 0;
+                          const newValue = Math.max(0, currentValue - 1);
+                          handleStyleChange('margin', { 
+                            ...block.styles.margin, 
+                            top: newValue 
+                          });
+                        }}
+                        className="px-1 py-1 text-gray-300 hover:text-white hover:bg-gray-600 transition-colors"
+                      >
+                        <svg className="w-2 h-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+                        </svg>
+                      </button>
+                      <input
+                        type="text"
+                        placeholder="0"
+                        value={block.styles.margin?.top || 0}
+                        onChange={(e) => {
+                          const value = parseInt(e.target.value) || 0;
+                          handleStyleChange('margin', { 
+                            ...block.styles.margin, 
+                            top: Math.max(0, value)
+                          });
+                        }}
+                        className="w-8 px-1 py-1 text-xs bg-transparent text-white text-center focus:outline-none"
+                      />
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          const currentValue = block.styles.margin?.top || 0;
+                          const newValue = currentValue + 1;
+                          handleStyleChange('margin', { 
+                            ...block.styles.margin, 
+                            top: newValue 
+                          });
+                        }}
+                        className="px-1 py-1 text-gray-300 hover:text-white hover:bg-gray-600 transition-colors"
+                      >
+                        <svg className="w-2 h-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                        </svg>
+                      </button>
+                    </div>
                     <div></div>
-                    <input
-                      type="number"
-                      placeholder="0"
-                      value={block.styles.margin?.left || 0}
-                      onChange={(e) => handleStyleChange('margin', { 
-                        ...block.styles.margin, 
-                        left: parseInt(e.target.value) || 0 
-                      })}
-                      onWheel={(e) => e.stopPropagation()}
-                      onFocus={(e) => e.stopPropagation()}
-                      className="px-2 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white text-center"
-                      min="0"
-                    />
+                    <div className="flex items-center bg-gray-700 border border-gray-600 rounded">
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          const currentValue = block.styles.margin?.left || 0;
+                          const newValue = Math.max(0, currentValue - 1);
+                          handleStyleChange('margin', { 
+                            ...block.styles.margin, 
+                            left: newValue 
+                          });
+                        }}
+                        className="px-1 py-1 text-gray-300 hover:text-white hover:bg-gray-600 transition-colors"
+                      >
+                        <svg className="w-2 h-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+                        </svg>
+                      </button>
+                      <input
+                        type="text"
+                        placeholder="0"
+                        value={block.styles.margin?.left || 0}
+                        onChange={(e) => {
+                          const value = parseInt(e.target.value) || 0;
+                          handleStyleChange('margin', { 
+                            ...block.styles.margin, 
+                            left: Math.max(0, value)
+                          });
+                        }}
+                        className="w-8 px-1 py-1 text-xs bg-transparent text-white text-center focus:outline-none"
+                      />
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          const currentValue = block.styles.margin?.left || 0;
+                          const newValue = currentValue + 1;
+                          handleStyleChange('margin', { 
+                            ...block.styles.margin, 
+                            left: newValue 
+                          });
+                        }}
+                        className="px-1 py-1 text-gray-300 hover:text-white hover:bg-gray-600 transition-colors"
+                      >
+                        <svg className="w-2 h-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                        </svg>
+                      </button>
+                    </div>
                     <div className="bg-gray-600 rounded flex items-center justify-center">
                       <span className="text-xs text-gray-300">M</span>
                     </div>
-                    <input
-                      type="number"
-                      placeholder="0"
-                      value={block.styles.margin?.right || 0}
-                      onChange={(e) => handleStyleChange('margin', { 
-                        ...block.styles.margin, 
-                        right: parseInt(e.target.value) || 0 
-                      })}
-                      onWheel={(e) => e.stopPropagation()}
-                      onFocus={(e) => e.stopPropagation()}
-                      className="px-2 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white text-center"
-                      min="0"
-                    />
+                    <div className="flex items-center bg-gray-700 border border-gray-600 rounded">
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          const currentValue = block.styles.margin?.right || 0;
+                          const newValue = Math.max(0, currentValue - 1);
+                          handleStyleChange('margin', { 
+                            ...block.styles.margin, 
+                            right: newValue 
+                          });
+                        }}
+                        className="px-1 py-1 text-gray-300 hover:text-white hover:bg-gray-600 transition-colors"
+                      >
+                        <svg className="w-2 h-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+                        </svg>
+                      </button>
+                      <input
+                        type="text"
+                        placeholder="0"
+                        value={block.styles.margin?.right || 0}
+                        onChange={(e) => {
+                          const value = parseInt(e.target.value) || 0;
+                          handleStyleChange('margin', { 
+                            ...block.styles.margin, 
+                            right: Math.max(0, value)
+                          });
+                        }}
+                        className="w-8 px-1 py-1 text-xs bg-transparent text-white text-center focus:outline-none"
+                      />
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          const currentValue = block.styles.margin?.right || 0;
+                          const newValue = currentValue + 1;
+                          handleStyleChange('margin', { 
+                            ...block.styles.margin, 
+                            right: newValue 
+                          });
+                        }}
+                        className="px-1 py-1 text-gray-300 hover:text-white hover:bg-gray-600 transition-colors"
+                      >
+                        <svg className="w-2 h-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                        </svg>
+                      </button>
+                    </div>
                     <div></div>
-                    <input
-                      type="number"
-                      placeholder="0"
-                      value={block.styles.margin?.bottom || 0}
-                      onChange={(e) => handleStyleChange('margin', { 
-                        ...block.styles.margin, 
-                        bottom: parseInt(e.target.value) || 0 
-                      })}
-                      onWheel={(e) => e.stopPropagation()}
-                      onFocus={(e) => e.stopPropagation()}
-                      className="px-2 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white text-center"
-                      min="0"
-                    />
+                    <div className="flex items-center bg-gray-700 border border-gray-600 rounded">
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          const currentValue = block.styles.margin?.bottom || 0;
+                          const newValue = Math.max(0, currentValue - 1);
+                          handleStyleChange('margin', { 
+                            ...block.styles.margin, 
+                            bottom: newValue 
+                          });
+                        }}
+                        className="px-1 py-1 text-gray-300 hover:text-white hover:bg-gray-600 transition-colors"
+                      >
+                        <svg className="w-2 h-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+                        </svg>
+                      </button>
+                      <input
+                        type="text"
+                        placeholder="0"
+                        value={block.styles.margin?.bottom || 0}
+                        onChange={(e) => {
+                          const value = parseInt(e.target.value) || 0;
+                          handleStyleChange('margin', { 
+                            ...block.styles.margin, 
+                            bottom: Math.max(0, value)
+                          });
+                        }}
+                        className="w-8 px-1 py-1 text-xs bg-transparent text-white text-center focus:outline-none"
+                      />
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          const currentValue = block.styles.margin?.bottom || 0;
+                          const newValue = currentValue + 1;
+                          handleStyleChange('margin', { 
+                            ...block.styles.margin, 
+                            bottom: newValue 
+                          });
+                        }}
+                        className="px-1 py-1 text-gray-300 hover:text-white hover:bg-gray-600 transition-colors"
+                      >
+                        <svg className="w-2 h-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                        </svg>
+                      </button>
+                    </div>
                     <div></div>
                   </div>
                 </div>
@@ -1815,63 +2010,207 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
                 <div className="relative">
                   <div className="grid grid-cols-3 gap-1">
                     <div></div>
-                    <input
-                      type="number"
-                      placeholder="0"
-                      value={block.styles.padding?.top || 0}
-                      onChange={(e) => handleStyleChange('padding', { 
-                        ...block.styles.padding, 
-                        top: parseInt(e.target.value) || 0 
-                      })}
-                      onWheel={(e) => e.stopPropagation()}
-                      onFocus={(e) => e.stopPropagation()}
-                      className="px-2 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white text-center"
-                      min="0"
-                    />
+                    <div className="flex items-center bg-gray-700 border border-gray-600 rounded">
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          const currentValue = block.styles.padding?.top || 0;
+                          const newValue = Math.max(0, currentValue - 1);
+                          handleStyleChange('padding', { 
+                            ...block.styles.padding, 
+                            top: newValue 
+                          });
+                        }}
+                        className="px-1 py-1 text-gray-300 hover:text-white hover:bg-gray-600 transition-colors"
+                      >
+                        <svg className="w-2 h-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+                        </svg>
+                      </button>
+                      <input
+                        type="text"
+                        placeholder="0"
+                        value={block.styles.padding?.top || 0}
+                        onChange={(e) => {
+                          const value = parseInt(e.target.value) || 0;
+                          handleStyleChange('padding', { 
+                            ...block.styles.padding, 
+                            top: Math.max(0, value)
+                          });
+                        }}
+                        className="w-8 px-1 py-1 text-xs bg-transparent text-white text-center focus:outline-none"
+                      />
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          const currentValue = block.styles.padding?.top || 0;
+                          const newValue = currentValue + 1;
+                          handleStyleChange('padding', { 
+                            ...block.styles.padding, 
+                            top: newValue 
+                          });
+                        }}
+                        className="px-1 py-1 text-gray-300 hover:text-white hover:bg-gray-600 transition-colors"
+                      >
+                        <svg className="w-2 h-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                        </svg>
+                      </button>
+                    </div>
                     <div></div>
-                    <input
-                      type="number"
-                      placeholder="0"
-                      value={block.styles.padding?.left || 0}
-                      onChange={(e) => handleStyleChange('padding', { 
-                        ...block.styles.padding, 
-                        left: parseInt(e.target.value) || 0 
-                      })}
-                      onWheel={(e) => e.stopPropagation()}
-                      onFocus={(e) => e.stopPropagation()}
-                      className="px-2 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white text-center"
-                      min="0"
-                    />
+                    <div className="flex items-center bg-gray-700 border border-gray-600 rounded">
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          const currentValue = block.styles.padding?.left || 0;
+                          const newValue = Math.max(0, currentValue - 1);
+                          handleStyleChange('padding', { 
+                            ...block.styles.padding, 
+                            left: newValue 
+                          });
+                        }}
+                        className="px-1 py-1 text-gray-300 hover:text-white hover:bg-gray-600 transition-colors"
+                      >
+                        <svg className="w-2 h-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+                        </svg>
+                      </button>
+                      <input
+                        type="text"
+                        placeholder="0"
+                        value={block.styles.padding?.left || 0}
+                        onChange={(e) => {
+                          const value = parseInt(e.target.value) || 0;
+                          handleStyleChange('padding', { 
+                            ...block.styles.padding, 
+                            left: Math.max(0, value)
+                          });
+                        }}
+                        className="w-8 px-1 py-1 text-xs bg-transparent text-white text-center focus:outline-none"
+                      />
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          const currentValue = block.styles.padding?.left || 0;
+                          const newValue = currentValue + 1;
+                          handleStyleChange('padding', { 
+                            ...block.styles.padding, 
+                            left: newValue 
+                          });
+                        }}
+                        className="px-1 py-1 text-gray-300 hover:text-white hover:bg-gray-600 transition-colors"
+                      >
+                        <svg className="w-2 h-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                        </svg>
+                      </button>
+                    </div>
                     <div className="bg-blue-600 rounded flex items-center justify-center">
                       <span className="text-xs text-white">P</span>
                     </div>
-                    <input
-                      type="number"
-                      placeholder="0"
-                      value={block.styles.padding?.right || 0}
-                      onChange={(e) => handleStyleChange('padding', { 
-                        ...block.styles.padding, 
-                        right: parseInt(e.target.value) || 0 
-                      })}
-                      onWheel={(e) => e.stopPropagation()}
-                      onFocus={(e) => e.stopPropagation()}
-                      className="px-2 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white text-center"
-                      min="0"
-                    />
+                    <div className="flex items-center bg-gray-700 border border-gray-600 rounded">
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          const currentValue = block.styles.padding?.right || 0;
+                          const newValue = Math.max(0, currentValue - 1);
+                          handleStyleChange('padding', { 
+                            ...block.styles.padding, 
+                            right: newValue 
+                          });
+                        }}
+                        className="px-1 py-1 text-gray-300 hover:text-white hover:bg-gray-600 transition-colors"
+                      >
+                        <svg className="w-2 h-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+                        </svg>
+                      </button>
+                      <input
+                        type="text"
+                        placeholder="0"
+                        value={block.styles.padding?.right || 0}
+                        onChange={(e) => {
+                          const value = parseInt(e.target.value) || 0;
+                          handleStyleChange('padding', { 
+                            ...block.styles.padding, 
+                            right: Math.max(0, value)
+                          });
+                        }}
+                        className="w-8 px-1 py-1 text-xs bg-transparent text-white text-center focus:outline-none"
+                      />
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          const currentValue = block.styles.padding?.right || 0;
+                          const newValue = currentValue + 1;
+                          handleStyleChange('padding', { 
+                            ...block.styles.padding, 
+                            right: newValue 
+                          });
+                        }}
+                        className="px-1 py-1 text-gray-300 hover:text-white hover:bg-gray-600 transition-colors"
+                      >
+                        <svg className="w-2 h-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                        </svg>
+                      </button>
+                    </div>
                     <div></div>
-                    <input
-                      type="number"
-                      placeholder="0"
-                      value={block.styles.padding?.bottom || 0}
-                      onChange={(e) => handleStyleChange('padding', { 
-                        ...block.styles.padding, 
-                        bottom: parseInt(e.target.value) || 0 
-                      })}
-                      onWheel={(e) => e.stopPropagation()}
-                      onFocus={(e) => e.stopPropagation()}
-                      className="px-2 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white text-center"
-                      min="0"
-                    />
+                    <div className="flex items-center bg-gray-700 border border-gray-600 rounded">
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          const currentValue = block.styles.padding?.bottom || 0;
+                          const newValue = Math.max(0, currentValue - 1);
+                          handleStyleChange('padding', { 
+                            ...block.styles.padding, 
+                            bottom: newValue 
+                          });
+                        }}
+                        className="px-1 py-1 text-gray-300 hover:text-white hover:bg-gray-600 transition-colors"
+                      >
+                        <svg className="w-2 h-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+                        </svg>
+                      </button>
+                      <input
+                        type="text"
+                        placeholder="0"
+                        value={block.styles.padding?.bottom || 0}
+                        onChange={(e) => {
+                          const value = parseInt(e.target.value) || 0;
+                          handleStyleChange('padding', { 
+                            ...block.styles.padding, 
+                            bottom: Math.max(0, value)
+                          });
+                        }}
+                        className="w-8 px-1 py-1 text-xs bg-transparent text-white text-center focus:outline-none"
+                      />
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          const currentValue = block.styles.padding?.bottom || 0;
+                          const newValue = currentValue + 1;
+                          handleStyleChange('padding', { 
+                            ...block.styles.padding, 
+                            bottom: newValue 
+                          });
+                        }}
+                        className="px-1 py-1 text-gray-300 hover:text-white hover:bg-gray-600 transition-colors"
+                      >
+                        <svg className="w-2 h-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                        </svg>
+                      </button>
+                    </div>
                     <div></div>
                   </div>
                 </div>
@@ -1942,16 +2281,54 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
               <div>
                 <label className="block text-xs font-medium text-gray-400 mb-1">Width</label>
                 <div className="flex">
-                  <input
-                    type="number"
-                    value={block.styles.border?.width || 0}
-                    onChange={(e) => handleStyleChange('border', { 
-                      ...block.styles.border, 
-                      width: parseInt(e.target.value) || 0 
-                    })}
-                    className="flex-1 px-3 py-2 text-sm bg-gray-700 border border-gray-600 rounded-l text-white focus:border-blue-500 focus:outline-none"
-                    min="0"
-                  />
+                  <div className="flex items-center bg-gray-700 border border-gray-600 rounded-l">
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const currentValue = block.styles.border?.width || 0;
+                        const newValue = Math.max(0, currentValue - 1);
+                        handleStyleChange('border', { 
+                          ...block.styles.border, 
+                          width: newValue 
+                        });
+                      }}
+                      className="px-2 py-2 text-gray-300 hover:text-white hover:bg-gray-600 transition-colors"
+                    >
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+                      </svg>
+                    </button>
+                    <input
+                      type="text"
+                      value={block.styles.border?.width || 0}
+                      onChange={(e) => {
+                        const value = parseInt(e.target.value) || 0;
+                        handleStyleChange('border', { 
+                          ...block.styles.border, 
+                          width: Math.max(0, value)
+                        });
+                      }}
+                      className="w-16 px-2 py-2 text-sm bg-transparent text-white text-center focus:outline-none"
+                    />
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const currentValue = block.styles.border?.width || 0;
+                        const newValue = currentValue + 1;
+                        handleStyleChange('border', { 
+                          ...block.styles.border, 
+                          width: newValue 
+                        });
+                      }}
+                      className="px-2 py-2 text-gray-300 hover:text-white hover:bg-gray-600 transition-colors"
+                    >
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                      </svg>
+                    </button>
+                  </div>
                   <span className="px-2 py-2 text-xs bg-gray-600 border border-l-0 border-gray-600 rounded-r text-gray-300">px</span>
                 </div>
               </div>
@@ -1998,16 +2375,54 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
               <div>
                 <label className="block text-xs font-medium text-gray-400 mb-1">Radius</label>
                 <div className="flex">
-                  <input
-                    type="number"
-                    value={block.styles.border?.radius || 0}
-                    onChange={(e) => handleStyleChange('border', { 
-                      ...block.styles.border, 
-                      radius: parseInt(e.target.value) || 0 
-                    })}
-                    className="flex-1 px-3 py-2 text-sm bg-gray-700 border border-gray-600 rounded-l text-white focus:border-blue-500 focus:outline-none"
-                    min="0"
-                  />
+                  <div className="flex items-center bg-gray-700 border border-gray-600 rounded-l">
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const currentValue = block.styles.border?.radius || 0;
+                        const newValue = Math.max(0, currentValue - 1);
+                        handleStyleChange('border', { 
+                          ...block.styles.border, 
+                          radius: newValue 
+                        });
+                      }}
+                      className="px-2 py-2 text-gray-300 hover:text-white hover:bg-gray-600 transition-colors"
+                    >
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+                      </svg>
+                    </button>
+                    <input
+                      type="text"
+                      value={block.styles.border?.radius || 0}
+                      onChange={(e) => {
+                        const value = parseInt(e.target.value) || 0;
+                        handleStyleChange('border', { 
+                          ...block.styles.border, 
+                          radius: Math.max(0, value)
+                        });
+                      }}
+                      className="w-16 px-2 py-2 text-sm bg-transparent text-white text-center focus:outline-none"
+                    />
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const currentValue = block.styles.border?.radius || 0;
+                        const newValue = currentValue + 1;
+                        handleStyleChange('border', { 
+                          ...block.styles.border, 
+                          radius: newValue 
+                        });
+                      }}
+                      className="px-2 py-2 text-gray-300 hover:text-white hover:bg-gray-600 transition-colors"
+                    >
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                      </svg>
+                    </button>
+                  </div>
                   <span className="px-2 py-2 text-xs bg-gray-600 border border-l-0 border-gray-600 rounded-r text-gray-300">px</span>
                 </div>
               </div>
@@ -2021,9 +2436,29 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
       <>
         {/* Sliding Panel */}
         <div className={`
-          property-panel fixed top-0 right-0 h-full w-80 bg-gray-800 shadow-xl z-50 transform transition-transform duration-300 ease-in-out border-l border-gray-700 flex flex-col
+          property-panel fixed top-0 right-0 h-full w-80 bg-gray-800 shadow-xl z-50 transform transition-transform duration-300 ease-in-out border-l border-gray-700 flex flex-col overflow-x-hidden
           ${isVisible ? 'translate-x-0' : 'translate-x-full'}
         `}>
+          <style jsx>{`
+            .property-panel input[type="number"]:focus,
+            .property-panel input[type="number"]:active {
+              position: relative;
+              z-index: 9999;
+            }
+            
+            .property-panel input[type="number"]:focus ~ *,
+            .property-panel input[type="number"]:active ~ * {
+              pointer-events: none;
+            }
+            
+            .property-panel:has(input[type="number"]:focus) {
+              overflow: hidden;
+            }
+            
+            .property-panel button {
+              touch-action: manipulation;
+            }
+          `}</style>
           {/* Panel Header */}
           <div className="flex items-center justify-between p-4 border-b border-gray-700">
             <h3 className="text-sm font-medium text-gray-300 uppercase tracking-wide">
@@ -2065,11 +2500,11 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
 
           {/* Panel Content */}
           <div 
-            className="flex-1 overflow-y-auto min-h-0"
+            className="flex-1 overflow-y-auto overflow-x-hidden min-h-0"
             onWheel={(e) => {
-              // Only prevent default if the wheel event is on a range input
+              // Only prevent default if the wheel event is on a range input or number input
               const target = e.target as HTMLInputElement;
-              if (target.type === 'range' || target.closest('input[type="range"]')) {
+              if (target.type === 'range' || target.type === 'number' || target.closest('input[type="range"]') || target.closest('input[type="number"]')) {
                 e.preventDefault();
               }
               e.stopPropagation();
