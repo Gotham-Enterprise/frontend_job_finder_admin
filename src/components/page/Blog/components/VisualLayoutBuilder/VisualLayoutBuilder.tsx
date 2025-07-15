@@ -278,16 +278,30 @@ const BlockRenderer: React.FC<BlockRenderProps> = ({
             )}
             <div className="relative z-10">
               <h1 
-                className="text-4xl font-bold mb-4 outline-none"
+                style={{
+                  fontSize: block.styles.fontSize || '2.5rem',
+                  fontWeight: block.styles.fontWeight || 'bold',
+                  color: block.styles.textColor || '#000000',
+                  textAlign: block.styles.textAlign || 'center',
+                  marginBottom: '1rem',
+                  outline: 'none',
+                }}
                 contentEditable={isEditing}
                 suppressContentEditableWarning={true}
                 onBlur={(e) => onEdit(block.id, { title: e.currentTarget.textContent })}
               >
                 {heroContent.title || 'Welcome to Our Blog'}
               </h1>
-              {heroContent.subtitle && (
-                <p className="text-xl mb-6">{heroContent.subtitle}</p>
-              )}
+              <p 
+                style={{
+                  fontSize: '1.25rem',
+                  color: block.styles.textColor || '#000000',
+                  textAlign: block.styles.textAlign || 'center',
+                  marginBottom: '1.5rem',
+                }}
+              >
+                {heroContent.subtitle || 'Add a compelling subtitle'}
+              </p>
               {heroContent.ctaButton && (
                 <button className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
                   {heroContent.ctaButton.text}
@@ -393,6 +407,7 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
   const [currentImageBlockId, setCurrentImageBlockId] = useState<string | null>(null);
   const [showElements, setShowElements] = useState(true); // Add toggle state for elements
   const [showPropertiesPanel, setShowPropertiesPanel] = useState(false); // Property panel visibility
+  const [propertyPanelActiveTab, setPropertyPanelActiveTab] = useState<'style' | 'settings'>('style'); // Property panel active tab
   const [isDragOverGlobal, setIsDragOverGlobal] = useState(false); // Global drag state
 
   // Open image upload for specific block
@@ -609,8 +624,9 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
     onClose: () => void;
     onUpdate: (blockId: string, content: any) => void;
     onStyleUpdate: (blockId: string, styles: any) => void;
-  }> = ({ block, isVisible, onClose, onUpdate, onStyleUpdate }) => {
-    const [activeTab, setActiveTab] = useState<'style' | 'settings'>('style');
+    activeTab: 'style' | 'settings';
+    onTabChange: (tab: 'style' | 'settings') => void;
+  }> = ({ block, isVisible, onClose, onUpdate, onStyleUpdate, activeTab, onTabChange }) => {
     const [expandedSections, setExpandedSections] = useState<{[key: string]: boolean}>({
       typography: true,
       spacing: false,
@@ -642,6 +658,28 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
       switch (block.type) {
         case 'heading':
           const headingContent = block.content as any;
+          const [localHeadingText, setLocalHeadingText] = useState(headingContent.text || '');
+          
+          // Update local state when block content changes from outside
+          useEffect(() => {
+            setLocalHeadingText(headingContent.text || '');
+          }, [headingContent.text]);
+
+    
+          useEffect(() => {
+            const timer = setTimeout(() => {
+              if (localHeadingText !== headingContent.text) {
+                handleContentChange('text', localHeadingText);
+              }
+            }, 300);
+
+            return () => clearTimeout(timer);
+          }, [localHeadingText]);
+
+          const updateHeadingText = (value: string) => {
+            setLocalHeadingText(value);
+          };
+
           return (
             <div className="space-y-4">
               <div>
@@ -649,8 +687,8 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
                   Text
                 </label>
                 <textarea
-                  value={headingContent.text || ''}
-                  onChange={(e) => handleContentChange('text', e.target.value)}
+                  value={localHeadingText}
+                  onChange={(e) => updateHeadingText(e.target.value)}
                   rows={3}
                   className="w-full px-3 py-2 text-sm bg-gray-700 border border-gray-600 rounded text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none resize-none"
                   placeholder="Enter heading text..."
@@ -678,14 +716,36 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
 
         case 'paragraph':
           const paragraphContent = block.content as any;
+          const [localParagraphText, setLocalParagraphText] = useState(paragraphContent.text || '');
+          
+          // Update local state when block content changes from outside
+          useEffect(() => {
+            setLocalParagraphText(paragraphContent.text || '');
+          }, [paragraphContent.text]);
+
+          // Debounced update function
+          useEffect(() => {
+            const timer = setTimeout(() => {
+              if (localParagraphText !== paragraphContent.text) {
+                handleContentChange('text', localParagraphText);
+              }
+            }, 300);
+
+            return () => clearTimeout(timer);
+          }, [localParagraphText]);
+
+          const updateParagraphText = (value: string) => {
+            setLocalParagraphText(value);
+          };
+
           return (
             <div>
               <label className="block text-xs font-medium text-gray-400 mb-2 uppercase tracking-wide">
                 Text
               </label>
               <textarea
-                value={paragraphContent.text || ''}
-                onChange={(e) => handleContentChange('text', e.target.value)}
+                value={localParagraphText}
+                onChange={(e) => updateParagraphText(e.target.value)}
                 rows={4}
                 className="w-full px-3 py-2 text-sm bg-gray-700 border border-gray-600 rounded text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none resize-none"
                 placeholder="Enter paragraph text..."
@@ -695,7 +755,27 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
 
         case 'image':
           const imageContent = block.content as any;
+          const [localAltText, setLocalAltText] = useState(imageContent.alt || '');
           
+          // Update local state when block content changes from outside
+          useEffect(() => {
+            setLocalAltText(imageContent.alt || '');
+          }, [imageContent.alt]);
+
+          // Debounced update function for alt text
+          useEffect(() => {
+            const timer = setTimeout(() => {
+              if (localAltText !== imageContent.alt) {
+                handleContentChange('alt', localAltText);
+              }
+            }, 300);
+            return () => clearTimeout(timer);
+          }, [localAltText]);
+
+          const updateAltText = (value: string) => {
+            setLocalAltText(value);
+          };
+
           // Handle drag and drop
           const handleDragOver = (e: React.DragEvent) => {
             e.preventDefault();
@@ -755,8 +835,8 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
                 </label>
                 <input
                   type="text"
-                  value={imageContent.alt || ''}
-                  onChange={(e) => handleContentChange('alt', e.target.value)}
+                  value={localAltText}
+                  onChange={(e) => updateAltText(e.target.value)}
                   className="w-full px-3 py-2 text-sm bg-gray-700 border border-gray-600 rounded text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none"
                   placeholder="Image description..."
                 />
@@ -842,6 +922,57 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
 
         case 'quote':
           const quoteContent = block.content as any;
+          const [localQuoteText, setLocalQuoteText] = useState(quoteContent.text || '');
+          const [localAuthor, setLocalAuthor] = useState(quoteContent.author || '');
+          const [localSource, setLocalSource] = useState(quoteContent.source || '');
+          
+          // Update local state when block content changes from outside
+          useEffect(() => {
+            setLocalQuoteText(quoteContent.text || '');
+            setLocalAuthor(quoteContent.author || '');
+            setLocalSource(quoteContent.source || '');
+          }, [quoteContent.text, quoteContent.author, quoteContent.source]);
+
+          // Debounced update functions
+          useEffect(() => {
+            const timer = setTimeout(() => {
+              if (localQuoteText !== quoteContent.text) {
+                handleContentChange('text', localQuoteText);
+              }
+            }, 300);
+            return () => clearTimeout(timer);
+          }, [localQuoteText]);
+
+          useEffect(() => {
+            const timer = setTimeout(() => {
+              if (localAuthor !== quoteContent.author) {
+                handleContentChange('author', localAuthor);
+              }
+            }, 300);
+            return () => clearTimeout(timer);
+          }, [localAuthor]);
+
+          useEffect(() => {
+            const timer = setTimeout(() => {
+              if (localSource !== quoteContent.source) {
+                handleContentChange('source', localSource);
+              }
+            }, 300);
+            return () => clearTimeout(timer);
+          }, [localSource]);
+
+          const updateQuoteText = (value: string) => {
+            setLocalQuoteText(value);
+          };
+
+          const updateAuthor = (value: string) => {
+            setLocalAuthor(value);
+          };
+
+          const updateSource = (value: string) => {
+            setLocalSource(value);
+          };
+
           return (
             <div className="space-y-4">
               <div>
@@ -849,8 +980,8 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
                   Quote Text
                 </label>
                 <textarea
-                  value={quoteContent.text || ''}
-                  onChange={(e) => handleContentChange('text', e.target.value)}
+                  value={localQuoteText}
+                  onChange={(e) => updateQuoteText(e.target.value)}
                   rows={3}
                   className="w-full px-3 py-2 text-sm bg-gray-700 border border-gray-600 rounded text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none resize-none"
                   placeholder="Enter your quote..."
@@ -862,8 +993,8 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
                 </label>
                 <input
                   type="text"
-                  value={quoteContent.author || ''}
-                  onChange={(e) => handleContentChange('author', e.target.value)}
+                  value={localAuthor}
+                  onChange={(e) => updateAuthor(e.target.value)}
                   className="w-full px-3 py-2 text-sm bg-gray-700 border border-gray-600 rounded text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none"
                   placeholder="Author name..."
                 />
@@ -874,12 +1005,108 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
                 </label>
                 <input
                   type="text"
-                  value={quoteContent.source || ''}
-                  onChange={(e) => handleContentChange('source', e.target.value)}
+                  value={localSource}
+                  onChange={(e) => updateSource(e.target.value)}
                   className="w-full px-3 py-2 text-sm bg-gray-700 border border-gray-600 rounded text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none"
                   placeholder="Source or publication..."
                 />
               </div>
+            </div>
+          );
+
+        case 'hero':
+          const heroContent = block.content as any;
+          const [localTitle, setLocalTitle] = useState(heroContent.title || '');
+          const [localSubtitle, setLocalSubtitle] = useState(heroContent.subtitle || '');
+          
+          // Update local state when block content changes from outside
+          useEffect(() => {
+            setLocalTitle(heroContent.title || '');
+            setLocalSubtitle(heroContent.subtitle || '');
+          }, [heroContent.title, heroContent.subtitle]);
+
+          // Debounced update functions
+          useEffect(() => {
+            const timer = setTimeout(() => {
+              if (localTitle !== heroContent.title) {
+                handleContentChange('title', localTitle);
+              }
+            }, 300);
+            return () => clearTimeout(timer);
+          }, [localTitle]);
+
+          useEffect(() => {
+            const timer = setTimeout(() => {
+              if (localSubtitle !== heroContent.subtitle) {
+                handleContentChange('subtitle', localSubtitle);
+              }
+            }, 300);
+            return () => clearTimeout(timer);
+          }, [localSubtitle]);
+
+          const updateTitle = (value: string) => {
+            setLocalTitle(value);
+          };
+
+          const updateSubtitle = (value: string) => {
+            setLocalSubtitle(value);
+          };
+
+          return (
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-medium text-gray-400 mb-2 uppercase tracking-wide">
+                  Title
+                </label>
+                <textarea
+                  value={localTitle}
+                  onChange={(e) => updateTitle(e.target.value)}
+                  rows={2}
+                  className="w-full px-3 py-2 text-sm bg-gray-700 border border-gray-600 rounded text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none resize-none"
+                  placeholder="Enter hero title..."
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-400 mb-2 uppercase tracking-wide">
+                  Subtitle
+                </label>
+                <textarea
+                  value={localSubtitle}
+                  onChange={(e) => updateSubtitle(e.target.value)}
+                  rows={2}
+                  className="w-full px-3 py-2 text-sm bg-gray-700 border border-gray-600 rounded text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none resize-none"
+                  placeholder="Enter hero subtitle..."
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-400 mb-2 uppercase tracking-wide">
+                  Background Image URL
+                </label>
+                <input
+                  type="text"
+                  value={heroContent.backgroundUrl || ''}
+                  onChange={(e) => handleContentChange('backgroundUrl', e.target.value)}
+                  className="w-full px-3 py-2 text-sm bg-gray-700 border border-gray-600 rounded text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none"
+                  placeholder="Enter image URL..."
+                />
+              </div>
+              {heroContent.ctaButton !== undefined && (
+                <div>
+                  <label className="block text-xs font-medium text-gray-400 mb-2 uppercase tracking-wide">
+                    CTA Button Text
+                  </label>
+                  <input
+                    type="text"
+                    value={heroContent.ctaButton?.text || ''}
+                    onChange={(e) => handleContentChange('ctaButton', { 
+                      ...heroContent.ctaButton, 
+                      text: e.target.value 
+                    })}
+                    className="w-full px-3 py-2 text-sm bg-gray-700 border border-gray-600 rounded text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none"
+                    placeholder="Enter button text..."
+                  />
+                </div>
+              )}
             </div>
           );
 
@@ -1278,7 +1505,7 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
           {/* Tab Navigation */}
           <div className="flex border-b border-gray-700">
             <button
-              onClick={() => setActiveTab('style')}
+              onClick={() => onTabChange('style')}
               className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
                 activeTab === 'style'
                   ? 'text-white border-b-2 border-blue-500 bg-gray-700'
@@ -1288,7 +1515,7 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
               Style
             </button>
             <button
-              onClick={() => setActiveTab('settings')}
+              onClick={() => onTabChange('settings')}
               className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
                 activeTab === 'settings'
                   ? 'text-white border-b-2 border-blue-500 bg-gray-700'
@@ -1320,22 +1547,7 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
       onDragLeave={handleGlobalDragLeave}
       onDrop={handleGlobalDrop}
     >
-      {/* Global drag overlay */}
-      {isDragOverGlobal && selectedBlockId && layout.blocks.find(b => b.id === selectedBlockId)?.type === 'image' && (
-        <div className="fixed inset-0 bg-blue-500 bg-opacity-20 z-40 flex items-center justify-center">
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl border-2 border-blue-500 border-dashed">
-            <div className="text-center">
-              <div className="w-16 h-16 mx-auto mb-4 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center">
-                <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Drop Image Here</h3>
-              <p className="text-gray-600 dark:text-gray-400">Release to upload image to selected block</p>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Removed global drag overlay for image drop. Image upload is now only in the right sidebar. */}
       
       {/* Custom styles for Webflow-like appearance */}
       <style jsx>{`
@@ -1464,6 +1676,8 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
         }}
         onUpdate={updateBlock}
         onStyleUpdate={updateBlockStyle}
+        activeTab={propertyPanelActiveTab}
+        onTabChange={setPropertyPanelActiveTab}
       />
 
       {/* Image Upload Modal */}
