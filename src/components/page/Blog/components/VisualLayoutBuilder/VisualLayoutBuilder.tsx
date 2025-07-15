@@ -279,7 +279,7 @@ const BlockRenderer: React.FC<BlockRenderProps> = ({
             <div className="relative z-10">
               <h1 
                 style={{
-                  fontSize: block.styles.fontSize || '2.5rem',
+                  fontSize: block.styles.titleFontSize || '2.5rem',
                   fontWeight: block.styles.fontWeight || 'bold',
                   color: block.styles.textColor || '#000000',
                   textAlign: block.styles.textAlign || 'center',
@@ -294,7 +294,7 @@ const BlockRenderer: React.FC<BlockRenderProps> = ({
               </h1>
               <p 
                 style={{
-                  fontSize: '1.25rem',
+                  fontSize: block.styles.subtitleFontSize || '1.25rem',
                   color: block.styles.textColor || '#000000',
                   textAlign: block.styles.textAlign || 'center',
                   marginBottom: '1.5rem',
@@ -687,7 +687,7 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
       onUpdate(block.id, { [field]: value });
     };
 
-    const handleStyleChange = (field: string, value: any) => {
+    const updateBlockStyle = (field: string, value: any) => {
       onStyleUpdate(block.id, { [field]: value });
     };
 
@@ -1676,7 +1676,7 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
                   <label className="block text-xs font-medium text-gray-400 mb-1">Weight</label>
                   <select
                     value={block.styles.fontWeight || 'normal'}
-                    onChange={(e) => handleStyleChange('fontWeight', e.target.value)}
+                    onChange={(e) => updateBlockStyle('fontWeight', e.target.value)}
                     className="w-full px-3 py-2 text-sm bg-gray-700 border border-gray-600 rounded text-white focus:border-blue-500 focus:outline-none"
                   >
                     <option value="normal">400 - Normal</option>
@@ -1685,17 +1685,65 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
                     <option value="bolder">900 - Black</option>
                   </select>
                 </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-400 mb-1">Size</label>
+                  <div className="flex">
+                    <div className="flex items-center bg-gray-700 border border-gray-600 rounded-l">
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          const currentValue = parseInt(block.styles.fontSize?.replace('px', '') || '16');
+                          const newValue = Math.max(8, currentValue - 1);
+                          updateBlockStyle('fontSize', `${newValue}px`);
+                        }}
+                        className="px-2 py-2 text-gray-300 hover:text-white hover:bg-gray-600 transition-colors"
+                      >
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+                        </svg>
+                      </button>
+                      <input
+                        type="text"
+                        value={parseInt(block.styles.fontSize?.replace('px', '') || '16')}
+                        onChange={(e) => {
+                          const value = parseInt(e.target.value) || 16;
+                          updateBlockStyle('fontSize', `${Math.max(8, Math.min(72, value))}px`);
+                        }}
+                        className="w-16 px-2 py-2 text-sm bg-transparent text-white text-center focus:outline-none"
+                      />
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          const currentValue = parseInt(block.styles.fontSize?.replace('px', '') || '16');
+                          const newValue = Math.min(72, currentValue + 1);
+                          updateBlockStyle('fontSize', `${newValue}px`);
+                        }}
+                        className="px-2 py-2 text-gray-300 hover:text-white hover:bg-gray-600 transition-colors"
+                      >
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                        </svg>
+                      </button>
+                    </div>
+                    <span className="px-2 py-2 text-xs bg-gray-600 border border-l-0 border-gray-600 rounded-r text-gray-300">px</span>
+                  </div>
+                </div>
+              </div>
+              {block.type === 'hero' && (
+                <>
                   <div>
-                    <label className="block text-xs font-medium text-gray-400 mb-1">Size</label>
+                    <label className="block text-xs font-medium text-gray-400 mb-1">Title Size</label>
                     <div className="flex">
                       <div className="flex items-center bg-gray-700 border border-gray-600 rounded-l">
                         <button
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
-                            const currentValue = parseInt(block.styles.fontSize?.replace('px', '') || '16');
-                            const newValue = Math.max(8, currentValue - 1);
-                            handleStyleChange('fontSize', `${newValue}px`);
+                            const currentValue = parseInt(block.styles.titleFontSize?.replace('px', '') || '32');
+                            const newValue = Math.max(12, currentValue - 1);
+                            updateBlockStyle('titleFontSize', `${newValue}px`);
                           }}
                           className="px-2 py-2 text-gray-300 hover:text-white hover:bg-gray-600 transition-colors"
                         >
@@ -1705,10 +1753,10 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
                         </button>
                         <input
                           type="text"
-                          value={parseInt(block.styles.fontSize?.replace('px', '') || '16')}
+                          value={parseInt(block.styles.titleFontSize?.replace('px', '') || '32')}
                           onChange={(e) => {
-                            const value = parseInt(e.target.value) || 16;
-                            handleStyleChange('fontSize', `${Math.max(8, Math.min(72, value))}px`);
+                            const value = parseInt(e.target.value) || 32;
+                            updateBlockStyle('titleFontSize', `${Math.max(12, Math.min(96, value))}px`);
                           }}
                           className="w-16 px-2 py-2 text-sm bg-transparent text-white text-center focus:outline-none"
                         />
@@ -1716,9 +1764,9 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
-                            const currentValue = parseInt(block.styles.fontSize?.replace('px', '') || '16');
-                            const newValue = Math.min(72, currentValue + 1);
-                            handleStyleChange('fontSize', `${newValue}px`);
+                            const currentValue = parseInt(block.styles.titleFontSize?.replace('px', '') || '32');
+                            const newValue = Math.min(96, currentValue + 1);
+                            updateBlockStyle('titleFontSize', `${newValue}px`);
                           }}
                           className="px-2 py-2 text-gray-300 hover:text-white hover:bg-gray-600 transition-colors"
                         >
@@ -1730,20 +1778,66 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
                       <span className="px-2 py-2 text-xs bg-gray-600 border border-l-0 border-gray-600 rounded-r text-gray-300">px</span>
                     </div>
                   </div>
-              </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-400 mb-1">Subtitle Size</label>
+                    <div className="flex">
+                      <div className="flex items-center bg-gray-700 border border-gray-600 rounded-l">
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            const currentValue = parseInt(block.styles.subtitleFontSize?.replace('px', '') || '18');
+                            const newValue = Math.max(10, currentValue - 1);
+                            updateBlockStyle('subtitleFontSize', `${newValue}px`);
+                          }}
+                          className="px-2 py-2 text-gray-300 hover:text-white hover:bg-gray-600 transition-colors"
+                        >
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+                          </svg>
+                        </button>
+                        <input
+                          type="text"
+                          value={parseInt(block.styles.subtitleFontSize?.replace('px', '') || '18')}
+                          onChange={(e) => {
+                            const value = parseInt(e.target.value) || 18;
+                            updateBlockStyle('subtitleFontSize', `${Math.max(10, Math.min(48, value))}px`);
+                          }}
+                          className="w-16 px-2 py-2 text-sm bg-transparent text-white text-center focus:outline-none"
+                        />
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            const currentValue = parseInt(block.styles.subtitleFontSize?.replace('px', '') || '18');
+                            const newValue = Math.min(48, currentValue + 1);
+                            updateBlockStyle('subtitleFontSize', `${newValue}px`);
+                          }}
+                          className="px-2 py-2 text-gray-300 hover:text-white hover:bg-gray-600 transition-colors"
+                        >
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                          </svg>
+                        </button>
+                      </div>
+                      <span className="px-2 py-2 text-xs bg-gray-600 border border-l-0 border-gray-600 rounded-r text-gray-300">px</span>
+                    </div>
+                  </div>
+                </>
+              )}
               <div>
                 <label className="block text-xs font-medium text-gray-400 mb-1">Color</label>
                 <div className="flex items-center space-x-2">
                   <input
                     type="color"
                     value={block.styles.textColor || '#000000'}
-                    onChange={(e) => handleStyleChange('textColor', e.target.value)}
+                    onChange={(e) => updateBlockStyle('textColor', e.target.value)}
                     className="w-8 h-8 rounded border border-gray-600"
                   />
                   <input
                     type="text"
                     value={block.styles.textColor || '#000000'}
-                    onChange={(e) => handleStyleChange('textColor', e.target.value)}
+                    onChange={(e) => updateBlockStyle('textColor', e.target.value)}
                     className="flex-1 px-3 py-2 text-sm bg-gray-700 border border-gray-600 rounded text-white focus:border-blue-500 focus:outline-none font-mono"
                   />
                 </div>
@@ -1754,7 +1848,7 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
                   {['left', 'center', 'right', 'justify'].map((align) => (
                     <button
                       key={align}
-                      onClick={() => handleStyleChange('textAlign', align)}
+                      onClick={() => updateBlockStyle('textAlign', align)}
                       className={`flex-1 p-2 text-xs rounded transition-colors ${
                         block.styles.textAlign === align || (!block.styles.textAlign && align === 'left')
                           ? 'bg-blue-600 text-white'
@@ -1807,7 +1901,7 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
                           e.stopPropagation();
                           const currentValue = block.styles.margin?.top || 0;
                           const newValue = Math.max(0, currentValue - 1);
-                          handleStyleChange('margin', { 
+                          updateBlockStyle('margin', { 
                             ...block.styles.margin, 
                             top: newValue 
                           });
@@ -1824,7 +1918,7 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
                         value={block.styles.margin?.top || 0}
                         onChange={(e) => {
                           const value = parseInt(e.target.value) || 0;
-                          handleStyleChange('margin', { 
+                          updateBlockStyle('margin', { 
                             ...block.styles.margin, 
                             top: Math.max(0, value)
                           });
@@ -1837,7 +1931,7 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
                           e.stopPropagation();
                           const currentValue = block.styles.margin?.top || 0;
                           const newValue = currentValue + 1;
-                          handleStyleChange('margin', { 
+                          updateBlockStyle('margin', { 
                             ...block.styles.margin, 
                             top: newValue 
                           });
@@ -1857,7 +1951,7 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
                           e.stopPropagation();
                           const currentValue = block.styles.margin?.left || 0;
                           const newValue = Math.max(0, currentValue - 1);
-                          handleStyleChange('margin', { 
+                          updateBlockStyle('margin', { 
                             ...block.styles.margin, 
                             left: newValue 
                           });
@@ -1874,7 +1968,7 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
                         value={block.styles.margin?.left || 0}
                         onChange={(e) => {
                           const value = parseInt(e.target.value) || 0;
-                          handleStyleChange('margin', { 
+                          updateBlockStyle('margin', { 
                             ...block.styles.margin, 
                             left: Math.max(0, value)
                           });
@@ -1887,7 +1981,7 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
                           e.stopPropagation();
                           const currentValue = block.styles.margin?.left || 0;
                           const newValue = currentValue + 1;
-                          handleStyleChange('margin', { 
+                          updateBlockStyle('margin', { 
                             ...block.styles.margin, 
                             left: newValue 
                           });
@@ -1909,7 +2003,7 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
                           e.stopPropagation();
                           const currentValue = block.styles.margin?.right || 0;
                           const newValue = Math.max(0, currentValue - 1);
-                          handleStyleChange('margin', { 
+                          updateBlockStyle('margin', { 
                             ...block.styles.margin, 
                             right: newValue 
                           });
@@ -1926,7 +2020,7 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
                         value={block.styles.margin?.right || 0}
                         onChange={(e) => {
                           const value = parseInt(e.target.value) || 0;
-                          handleStyleChange('margin', { 
+                          updateBlockStyle('margin', { 
                             ...block.styles.margin, 
                             right: Math.max(0, value)
                           });
@@ -1939,7 +2033,7 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
                           e.stopPropagation();
                           const currentValue = block.styles.margin?.right || 0;
                           const newValue = currentValue + 1;
-                          handleStyleChange('margin', { 
+                          updateBlockStyle('margin', { 
                             ...block.styles.margin, 
                             right: newValue 
                           });
@@ -1959,7 +2053,7 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
                           e.stopPropagation();
                           const currentValue = block.styles.margin?.bottom || 0;
                           const newValue = Math.max(0, currentValue - 1);
-                          handleStyleChange('margin', { 
+                          updateBlockStyle('margin', { 
                             ...block.styles.margin, 
                             bottom: newValue 
                           });
@@ -1976,7 +2070,7 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
                         value={block.styles.margin?.bottom || 0}
                         onChange={(e) => {
                           const value = parseInt(e.target.value) || 0;
-                          handleStyleChange('margin', { 
+                          updateBlockStyle('margin', { 
                             ...block.styles.margin, 
                             bottom: Math.max(0, value)
                           });
@@ -1989,7 +2083,7 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
                           e.stopPropagation();
                           const currentValue = block.styles.margin?.bottom || 0;
                           const newValue = currentValue + 1;
-                          handleStyleChange('margin', { 
+                          updateBlockStyle('margin', { 
                             ...block.styles.margin, 
                             bottom: newValue 
                           });
@@ -2017,7 +2111,7 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
                           e.stopPropagation();
                           const currentValue = block.styles.padding?.top || 0;
                           const newValue = Math.max(0, currentValue - 1);
-                          handleStyleChange('padding', { 
+                          updateBlockStyle('padding', { 
                             ...block.styles.padding, 
                             top: newValue 
                           });
@@ -2034,7 +2128,7 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
                         value={block.styles.padding?.top || 0}
                         onChange={(e) => {
                           const value = parseInt(e.target.value) || 0;
-                          handleStyleChange('padding', { 
+                          updateBlockStyle('padding', { 
                             ...block.styles.padding, 
                             top: Math.max(0, value)
                           });
@@ -2047,7 +2141,7 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
                           e.stopPropagation();
                           const currentValue = block.styles.padding?.top || 0;
                           const newValue = currentValue + 1;
-                          handleStyleChange('padding', { 
+                          updateBlockStyle('padding', { 
                             ...block.styles.padding, 
                             top: newValue 
                           });
@@ -2067,7 +2161,7 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
                           e.stopPropagation();
                           const currentValue = block.styles.padding?.left || 0;
                           const newValue = Math.max(0, currentValue - 1);
-                          handleStyleChange('padding', { 
+                          updateBlockStyle('padding', { 
                             ...block.styles.padding, 
                             left: newValue 
                           });
@@ -2084,7 +2178,7 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
                         value={block.styles.padding?.left || 0}
                         onChange={(e) => {
                           const value = parseInt(e.target.value) || 0;
-                          handleStyleChange('padding', { 
+                          updateBlockStyle('padding', { 
                             ...block.styles.padding, 
                             left: Math.max(0, value)
                           });
@@ -2097,7 +2191,7 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
                           e.stopPropagation();
                           const currentValue = block.styles.padding?.left || 0;
                           const newValue = currentValue + 1;
-                          handleStyleChange('padding', { 
+                          updateBlockStyle('padding', { 
                             ...block.styles.padding, 
                             left: newValue 
                           });
@@ -2119,7 +2213,7 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
                           e.stopPropagation();
                           const currentValue = block.styles.padding?.right || 0;
                           const newValue = Math.max(0, currentValue - 1);
-                          handleStyleChange('padding', { 
+                          updateBlockStyle('padding', { 
                             ...block.styles.padding, 
                             right: newValue 
                           });
@@ -2136,7 +2230,7 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
                         value={block.styles.padding?.right || 0}
                         onChange={(e) => {
                           const value = parseInt(e.target.value) || 0;
-                          handleStyleChange('padding', { 
+                          updateBlockStyle('padding', { 
                             ...block.styles.padding, 
                             right: Math.max(0, value)
                           });
@@ -2149,7 +2243,7 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
                           e.stopPropagation();
                           const currentValue = block.styles.padding?.right || 0;
                           const newValue = currentValue + 1;
-                          handleStyleChange('padding', { 
+                          updateBlockStyle('padding', { 
                             ...block.styles.padding, 
                             right: newValue 
                           });
@@ -2169,7 +2263,7 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
                           e.stopPropagation();
                           const currentValue = block.styles.padding?.bottom || 0;
                           const newValue = Math.max(0, currentValue - 1);
-                          handleStyleChange('padding', { 
+                          updateBlockStyle('padding', { 
                             ...block.styles.padding, 
                             bottom: newValue 
                           });
@@ -2186,7 +2280,7 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
                         value={block.styles.padding?.bottom || 0}
                         onChange={(e) => {
                           const value = parseInt(e.target.value) || 0;
-                          handleStyleChange('padding', { 
+                          updateBlockStyle('padding', { 
                             ...block.styles.padding, 
                             bottom: Math.max(0, value)
                           });
@@ -2199,7 +2293,7 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
                           e.stopPropagation();
                           const currentValue = block.styles.padding?.bottom || 0;
                           const newValue = currentValue + 1;
-                          handleStyleChange('padding', { 
+                          updateBlockStyle('padding', { 
                             ...block.styles.padding, 
                             bottom: newValue 
                           });
@@ -2249,7 +2343,7 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
                   <input
                     type="text"
                     value={block.styles.backgroundColor || 'transparent'}
-                    onChange={(e) => handleStyleChange('backgroundColor', e.target.value)}
+                    onChange={(e) => updateBlockStyle('backgroundColor', e.target.value)}
                     className="flex-1 px-3 py-2 text-sm bg-gray-700 border border-gray-600 rounded text-white focus:border-blue-500 focus:outline-none font-mono"
                   />
                 </div>
@@ -2288,7 +2382,7 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
                         e.stopPropagation();
                         const currentValue = block.styles.border?.width || 0;
                         const newValue = Math.max(0, currentValue - 1);
-                        handleStyleChange('border', { 
+                        updateBlockStyle('border', { 
                           ...block.styles.border, 
                           width: newValue 
                         });
@@ -2304,7 +2398,7 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
                       value={block.styles.border?.width || 0}
                       onChange={(e) => {
                         const value = parseInt(e.target.value) || 0;
-                        handleStyleChange('border', { 
+                        updateBlockStyle('border', { 
                           ...block.styles.border, 
                           width: Math.max(0, value)
                         });
@@ -2317,7 +2411,7 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
                         e.stopPropagation();
                         const currentValue = block.styles.border?.width || 0;
                         const newValue = currentValue + 1;
-                        handleStyleChange('border', { 
+                        updateBlockStyle('border', { 
                           ...block.styles.border, 
                           width: newValue 
                         });
@@ -2336,7 +2430,7 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
                 <label className="block text-xs font-medium text-gray-400 mb-1">Style</label>
                 <select
                   value={block.styles.border?.style || 'solid'}
-                  onChange={(e) => handleStyleChange('border', { 
+                  onChange={(e) => updateBlockStyle('border', { 
                     ...block.styles.border, 
                     style: e.target.value 
                   })}
@@ -2355,7 +2449,7 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
                   <input
                     type="color"
                     value={block.styles.border?.color || '#000000'}
-                    onChange={(e) => handleStyleChange('border', { 
+                    onChange={(e) => updateBlockStyle('border', { 
                       ...block.styles.border, 
                       color: e.target.value 
                     })}
@@ -2364,7 +2458,7 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
                   <input
                     type="text"
                     value={block.styles.border?.color || '#000000'}
-                    onChange={(e) => handleStyleChange('border', { 
+                    onChange={(e) => updateBlockStyle('border', { 
                       ...block.styles.border, 
                       color: e.target.value 
                     })}
@@ -2382,7 +2476,7 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
                         e.stopPropagation();
                         const currentValue = block.styles.border?.radius || 0;
                         const newValue = Math.max(0, currentValue - 1);
-                        handleStyleChange('border', { 
+                        updateBlockStyle('border', { 
                           ...block.styles.border, 
                           radius: newValue 
                         });
@@ -2398,7 +2492,7 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
                       value={block.styles.border?.radius || 0}
                       onChange={(e) => {
                         const value = parseInt(e.target.value) || 0;
-                        handleStyleChange('border', { 
+                        updateBlockStyle('border', { 
                           ...block.styles.border, 
                           radius: Math.max(0, value)
                         });
@@ -2411,7 +2505,7 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
                         e.stopPropagation();
                         const currentValue = block.styles.border?.radius || 0;
                         const newValue = currentValue + 1;
-                        handleStyleChange('border', { 
+                        updateBlockStyle('border', { 
                           ...block.styles.border, 
                           radius: newValue 
                         });

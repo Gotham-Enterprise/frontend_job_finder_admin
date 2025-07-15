@@ -36,6 +36,8 @@ export interface BlockStyles {
   fontSize?: string;
   fontWeight?: string;
   textAlign?: 'left' | 'center' | 'right' | 'justify';
+  titleFontSize?: string;
+  subtitleFontSize?: string;
   padding?: {
     top: number;
     right: number;
