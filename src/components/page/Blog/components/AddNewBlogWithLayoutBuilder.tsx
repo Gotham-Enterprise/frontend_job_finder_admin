@@ -163,18 +163,17 @@ export default function AddNewBlogWithLayoutBuilder() {
   ];
 
   // Handlers
-  const handleMetadataChange = useCallback((field: keyof BlogMetadata, value: any) => {
+  const updateMetadata = useCallback((field: keyof BlogMetadata, value: any) => {
     setMetadata(prev => ({
       ...prev,
       [field]: value
     }));
   }, []);
 
-  const handleTitleChange = useCallback((title: string) => {
+  const updateTitle = useCallback((title: string) => {
     setMetadata(prev => ({
       ...prev,
       title,
-      // Auto-generate permalink from title
       permalink: title.toLowerCase()
         .replace(/[^\w\s-]/g, '')
         .replace(/\s+/g, '-')
@@ -190,26 +189,23 @@ export default function AddNewBlogWithLayoutBuilder() {
     }));
   }, []);
 
-  const handleLayoutChange = useCallback((layout: BlogLayout) => {
+  const updateLayout = useCallback((layout: BlogLayout) => {
     setCurrentLayout(layout);
   }, []);
 
-  const handleSave = useCallback(async (isDraft = true) => {
+  const saveBlog = useCallback(async (isDraft = true) => {
     try {
-      // Convert layout to content
       const layoutPayload = convertLayoutToBlogPayload(currentLayout, metadata.title);
       console.log('Saving blog post:', layoutPayload);
-      // Here you would call your API to save the blog post
     } catch (error) {
       console.error('Error saving blog post:', error);
     }
   }, [currentLayout, metadata]);
 
-  const handlePreview = useCallback(() => {
+  const previewBlog = useCallback(() => {
     previewModal.openModal();
   }, [previewModal]);
 
-  // Add element function for the element buttons
   const addElement = useCallback((type: string) => {
     const newBlock: any = {
       id: `${type}-${Date.now()}`,
@@ -337,14 +333,14 @@ export default function AddNewBlogWithLayoutBuilder() {
             <span className="text-sm text-gray-500 dark:text-gray-400">Draft auto-saved</span>
             <Button
               variant="secondary"
-              onClick={handlePreview}
+              onClick={previewBlog}
               disabled={!canSave}
               className="px-4 py-2"
             >
               Preview
             </Button>
             <Button
-              onClick={handleSave}
+              onClick={saveBlog}
               disabled={!canSave}
               className="px-4 py-2"
             >
@@ -367,7 +363,7 @@ export default function AddNewBlogWithLayoutBuilder() {
                     <input
                       type="text"
                       value={metadata.title}
-                      onChange={(e) => handleTitleChange(e.target.value)}
+                      onChange={(e) => updateTitle(e.target.value)}
                       placeholder="Enter blog title..."
                       className="w-full px-2 py-1 text-sm bg-gray-800 border border-gray-600 rounded focus:border-blue-500 focus:outline-none"
                     />
@@ -376,7 +372,7 @@ export default function AddNewBlogWithLayoutBuilder() {
                     <label className="block text-xs text-gray-400 mb-1">Status</label>
                     <select
                       value={metadata.status}
-                      onChange={(e) => handleMetadataChange('status', e.target.value)}
+                      onChange={(e) => updateMetadata('status', e.target.value)}
                       className="w-full px-2 py-1 text-sm bg-gray-800 border border-gray-600 rounded focus:border-blue-500 focus:outline-none"
                     >
                       {statusOptions.map(option => (
@@ -388,7 +384,7 @@ export default function AddNewBlogWithLayoutBuilder() {
                     <label className="block text-xs text-gray-400 mb-1">Visibility</label>
                     <select
                       value={metadata.visibility}
-                      onChange={(e) => handleMetadataChange('visibility', e.target.value)}
+                      onChange={(e) => updateMetadata('visibility', e.target.value)}
                       className="w-full px-2 py-1 text-sm bg-gray-800 border border-gray-600 rounded focus:border-blue-500 focus:outline-none"
                     >
                       <option value="public">Public</option>
@@ -414,7 +410,7 @@ export default function AddNewBlogWithLayoutBuilder() {
                             const newCategories = e.target.checked
                               ? [...currentCategories, category.value]
                               : currentCategories.filter(c => c !== category.value);
-                            handleMetadataChange('categories', newCategories);
+                            updateMetadata('categories', newCategories);
                           }}
                           className="mr-2 w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
                         />
@@ -438,7 +434,7 @@ export default function AddNewBlogWithLayoutBuilder() {
                             const newTags = e.target.checked
                               ? [...currentTags, tag.value]
                               : currentTags.filter(t => t !== tag.value);
-                            handleMetadataChange('tags', newTags);
+                            updateMetadata('tags', newTags);
                           }}
                           className="mr-2 w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
                         />
@@ -476,7 +472,7 @@ export default function AddNewBlogWithLayoutBuilder() {
                       <input
                         type="text"
                         value={metadata.seoTitle}
-                        onChange={(e) => handleMetadataChange('seoTitle', e.target.value)}
+                        onChange={(e) => updateMetadata('seoTitle', e.target.value)}
                         placeholder="Leave empty to use blog title"
                         className="w-full px-2 py-1 text-sm bg-gray-800 border border-gray-600 rounded focus:border-blue-500 focus:outline-none"
                       />
@@ -486,7 +482,7 @@ export default function AddNewBlogWithLayoutBuilder() {
                       <label className="block text-xs text-gray-400 mb-1">Meta Description</label>
                       <textarea
                         value={metadata.seoDescription}
-                        onChange={(e) => handleMetadataChange('seoDescription', e.target.value)}
+                        onChange={(e) => updateMetadata('seoDescription', e.target.value)}
                         placeholder="Brief description for search engines..."
                         rows={3}
                         className="w-full px-2 py-1 text-sm bg-gray-800 border border-gray-600 rounded focus:border-blue-500 focus:outline-none resize-none"
@@ -498,7 +494,7 @@ export default function AddNewBlogWithLayoutBuilder() {
                       <input
                         type="text"
                         value={metadata.permalink}
-                        onChange={(e) => handleMetadataChange('permalink', e.target.value)}
+                        onChange={(e) => updateMetadata('permalink', e.target.value)}
                         placeholder="post-url-slug"
                         className="w-full px-2 py-1 text-sm bg-gray-800 border border-gray-600 rounded focus:border-blue-500 focus:outline-none font-mono"
                       />
@@ -533,7 +529,7 @@ export default function AddNewBlogWithLayoutBuilder() {
                       <input
                         type="date"
                         value={metadata.publishDate}
-                        onChange={(e) => handleMetadataChange('publishDate', e.target.value)}
+                        onChange={(e) => updateMetadata('publishDate', e.target.value)}
                         className="w-full px-2 py-1 text-sm bg-gray-800 border border-gray-600 rounded focus:border-blue-500 focus:outline-none"
                       />
                     </div>
@@ -543,7 +539,7 @@ export default function AddNewBlogWithLayoutBuilder() {
                         <input
                           type="checkbox"
                           checked={metadata.allowComments}
-                          onChange={(e) => handleMetadataChange('allowComments', e.target.checked)}
+                          onChange={(e) => updateMetadata('allowComments', e.target.checked)}
                           className="mr-2 text-blue-500"
                         />
                         <span className="text-gray-300">Allow Comments</span>
@@ -553,7 +549,7 @@ export default function AddNewBlogWithLayoutBuilder() {
                         <input
                           type="checkbox"
                           checked={metadata.allowPings}
-                          onChange={(e) => handleMetadataChange('allowPings', e.target.checked)}
+                          onChange={(e) => updateMetadata('allowPings', e.target.checked)}
                           className="mr-2 text-blue-500"
                         />
                         <span className="text-gray-300">Allow Pingbacks</span>
@@ -566,7 +562,7 @@ export default function AddNewBlogWithLayoutBuilder() {
                         <input
                           type="password"
                           value={metadata.password}
-                          onChange={(e) => handleMetadataChange('password', e.target.value)}
+                          onChange={(e) => updateMetadata('password', e.target.value)}
                           placeholder="Enter password..."
                           className="w-full px-2 py-1 text-sm bg-gray-800 border border-gray-600 rounded focus:border-blue-500 focus:outline-none"
                         />
@@ -582,8 +578,8 @@ export default function AddNewBlogWithLayoutBuilder() {
           <div className="flex-1 relative h-full bg-gray-100 dark:bg-gray-900">
             <VisualLayoutBuilder
               initialLayout={currentLayout}
-              onLayoutChange={handleLayoutChange}
-              onSave={handleSave}
+              onLayoutChange={updateLayout}
+              onSave={saveBlog}
               blogData={metadata}
             />
           </div>

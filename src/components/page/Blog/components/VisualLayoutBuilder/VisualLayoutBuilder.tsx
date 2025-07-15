@@ -1014,6 +1014,114 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
             </div>
           );
 
+        case 'list':
+          const listContent = block.content as any;
+          const [localItems, setLocalItems] = useState(listContent.items || ['']);
+          
+          useEffect(() => {
+            setLocalItems(listContent.items || ['']);
+          }, [listContent.items]);
+
+          const addListItem = () => {
+            const newItems = [...localItems, ''];
+            setLocalItems(newItems);
+            handleContentChange('items', newItems);
+          };
+
+          const removeListItem = (index: number) => {
+            if (localItems.length > 1) {
+              const newItems = localItems.filter((_: string, i: number) => i !== index);
+              setLocalItems(newItems);
+              handleContentChange('items', newItems);
+            }
+          };
+
+          const updateListItem = (index: number, value: string) => {
+            const newItems = [...localItems];
+            newItems[index] = value;
+            setLocalItems(newItems);
+            
+            const timer = setTimeout(() => {
+              handleContentChange('items', newItems);
+            }, 300);
+
+            return () => clearTimeout(timer);
+          };
+
+          const toggleListType = (ordered: boolean) => {
+            handleContentChange('ordered', ordered);
+          };
+
+          return (
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-medium text-gray-400 mb-2 uppercase tracking-wide">
+                  List Type
+                </label>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => toggleListType(false)}
+                    className={`flex-1 px-3 py-2 text-xs rounded transition-colors ${
+                      !listContent.ordered
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                    }`}
+                  >
+                    Unordered
+                  </button>
+                  <button
+                    onClick={() => toggleListType(true)}
+                    className={`flex-1 px-3 py-2 text-xs rounded transition-colors ${
+                      listContent.ordered
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                    }`}
+                  >
+                    Ordered
+                  </button>
+                </div>
+              </div>
+              
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-xs font-medium text-gray-400 uppercase tracking-wide">
+                    List Items
+                  </label>
+                  <button
+                    onClick={addListItem}
+                    className="px-2 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                  >
+                    Add Item
+                  </button>
+                </div>
+                
+                <div className="space-y-2 max-h-48 overflow-y-auto">
+                  {localItems.map((item: string, index: number) => (
+                    <div key={index} className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={item}
+                        onChange={(e) => updateListItem(index, e.target.value)}
+                        className="flex-1 px-3 py-2 text-sm bg-gray-700 border border-gray-600 rounded text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none"
+                        placeholder={`Item ${index + 1}`}
+                      />
+                      <button
+                        onClick={() => removeListItem(index)}
+                        disabled={localItems.length <= 1}
+                        className="p-2 text-red-400 hover:text-red-300 hover:bg-red-900/20 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        title="Delete item"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          );
+
         case 'hero':
           const heroContent = block.content as any;
           const [localTitle, setLocalTitle] = useState(heroContent.title || '');
