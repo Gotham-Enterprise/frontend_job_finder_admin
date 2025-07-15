@@ -302,10 +302,26 @@ const BlockRenderer: React.FC<BlockRenderProps> = ({
               >
                 {heroContent.subtitle || 'Add a compelling subtitle'}
               </p>
-              {heroContent.ctaButton && (
-                <button className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                  {heroContent.ctaButton.text}
-                </button>
+              {heroContent.ctaButton && heroContent.ctaButton.visible !== false && (
+                <a
+                  href={heroContent.ctaButton.link || '#'}
+                  target={heroContent.ctaButton.link?.startsWith('http') ? '_blank' : undefined}
+                  rel={heroContent.ctaButton.link?.startsWith('http') ? 'noopener noreferrer' : undefined}
+                  className="inline-block px-6 py-3 rounded-lg transition-colors hover:opacity-90"
+                  style={{
+                    backgroundColor: heroContent.ctaButton.backgroundColor || '#3b82f6',
+                    color: heroContent.ctaButton.textColor || '#ffffff',
+                    width: heroContent.ctaButton.width === 'full' ? '100%' : 
+                           heroContent.ctaButton.width === 'fit' ? 'fit-content' : 
+                           heroContent.ctaButton.width === 'auto' ? 'auto' : 
+                           heroContent.ctaButton.width,
+                    textDecoration: 'none',
+                    display: 'inline-block',
+                    textAlign: 'center',
+                  }}
+                >
+                  {heroContent.ctaButton.text || 'Learn More'}
+                </a>
               )}
             </div>
           </div>
@@ -629,12 +645,11 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
   }> = ({ block, isVisible, onClose, onUpdate, onStyleUpdate, activeTab, onTabChange }) => {
     const [expandedSections, setExpandedSections] = useState<{[key: string]: boolean}>({
       typography: true,
-      spacing: false,
+      spacing: true,
       size: false,
       position: false,
-      backgrounds: false,
-      borders: false,
-      effects: false,
+      backgrounds: true,
+      borders: true,
     });
 
     if (!block) return null;
@@ -1122,22 +1137,162 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
             </div>
           );
 
+        case 'spacer':
+          const spacerContent = block.content as any;
+          const [localHeight, setLocalHeight] = useState(spacerContent.height || 40);
+          
+          useEffect(() => {
+            setLocalHeight(spacerContent.height || 40);
+          }, [spacerContent.height]);
+
+          const updateSpacerHeight = (value: number) => {
+            setLocalHeight(value);
+            handleContentChange('height', value);
+            
+            const newPosition = { ...block.position, height: value };
+            onStyleUpdate(block.id, { position: newPosition });
+          };
+
+          return (
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-medium text-gray-400 mb-2 uppercase tracking-wide">
+                  Height
+                </label>
+                <div className="flex">
+                  <input
+                    type="number"
+                    value={localHeight}
+                    onChange={(e) => updateSpacerHeight(parseInt(e.target.value) || 40)}
+                    className="flex-1 px-3 py-2 text-sm bg-gray-700 border border-gray-600 rounded-l text-white focus:border-blue-500 focus:outline-none"
+                    min="10"
+                    max="500"
+                    step="10"
+                  />
+                  <span className="px-2 py-2 text-xs bg-gray-600 border border-l-0 border-gray-600 rounded-r text-gray-300">px</span>
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  Controls the vertical spacing this element adds
+                </p>
+              </div>
+            </div>
+          );
+
+        case 'code':
+          const codeContent = block.content as any;
+          const [localCode, setLocalCode] = useState(codeContent.code || '');
+          const [localLanguage, setLocalLanguage] = useState(codeContent.language || 'javascript');
+          
+          useEffect(() => {
+            setLocalCode(codeContent.code || '');
+            setLocalLanguage(codeContent.language || 'javascript');
+          }, [codeContent.code, codeContent.language]);
+
+          useEffect(() => {
+            const timer = setTimeout(() => {
+              if (localCode !== codeContent.code) {
+                handleContentChange('code', localCode);
+              }
+            }, 300);
+            return () => clearTimeout(timer);
+          }, [localCode]);
+
+          const updateCode = (value: string) => {
+            setLocalCode(value);
+          };
+
+          const updateLanguage = (value: string) => {
+            setLocalLanguage(value);
+            handleContentChange('language', value);
+          };
+
+          const languageOptions = [
+            { value: 'javascript', label: 'JavaScript' },
+            { value: 'typescript', label: 'TypeScript' },
+            { value: 'python', label: 'Python' },
+            { value: 'html', label: 'HTML' },
+            { value: 'css', label: 'CSS' },
+            { value: 'json', label: 'JSON' },
+            { value: 'sql', label: 'SQL' },
+            { value: 'bash', label: 'Bash' },
+            { value: 'php', label: 'PHP' },
+            { value: 'java', label: 'Java' },
+            { value: 'csharp', label: 'C#' },
+            { value: 'cpp', label: 'C++' },
+            { value: 'go', label: 'Go' },
+            { value: 'rust', label: 'Rust' },
+            { value: 'swift', label: 'Swift' },
+            { value: 'kotlin', label: 'Kotlin' },
+            { value: 'ruby', label: 'Ruby' },
+            { value: 'yaml', label: 'YAML' },
+            { value: 'xml', label: 'XML' },
+            { value: 'markdown', label: 'Markdown' },
+          ];
+
+          return (
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-medium text-gray-400 mb-2 uppercase tracking-wide">
+                  Language
+                </label>
+                <select
+                  value={localLanguage}
+                  onChange={(e) => updateLanguage(e.target.value)}
+                  className="w-full px-3 py-2 text-sm bg-gray-700 border border-gray-600 rounded text-white focus:border-blue-500 focus:outline-none"
+                >
+                  {languageOptions.map(option => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-400 mb-2 uppercase tracking-wide">
+                  Code
+                </label>
+                <textarea
+                  value={localCode}
+                  onChange={(e) => updateCode(e.target.value)}
+                  rows={8}
+                  className="w-full px-3 py-2 text-sm bg-gray-700 border border-gray-600 rounded text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none resize-none font-mono"
+                  placeholder="// Enter your code here..."
+                />
+              </div>
+            </div>
+          );
+
         case 'hero':
           const heroContent = block.content as any;
           const [localTitle, setLocalTitle] = useState(heroContent.title || '');
           const [localSubtitle, setLocalSubtitle] = useState(heroContent.subtitle || '');
+          const [localBackgroundUrl, setLocalBackgroundUrl] = useState(heroContent.backgroundUrl || '');
+          const [localButtonText, setLocalButtonText] = useState(heroContent.ctaButton?.text || '');
+          const [localButtonLink, setLocalButtonLink] = useState(heroContent.ctaButton?.link || '');
+          const [localButtonVisible, setLocalButtonVisible] = useState(heroContent.ctaButton?.visible !== false);
+          const [localButtonBgColor, setLocalButtonBgColor] = useState(heroContent.ctaButton?.backgroundColor || '#3b82f6');
+          const [localButtonTextColor, setLocalButtonTextColor] = useState(heroContent.ctaButton?.textColor || '#ffffff');
+          const [localButtonWidth, setLocalButtonWidth] = useState(heroContent.ctaButton?.width || 'auto');
+          const [isCustomWidth, setIsCustomWidth] = useState(false);
           
-          // Update local state when block content changes from outside
           useEffect(() => {
             setLocalTitle(heroContent.title || '');
             setLocalSubtitle(heroContent.subtitle || '');
-          }, [heroContent.title, heroContent.subtitle]);
+            setLocalBackgroundUrl(heroContent.backgroundUrl || '');
+            setLocalButtonText(heroContent.ctaButton?.text || '');
+            setLocalButtonLink(heroContent.ctaButton?.link || '');
+            setLocalButtonVisible(heroContent.ctaButton?.visible !== false);
+            setLocalButtonBgColor(heroContent.ctaButton?.backgroundColor || '#3b82f6');
+            setLocalButtonTextColor(heroContent.ctaButton?.textColor || '#ffffff');
+            const width = heroContent.ctaButton?.width || 'auto';
+            setLocalButtonWidth(width);
+            setIsCustomWidth(!['auto', 'full', 'fit', '150px', '200px', '250px', '300px'].includes(width));
+          }, [heroContent]);
 
-          // Debounced update functions
           useEffect(() => {
             const timer = setTimeout(() => {
               if (localTitle !== heroContent.title) {
-                handleContentChange('title', localTitle);
+                updateContentChange('title', localTitle);
               }
             }, 300);
             return () => clearTimeout(timer);
@@ -1146,11 +1301,48 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
           useEffect(() => {
             const timer = setTimeout(() => {
               if (localSubtitle !== heroContent.subtitle) {
-                handleContentChange('subtitle', localSubtitle);
+                updateContentChange('subtitle', localSubtitle);
               }
             }, 300);
             return () => clearTimeout(timer);
           }, [localSubtitle]);
+
+          useEffect(() => {
+            const timer = setTimeout(() => {
+              if (localBackgroundUrl !== heroContent.backgroundUrl) {
+                updateContentChange('backgroundUrl', localBackgroundUrl);
+              }
+            }, 300);
+            return () => clearTimeout(timer);
+          }, [localBackgroundUrl]);
+
+          useEffect(() => {
+            const timer = setTimeout(() => {
+              if (localButtonText !== heroContent.ctaButton?.text) {
+                updateButtonProperty('text', localButtonText);
+              }
+            }, 300);
+            return () => clearTimeout(timer);
+          }, [localButtonText]);
+
+          useEffect(() => {
+            const timer = setTimeout(() => {
+              if (localButtonLink !== heroContent.ctaButton?.link) {
+                updateButtonProperty('link', localButtonLink);
+              }
+            }, 300);
+            return () => clearTimeout(timer);
+          }, [localButtonLink]);
+
+          const updateContentChange = (key: string, value: any) => {
+            handleContentChange(key, value);
+          };
+
+          const updateButtonProperty = (property: string, value: any) => {
+            const currentButton = heroContent.ctaButton || {};
+            const updatedButton = { ...currentButton, [property]: value };
+            updateContentChange('ctaButton', updatedButton);
+          };
 
           const updateTitle = (value: string) => {
             setLocalTitle(value);
@@ -1158,6 +1350,42 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
 
           const updateSubtitle = (value: string) => {
             setLocalSubtitle(value);
+          };
+
+          const updateBackgroundUrl = (value: string) => {
+            setLocalBackgroundUrl(value);
+          };
+
+          const updateButtonText = (value: string) => {
+            setLocalButtonText(value);
+          };
+
+          const updateButtonLink = (value: string) => {
+            setLocalButtonLink(value);
+          };
+
+          const toggleButtonVisibility = () => {
+            const newVisible = !localButtonVisible;
+            setLocalButtonVisible(newVisible);
+            updateButtonProperty('visible', newVisible);
+          };
+
+          const updateButtonBackgroundColor = (value: string) => {
+            setLocalButtonBgColor(value);
+            updateButtonProperty('backgroundColor', value);
+          };
+
+          const updateButtonTextColor = (value: string) => {
+            setLocalButtonTextColor(value);
+            updateButtonProperty('textColor', value);
+          };
+
+          const updateButtonWidth = (value: string, forceCustom?: boolean) => {
+            setLocalButtonWidth(value);
+            if (forceCustom !== undefined) {
+              setIsCustomWidth(forceCustom);
+            }
+            updateButtonProperty('width', value);
           };
 
           return (
@@ -1169,8 +1397,8 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
                 <textarea
                   value={localTitle}
                   onChange={(e) => updateTitle(e.target.value)}
-                  rows={2}
-                  className="w-full px-3 py-2 text-sm bg-gray-700 border border-gray-600 rounded text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none resize-none"
+                  rows={3}
+                  className="w-full px-3 py-2 text-sm bg-gray-700 border border-gray-600 rounded text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none resize-y"
                   placeholder="Enter hero title..."
                 />
               </div>
@@ -1181,8 +1409,8 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
                 <textarea
                   value={localSubtitle}
                   onChange={(e) => updateSubtitle(e.target.value)}
-                  rows={2}
-                  className="w-full px-3 py-2 text-sm bg-gray-700 border border-gray-600 rounded text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none resize-none"
+                  rows={3}
+                  className="w-full px-3 py-2 text-sm bg-gray-700 border border-gray-600 rounded text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none resize-y"
                   placeholder="Enter hero subtitle..."
                 />
               </div>
@@ -1192,29 +1420,168 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
                 </label>
                 <input
                   type="text"
-                  value={heroContent.backgroundUrl || ''}
-                  onChange={(e) => handleContentChange('backgroundUrl', e.target.value)}
+                  value={localBackgroundUrl}
+                  onChange={(e) => updateBackgroundUrl(e.target.value)}
                   className="w-full px-3 py-2 text-sm bg-gray-700 border border-gray-600 rounded text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none"
                   placeholder="Enter image URL..."
                 />
               </div>
-              {heroContent.ctaButton !== undefined && (
-                <div>
-                  <label className="block text-xs font-medium text-gray-400 mb-2 uppercase tracking-wide">
-                    CTA Button Text
+              
+              <div className="border-t border-gray-600 pt-4">
+                <div className="flex items-center justify-between mb-3">
+                  <label className="block text-xs font-medium text-gray-400 uppercase tracking-wide">
+                    CTA Button
                   </label>
-                  <input
-                    type="text"
-                    value={heroContent.ctaButton?.text || ''}
-                    onChange={(e) => handleContentChange('ctaButton', { 
-                      ...heroContent.ctaButton, 
-                      text: e.target.value 
-                    })}
-                    className="w-full px-3 py-2 text-sm bg-gray-700 border border-gray-600 rounded text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none"
-                    placeholder="Enter button text..."
-                  />
+                  <button
+                    onClick={toggleButtonVisibility}
+                    className={`px-2 py-1 text-xs rounded transition-colors ${
+                      localButtonVisible
+                        ? 'bg-green-600 text-white'
+                        : 'bg-gray-600 text-gray-300'
+                    }`}
+                  >
+                    {localButtonVisible ? 'Visible' : 'Hidden'}
+                  </button>
                 </div>
-              )}
+                
+                {localButtonVisible && (
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-400 mb-1">
+                        Button Text
+                      </label>
+                      <input
+                        type="text"
+                        value={localButtonText}
+                        onChange={(e) => updateButtonText(e.target.value)}
+                        className="w-full px-3 py-2 text-sm bg-gray-700 border border-gray-600 rounded text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none"
+                        placeholder="Button text..."
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-xs font-medium text-gray-400 mb-1">
+                        Button Link
+                      </label>
+                      <input
+                        type="url"
+                        value={localButtonLink}
+                        onChange={(e) => updateButtonLink(e.target.value)}
+                        className="w-full px-3 py-2 text-sm bg-gray-700 border border-gray-600 rounded text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none"
+                        placeholder="https://example.com"
+                      />
+                    </div>
+                    
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-xs font-medium text-gray-400 mb-1">
+                          Background Color
+                        </label>
+                        <div className="flex">
+                          <input
+                            type="color"
+                            value={localButtonBgColor}
+                            onChange={(e) => updateButtonBackgroundColor(e.target.value)}
+                            className="w-10 h-[34px] bg-gray-700 border border-gray-600 rounded-l cursor-pointer"
+                          />
+                          <input
+                            type="text"
+                            value={localButtonBgColor}
+                            onChange={(e) => updateButtonBackgroundColor(e.target.value)}
+                            className="flex-1 px-3 py-2 text-sm bg-gray-700 border border-l-0 border-gray-600 rounded-r text-white focus:border-blue-500 focus:outline-none"
+                          />
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <label className="block text-xs font-medium text-gray-400 mb-1">
+                          Text Color
+                        </label>
+                        <div className="flex">
+                          <input
+                            type="color"
+                            value={localButtonTextColor}
+                            onChange={(e) => updateButtonTextColor(e.target.value)}
+                            className="w-10 h-[34px] bg-gray-700 border border-gray-600 rounded-l cursor-pointer"
+                          />
+                          <input
+                            type="text"
+                            value={localButtonTextColor}
+                            onChange={(e) => updateButtonTextColor(e.target.value)}
+                            className="flex-1 px-3 py-2 text-sm bg-gray-700 border border-l-0 border-gray-600 rounded-r text-white focus:border-blue-500 focus:outline-none"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-xs font-medium text-gray-400 mb-1">
+                        Button Width
+                      </label>
+                      <div className="flex gap-2">
+                        <select
+                          value={isCustomWidth ? 'custom' : localButtonWidth}
+                          onChange={(e) => {
+                            if (e.target.value === 'custom') {
+                              setIsCustomWidth(true);
+                              if (['auto', 'full', 'fit', '150px', '200px', '250px', '300px'].includes(localButtonWidth)) {
+                                updateButtonWidth('175px');
+                              }
+                            } else {
+                              setIsCustomWidth(false);
+                              updateButtonWidth(e.target.value);
+                            }
+                          }}
+                          className="flex-1 px-3 py-2 text-sm bg-gray-700 border border-gray-600 rounded text-white focus:border-blue-500 focus:outline-none"
+                        >
+                          <option value="auto">Auto</option>
+                          <option value="full">Full Width</option>
+                          <option value="fit">Fit Content</option>
+                          <option value="150px">150px</option>
+                          <option value="200px">200px</option>
+                          <option value="250px">250px</option>
+                          <option value="300px">300px</option>
+                          <option value="custom">Custom</option>
+                        </select>
+                        {isCustomWidth && (
+                          <div className="flex">
+                            <input
+                              type="text"
+                              value={localButtonWidth}
+                              onChange={(e) => updateButtonWidth(e.target.value, true)}
+                              className="w-16 px-2 py-2 text-sm bg-gray-700 border border-gray-600 rounded-l text-white focus:border-blue-500 focus:outline-none"
+                              placeholder="175px"
+                            />
+                            <div className="flex flex-col">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const currentValue = parseInt(localButtonWidth) || 0;
+                                  updateButtonWidth(`${currentValue + 5}px`, true);
+                                }}
+                                className="px-1 py-0.5 text-xs bg-gray-600 border border-l-0 border-gray-600 rounded-tr text-gray-300 hover:bg-gray-500 hover:text-white transition-colors"
+                              >
+                                ▲
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const currentValue = parseInt(localButtonWidth) || 0;
+                                  const newValue = Math.max(10, currentValue - 5);
+                                  updateButtonWidth(`${newValue}px`, true);
+                                }}
+                                className="px-1 py-0.5 text-xs bg-gray-600 border border-l-0 border-t-0 border-gray-600 rounded-br text-gray-300 hover:bg-gray-500 hover:text-white transition-colors"
+                              >
+                                ▼
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           );
 
@@ -1228,7 +1595,25 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
     };
 
     const renderStyleControls = () => (
-      <div className="space-y-1">
+      <div 
+        className="space-y-1 p-4 pb-8"
+        onWheel={(e) => {
+          e.stopPropagation();
+          // Allow scrolling within the panel but prevent bubbling
+          const element = e.currentTarget;
+          const { scrollTop, scrollHeight, clientHeight } = element.parentElement!;
+          
+          if (e.deltaY < 0 && scrollTop === 0) {
+            e.preventDefault();
+          } else if (e.deltaY > 0 && scrollTop + clientHeight >= scrollHeight) {
+            e.preventDefault();
+          }
+        }}
+        onMouseDown={(e) => e.stopPropagation()}
+        onMouseMove={(e) => e.stopPropagation()}
+        onTouchStart={(e) => e.stopPropagation()}
+        onTouchMove={(e) => e.stopPropagation()}
+      >
         {/* Typography Section */}
         <div>
           <button
@@ -1363,6 +1748,17 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
                         ...block.styles.margin, 
                         top: parseInt(e.target.value) || 0 
                       })}
+                      onWheel={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                      }}
+                      onFocus={(e) => {
+                        e.stopPropagation();
+                        e.target.addEventListener('wheel', (event) => event.preventDefault());
+                      }}
+                      onBlur={(e) => {
+                        e.target.removeEventListener('wheel', (event) => event.preventDefault());
+                      }}
                       className="px-2 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white text-center"
                       min="0"
                     />
@@ -1375,6 +1771,8 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
                         ...block.styles.margin, 
                         left: parseInt(e.target.value) || 0 
                       })}
+                      onWheel={(e) => e.stopPropagation()}
+                      onFocus={(e) => e.stopPropagation()}
                       className="px-2 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white text-center"
                       min="0"
                     />
@@ -1389,6 +1787,8 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
                         ...block.styles.margin, 
                         right: parseInt(e.target.value) || 0 
                       })}
+                      onWheel={(e) => e.stopPropagation()}
+                      onFocus={(e) => e.stopPropagation()}
                       className="px-2 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white text-center"
                       min="0"
                     />
@@ -1401,6 +1801,8 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
                         ...block.styles.margin, 
                         bottom: parseInt(e.target.value) || 0 
                       })}
+                      onWheel={(e) => e.stopPropagation()}
+                      onFocus={(e) => e.stopPropagation()}
                       className="px-2 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white text-center"
                       min="0"
                     />
@@ -1421,6 +1823,8 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
                         ...block.styles.padding, 
                         top: parseInt(e.target.value) || 0 
                       })}
+                      onWheel={(e) => e.stopPropagation()}
+                      onFocus={(e) => e.stopPropagation()}
                       className="px-2 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white text-center"
                       min="0"
                     />
@@ -1433,6 +1837,8 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
                         ...block.styles.padding, 
                         left: parseInt(e.target.value) || 0 
                       })}
+                      onWheel={(e) => e.stopPropagation()}
+                      onFocus={(e) => e.stopPropagation()}
                       className="px-2 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white text-center"
                       min="0"
                     />
@@ -1447,6 +1853,8 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
                         ...block.styles.padding, 
                         right: parseInt(e.target.value) || 0 
                       })}
+                      onWheel={(e) => e.stopPropagation()}
+                      onFocus={(e) => e.stopPropagation()}
                       className="px-2 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white text-center"
                       min="0"
                     />
@@ -1459,6 +1867,8 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
                         ...block.styles.padding, 
                         bottom: parseInt(e.target.value) || 0 
                       })}
+                      onWheel={(e) => e.stopPropagation()}
+                      onFocus={(e) => e.stopPropagation()}
                       className="px-2 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-white text-center"
                       min="0"
                     />
@@ -1530,6 +1940,62 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
           {expandedSections.borders && (
             <div className="px-3 pb-3 space-y-3">
               <div>
+                <label className="block text-xs font-medium text-gray-400 mb-1">Width</label>
+                <div className="flex">
+                  <input
+                    type="number"
+                    value={block.styles.border?.width || 0}
+                    onChange={(e) => handleStyleChange('border', { 
+                      ...block.styles.border, 
+                      width: parseInt(e.target.value) || 0 
+                    })}
+                    className="flex-1 px-3 py-2 text-sm bg-gray-700 border border-gray-600 rounded-l text-white focus:border-blue-500 focus:outline-none"
+                    min="0"
+                  />
+                  <span className="px-2 py-2 text-xs bg-gray-600 border border-l-0 border-gray-600 rounded-r text-gray-300">px</span>
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-400 mb-1">Style</label>
+                <select
+                  value={block.styles.border?.style || 'solid'}
+                  onChange={(e) => handleStyleChange('border', { 
+                    ...block.styles.border, 
+                    style: e.target.value 
+                  })}
+                  className="w-full px-3 py-2 text-sm bg-gray-700 border border-gray-600 rounded text-white focus:border-blue-500 focus:outline-none"
+                >
+                  <option value="solid">Solid</option>
+                  <option value="dashed">Dashed</option>
+                  <option value="dotted">Dotted</option>
+                  <option value="double">Double</option>
+                  <option value="none">None</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-400 mb-1">Color</label>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="color"
+                    value={block.styles.border?.color || '#000000'}
+                    onChange={(e) => handleStyleChange('border', { 
+                      ...block.styles.border, 
+                      color: e.target.value 
+                    })}
+                    className="w-8 h-8 rounded border border-gray-600"
+                  />
+                  <input
+                    type="text"
+                    value={block.styles.border?.color || '#000000'}
+                    onChange={(e) => handleStyleChange('border', { 
+                      ...block.styles.border, 
+                      color: e.target.value 
+                    })}
+                    className="flex-1 px-3 py-2 text-sm bg-gray-700 border border-gray-600 rounded text-white focus:border-blue-500 focus:outline-none font-mono"
+                  />
+                </div>
+              </div>
+              <div>
                 <label className="block text-xs font-medium text-gray-400 mb-1">Radius</label>
                 <div className="flex">
                   <input
@@ -1548,43 +2014,6 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
             </div>
           )}
         </div>
-
-        {/* Effects Section */}
-        <div>
-          <button
-            onClick={() => toggleSection('effects')}
-            className="flex items-center justify-between w-full p-3 text-left hover:bg-gray-700 transition-colors"
-          >
-            <span className="text-sm font-medium text-white">Effects</span>
-            <svg
-              className={`w-4 h-4 text-gray-400 transition-transform ${
-                expandedSections.effects ? 'rotate-180' : ''
-              }`}
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
-          {expandedSections.effects && (
-            <div className="px-3 pb-3 space-y-3">
-              <div>
-                <label className="block text-xs font-medium text-gray-400 mb-1">Opacity</label>
-                <div className="flex">
-                  <input
-                    type="range"
-                    min="0"
-                    max="100"
-                    value="100"
-                    className="flex-1"
-                  />
-                  <span className="ml-2 text-xs text-gray-300 w-8">100</span>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
       </div>
     );
 
@@ -1592,7 +2021,7 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
       <>
         {/* Sliding Panel */}
         <div className={`
-          fixed top-0 right-0 h-full w-80 bg-gray-800 shadow-xl z-50 transform transition-transform duration-300 ease-in-out border-l border-gray-700
+          property-panel fixed top-0 right-0 h-full w-80 bg-gray-800 shadow-xl z-50 transform transition-transform duration-300 ease-in-out border-l border-gray-700 flex flex-col
           ${isVisible ? 'translate-x-0' : 'translate-x-full'}
         `}>
           {/* Panel Header */}
@@ -1635,7 +2064,25 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
           </div>
 
           {/* Panel Content */}
-          <div className="overflow-y-auto h-full pb-20">
+          <div 
+            className="flex-1 overflow-y-auto min-h-0"
+            onWheel={(e) => {
+              // Only prevent default if the wheel event is on a range input
+              const target = e.target as HTMLInputElement;
+              if (target.type === 'range' || target.closest('input[type="range"]')) {
+                e.preventDefault();
+              }
+              e.stopPropagation();
+            }}
+            onScroll={(e) => e.stopPropagation()}
+            onMouseMove={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.stopPropagation()}
+            onMouseUp={(e) => e.stopPropagation()}
+            onTouchMove={(e) => e.stopPropagation()}
+            onTouchStart={(e) => e.stopPropagation()}
+            onTouchEnd={(e) => e.stopPropagation()}
+            style={{ overscrollBehavior: 'contain' }}
+          >
             {activeTab === 'style' && renderStyleControls()}
             {activeTab === 'settings' && (
               <div className="p-4">
@@ -1666,6 +2113,30 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
                             linear-gradient(-45deg, transparent 75%, #f0f0f0 75%);
           background-size: 8px 8px;
           background-position: 0 0, 0 4px, 4px -4px, -4px 0px;
+        }
+        
+        /* Property panel scroll isolation */
+        .property-panel {
+          overscroll-behavior: contain;
+          isolation: isolate;
+        }
+        
+        .property-panel input[type="range"] {
+          pointer-events: auto;
+        }
+        
+        .property-panel input[type="range"]::-webkit-slider-thumb {
+          pointer-events: auto;
+        }
+        
+        .property-panel input[type="number"] {
+          -webkit-appearance: textfield;
+        }
+        
+        .property-panel input[type="number"]::-webkit-outer-spin-button,
+        .property-panel input[type="number"]::-webkit-inner-spin-button {
+          -webkit-appearance: none;
+          margin: 0;
         }
       `}</style>
       

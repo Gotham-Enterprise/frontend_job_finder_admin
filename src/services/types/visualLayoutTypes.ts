@@ -60,6 +60,18 @@ export interface BlockStyles {
     blur: number;
     color: string;
   };
+  opacity?: number;
+  boxShadow?: {
+    x: number;
+    y: number;
+    blur: number;
+    spread: number;
+    color: string;
+  };
+  transform?: {
+    scale: number;
+    rotate: number;
+  };
 }
 
 export interface HeadingBlock extends LayoutBlock {
