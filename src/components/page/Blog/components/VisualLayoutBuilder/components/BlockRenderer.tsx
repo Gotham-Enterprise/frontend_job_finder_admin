@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { LayoutBlock } from '../../../../../../services/types/visualLayoutTypes';
 
 interface BlockRendererProps {
@@ -44,6 +44,16 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState('');
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Auto-resize textarea when editing starts
+  useEffect(() => {
+    if (isEditing && textareaRef.current) {
+      const textarea = textareaRef.current;
+      textarea.style.height = 'auto';
+      textarea.style.height = `${Math.max(textarea.scrollHeight, 80)}px`;
+    }
+  }, [isEditing, editValue]);
 
   const createStyle = (type: 'heading' | 'paragraph') => ({
     fontSize: block.styles.fontSize || DEFAULT_STYLES[type].fontSize,
@@ -99,7 +109,11 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
               if (e.key === 'Enter') saveEdit();
               if (e.key === 'Escape') cancelEdit();
             }}
-            style={style}
+            style={{
+              ...style,
+              minHeight: '1.2em',
+              overflow: 'visible',
+            }}
             className="w-full bg-transparent border-none outline-none"
             autoFocus
           />
@@ -110,7 +124,12 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
     if (text.includes('<a ')) {
       return (
         <Tag 
-          style={style}
+          style={{
+            ...style,
+            wordWrap: 'break-word',
+            overflowWrap: 'break-word',
+            lineHeight: '1.3'
+          }}
           dangerouslySetInnerHTML={{ __html: text }}
           onClick={preventClickPropagation}
           onDoubleClick={() => startEditing(text.replace(/<[^>]*>/g, ''))}
@@ -120,7 +139,12 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
 
     return (
       <Tag 
-        style={style}
+        style={{
+          ...style,
+          wordWrap: 'break-word',
+          overflowWrap: 'break-word',
+          lineHeight: '1.3'
+        }}
         onDoubleClick={() => startEditing(text)}
       >
         {text}
@@ -135,16 +159,27 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
     if (isEditing) {
       return (
         <textarea
+          ref={textareaRef}
           value={editValue}
           onChange={(e) => setEditValue(e.target.value)}
           onBlur={saveEdit}
           onKeyDown={(e) => {
             if (e.key === 'Escape') cancelEdit();
           }}
-          style={style}
+          style={{
+            ...style,
+            minHeight: '80px',
+            resize: 'none',
+            overflow: 'hidden',
+          }}
           className="w-full bg-transparent border-none outline-none resize-none"
-          rows={4}
           autoFocus
+          onInput={(e) => {
+         
+            const target = e.target as HTMLTextAreaElement;
+            target.style.height = 'auto';
+            target.style.height = `${Math.max(target.scrollHeight, 80)}px`;
+          }}
         />
       );
     }
@@ -152,7 +187,12 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
     if (text.includes('<a ')) {
       return (
         <p 
-          style={style}
+          style={{
+            ...style,
+            wordWrap: 'break-word',
+            overflowWrap: 'break-word',
+            lineHeight: '1.6'
+          }}
           dangerouslySetInnerHTML={{ __html: text }}
           onClick={preventClickPropagation}
           onDoubleClick={() => startEditing(text.replace(/<[^>]*>/g, ''))}
@@ -162,7 +202,12 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
 
     return (
       <p 
-        style={style}
+        style={{
+          ...style,
+          wordWrap: 'break-word',
+          overflowWrap: 'break-word',
+          lineHeight: '1.6'
+        }}
         onDoubleClick={() => startEditing(text)}
       >
         {text}
@@ -236,6 +281,8 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
       margin: margin ? `${margin.top}px ${margin.right}px ${margin.bottom}px ${margin.left}px` : '0',
       padding: padding ? `${padding.top}px ${padding.right}px ${padding.bottom}px ${padding.left}px` : '16px',
       backgroundColor: block.styles.backgroundColor || 'transparent',
+      minHeight: 'auto',
+      overflow: 'visible',
       ...(!hasCustomBorder && {
         border: isSelected ? '2px solid #a855f7' : '2px solid #e5e7eb',
         borderRadius: '12px',

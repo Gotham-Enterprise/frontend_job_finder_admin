@@ -32,5 +32,10 @@ export { default as OrderedListIcon } from './OrderedListIcon';
 // Style icons
 export { default as SpacingIcon } from './SpacingIcon';
 export { default as AppearanceIcon } from './AppearanceIcon';
+export { default as MarginIcon } from './MarginIcon';
+export { default as PaddingIcon } from './PaddingIcon';
+export { default as BackgroundIcon } from './BackgroundIcon';
+export { default as BorderIcon } from './BorderIcon';
+export { default as TextColorIcon } from './TextColorIcon';
 
 export type { IconProps } from './Close';

@@ -8,7 +8,12 @@ import {
   AlignCenterIcon, 
   AlignRightIcon, 
   BulletListIcon, 
-  OrderedListIcon 
+  OrderedListIcon,
+  MarginIcon,
+  PaddingIcon,
+  BackgroundIcon,
+  BorderIcon,
+  TextColorIcon
 } from '../../../../../ui/icons';
 
 interface StyleControlsProps {
@@ -17,15 +22,40 @@ interface StyleControlsProps {
   onStyleUpdate: (field: string, value: any) => void;
 }
 
-const spacingButtons = [
-  { key: 'margin', label: 'Margin' },
-  { key: 'padding', label: 'Padding' },
+const spacingOptions = [
+  { 
+    key: 'margin', 
+    label: 'Margin', 
+    icon: MarginIcon,
+    tooltip: 'Set margin spacing'
+  },
+  { 
+    key: 'padding', 
+    label: 'Padding', 
+    icon: PaddingIcon,
+    tooltip: 'Set padding spacing'
+  }
 ];
 
-const appearanceButtons = [
-  { key: 'background', label: 'Background' },
-  { key: 'border', label: 'Border' },
-  { key: 'textColor', label: 'Text Color' },
+const appearanceOptions = [
+  { 
+    key: 'background', 
+    label: 'Background', 
+    icon: BackgroundIcon,
+    tooltip: 'Set background color'
+  },
+  { 
+    key: 'border', 
+    label: 'Border', 
+    icon: BorderIcon,
+    tooltip: 'Set border style'
+  },
+  { 
+    key: 'textColor', 
+    label: 'Text Color', 
+    icon: TextColorIcon,
+    tooltip: 'Set text color'
+  }
 ];
 
 const StyleControls: React.FC<StyleControlsProps> = ({ block, onFloatingPanelOpen, onStyleUpdate }) => {
@@ -47,6 +77,17 @@ const StyleControls: React.FC<StyleControlsProps> = ({ block, onFloatingPanelOpe
     const currentDecoration = block.styles.textDecoration;
     const newDecoration = currentDecoration === 'underline' ? 'none' : 'underline';
     onStyleUpdate('textDecoration', newDecoration);
+  };
+
+  // List functionality placeholders
+  const createBulletList = () => {
+    console.log('Bullet list functionality - coming soon');
+    // Future implementation: Convert current text to bullet list
+  };
+
+  const createOrderedList = () => {
+    console.log('Ordered list functionality - coming soon');
+    // Future implementation: Convert current text to numbered list
   };
 
   const setTextAlignment = (alignment: 'left' | 'center' | 'right') => {
@@ -143,12 +184,12 @@ const StyleControls: React.FC<StyleControlsProps> = ({ block, onFloatingPanelOpe
             </div>
           </div>
 
-          {/* List Options (for future implementation) */}
+          {/* List Options */}
           <div className="space-y-2">
             <label className="text-xs font-medium text-gray-600">List Options</label>
             <div className="flex gap-2">
               <button
-                onClick={() => console.log('Bullet list - to be implemented')}
+                onClick={createBulletList}
                 className="w-8 h-8 flex items-center justify-center rounded transition-all border bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed"
                 title="Bullet List (Coming Soon)"
                 disabled
@@ -157,7 +198,7 @@ const StyleControls: React.FC<StyleControlsProps> = ({ block, onFloatingPanelOpe
               </button>
               
               <button
-                onClick={() => console.log('Ordered list - to be implemented')}
+                onClick={createOrderedList}
                 className="w-8 h-8 flex items-center justify-center rounded transition-all border bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed"
                 title="Ordered List (Coming Soon)"
                 disabled
@@ -171,14 +212,16 @@ const StyleControls: React.FC<StyleControlsProps> = ({ block, onFloatingPanelOpe
       
       <div className="space-y-3">
         <h3 className="text-sm font-medium text-gray-700 mb-3">Spacing</h3>
-        <div className="grid grid-cols-2 gap-2">
-          {spacingButtons.map((button) => (
+        <div className="flex gap-2">
+          {spacingOptions.map((option) => (
             <button
-              key={button.key}
-              onClick={(e) => onFloatingPanelOpen(button.key, e)}
-              className="px-3 py-2 text-sm bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg text-gray-700 transition-all hover:shadow-sm"
+              key={option.key}
+              onClick={(e) => onFloatingPanelOpen(option.key, e)}
+              className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg text-gray-700 transition-all hover:shadow-sm"
+              title={option.tooltip}
             >
-              {button.label}
+              <option.icon width={16} height={16} />
+              <span>{option.label}</span>
             </button>
           ))}
         </div>
@@ -187,13 +230,15 @@ const StyleControls: React.FC<StyleControlsProps> = ({ block, onFloatingPanelOpe
       <div className="space-y-3">
         <h3 className="text-sm font-medium text-gray-700 mb-3">Appearance</h3>
         <div className="space-y-2">
-          {appearanceButtons.map((button) => (
+          {appearanceOptions.map((option) => (
             <button
-              key={button.key}
-              onClick={(e) => onFloatingPanelOpen(button.key, e)}
-              className="w-full px-3 py-2 text-sm bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg text-gray-700 transition-all hover:shadow-sm text-left"
+              key={option.key}
+              onClick={(e) => onFloatingPanelOpen(option.key, e)}
+              className="w-full flex items-center gap-3 px-3 py-2 text-sm bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg text-gray-700 transition-all hover:shadow-sm text-left"
+              title={option.tooltip}
             >
-              {button.label}
+              <option.icon width={16} height={16} />
+              <span>{option.label}</span>
             </button>
           ))}
         </div>
