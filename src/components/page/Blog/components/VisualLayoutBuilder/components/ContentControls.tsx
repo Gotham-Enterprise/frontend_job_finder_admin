@@ -296,11 +296,15 @@ const ContentControls: React.FC<ContentControlsProps> = ({ block, onContentUpdat
           altText={(block.content as any)?.alt || ''}
           onImageUrlChange={(value: string) => onContentUpdate('url', value)}
           onAltTextChange={(value: string) => onContentUpdate('alt', value)}
-          imageWidth={(block.styles as any)?.width || 400}
-          imageHeight={(block.styles as any)?.height || 200}
+          imageWidth={(block.styles as any)?.width || 100}
+          imageHeight={(block.styles as any)?.height || 400}
+          widthUnit={(block.styles as any)?.widthUnit || '%'}
+          heightUnit={(block.styles as any)?.heightUnit || 'px'}
           borderRadius={(block.styles as any)?.border?.radius || 8}
           onWidthChange={(value: number) => onStyleUpdate?.('width', value)}
           onHeightChange={(value: number) => onStyleUpdate?.('height', value)}
+          onWidthUnitChange={(value: 'px' | '%') => onStyleUpdate?.('widthUnit', value)}
+          onHeightUnitChange={(value: 'px' | '%') => onStyleUpdate?.('heightUnit', value)}
           onBorderRadiusChange={(value: number) => {
             const currentBorder = (block.styles as any)?.border || {};
             onStyleUpdate?.('border', { ...currentBorder, radius: value });

@@ -43,6 +43,8 @@ export interface BlockStyles {
   subtitleFontSize?: string;
   width?: number;
   height?: number;
+  widthUnit?: 'px' | '%';
+  heightUnit?: 'px' | '%';
   padding?: {
     top: number;
     right: number;
@@ -248,8 +250,10 @@ export const BLOCK_TEMPLATES: Record<BlockType, Partial<LayoutBlock>> = {
       padding: { top: 0, right: 0, bottom: 0, left: 0 },
       margin: { top: 24, right: 0, bottom: 24, left: 0 },
       border: { width: 0, style: 'solid', color: '#e5e7eb', radius: 8 },
-      width: 400,
-      height: 200,
+      width: 100,
+      height: 400,
+      widthUnit: '%',
+      heightUnit: 'px',
     },
     position: { x: 0, y: 0, width: 100, height: 200 },
   },

@@ -218,30 +218,34 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
   const renderImage = () => {
     const imageUrl = (block.content as any)?.url;
     const altText = (block.content as any)?.alt || 'Image';
-    const imageWidth = block.styles.width || 400;
-    const imageHeight = block.styles.height || 200;
+    const imageWidth = block.styles.width || 100;
+    const imageHeight = block.styles.height || 400;
+    const widthUnit = block.styles.widthUnit || '%';
+    const heightUnit = block.styles.heightUnit || 'px';
     const borderRadius = block.styles.border?.radius || 8;
     
     const imageStyle = {
-      width: `${imageWidth}px`,
-      height: `${imageHeight}px`,
+      width: `${imageWidth}${widthUnit}`,
+      height: `${imageHeight}${heightUnit}`,
       borderRadius: `${borderRadius}px`,
       objectFit: 'cover' as const,
+      display: 'block',
     };
 
     if (!imageUrl) {
       return (
         <div 
-          className="bg-gray-200 rounded flex items-center justify-center" 
+          className="bg-gray-200 rounded flex items-center justify-center mx-auto" 
           style={{ 
-            width: `${imageWidth}px`, 
-            height: `${imageHeight}px`,
-            borderRadius: `${borderRadius}px`
+            width: `${imageWidth}${widthUnit}`, 
+            height: `${imageHeight}${heightUnit}`,
+            borderRadius: `${borderRadius}px`,
+            display: 'block'
           }}
         >
           <div className="text-center text-gray-500">
             <svg className="w-12 h-12 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
             <p className="text-sm">Click to add image</p>
           </div>
@@ -250,12 +254,12 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
     }
 
     return (
-      <div className="inline-block">
+      <div className="w-full">
         <img 
           src={imageUrl} 
           alt={altText}
           style={imageStyle}
-          className="border border-gray-200"
+          className="border border-gray-200 mx-auto"
         />
       </div>
     );
@@ -287,13 +291,17 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
     const padding = block.styles.padding;
     const hasCustomBorder = block.styles.border?.width;
     
+    const defaultMargin = block.type === 'image' ? { top: 16, right: 0, bottom: 16, left: 0 } : { top: 8, right: 0, bottom: 8, left: 0 };
+    const actualMargin = margin || defaultMargin;
+    
     return {
-      margin: margin ? `${margin.top || 0}px ${margin.right || 0}px ${margin.bottom || 0}px ${margin.left || 0}px` : '0px',
+      margin: `${actualMargin.top || 0}px ${actualMargin.right || 0}px ${actualMargin.bottom || 0}px ${actualMargin.left || 0}px`,
       padding: padding ? `${padding.top || 0}px ${padding.right || 0}px ${padding.bottom || 0}px ${padding.left || 0}px` : '0px',
       backgroundColor: block.styles.backgroundColor || 'transparent',
       minHeight: 'auto',
-      overflow: 'visible',
-      // Only show border on hover or when selected, not by default
+      overflow: 'hidden',
+      position: 'relative' as const,
+      width: '100%',
       border: isSelected 
         ? '2px solid #a855f7' 
         : 'transparent',
@@ -307,10 +315,10 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
   return (
     <div 
       onClick={(e) => {
-        e.stopPropagation(); // Prevent event bubbling to parent containers
+        e.stopPropagation();
         onClick?.();
       }}
-      className={`relative group cursor-pointer transition-all duration-200 ${
+      className={`relative group cursor-pointer transition-all duration-200 block clear-both ${
         isSelected ? 'shadow-lg ring-2 ring-purple-200' : 'hover:border-gray-300'
       }`}
       style={createContainerStyle()}

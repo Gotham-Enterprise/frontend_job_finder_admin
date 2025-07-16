@@ -9,9 +9,13 @@ interface ImageUrlInputProps {
   onAltTextChange: (alt: string) => void;
   imageWidth?: number;
   imageHeight?: number;
+  widthUnit?: 'px' | '%';
+  heightUnit?: 'px' | '%';
   borderRadius?: number;
   onWidthChange?: (width: number) => void;
   onHeightChange?: (height: number) => void;
+  onWidthUnitChange?: (unit: 'px' | '%') => void;
+  onHeightUnitChange?: (unit: 'px' | '%') => void;
   onBorderRadiusChange?: (radius: number) => void;
 }
 
@@ -20,11 +24,15 @@ const ImageUrlInput: React.FC<ImageUrlInputProps> = ({
   altText,
   onImageUrlChange,
   onAltTextChange,
-  imageWidth = 400,
-  imageHeight = 200,
+  imageWidth = 100,
+  imageHeight = 400,
+  widthUnit = '%',
+  heightUnit = 'px',
   borderRadius = 8,
   onWidthChange,
   onHeightChange,
+  onWidthUnitChange,
+  onHeightUnitChange,
   onBorderRadiusChange,
 }) => {
   const [localImageUrl, setLocalImageUrl] = useState(imageUrl);
@@ -110,32 +118,52 @@ const ImageUrlInput: React.FC<ImageUrlInputProps> = ({
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="space-y-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Width (px)
+            Width
           </label>
-          <input
-            type="number"
-            min="50"
-            max="1200"
-            value={imageWidth}
-            onChange={(e) => onWidthChange?.(parseInt(e.target.value) || 400)}
-            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-100 transition-all"
-          />
+          <div className="flex gap-2">
+            <input
+              type="number"
+              min={widthUnit === '%' ? "1" : "50"}
+              max={widthUnit === '%' ? "100" : "1200"}
+              value={imageWidth}
+              onChange={(e) => onWidthChange?.(parseInt(e.target.value) || (widthUnit === '%' ? 100 : 400))}
+              className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-100 transition-all"
+            />
+            <select
+              value={widthUnit}
+              onChange={(e) => onWidthUnitChange?.(e.target.value as 'px' | '%')}
+              className="px-3 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-100 transition-all"
+            >
+              <option value="%">%</option>
+              <option value="px">px</option>
+            </select>
+          </div>
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Height (px)
+            Height
           </label>
-          <input
-            type="number"
-            min="50"
-            max="800"
-            value={imageHeight}
-            onChange={(e) => onHeightChange?.(parseInt(e.target.value) || 200)}
-            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-100 transition-all"
-          />
+          <div className="flex gap-2">
+            <input
+              type="number"
+              min={heightUnit === '%' ? "1" : "50"}
+              max={heightUnit === '%' ? "100" : "800"}
+              value={imageHeight}
+              onChange={(e) => onHeightChange?.(parseInt(e.target.value) || (heightUnit === '%' ? 50 : 400))}
+              className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-100 transition-all"
+            />
+            <select
+              value={heightUnit}
+              onChange={(e) => onHeightUnitChange?.(e.target.value as 'px' | '%')}
+              className="px-3 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-100 transition-all"
+            >
+              <option value="px">px</option>
+              <option value="%">%</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -171,7 +199,7 @@ const ImageUrlInput: React.FC<ImageUrlInputProps> = ({
               alt={localAltText || "Preview"} 
               className="object-cover border border-gray-200"
               style={{
-                width: `${Math.min(imageWidth, 320)}px`,
+                width: widthUnit === '%' ? '100%' : `${Math.min(imageWidth, 320)}px`,
                 height: `${Math.min(imageHeight, 180)}px`,
                 borderRadius: `${borderRadius}px`
               }}
@@ -188,7 +216,7 @@ const ImageUrlInput: React.FC<ImageUrlInputProps> = ({
             </button>
           </div>
           <p className="text-xs text-gray-500">
-            Actual size: {imageWidth} × {imageHeight}px
+            Actual size: {imageWidth}{widthUnit} × {imageHeight}{heightUnit}
           </p>
         </div>
       )}
