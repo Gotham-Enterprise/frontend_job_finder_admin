@@ -10,7 +10,7 @@ import {
 import Badge from '../../../ui/badge/Badge';
 import Button from '../../../ui/button/Button';
 import TableHeading from '../../../tables/tableHeader';
-import { EyeIcon, TimeIcon } from '@/icons';
+import { EyeIcon, TimeIcon, FileIcon, DownloadIcon } from '@/icons';
 import { JobSeekersTableProps } from '@/services/types/JobSeekersTypes';
 import Avatar from '../../../ui/avatar/Avatar';
 
@@ -102,11 +102,19 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
         <Button
           variant="default"
           size="sm"
-          className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 text-xs"
+          className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 text-xs font-medium rounded-md shadow-sm hover:shadow-md transition-all duration-200 flex items-center gap-1.5"
           onClick={() => viewResume(jobSeeker.id, jobSeeker.resumeFileObjectKey)}
           disabled={isLoadingThisResume}
+          startIcon={isLoadingThisResume ? null : <FileIcon  />}
         >
-          {isLoadingThisResume ? 'Opening...' : 'View resume'}
+          {isLoadingThisResume ? (
+            <>
+              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
+              Opening...
+            </>
+          ) : (
+            'Resume'
+          )}
         </Button>
       );
     }
@@ -116,11 +124,19 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
         <Button
           variant="default"
           size="sm"
-          className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 text-xs"
+          className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 text-xs font-medium rounded-md shadow-sm hover:shadow-md transition-all duration-200 flex items-center gap-1.5"
           onClick={() => viewResume(jobSeeker.id, jobSeeker.resumeFileObjectKey)}
           disabled={isLoadingThisResume}
+          startIcon={isLoadingThisResume ? null : <FileIcon  />}
         >
-          {isLoadingThisResume ? 'Opening...' : 'View resume'}
+          {isLoadingThisResume ? (
+            <>
+              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
+              Opening...
+            </>
+          ) : (
+            'Resume'
+          )}
         </Button>
       );
     }
@@ -136,18 +152,29 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
           <Button
             variant="default"
             size="sm"
-            className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 text-xs"
+            className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 text-xs font-medium rounded-md shadow-sm hover:shadow-md transition-all duration-200 flex items-center gap-1.5"
             onClick={() => viewResume(jobSeeker.id, resumeDoc.objectKey)}
             disabled={isLoadingThisResume}
+            startIcon={isLoadingThisResume ? null : <FileIcon />}
           >
-            {isLoadingThisResume ? 'Opening...' : 'View resume'}
+            {isLoadingThisResume ? (
+              <>
+                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
+                Opening...
+              </>
+            ) : (
+              'Resume'
+            )}
           </Button>
         );
       }
     }
 
     return (
-      <span className="text-gray-400 dark:text-gray-500 text-sm">No resume</span>
+      <div className="flex items-center gap-1.5 text-gray-400 dark:text-gray-500 text-xs">
+        <FileIcon className="opacity-50" />
+        <span>No resume</span>
+      </div>
     );
   };
 
