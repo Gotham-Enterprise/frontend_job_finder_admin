@@ -124,6 +124,11 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
                       <p className="font-medium text-gray-900 dark:text-white">
                         {jobSeeker.name}
                       </p>
+                      {jobSeeker.email && (
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                          {jobSeeker.email}
+                        </p>
+                      )}
                       <Link 
                         href={`/admin/applications?name=${encodeURIComponent(jobSeeker.name.split(' ')[0])}`}
                         className="text-sm text-blue-500 dark:text-blue-500 hover:text-brand-500 dark:hover:text-brand-400 cursor-pointer transition-colors duration-200"
@@ -155,14 +160,13 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
                   </p>
                 </TableCell>
                 <TableCell className="py-4 px-6 text-left">
-                  {jobSeeker.hasResume && jobSeeker.resumeId ? (
+                  {jobSeeker.documents && jobSeeker.documents.length > 0 ? (
                     <Button
                       variant="text-primary"
                       size="sm"
                       className="text-brand-400"
-                      onClick={() => onViewResume(jobSeeker.resumeId)}
+                      onClick={() => onViewResume(jobSeeker.documents[0].objectKey)}
                       disabled={isViewingResume}
-                    
                     >
                       {isViewingResume ? 'Opening...' : 'View resume'}
                     </Button>

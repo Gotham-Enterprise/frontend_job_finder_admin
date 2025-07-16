@@ -9,8 +9,7 @@ export interface JobSeeker {
   zipCode: string;
   jobApplications: number;
   dateJoined: string;
-  resumeId: string | null; 
-  hasResume: boolean;
+  documents?: Document[];
   lastActivity: string;
   status: 'active' | 'inactive' | 'suspended' | 'pending';
   profilePicture: {

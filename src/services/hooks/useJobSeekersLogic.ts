@@ -1,8 +1,9 @@
 import { useState, useMemo, useTransition, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useJobSeekers, useViewResume } from '@/services/hooks/useJobSeekers';
+import { useJobSeekers } from '@/services/hooks/useJobSeekers';
 import { useOccupations } from '@/services/hooks/useOccupations';
 import { useStates } from '@/services/hooks/useStates';
+import { jobApplicationApi } from '@/services/api/jobApplication';
 import { JobSeekerFilters } from '@/services/types/jobSeeker';
 
 export const useJobSeekersLogic = () => {
@@ -98,7 +99,8 @@ export const useJobSeekersLogic = () => {
   );
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
-  const [scrollPosition, setScrollPosition] = useState(0  );
+  const [scrollPosition, setScrollPosition] = useState(0);
+  const [isViewingResume, setIsViewingResume] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const [hasRestoredFromState, setHasRestoredFromState] = useState(false);
 
@@ -204,7 +206,6 @@ export const useJobSeekersLogic = () => {
   const { data, isLoading, error, refetch } = useJobSeekers(filters);
   const { data: occupationsData, isLoading: isOccupationsLoading } = useOccupations();
   const { data: statesData, isLoading: isStatesLoading } = useStates();
-  const { mutate: viewResume, isPending: isViewingResume } = useViewResume();
   const tableColumns = useMemo(() => [
     { key: 'name', label: 'Name' },
     { key: 'occupation', label: 'Occupation' },
@@ -292,25 +293,26 @@ export const useJobSeekersLogic = () => {
     }
   }, []);
 
-  const initViewResume = useCallback(async (resumeId: string | null) => {
-    if (!resumeId) {
-      console.error('No resume ID provided');
+  const initViewResume = useCallback(async (objectKey: string | null) => {
+    if (!objectKey) {
+      console.error('No object key provided');
       return;
     }
     
-    viewResume(resumeId, {
-      onSuccess: (data: any) => {
-        if (data?.success && data?.data?.fileUrl) {
-          window.open(data.data.fileUrl, '_blank', 'noopener,noreferrer');
-        } else {
-          console.error('No file URL found in response');
-        }
-      },
-      onError: (error) => {
-        console.error('Error viewing resume:', error);
+    setIsViewingResume(true);
+    try {
+      const response = await jobApplicationApi.viewResume(objectKey);
+      if (response.success && response.data?.fileUrl) {
+        window.open(response.data.fileUrl, '_blank', 'noopener,noreferrer');
+      } else {
+        console.error('No file URL found in response');
       }
-    });
-  }, [viewResume]);
+    } catch (error) {
+      console.error('Error viewing resume:', error);
+    } finally {
+      setIsViewingResume(false);
+    }
+  }, []);
   const viewJobSeeker = useCallback((jobSeekerId: string) => {
     
     saveScrollPosition();

@@ -18,6 +18,7 @@ export default function JobSeekerProfileCard({ jobSeeker, contactInfo }: JobSeek
         name: jobSeeker.name,
         title: jobSeeker.professionalBackground?.[0]?.jobTitle || 'Job Seeker',
         status: jobSeeker.status,
+        email: jobSeeker.email,
         profilePicture: jobSeeker.profilePicture ? {
             url: jobSeeker.profilePicture.url
         } : undefined,
