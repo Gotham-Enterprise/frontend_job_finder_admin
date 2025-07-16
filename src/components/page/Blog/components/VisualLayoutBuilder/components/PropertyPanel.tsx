@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState } from 'react';
 import { LayoutBlock } from '../../../../../../services/types/visualLayoutTypes';
 import FloatingPanel from './FloatingPanel';
 import StyleControls from './StyleControls';
@@ -32,49 +32,17 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({
   const [activeFloatingPanel, setActiveFloatingPanel] = useState<string | null>(null);
   const [floatingPanelPosition, setFloatingPanelPosition] = useState({ x: 0, y: 0 });
 
-  const scrollPreventionConfig = {
-    wheel: { passive: false },
-    keydown: { passive: false }
-  };
-
-  const preventScrollOnNumberInputs = useCallback(() => {
-    const scrollFunction = (e: WheelEvent) => {
-      const target = e.target as HTMLElement;
-      if (target.closest('.property-panel') && (target.tagName === 'INPUT' && (target as HTMLInputElement).type === 'number')) {
-        e.preventDefault();
-        e.stopPropagation();
-      }
-    };
-
-    const keyFunction = (e: KeyboardEvent) => {
-      const target = e.target as HTMLElement;
-      if (target.closest('.property-panel') && target.tagName === 'INPUT' && (target as HTMLInputElement).type === 'number') {
-        if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-          e.preventDefault();
-          e.stopPropagation();
-        }
-      }
-    };
-
-    document.addEventListener('wheel', scrollFunction, scrollPreventionConfig.wheel);
-    document.addEventListener('keydown', keyFunction, scrollPreventionConfig.keydown);
-
-    return () => {
-      document.removeEventListener('wheel', scrollFunction);
-      document.removeEventListener('keydown', keyFunction);
-    };
-  }, []);
-
-  useEffect(() => {
-    return preventScrollOnNumberInputs();
-  }, [preventScrollOnNumberInputs]);
-
   if (!block) return null;
 
   const currentConfig = blockTypeConfig[block.type as keyof typeof blockTypeConfig] || blockTypeConfig.default;
 
   const updateContent = (field: string, value: any) => {
-    onUpdate(block.id, { [field]: value });
+    onUpdate(block.id, { 
+      content: { 
+        ...block.content, 
+        [field]: value 
+      } 
+    });
   };
 
   const updateStyle = (field: string, value: any) => {
@@ -112,7 +80,7 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({
       </FloatingPanel>
 
       <div
-        className={`fixed top-16 right-4 w-80 h-[calc(100vh-5rem)] bg-white/95 backdrop-blur-xl shadow-2xl border border-gray-200/50 rounded-2xl z-50 transition-all duration-300 ease-out property-panel ${
+        className={`fixed top-16 right-4 w-80 h-[calc(100vh-5rem)] bg-white shadow-2xl border border-gray-200 rounded-2xl z-[60] transition-all duration-300 ease-out property-panel ${
           isVisible ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0 pointer-events-none'
         }`}
       >

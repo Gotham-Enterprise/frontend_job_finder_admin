@@ -49,17 +49,24 @@ const ContentControls: React.FC<ContentControlsProps> = ({ block, onContentUpdat
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">Level</label>
-          <select
-            value={(block.content as any)?.level || 1}
-            onChange={(e) => onContentUpdate('level', parseInt(e.target.value))}
-            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-100 transition-all"
-          >
-            {headingLevels.map((level) => (
-              <option key={level.value} value={level.value}>
-                {level.label}
-              </option>
-            ))}
-          </select>
+          <div className="relative">
+            <select
+              value={(block.content as any)?.level || 1}
+              onChange={(e) => onContentUpdate('level', parseInt(e.target.value))}
+              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-100 transition-all appearance-none relative z-[70]"
+            >
+              {headingLevels.map((level) => (
+                <option key={level.value} value={level.value}>
+                  {level.label}
+                </option>
+              ))}
+            </select>
+            <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
+          </div>
         </div>
       </div>
     );

@@ -138,19 +138,7 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
   const updateBlock = (blockId: string, updates: Partial<LayoutBlock>) => {
     setBlocks(prev => prev.map(block => {
       if (block.id === blockId) {
-        const contentUpdates = Object.keys(updates).reduce((acc, key) => {
-          if (!['id', 'type', 'styles', 'position', 'children', 'metadata'].includes(key)) {
-            acc[key] = updates[key as keyof LayoutBlock];
-            delete updates[key as keyof LayoutBlock];
-          }
-          return acc;
-        }, {} as any);
-
-        const newBlock = { ...block, ...updates };
-        if (Object.keys(contentUpdates).length > 0) {
-          newBlock.content = { ...block.content, ...contentUpdates };
-        }
-        return newBlock;
+        return { ...block, ...updates };
       }
       return block;
     }));

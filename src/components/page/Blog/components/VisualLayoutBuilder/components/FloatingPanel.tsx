@@ -19,10 +19,11 @@ const FloatingPanel: React.FC<FloatingPanelProps> = ({
 
   return (
     <div
-      className="fixed bg-white/95 backdrop-blur-xl shadow-2xl border border-gray-200/50 rounded-2xl p-4 z-[60] min-w-[250px]"
+      className="fixed bg-white shadow-2xl border border-gray-200 rounded-2xl p-4 z-[50] min-w-[280px] max-w-[350px]"
       style={{
-        left: `${position.x}px`,
-        top: `${position.y}px`,
+        left: `${Math.min(position.x, window.innerWidth - 350)}px`,
+        top: `${Math.min(position.y, window.innerHeight - 400)}px`,
+        transform: position.x > window.innerWidth - 350 ? 'translateX(-100%)' : 'none'
       }}
     >
       <div className="flex items-center justify-between mb-3">
