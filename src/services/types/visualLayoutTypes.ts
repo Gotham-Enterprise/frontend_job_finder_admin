@@ -36,6 +36,8 @@ export interface BlockStyles {
   fontSize?: string;
   fontWeight?: string;
   fontFamily?: string;
+  fontStyle?: 'normal' | 'italic' | 'oblique';
+  textDecoration?: 'none' | 'underline' | 'overline' | 'line-through';
   textAlign?: 'left' | 'center' | 'right' | 'justify';
   titleFontSize?: string;
   subtitleFontSize?: string;

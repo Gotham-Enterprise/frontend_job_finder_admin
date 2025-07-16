@@ -135,7 +135,11 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({
             ) : (
               <>
                 {activeTab === 'style' && (
-                  <StyleControls block={block} onFloatingPanelOpen={openFloatingPanel} />
+                  <StyleControls 
+                    block={block} 
+                    onFloatingPanelOpen={openFloatingPanel}
+                    onStyleUpdate={updateStyle}
+                  />
                 )}
                 {activeTab === 'settings' && (
                   <div className="p-5">

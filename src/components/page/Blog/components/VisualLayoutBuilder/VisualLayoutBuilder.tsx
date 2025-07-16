@@ -174,6 +174,10 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
                         setShowPropertiesPanel(true);
                       }}
                       onRemove={() => removeBlock(block.id)}
+                      onContentUpdate={(field, value) => updateBlock(block.id, { 
+                        content: { ...block.content, [field]: value } 
+                      })}
+                      onStyleUpdate={(field, value) => updateBlockStyle(block.id, { [field]: value })}
                     />
                   ))
                 ) : (
