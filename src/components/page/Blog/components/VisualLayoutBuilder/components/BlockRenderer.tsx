@@ -278,34 +278,44 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
     const hasCustomBorder = block.styles.border?.width;
     
     return {
-      margin: margin ? `${margin.top}px ${margin.right}px ${margin.bottom}px ${margin.left}px` : '0',
-      padding: padding ? `${padding.top}px ${padding.right}px ${padding.bottom}px ${padding.left}px` : '16px',
+      margin: margin ? `${margin.top || 0}px ${margin.right || 0}px ${margin.bottom || 0}px ${margin.left || 0}px` : '0px',
+      padding: padding ? `${padding.top || 0}px ${padding.right || 0}px ${padding.bottom || 0}px ${padding.left || 0}px` : '0px',
       backgroundColor: block.styles.backgroundColor || 'transparent',
       minHeight: 'auto',
       overflow: 'visible',
-      ...(!hasCustomBorder && {
-        border: isSelected ? '2px solid #a855f7' : '2px solid #e5e7eb',
-        borderRadius: '12px',
-      }),
+      // Only show border on hover or when selected, not by default
+      border: isSelected 
+        ? '2px solid #a855f7' 
+        : 'transparent',
+      borderRadius: hasCustomBorder && block.styles.border?.radius 
+        ? `${block.styles.border.radius}px` 
+        : '8px',
       ...createBorderStyle(),
     };
   };
 
   return (
     <div 
-      onClick={onClick}
-      className={`relative group cursor-pointer transition-all hover:shadow-lg ${
-        isSelected ? 'shadow-lg ring-2 ring-purple-200' : ''
+      onClick={(e) => {
+        e.stopPropagation(); // Prevent event bubbling to parent containers
+        onClick?.();
+      }}
+      className={`relative group cursor-pointer transition-all duration-200 ${
+        isSelected ? 'shadow-lg ring-2 ring-purple-200' : 'hover:border-gray-300'
       }`}
       style={createContainerStyle()}
     >
-      <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity">
+      <div className={`absolute top-2 left-2 transition-opacity duration-200 ${
+        isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-70'
+      }`}>
         <span className="text-xs font-medium text-gray-500 bg-white px-2 py-1 rounded-full shadow-sm border">
           {block.type}
         </span>
       </div>
       
-      <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+      <div className={`absolute top-2 right-2 transition-opacity duration-200 ${
+        isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+      }`}>
         <button
           onClick={(e) => {
             e.stopPropagation();

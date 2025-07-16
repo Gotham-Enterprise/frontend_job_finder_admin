@@ -34,7 +34,7 @@ const demoBlocks: LayoutBlock[] = [
     id: 'demo-heading-1',
     type: 'heading',
     content: {
-      text: 'Gotham Visual Layout Builder',
+      text: 'Welcome to the Visual Layout Builder',
       level: 1,
     },
     styles: {
@@ -43,7 +43,7 @@ const demoBlocks: LayoutBlock[] = [
       textAlign: 'center',
       textColor: '#1f2937',
       margin: { top: 0, right: 0, bottom: 24, left: 0 },
-      padding: { top: 16, right: 0, bottom: 16, left: 0 },
+      padding: { top: 0, right: 0, bottom: 0, left: 0 },
     },
     position: { x: 0, y: 0, width: 100, height: 80 },
   },
@@ -59,7 +59,7 @@ const demoBlocks: LayoutBlock[] = [
       textAlign: 'center',
       textColor: '#4b5563',
       margin: { top: 0, right: 0, bottom: 32, left: 0 },
-      padding: { top: 8, right: 0, bottom: 8, left: 0 },
+      padding: { top: 0, right: 0, bottom: 0, left: 0 },
     },
     position: { x: 0, y: 0, width: 100, height: 80 },
   },
@@ -74,7 +74,7 @@ const demoBlocks: LayoutBlock[] = [
     },
     styles: {
       margin: { top: 0, right: 0, bottom: 24, left: 0 },
-      padding: { top: 8, right: 8, bottom: 8, left: 8 },
+      padding: { top: 0, right: 0, bottom: 0, left: 0 },
       border: { width: 0, style: 'solid', color: '#e5e7eb', radius: 12 },
     },
     position: { x: 0, y: 0, width: 100, height: 300 },
@@ -158,40 +158,70 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
     <div className="flex h-full bg-gradient-to-br from-slate-50 via-white to-blue-50/30 relative">
       <ElementsSidebar onAddBlock={addBlock} />
       
-      <div className="flex-1 ml-[218px] h-full overflow-y-auto">
-        <div className="p-8 pb-24 min-h-full">
+      <div 
+        className="flex-1 ml-[218px] h-full overflow-y-auto"
+        onClick={(e) => {
+          // Deselect when clicking in the background area
+          if (e.target === e.currentTarget) {
+            setSelectedBlockId(null);
+            setShowPropertiesPanel(false);
+          }
+        }}
+      >
+        <div 
+          className="p-8 pb-24 min-h-full"
+          onClick={(e) => {
+            // Deselect when clicking in the padding area
+            if (e.target === e.currentTarget) {
+              setSelectedBlockId(null);
+              setShowPropertiesPanel(false);
+            }
+          }}
+        >
           <DndContext sensors={sensors} collisionDetection={closestCenter}>
             <SortableContext items={Array.isArray(blocks) ? blocks : []} strategy={verticalListSortingStrategy}>
               <div className="max-w-4xl mx-auto">
-                <div className="space-y-4">
-                  {Array.isArray(blocks) && blocks.length > 0 ? (
-                    blocks.map((block) => (
-                      <BlockRenderer
-                        key={block.id}
-                        block={block}
-                        isSelected={selectedBlockId === block.id}
-                        onClick={() => {
-                          setSelectedBlockId(block.id);
-                          setShowPropertiesPanel(true);
-                        }}
-                        onRemove={() => removeBlock(block.id)}
-                        onContentUpdate={(field, value) => updateBlock(block.id, { 
-                          content: { ...block.content, [field]: value } 
-                        })}
-                        onStyleUpdate={(field, value) => updateBlockStyle(block.id, { [field]: value })}
-                      />
-                    ))
-                  ) : (
-                    <div className="text-center py-12">
-                      <div className="text-gray-400 mb-4">
-                        <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                        </svg>
+                {/* Blog Preview Container - Clean layout like actual blog */}
+                <div 
+                  className="bg-white rounded-lg shadow-sm border border-gray-100 p-8 min-h-[600px]"
+                  onClick={(e) => {
+                    // Only deselect if clicking on the container itself, not its children
+                    if (e.target === e.currentTarget) {
+                      setSelectedBlockId(null);
+                      setShowPropertiesPanel(false);
+                    }
+                  }}
+                >
+                  <div className="space-y-0">
+                    {Array.isArray(blocks) && blocks.length > 0 ? (
+                      blocks.map((block) => (
+                        <BlockRenderer
+                          key={block.id}
+                          block={block}
+                          isSelected={selectedBlockId === block.id}
+                          onClick={() => {
+                            setSelectedBlockId(block.id);
+                            setShowPropertiesPanel(true);
+                          }}
+                          onRemove={() => removeBlock(block.id)}
+                          onContentUpdate={(field, value) => updateBlock(block.id, { 
+                            content: { ...block.content, [field]: value } 
+                          })}
+                          onStyleUpdate={(field, value) => updateBlockStyle(block.id, { [field]: value })}
+                        />
+                      ))
+                    ) : (
+                      <div className="text-center py-12">
+                        <div className="text-gray-400 mb-4">
+                          <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                          </svg>
+                        </div>
+                        <h3 className="text-lg font-medium text-gray-500 mb-2">Start Building Your Blog</h3>
+                        <p className="text-gray-400">Use the sidebar to add content blocks and create your blog layout</p>
                       </div>
-                      <h3 className="text-lg font-medium text-gray-500 mb-2">No blocks yet</h3>
-                      <p className="text-gray-400">Use the sidebar to add content blocks</p>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
               </div>
             </SortableContext>
