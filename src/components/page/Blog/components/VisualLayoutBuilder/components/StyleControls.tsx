@@ -207,6 +207,37 @@ const StyleControls: React.FC<StyleControlsProps> = ({ block, onFloatingPanelOpe
               </button>
             </div>
           </div>
+
+          {/* Font Size */}
+          <div className="space-y-2">
+            <label className="text-xs font-medium text-gray-600">Font Size</label>
+            <div className="flex items-center gap-3">
+              <div className="flex-1">
+                <input
+                  type="range"
+                  min="8"
+                  max="72"
+                  value={parseInt(block.styles.fontSize?.replace('px', '') || '16')}
+                  onChange={(e) => onStyleUpdate('fontSize', `${e.target.value}px`)}
+                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                  style={{
+                    background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${((parseInt(block.styles.fontSize?.replace('px', '') || '16') - 8) / (72 - 8)) * 100}%, #e5e7eb ${((parseInt(block.styles.fontSize?.replace('px', '') || '16') - 8) / (72 - 8)) * 100}%, #e5e7eb 100%)`
+                  }}
+                />
+              </div>
+              <div className="w-12">
+                <input
+                  type="number"
+                  min="8"
+                  max="72"
+                  value={parseInt(block.styles.fontSize?.replace('px', '') || '16')}
+                  onChange={(e) => onStyleUpdate('fontSize', `${e.target.value}px`)}
+                  className="w-full px-2 py-1 text-xs border border-gray-200 rounded text-center bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+              <span className="text-xs text-gray-500 w-6">px</span>
+            </div>
+          </div>
         </div>
       )}
       

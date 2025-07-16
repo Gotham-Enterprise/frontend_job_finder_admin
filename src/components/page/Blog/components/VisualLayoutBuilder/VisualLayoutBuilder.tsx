@@ -34,7 +34,7 @@ const demoBlocks: LayoutBlock[] = [
     id: 'demo-heading-1',
     type: 'heading',
     content: {
-      text: 'Welcome to the Visual Layout Builder',
+      text: 'Gotham Visual Layout Builder',
       level: 1,
     },
     styles: {
@@ -155,46 +155,48 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
   const selectedBlock = selectedBlockId ? blocks.find(block => block.id === selectedBlockId) : undefined;
 
   return (
-    <div className="flex h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30 relative overflow-hidden">
+    <div className="flex h-full bg-gradient-to-br from-slate-50 via-white to-blue-50/30 relative">
       <ElementsSidebar onAddBlock={addBlock} />
       
-      <div className="flex-1 ml-[218px] p-8 overflow-auto">
-        <DndContext sensors={sensors} collisionDetection={closestCenter}>
-          <SortableContext items={Array.isArray(blocks) ? blocks : []} strategy={verticalListSortingStrategy}>
-            <div className="max-w-4xl mx-auto">
-              <div className="space-y-4">
-                {Array.isArray(blocks) && blocks.length > 0 ? (
-                  blocks.map((block) => (
-                    <BlockRenderer
-                      key={block.id}
-                      block={block}
-                      isSelected={selectedBlockId === block.id}
-                      onClick={() => {
-                        setSelectedBlockId(block.id);
-                        setShowPropertiesPanel(true);
-                      }}
-                      onRemove={() => removeBlock(block.id)}
-                      onContentUpdate={(field, value) => updateBlock(block.id, { 
-                        content: { ...block.content, [field]: value } 
-                      })}
-                      onStyleUpdate={(field, value) => updateBlockStyle(block.id, { [field]: value })}
-                    />
-                  ))
-                ) : (
-                  <div className="text-center py-12">
-                    <div className="text-gray-400 mb-4">
-                      <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                      </svg>
+      <div className="flex-1 ml-[218px] h-full overflow-y-auto">
+        <div className="p-8 pb-24 min-h-full">
+          <DndContext sensors={sensors} collisionDetection={closestCenter}>
+            <SortableContext items={Array.isArray(blocks) ? blocks : []} strategy={verticalListSortingStrategy}>
+              <div className="max-w-4xl mx-auto">
+                <div className="space-y-4">
+                  {Array.isArray(blocks) && blocks.length > 0 ? (
+                    blocks.map((block) => (
+                      <BlockRenderer
+                        key={block.id}
+                        block={block}
+                        isSelected={selectedBlockId === block.id}
+                        onClick={() => {
+                          setSelectedBlockId(block.id);
+                          setShowPropertiesPanel(true);
+                        }}
+                        onRemove={() => removeBlock(block.id)}
+                        onContentUpdate={(field, value) => updateBlock(block.id, { 
+                          content: { ...block.content, [field]: value } 
+                        })}
+                        onStyleUpdate={(field, value) => updateBlockStyle(block.id, { [field]: value })}
+                      />
+                    ))
+                  ) : (
+                    <div className="text-center py-12">
+                      <div className="text-gray-400 mb-4">
+                        <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                        </svg>
+                      </div>
+                      <h3 className="text-lg font-medium text-gray-500 mb-2">No blocks yet</h3>
+                      <p className="text-gray-400">Use the sidebar to add content blocks</p>
                     </div>
-                    <h3 className="text-lg font-medium text-gray-500 mb-2">No blocks yet</h3>
-                    <p className="text-gray-400">Use the sidebar to add content blocks</p>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
-            </div>
-          </SortableContext>
-        </DndContext>
+            </SortableContext>
+          </DndContext>
+        </div>
       </div>
 
       <PropertyPanel
