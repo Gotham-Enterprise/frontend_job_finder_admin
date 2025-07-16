@@ -56,9 +56,155 @@ const FloatingPanelContent: React.FC<FloatingPanelContentProps> = ({ panelType, 
     );
   };
 
+  const renderBackgroundPanel = () => {
+    const backgroundColor = block.styles.backgroundColor || '#ffffff';
+    
+    return (
+      <div className="space-y-4">
+        <h4 className="font-medium text-gray-700 text-sm">Background</h4>
+        <div className="space-y-3">
+          <div>
+            <label className="block text-xs text-gray-600 mb-1">Color</label>
+            <div className="flex items-center gap-2">
+              <input
+                type="color"
+                value={backgroundColor}
+                onChange={(e) => onStyleUpdate('backgroundColor', e.target.value)}
+                className="w-8 h-8 rounded border border-gray-200 cursor-pointer"
+              />
+              <input
+                type="text"
+                value={backgroundColor}
+                onChange={(e) => onStyleUpdate('backgroundColor', e.target.value)}
+                className="flex-1 px-2 py-1 text-xs bg-gray-50 border border-gray-200 rounded focus:border-purple-400 focus:outline-none"
+                placeholder="#ffffff"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderBorderPanel = () => {
+    const border = (block.styles.border as any) || {};
+    const borderColor = border.color || '#000000';
+    const borderWidth = border.width || 0;
+    const borderRadius = border.radius || 0;
+    const borderStyle = border.style || 'solid';
+    
+    return (
+      <div className="space-y-4">
+        <h4 className="font-medium text-gray-700 text-sm">Border</h4>
+        <div className="space-y-3">
+          <div>
+            <label className="block text-xs text-gray-600 mb-1">Width</label>
+            <input
+              type="number"
+              value={borderWidth}
+              onChange={(e) => onStyleUpdate('border', { ...border, width: parseInt(e.target.value) || 0 })}
+              className="w-full px-2 py-1 text-xs bg-gray-50 border border-gray-200 rounded focus:border-purple-400 focus:outline-none"
+              min="0"
+              max="20"
+            />
+          </div>
+          <div>
+            <label className="block text-xs text-gray-600 mb-1">Style</label>
+            <select
+              value={borderStyle}
+              onChange={(e) => onStyleUpdate('border', { ...border, style: e.target.value })}
+              className="w-full px-2 py-1 text-xs bg-gray-50 border border-gray-200 rounded focus:border-purple-400 focus:outline-none"
+            >
+              <option value="solid">Solid</option>
+              <option value="dashed">Dashed</option>
+              <option value="dotted">Dotted</option>
+              <option value="double">Double</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs text-gray-600 mb-1">Color</label>
+            <div className="flex items-center gap-2">
+              <input
+                type="color"
+                value={borderColor}
+                onChange={(e) => onStyleUpdate('border', { ...border, color: e.target.value })}
+                className="w-8 h-8 rounded border border-gray-200 cursor-pointer"
+              />
+              <input
+                type="text"
+                value={borderColor}
+                onChange={(e) => onStyleUpdate('border', { ...border, color: e.target.value })}
+                className="flex-1 px-2 py-1 text-xs bg-gray-50 border border-gray-200 rounded focus:border-purple-400 focus:outline-none"
+                placeholder="#000000"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs text-gray-600 mb-1">Radius</label>
+            <input
+              type="number"
+              value={borderRadius}
+              onChange={(e) => onStyleUpdate('border', { ...border, radius: parseInt(e.target.value) || 0 })}
+              className="w-full px-2 py-1 text-xs bg-gray-50 border border-gray-200 rounded focus:border-purple-400 focus:outline-none"
+              min="0"
+              max="50"
+            />
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderTextColorPanel = () => {
+    const textColor = block.styles.textColor || '#000000';
+    
+    return (
+      <div className="space-y-4">
+        <h4 className="font-medium text-gray-700 text-sm">Text Color</h4>
+        <div className="space-y-3">
+          <div>
+            <label className="block text-xs text-gray-600 mb-1">Color</label>
+            <div className="flex items-center gap-2">
+              <input
+                type="color"
+                value={textColor}
+                onChange={(e) => onStyleUpdate('textColor', e.target.value)}
+                className="w-8 h-8 rounded border border-gray-200 cursor-pointer"
+              />
+              <input
+                type="text"
+                value={textColor}
+                onChange={(e) => onStyleUpdate('textColor', e.target.value)}
+                className="flex-1 px-2 py-1 text-xs bg-gray-50 border border-gray-200 rounded focus:border-purple-400 focus:outline-none"
+                placeholder="#000000"
+              />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <label className="block text-xs text-gray-600">Quick Colors</label>
+            <div className="grid grid-cols-6 gap-1">
+              {['#000000', '#ffffff', '#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6', '#8b5cf6'].map(color => (
+                <button
+                  key={color}
+                  onClick={() => onStyleUpdate('textColor', color)}
+                  className="w-6 h-6 rounded border border-gray-200 hover:scale-110 transition-transform"
+                  style={{ backgroundColor: color }}
+                  title={color}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   switch (panelType) {
     case 'margin': return renderSpacingPanel('margin');
     case 'padding': return renderSpacingPanel('padding');
+    case 'background': return renderBackgroundPanel();
+    case 'border': return renderBorderPanel();
+    case 'textColor': return renderTextColorPanel();
     default: return null;
   }
 };

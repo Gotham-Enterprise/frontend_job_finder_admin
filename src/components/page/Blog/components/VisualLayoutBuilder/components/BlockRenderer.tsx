@@ -22,28 +22,67 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({ block, isSelected, onClic
           fontFamily: block.styles.fontFamily || 'inherit',
         } as React.CSSProperties;
 
+        const renderHeading = (Tag: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6') => {
+         
+          if (headingText.includes('<a ')) {
+            return (
+              <Tag 
+                style={headingStyle}
+                dangerouslySetInnerHTML={{ __html: headingText }}
+                onClick={(e) => {
+               
+                  const target = e.target as HTMLElement;
+                  if (target.tagName === 'A') {
+                    e.stopPropagation();
+                  }
+                }}
+              />
+            );
+          }
+          return <Tag style={headingStyle}>{headingText}</Tag>;
+        };
+
         switch (headingLevel) {
-          case 1: return <h1 style={headingStyle}>{headingText}</h1>;
-          case 2: return <h2 style={headingStyle}>{headingText}</h2>;
-          case 3: return <h3 style={headingStyle}>{headingText}</h3>;
-          case 4: return <h4 style={headingStyle}>{headingText}</h4>;
-          case 5: return <h5 style={headingStyle}>{headingText}</h5>;
-          case 6: return <h6 style={headingStyle}>{headingText}</h6>;
-          default: return <h2 style={headingStyle}>{headingText}</h2>;
+          case 1: return renderHeading('h1');
+          case 2: return renderHeading('h2');
+          case 3: return renderHeading('h3');
+          case 4: return renderHeading('h4');
+          case 5: return renderHeading('h5');
+          case 6: return renderHeading('h6');
+          default: return renderHeading('h2');
         }
       
       case 'paragraph':
+        const paragraphText = (block.content as any)?.text || 'Sample paragraph text. Click to edit this content.';
+        
+        const paragraphStyle = {
+          fontSize: block.styles.fontSize || '1rem',
+          fontWeight: block.styles.fontWeight || 'normal',
+          color: block.styles.textColor || '#000000',
+          textAlign: block.styles.textAlign || 'left',
+          fontFamily: block.styles.fontFamily || 'inherit',
+        } as React.CSSProperties;
+
+        // Check if text contains HTML links
+        if (paragraphText.includes('<a ')) {
+          return (
+            <p 
+              style={paragraphStyle}
+              dangerouslySetInnerHTML={{ __html: paragraphText }}
+              onClick={(e) => {
+                // Allow link clicks to work
+                const target = e.target as HTMLElement;
+                if (target.tagName === 'A') {
+                  e.stopPropagation();
+                }
+              }}
+            />
+          );
+        }
+        
         return (
-          <p 
-            style={{
-              fontSize: block.styles.fontSize || '1rem',
-              fontWeight: block.styles.fontWeight || 'normal',
-              color: block.styles.textColor || '#000000',
-              textAlign: block.styles.textAlign || 'left',
-              fontFamily: block.styles.fontFamily || 'inherit',
-            }}
-          >
-            {(block.content as any)?.text || 'Sample paragraph text. Click to edit this content.'}
+          <p style={paragraphStyle}>
+            {paragraphText}
           </p>
         );
       
@@ -78,16 +117,33 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({ block, isSelected, onClic
     }
   };
 
+  const getBorderStyle = () => {
+    const border = block.styles.border;
+    if (!border || !border.width) return {};
+    
+    return {
+      border: `${border.width}px ${border.style || 'solid'} ${border.color || '#000000'}`,
+      borderRadius: border.radius ? `${border.radius}px` : undefined,
+    };
+  };
+
   return (
     <div 
       onClick={onClick}
-      className={`relative group p-4 border-2 rounded-xl cursor-pointer transition-all hover:shadow-lg ${
-        isSelected ? 'border-purple-500 bg-purple-50/30 shadow-lg ring-2 ring-purple-200' : 'border-gray-200 hover:border-gray-300 bg-white'
+      className={`relative group cursor-pointer transition-all hover:shadow-lg ${
+        isSelected ? 'shadow-lg ring-2 ring-purple-200' : ''
       }`}
       style={{
         margin: block.styles.margin ? `${block.styles.margin.top}px ${block.styles.margin.right}px ${block.styles.margin.bottom}px ${block.styles.margin.left}px` : '0',
         padding: block.styles.padding ? `${block.styles.padding.top}px ${block.styles.padding.right}px ${block.styles.padding.bottom}px ${block.styles.padding.left}px` : '16px',
         backgroundColor: block.styles.backgroundColor || 'transparent',
+        // Default border if no custom border is set
+        ...(!(block.styles.border?.width) && {
+          border: isSelected ? '2px solid #a855f7' : '2px solid #e5e7eb',
+          borderRadius: '12px',
+        }),
+        // Custom border styles
+        ...getBorderStyle(),
       }}
     >
       <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity">
