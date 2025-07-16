@@ -130,7 +130,11 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({
           <div className="flex-1 overflow-y-auto bg-white">
             {block.type === 'image' ? (
               <div className="p-5">
-                <ContentControls block={block} onContentUpdate={updateContent} />
+                <ContentControls 
+                  block={block} 
+                  onContentUpdate={updateContent}
+                  onStyleUpdate={updateStyle}
+                />
               </div>
             ) : (
               <>
@@ -143,7 +147,11 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({
                 )}
                 {activeTab === 'settings' && (
                   <div className="p-5">
-                    <ContentControls block={block} onContentUpdate={updateContent} />
+                    <ContentControls 
+                      block={block} 
+                      onContentUpdate={updateContent}
+                      onStyleUpdate={updateStyle}
+                    />
                   </div>
                 )}
               </>

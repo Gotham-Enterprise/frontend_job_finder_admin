@@ -218,14 +218,27 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
   const renderImage = () => {
     const imageUrl = (block.content as any)?.url;
     const altText = (block.content as any)?.alt || 'Image';
+    const imageWidth = block.styles.width || 400;
+    const imageHeight = block.styles.height || 200;
+    const borderRadius = block.styles.border?.radius || 8;
     
     const imageStyle = {
-      borderRadius: block.styles.border?.radius ? `${block.styles.border.radius}px` : DEFAULT_STYLES.image.borderRadius,
+      width: `${imageWidth}px`,
+      height: `${imageHeight}px`,
+      borderRadius: `${borderRadius}px`,
+      objectFit: 'cover' as const,
     };
 
     if (!imageUrl) {
       return (
-        <div className="w-full bg-gray-200 rounded flex items-center justify-center" style={{ height: DEFAULT_STYLES.image.height }}>
+        <div 
+          className="bg-gray-200 rounded flex items-center justify-center" 
+          style={{ 
+            width: `${imageWidth}px`, 
+            height: `${imageHeight}px`,
+            borderRadius: `${borderRadius}px`
+          }}
+        >
           <div className="text-center text-gray-500">
             <svg className="w-12 h-12 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -237,15 +250,12 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
     }
 
     return (
-      <div className="w-full rounded-lg overflow-hidden bg-gray-100">
+      <div className="inline-block">
         <img 
           src={imageUrl} 
           alt={altText}
-          className="w-full object-cover"
-          style={{
-            ...imageStyle,
-            height: DEFAULT_STYLES.image.height,
-          }}
+          style={imageStyle}
+          className="border border-gray-200"
         />
       </div>
     );

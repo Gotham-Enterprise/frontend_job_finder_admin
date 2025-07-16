@@ -5,6 +5,7 @@ import ImageUrlInput from '../ImageUrlInput';
 interface ContentControlsProps {
   block: LayoutBlock;
   onContentUpdate: (field: string, value: any) => void;
+  onStyleUpdate?: (field: string, value: any) => void;
 }
 
 const headingLevels = [
@@ -16,7 +17,7 @@ const headingLevels = [
   { value: 6, label: 'H6' },
 ];
 
-const ContentControls: React.FC<ContentControlsProps> = ({ block, onContentUpdate }) => {
+const ContentControls: React.FC<ContentControlsProps> = ({ block, onContentUpdate, onStyleUpdate }) => {
   const [showLinkModal, setShowLinkModal] = useState(false);
   const [selectedText, setSelectedText] = useState('');
   const [linkUrl, setLinkUrl] = useState('');
@@ -295,6 +296,15 @@ const ContentControls: React.FC<ContentControlsProps> = ({ block, onContentUpdat
           altText={(block.content as any)?.alt || ''}
           onImageUrlChange={(value: string) => onContentUpdate('url', value)}
           onAltTextChange={(value: string) => onContentUpdate('alt', value)}
+          imageWidth={(block.styles as any)?.width || 400}
+          imageHeight={(block.styles as any)?.height || 200}
+          borderRadius={(block.styles as any)?.border?.radius || 8}
+          onWidthChange={(value: number) => onStyleUpdate?.('width', value)}
+          onHeightChange={(value: number) => onStyleUpdate?.('height', value)}
+          onBorderRadiusChange={(value: number) => {
+            const currentBorder = (block.styles as any)?.border || {};
+            onStyleUpdate?.('border', { ...currentBorder, radius: value });
+          }}
         />
       </div>
     );
