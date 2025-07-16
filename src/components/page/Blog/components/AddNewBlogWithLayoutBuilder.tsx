@@ -234,7 +234,6 @@ export default function AddNewBlogWithLayoutBuilder() {
     }));
   }, [currentLayout.blocks.length]);
 
-  // Helper functions for default content
   const getDefaultContent = (type: string) => {
     switch (type) {
       case 'heading':
@@ -242,7 +241,7 @@ export default function AddNewBlogWithLayoutBuilder() {
       case 'paragraph':
         return { text: 'Type your content here...', richText: true };
       case 'image':
-        return { src: '', alt: 'Image description', caption: '' };
+        return { url: '', alt: 'Image description', caption: '' };
       case 'quote':
         return { text: 'Inspiring quote goes here...', author: '' };
       case 'list':

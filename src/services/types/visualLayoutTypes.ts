@@ -95,7 +95,6 @@ export interface ParagraphBlock extends LayoutBlock {
 export interface ImageBlock extends LayoutBlock {
   type: 'image';
   content: {
-    imageId: string;
     url: string;
     alt: string;
     caption?: string;
@@ -144,7 +143,6 @@ export interface HeroBlock extends LayoutBlock {
   content: {
     title: string;
     subtitle?: string;
-    backgroundImageId?: string;
     backgroundUrl?: string;
     overlay?: {
       color: string;
@@ -162,7 +160,6 @@ export interface GalleryBlock extends LayoutBlock {
   type: 'gallery';
   content: {
     images: Array<{
-      imageId: string;
       url: string;
       alt: string;
       caption?: string;
@@ -237,7 +234,6 @@ export const BLOCK_TEMPLATES: Record<BlockType, Partial<LayoutBlock>> = {
   image: {
     type: 'image',
     content: {
-      imageId: '',
       url: '',
       alt: 'Image description',
       size: 'medium',

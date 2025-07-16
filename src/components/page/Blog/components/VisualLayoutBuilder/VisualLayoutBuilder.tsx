@@ -5,8 +5,7 @@ import { SortableContext, verticalListSortingStrategy, arrayMove } from '@dnd-ki
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { motion } from 'framer-motion';
-import ImageUploadWithResize from '@/components/ui/ImageUploadWithResize';
-import { ProcessedImage } from '@/services/utils/imageResizer';
+import ImageUrlInput from './ImageUrlInput';
 
 import {
   LayoutBlock,
@@ -38,7 +37,6 @@ interface BlockRenderProps {
   onStyleChange: (blockId: string, styles: any) => void;
   onDelete: (blockId: string) => void;
   onDuplicate: (blockId: string) => void;
-  onImageUpload: (blockId: string) => void;
 }
 
 // Sortable Block Wrapper
@@ -109,7 +107,6 @@ const BlockRenderer: React.FC<BlockRenderProps> = ({
   onStyleChange,
   onDelete,
   onDuplicate,
-  onImageUpload,
 }) => {
   const renderBlockContent = () => {
     const baseStyles = {
@@ -419,18 +416,10 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
   const [editingBlockId, setEditingBlockId] = useState<string | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [isImageUploadOpen, setIsImageUploadOpen] = useState(false);
-  const [currentImageBlockId, setCurrentImageBlockId] = useState<string | null>(null);
-  const [showElements, setShowElements] = useState(true); // Add toggle state for elements
-  const [showPropertiesPanel, setShowPropertiesPanel] = useState(false); // Property panel visibility
-  const [propertyPanelActiveTab, setPropertyPanelActiveTab] = useState<'style' | 'settings'>('style'); // Property panel active tab
-  const [isDragOverGlobal, setIsDragOverGlobal] = useState(false); // Global drag state
-
-  // Open image upload for specific block
-  const openImageUpload = useCallback((blockId: string) => {
-    setCurrentImageBlockId(blockId);
-    setIsImageUploadOpen(true);
-  }, []);
+  const [showElements, setShowElements] = useState(true);
+  const [showPropertiesPanel, setShowPropertiesPanel] = useState(false);
+  const [propertyPanelActiveTab, setPropertyPanelActiveTab] = useState<'style' | 'settings'>('style');
+  const [isDragOverGlobal, setIsDragOverGlobal] = useState(false);
 
   const selectedBlock = useMemo(() => 
     layout.blocks.find(block => block.id === selectedBlockId),
@@ -619,20 +608,6 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
     onLayoutChange(layout);
   }, [layout, blogData, onSave, onLayoutChange]);
 
-  // Image Upload Handler
-  const handleImageUpload = useCallback((processedImage: ProcessedImage) => {
-    if (currentImageBlockId) {
-      updateBlock(currentImageBlockId, {
-        imageId: generateBlockId(),
-        url: processedImage.dataUrl,
-        alt: 'Uploaded image',
-        size: 'original'
-      });
-      setCurrentImageBlockId(null);
-    }
-    setIsImageUploadOpen(false);
-  }, [currentImageBlockId, updateBlock]);
-
   // Property Panel Component
   const PropertyPanel: React.FC<{ 
     block: LayoutBlock | undefined; 
@@ -799,169 +774,14 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
 
         case 'image':
           const imageContent = block.content as any;
-          const [localAltText, setLocalAltText] = useState(imageContent.alt || '');
-          
-          // Update local state when block content changes from outside
-          useEffect(() => {
-            setLocalAltText(imageContent.alt || '');
-          }, [imageContent.alt]);
-
-          // Debounced update function for alt text
-          useEffect(() => {
-            const timer = setTimeout(() => {
-              if (localAltText !== imageContent.alt) {
-                handleContentChange('alt', localAltText);
-              }
-            }, 300);
-            return () => clearTimeout(timer);
-          }, [localAltText]);
-
-          const updateAltText = (value: string) => {
-            setLocalAltText(value);
-          };
-
-          // Handle drag and drop
-          const handleDragOver = (e: React.DragEvent) => {
-            e.preventDefault();
-            e.stopPropagation();
-          };
-
-          const handleDragEnter = (e: React.DragEvent) => {
-            e.preventDefault();
-            e.stopPropagation();
-          };
-
-          const handleDragLeave = (e: React.DragEvent) => {
-            e.preventDefault();
-            e.stopPropagation();
-          };
-
-          const handleDrop = (e: React.DragEvent) => {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            const files = Array.from(e.dataTransfer.files);
-            const imageFiles = files.filter(file => file.type.startsWith('image/'));
-            
-            if (imageFiles.length > 0) {
-              const file = imageFiles[0];
-              const reader = new FileReader();
-              reader.onload = (event) => {
-                if (event.target?.result) {
-                  handleContentChange('url', event.target.result as string);
-                  handleContentChange('alt', file.name.replace(/\.[^/.]+$/, ""));
-                }
-              };
-              reader.readAsDataURL(file);
-            }
-          };
-
-          const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-            const files = e.target.files;
-            if (files && files.length > 0) {
-              const file = files[0];
-              const reader = new FileReader();
-              reader.onload = (event) => {
-                if (event.target?.result) {
-                  handleContentChange('url', event.target.result as string);
-                  handleContentChange('alt', file.name.replace(/\.[^/.]+$/, ""));
-                }
-              };
-              reader.readAsDataURL(file);
-            }
-          };
 
           return (
-            <div className="space-y-4">
-              <div>
-                <label className="block text-xs font-medium text-gray-400 mb-2 uppercase tracking-wide">
-                  Alt Text
-                </label>
-                <input
-                  type="text"
-                  value={localAltText}
-                  onChange={(e) => updateAltText(e.target.value)}
-                  className="w-full px-3 py-2 text-sm bg-gray-700 border border-gray-600 rounded text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none"
-                  placeholder="Image description..."
-                />
-              </div>
-              
-              {/* Image Upload Drop Zone */}
-              <div>
-                <label className="block text-xs font-medium text-gray-400 mb-2 uppercase tracking-wide">
-                  Image
-                </label>
-                
-                {imageContent.url ? (
-                  // Show current image with replace option
-                  <div className="space-y-3">
-                    <div className="relative">
-                      <img src={imageContent.url} alt="Preview" className="w-full h-32 object-cover rounded border border-gray-600" />
-                      <button
-                        onClick={() => handleContentChange('url', '')}
-                        className="absolute top-2 right-2 w-6 h-6 bg-red-600 text-white rounded-full flex items-center justify-center text-xs hover:bg-red-700 transition-colors"
-                        title="Remove image"
-                      >
-                        ×
-                      </button>
-                    </div>
-                    
-                    {/* Replace Image Drop Zone */}
-                    <div
-                      onDragOver={handleDragOver}
-                      onDragEnter={handleDragEnter}
-                      onDragLeave={handleDragLeave}
-                      onDrop={handleDrop}
-                      className="border-2 border-dashed border-gray-600 rounded-lg p-4 text-center hover:border-blue-500 transition-colors cursor-pointer bg-gray-700/50"
-                      onClick={() => document.getElementById(`image-input-${block.id}`)?.click()}
-                    >
-                      <div className="flex flex-col items-center space-y-2">
-                        <div className="w-8 h-8 border border-gray-500 rounded flex items-center justify-center">
-                          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                          </svg>
-                        </div>
-                        <div className="text-xs text-gray-400">
-                          <div className="font-medium">Drop files here</div>
-                          <div>Drag and drop files anywhere on the screen, or click the upload button above.</div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  // Show upload drop zone when no image
-                  <div
-                    onDragOver={handleDragOver}
-                    onDragEnter={handleDragEnter}
-                    onDragLeave={handleDragLeave}
-                    onDrop={handleDrop}
-                    className="border-2 border-dashed border-gray-600 rounded-lg p-8 text-center hover:border-blue-500 transition-colors cursor-pointer bg-gray-700/30"
-                    onClick={() => document.getElementById(`image-input-${block.id}`)?.click()}
-                  >
-                    <div className="flex flex-col items-center space-y-3">
-                      <div className="w-12 h-12 border-2 border-gray-500 rounded-lg flex items-center justify-center">
-                        <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                        </svg>
-                      </div>
-                      <div className="text-sm text-gray-300 font-medium">Drop files here</div>
-                      <div className="text-xs text-gray-400 max-w-xs">
-                        Drag and drop files anywhere on the screen, or click the upload button above.
-                      </div>
-                    </div>
-                  </div>
-                )}
-                
-                {/* Hidden file input */}
-                <input
-                  id={`image-input-${block.id}`}
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileSelect}
-                  className="hidden"
-                />
-              </div>
-            </div>
+            <ImageUrlInput
+              imageUrl={imageContent.url || ''}
+              altText={imageContent.alt || ''}
+              onImageUrlChange={(url) => handleContentChange('url', url)}
+              onAltTextChange={(alt) => handleContentChange('alt', alt)}
+            />
           );
 
         case 'quote':
@@ -2752,7 +2572,6 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
                           onStyleChange={updateBlockStyle}
                           onDelete={removeBlock}
                           onDuplicate={duplicateBlockById}
-                          onImageUpload={openImageUpload}
                         />
                       ))}
                     </div>
@@ -2786,14 +2605,6 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
         onStyleUpdate={updateBlockStyle}
         activeTab={propertyPanelActiveTab}
         onTabChange={setPropertyPanelActiveTab}
-      />
-
-      {/* Image Upload Modal */}
-      <ImageUploadWithResize
-        isOpen={isImageUploadOpen}
-        onClose={() => setIsImageUploadOpen(false)}
-        onImageSelect={handleImageUpload}
-        title="Upload Image for Block"
       />
     </div>
   );
