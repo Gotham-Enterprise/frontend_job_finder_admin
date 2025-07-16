@@ -35,6 +35,7 @@ export interface BlockStyles {
   textColor?: string;
   fontSize?: string;
   fontWeight?: string;
+  fontFamily?: string;
   textAlign?: 'left' | 'center' | 'right' | 'justify';
   titleFontSize?: string;
   subtitleFontSize?: string;
