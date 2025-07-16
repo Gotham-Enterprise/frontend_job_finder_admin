@@ -7,6 +7,15 @@ interface ContentControlsProps {
   onContentUpdate: (field: string, value: any) => void;
 }
 
+const headingLevels = [
+  { value: 1, label: 'H1' },
+  { value: 2, label: 'H2' },
+  { value: 3, label: 'H3' },
+  { value: 4, label: 'H4' },
+  { value: 5, label: 'H5' },
+  { value: 6, label: 'H6' },
+];
+
 const ContentControls: React.FC<ContentControlsProps> = ({ block, onContentUpdate }) => {
   if (block.type === 'paragraph') {
     return (
@@ -45,12 +54,11 @@ const ContentControls: React.FC<ContentControlsProps> = ({ block, onContentUpdat
             onChange={(e) => onContentUpdate('level', parseInt(e.target.value))}
             className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-100 transition-all"
           >
-            <option value={1}>H1</option>
-            <option value={2}>H2</option>
-            <option value={3}>H3</option>
-            <option value={4}>H4</option>
-            <option value={5}>H5</option>
-            <option value={6}>H6</option>
+            {headingLevels.map((level) => (
+              <option key={level.value} value={level.value}>
+                {level.label}
+              </option>
+            ))}
           </select>
         </div>
       </div>
