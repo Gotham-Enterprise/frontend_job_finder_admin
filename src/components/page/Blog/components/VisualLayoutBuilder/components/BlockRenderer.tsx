@@ -288,34 +288,55 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
     const controls = (block.content as any)?.controls !== false;
     const muted = (block.content as any)?.muted || false;
     
-    const getAlignmentClass = () => {
-      switch (videoAlign) {
-        case 'left': return 'mr-auto';
-        case 'right': return 'ml-auto';
-        case 'center': 
-        default: return 'mx-auto';
+    const VIDEO_PROVIDERS = {
+      youtube: {
+        patterns: ['youtube.com/watch?v=', 'youtu.be/', 'youtube.com/shorts/'],
+        getVideoId: (url: string) => {
+          if (url.includes('youtube.com/watch?v=')) return url.split('v=')[1]?.split('&')[0];
+          if (url.includes('youtu.be/')) return url.split('youtu.be/')[1]?.split('?')[0];
+          if (url.includes('youtube.com/shorts/')) return url.split('/shorts/')[1]?.split('?')[0];
+          return '';
+        },
+        buildEmbedUrl: (videoId: string) => {
+          const params = new URLSearchParams({
+            rel: '0',
+            ...(autoplay && { autoplay: '1' }),
+            ...(muted && { mute: '1' })
+          });
+          return `https://www.youtube.com/embed/${videoId}?${params}`;
+        }
+      },
+      vimeo: {
+        patterns: ['vimeo.com/'],
+        getVideoId: (url: string) => url.split('vimeo.com/')[1]?.split('?')[0],
+        buildEmbedUrl: (videoId: string) => {
+          const params = new URLSearchParams({
+            portrait: '0',
+            byline: '0',
+            title: '0',
+            ...(autoplay && { autoplay: '1' }),
+            ...(muted && { muted: '1' })
+          });
+          return `https://player.vimeo.com/video/${videoId}?${params}`;
+        }
       }
     };
 
+    const ALIGNMENT_CLASSES = {
+      left: 'mr-auto',
+      right: 'ml-auto',
+      center: 'mx-auto'
+    };
+
+    const getAlignmentClass = () => ALIGNMENT_CLASSES[videoAlign] || ALIGNMENT_CLASSES.center;
+
     const getVideoEmbedUrl = (url: string) => {
-      if (url.includes('youtube.com/watch?v=')) {
-        const videoId = url.split('v=')[1]?.split('&')[0];
-        return `https://www.youtube.com/embed/${videoId}?rel=0${autoplay ? '&autoplay=1' : ''}${muted ? '&mute=1' : ''}`;
+      for (const [, provider] of Object.entries(VIDEO_PROVIDERS)) {
+        if (provider.patterns.some(pattern => url.includes(pattern))) {
+          const videoId = provider.getVideoId(url);
+          return videoId ? provider.buildEmbedUrl(videoId) : url;
+        }
       }
-      if (url.includes('youtu.be/')) {
-        const videoId = url.split('youtu.be/')[1]?.split('?')[0];
-        return `https://www.youtube.com/embed/${videoId}?rel=0${autoplay ? '&autoplay=1' : ''}${muted ? '&mute=1' : ''}`;
-      }
-      if (url.includes('youtube.com/shorts/')) {
-        const videoId = url.split('/shorts/')[1]?.split('?')[0];
-        return `https://www.youtube.com/embed/${videoId}?rel=0${autoplay ? '&autoplay=1' : ''}${muted ? '&mute=1' : ''}`;
-      }
-      
-      if (url.includes('vimeo.com/')) {
-        const videoId = url.split('vimeo.com/')[1]?.split('?')[0];
-        return `https://player.vimeo.com/video/${videoId}?${autoplay ? 'autoplay=1&' : ''}${muted ? 'muted=1&' : ''}portrait=0&byline=0&title=0`;
-      }
-      
       return url;
     };
     
