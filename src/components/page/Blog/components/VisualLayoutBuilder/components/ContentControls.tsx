@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { LayoutBlock } from '../../../../../../services/types/visualLayoutTypes';
 import ImageUrlInput from '../ImageUrlInput';
 import VideoUrlInput from '../VideoUrlInput';
-import { GridIcon, PlusIcon } from '../../../../../../icons';
+
 
 interface ContentControlsProps {
   block: LayoutBlock;
@@ -154,8 +154,7 @@ const ContentControls: React.FC<ContentControlsProps> = ({ block, onContentUpdat
               </button>
             </div>
           </div>
-          
-          {/* Link Color Setting */}
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Link Color</label>
             <div className="flex items-center space-x-2">
