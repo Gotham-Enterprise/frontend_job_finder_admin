@@ -163,6 +163,26 @@ const ContentControls: React.FC<ContentControlsProps> = ({ block, onContentUpdat
               </button>
             </div>
           </div>
+          
+          {/* Link Color Setting */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Link Color</label>
+            <div className="flex items-center space-x-2">
+              <input
+                type="color"
+                value={block.styles?.linkColor || '#3b82f6'}
+                onChange={(e) => onStyleUpdate?.('linkColor', e.target.value)}
+                className="w-10 h-10 rounded-lg border border-gray-200 cursor-pointer"
+              />
+              <input
+                type="text"
+                value={block.styles?.linkColor || '#3b82f6'}
+                onChange={(e) => onStyleUpdate?.('linkColor', e.target.value)}
+                placeholder="#3b82f6"
+                className="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-100"
+              />
+            </div>
+          </div>
         </div>
         {showLinkModal && renderLinkModal()}
       </>
@@ -191,6 +211,15 @@ const ContentControls: React.FC<ContentControlsProps> = ({ block, onContentUpdat
                 Remove all links
               </button>
             </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Link Color</label>
+            <input
+              type="color"
+              value={block.styles?.linkColor || '#3b82f6'}
+              onChange={(e) => onStyleUpdate?.('linkColor', e.target.value)}
+              className="w-full h-10 border border-gray-200 rounded-xl cursor-pointer"
+            />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Level</label>

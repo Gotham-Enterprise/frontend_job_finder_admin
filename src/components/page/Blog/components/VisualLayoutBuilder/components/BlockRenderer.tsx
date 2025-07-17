@@ -102,6 +102,22 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
     const text = (block.content as any)?.text || 'Sample Heading';
     const style = createStyle('heading');
     const Tag = HEADING_TAGS[Math.min(Math.max(level - 1, 0), 5)] as HeadingTag;
+    
+    // Apply automatic link styling with custom color
+    const linkColor = block.styles?.linkColor || '#3b82f6';
+    const styledText = text.replace(
+      /<a\s+(?![^>]*style\s*=\s*["'][^"']*color\s*:)[^>]*>/gi,
+      `<a style="color: ${linkColor};" $&`.slice(0, -2) + '>'
+    ).replace(
+      /(<a\s+[^>]*style\s*=\s*["'])([^"']*)(["'][^>]*>)/gi,
+      (match: string, start: string, styleContent: string, end: string) => {
+        if (!styleContent.includes('color:')) {
+          const separator = styleContent.trim() && !styleContent.trim().endsWith(';') ? '; ' : '';
+          return `${start}${styleContent}${separator}color: ${linkColor}${end}`;
+        }
+        return match;
+      }
+    );
 
     if (isEditing) {
       return (
@@ -127,7 +143,7 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
       );
     }
 
-    if (text.includes('<a ')) {
+    if (styledText.includes('<a ')) {
       return (
         <Tag 
           style={{
@@ -135,7 +151,7 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
             wordWrap: 'break-word',
             overflowWrap: 'break-word'
           }}
-          dangerouslySetInnerHTML={{ __html: text }}
+          dangerouslySetInnerHTML={{ __html: styledText }}
           onClick={preventClickPropagation}
           onDoubleClick={() => startEditing(text.replace(/<[^>]*>/g, ''))}
         />
@@ -151,7 +167,7 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
         }}
         onDoubleClick={() => startEditing(text)}
       >
-        {text}
+        {styledText}
       </Tag>
     );
   };
@@ -189,6 +205,13 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
     }
 
     if (text.includes('<a ')) {
+      // Apply custom link color or default blue
+      const linkColor = block.styles.linkColor || '#3b82f6';
+      const linkStyledText = text.replace(
+        /<a\s+([^>]*)>/g,
+        `<a $1 style="color: ${linkColor}; text-decoration: underline;">`
+      );
+      
       return (
         <p 
           style={{
@@ -196,7 +219,7 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
             wordWrap: 'break-word',
             overflowWrap: 'break-word'
           }}
-          dangerouslySetInnerHTML={{ __html: text }}
+          dangerouslySetInnerHTML={{ __html: linkStyledText }}
           onClick={preventClickPropagation}
           onDoubleClick={() => startEditing(text.replace(/<[^>]*>/g, ''))}
         />

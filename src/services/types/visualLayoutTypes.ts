@@ -1,4 +1,3 @@
-
 export type BlockType = 
   | 'heading' 
   | 'paragraph' 
@@ -33,6 +32,7 @@ export interface LayoutBlock {
 export interface BlockStyles {
   backgroundColor?: string;
   textColor?: string;
+  linkColor?: string;
   fontSize?: string;
   fontWeight?: string;
   fontFamily?: string;
