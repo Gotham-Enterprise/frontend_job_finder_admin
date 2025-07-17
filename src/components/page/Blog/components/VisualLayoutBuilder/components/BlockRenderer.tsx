@@ -20,6 +20,7 @@ const DEFAULT_STYLES = {
     color: '#000000',
     textAlign: 'left' as const,
     fontFamily: 'inherit',
+    lineHeight: '1.3',
   },
   paragraph: {
     fontSize: '1rem',
@@ -27,6 +28,7 @@ const DEFAULT_STYLES = {
     color: '#000000',
     textAlign: 'left' as const,
     fontFamily: 'inherit',
+    lineHeight: '1.6',
   },
   image: {
     borderRadius: '8px',
@@ -63,6 +65,8 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
     color: block.styles.textColor || DEFAULT_STYLES[type].color,
     textAlign: block.styles.textAlign || DEFAULT_STYLES[type].textAlign,
     fontFamily: block.styles.fontFamily || DEFAULT_STYLES[type].fontFamily,
+    letterSpacing: block.styles.letterSpacing || '0px',
+    lineHeight: block.styles.lineHeight || DEFAULT_STYLES[type].lineHeight,
   } as React.CSSProperties);
 
 
@@ -127,8 +131,7 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
           style={{
             ...style,
             wordWrap: 'break-word',
-            overflowWrap: 'break-word',
-            lineHeight: '1.3'
+            overflowWrap: 'break-word'
           }}
           dangerouslySetInnerHTML={{ __html: text }}
           onClick={preventClickPropagation}
@@ -142,8 +145,7 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
         style={{
           ...style,
           wordWrap: 'break-word',
-          overflowWrap: 'break-word',
-          lineHeight: '1.3'
+          overflowWrap: 'break-word'
         }}
         onDoubleClick={() => startEditing(text)}
       >
@@ -190,8 +192,7 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
           style={{
             ...style,
             wordWrap: 'break-word',
-            overflowWrap: 'break-word',
-            lineHeight: '1.6'
+            overflowWrap: 'break-word'
           }}
           dangerouslySetInnerHTML={{ __html: text }}
           onClick={preventClickPropagation}
@@ -205,8 +206,7 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
         style={{
           ...style,
           wordWrap: 'break-word',
-          overflowWrap: 'break-word',
-          lineHeight: '1.6'
+          overflowWrap: 'break-word'
         }}
         onDoubleClick={() => startEditing(text)}
       >
@@ -222,7 +222,17 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
     const imageHeight = block.styles.height || 400;
     const widthUnit = block.styles.widthUnit || '%';
     const heightUnit = block.styles.heightUnit || 'px';
+    const imageAlign = block.styles.imageAlign || 'center';
     const borderRadius = block.styles.border?.radius || 8;
+    
+    const getAlignmentClass = () => {
+      switch (imageAlign) {
+        case 'left': return 'mr-auto';
+        case 'right': return 'ml-auto';
+        case 'center': 
+        default: return 'mx-auto';
+      }
+    };
     
     const imageStyle = {
       width: `${imageWidth}${widthUnit}`,
@@ -235,7 +245,7 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
     if (!imageUrl) {
       return (
         <div 
-          className="bg-gray-200 rounded flex items-center justify-center mx-auto" 
+          className={`bg-gray-200 rounded flex items-center justify-center ${getAlignmentClass()}`}
           style={{ 
             width: `${imageWidth}${widthUnit}`, 
             height: `${imageHeight}${heightUnit}`,
@@ -259,7 +269,7 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
           src={imageUrl} 
           alt={altText}
           style={imageStyle}
-          className="border border-gray-200 mx-auto"
+          className={`border border-gray-200 ${getAlignmentClass()}`}
         />
       </div>
     );

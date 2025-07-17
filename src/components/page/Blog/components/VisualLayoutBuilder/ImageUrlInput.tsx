@@ -11,11 +11,13 @@ interface ImageUrlInputProps {
   imageHeight?: number;
   widthUnit?: 'px' | '%';
   heightUnit?: 'px' | '%';
+  imageAlign?: 'left' | 'center' | 'right';
   borderRadius?: number;
   onWidthChange?: (width: number) => void;
   onHeightChange?: (height: number) => void;
   onWidthUnitChange?: (unit: 'px' | '%') => void;
   onHeightUnitChange?: (unit: 'px' | '%') => void;
+  onImageAlignChange?: (align: 'left' | 'center' | 'right') => void;
   onBorderRadiusChange?: (radius: number) => void;
 }
 
@@ -28,11 +30,13 @@ const ImageUrlInput: React.FC<ImageUrlInputProps> = ({
   imageHeight = 400,
   widthUnit = '%',
   heightUnit = 'px',
+  imageAlign = 'center',
   borderRadius = 8,
   onWidthChange,
   onHeightChange,
   onWidthUnitChange,
   onHeightUnitChange,
+  onImageAlignChange,
   onBorderRadiusChange,
 }) => {
   const [localImageUrl, setLocalImageUrl] = useState(imageUrl);
@@ -164,6 +168,31 @@ const ImageUrlInput: React.FC<ImageUrlInputProps> = ({
               <option value="%">%</option>
             </select>
           </div>
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Image Alignment
+        </label>
+        <div className="flex gap-2">
+          {[
+            { value: 'left', label: 'Left' },
+            { value: 'center', label: 'Center' },
+            { value: 'right', label: 'Right' }
+          ].map((option) => (
+            <button
+              key={option.value}
+              onClick={() => onImageAlignChange?.(option.value as 'left' | 'center' | 'right')}
+              className={`flex-1 px-3 py-2 text-sm rounded-lg border transition-all ${
+                imageAlign === option.value
+                  ? 'border-purple-500 bg-purple-50 text-purple-700'
+                  : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
+              }`}
+            >
+              {option.label}
+            </button>
+          ))}
         </div>
       </div>
 

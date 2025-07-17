@@ -5,10 +5,9 @@ import ImageUrlInput from '../ImageUrlInput';
 interface ContentControlsProps {
   block: LayoutBlock;
   onContentUpdate: (field: string, value: any) => void;
-  onStyleUpdate?: (field: string, value: any) => void;
 }
 
-const headingLevels = [
+const HEADING_LEVELS = [
   { value: 1, label: 'H1' },
   { value: 2, label: 'H2' },
   { value: 3, label: 'H3' },
@@ -17,7 +16,12 @@ const headingLevels = [
   { value: 6, label: 'H6' },
 ];
 
-const ContentControls: React.FC<ContentControlsProps> = ({ block, onContentUpdate, onStyleUpdate }) => {
+const LINK_TARGETS = [
+  { value: '_self', label: 'Same Tab' },
+  { value: '_blank', label: 'New Tab' }
+];
+
+const ContentControls: React.FC<ContentControlsProps> = ({ block, onContentUpdate }) => {
   const [showLinkModal, setShowLinkModal] = useState(false);
   const [selectedText, setSelectedText] = useState('');
   const [linkUrl, setLinkUrl] = useState('');
@@ -25,21 +29,19 @@ const ContentControls: React.FC<ContentControlsProps> = ({ block, onContentUpdat
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const handleTextSelection = (ref: React.RefObject<HTMLTextAreaElement | HTMLInputElement | null>) => {
+  const processTextSelection = (ref: React.RefObject<HTMLTextAreaElement | HTMLInputElement | null>) => {
     if (!ref.current) return;
     
-    const start = ref.current.selectionStart || 0;
-    const end = ref.current.selectionEnd || 0;
-    const text = ref.current.value;
+    const { selectionStart = 0, selectionEnd = 0, value } = ref.current;
     
-    if (start !== end) {
-      const selected = text.substring(start, end);
+    if (selectionStart !== selectionEnd) {
+      const selected = value.substring(selectionStart, selectionEnd);
       setSelectedText(selected);
       setShowLinkModal(true);
     }
   };
 
-  const insertLink = () => {
+  const createLink = () => {
     if (!selectedText || !linkUrl) return;
     
     const currentText = (block.content as any)?.text || '';
@@ -47,6 +49,10 @@ const ContentControls: React.FC<ContentControlsProps> = ({ block, onContentUpdat
     const newText = currentText.replace(selectedText, linkHtml);
     
     onContentUpdate('text', newText);
+    resetLinkModal();
+  };
+
+  const resetLinkModal = () => {
     setShowLinkModal(false);
     setSelectedText('');
     setLinkUrl('');
@@ -59,8 +65,76 @@ const ContentControls: React.FC<ContentControlsProps> = ({ block, onContentUpdat
     onContentUpdate('text', textWithoutLinks);
   };
 
-  if (block.type === 'paragraph') {
-    return (
+  const renderLinkModal = () => (
+    <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl p-4 w-80 shadow-xl border border-gray-200 z-[100] max-w-[90vw]">
+      <div className="flex items-center justify-between mb-3">
+        <h4 className="text-sm font-semibold text-gray-800">Add Link</h4>
+        <button
+          onClick={resetLinkModal}
+          className="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md transition-all"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+    
+      <div className="space-y-3">
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">Selected Text</label>
+          <div className="px-2 py-1 bg-gray-50 rounded-lg text-sm text-gray-800 font-medium">
+            "{selectedText}"
+          </div>
+        </div>
+        
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">URL</label>
+          <input
+            type="url"
+            value={linkUrl}
+            onChange={(e) => setLinkUrl(e.target.value)}
+            placeholder="https://example.com"
+            className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 placeholder-gray-400 focus:border-purple-400 focus:outline-none focus:ring-1 focus:ring-purple-100 transition-all"
+            autoFocus
+          />
+        </div>
+        
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">Open Link In</label>
+          <select
+            value={linkTarget}
+            onChange={(e) => setLinkTarget(e.target.value)}
+            className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 focus:border-purple-400 focus:outline-none focus:ring-1 focus:ring-purple-100 transition-all"
+          >
+            {LINK_TARGETS.map((target) => (
+              <option key={target.value} value={target.value}>
+                {target.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+      
+      <div className="flex gap-2 mt-4">
+        <button
+          onClick={resetLinkModal}
+          className="flex-1 px-3 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-all"
+        >
+          Cancel
+        </button>
+        <button
+          onClick={createLink}
+          disabled={!linkUrl.trim()}
+          className="flex-1 px-3 py-2 text-sm bg-purple-500 text-white rounded-lg hover:bg-purple-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+        >
+          Add Link
+        </button>
+      </div>
+    </div>
+  );
+
+  const CONTENT_RENDERERS = {
+    paragraph: () => (
       <>
         <div className="space-y-4">
           <div>
@@ -69,7 +143,7 @@ const ContentControls: React.FC<ContentControlsProps> = ({ block, onContentUpdat
               ref={textareaRef}
               value={(block.content as any)?.text || ''}
               onChange={(e) => onContentUpdate('text', e.target.value)}
-              onMouseUp={() => handleTextSelection(textareaRef)}
+              onMouseUp={() => processTextSelection(textareaRef)}
               placeholder="Enter your text..."
               className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 placeholder-gray-400 focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-100 resize-none transition-all"
               rows={4}
@@ -85,86 +159,11 @@ const ContentControls: React.FC<ContentControlsProps> = ({ block, onContentUpdat
             </div>
           </div>
         </div>
-
-        {/* Link Floating Panel */}
-        {showLinkModal && (
-          <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl p-4 w-80 shadow-xl border border-gray-200 z-[100] max-w-[90vw]">
-            <div className="flex items-center justify-between mb-3">
-              <h4 className="text-sm font-semibold text-gray-800">Add Link</h4>
-              <button
-                onClick={() => {
-                  setShowLinkModal(false);
-                  setSelectedText('');
-                  setLinkUrl('');
-                }}
-                className="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md transition-all"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-          
-            <div className="space-y-3">
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Selected Text</label>
-                <div className="px-2 py-1 bg-gray-50 rounded-lg text-sm text-gray-800 font-medium">
-                  "{selectedText}"
-                </div>
-              </div>
-              
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">URL</label>
-                <input
-                  type="url"
-                  value={linkUrl}
-                  onChange={(e) => setLinkUrl(e.target.value)}
-                  placeholder="https://example.com"
-                  className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 placeholder-gray-400 focus:border-purple-400 focus:outline-none focus:ring-1 focus:ring-purple-100 transition-all"
-                  autoFocus
-                />
-              </div>
-              
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Open Link In</label>
-                <select
-                  value={linkTarget}
-                  onChange={(e) => setLinkTarget(e.target.value)}
-                  className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 focus:border-purple-400 focus:outline-none focus:ring-1 focus:ring-purple-100 transition-all"
-                >
-                  <option value="_self">Same Tab</option>
-                  <option value="_blank">New Tab</option>
-                </select>
-              </div>
-            </div>
-            
-            <div className="flex gap-2 mt-4">
-              <button
-                onClick={() => {
-                  setShowLinkModal(false);
-                  setSelectedText('');
-                  setLinkUrl('');
-                }}
-                className="flex-1 px-3 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-all"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={insertLink}
-                disabled={!linkUrl.trim()}
-                className="flex-1 px-3 py-2 text-sm bg-purple-500 text-white rounded-lg hover:bg-purple-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-              >
-                Add Link
-              </button>
-            </div>
-          </div>
-        )}
+        {showLinkModal && renderLinkModal()}
       </>
-    );
-  }
+    ),
 
-  if (block.type === 'heading') {
-    return (
+    heading: () => (
       <>
         <div className="space-y-4">
           <div>
@@ -174,7 +173,7 @@ const ContentControls: React.FC<ContentControlsProps> = ({ block, onContentUpdat
               type="text"
               value={(block.content as any)?.text || ''}
               onChange={(e) => onContentUpdate('text', e.target.value)}
-              onMouseUp={() => handleTextSelection(inputRef)}
+              onMouseUp={() => processTextSelection(inputRef)}
               placeholder="Enter heading title..."
               className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 placeholder-gray-400 focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-100 transition-all"
             />
@@ -196,7 +195,7 @@ const ContentControls: React.FC<ContentControlsProps> = ({ block, onContentUpdat
                 onChange={(e) => onContentUpdate('level', parseInt(e.target.value))}
                 className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-100 transition-all appearance-none relative z-[70]"
               >
-                {headingLevels.map((level) => (
+                {HEADING_LEVELS.map((level) => (
                   <option key={level.value} value={level.value}>
                     {level.label}
                   </option>
@@ -210,111 +209,27 @@ const ContentControls: React.FC<ContentControlsProps> = ({ block, onContentUpdat
             </div>
           </div>
         </div>
-
-        {/* Link Modal */}
-        {showLinkModal && (
-          <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl p-4 w-80 shadow-xl border border-gray-200 z-[100] max-w-[90vw]">
-            <div className="flex items-center justify-between mb-3">
-              <h4 className="text-sm font-semibold text-gray-800">Add Link</h4>
-              <button
-                onClick={() => {
-                  setShowLinkModal(false);
-                  setSelectedText('');
-                  setLinkUrl('');
-                }}
-                className="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md transition-all"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-            
-            <div className="space-y-3">
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Selected Text</label>
-                <div className="px-2 py-1 bg-gray-50 rounded-lg text-sm text-gray-800 font-medium">
-                  "{selectedText}"
-                </div>
-              </div>
-              
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">URL</label>
-                <input
-                  type="url"
-                  value={linkUrl}
-                  onChange={(e) => setLinkUrl(e.target.value)}
-                  placeholder="https://example.com"
-                  className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 placeholder-gray-400 focus:border-purple-400 focus:outline-none focus:ring-1 focus:ring-purple-100 transition-all"
-                  autoFocus
-                />
-              </div>
-              
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Open Link In</label>
-                <select
-                  value={linkTarget}
-                  onChange={(e) => setLinkTarget(e.target.value)}
-                  className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 focus:border-purple-400 focus:outline-none focus:ring-1 focus:ring-purple-100 transition-all"
-                >
-                  <option value="_self">Same Tab</option>
-                  <option value="_blank">New Tab</option>
-                </select>
-              </div>
-            </div>
-            
-            <div className="flex gap-2 mt-4">
-              <button
-                onClick={() => {
-                  setShowLinkModal(false);
-                  setSelectedText('');
-                  setLinkUrl('');
-                }}
-                className="flex-1 px-3 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-all"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={insertLink}
-                disabled={!linkUrl.trim()}
-                className="flex-1 px-3 py-2 text-sm bg-purple-500 text-white rounded-lg hover:bg-purple-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-              >
-                Add Link
-              </button>
-            </div>
-          </div>
-        )}
+        {showLinkModal && renderLinkModal()}
       </>
-    );
-  }
+    ),
 
-  if (block.type === 'image') {
-    return (
+    image: () => (
       <div className="space-y-4">
         <ImageUrlInput
           imageUrl={(block.content as any)?.url || ''}
           altText={(block.content as any)?.alt || ''}
           onImageUrlChange={(value: string) => onContentUpdate('url', value)}
           onAltTextChange={(value: string) => onContentUpdate('alt', value)}
-          imageWidth={(block.styles as any)?.width || 100}
-          imageHeight={(block.styles as any)?.height || 400}
-          widthUnit={(block.styles as any)?.widthUnit || '%'}
-          heightUnit={(block.styles as any)?.heightUnit || 'px'}
-          borderRadius={(block.styles as any)?.border?.radius || 8}
-          onWidthChange={(value: number) => onStyleUpdate?.('width', value)}
-          onHeightChange={(value: number) => onStyleUpdate?.('height', value)}
-          onWidthUnitChange={(value: 'px' | '%') => onStyleUpdate?.('widthUnit', value)}
-          onHeightUnitChange={(value: 'px' | '%') => onStyleUpdate?.('heightUnit', value)}
-          onBorderRadiusChange={(value: number) => {
-            const currentBorder = (block.styles as any)?.border || {};
-            onStyleUpdate?.('border', { ...currentBorder, radius: value });
-          }}
         />
       </div>
-    );
-  }
+    ),
 
-  return null;
+    default: () => null
+  };
+
+  const renderer = CONTENT_RENDERERS[block.type as keyof typeof CONTENT_RENDERERS] || CONTENT_RENDERERS.default;
+  
+  return renderer();
 };
 
 export default ContentControls;

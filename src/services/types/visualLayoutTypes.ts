@@ -39,6 +39,9 @@ export interface BlockStyles {
   fontStyle?: 'normal' | 'italic' | 'oblique';
   textDecoration?: 'none' | 'underline' | 'overline' | 'line-through';
   textAlign?: 'left' | 'center' | 'right' | 'justify';
+  letterSpacing?: string;
+  lineHeight?: string;
+  imageAlign?: 'left' | 'center' | 'right';
   titleFontSize?: string;
   subtitleFontSize?: string;
   width?: number;
@@ -254,6 +257,7 @@ export const BLOCK_TEMPLATES: Record<BlockType, Partial<LayoutBlock>> = {
       height: 400,
       widthUnit: '%',
       heightUnit: 'px',
+      imageAlign: 'center',
     },
     position: { x: 0, y: 0, width: 100, height: 200 },
   },

@@ -192,7 +192,7 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
                     }
                   }}
                 >
-                  <div className="space-y-0">
+                  <div className="space-y-4">
                     {Array.isArray(blocks) && blocks.length > 0 ? (
                       blocks.map((block) => (
                         <BlockRenderer

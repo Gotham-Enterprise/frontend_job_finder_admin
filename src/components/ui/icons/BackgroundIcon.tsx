@@ -19,11 +19,10 @@ const BackgroundIcon: React.FC<IconProps> = ({ width = 24, height = 24, classNam
       strokeLinejoin="round"
       className={className}
     >
-      {/* Background shape */}
       <rect x="3" y="3" width="18" height="18" rx="3" fill="none" stroke="currentColor" />
-      {/* Paint bucket style fill indicator */}
+  
       <path d="M8 8h8v8H8z" fill="currentColor" opacity="0.3" />
-      {/* Drop/paint indicator */}
+     
       <circle cx="18" cy="6" r="2" fill="currentColor" opacity="0.6" />
     </svg>
   );

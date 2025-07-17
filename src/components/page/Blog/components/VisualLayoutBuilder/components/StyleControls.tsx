@@ -22,7 +22,42 @@ interface StyleControlsProps {
   onStyleUpdate: (field: string, value: any) => void;
 }
 
-const spacingOptions = [
+const TEXT_STYLE_BUTTONS = [
+  {
+    key: 'fontWeight',
+    icon: BoldIcon,
+    title: 'Bold',
+    activeValue: 'bold',
+    inactiveValue: 'normal'
+  },
+  {
+    key: 'fontStyle',
+    icon: ItalicIcon,
+    title: 'Italic',
+    activeValue: 'italic',
+    inactiveValue: 'normal'
+  },
+  {
+    key: 'textDecoration',
+    icon: UnderlineIcon,
+    title: 'Underline',
+    activeValue: 'underline',
+    inactiveValue: 'none'
+  }
+];
+
+const ALIGNMENT_OPTIONS = [
+  { value: 'left', icon: AlignLeftIcon, title: 'Align Left' },
+  { value: 'center', icon: AlignCenterIcon, title: 'Align Center' },
+  { value: 'right', icon: AlignRightIcon, title: 'Align Right' }
+];
+
+const LIST_OPTIONS = [
+  { icon: BulletListIcon, title: 'Bullet List (Coming Soon)', disabled: true },
+  { icon: OrderedListIcon, title: 'Ordered List (Coming Soon)', disabled: true }
+];
+
+const SPACING_OPTIONS = [
   { 
     key: 'margin', 
     label: 'Margin', 
@@ -37,7 +72,7 @@ const spacingOptions = [
   }
 ];
 
-const appearanceOptions = [
+const APPEARANCE_OPTIONS = [
   { 
     key: 'background', 
     label: 'Background', 
@@ -58,44 +93,111 @@ const appearanceOptions = [
   }
 ];
 
+const TYPOGRAPHY_CONTROLS = [
+  {
+    key: 'fontSize',
+    label: 'Font Size',
+    min: 8,
+    max: 72,
+    defaultValue: '16',
+    unit: 'px'
+  },
+  {
+    key: 'letterSpacing',
+    label: 'Letter Spacing',
+    min: -2,
+    max: 10,
+    defaultValue: '0',
+    unit: 'px'
+  },
+  {
+    key: 'lineHeight',
+    label: 'Line Height',
+    min: 12,
+    max: 80,
+    defaultValue: '24',
+    unit: 'px'
+  }
+];
+
 const StyleControls: React.FC<StyleControlsProps> = ({ block, onFloatingPanelOpen, onStyleUpdate }) => {
-  
-  // Text formatting functions
-  const toggleBold = () => {
-    const currentWeight = block.styles.fontWeight;
-    const newWeight = currentWeight === 'bold' ? 'normal' : 'bold';
-    onStyleUpdate('fontWeight', newWeight);
+  const showTextFormatting = ['heading', 'paragraph'].includes(block.type);
+  const showImageControls = block.type === 'image';
+
+  const toggleTextStyle = (key: string, activeValue: string, inactiveValue: string) => {
+    const currentValue = (block.styles as any)[key];
+    const newValue = currentValue === activeValue ? inactiveValue : activeValue;
+    onStyleUpdate(key, newValue);
   };
 
-  const toggleItalic = () => {
-    const currentStyle = block.styles.fontStyle;
-    const newStyle = currentStyle === 'italic' ? 'normal' : 'italic';
-    onStyleUpdate('fontStyle', newStyle);
-  };
-
-  const toggleUnderline = () => {
-    const currentDecoration = block.styles.textDecoration;
-    const newDecoration = currentDecoration === 'underline' ? 'none' : 'underline';
-    onStyleUpdate('textDecoration', newDecoration);
-  };
-
-  // List functionality placeholders
-  const createBulletList = () => {
-    console.log('Bullet list functionality - coming soon');
-    // Future implementation: Convert current text to bullet list
-  };
-
-  const createOrderedList = () => {
-    console.log('Ordered list functionality - coming soon');
-    // Future implementation: Convert current text to numbered list
-  };
-
-  const setTextAlignment = (alignment: 'left' | 'center' | 'right') => {
+  const updateTextAlignment = (alignment: string) => {
     onStyleUpdate('textAlign', alignment);
   };
 
-  // Only show text formatting for text-based blocks
-  const showTextFormatting = ['heading', 'paragraph'].includes(block.type);
+  const updateTypography = (key: string, value: string, unit: string) => {
+    onStyleUpdate(key, `${value}${unit}`);
+  };
+
+  const getTypographyValue = (key: string, defaultValue: string, unit: string) => {
+    const styleValue = (block.styles as any)[key];
+    if (!styleValue) return defaultValue;
+    return styleValue.replace(unit, '') || defaultValue;
+  };
+
+  const renderButton = (isActive: boolean, onClick: () => void, title: string, icon: React.ComponentType<any>) => {
+    const Icon = icon;
+    return (
+      <button
+        onClick={onClick}
+        className={`w-8 h-8 flex items-center justify-center rounded transition-all border ${
+          isActive
+            ? 'bg-blue-100 text-blue-700 border-blue-300'
+            : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100 hover:text-gray-800'
+        }`}
+        title={title}
+      >
+        <Icon width={16} height={16} />
+      </button>
+    );
+  };
+
+  const renderTypographyControl = (control: typeof TYPOGRAPHY_CONTROLS[0]) => {
+    const value = getTypographyValue(control.key, control.defaultValue, control.unit);
+    const numericValue = parseInt(value);
+    const progressPercentage = ((numericValue - control.min) / (control.max - control.min)) * 100;
+
+    return (
+      <div key={control.key} className="space-y-2">
+        <label className="text-xs font-medium text-gray-600">{control.label}</label>
+        <div className="flex items-center gap-3">
+          <div className="flex-1">
+            <input
+              type="range"
+              min={control.min}
+              max={control.max}
+              value={numericValue}
+              onChange={(e) => updateTypography(control.key, e.target.value, control.unit)}
+              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+              style={{
+                background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${progressPercentage}%, #e5e7eb ${progressPercentage}%, #e5e7eb 100%)`
+              }}
+            />
+          </div>
+          <div className="w-12">
+            <input
+              type="number"
+              min={control.min}
+              max={control.max}
+              value={numericValue}
+              onChange={(e) => updateTypography(control.key, e.target.value, control.unit)}
+              className="w-full px-2 py-1 text-xs border border-gray-200 rounded text-center bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+          <span className="text-xs text-gray-500 w-6">{control.unit}</span>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="p-5 space-y-4">
@@ -103,148 +205,73 @@ const StyleControls: React.FC<StyleControlsProps> = ({ block, onFloatingPanelOpe
         <div className="space-y-3">
           <h3 className="text-sm font-medium text-gray-700 mb-3">Text Formatting</h3>
           
-          {/* Text Style Buttons */}
           <div className="flex gap-2 mb-3">
-            <button
-              onClick={toggleBold}
-              className={`w-8 h-8 flex items-center justify-center rounded transition-all border ${
-                block.styles.fontWeight === 'bold'
-                  ? 'bg-blue-100 text-blue-700 border-blue-300'
-                  : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100 hover:text-gray-800'
-              }`}
-              title="Bold"
-            >
-              <BoldIcon width={16} height={16} />
-            </button>
-            
-            <button
-              onClick={toggleItalic}
-              className={`w-8 h-8 flex items-center justify-center rounded transition-all border ${
-                block.styles.fontStyle === 'italic'
-                  ? 'bg-blue-100 text-blue-700 border-blue-300'
-                  : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100 hover:text-gray-800'
-              }`}
-              title="Italic"
-            >
-              <ItalicIcon width={16} height={16} />
-            </button>
-            
-            <button
-              onClick={toggleUnderline}
-              className={`w-8 h-8 flex items-center justify-center rounded transition-all border ${
-                block.styles.textDecoration === 'underline'
-                  ? 'bg-blue-100 text-blue-700 border-blue-300'
-                  : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100 hover:text-gray-800'
-              }`}
-              title="Underline"
-            >
-              <UnderlineIcon width={16} height={16} />
-            </button>
+            {TEXT_STYLE_BUTTONS.map((button) => {
+              const isActive = (block.styles as any)[button.key] === button.activeValue;
+              return renderButton(
+                isActive,
+                () => toggleTextStyle(button.key, button.activeValue, button.inactiveValue),
+                button.title,
+                button.icon
+              );
+            })}
           </div>
 
-          {/* Text Alignment Buttons */}
           <div className="space-y-2">
             <label className="text-xs font-medium text-gray-600">Text Alignment</label>
             <div className="flex gap-2">
-              <button
-                onClick={() => setTextAlignment('left')}
-                className={`w-8 h-8 flex items-center justify-center rounded transition-all border ${
-                  block.styles.textAlign === 'left'
-                    ? 'bg-blue-100 text-blue-700 border-blue-300'
-                    : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100 hover:text-gray-800'
-                }`}
-                title="Align Left"
-              >
-                <AlignLeftIcon width={16} height={16} />
-              </button>
-              
-              <button
-                onClick={() => setTextAlignment('center')}
-                className={`w-8 h-8 flex items-center justify-center rounded transition-all border ${
-                  block.styles.textAlign === 'center'
-                    ? 'bg-blue-100 text-blue-700 border-blue-300'
-                    : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100 hover:text-gray-800'
-                }`}
-                title="Align Center"
-              >
-                <AlignCenterIcon width={16} height={16} />
-              </button>
-              
-              <button
-                onClick={() => setTextAlignment('right')}
-                className={`w-8 h-8 flex items-center justify-center rounded transition-all border ${
-                  block.styles.textAlign === 'right'
-                    ? 'bg-blue-100 text-blue-700 border-blue-300'
-                    : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100 hover:text-gray-800'
-                }`}
-                title="Align Right"
-              >
-                <AlignRightIcon width={16} height={16} />
-              </button>
+              {ALIGNMENT_OPTIONS.map((option) => {
+                const isActive = block.styles.textAlign === option.value;
+                return renderButton(
+                  isActive,
+                  () => updateTextAlignment(option.value),
+                  option.title,
+                  option.icon
+                );
+              })}
             </div>
           </div>
 
-          {/* List Options */}
           <div className="space-y-2">
             <label className="text-xs font-medium text-gray-600">List Options</label>
             <div className="flex gap-2">
-              <button
-                onClick={createBulletList}
-                className="w-8 h-8 flex items-center justify-center rounded transition-all border bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed"
-                title="Bullet List (Coming Soon)"
-                disabled
-              >
-                <BulletListIcon width={16} height={16} />
-              </button>
-              
-              <button
-                onClick={createOrderedList}
-                className="w-8 h-8 flex items-center justify-center rounded transition-all border bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed"
-                title="Ordered List (Coming Soon)"
-                disabled
-              >
-                <OrderedListIcon width={16} height={16} />
-              </button>
+              {LIST_OPTIONS.map((option, index) => (
+                <button
+                  key={index}
+                  className="w-8 h-8 flex items-center justify-center rounded transition-all border bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed"
+                  title={option.title}
+                  disabled={option.disabled}
+                >
+                  <option.icon width={16} height={16} />
+                </button>
+              ))}
             </div>
           </div>
 
-          {/* Font Size */}
-          <div className="space-y-2">
-            <label className="text-xs font-medium text-gray-600">Font Size</label>
-            <div className="flex items-center gap-3">
-              <div className="flex-1">
-                <input
-                  type="range"
-                  min="8"
-                  max="72"
-                  value={parseInt(block.styles.fontSize?.replace('px', '') || '16')}
-                  onChange={(e) => onStyleUpdate('fontSize', `${e.target.value}px`)}
-                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
-                  style={{
-                    background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${((parseInt(block.styles.fontSize?.replace('px', '') || '16') - 8) / (72 - 8)) * 100}%, #e5e7eb ${((parseInt(block.styles.fontSize?.replace('px', '') || '16') - 8) / (72 - 8)) * 100}%, #e5e7eb 100%)`
-                  }}
-                />
-              </div>
-              <div className="w-12">
-                <input
-                  type="number"
-                  min="8"
-                  max="72"
-                  value={parseInt(block.styles.fontSize?.replace('px', '') || '16')}
-                  onChange={(e) => onStyleUpdate('fontSize', `${e.target.value}px`)}
-                  className="w-full px-2 py-1 text-xs border border-gray-200 rounded text-center bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-              <span className="text-xs text-gray-500 w-6">px</span>
-            </div>
-          </div>
+          {TYPOGRAPHY_CONTROLS.map(renderTypographyControl)}
+        </div>
+      )}
+
+      {showImageControls && (
+        <div className="space-y-3">
+          <h3 className="text-sm font-medium text-gray-700 mb-3">Image Layout</h3>
+          <button
+            onClick={(e) => onFloatingPanelOpen('imageAlign', e)}
+            className="w-full flex items-center gap-3 px-3 py-2 text-sm bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg text-gray-700 transition-all hover:shadow-sm text-left"
+            title="Set image alignment"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h8m0 0l4 4m0 0l-4 4m4-4H4" />
+            </svg>
+            <span>Align to page</span>
+          </button>
         </div>
       )}
       
       <div className="space-y-3">
         <h3 className="text-sm font-medium text-gray-700 mb-3">Spacing</h3>
         <div className="flex gap-2">
-          {spacingOptions.map((option) => (
+          {SPACING_OPTIONS.map((option) => (
             <button
               key={option.key}
               onClick={(e) => onFloatingPanelOpen(option.key, e)}
@@ -261,7 +288,7 @@ const StyleControls: React.FC<StyleControlsProps> = ({ block, onFloatingPanelOpe
       <div className="space-y-3">
         <h3 className="text-sm font-medium text-gray-700 mb-3">Appearance</h3>
         <div className="space-y-2">
-          {appearanceOptions.map((option) => (
+          {APPEARANCE_OPTIONS.map((option) => (
             <button
               key={option.key}
               onClick={(e) => onFloatingPanelOpen(option.key, e)}
