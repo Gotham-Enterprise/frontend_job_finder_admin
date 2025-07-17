@@ -7,6 +7,7 @@ import VisualLayoutBuilder from "./VisualLayoutBuilder/VisualLayoutBuilder";
 
 import { 
   BlogLayout, 
+  LayoutBlock,
   convertLayoutToBlogPayload, 
   LAYOUT_PRESETS 
 } from "@/services/types/visualLayoutTypes";
@@ -36,49 +37,73 @@ interface BlogMetadata {
 
 type ViewMode = 'builder' | 'classic' | 'preview';
 
-// Helper function to create a simple initial layout
+
 const createInitialLayout = (): BlogLayout => {
   return {
     id: `layout-${Date.now()}`,
     name: 'New Blog Post',
     blocks: [
       {
-        id: 'hero-1',
-        type: 'hero',
+        id: 'demo-heading-1',
+        type: 'heading',
         content: {
-          title: 'Your Blog Title Here',
-          subtitle: 'Add a compelling subtitle',
+          text: 'Gotham Visual Layout Builder',
+          level: 1,
         },
         styles: {
           fontSize: '2.5rem',
           fontWeight: 'bold',
           textAlign: 'center',
-          margin: { top: 20, right: 0, bottom: 20, left: 0 },
-          padding: { top: 40, right: 20, bottom: 40, left: 20 },
+          textColor: '#1f2937',
+          margin: { top: 0, right: 0, bottom: 24, left: 0 },
+          padding: { top: 0, right: 0, bottom: 0, left: 0 },
         },
-        position: { x: 0, y: 0, width: 100, height: 200 },
+        position: { x: 0, y: 0, width: 100, height: 80 },
         metadata: {
           created: new Date().toISOString(),
           updated: new Date().toISOString(),
         },
       },
       {
-        id: 'paragraph-1',
+        id: 'demo-paragraph-1',
         type: 'paragraph',
         content: {
-          text: 'Start writing your blog content here. You can edit this text directly or use the sidebar controls.',
+          text: 'Click on any block to see the floating style controls. Try clicking the Style buttons on the right to see the floating panels in action!',
           richText: true,
         },
         styles: {
-          fontSize: '1.1rem',
-          margin: { top: 0, right: 0, bottom: 20, left: 0 },
+          fontSize: '1.125rem',
+          textAlign: 'center',
+          textColor: '#4b5563',
+          margin: { top: 0, right: 0, bottom: 32, left: 0 },
+          padding: { top: 0, right: 0, bottom: 0, left: 0 },
         },
-        position: { x: 0, y: 200, width: 100, height: 100 },
+        position: { x: 0, y: 0, width: 100, height: 80 },
         metadata: {
           created: new Date().toISOString(),
           updated: new Date().toISOString(),
         },
       },
+      {
+        id: 'demo-image-1',
+        type: 'image',
+        content: {
+          url: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&h=400&fit=crop',
+          alt: 'Demo image of a laptop with code',
+          size: 'large',
+          aspectRatio: '16:9',
+        },
+        styles: {
+          margin: { top: 0, right: 0, bottom: 24, left: 0 },
+          padding: { top: 0, right: 0, bottom: 0, left: 0 },
+          border: { width: 0, style: 'solid', color: '#e5e7eb', radius: 12 },
+        },
+        position: { x: 0, y: 0, width: 100, height: 300 },
+        metadata: {
+          created: new Date().toISOString(),
+          updated: new Date().toISOString(),
+        },
+      }
     ],
     settings: {
       maxWidth: 800,
@@ -189,8 +214,15 @@ export default function AddNewBlogWithLayoutBuilder() {
     }));
   }, []);
 
-  const updateLayout = useCallback((layout: BlogLayout) => {
-    setCurrentLayout(layout);
+  const updateLayout = useCallback((blocks: LayoutBlock[]) => {
+    setCurrentLayout(prev => ({
+      ...prev,
+      blocks,
+      metadata: {
+        ...prev.metadata,
+        updated: new Date().toISOString(),
+      },
+    }));
   }, []);
 
   const saveBlog = useCallback(async (isDraft = true) => {
@@ -576,7 +608,7 @@ export default function AddNewBlogWithLayoutBuilder() {
           {/* Center Canvas - Visual Layout Builder */}
           <div className="flex-1 relative h-full bg-gray-100 dark:bg-gray-900">
             <VisualLayoutBuilder
-              initialLayout={currentLayout}
+              initialLayout={currentLayout.blocks}
               onLayoutChange={updateLayout}
               onSave={saveBlog}
               blogData={metadata}
