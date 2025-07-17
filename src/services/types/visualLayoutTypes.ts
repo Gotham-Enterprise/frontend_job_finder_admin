@@ -220,7 +220,7 @@ export const BLOCK_TEMPLATES: Record<BlockType, Partial<LayoutBlock>> = {
     type: 'heading',
     content: {
       text: 'Your Heading Here',
-      level: 2,
+      level: 1, 
     },
     styles: {
       fontSize: '2rem',

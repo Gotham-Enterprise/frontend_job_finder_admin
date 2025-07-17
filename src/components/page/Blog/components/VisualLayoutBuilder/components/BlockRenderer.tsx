@@ -50,7 +50,6 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
   const [editValue, setEditValue] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Auto-resize textarea when editing starts
   useEffect(() => {
     if (isEditing && textareaRef.current) {
       const textarea = textareaRef.current;
@@ -98,12 +97,14 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
   };
 
   const renderEditableHeading = () => {
-    const level = (block.content as any)?.level || 2;
+    const level = (block.content as any)?.level || 1; 
     const text = (block.content as any)?.text || 'Sample Heading';
+    const url = (block.content as any)?.url;
     const style = createStyle('heading');
     const Tag = HEADING_TAGS[Math.min(Math.max(level - 1, 0), 5)] as HeadingTag;
     
-    // Apply automatic link styling with custom color
+ 
+    
     const linkColor = block.styles?.linkColor || '#3b82f6';
     const styledText = text.replace(
       /<a\s+(?![^>]*style\s*=\s*["'][^"']*color\s*:)[^>]*>/gi,
@@ -140,6 +141,39 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
             autoFocus
           />
         </div>
+      );
+    }
+
+    if (url && url.trim()) {
+      return (
+        <a
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ textDecoration: 'none' }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <Tag 
+            style={{
+              ...style,
+              color: linkColor,
+              wordWrap: 'break-word',
+              overflowWrap: 'break-word',
+              cursor: 'pointer'
+            }}
+            onDoubleClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              startEditing(text.replace(/<[^>]*>/g, ''));
+            }}
+          >
+            {styledText.includes('<a ') ? (
+              <span dangerouslySetInnerHTML={{ __html: styledText }} />
+            ) : (
+              styledText
+            )}
+          </Tag>
+        </a>
       );
     }
 
@@ -205,7 +239,7 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
     }
 
     if (text.includes('<a ')) {
-      // Apply custom link color or default blue
+    
       const linkColor = block.styles.linkColor || '#3b82f6';
       const linkStyledText = text.replace(
         /<a\s+([^>]*)>/g,
@@ -412,7 +446,6 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
       );
     }
 
-    // For direct video files
     return (
       <div className="w-full">
         <video

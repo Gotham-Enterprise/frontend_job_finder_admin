@@ -10,15 +10,6 @@ interface ContentControlsProps {
   onStyleUpdate?: (field: string, value: any) => void;
 }
 
-const HEADING_LEVELS = [
-  { value: 1, label: 'H1' },
-  { value: 2, label: 'H2' },
-  { value: 3, label: 'H3' },
-  { value: 4, label: 'H4' },
-  { value: 5, label: 'H5' },
-  { value: 6, label: 'H6' },
-];
-
 const LINK_TARGETS = [
   { value: '_self', label: 'Same Tab' },
   { value: '_blank', label: 'New Tab' }
@@ -202,15 +193,6 @@ const ContentControls: React.FC<ContentControlsProps> = ({ block, onContentUpdat
               placeholder="Enter heading title..."
               className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 placeholder-gray-400 focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-100 transition-all"
             />
-            <div className="flex items-center justify-between mt-2">
-              <p className="text-xs text-gray-500">Select text and it will prompt you to add a link</p>
-              <button
-                onClick={removeAllLinks}
-                className="text-xs text-red-500 hover:text-red-700 underline"
-              >
-                Remove all links
-              </button>
-            </div>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Link Color</label>
@@ -222,25 +204,14 @@ const ContentControls: React.FC<ContentControlsProps> = ({ block, onContentUpdat
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Level</label>
-            <div className="relative">
-              <select
-                value={(block.content as any)?.level || 1}
-                onChange={(e) => onContentUpdate('level', parseInt(e.target.value))}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-100 transition-all appearance-none relative z-[70]"
-              >
-                {HEADING_LEVELS.map((level) => (
-                  <option key={level.value} value={level.value}>
-                    {level.label}
-                  </option>
-                ))}
-              </select>
-              <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </div>
-            </div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">URL (Optional)</label>
+            <input
+              type="url"
+              value={(block.content as any)?.url || ''}
+              onChange={(e) => onContentUpdate('url', e.target.value)}
+              placeholder="https://example.com"
+              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 placeholder-gray-400 focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-100 transition-all"
+            />
           </div>
         </div>
         {showLinkModal && renderLinkModal()}

@@ -9,11 +9,8 @@ import {
   BlogLayout, 
   LayoutBlock,
   convertLayoutToBlogPayload, 
-  LAYOUT_PRESETS 
 } from "@/services/types/visualLayoutTypes";
-import { 
-  CreateBlogPostPayload 
-} from "@/services/types/blogPayload";
+
 import { 
   CategoryOption, 
   TagOption 
@@ -124,11 +121,11 @@ const createInitialLayout = (): BlogLayout => {
 };
 
 export default function AddNewBlogWithLayoutBuilder() {
-  // Layout and content state
+
   const [currentLayout, setCurrentLayout] = useState<BlogLayout>(createInitialLayout());
   const [viewMode, setViewMode] = useState<ViewMode>('builder');
   
-  // Blog metadata state
+
   const [metadata, setMetadata] = useState<BlogMetadata>({
     title: '',
     permalink: '',
@@ -145,7 +142,6 @@ export default function AddNewBlogWithLayoutBuilder() {
     allowPings: true,
   });
 
-  // Expanded sections state
   const [expandedSections, setExpandedSections] = useState({
     publish: true,
     categories: true,
@@ -156,7 +152,6 @@ export default function AddNewBlogWithLayoutBuilder() {
 
   const previewModal = useModal();
 
-  // Sample options (in real app, these would come from API)
   const categoryOptions: CategoryOption[] = [
     { value: '1', text: 'Technology', selected: false },
     { value: '2', text: 'Design', selected: false },
@@ -187,7 +182,7 @@ export default function AddNewBlogWithLayoutBuilder() {
     { value: 'private', label: 'Private' },
   ];
 
-  // Handlers
+
   const updateMetadata = useCallback((field: keyof BlogMetadata, value: any) => {
     setMetadata(prev => ({
       ...prev,
@@ -336,7 +331,6 @@ export default function AddNewBlogWithLayoutBuilder() {
     }
   };
 
-  // Check if we can save (title is required)
   const canSave = metadata.title.trim().length > 0;
 
   return (
@@ -477,131 +471,9 @@ export default function AddNewBlogWithLayoutBuilder() {
                 </div>
               </div>
 
-              {/* SEO Settings */}
-              <div className="space-y-3 mb-6">
-                <button
-                  onClick={() => toggleSection('seo')}
-                  className="flex items-center justify-between w-full p-2 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors"
-                >
-                  <span className="text-sm font-medium text-white">SEO Settings</span>
-                  <svg
-                    className={`w-4 h-4 text-gray-400 transition-transform ${
-                      expandedSections.seo ? 'rotate-180' : ''
-                    }`}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
+           
 
-                {expandedSections.seo && (
-                  <div className="space-y-3 px-2">
-                    <div>
-                      <label className="block text-xs text-gray-400 mb-1">SEO Title</label>
-                      <input
-                        type="text"
-                        value={metadata.seoTitle}
-                        onChange={(e) => updateMetadata('seoTitle', e.target.value)}
-                        placeholder="Leave empty to use blog title"
-                        className="w-full px-2 py-1 text-sm bg-gray-800 border border-gray-600 rounded focus:border-blue-500 focus:outline-none"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs text-gray-400 mb-1">Meta Description</label>
-                      <textarea
-                        value={metadata.seoDescription}
-                        onChange={(e) => updateMetadata('seoDescription', e.target.value)}
-                        placeholder="Brief description for search engines..."
-                        rows={3}
-                        className="w-full px-2 py-1 text-sm bg-gray-800 border border-gray-600 rounded focus:border-blue-500 focus:outline-none resize-none"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs text-gray-400 mb-1">Permalink</label>
-                      <input
-                        type="text"
-                        value={metadata.permalink}
-                        onChange={(e) => updateMetadata('permalink', e.target.value)}
-                        placeholder="post-url-slug"
-                        className="w-full px-2 py-1 text-sm bg-gray-800 border border-gray-600 rounded focus:border-blue-500 focus:outline-none font-mono"
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Advanced Settings */}
-              <div className="space-y-3">
-                <button
-                  onClick={() => toggleSection('settings')}
-                  className="flex items-center justify-between w-full p-2 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors"
-                >
-                  <span className="text-sm font-medium text-white">Advanced Settings</span>
-                  <svg
-                    className={`w-4 h-4 text-gray-400 transition-transform ${
-                      expandedSections.settings ? 'rotate-180' : ''
-                    }`}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-
-                {expandedSections.settings && (
-                  <div className="space-y-3 px-2">
-                    <div>
-                      <label className="block text-xs text-gray-400 mb-1">Publish Date</label>
-                      <input
-                        type="date"
-                        value={metadata.publishDate}
-                        onChange={(e) => updateMetadata('publishDate', e.target.value)}
-                        className="w-full px-2 py-1 text-sm bg-gray-800 border border-gray-600 rounded focus:border-blue-500 focus:outline-none"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="flex items-center text-xs">
-                        <input
-                          type="checkbox"
-                          checked={metadata.allowComments}
-                          onChange={(e) => updateMetadata('allowComments', e.target.checked)}
-                          className="mr-2 text-blue-500"
-                        />
-                        <span className="text-gray-300">Allow Comments</span>
-                      </label>
-
-                      <label className="flex items-center text-xs">
-                        <input
-                          type="checkbox"
-                          checked={metadata.allowPings}
-                          onChange={(e) => updateMetadata('allowPings', e.target.checked)}
-                          className="mr-2 text-blue-500"
-                        />
-                        <span className="text-gray-300">Allow Pingbacks</span>
-                      </label>
-                    </div>
-
-                    {metadata.visibility === 'password' && (
-                      <div>
-                        <label className="block text-xs text-gray-400 mb-1">Password</label>
-                        <input
-                          type="password"
-                          value={metadata.password}
-                          onChange={(e) => updateMetadata('password', e.target.value)}
-                          placeholder="Enter password..."
-                          className="w-full px-2 py-1 text-sm bg-gray-800 border border-gray-600 rounded focus:border-blue-500 focus:outline-none"
-                        />
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
+          
             </div>
           </div>
 
