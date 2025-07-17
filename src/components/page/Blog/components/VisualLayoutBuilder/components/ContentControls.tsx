@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { LayoutBlock } from '../../../../../../services/types/visualLayoutTypes';
 import ImageUrlInput from '../ImageUrlInput';
 import VideoUrlInput from '../VideoUrlInput';
+import { GridIcon, PlusIcon } from '../../../../../../icons';
 
 interface ContentControlsProps {
   block: LayoutBlock;
@@ -258,25 +259,40 @@ const ContentControls: React.FC<ContentControlsProps> = ({ block, onContentUpdat
     columns: () => (
       <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Number of Columns
-          </label>
-          <div className="relative">
-            <select
-              value={(block.content as any)?.columns || 2}
-              onChange={(e) => onContentUpdate('columns', parseInt(e.target.value))}
-              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-100 transition-all appearance-none"
+          <div className="flex items-center gap-2 mb-3">
+            <GridIcon className="w-4 h-4 text-gray-600" />
+            <label className="text-sm font-medium text-gray-700">
+              Number of Columns
+            </label>
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => {
+                const current = (block.content as any)?.columns || 2;
+                if (current > 1) onContentUpdate('columns', current - 1);
+              }}
+              disabled={(block.content as any)?.columns <= 1}
+              className="flex items-center justify-center w-8 h-8 bg-gray-100 hover:bg-gray-200 disabled:bg-gray-50 disabled:opacity-50 rounded border transition-colors"
             >
-              <option value={1}>1 Column</option>
-              <option value={2}>2 Columns</option>
-              <option value={3}>3 Columns</option>
-              <option value={4}>4 Columns</option>
-            </select>
-            <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
               </svg>
+            </button>
+            <div className="flex-1 text-center">
+              <span className="text-lg font-semibold text-gray-800">
+                {(block.content as any)?.columns || 2} Column{((block.content as any)?.columns || 2) !== 1 ? 's' : ''}
+              </span>
             </div>
+            <button
+              onClick={() => {
+                const current = (block.content as any)?.columns || 2;
+                if (current < 4) onContentUpdate('columns', current + 1);
+              }}
+              disabled={(block.content as any)?.columns >= 4}
+              className="flex items-center justify-center w-8 h-8 bg-gray-100 hover:bg-gray-200 disabled:bg-gray-50 disabled:opacity-50 rounded border transition-colors"
+            >
+              <PlusIcon className="w-3 h-3" />
+            </button>
           </div>
         </div>
 

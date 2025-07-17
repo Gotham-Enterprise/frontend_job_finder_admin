@@ -25,15 +25,54 @@ const ColumnItemRenderer: React.FC<ColumnItemRendererProps> = ({
 }) => {
   const contentBlock = block.content as LayoutBlock;
 
-  const openContentSettings = () => {
-    if (onOpenSettings && contentBlock.type) {
-      onOpenSettings(contentBlock.type as 'image' | 'video' | 'paragraph', contentBlock);
-    }
+  const CONTENT_OPTIONS = [
+    { type: 'paragraph', label: 'Text', icon: DocsIcon },
+    { type: 'image', label: 'Image', icon: FileIcon },
+    { type: 'video', label: 'Video', icon: VideoIcon }
+  ];
+
+  const createContentBlock = (type: 'paragraph' | 'image' | 'video'): LayoutBlock => {
+    const blocks = {
+      paragraph: {
+        id: `text-${Date.now()}`,
+        type: 'paragraph' as const,
+        content: { text: 'Click to edit text' },
+        styles: { fontSize: '1rem', fontWeight: 'normal', textColor: '#000000' },
+        position: { x: 0, y: 0, width: 100, height: 50 }
+      },
+      image: {
+        id: `image-${Date.now()}`,
+        type: 'image' as const,
+        content: { url: '', alt: 'Column image' },
+        styles: { width: 100, height: 200, widthUnit: '%' as const, heightUnit: 'px' as const },
+        position: { x: 0, y: 0, width: 100, height: 200 }
+      },
+      video: {
+        id: `video-${Date.now()}`,
+        type: 'video' as const,
+        content: { url: '', title: 'Column video' },
+        styles: { width: 100, height: 200, widthUnit: '%' as const, heightUnit: 'px' as const },
+        position: { x: 0, y: 0, width: 100, height: 200 }
+      }
+    };
+    return blocks[type];
   };
 
-  const updateContentField = (field: string, value: any) => {
-    const updatedContent = { ...contentBlock, [field]: value };
-    onContentUpdate?.('content', updatedContent);
+  const selectContentType = (type: 'paragraph' | 'image' | 'video') => {
+    const newContent = createContentBlock(type);
+    const updatedBlock = { ...block, content: newContent };
+    onContentUpdate?.('content', newContent);
+    setTimeout(() => {
+      if (onOpenSettings) {
+        onOpenSettings(type, updatedBlock);
+      }
+    }, 100);
+  };
+
+  const openContentSettings = () => {
+    if (onOpenSettings && contentBlock?.type) {
+      onOpenSettings(contentBlock.type as 'image' | 'video' | 'paragraph', contentBlock);
+    }
   };
 
   const CONTENT_RENDERERS = {
@@ -45,13 +84,27 @@ const ColumnItemRenderer: React.FC<ColumnItemRendererProps> = ({
   const renderContent = () => {
     if (!contentBlock?.type) {
       return (
-        <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center bg-gray-50 min-h-[120px] flex flex-col items-center justify-center">
-          <div className="text-gray-500 text-sm">
-            <svg className="w-8 h-8 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center bg-gray-50 min-h-[160px] flex flex-col items-center justify-center">
+          <div className="text-gray-500 text-sm mb-4">
+            <svg className="w-8 h-8 mx-auto mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
             </svg>
-            <p>Empty Column</p>
-            <p className="text-xs mt-1">Configure in Column Settings</p>
+            <p className="text-xs font-medium">Add Content</p>
+          </div>
+          <div className="flex flex-wrap gap-3 justify-center">
+            {CONTENT_OPTIONS.map(({ type, label, icon: Icon }) => (
+              <button
+                key={type}
+                onClick={() => selectContentType(type as 'paragraph' | 'image' | 'video')}
+                className="flex flex-col items-center p-3 min-w-[70px] rounded-lg border border-gray-300 hover:border-blue-400 hover:bg-blue-50 bg-white transition-all duration-200 text-xs font-medium shadow-sm hover:shadow-md"
+                title={`Add ${label}`}
+              >
+                <div className="w-6 h-6 mb-2 flex items-center justify-center">
+                  <Icon className="w-5 h-5 text-gray-600" />
+                </div>
+                <span className="text-gray-700">{label}</span>
+              </button>
+            ))}
           </div>
         </div>
       );
