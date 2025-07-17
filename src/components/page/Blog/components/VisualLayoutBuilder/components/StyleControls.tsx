@@ -123,6 +123,7 @@ const TYPOGRAPHY_CONTROLS = [
 const StyleControls: React.FC<StyleControlsProps> = ({ block, onFloatingPanelOpen, onStyleUpdate }) => {
   const showTextFormatting = ['heading', 'paragraph'].includes(block.type);
   const showImageControls = block.type === 'image';
+  const showVideoControls = block.type === 'video';
 
   const toggleTextStyle = (key: string, activeValue: string, inactiveValue: string) => {
     const currentValue = (block.styles as any)[key];
@@ -262,6 +263,22 @@ const StyleControls: React.FC<StyleControlsProps> = ({ block, onFloatingPanelOpe
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h8m0 0l4 4m0 0l-4 4m4-4H4" />
+            </svg>
+            <span>Align to page</span>
+          </button>
+        </div>
+      )}
+
+      {showVideoControls && (
+        <div className="space-y-3">
+          <h3 className="text-sm font-medium text-gray-700 mb-3">Video Layout</h3>
+          <button
+            onClick={(e) => onFloatingPanelOpen('videoAlign', e)}
+            className="w-full flex items-center gap-3 px-3 py-2 text-sm bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg text-gray-700 transition-all hover:shadow-sm text-left"
+            title="Set video alignment"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
             </svg>
             <span>Align to page</span>
           </button>

@@ -275,10 +275,118 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
     );
   };
 
+  const renderVideo = () => {
+    const videoUrl = (block.content as any)?.url;
+    const videoTitle = (block.content as any)?.title || 'Video';
+    const videoWidth = block.styles.width || 100;
+    const videoHeight = block.styles.height || 400;
+    const widthUnit = block.styles.widthUnit || '%';
+    const heightUnit = block.styles.heightUnit || 'px';
+    const videoAlign = block.styles.videoAlign || 'center';
+    const borderRadius = block.styles.border?.radius || 8;
+    const autoplay = (block.content as any)?.autoplay || false;
+    const controls = (block.content as any)?.controls !== false;
+    const muted = (block.content as any)?.muted || false;
+    
+    const getAlignmentClass = () => {
+      switch (videoAlign) {
+        case 'left': return 'mr-auto';
+        case 'right': return 'ml-auto';
+        case 'center': 
+        default: return 'mx-auto';
+      }
+    };
+
+    const getVideoEmbedUrl = (url: string) => {
+      if (url.includes('youtube.com/watch?v=')) {
+        const videoId = url.split('v=')[1]?.split('&')[0];
+        return `https://www.youtube.com/embed/${videoId}?rel=0${autoplay ? '&autoplay=1' : ''}${muted ? '&mute=1' : ''}`;
+      }
+      if (url.includes('youtu.be/')) {
+        const videoId = url.split('youtu.be/')[1]?.split('?')[0];
+        return `https://www.youtube.com/embed/${videoId}?rel=0${autoplay ? '&autoplay=1' : ''}${muted ? '&mute=1' : ''}`;
+      }
+      if (url.includes('youtube.com/shorts/')) {
+        const videoId = url.split('/shorts/')[1]?.split('?')[0];
+        return `https://www.youtube.com/embed/${videoId}?rel=0${autoplay ? '&autoplay=1' : ''}${muted ? '&mute=1' : ''}`;
+      }
+      
+      if (url.includes('vimeo.com/')) {
+        const videoId = url.split('vimeo.com/')[1]?.split('?')[0];
+        return `https://player.vimeo.com/video/${videoId}?${autoplay ? 'autoplay=1&' : ''}${muted ? 'muted=1&' : ''}portrait=0&byline=0&title=0`;
+      }
+      
+      return url;
+    };
+    
+    const videoStyle = {
+      width: `${videoWidth}${widthUnit}`,
+      height: `${videoHeight}${heightUnit}`,
+      borderRadius: `${borderRadius}px`,
+      display: 'block',
+    };
+
+    if (!videoUrl) {
+      return (
+        <div 
+          className={`bg-gray-200 rounded flex items-center justify-center ${getAlignmentClass()}`}
+          style={{ 
+            width: `${videoWidth}${widthUnit}`, 
+            height: `${videoHeight}${heightUnit}`,
+            borderRadius: `${borderRadius}px`,
+            display: 'block'
+          }}
+        >
+          <div className="text-center text-gray-500">
+            <svg className="w-12 h-12 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+            </svg>
+            <p className="text-sm">Click to add video</p>
+          </div>
+        </div>
+      );
+    }
+
+    const embedUrl = getVideoEmbedUrl(videoUrl);
+    const isEmbedUrl = embedUrl.includes('youtube.com/embed') || embedUrl.includes('player.vimeo.com');
+
+    if (isEmbedUrl) {
+      return (
+        <div className="w-full">
+          <iframe
+            src={embedUrl}
+            title={videoTitle}
+            style={videoStyle}
+            className={`border border-gray-200 ${getAlignmentClass()}`}
+            frameBorder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          />
+        </div>
+      );
+    }
+
+    // For direct video files
+    return (
+      <div className="w-full">
+        <video
+          src={videoUrl}
+          title={videoTitle}
+          style={videoStyle}
+          className={`border border-gray-200 ${getAlignmentClass()}`}
+          controls={controls}
+          autoPlay={autoplay}
+          muted={muted}
+        />
+      </div>
+    );
+  };
+
   const BLOCK_RENDERERS = {
     heading: renderEditableHeading,
     paragraph: renderEditableParagraph,
     image: renderImage,
+    video: renderVideo,
   };
 
   const renderBlockContent = () => {
@@ -301,7 +409,7 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
     const padding = block.styles.padding;
     const hasCustomBorder = block.styles.border?.width;
     
-    const defaultMargin = block.type === 'image' ? { top: 16, right: 0, bottom: 16, left: 0 } : { top: 8, right: 0, bottom: 8, left: 0 };
+    const defaultMargin = (block.type === 'image' || block.type === 'video') ? { top: 16, right: 0, bottom: 16, left: 0 } : { top: 8, right: 0, bottom: 8, left: 0 };
     const actualMargin = margin || defaultMargin;
     
     return {

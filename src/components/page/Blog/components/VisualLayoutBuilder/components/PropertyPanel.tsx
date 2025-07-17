@@ -17,6 +17,7 @@ interface PropertyPanelProps {
 
 const blockTypeConfig = {
   image: { showStyleTab: false, showSettingsTab: true },
+  video: { showStyleTab: false, showSettingsTab: true },
   default: { showStyleTab: true, showSettingsTab: true }
 };
 
@@ -128,7 +129,7 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({
           )}
 
           <div className="flex-1 overflow-y-auto bg-white">
-            {block.type === 'image' ? (
+            {(block.type === 'image' || block.type === 'video') ? (
               <div className="p-5">
                 <ContentControls 
                   block={block} 

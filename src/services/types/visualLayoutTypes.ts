@@ -3,6 +3,7 @@ export type BlockType =
   | 'heading' 
   | 'paragraph' 
   | 'image' 
+  | 'video'
   | 'quote' 
   | 'list' 
   | 'code' 
@@ -42,6 +43,7 @@ export interface BlockStyles {
   letterSpacing?: string;
   lineHeight?: string;
   imageAlign?: 'left' | 'center' | 'right';
+  videoAlign?: 'left' | 'center' | 'right';
   titleFontSize?: string;
   subtitleFontSize?: string;
   width?: number;
@@ -110,6 +112,20 @@ export interface ImageBlock extends LayoutBlock {
     caption?: string;
     size: 'thumbnail' | 'small' | 'medium' | 'large' | 'original';
     aspectRatio?: string;
+  };
+}
+
+export interface VideoBlock extends LayoutBlock {
+  type: 'video';
+  content: {
+    url: string;
+    title?: string;
+    caption?: string;
+    aspectRatio?: string;
+    autoplay?: boolean;
+    controls?: boolean;
+    muted?: boolean;
+    provider?: 'youtube' | 'vimeo' | 'direct' | 'other';
   };
 }
 
@@ -258,6 +274,29 @@ export const BLOCK_TEMPLATES: Record<BlockType, Partial<LayoutBlock>> = {
       widthUnit: '%',
       heightUnit: 'px',
       imageAlign: 'center',
+    },
+    position: { x: 0, y: 0, width: 100, height: 200 },
+  },
+  
+  video: {
+    type: 'video',
+    content: {
+      url: '',
+      title: 'Video title',
+      aspectRatio: '16:9',
+      autoplay: false,
+      controls: true,
+      muted: false,
+    },
+    styles: {
+      padding: { top: 0, right: 0, bottom: 0, left: 0 },
+      margin: { top: 24, right: 0, bottom: 24, left: 0 },
+      border: { width: 0, style: 'solid', color: '#e5e7eb', radius: 8 },
+      width: 100,
+      height: 400,
+      widthUnit: '%',
+      heightUnit: 'px',
+      videoAlign: 'center',
     },
     position: { x: 0, y: 0, width: 100, height: 200 },
   },

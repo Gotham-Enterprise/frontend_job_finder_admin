@@ -32,10 +32,12 @@ const ContentControls: React.FC<ContentControlsProps> = ({ block, onContentUpdat
   const processTextSelection = (ref: React.RefObject<HTMLTextAreaElement | HTMLInputElement | null>) => {
     if (!ref.current) return;
     
-    const { selectionStart = 0, selectionEnd = 0, value } = ref.current;
+    const { selectionStart, selectionEnd, value } = ref.current;
+    const start = selectionStart ?? 0;
+    const end = selectionEnd ?? 0;
     
-    if (selectionStart !== selectionEnd) {
-      const selected = value.substring(selectionStart, selectionEnd);
+    if (start !== end) {
+      const selected = value.substring(start, end);
       setSelectedText(selected);
       setShowLinkModal(true);
     }
@@ -221,6 +223,70 @@ const ContentControls: React.FC<ContentControlsProps> = ({ block, onContentUpdat
           onImageUrlChange={(value: string) => onContentUpdate('url', value)}
           onAltTextChange={(value: string) => onContentUpdate('alt', value)}
         />
+      </div>
+    ),
+
+    video: () => (
+      <div className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Video URL</label>
+          <input
+            type="url"
+            value={(block.content as any)?.url || ''}
+            onChange={(e) => onContentUpdate('url', e.target.value)}
+            placeholder="YouTube, Vimeo, or direct video URL..."
+            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 placeholder-gray-400 focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-100 transition-all"
+          />
+          <p className="text-xs text-gray-500 mt-1">
+            Supports YouTube, YouTube Shorts, Vimeo, and direct video file URLs
+          </p>
+        </div>
+        
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Title (Optional)</label>
+          <input
+            type="text"
+            value={(block.content as any)?.title || ''}
+            onChange={(e) => onContentUpdate('title', e.target.value)}
+            placeholder="Video title..."
+            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 placeholder-gray-400 focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-100 transition-all"
+          />
+        </div>
+
+        <div className="grid grid-cols-3 gap-3">
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              id="autoplay"
+              checked={(block.content as any)?.autoplay || false}
+              onChange={(e) => onContentUpdate('autoplay', e.target.checked)}
+              className="w-4 h-4 text-purple-600 bg-gray-100 border-gray-300 rounded focus:ring-purple-500 focus:ring-2"
+            />
+            <label htmlFor="autoplay" className="text-sm text-gray-700">Autoplay</label>
+          </div>
+          
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              id="controls"
+              checked={(block.content as any)?.controls !== false}
+              onChange={(e) => onContentUpdate('controls', e.target.checked)}
+              className="w-4 h-4 text-purple-600 bg-gray-100 border-gray-300 rounded focus:ring-purple-500 focus:ring-2"
+            />
+            <label htmlFor="controls" className="text-sm text-gray-700">Controls</label>
+          </div>
+          
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              id="muted"
+              checked={(block.content as any)?.muted || false}
+              onChange={(e) => onContentUpdate('muted', e.target.checked)}
+              className="w-4 h-4 text-purple-600 bg-gray-100 border-gray-300 rounded focus:ring-purple-500 focus:ring-2"
+            />
+            <label htmlFor="muted" className="text-sm text-gray-700">Muted</label>
+          </div>
+        </div>
       </div>
     ),
 
