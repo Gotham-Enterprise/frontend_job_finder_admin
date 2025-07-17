@@ -134,16 +134,6 @@ export default function AddNewBlog() {  const [blogPost, setBlogPost] = useState
               editorImageUploadRef.current = imageUploadFn;
             }}
           />
-
-
-          <BlogSEOSettings
-            seoTitle={blogPost.seoTitle}
-            seoDescription={blogPost.seoDescription}
-            showSEOSettings={showSEOSettings}
-            onToggleShow={() => setShowSEOSettings(!showSEOSettings)}
-            onSeoTitleChange={(title: string) => initInputChange('seoTitle', title)}
-            onSeoDescriptionChange={(description: string) => initInputChange('seoDescription', description)}
-          />
         </div>
 
         <div className="space-y-6">

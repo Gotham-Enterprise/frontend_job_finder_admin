@@ -15,7 +15,7 @@ const BlogTagsSelector: React.FC<BlogTagsSelectorProps> = ({
   onChange
 }) => {
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+    <div className="bg-white dark:bg-white rounded-lg border border-gray-200 dark:border-gray-200 p-6">
       <h3 className="text-base font-medium text-gray-900 dark:text-white mb-4">Tags</h3>      
       <MultiSelect
         label=""

@@ -8,7 +8,6 @@ export type BlockType =
   | 'list' 
   | 'code' 
   | 'spacer'
-  | 'columns'
   | 'hero'
   | 'gallery'
   | 'embed';
@@ -153,15 +152,6 @@ export interface CodeBlock extends LayoutBlock {
     language: string;
     showLineNumbers?: boolean;
   };
-}
-
-export interface ColumnsBlock extends LayoutBlock {
-  type: 'columns';
-  content: {
-    columns: number;
-    gap: number;
-  };
-  children: LayoutBlock[];
 }
 
 export interface HeroBlock extends LayoutBlock {
@@ -356,20 +346,6 @@ export const BLOCK_TEMPLATES: Record<BlockType, Partial<LayoutBlock>> = {
       backgroundColor: 'transparent',
     },
     position: { x: 0, y: 0, width: 100, height: 40 },
-  },
-  
-  columns: {
-    type: 'columns',
-    content: {
-      columns: 2,
-      gap: 24,
-    },
-    styles: {
-      padding: { top: 0, right: 0, bottom: 0, left: 0 },
-      margin: { top: 0, right: 0, bottom: 24, left: 0 },
-    },
-    position: { x: 0, y: 0, width: 100, height: 200 },
-    children: [],
   },
   
   hero: {
@@ -604,13 +580,6 @@ export const convertLayoutToHtml = (layout: BlogLayout): string => {
         const embedBlock = block as EmbedBlock;
         return `<div${styleAttr} class="embed-container" data-provider="${embedBlock.content.provider}">
           ${embedBlock.content.embedCode}
-        </div>`;
-      
-      case 'columns':
-        const columnsBlock = block as ColumnsBlock;
-        const columnContent = columnsBlock.children?.map(child => convertLayoutToHtml({ ...layout, blocks: [child] })).join('') || '';
-        return `<div${styleAttr} class="columns" style="display: grid; grid-template-columns: repeat(${columnsBlock.content.columns}, 1fr); gap: ${columnsBlock.content.gap}px;">
-          ${columnContent}
         </div>`;
       
       default:

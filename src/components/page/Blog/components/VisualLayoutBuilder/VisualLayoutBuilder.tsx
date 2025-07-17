@@ -23,6 +23,9 @@ import {
 import SortableBlockRenderer from './components/SortableBlockRenderer';
 import ElementsSidebar from './components/ElementsSidebar';
 import PropertyPanel from './components/PropertyPanel';
+import { DesktopIcon } from '../../../../ui/icons/desktop';
+import { TabletIcon } from '../../../../ui/icons/tablet';
+import { MobileIcon } from '../../../../ui/icons/mobile';
 
 interface VisualLayoutBuilderProps {
   onLayoutChange?: (layout: LayoutBlock[]) => void;
@@ -96,6 +99,7 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
   const [showPropertiesPanel, setShowPropertiesPanel] = useState(false);
   const [propertyPanelActiveTab, setPropertyPanelActiveTab] = useState<'style' | 'settings'>('settings');
+  const [viewMode, setViewMode] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -195,14 +199,21 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
     ? (temporaryBlock?.id === selectedBlockId ? temporaryBlock : blocks.find(block => block.id === selectedBlockId))
     : undefined;
 
+  const getContainerMaxWidth = () => {
+    switch (viewMode) {
+      case 'mobile': return 'max-w-sm';
+      case 'tablet': return 'max-w-2xl';
+      default: return 'max-w-4xl';
+    }
+  };
+
   return (
-    <div className="flex h-full bg-gradient-to-br from-slate-50 via-white to-blue-50/30 relative">
+    <div className="flex h-full bg-white relative">
       <ElementsSidebar onAddBlock={addBlock} />
       
       <div 
         className="flex-1 ml-[218px] h-full overflow-y-auto"
         onClick={(e) => {
-        
           if (e.target === e.currentTarget) {
             setSelectedBlockId(null);
             setShowPropertiesPanel(false);
@@ -210,69 +221,111 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
           }
         }}
       >
-        <div 
-          className="p-8 pb-24 min-h-full"
-          onClick={(e) => {
-          
-            if (e.target === e.currentTarget) {
-              setSelectedBlockId(null);
-              setShowPropertiesPanel(false);
-            }
-          }}
-        >
-          <DndContext 
-            sensors={sensors} 
-            collisionDetection={closestCenter}
-            onDragEnd={reorderBlocks}
+        <div className="flex flex-col h-full">
+          <div className="sticky top-0 z-10 bg-white px-8 py-4">
+            <div className="flex items-center justify-end">
+              <div className="flex items-center gap-4">
+                <div className="flex items-center bg-gray-100 rounded-lg p-1">
+                  <button
+                    onClick={() => setViewMode('desktop')}
+                    className={`p-2 rounded-md transition-colors ${
+                      viewMode === 'desktop'
+                        ? 'bg-white shadow-sm'
+                        : 'hover:bg-gray-200'
+                    }`}
+                    title="Desktop View"
+                  >
+                    <DesktopIcon size={20} className={viewMode === 'desktop' ? 'text-blue-600' : 'text-gray-600'} />
+                  </button>
+                  <button
+                    onClick={() => setViewMode('tablet')}
+                    className={`p-2 rounded-md transition-colors ${
+                      viewMode === 'tablet'
+                        ? 'bg-white shadow-sm'
+                        : 'hover:bg-gray-200'
+                    }`}
+                    title="Tablet View"
+                  >
+                    <TabletIcon size={20} className={viewMode === 'tablet' ? 'text-blue-600' : 'text-gray-600'} />
+                  </button>
+                  <button
+                    onClick={() => setViewMode('mobile')}
+                    className={`p-2 rounded-md transition-colors ${
+                      viewMode === 'mobile'
+                        ? 'bg-white shadow-sm'
+                        : 'hover:bg-gray-200'
+                    }`}
+                    title="Mobile View"
+                  >
+                    <MobileIcon size={20} className={viewMode === 'mobile' ? 'text-blue-600' : 'text-gray-600'} />
+                  </button>
+                </div>
+                <div className="w-3 h-3 bg-gray-300 rounded-full"></div>
+              </div>
+            </div>
+          </div>
+
+          <div 
+            className="flex-1 p-8 pb-24"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                setSelectedBlockId(null);
+                setShowPropertiesPanel(false);
+              }
+            }}
           >
-            <SortableContext items={Array.isArray(blocks) ? blocks.map(b => b.id) : []} strategy={verticalListSortingStrategy}>
-              <div className="max-w-4xl mx-auto">
-             
-                <div 
-                  className="bg-white rounded-lg shadow-sm border border-gray-100 p-8 min-h-[600px]"
-                  onClick={(e) => {
-                   
-                    if (e.target === e.currentTarget) {
-                      setSelectedBlockId(null);
-                      setShowPropertiesPanel(false);
-                    }
-                  }}
-                >
-                  <div className="space-y-4">
-                    {Array.isArray(blocks) && blocks.length > 0 ? (
-                      blocks.map((block) => (
-                        <SortableBlockRenderer
-                          key={block.id}
-                          block={block}
-                          isSelected={selectedBlockId === block.id}
-                          onClick={() => {
-                            setSelectedBlockId(block.id);
-                            setShowPropertiesPanel(true);
-                          }}
-                          onRemove={() => removeBlock(block.id)}
-                          onContentUpdate={(field, value) => updateBlock(block.id, { 
-                            content: { ...block.content, [field]: value } 
-                          })}
-                          onStyleUpdate={(field, value) => updateBlockStyle(block.id, { [field]: value })}
-                          onOpenSettings={openSettings}
-                        />
-                      ))
-                    ) : (
-                      <div className="text-center py-12">
-                        <div className="text-gray-400 mb-4">
-                          <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                          </svg>
+            <DndContext 
+              sensors={sensors} 
+              collisionDetection={closestCenter}
+              onDragEnd={reorderBlocks}
+            >
+              <SortableContext items={Array.isArray(blocks) ? blocks.map(b => b.id) : []} strategy={verticalListSortingStrategy}>
+                <div className={`mx-auto transition-all duration-300 ${getContainerMaxWidth()}`}>
+                  <div 
+                    className="bg-white p-8 min-h-[600px]"
+                    onClick={(e) => {
+                      if (e.target === e.currentTarget) {
+                        setSelectedBlockId(null);
+                        setShowPropertiesPanel(false);
+                      }
+                    }}
+                  >
+                    <div className="space-y-4">
+                      {Array.isArray(blocks) && blocks.length > 0 ? (
+                        blocks.map((block) => (
+                          <SortableBlockRenderer
+                            key={block.id}
+                            block={block}
+                            isSelected={selectedBlockId === block.id}
+                            onClick={() => {
+                              setSelectedBlockId(block.id);
+                              setShowPropertiesPanel(true);
+                            }}
+                            onRemove={() => removeBlock(block.id)}
+                            onContentUpdate={(field, value) => updateBlock(block.id, { 
+                              content: { ...block.content, [field]: value } 
+                            })}
+                            onStyleUpdate={(field, value) => updateBlockStyle(block.id, { [field]: value })}
+                            onOpenSettings={openSettings}
+                          />
+                        ))
+                      ) : (
+                        <div className="text-center py-12">
+                          <div className="text-gray-400 mb-4">
+                            <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                            </svg>
+                          </div>
+                          <h3 className="text-lg font-medium text-gray-500 mb-2">Start Building Your Blog</h3>
+                          <p className="text-gray-400">Use the sidebar to add content blocks and create your blog layout</p>
                         </div>
-                        <h3 className="text-lg font-medium text-gray-500 mb-2">Start Building Your Blog</h3>
-                        <p className="text-gray-400">Use the sidebar to add content blocks and create your blog layout</p>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            </SortableContext>
-          </DndContext>
+              </SortableContext>
+            </DndContext>
+          </div>
         </div>
       </div>
 
