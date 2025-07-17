@@ -15,21 +15,16 @@ export { default as BlogIcon } from './BlogIcon';
 export { default as PlusIcon } from './PlusIcon';
 export { default as CouponIcon } from './CouponIcon';
 
-// Text formatting icons
 export { default as BoldIcon } from './BoldIcon';
 export { default as ItalicIcon } from './ItalicIcon';
 export { default as UnderlineIcon } from './UnderlineIcon';
 
-// Alignment icons
 export { default as AlignLeftIcon } from './AlignLeftIcon';
 export { default as AlignCenterIcon } from './AlignCenterIcon';
 export { default as AlignRightIcon } from './AlignRightIcon';
 
-// List icons
 export { default as BulletListIcon } from './BulletListIcon';
 export { default as OrderedListIcon } from './OrderedListIcon';
-
-// Style icons
 export { default as SpacingIcon } from './SpacingIcon';
 export { default as AppearanceIcon } from './AppearanceIcon';
 export { default as MarginIcon } from './MarginIcon';

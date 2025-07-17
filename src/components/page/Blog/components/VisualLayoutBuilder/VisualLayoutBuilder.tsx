@@ -5,12 +5,14 @@ import {
   KeyboardSensor, 
   PointerSensor, 
   useSensor, 
-  useSensors
+  useSensors,
+  DragEndEvent
 } from '@dnd-kit/core';
 import { 
   SortableContext, 
   sortableKeyboardCoordinates, 
-  verticalListSortingStrategy
+  verticalListSortingStrategy,
+  arrayMove
 } from '@dnd-kit/sortable';
 import { 
   LayoutBlock, 
@@ -18,7 +20,7 @@ import {
   BLOCK_TEMPLATES,
   BlockType,
 } from '../../../../../services/types/visualLayoutTypes';
-import BlockRenderer from './components/BlockRenderer';
+import SortableBlockRenderer from './components/SortableBlockRenderer';
 import ElementsSidebar from './components/ElementsSidebar';
 import PropertyPanel from './components/PropertyPanel';
 
@@ -34,7 +36,7 @@ const demoBlocks: LayoutBlock[] = [
     id: 'demo-heading-1',
     type: 'heading',
     content: {
-      text: 'Welcome to the Visual Layout Builder',
+      text: 'Gotham Visual Layout Builder',
       level: 1,
     },
     styles: {
@@ -51,7 +53,7 @@ const demoBlocks: LayoutBlock[] = [
     id: 'demo-paragraph-1',
     type: 'paragraph',
     content: {
-      text: 'Click on any block to see the floating style controls. Try clicking the Style buttons on the right to see the Canva-like floating panels in action!',
+      text: 'Click on any block to see the floating style controls. Try clicking the Style buttons on the right to see the floating panels in action!',
       richText: true,
     },
     styles: {
@@ -152,6 +154,21 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
     );
   };
 
+  const reorderBlocks = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (!over || active.id === over.id) return;
+
+    setBlocks(prev => {
+      const activeIndex = prev.findIndex(block => block.id === active.id);
+      const overIndex = prev.findIndex(block => block.id === over.id);
+
+      if (activeIndex === -1 || overIndex === -1) return prev;
+
+      return arrayMove(prev, activeIndex, overIndex);
+    });
+  };
+
   const selectedBlock = selectedBlockId ? blocks.find(block => block.id === selectedBlockId) : undefined;
 
   return (
@@ -161,7 +178,7 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
       <div 
         className="flex-1 ml-[218px] h-full overflow-y-auto"
         onClick={(e) => {
-          // Deselect when clicking in the background area
+        
           if (e.target === e.currentTarget) {
             setSelectedBlockId(null);
             setShowPropertiesPanel(false);
@@ -171,21 +188,25 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
         <div 
           className="p-8 pb-24 min-h-full"
           onClick={(e) => {
-            // Deselect when clicking in the padding area
+          
             if (e.target === e.currentTarget) {
               setSelectedBlockId(null);
               setShowPropertiesPanel(false);
             }
           }}
         >
-          <DndContext sensors={sensors} collisionDetection={closestCenter}>
-            <SortableContext items={Array.isArray(blocks) ? blocks : []} strategy={verticalListSortingStrategy}>
+          <DndContext 
+            sensors={sensors} 
+            collisionDetection={closestCenter}
+            onDragEnd={reorderBlocks}
+          >
+            <SortableContext items={Array.isArray(blocks) ? blocks.map(b => b.id) : []} strategy={verticalListSortingStrategy}>
               <div className="max-w-4xl mx-auto">
-                {/* Blog Preview Container - Clean layout like actual blog */}
+             
                 <div 
                   className="bg-white rounded-lg shadow-sm border border-gray-100 p-8 min-h-[600px]"
                   onClick={(e) => {
-                    // Only deselect if clicking on the container itself, not its children
+                   
                     if (e.target === e.currentTarget) {
                       setSelectedBlockId(null);
                       setShowPropertiesPanel(false);
@@ -195,7 +216,7 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
                   <div className="space-y-4">
                     {Array.isArray(blocks) && blocks.length > 0 ? (
                       blocks.map((block) => (
-                        <BlockRenderer
+                        <SortableBlockRenderer
                           key={block.id}
                           block={block}
                           isSelected={selectedBlockId === block.id}

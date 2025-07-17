@@ -133,7 +133,6 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({
                 <ContentControls 
                   block={block} 
                   onContentUpdate={updateContent}
-                  onStyleUpdate={updateStyle}
                 />
               </div>
             ) : (
@@ -150,7 +149,6 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({
                     <ContentControls 
                       block={block} 
                       onContentUpdate={updateContent}
-                      onStyleUpdate={updateStyle}
                     />
                   </div>
                 )}
