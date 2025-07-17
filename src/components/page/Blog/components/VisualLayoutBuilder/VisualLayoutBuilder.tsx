@@ -203,7 +203,7 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
     switch (viewMode) {
       case 'mobile': return 'max-w-sm';
       case 'tablet': return 'max-w-2xl';
-      default: return 'max-w-4xl';
+      default: return 'max-w-8xl'; 
     }
   };
 
@@ -282,7 +282,7 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
               <SortableContext items={Array.isArray(blocks) ? blocks.map(b => b.id) : []} strategy={verticalListSortingStrategy}>
                 <div className={`mx-auto transition-all duration-300 ${getContainerMaxWidth()}`}>
                   <div 
-                    className="bg-white p-8 min-h-[600px]"
+                    className="bg-white p-12 min-h-[600px]" // Increased padding from p-8 to p-12
                     onClick={(e) => {
                       if (e.target === e.currentTarget) {
                         setSelectedBlockId(null);
