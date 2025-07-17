@@ -60,13 +60,20 @@ const ColumnItemRenderer: React.FC<ColumnItemRendererProps> = ({
 
   const selectContentType = (type: 'paragraph' | 'image' | 'video') => {
     const newContent = createContentBlock(type);
-    const updatedBlock = { ...block, content: newContent };
     onContentUpdate?.('content', newContent);
+    
     setTimeout(() => {
       if (onOpenSettings) {
-        onOpenSettings(type, updatedBlock);
+        const tempBlock: LayoutBlock = {
+          id: `temp-${type}-${Date.now()}`,
+          type: type,
+          content: newContent.content,
+          styles: newContent.styles,
+          position: newContent.position
+        };
+        onOpenSettings(type, tempBlock);
       }
-    }, 100);
+    }, 50);
   };
 
   const openContentSettings = () => {

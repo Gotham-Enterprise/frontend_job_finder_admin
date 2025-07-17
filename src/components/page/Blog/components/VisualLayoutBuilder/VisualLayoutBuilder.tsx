@@ -138,20 +138,28 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
   };
 
   const updateBlock = (blockId: string, updates: Partial<LayoutBlock>) => {
-    setBlocks(prev => prev.map(block => {
-      if (block.id === blockId) {
-        return { ...block, ...updates };
-      }
-      return block;
-    }));
+    if (temporaryBlock?.id === blockId) {
+      setTemporaryBlock(prev => prev ? { ...prev, ...updates } : null);
+    } else {
+      setBlocks(prev => prev.map(block => {
+        if (block.id === blockId) {
+          return { ...block, ...updates };
+        }
+        return block;
+      }));
+    }
   };
 
   const updateBlockStyle = (blockId: string, styles: any) => {
-    setBlocks(prev => 
-      prev.map(block => 
-        block.id === blockId ? updateBlockStyles(block, styles) : block
-      )
-    );
+    if (temporaryBlock?.id === blockId) {
+      setTemporaryBlock(prev => prev ? updateBlockStyles(prev, styles) : null);
+    } else {
+      setBlocks(prev => 
+        prev.map(block => 
+          block.id === blockId ? updateBlockStyles(block, styles) : block
+        )
+      );
+    }
   };
 
   const reorderBlocks = (event: DragEndEvent) => {
@@ -169,13 +177,23 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
     });
   };
 
+  const [temporaryBlock, setTemporaryBlock] = useState<LayoutBlock | null>(null);
+
   const openSettings = (type: 'image' | 'video' | 'paragraph', block: LayoutBlock) => {
-    setSelectedBlockId(block.id);
+    if (block.id.startsWith('temp-')) {
+      setTemporaryBlock(block);
+      setSelectedBlockId(block.id);
+    } else {
+      setTemporaryBlock(null);
+      setSelectedBlockId(block.id);
+    }
     setShowPropertiesPanel(true);
     setPropertyPanelActiveTab('settings');
   };
 
-  const selectedBlock = selectedBlockId ? blocks.find(block => block.id === selectedBlockId) : undefined;
+  const selectedBlock = selectedBlockId 
+    ? (temporaryBlock?.id === selectedBlockId ? temporaryBlock : blocks.find(block => block.id === selectedBlockId))
+    : undefined;
 
   return (
     <div className="flex h-full bg-gradient-to-br from-slate-50 via-white to-blue-50/30 relative">
@@ -188,6 +206,7 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
           if (e.target === e.currentTarget) {
             setSelectedBlockId(null);
             setShowPropertiesPanel(false);
+            setTemporaryBlock(null);
           }
         }}
       >
@@ -260,7 +279,10 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
       <PropertyPanel
         block={selectedBlock}
         isVisible={showPropertiesPanel}
-        onClose={() => setShowPropertiesPanel(false)}
+        onClose={() => {
+          setShowPropertiesPanel(false);
+          setTemporaryBlock(null);
+        }}
         onUpdate={updateBlock}
         onStyleUpdate={updateBlockStyle}
         activeTab={propertyPanelActiveTab}
