@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { LayoutBlock } from '../../../../../../services/types/visualLayoutTypes';
+import ColumnItemRenderer from './ColumnItemRenderer';
 
 interface BlockRendererProps {
   block: LayoutBlock;
@@ -8,6 +9,7 @@ interface BlockRendererProps {
   onRemove?: () => void;
   onContentUpdate?: (field: string, value: any) => void;
   onStyleUpdate?: (field: string, value: any) => void;
+  onOpenSettings?: (type: 'image' | 'video' | 'paragraph', block: LayoutBlock) => void;
 }
 
 const HEADING_TAGS = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'] as const;
@@ -42,7 +44,8 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
   onClick, 
   onRemove, 
   onContentUpdate, 
-  onStyleUpdate 
+  onStyleUpdate,
+  onOpenSettings
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState('');
@@ -403,11 +406,89 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
     );
   };
 
+  const renderColumns = () => {
+    const columnCount = (block.content as any)?.columns || 2;
+    const gap = (block.content as any)?.gap || 24;
+    const children = block.children || [];
+
+    const createEmptyColumn = (index: number): LayoutBlock => ({
+      id: `column-${block.id}-${index}`,
+      type: 'paragraph',
+      content: null,
+      styles: {},
+      position: { x: 0, y: 0, width: 100, height: 100 }
+    });
+
+    const ensureColumnsExist = () => {
+      const neededColumns = columnCount - children.length;
+      if (neededColumns > 0) {
+        const newColumns = Array.from({ length: neededColumns }, (_, i) => 
+          createEmptyColumn(children.length + i)
+        );
+        return [...children, ...newColumns];
+      }
+      return children.slice(0, columnCount);
+    };
+
+    const columnItems = ensureColumnsExist();
+
+    const updateColumn = (index: number, field: string, value: any) => {
+      const updatedChildren = [...columnItems];
+      updatedChildren[index] = { ...updatedChildren[index], [field]: value };
+      onContentUpdate?.('children', updatedChildren);
+    };
+
+    const updateColumnStyle = (index: number, field: string, value: any) => {
+      const updatedChildren = [...columnItems];
+      updatedChildren[index] = {
+        ...updatedChildren[index],
+        styles: { ...updatedChildren[index].styles, [field]: value }
+      };
+      onContentUpdate?.('children', updatedChildren);
+    };
+
+    const removeColumn = (index: number) => {
+      if (columnItems.length > 1) {
+        const updatedChildren = columnItems.filter((_, i) => i !== index);
+        onContentUpdate?.('children', updatedChildren);
+        onContentUpdate?.('columns', updatedChildren.length);
+      }
+    };
+
+    return (
+      <div 
+        className="w-full"
+        style={{
+          display: 'grid',
+          gridTemplateColumns: `repeat(${columnCount}, 1fr)`,
+          gap: `${gap}px`,
+          minHeight: '120px'
+        }}
+      >
+        {columnItems.map((column, index) => (
+          <div key={column.id || `column-${index}`} className="relative">
+            <ColumnItemRenderer
+              block={column}
+              columnIndex={index}
+              isSelected={isSelected}
+              onClick={onClick}
+              onRemove={() => removeColumn(index)}
+              onContentUpdate={(field, value) => updateColumn(index, field, value)}
+              onStyleUpdate={(field, value) => updateColumnStyle(index, field, value)}
+              onOpenSettings={onOpenSettings}
+            />
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   const BLOCK_RENDERERS = {
     heading: renderEditableHeading,
     paragraph: renderEditableParagraph,
     image: renderImage,
     video: renderVideo,
+    columns: renderColumns,
   };
 
   const renderBlockContent = () => {

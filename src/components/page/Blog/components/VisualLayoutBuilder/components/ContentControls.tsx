@@ -255,6 +255,76 @@ const ContentControls: React.FC<ContentControlsProps> = ({ block, onContentUpdat
       </div>
     ),
 
+    columns: () => (
+      <div className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Number of Columns
+          </label>
+          <div className="relative">
+            <select
+              value={(block.content as any)?.columns || 2}
+              onChange={(e) => onContentUpdate('columns', parseInt(e.target.value))}
+              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-100 transition-all appearance-none"
+            >
+              <option value={1}>1 Column</option>
+              <option value={2}>2 Columns</option>
+              <option value={3}>3 Columns</option>
+              <option value={4}>4 Columns</option>
+            </select>
+            <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Column Gap (px)
+          </label>
+          <input
+            type="number"
+            value={(block.content as any)?.gap || 24}
+            onChange={(e) => onContentUpdate('gap', parseInt(e.target.value) || 0)}
+            min="0"
+            max="100"
+            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-100 transition-all"
+            placeholder="24"
+          />
+        </div>
+
+        {block.children && block.children.length > 0 && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-3">
+              Column Settings
+            </label>
+            <div className="space-y-3">
+              {block.children.map((child, index) => (
+                <div key={child.id || index} className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-gray-600">
+                      Column {index + 1}
+                    </span>
+                    <span className="text-xs text-gray-500 bg-white px-2 py-1 rounded">
+                      {child.type || 'Empty'}
+                    </span>
+                  </div>
+                  
+                  {child.content && typeof child.content === 'object' && 'type' in child.content && (
+                    <div className="text-xs text-gray-600">
+                      Content: {(child.content as any).type || 'Unknown'}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    ),
+
     default: () => null
   };
 

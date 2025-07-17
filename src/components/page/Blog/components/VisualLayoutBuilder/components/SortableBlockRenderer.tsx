@@ -11,6 +11,7 @@ interface SortableBlockRendererProps {
   onRemove?: () => void;
   onContentUpdate?: (field: string, value: any) => void;
   onStyleUpdate?: (field: string, value: any) => void;
+  onOpenSettings?: (type: 'image' | 'video' | 'paragraph', block: LayoutBlock) => void;
 }
 
 const DRAG_STATES = {

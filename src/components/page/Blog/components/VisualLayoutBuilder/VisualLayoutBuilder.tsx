@@ -169,6 +169,12 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
     });
   };
 
+  const openSettings = (type: 'image' | 'video' | 'paragraph', block: LayoutBlock) => {
+    setSelectedBlockId(block.id);
+    setShowPropertiesPanel(true);
+    setPropertyPanelActiveTab('settings');
+  };
+
   const selectedBlock = selectedBlockId ? blocks.find(block => block.id === selectedBlockId) : undefined;
 
   return (
@@ -229,6 +235,7 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
                             content: { ...block.content, [field]: value } 
                           })}
                           onStyleUpdate={(field, value) => updateBlockStyle(block.id, { [field]: value })}
+                          onOpenSettings={openSettings}
                         />
                       ))
                     ) : (
