@@ -18,7 +18,6 @@ interface PropertyPanelProps {
 const blockTypeConfig = {
   image: { showStyleTab: false, showSettingsTab: true },
   video: { showStyleTab: false, showSettingsTab: true },
-  columns: { showStyleTab: false, showSettingsTab: true },
   default: { showStyleTab: true, showSettingsTab: true }
 };
 

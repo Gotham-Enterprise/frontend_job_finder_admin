@@ -41,16 +41,6 @@ const sidebarElements = [
       </svg>
     ),
     title: 'Add Video'
-  },
-  {
-    type: 'columns' as BlockType,
-    label: 'Columns',
-    icon: (
-      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 4H5a2 2 0 00-2 2v12a2 2 0 002 2h4M9 4v16M9 4h6M15 4h4a2 2 0 012 2v12a2 2 0 01-2 2h-4M15 4v16M9 4V2M15 4V2M9 20v2M15 20v2" />
-      </svg>
-    ),
-    title: 'Add Columns'
   }
 ];
 
