@@ -10,7 +10,8 @@ export type BlockType =
   | 'hero'
   | 'gallery'
   | 'embed'
-  | 'button';
+  | 'button'
+  | 'column';
 
 export interface LayoutBlock {
   id: string;
@@ -208,6 +209,24 @@ export interface ButtonBlock extends LayoutBlock {
     width: 'auto' | 'full' | 'custom';
     customWidth?: number;
     alignment: 'left' | 'center' | 'right';
+  };
+}
+
+export interface ColumnBlock extends LayoutBlock {
+  type: 'column';
+  content: {
+    columnCount: 1 | 2 | 3 | 4;
+    columns: Array<{
+      id: string;
+      contentType: 'text' | 'image' | 'video';
+      content: {
+        text?: string;
+        url?: string;
+        alt?: string;
+        title?: string;
+      };
+    }>;
+    gap: number;
   };
 }
 
@@ -438,6 +457,36 @@ export const BLOCK_TEMPLATES: Record<BlockType, Partial<LayoutBlock>> = {
       border: { width: 0, style: 'solid', color: 'transparent', radius: 6 },
     },
     position: { x: 0, y: 0, width: 100, height: 48 },
+  },
+  
+  column: {
+    type: 'column',
+    content: {
+      columnCount: 2,
+      columns: [
+        {
+          id: 'col-1',
+          contentType: 'text',
+          content: {
+            text: 'Column 1 content...',
+          },
+        },
+        {
+          id: 'col-2',
+          contentType: 'text',
+          content: {
+            text: 'Column 2 content...',
+          },
+        },
+      ],
+      gap: 16,
+    },
+    styles: {
+      backgroundColor: 'transparent',
+      padding: { top: 16, right: 16, bottom: 16, left: 16 },
+      margin: { top: 0, right: 0, bottom: 16, left: 0 },
+    },
+    position: { x: 0, y: 0, width: 100, height: 120 },
   },
 };
 

@@ -279,6 +279,15 @@ export default function AddNewBlogWithLayoutBuilder() {
         return { height: 40 };
       case 'columns':
         return { columns: 2, content: ['Column 1', 'Column 2'] };
+      case 'column':
+        return { 
+          columnCount: 2, 
+          columns: [
+            { contentType: 'text', content: 'Column 1 content' },
+            { contentType: 'text', content: 'Column 2 content' }
+          ],
+          gap: 16
+        };
       case 'gallery':
         return { images: [], layout: 'grid' };
       case 'hero':
@@ -346,6 +355,7 @@ export default function AddNewBlogWithLayoutBuilder() {
       case 'code': return 150;
       case 'spacer': return 40;
       case 'columns': return 200;
+      case 'column': return 150;
       case 'gallery': return 300;
       case 'hero': return 250;
       case 'embed': return 200;
@@ -378,7 +388,7 @@ export default function AddNewBlogWithLayoutBuilder() {
             </div>
           </div>
           <div className="flex items-center space-x-3">
-            <span className="text-sm text-gray-500 dark:text-gray-400">Draft auto-saved</span>
+         
             <Button
               variant="secondary"
               onClick={previewBlog}
@@ -397,7 +407,6 @@ export default function AddNewBlogWithLayoutBuilder() {
           </div>
         </div>
         
-        {/* Main content area - Webflow style layout */}
         <div className="h-[calc(100vh-64px)] flex">
           {/* Left Sidebar - Element Library */}
           <div className="w-64 bg-gray-900 text-white border-r border-gray-700 overflow-y-auto h-full">

@@ -3,6 +3,7 @@ import { LayoutBlock } from '../../../../../../services/types/visualLayoutTypes'
 import ImageUrlInput from '../ImageUrlInput';
 import VideoUrlInput from '../VideoUrlInput';
 import ButtonSettings from './ButtonSettings';
+import ColumnSettings from './ColumnSettings';
 import { LINK_TARGETS, getButtonDefaultStyles, getSizeStyles } from '../utils/buttonUtils';
 import { 
   processTextSelection as processSelection, 
@@ -273,6 +274,14 @@ const ContentControls: React.FC<ContentControlsProps> = memo(({ block, onContent
       <ButtonSettings
         block={block as any}
         onContentUpdate={handleButtonContentUpdate}
+        onStyleUpdate={onStyleUpdate}
+      />
+    ),
+
+    column: () => (
+      <ColumnSettings
+        block={block as any}
+        onContentUpdate={onContentUpdate}
         onStyleUpdate={onStyleUpdate}
       />
     ),
