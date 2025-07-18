@@ -3,7 +3,7 @@ import { LayoutBlock } from '../../../../../../services/types/visualLayoutTypes'
 import ImageUrlInput from '../ImageUrlInput';
 import VideoUrlInput from '../VideoUrlInput';
 import ButtonSettings from './ButtonSettings';
-import { LINK_TARGETS } from '../utils/buttonUtils';
+import { LINK_TARGETS, getButtonDefaultStyles, getSizeStyles } from '../utils/buttonUtils';
 import { 
   processTextSelection as processSelection, 
   createLinkHtml, 
@@ -51,6 +51,23 @@ const ContentControls: React.FC<ContentControlsProps> = memo(({ block, onContent
     setLinkUrl('');
     setLinkTarget('_self');
   }, []);
+
+  const handleButtonContentUpdate = useCallback((field: string, value: any) => {
+    onContentUpdate(field, value);
+    
+    if (field === 'variant' && onStyleUpdate) {
+      const variantStyles = getButtonDefaultStyles(value as any) as any;
+      onStyleUpdate('backgroundColor', variantStyles.backgroundColor);
+      onStyleUpdate('textColor', variantStyles.textColor);
+      if (variantStyles.border) {
+        onStyleUpdate('border', variantStyles.border);
+      }
+    } else if (field === 'size' && onStyleUpdate) {
+      const sizeStyles = getSizeStyles(value as any);
+      onStyleUpdate('fontSize', sizeStyles.fontSize);
+      onStyleUpdate('padding', sizeStyles.padding);
+    }
+  }, [onContentUpdate, onStyleUpdate]);
 
   const removeAllLinks = useCallback(() => {
     const currentText = (block.content as any)?.text || '';
@@ -255,7 +272,7 @@ const ContentControls: React.FC<ContentControlsProps> = memo(({ block, onContent
     button: () => (
       <ButtonSettings
         block={block as any}
-        onContentUpdate={onContentUpdate}
+        onContentUpdate={handleButtonContentUpdate}
         onStyleUpdate={onStyleUpdate}
       />
     ),

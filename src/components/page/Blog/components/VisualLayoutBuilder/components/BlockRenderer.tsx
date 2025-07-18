@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { LayoutBlock } from '../../../../../../services/types/visualLayoutTypes';
+import { getButtonDefaultStyles, getSizeStyles } from '../utils/buttonUtils';
 
 interface BlockRendererProps {
   block: LayoutBlock;
@@ -471,20 +472,25 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
     const customWidth = (block.content as any)?.customWidth || 200;
     const alignment = (block.content as any)?.alignment || 'left';
     
+    const variantStyles = getButtonDefaultStyles(variant) as any;
+    const sizeStyles = getSizeStyles(size);
+    
     const buttonStyle = {
-      backgroundColor: block.styles?.backgroundColor || '#3b82f6',
-      color: block.styles?.textColor || '#ffffff',
-      fontSize: block.styles?.fontSize || '1rem',
-      fontWeight: block.styles?.fontWeight || '500',
-      textAlign: block.styles?.textAlign || 'center',
+      backgroundColor: block.styles?.backgroundColor || variantStyles.backgroundColor,
+      color: block.styles?.textColor || variantStyles.textColor,
+      fontSize: block.styles?.fontSize || sizeStyles.fontSize,
+      fontWeight: block.styles?.fontWeight || variantStyles.fontWeight,
+      textAlign: block.styles?.textAlign || variantStyles.textAlign,
       fontFamily: block.styles?.fontFamily || 'inherit',
       border: block.styles?.border?.width 
         ? `${block.styles.border.width}px ${block.styles.border.style || 'solid'} ${block.styles.border.color || 'transparent'}`
+        : variantStyles.border?.width 
+        ? `${variantStyles.border.width}px ${variantStyles.border.style || 'solid'} ${variantStyles.border.color || 'transparent'}`
         : 'none',
-      borderRadius: block.styles?.border?.radius ? `${block.styles.border.radius}px` : '6px',
+      borderRadius: block.styles?.border?.radius ? `${block.styles.border.radius}px` : `${variantStyles.border?.radius || 6}px`,
       padding: block.styles?.padding 
         ? `${block.styles.padding.top || 12}px ${block.styles.padding.right || 24}px ${block.styles.padding.bottom || 12}px ${block.styles.padding.left || 24}px`
-        : '12px 24px',
+        : `${sizeStyles.padding.top}px ${sizeStyles.padding.right}px ${sizeStyles.padding.bottom}px ${sizeStyles.padding.left}px`,
       cursor: 'pointer',
       display: 'inline-block',
       textDecoration: 'none',

@@ -11,6 +11,18 @@ export const BUTTON_SIZES = [
   { value: 'large', label: 'Large' }
 ] as const;
 
+export const BUTTON_WIDTHS = [
+  { value: 'auto', label: 'Auto' },
+  { value: 'full', label: 'Full Width' },
+  { value: 'custom', label: 'Custom' }
+] as const;
+
+export const BUTTON_ALIGNMENTS = [
+  { value: 'left', label: 'Left' },
+  { value: 'center', label: 'Center' },
+  { value: 'right', label: 'Right' }
+] as const;
+
 export const LINK_TARGETS = [
   { value: '_self', label: 'Same Tab' },
   { value: '_blank', label: 'New Tab' }

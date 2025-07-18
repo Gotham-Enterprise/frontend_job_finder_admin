@@ -1,6 +1,12 @@
 import React, { memo } from 'react';
 import { ButtonBlock } from '@/services/types/visualLayoutTypes';
-import { BUTTON_VARIANTS, BUTTON_SIZES, LINK_TARGETS } from '../utils/buttonUtils';
+import { 
+  BUTTON_VARIANTS, 
+  BUTTON_SIZES, 
+  BUTTON_WIDTHS, 
+  BUTTON_ALIGNMENTS, 
+  LINK_TARGETS 
+} from '../utils/buttonUtils';
 
 interface ButtonSettingsProps {
   block: ButtonBlock;
@@ -8,11 +14,71 @@ interface ButtonSettingsProps {
   onStyleUpdate?: (field: string, value: any) => void;
 }
 
+interface SelectFieldProps {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  options: readonly { value: string; label: string }[];
+  className?: string;
+}
+
+const SelectField: React.FC<SelectFieldProps> = memo(({ 
+  label, 
+  value, 
+  onChange, 
+  options, 
+  className = "w-full" 
+}) => (
+  <div className={className}>
+    <label className="block text-sm font-medium text-gray-700 mb-2">{label}</label>
+    <select
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 focus:border-purple-400 focus:outline-none focus:ring-1 focus:ring-purple-100 transition-all"
+    >
+      {options.map((option) => (
+        <option key={option.value} value={option.value}>
+          {option.label}
+        </option>
+      ))}
+    </select>
+  </div>
+));
+
+SelectField.displayName = 'SelectField';
+
 const ButtonSettings: React.FC<ButtonSettingsProps> = memo(({ 
   block, 
   onContentUpdate, 
   onStyleUpdate 
 }) => {
+  const selectFields = [
+    {
+      label: 'Variant',
+      value: block.content.variant,
+      field: 'variant',
+      options: BUTTON_VARIANTS,
+    },
+    {
+      label: 'Size',
+      value: block.content.size,
+      field: 'size',
+      options: BUTTON_SIZES,
+    },
+    {
+      label: 'Width',
+      value: block.content.width,
+      field: 'width',
+      options: BUTTON_WIDTHS,
+    },
+    {
+      label: 'Alignment',
+      value: block.content.alignment,
+      field: 'alignment',
+      options: BUTTON_ALIGNMENTS,
+    },
+  ];
+
   return (
     <div className="space-y-4">
       <div>
@@ -37,79 +103,35 @@ const ButtonSettings: React.FC<ButtonSettingsProps> = memo(({
         />
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">Open Link In</label>
-        <select
-          value={block.content.target || '_self'}
-          onChange={(e) => onContentUpdate('target', e.target.value)}
-          className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 focus:border-purple-400 focus:outline-none focus:ring-1 focus:ring-purple-100 transition-all"
-        >
-          {LINK_TARGETS.map((target) => (
-            <option key={target.value} value={target.value}>
-              {target.label}
-            </option>
-          ))}
-        </select>
+      <SelectField
+        label="Open Link In"
+        value={block.content.target || '_self'}
+        onChange={(value) => onContentUpdate('target', value)}
+        options={LINK_TARGETS}
+      />
+
+      <div className="grid grid-cols-2 gap-3">
+        {selectFields.slice(0, 2).map((field) => (
+          <SelectField
+            key={field.field}
+            label={field.label}
+            value={field.value}
+            onChange={(value) => onContentUpdate(field.field, value)}
+            options={field.options}
+          />
+        ))}
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Variant</label>
-          <select
-            value={block.content.variant}
-            onChange={(e) => onContentUpdate('variant', e.target.value)}
-            className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 focus:border-purple-400 focus:outline-none focus:ring-1 focus:ring-purple-100 transition-all"
-          >
-            {BUTTON_VARIANTS.map((variant) => (
-              <option key={variant.value} value={variant.value}>
-                {variant.label}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Size</label>
-          <select
-            value={block.content.size}
-            onChange={(e) => onContentUpdate('size', e.target.value)}
-            className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 focus:border-purple-400 focus:outline-none focus:ring-1 focus:ring-purple-100 transition-all"
-          >
-            {BUTTON_SIZES.map((size) => (
-              <option key={size.value} value={size.value}>
-                {size.label}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Width</label>
-          <select
-            value={block.content.width}
-            onChange={(e) => onContentUpdate('width', e.target.value)}
-            className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 focus:border-purple-400 focus:outline-none focus:ring-1 focus:ring-purple-100 transition-all"
-          >
-            <option value="auto">Auto</option>
-            <option value="full">Full Width</option>
-            <option value="custom">Custom</option>
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Alignment</label>
-          <select
-            value={block.content.alignment}
-            onChange={(e) => onContentUpdate('alignment', e.target.value)}
-            className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 focus:border-purple-400 focus:outline-none focus:ring-1 focus:ring-purple-100 transition-all"
-          >
-            <option value="left">Left</option>
-            <option value="center">Center</option>
-            <option value="right">Right</option>
-          </select>
-        </div>
+        {selectFields.slice(2).map((field) => (
+          <SelectField
+            key={field.field}
+            label={field.label}
+            value={field.value}
+            onChange={(value) => onContentUpdate(field.field, value)}
+            options={field.options}
+          />
+        ))}
       </div>
 
       {block.content.width === 'custom' && (
