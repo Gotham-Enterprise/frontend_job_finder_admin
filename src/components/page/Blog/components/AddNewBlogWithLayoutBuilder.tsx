@@ -285,6 +285,17 @@ export default function AddNewBlogWithLayoutBuilder() {
         return { title: 'Hero Title', subtitle: 'Hero subtitle' };
       case 'embed':
         return { code: '', type: 'html' };
+      case 'button':
+        return { 
+          text: 'Click Me', 
+          url: '', 
+          target: '_self', 
+          variant: 'primary', 
+          size: 'medium',
+          width: 'auto',
+          customWidth: 200,
+          alignment: 'left'
+        };
       default:
         return { text: 'New element' };
     }
@@ -309,6 +320,17 @@ export default function AddNewBlogWithLayoutBuilder() {
           textAlign: 'center' as const,
           padding: { top: 40, right: 20, bottom: 40, left: 20 }
         };
+      case 'button':
+        return {
+          backgroundColor: '#3b82f6',
+          textColor: '#ffffff',
+          fontSize: '1rem',
+          fontWeight: '500',
+          textAlign: 'center' as const,
+          padding: { top: 12, right: 24, bottom: 12, left: 24 },
+          margin: { top: 0, right: 0, bottom: 16, left: 0 },
+          border: { width: 0, style: 'solid', color: 'transparent', radius: 6 },
+        };
       default:
         return baseStyles;
     }
@@ -327,6 +349,7 @@ export default function AddNewBlogWithLayoutBuilder() {
       case 'gallery': return 300;
       case 'hero': return 250;
       case 'embed': return 200;
+      case 'button': return 48;
       default: return 100;
     }
   };

@@ -8,7 +8,7 @@ interface BlockRendererProps {
   onRemove?: () => void;
   onContentUpdate?: (field: string, value: any) => void;
   onStyleUpdate?: (field: string, value: any) => void;
-  onOpenSettings?: (type: 'image' | 'video' | 'paragraph', block: LayoutBlock) => void;
+  onOpenSettings?: (type: 'image' | 'video' | 'paragraph' | 'button', block: LayoutBlock) => void;
 }
 
 const HEADING_TAGS = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'] as const;
@@ -461,11 +461,95 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
     );
   };
 
+  const renderButton = () => {
+    const buttonText = (block.content as any)?.text || 'Click Me';
+    const buttonUrl = (block.content as any)?.url;
+    const buttonTarget = (block.content as any)?.target || '_self';
+    const variant = (block.content as any)?.variant || 'primary';
+    const size = (block.content as any)?.size || 'medium';
+    const width = (block.content as any)?.width || 'auto';
+    const customWidth = (block.content as any)?.customWidth || 200;
+    const alignment = (block.content as any)?.alignment || 'left';
+    
+    const buttonStyle = {
+      backgroundColor: block.styles?.backgroundColor || '#3b82f6',
+      color: block.styles?.textColor || '#ffffff',
+      fontSize: block.styles?.fontSize || '1rem',
+      fontWeight: block.styles?.fontWeight || '500',
+      textAlign: block.styles?.textAlign || 'center',
+      fontFamily: block.styles?.fontFamily || 'inherit',
+      border: block.styles?.border?.width 
+        ? `${block.styles.border.width}px ${block.styles.border.style || 'solid'} ${block.styles.border.color || 'transparent'}`
+        : 'none',
+      borderRadius: block.styles?.border?.radius ? `${block.styles.border.radius}px` : '6px',
+      padding: block.styles?.padding 
+        ? `${block.styles.padding.top || 12}px ${block.styles.padding.right || 24}px ${block.styles.padding.bottom || 12}px ${block.styles.padding.left || 24}px`
+        : '12px 24px',
+      cursor: 'pointer',
+      display: 'inline-block',
+      textDecoration: 'none',
+      transition: 'all 0.2s ease',
+      width: width === 'full' ? '100%' : width === 'custom' ? `${customWidth}px` : 'auto',
+    } as React.CSSProperties;
+
+    const containerClass = `flex w-full ${
+      alignment === 'center' ? 'justify-center' : 
+      alignment === 'right' ? 'justify-end' : 
+      'justify-start'
+    }`;
+
+    const commonProps = {
+      style: buttonStyle,
+      className: `btn btn-${variant} btn-${size} hover:opacity-90 transition-opacity`,
+      onDoubleClick: () => startEditing(buttonText),
+    };
+
+    if (buttonUrl && buttonUrl.trim()) {
+      return (
+        <div className={containerClass}>
+          <a
+            href={buttonUrl}
+            target={buttonTarget}
+            rel={buttonTarget === '_blank' ? 'noopener noreferrer' : undefined}
+            {...commonProps}
+            onClick={(e) => {
+              e.stopPropagation();
+              if (onOpenSettings) {
+                e.preventDefault();
+                onOpenSettings('button' as any, block);
+              }
+            }}
+          >
+            {buttonText}
+          </a>
+        </div>
+      );
+    }
+
+    return (
+      <div className={containerClass}>
+        <button
+          type="button"
+          {...commonProps}
+          onClick={(e) => {
+            e.stopPropagation();
+            if (onOpenSettings) {
+              onOpenSettings('button' as any, block);
+            }
+          }}
+        >
+          {buttonText}
+        </button>
+      </div>
+    );
+  };
+
   const BLOCK_RENDERERS = {
     heading: renderEditableHeading,
     paragraph: renderEditableParagraph,
     image: renderImage,
     video: renderVideo,
+    button: renderButton,
   };
 
   const renderBlockContent = () => {

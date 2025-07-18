@@ -9,7 +9,8 @@ export type BlockType =
   | 'spacer'
   | 'hero'
   | 'gallery'
-  | 'embed';
+  | 'embed'
+  | 'button';
 
 export interface LayoutBlock {
   id: string;
@@ -191,6 +192,22 @@ export interface EmbedBlock extends LayoutBlock {
     embedCode: string;
     provider?: 'youtube' | 'vimeo' | 'twitter' | 'instagram' | 'custom';
     url?: string;
+  };
+}
+
+export interface ButtonBlock extends LayoutBlock {
+  type: 'button';
+  content: {
+    text: string;
+    url?: string;
+    target?: '_self' | '_blank';
+    variant: 'primary' | 'secondary' | 'outline' | 'ghost';
+    size: 'small' | 'medium' | 'large';
+    icon?: string;
+    iconPosition?: 'left' | 'right';
+    width: 'auto' | 'full' | 'custom';
+    customWidth?: number;
+    alignment: 'left' | 'center' | 'right';
   };
 }
 
@@ -395,6 +412,33 @@ export const BLOCK_TEMPLATES: Record<BlockType, Partial<LayoutBlock>> = {
     },
     position: { x: 0, y: 0, width: 100, height: 200 },
   },
+  
+  button: {
+    type: 'button',
+    content: {
+      text: 'Click Me',
+      url: '',
+      target: '_self',
+      variant: 'primary',
+      size: 'medium',
+      icon: '',
+      iconPosition: 'left',
+      width: 'auto',
+      customWidth: 200,
+      alignment: 'left',
+    },
+    styles: {
+      backgroundColor: '#3b82f6',
+      textColor: '#ffffff',
+      fontSize: '1rem',
+      fontWeight: '500',
+      textAlign: 'center',
+      padding: { top: 12, right: 24, bottom: 12, left: 24 },
+      margin: { top: 0, right: 0, bottom: 16, left: 0 },
+      border: { width: 0, style: 'solid', color: 'transparent', radius: 6 },
+    },
+    position: { x: 0, y: 0, width: 100, height: 48 },
+  },
 };
 
 
@@ -581,6 +625,28 @@ export const convertLayoutToHtml = (layout: BlogLayout): string => {
         return `<div${styleAttr} class="embed-container" data-provider="${embedBlock.content.provider}">
           ${embedBlock.content.embedCode}
         </div>`;
+      
+      case 'button':
+        const buttonBlock = block as ButtonBlock;
+        const buttonStyleAttr = block.styles ? ` style="${styleString}"` : '';
+        const alignment = buttonBlock.content.alignment || 'left';
+        const width = buttonBlock.content.width || 'auto';
+        const customWidth = buttonBlock.content.customWidth || 200;
+        
+        const containerStyle = `text-align: ${alignment};`;
+        const buttonStyle = width === 'full' ? 'width: 100%;' : 
+                           width === 'custom' ? `width: ${customWidth}px;` : 
+                           'width: auto;';
+        
+        const fullButtonStyle = buttonStyleAttr ? 
+          buttonStyleAttr.replace('style="', `style="${buttonStyle}`) : 
+          ` style="${buttonStyle}"`;
+        
+        const buttonElement = buttonBlock.content.url ? 
+          `<a href="${buttonBlock.content.url}" target="${buttonBlock.content.target || '_self'}"${buttonBlock.content.target === '_blank' ? ' rel="noopener noreferrer"' : ''} class="btn btn-${buttonBlock.content.variant} btn-${buttonBlock.content.size}"${fullButtonStyle}>${buttonBlock.content.text}</a>` :
+          `<button class="btn btn-${buttonBlock.content.variant} btn-${buttonBlock.content.size}"${fullButtonStyle}>${buttonBlock.content.text}</button>`;
+        
+        return `<div style="${containerStyle}">${buttonElement}</div>`;
       
       default:
         return `<!-- Unsupported block type: ${block.type} -->`;

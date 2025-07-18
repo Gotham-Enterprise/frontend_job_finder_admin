@@ -1,0 +1,221 @@
+import React, { memo } from 'react';
+import { ButtonBlock } from '@/services/types/visualLayoutTypes';
+import { BUTTON_VARIANTS, BUTTON_SIZES, LINK_TARGETS } from '../utils/buttonUtils';
+
+interface ButtonSettingsProps {
+  block: ButtonBlock;
+  onContentUpdate: (field: string, value: any) => void;
+  onStyleUpdate?: (field: string, value: any) => void;
+}
+
+const ButtonSettings: React.FC<ButtonSettingsProps> = memo(({ 
+  block, 
+  onContentUpdate, 
+  onStyleUpdate 
+}) => {
+  return (
+    <div className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Button Text</label>
+        <input
+          type="text"
+          value={block.content.text}
+          onChange={(e) => onContentUpdate('text', e.target.value)}
+          placeholder="Enter button text..."
+          className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 placeholder-gray-400 focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-100 transition-all"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Link URL</label>
+        <input
+          type="url"
+          value={block.content.url || ''}
+          onChange={(e) => onContentUpdate('url', e.target.value)}
+          placeholder="https://example.com"
+          className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 placeholder-gray-400 focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-100 transition-all"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Open Link In</label>
+        <select
+          value={block.content.target || '_self'}
+          onChange={(e) => onContentUpdate('target', e.target.value)}
+          className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 focus:border-purple-400 focus:outline-none focus:ring-1 focus:ring-purple-100 transition-all"
+        >
+          {LINK_TARGETS.map((target) => (
+            <option key={target.value} value={target.value}>
+              {target.label}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Variant</label>
+          <select
+            value={block.content.variant}
+            onChange={(e) => onContentUpdate('variant', e.target.value)}
+            className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 focus:border-purple-400 focus:outline-none focus:ring-1 focus:ring-purple-100 transition-all"
+          >
+            {BUTTON_VARIANTS.map((variant) => (
+              <option key={variant.value} value={variant.value}>
+                {variant.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Size</label>
+          <select
+            value={block.content.size}
+            onChange={(e) => onContentUpdate('size', e.target.value)}
+            className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 focus:border-purple-400 focus:outline-none focus:ring-1 focus:ring-purple-100 transition-all"
+          >
+            {BUTTON_SIZES.map((size) => (
+              <option key={size.value} value={size.value}>
+                {size.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Width</label>
+          <select
+            value={block.content.width}
+            onChange={(e) => onContentUpdate('width', e.target.value)}
+            className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 focus:border-purple-400 focus:outline-none focus:ring-1 focus:ring-purple-100 transition-all"
+          >
+            <option value="auto">Auto</option>
+            <option value="full">Full Width</option>
+            <option value="custom">Custom</option>
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Alignment</label>
+          <select
+            value={block.content.alignment}
+            onChange={(e) => onContentUpdate('alignment', e.target.value)}
+            className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 focus:border-purple-400 focus:outline-none focus:ring-1 focus:ring-purple-100 transition-all"
+          >
+            <option value="left">Left</option>
+            <option value="center">Center</option>
+            <option value="right">Right</option>
+          </select>
+        </div>
+      </div>
+
+      {block.content.width === 'custom' && (
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Custom Width (px)</label>
+          <input
+            type="number"
+            value={block.content.customWidth || 200}
+            onChange={(e) => onContentUpdate('customWidth', parseInt(e.target.value))}
+            min="50"
+            max="800"
+            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 placeholder-gray-400 focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-100 transition-all"
+          />
+        </div>
+      )}
+
+      <div className="space-y-3">
+        <h4 className="text-sm font-medium text-gray-700">Button Colors</h4>
+        
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">Background Color</label>
+          <div className="flex items-center space-x-2">
+            <input
+              type="color"
+              value={block.styles?.backgroundColor || '#3b82f6'}
+              onChange={(e) => onStyleUpdate?.('backgroundColor', e.target.value)}
+              className="w-10 h-10 rounded-lg border border-gray-200 cursor-pointer"
+            />
+            <input
+              type="text"
+              value={block.styles?.backgroundColor || '#3b82f6'}
+              onChange={(e) => onStyleUpdate?.('backgroundColor', e.target.value)}
+              placeholder="#3b82f6"
+              className="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-100"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">Text Color</label>
+          <div className="flex items-center space-x-2">
+            <input
+              type="color"
+              value={block.styles?.textColor || '#ffffff'}
+              onChange={(e) => onStyleUpdate?.('textColor', e.target.value)}
+              className="w-10 h-10 rounded-lg border border-gray-200 cursor-pointer"
+            />
+            <input
+              type="text"
+              value={block.styles?.textColor || '#ffffff'}
+              onChange={(e) => onStyleUpdate?.('textColor', e.target.value)}
+              placeholder="#ffffff"
+              className="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-100"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">Border Color</label>
+          <div className="flex items-center space-x-2">
+            <input
+              type="color"
+              value={block.styles?.border?.color || 'transparent'}
+              onChange={(e) => onStyleUpdate?.('border', { ...block.styles?.border, color: e.target.value })}
+              className="w-10 h-10 rounded-lg border border-gray-200 cursor-pointer"
+            />
+            <input
+              type="text"
+              value={block.styles?.border?.color || 'transparent'}
+              onChange={(e) => onStyleUpdate?.('border', { ...block.styles?.border, color: e.target.value })}
+              placeholder="transparent"
+              className="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-100"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">Border Width</label>
+          <input
+            type="number"
+            value={block.styles?.border?.width || 0}
+            onChange={(e) => onStyleUpdate?.('border', { ...block.styles?.border, width: parseInt(e.target.value) })}
+            min="0"
+            max="10"
+            className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-100"
+          />
+        </div>
+
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">Border Radius</label>
+          <input
+            type="number"
+            value={block.styles?.border?.radius || 6}
+            onChange={(e) => onStyleUpdate?.('border', { ...block.styles?.border, radius: parseInt(e.target.value) })}
+            min="0"
+            max="50"
+            className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-100"
+          />
+        </div>
+      </div>
+    </div>
+  );
+});
+
+ButtonSettings.displayName = 'ButtonSettings';
+
+export default ButtonSettings;

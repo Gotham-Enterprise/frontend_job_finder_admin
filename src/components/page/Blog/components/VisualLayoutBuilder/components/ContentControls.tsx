@@ -1,7 +1,15 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, memo, useCallback } from 'react';
 import { LayoutBlock } from '../../../../../../services/types/visualLayoutTypes';
 import ImageUrlInput from '../ImageUrlInput';
 import VideoUrlInput from '../VideoUrlInput';
+import ButtonSettings from './ButtonSettings';
+import { LINK_TARGETS } from '../utils/buttonUtils';
+import { 
+  processTextSelection as processSelection, 
+  createLinkHtml, 
+  removeAllLinksFromText, 
+  replaceTextWithLink 
+} from '../utils/textUtils';
 
 
 interface ContentControlsProps {
@@ -10,12 +18,7 @@ interface ContentControlsProps {
   onStyleUpdate?: (field: string, value: any) => void;
 }
 
-const LINK_TARGETS = [
-  { value: '_self', label: 'Same Tab' },
-  { value: '_blank', label: 'New Tab' }
-];
-
-const ContentControls: React.FC<ContentControlsProps> = ({ block, onContentUpdate, onStyleUpdate }) => {
+const ContentControls: React.FC<ContentControlsProps> = memo(({ block, onContentUpdate, onStyleUpdate }) => {
   const [showLinkModal, setShowLinkModal] = useState(false);
   const [selectedText, setSelectedText] = useState('');
   const [linkUrl, setLinkUrl] = useState('');
@@ -23,43 +26,37 @@ const ContentControls: React.FC<ContentControlsProps> = ({ block, onContentUpdat
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const processTextSelection = (ref: React.RefObject<HTMLTextAreaElement | HTMLInputElement | null>) => {
-    if (!ref.current) return;
-    
-    const { selectionStart, selectionEnd, value } = ref.current;
-    const start = selectionStart ?? 0;
-    const end = selectionEnd ?? 0;
-    
-    if (start !== end) {
-      const selected = value.substring(start, end);
-      setSelectedText(selected);
+  const processTextSelection = useCallback((ref: React.RefObject<HTMLTextAreaElement | HTMLInputElement | null>) => {
+    const result = processSelection(ref);
+    if (result) {
+      setSelectedText(result.selectedText);
       setShowLinkModal(true);
     }
-  };
+  }, []);
 
-  const createLink = () => {
+  const createLink = useCallback(() => {
     if (!selectedText || !linkUrl) return;
     
     const currentText = (block.content as any)?.text || '';
-    const linkHtml = `<a href="${linkUrl}" target="${linkTarget}" ${linkTarget === '_blank' ? 'rel="noopener noreferrer"' : ''}>${selectedText}</a>`;
-    const newText = currentText.replace(selectedText, linkHtml);
+    const linkHtml = createLinkHtml(selectedText, linkUrl, linkTarget);
+    const newText = replaceTextWithLink(currentText, selectedText, linkHtml);
     
     onContentUpdate('text', newText);
     resetLinkModal();
-  };
+  }, [selectedText, linkUrl, linkTarget, block.content, onContentUpdate]);
 
-  const resetLinkModal = () => {
+  const resetLinkModal = useCallback(() => {
     setShowLinkModal(false);
     setSelectedText('');
     setLinkUrl('');
     setLinkTarget('_self');
-  };
+  }, []);
 
-  const removeAllLinks = () => {
+  const removeAllLinks = useCallback(() => {
     const currentText = (block.content as any)?.text || '';
-    const textWithoutLinks = currentText.replace(/<a[^>]*>(.*?)<\/a>/g, '$1');
+    const textWithoutLinks = removeAllLinksFromText(currentText);
     onContentUpdate('text', textWithoutLinks);
-  };
+  }, [block.content, onContentUpdate]);
 
   const renderLinkModal = () => (
     <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl p-4 w-80 shadow-xl border border-gray-200 z-[100] max-w-[90vw]">
@@ -255,12 +252,22 @@ const ContentControls: React.FC<ContentControlsProps> = ({ block, onContentUpdat
       </div>
     ),
 
+    button: () => (
+      <ButtonSettings
+        block={block as any}
+        onContentUpdate={onContentUpdate}
+        onStyleUpdate={onStyleUpdate}
+      />
+    ),
+
     default: () => null
   };
 
   const renderer = CONTENT_RENDERERS[block.type as keyof typeof CONTENT_RENDERERS] || CONTENT_RENDERERS.default;
   
   return renderer();
-};
+});
+
+ContentControls.displayName = 'ContentControls';
 
 export default ContentControls;
