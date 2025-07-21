@@ -264,6 +264,21 @@ const ContentControls: React.FC<ContentControlsProps> = memo(({ block, onContent
           altText={(block.content as any)?.alt || ''}
           onImageUrlChange={(value: string) => onContentUpdate('url', value)}
           onAltTextChange={(value: string) => onContentUpdate('alt', value)}
+          imageWidth={block.styles?.width || 100}
+          imageHeight={block.styles?.height || 400}
+          widthUnit={(block.styles?.widthUnit as 'px' | '%') || '%'}
+          heightUnit={(block.styles?.heightUnit as 'px' | '%') || 'px'}
+          imageAlign={(block.styles?.imageAlign as 'left' | 'center' | 'right') || 'center'}
+          borderRadius={block.styles?.border?.radius || 8}
+          onWidthChange={(value: number) => onStyleUpdate?.('width', value)}
+          onHeightChange={(value: number) => onStyleUpdate?.('height', value)}
+          onWidthUnitChange={(value: 'px' | '%') => onStyleUpdate?.('widthUnit', value)}
+          onHeightUnitChange={(value: 'px' | '%') => onStyleUpdate?.('heightUnit', value)}
+          onImageAlignChange={(value: 'left' | 'center' | 'right') => onStyleUpdate?.('imageAlign', value)}
+          onBorderRadiusChange={(value: number) => {
+            const currentBorder = block.styles?.border || { width: 0, style: 'solid', color: '#000000', radius: 8 };
+            onStyleUpdate?.('border', { ...currentBorder, radius: value });
+          }}
         />
       </div>
     ),
