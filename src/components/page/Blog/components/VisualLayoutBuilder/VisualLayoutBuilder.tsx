@@ -93,7 +93,7 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
 }) => {
   const [blocks, setBlocks] = useState<LayoutBlock[]>(() => {
     const result = Array.isArray(initialLayout) ? initialLayout : [];
-    return result.length === 0 ? demoBlocks : result;
+    return result;
   });
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
   const [showPropertiesPanel, setShowPropertiesPanel] = useState(false);
