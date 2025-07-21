@@ -9,7 +9,7 @@ interface BlockRendererProps {
   onRemove?: () => void;
   onContentUpdate?: (field: string, value: any) => void;
   onStyleUpdate?: (field: string, value: any) => void;
-  onOpenSettings?: (type: 'image' | 'video' | 'paragraph' | 'button', block: LayoutBlock) => void;
+  onOpenSettings?: (type: 'image' | 'video' | 'paragraph' | 'button' | 'list', block: LayoutBlock) => void;
 }
 
 const HEADING_TAGS = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'] as const;
@@ -550,6 +550,48 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
     );
   };
 
+  const renderList = () => {
+    const items = (block.content as any)?.items || [];
+    const isOrdered = (block.content as any)?.ordered || false;
+    const style = createStyle('paragraph');
+    
+    if (items.length === 0) {
+      return (
+        <div 
+          className="bg-gray-100 rounded-lg p-6 text-center"
+          onDoubleClick={() => onOpenSettings?.('list', block)}
+        >
+          <div className="text-gray-400">
+            <svg className="w-8 h-8 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+            </svg>
+            <p className="text-sm">Double-click to add list items</p>
+          </div>
+        </div>
+      );
+    }
+
+    const ListTag = isOrdered ? 'ol' : 'ul';
+    return (
+      <ListTag 
+        style={{
+          ...style,
+          listStyleType: isOrdered ? 'decimal' : 'disc',
+          paddingLeft: '1.5rem',
+          margin: '0.5rem 0',
+        }}
+        className="space-y-1"
+        onDoubleClick={() => onOpenSettings?.('list', block)}
+      >
+        {items.map((item: string, index: number) => (
+          <li key={index} style={{ margin: '0.25rem 0' }}>
+            {item || `Item ${index + 1}`}
+          </li>
+        ))}
+      </ListTag>
+    );
+  };
+
   const renderColumn = () => {
     const columnCount = (block.content as any)?.columnCount || 2;
     const columns = (block.content as any)?.columns || [];
@@ -642,6 +684,32 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
             />
           );
 
+        case 'list':
+          const listItems = content.listItems || [];
+          const isOrdered = content.listType === 'ordered';
+          
+          if (listItems.length === 0) {
+            return (
+              <div className="bg-gray-100 rounded-lg p-3 flex items-center justify-center">
+                <div className="text-center text-gray-400">
+                  <svg className="w-6 h-6 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                  </svg>
+                  <p className="text-xs">Add list items</p>
+                </div>
+              </div>
+            );
+          }
+
+          const ListTag = isOrdered ? 'ol' : 'ul';
+          return (
+            <ListTag className={`text-sm text-gray-700 leading-relaxed ${isOrdered ? 'list-decimal' : 'list-disc'} ml-4 space-y-1`}>
+              {listItems.map((item: string, index: number) => (
+                <li key={index}>{item || `Item ${index + 1}`}</li>
+              ))}
+            </ListTag>
+          );
+
         default:
           return (
             <div className="text-xs text-gray-400 italic">
@@ -676,6 +744,7 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
     paragraph: renderEditableParagraph,
     image: renderImage,
     video: renderVideo,
+    list: renderList,
     button: renderButton,
     column: renderColumn,
   };

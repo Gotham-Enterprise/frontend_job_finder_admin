@@ -218,12 +218,14 @@ export interface ColumnBlock extends LayoutBlock {
     columnCount: 1 | 2 | 3 | 4;
     columns: Array<{
       id: string;
-      contentType: 'text' | 'image' | 'video';
+      contentType: 'text' | 'image' | 'video' | 'list';
       content: {
         text?: string;
         url?: string;
         alt?: string;
         title?: string;
+        listItems?: string[];
+        listType?: 'ordered' | 'unordered';
       };
     }>;
     gap: number;

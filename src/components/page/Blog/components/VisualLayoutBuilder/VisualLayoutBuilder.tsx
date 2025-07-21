@@ -183,7 +183,7 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
 
   const [temporaryBlock, setTemporaryBlock] = useState<LayoutBlock | null>(null);
 
-  const openSettings = (type: 'image' | 'video' | 'paragraph' | 'button', block: LayoutBlock) => {
+  const openSettings = (type: 'image' | 'video' | 'paragraph' | 'button' | 'list', block: LayoutBlock) => {
     if (block.id.startsWith('temp-')) {
       setTemporaryBlock(block);
       setSelectedBlockId(block.id);
