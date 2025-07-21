@@ -22,13 +22,13 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = memo(({
   onClose, 
   onImageSelect 
 }) => {
-  const [selectedImages, setSelectedImages] = useState<Set<string>>(new Set());
+  const [selectedGalleryImage, setSelectedGalleryImage] = useState<string | null>(null);
   const [loadedImages, setLoadedImages] = useState<Set<string>>(new Set());
   const [activeTab, setActiveTab] = useState<'gallery' | 'upload'>('gallery');
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [uploadPreviews, setUploadPreviews] = useState<{ file: File; url: string; selected: boolean }[]>([]);
   const [isDragOver, setIsDragOver] = useState(false);
-  const [selectedUploadedFile, setSelectedUploadedFile] = useState<File | null>(null);
+  const [selectedUploadedFiles, setSelectedUploadedFiles] = useState<Set<File>>(new Set());
 
   useEffect(() => {
     const escapeKey = (event: KeyboardEvent) => {
@@ -58,26 +58,20 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = memo(({
   }, [uploadPreviews]);
 
   const toggleImageSelection = (imageUrl: string) => {
-    setSelectedImages(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(imageUrl)) {
-        newSet.delete(imageUrl);
-      } else {
-        newSet.add(imageUrl);
-      }
-      return newSet;
-    });
+    setSelectedGalleryImage(prev => prev === imageUrl ? null : imageUrl);
   };
 
   const confirmSelection = () => {
-    if (activeTab === 'gallery' && selectedImages.size > 0) {
-      const firstSelected = Array.from(selectedImages)[0];
-      onImageSelect(firstSelected);
+    if (activeTab === 'gallery' && selectedGalleryImage) {
+      onImageSelect(selectedGalleryImage);
       onClose();
-      setSelectedImages(new Set());
-    } else if (activeTab === 'upload' && selectedUploadedFile) {
-      const objectUrl = URL.createObjectURL(selectedUploadedFile);
-      onImageSelect(objectUrl, selectedUploadedFile);
+      setSelectedGalleryImage(null);
+    } else if (activeTab === 'upload' && selectedUploadedFiles.size > 0) {
+      // For multiple uploaded files, we'll select the first one for now
+      // You could modify this to handle multiple files differently
+      const firstFile = Array.from(selectedUploadedFiles)[0];
+      const objectUrl = URL.createObjectURL(firstFile);
+      onImageSelect(objectUrl, firstFile);
       onClose();
       resetUploadState();
     }
@@ -85,14 +79,14 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = memo(({
 
   const closeModal = () => {
     onClose();
-    setSelectedImages(new Set());
+    setSelectedGalleryImage(null);
     resetUploadState();
   };
 
   const resetUploadState = () => {
     setUploadedFiles([]);
     setUploadPreviews([]);
-    setSelectedUploadedFile(null);
+    setSelectedUploadedFiles(new Set());
     setIsDragOver(false);
   };
 
@@ -138,20 +132,30 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = memo(({
   };
 
   const toggleUploadedImageSelection = (file: File) => {
+    setSelectedUploadedFiles(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(file)) {
+        newSet.delete(file);
+      } else {
+        newSet.add(file);
+      }
+      return newSet;
+    });
+    
     setUploadPreviews(prev => prev.map(preview => ({
       ...preview,
-      selected: preview.file === file ? !preview.selected : false
+      selected: preview.file === file ? !preview.selected : preview.selected
     })));
-    
-    setSelectedUploadedFile(prev => prev === file ? null : file);
   };
 
   const removeUploadedImage = (file: File) => {
     setUploadPreviews(prev => prev.filter(preview => preview.file !== file));
     setUploadedFiles(prev => prev.filter(f => f !== file));
-    if (selectedUploadedFile === file) {
-      setSelectedUploadedFile(null);
-    }
+    setSelectedUploadedFiles(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(file);
+      return newSet;
+    });
     
     // Clean up object URL
     const preview = uploadPreviews.find(p => p.file === file);
@@ -229,7 +233,7 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = memo(({
               <>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
                   {DEFAULT_IMAGES.map((imageUrl, index) => {
-                    const isSelected = selectedImages.has(imageUrl);
+                    const isSelected = selectedGalleryImage === imageUrl;
                     return (
                       <div
                         key={index}
@@ -250,7 +254,8 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = memo(({
                         
                         <div className="absolute top-2 left-2 z-10">
                           <input
-                            type="checkbox"
+                            type="radio"
+                            name="gallery-selection"
                             checked={isSelected}
                             onChange={() => toggleImageSelection(imageUrl)}
                             className="w-5 h-5 text-purple-600 bg-white border-2 border-gray-300 rounded focus:ring-purple-500 focus:ring-2"
@@ -289,28 +294,24 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = memo(({
                   })}
                 </div>
 
-                {selectedImages.size > 0 && (
+                {selectedGalleryImage && (
                   <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
                     <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Selected Images ({selectedImages.size}):
+                      Selected Image:
                     </h4>
-                    <div className="flex flex-wrap gap-2">
-                      {Array.from(selectedImages).map((imageUrl, index) => (
-                        <div key={index} className="flex items-center gap-2 p-2 bg-white dark:bg-gray-600 rounded border">
-                          <img
-                            src={imageUrl}
-                            alt={`Selected ${index + 1}`}
-                            className="w-12 h-12 object-cover rounded border border-gray-200 dark:border-gray-500"
-                          />
-                          <button
-                            onClick={() => toggleImageSelection(imageUrl)}
-                            className="text-red-500 hover:text-red-700 transition-colors"
-                            title="Remove selection"
-                          >
-                            ×
-                          </button>
-                        </div>
-                      ))}
+                    <div className="flex items-center gap-2 p-2 bg-white dark:bg-gray-600 rounded border w-fit">
+                      <img
+                        src={selectedGalleryImage}
+                        alt="Selected image"
+                        className="w-12 h-12 object-cover rounded border border-gray-200 dark:border-gray-500"
+                      />
+                      <button
+                        onClick={() => toggleImageSelection(selectedGalleryImage)}
+                        className="text-red-500 hover:text-red-700 transition-colors"
+                        title="Remove selection"
+                      >
+                        ×
+                      </button>
                     </div>
                   </div>
                 )}
@@ -426,6 +427,42 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = memo(({
                     </div>
                   </div>
                 )}
+
+                {/* Selected Files Preview */}
+                {selectedUploadedFiles.size > 0 && (
+                  <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Selected Files ({selectedUploadedFiles.size}):
+                    </h4>
+                    <div className="flex flex-wrap gap-2">
+                      {Array.from(selectedUploadedFiles).map((file, index) => {
+                        const preview = uploadPreviews.find(p => p.file === file);
+                        return (
+                          <div key={index} className="flex items-center gap-2 p-2 bg-white dark:bg-gray-600 rounded border">
+                            {preview && (
+                              <img
+                                src={preview.url}
+                                alt={`Selected ${index + 1}`}
+                                className="w-12 h-12 object-cover rounded border border-gray-200 dark:border-gray-500"
+                              />
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-medium truncate">{file.name}</p>
+                              <p className="text-xs text-gray-500">{(file.size / 1024 / 1024).toFixed(1)} MB</p>
+                            </div>
+                            <button
+                              onClick={() => toggleUploadedImageSelection(file)}
+                              className="text-red-500 hover:text-red-700 transition-colors"
+                              title="Remove selection"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </>
             )}
 
@@ -439,15 +476,15 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = memo(({
               <button
                 onClick={confirmSelection}
                 disabled={
-                  (activeTab === 'gallery' && selectedImages.size === 0) ||
-                  (activeTab === 'upload' && !selectedUploadedFile)
+                  (activeTab === 'gallery' && !selectedGalleryImage) ||
+                  (activeTab === 'upload' && selectedUploadedFiles.size === 0)
                 }
                 className="px-4 py-2 text-sm font-medium text-white bg-purple-500 border border-purple-500 rounded-lg hover:bg-purple-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {activeTab === 'gallery' 
-                  ? `Use Selected Image${selectedImages.size > 1 ? 's' : ''} (${selectedImages.size})`
-                  : selectedUploadedFile 
-                    ? `Use Uploaded Image (${selectedUploadedFile.name})`
+                  ? selectedGalleryImage ? 'Use Selected Image' : 'Select an Image'
+                  : selectedUploadedFiles.size > 0
+                    ? `Use Selected Image${selectedUploadedFiles.size > 1 ? 's' : ''} (${selectedUploadedFiles.size})`
                     : 'Select an Image'
                 }
               </button>
