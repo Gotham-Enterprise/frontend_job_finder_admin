@@ -127,6 +127,7 @@ export default function AddNewBlogWithLayoutBuilder() {
   const [viewMode, setViewMode] = useState<ViewMode>('builder');
   const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
   const [visibilityDropdownOpen, setVisibilityDropdownOpen] = useState(false);
+  const [dateDropdownOpen, setDateDropdownOpen] = useState(false);
   
 
   const [metadata, setMetadata] = useState<BlogMetadata>({
@@ -376,6 +377,7 @@ export default function AddNewBlogWithLayoutBuilder() {
       if (!target.closest('.dropdown-container')) {
         setStatusDropdownOpen(false);
         setVisibilityDropdownOpen(false);
+        setDateDropdownOpen(false);
       }
     };
 
@@ -425,7 +427,7 @@ export default function AddNewBlogWithLayoutBuilder() {
                   <button
                     type="button"
                     onClick={() => setStatusDropdownOpen(!statusDropdownOpen)}
-                    className="flex items-center justify-between bg-blue-600 text-white px-4 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer min-w-[120px]"
+                    className="flex items-center justify-between bg-primary text-white px-4 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer min-w-[120px]"
                   >
                     <span>{statusOptions.find(option => option.value === metadata.status)?.label || 'Draft'}</span>
                     <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -473,7 +475,7 @@ export default function AddNewBlogWithLayoutBuilder() {
                   <button
                     type="button"
                     onClick={() => setVisibilityDropdownOpen(!visibilityDropdownOpen)}
-                    className="flex items-center justify-between bg-blue-600 text-white px-4 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer min-w-[120px]"
+                    className="flex items-center justify-between bg-primary text-white px-4 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer min-w-[120px]"
                   >
                     <span className="capitalize">{metadata.visibility}</span>
                     <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -555,19 +557,55 @@ export default function AddNewBlogWithLayoutBuilder() {
 
               {/* Date Posted Field */}
               <div className="flex items-center space-x-2">
-                <DatePicker
-                  id="blog-publish-date-header"
-                  label="Date Posted:"
-                  defaultDate={metadata.publishDate}
-                  placeholder="Select date..."
-                  onChange={(selectedDates: Date[]) => {
-                    if (selectedDates && selectedDates.length > 0) {
-                      const date = selectedDates[0];
-                      const formattedDate = date.toISOString().split('T')[0];
-                      updateMetadata('publishDate', formattedDate);
-                    }
-                  }}
-                />
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                  Date Posted:
+                </label>
+                <div className="relative dropdown-container">
+                  <button
+                    type="button"
+                    onClick={() => setDateDropdownOpen(!dateDropdownOpen)}
+                    className="flex items-center justify-between bg-primary text-white px-4 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer min-w-[140px]"
+                  >
+                    <span>{metadata.publishDate || '2025-07-21'}</span>
+                    <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  {dateDropdownOpen && (
+                    <div className="absolute top-full left-0 mt-1 w-80 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg z-50">
+                      <div className="px-4 py-3">
+                        <div className="flex items-center space-x-3">
+                          <div className="flex-shrink-0">
+                            <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                          </div>
+                          <div className="flex-1">
+                            <div className="font-medium text-gray-900 dark:text-gray-100 mb-1">Select Publication Date</div>
+                            <input
+                              type="date"
+                              value={metadata.publishDate}
+                              onChange={(e) => {
+                                updateMetadata('publishDate', e.target.value);
+                              }}
+                              className="w-full px-3 py-2 text-sm bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none text-gray-900 dark:text-gray-100"
+                            />
+                            <div className="text-xs text-gray-500 dark:text-gray-400 mt-2">Choose when this blog post should be published.</div>
+                          </div>
+                        </div>
+                        <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
+                          <button
+                            type="button"
+                            onClick={() => setDateDropdownOpen(false)}
+                            className="w-full px-3 py-2 text-sm bg-primary text-white rounded-md hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/20"
+                          >
+                            Done
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
