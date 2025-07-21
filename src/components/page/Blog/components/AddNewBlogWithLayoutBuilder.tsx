@@ -5,11 +5,14 @@ import { useModal } from "@/hooks/useModal";
 import Button from "@/components/ui/button/Button";
 import DatePicker from "@/components/form/date-picker";
 import VisualLayoutBuilder from "./VisualLayoutBuilder/VisualLayoutBuilder";
+import FloatingElementsPanel from "./VisualLayoutBuilder/components/FloatingElementsPanel";
 
 import { 
   BlogLayout, 
   LayoutBlock,
-  convertLayoutToBlogPayload, 
+  convertLayoutToBlogPayload,
+  BlockType,
+  BLOCK_TEMPLATES
 } from "@/services/types/visualLayoutTypes";
 
 import { 
@@ -158,6 +161,8 @@ export default function AddNewBlogWithLayoutBuilder() {
     settings: false,
   });
 
+  const [isElementsPanelVisible, setIsElementsPanelVisible] = useState(true);
+
   const previewModal = useModal();
 
   const categoryOptions: CategoryOption[] = [
@@ -250,23 +255,15 @@ export default function AddNewBlogWithLayoutBuilder() {
     previewModal.openModal();
   }, [previewModal]);
 
-  const addElement = useCallback((type: string) => {
-    const newBlock: any = {
-      id: `${type}-${Date.now()}`,
-      type: type,
-      content: getDefaultContent(type),
-      styles: getDefaultStyles(type),
-      position: { 
-        x: 0, 
-        y: currentLayout.blocks.length * 100, 
-        width: 100, 
-        height: getDefaultHeight(type) 
-      },
-      metadata: {
-        created: new Date().toISOString(),
-        updated: new Date().toISOString(),
-      },
-    };
+  const addElement = useCallback((type: BlockType) => {
+    const template = BLOCK_TEMPLATES[type];
+    const newBlock: LayoutBlock = {
+      id: `block_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      ...template,
+      styles: template.styles || {},
+      content: template.content || {},
+      position: template.position || { x: 0, y: 0, width: 100, height: 100 },
+    } as LayoutBlock;
 
     setCurrentLayout(prev => ({
       ...prev,
@@ -276,110 +273,7 @@ export default function AddNewBlogWithLayoutBuilder() {
         updated: new Date().toISOString(),
       },
     }));
-  }, [currentLayout.blocks.length]);
-
-  const getDefaultContent = (type: string) => {
-    switch (type) {
-      case 'heading':
-        return { text: 'New Heading', level: 2 };
-      case 'paragraph':
-        return { text: 'Type your content here...', richText: true };
-      case 'image':
-        return { url: '', alt: 'Image description', caption: '' };
-      case 'quote':
-        return { text: 'Inspiring quote goes here...', author: '' };
-      case 'list':
-        return { items: ['Item 1', 'Item 2', 'Item 3'], ordered: false };
-      case 'code':
-        return { code: '// Your code here', language: 'javascript' };
-      case 'spacer':
-        return { height: 40 };
-      case 'columns':
-        return { columns: 2, content: ['Column 1', 'Column 2'] };
-      case 'column':
-        return { 
-          columnCount: 2, 
-          columns: [
-            { contentType: 'text', content: 'Column 1 content' },
-            { contentType: 'text', content: 'Column 2 content' }
-          ],
-          gap: 16
-        };
-      case 'gallery':
-        return { images: [], layout: 'grid' };
-      case 'hero':
-        return { title: 'Hero Title', subtitle: 'Hero subtitle' };
-      case 'embed':
-        return { code: '', type: 'html' };
-      case 'button':
-        return { 
-          text: 'Click Me', 
-          url: '', 
-          target: '_self', 
-          variant: 'primary', 
-          size: 'medium',
-          width: 'auto',
-          customWidth: 200,
-          alignment: 'left'
-        };
-      default:
-        return { text: 'New element' };
-    }
-  };
-
-  const getDefaultStyles = (type: string) => {
-    const baseStyles = {
-      margin: { top: 10, right: 0, bottom: 10, left: 0 },
-      padding: { top: 10, right: 10, bottom: 10, left: 10 },
-    };
-
-    switch (type) {
-      case 'heading':
-        return { ...baseStyles, fontSize: '1.8rem', fontWeight: 'bold' };
-      case 'spacer':
-        return { ...baseStyles, padding: { top: 0, right: 0, bottom: 0, left: 0 } };
-      case 'hero':
-        return { 
-          ...baseStyles, 
-          fontSize: '2.5rem', 
-          fontWeight: 'bold', 
-          textAlign: 'center' as const,
-          padding: { top: 40, right: 20, bottom: 40, left: 20 }
-        };
-      case 'button':
-        return {
-          backgroundColor: '#3b82f6',
-          textColor: '#ffffff',
-          fontSize: '1rem',
-          fontWeight: '500',
-          textAlign: 'center' as const,
-          padding: { top: 12, right: 24, bottom: 12, left: 24 },
-          margin: { top: 0, right: 0, bottom: 16, left: 0 },
-          border: { width: 0, style: 'solid', color: 'transparent', radius: 6 },
-        };
-      default:
-        return baseStyles;
-    }
-  };
-
-  const getDefaultHeight = (type: string) => {
-    switch (type) {
-      case 'heading': return 60;
-      case 'paragraph': return 100;
-      case 'image': return 200;
-      case 'quote': return 120;
-      case 'list': return 120;
-      case 'code': return 150;
-      case 'spacer': return 40;
-      case 'columns': return 200;
-      case 'column': return 150;
-      case 'gallery': return 300;
-      case 'hero': return 250;
-      case 'embed': return 200;
-      case 'button': return 48;
-      default: return 100;
-    }
-  };
+  }, []);
 
   const canSave = metadata.title.trim().length > 0;
 
@@ -855,80 +749,7 @@ export default function AddNewBlogWithLayoutBuilder() {
         </div>
         
         <div className="h-[calc(100vh-64px)] flex">
-          {/* Left Sidebar - Element Library */}
-          <div className="w-64 bg-gray-900 text-white border-r border-gray-700 overflow-y-auto h-full">
-            <div className="p-4">
-              {/* Blog Settings Section */}
-              <div className="mb-6">
-                <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wide mb-3">Blog Settings</h3>
-              </div>
 
-              {/* Element Library */}
-              <div className="space-y-2">
-                <button
-                  onClick={() => addElement('heading')}
-                  className="w-full flex items-center p-3 text-left hover:bg-gray-800 rounded-lg transition-colors"
-                >
-                  <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center mr-3">
-                    <span className="text-white font-bold text-lg">H</span>
-                  </div>
-                  <div>
-                    <div className="text-sm font-medium">Heading</div>
-                    <div className="text-xs text-gray-400">Add a title or heading</div>
-                  </div>
-                </button>
-
-                <button
-                  onClick={() => addElement('paragraph')}
-                  className="w-full flex items-center p-3 text-left hover:bg-gray-800 rounded-lg transition-colors"
-                >
-                  <div className="w-8 h-8 bg-gray-600 rounded flex items-center justify-center mr-3">
-                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
-                    </svg>
-                  </div>
-                  <div>
-                    <div className="text-sm font-medium">Text</div>
-                    <div className="text-xs text-gray-400">Add a paragraph of text</div>
-                  </div>
-                </button>
-
-                <button
-                  onClick={() => addElement('image')}
-                  className="w-full flex items-center p-3 text-left hover:bg-gray-800 rounded-lg transition-colors"
-                >
-                  <div className="w-8 h-8 bg-green-600 rounded flex items-center justify-center mr-3">
-                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <div className="text-sm font-medium">Image</div>
-                    <div className="text-xs text-gray-400">Add an image or photo</div>
-                  </div>
-                </button>
-
-                <button
-                  onClick={() => addElement('button')}
-                  className="w-full flex items-center p-3 text-left hover:bg-gray-800 rounded-lg transition-colors"
-                >
-                  <div className="w-8 h-8 bg-purple-600 rounded flex items-center justify-center mr-3">
-                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
-                    </svg>
-                  </div>
-                  <div>
-                    <div className="text-sm font-medium">Button</div>
-                    <div className="text-xs text-gray-400">Add a call-to-action button</div>
-                  </div>
-                </button>
-              </div>
-
-           
-
-          
-            </div>
-          </div>
 
           {/* Center Canvas - Visual Layout Builder */}
           <div className="flex-1 relative h-full bg-gray-100 dark:bg-gray-900">
@@ -937,6 +758,13 @@ export default function AddNewBlogWithLayoutBuilder() {
               onLayoutChange={updateLayout}
               onSave={saveBlog}
               blogData={metadata}
+            />
+            
+            {/* Floating Elements Panel */}
+            <FloatingElementsPanel
+              onAddBlock={addElement}
+              isVisible={isElementsPanelVisible}
+              onToggle={() => setIsElementsPanelVisible(!isElementsPanelVisible)}
             />
           </div>
         </div>

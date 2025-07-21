@@ -21,7 +21,6 @@ import {
   BlockType,
 } from '../../../../../services/types/visualLayoutTypes';
 import SortableBlockRenderer from './components/SortableBlockRenderer';
-import ElementsSidebar from './components/ElementsSidebar';
 import PropertyPanel from './components/PropertyPanel';
 import { DesktopIcon } from '../../../../ui/icons/desktop';
 import { TabletIcon } from '../../../../ui/icons/tablet';
@@ -209,10 +208,8 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
 
   return (
     <div className="flex h-full bg-white relative">
-      <ElementsSidebar onAddBlock={addBlock} />
-      
       <div 
-        className="flex-1 ml-[218px] h-full overflow-y-auto"
+        className="flex-1 h-full overflow-y-auto"
         onClick={(e) => {
           if (e.target === e.currentTarget) {
             setSelectedBlockId(null);
