@@ -574,34 +574,36 @@ export default function AddNewBlogWithLayoutBuilder() {
                   {dateDropdownOpen && (
                     <div className="absolute top-full left-0 mt-1 w-80 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg z-50">
                       <div className="px-4 py-3">
-                        <div className="flex items-center space-x-3">
-                          <div className="flex-shrink-0">
-                            <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
-                          </div>
-                          <div className="flex-1">
-                            <div className="font-medium text-gray-900 dark:text-gray-100 mb-1">Select Publication Date</div>
-                            <input
-                              type="date"
-                              value={metadata.publishDate}
-                              onChange={(e) => {
-                                updateMetadata('publishDate', e.target.value);
-                              }}
-                              className="w-full px-3 py-2 text-sm bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none text-gray-900 dark:text-gray-100"
-                            />
-                            <div className="text-xs text-gray-500 dark:text-gray-400 mt-2">Choose when this blog post should be published.</div>
-                          </div>
+                        <div className="flex items-center space-x-3 mb-3">
+                          <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Select Publication Date</span>
                         </div>
-                        <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
-                          <button
-                            type="button"
-                            onClick={() => setDateDropdownOpen(false)}
-                            className="w-full px-3 py-2 text-sm bg-primary text-white rounded-md hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/20"
-                          >
-                            Done
-                          </button>
+                        <div className="mb-4">
+                          <DatePicker
+                            id="blog-publish-date"
+                            defaultDate={metadata.publishDate}
+                            onChange={(selectedDates) => {
+                              if (selectedDates.length > 0) {
+                                const selectedDate = selectedDates[0];
+                                const formattedDate = selectedDate.toISOString().split('T')[0];
+                                updateMetadata('publishDate', formattedDate);
+                              }
+                            }}
+                            placeholder="Select date"
+                          />
                         </div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400 mb-4">
+                          Choose when this blog post should be published.
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setDateDropdownOpen(false)}
+                          className="w-full bg-primary text-white px-4 py-2 text-sm rounded-lg hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/20"
+                        >
+                          Done
+                        </button>
                       </div>
                     </div>
                   )}
