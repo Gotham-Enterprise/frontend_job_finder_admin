@@ -18,14 +18,14 @@ const FloatingPanelContent: React.FC<FloatingPanelContentProps> = ({ panelType, 
       <div className="space-y-3">
         <h4 className="font-medium text-gray-700 text-sm capitalize">{type}</h4>
         <div className="grid grid-cols-3 gap-2 max-w-[120px] mx-auto">
-          <div></div>
+       
           <input
             type="number"
             value={value.top}
             onChange={(e) => updateSpacing('top', parseInt(e.target.value) || 0)}
             className="w-12 px-2 py-1 text-xs bg-gray-50 border border-gray-200 rounded text-center focus:border-purple-400 focus:outline-none"
           />
-          <div></div>
+       
           <input
             type="number"
             value={value.left}

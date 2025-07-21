@@ -807,10 +807,13 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
     const defaultMargin = (block.type === 'image' || block.type === 'video') ? { top: 16, right: 0, bottom: 16, left: 0 } : { top: 8, right: 0, bottom: 8, left: 0 };
     const actualMargin = margin || defaultMargin;
     
+  
+    const containerBackgroundColor = block.type === 'button' ? 'transparent' : (block.styles.backgroundColor || 'transparent');
+    
     return {
       margin: `${actualMargin.top || 0}px ${actualMargin.right || 0}px ${actualMargin.bottom || 0}px ${actualMargin.left || 0}px`,
       padding: padding ? `${padding.top || 0}px ${padding.right || 0}px ${padding.bottom || 0}px ${padding.left || 0}px` : '0px',
-      backgroundColor: block.styles.backgroundColor || 'transparent',
+      backgroundColor: containerBackgroundColor,
       minHeight: 'auto',
       overflow: 'hidden',
       position: 'relative' as const,
