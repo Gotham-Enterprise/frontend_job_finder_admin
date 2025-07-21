@@ -130,6 +130,8 @@ export default function AddNewBlogWithLayoutBuilder() {
   const [dateDropdownOpen, setDateDropdownOpen] = useState(false);
   const [categoriesDropdownOpen, setCategoriesDropdownOpen] = useState(false);
   const [tagsDropdownOpen, setTagsDropdownOpen] = useState(false);
+  const [categoriesSearchTerm, setCategoriesSearchTerm] = useState('');
+  const [tagsSearchTerm, setTagsSearchTerm] = useState('');
   
 
   const [metadata, setMetadata] = useState<BlogMetadata>({
@@ -187,6 +189,15 @@ export default function AddNewBlogWithLayoutBuilder() {
     { value: 'pending', label: 'Pending Review', description: 'This job posting is waiting for review before being published.' },
     { value: 'private', label: 'Private', description: 'This job posting is only visible to you and selected users.' },
   ];
+
+  // Filtered categories and tags based on search terms
+  const filteredCategories = categoryOptions.filter(category =>
+    category.text.toLowerCase().includes(categoriesSearchTerm.toLowerCase())
+  );
+
+  const filteredTags = tagOptions.filter(tag =>
+    tag.text.toLowerCase().includes(tagsSearchTerm.toLowerCase())
+  );
 
 
   const updateMetadata = useCallback((field: keyof BlogMetadata, value: any) => {
@@ -430,7 +441,13 @@ export default function AddNewBlogWithLayoutBuilder() {
                 <div className="relative dropdown-container">
                   <button
                     type="button"
-                    onClick={() => setStatusDropdownOpen(!statusDropdownOpen)}
+                    onClick={() => {
+                      setStatusDropdownOpen(!statusDropdownOpen);
+                      setVisibilityDropdownOpen(false);
+                      setDateDropdownOpen(false);
+                      setCategoriesDropdownOpen(false);
+                      setTagsDropdownOpen(false);
+                    }}
                     className="flex items-center justify-between bg-primary text-white px-4 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer min-w-[120px]"
                   >
                     <span>{statusOptions.find(option => option.value === metadata.status)?.label || 'Draft'}</span>
@@ -478,7 +495,13 @@ export default function AddNewBlogWithLayoutBuilder() {
                 <div className="relative dropdown-container">
                   <button
                     type="button"
-                    onClick={() => setVisibilityDropdownOpen(!visibilityDropdownOpen)}
+                    onClick={() => {
+                      setVisibilityDropdownOpen(!visibilityDropdownOpen);
+                      setStatusDropdownOpen(false);
+                      setDateDropdownOpen(false);
+                      setCategoriesDropdownOpen(false);
+                      setTagsDropdownOpen(false);
+                    }}
                     className="flex items-center justify-between bg-primary text-white px-4 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer min-w-[120px]"
                   >
                     <span className="capitalize">{metadata.visibility}</span>
@@ -567,7 +590,13 @@ export default function AddNewBlogWithLayoutBuilder() {
                 <div className="relative dropdown-container">
                   <button
                     type="button"
-                    onClick={() => setDateDropdownOpen(!dateDropdownOpen)}
+                    onClick={() => {
+                      setDateDropdownOpen(!dateDropdownOpen);
+                      setStatusDropdownOpen(false);
+                      setVisibilityDropdownOpen(false);
+                      setCategoriesDropdownOpen(false);
+                      setTagsDropdownOpen(false);
+                    }}
                     className="flex items-center justify-between bg-primary text-white px-4 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer min-w-[140px]"
                   >
                     <span>{metadata.publishDate || '2025-07-21'}</span>
@@ -622,7 +651,13 @@ export default function AddNewBlogWithLayoutBuilder() {
                 <div className="relative dropdown-container">
                   <button
                     type="button"
-                    onClick={() => setCategoriesDropdownOpen(!categoriesDropdownOpen)}
+                    onClick={() => {
+                      setCategoriesDropdownOpen(!categoriesDropdownOpen);
+                      setStatusDropdownOpen(false);
+                      setVisibilityDropdownOpen(false);
+                      setDateDropdownOpen(false);
+                      setTagsDropdownOpen(false);
+                    }}
                     className="flex items-center justify-between bg-primary text-white px-4 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer min-w-[120px]"
                   >
                     <span>{metadata.categories.length > 0 ? `${metadata.categories.length} selected` : 'Select'}</span>
@@ -631,7 +666,7 @@ export default function AddNewBlogWithLayoutBuilder() {
                     </svg>
                   </button>
                   {categoriesDropdownOpen && (
-                    <div className="absolute top-full left-0 mt-1 w-80 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg z-50 max-h-64 overflow-y-auto">
+                    <div className="absolute top-full left-0 mt-1 w-80 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg z-50 max-h-64 overflow-hidden">
                       <div className="px-4 py-3">
                         <div className="flex items-center space-x-3 mb-3">
                           <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -639,36 +674,60 @@ export default function AddNewBlogWithLayoutBuilder() {
                           </svg>
                           <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Select Categories</span>
                         </div>
-                        <div className="space-y-2 mb-4">
-                          {categoryOptions.map(category => (
-                            <label key={category.value} className="flex items-center text-sm cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 p-2 rounded">
-                              <input
-                                type="checkbox"
-                                checked={metadata.categories.includes(category.value)}
-                                onChange={(e) => {
-                                  const currentCategories = metadata.categories;
-                                  const newCategories = e.target.checked
-                                    ? [...currentCategories, category.value]
-                                    : currentCategories.filter(c => c !== category.value);
-                                  updateMetadata('categories', newCategories);
-                                }}
-                                className="mr-3 w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
-                              />
-                              <span className="text-gray-900 dark:text-gray-100">{category.text}</span>
-                              {metadata.categories.includes(category.value) && (
-                                <svg className="w-4 h-4 ml-auto text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                </svg>
-                              )}
-                            </label>
-                          ))}
+                        
+                        {/* Search Input */}
+                        <div className="mb-3 relative">
+                          <svg className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                          </svg>
+                          <input
+                            type="text"
+                            placeholder="Search categories..."
+                            value={categoriesSearchTerm}
+                            onChange={(e) => setCategoriesSearchTerm(e.target.value)}
+                            className="w-full pl-10 pr-3 py-2 text-sm bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+                          />
+                        </div>
+
+                        <div className="max-h-32 overflow-y-auto space-y-2 mb-4">
+                          {filteredCategories.length > 0 ? (
+                            filteredCategories.map(category => (
+                              <label key={category.value} className="flex items-center text-sm cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 p-2 rounded">
+                                <input
+                                  type="checkbox"
+                                  checked={metadata.categories.includes(category.value)}
+                                  onChange={(e) => {
+                                    const currentCategories = metadata.categories;
+                                    const newCategories = e.target.checked
+                                      ? [...currentCategories, category.value]
+                                      : currentCategories.filter(c => c !== category.value);
+                                    updateMetadata('categories', newCategories);
+                                  }}
+                                  className="mr-3 w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                                />
+                                <span className="text-gray-900 dark:text-gray-100">{category.text}</span>
+                                {metadata.categories.includes(category.value) && (
+                                  <svg className="w-4 h-4 ml-auto text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                  </svg>
+                                )}
+                              </label>
+                            ))
+                          ) : (
+                            <div className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
+                              No categories found matching "{categoriesSearchTerm}"
+                            </div>
+                          )}
                         </div>
                         <div className="text-xs text-gray-500 dark:text-gray-400 mb-4">
                           Select multiple categories for better organization.
                         </div>
                         <button
                           type="button"
-                          onClick={() => setCategoriesDropdownOpen(false)}
+                          onClick={() => {
+                            setCategoriesDropdownOpen(false);
+                            setCategoriesSearchTerm('');
+                          }}
                           className="w-full bg-primary text-white px-4 py-2 text-sm rounded-lg hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/20"
                         >
                           Done
@@ -687,7 +746,13 @@ export default function AddNewBlogWithLayoutBuilder() {
                 <div className="relative dropdown-container">
                   <button
                     type="button"
-                    onClick={() => setTagsDropdownOpen(!tagsDropdownOpen)}
+                    onClick={() => {
+                      setTagsDropdownOpen(!tagsDropdownOpen);
+                      setStatusDropdownOpen(false);
+                      setVisibilityDropdownOpen(false);
+                      setDateDropdownOpen(false);
+                      setCategoriesDropdownOpen(false);
+                    }}
                     className="flex items-center justify-between bg-primary text-white px-4 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer min-w-[120px]"
                   >
                     <span>{metadata.tags.length > 0 ? `${metadata.tags.length} selected` : 'Select'}</span>
@@ -696,7 +761,7 @@ export default function AddNewBlogWithLayoutBuilder() {
                     </svg>
                   </button>
                   {tagsDropdownOpen && (
-                    <div className="absolute top-full left-0 mt-1 w-80 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg z-50 max-h-64 overflow-y-auto">
+                    <div className="absolute top-full left-0 mt-1 w-80 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg z-50 max-h-64 overflow-hidden">
                       <div className="px-4 py-3">
                         <div className="flex items-center space-x-3 mb-3">
                           <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -704,36 +769,60 @@ export default function AddNewBlogWithLayoutBuilder() {
                           </svg>
                           <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Select Tags</span>
                         </div>
-                        <div className="space-y-2 mb-4">
-                          {tagOptions.map(tag => (
-                            <label key={tag.value} className="flex items-center text-sm cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 p-2 rounded">
-                              <input
-                                type="checkbox"
-                                checked={metadata.tags.includes(tag.value)}
-                                onChange={(e) => {
-                                  const currentTags = metadata.tags;
-                                  const newTags = e.target.checked
-                                    ? [...currentTags, tag.value]
-                                    : currentTags.filter(t => t !== tag.value);
-                                  updateMetadata('tags', newTags);
-                                }}
-                                className="mr-3 w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
-                              />
-                              <span className="text-gray-900 dark:text-gray-100">{tag.text}</span>
-                              {metadata.tags.includes(tag.value) && (
-                                <svg className="w-4 h-4 ml-auto text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                </svg>
-                              )}
-                            </label>
-                          ))}
+                        
+                        {/* Search Input */}
+                        <div className="mb-3 relative">
+                          <svg className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                          </svg>
+                          <input
+                            type="text"
+                            placeholder="Search tags..."
+                            value={tagsSearchTerm}
+                            onChange={(e) => setTagsSearchTerm(e.target.value)}
+                            className="w-full pl-10 pr-3 py-2 text-sm bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+                          />
+                        </div>
+
+                        <div className="max-h-32 overflow-y-auto space-y-2 mb-4">
+                          {filteredTags.length > 0 ? (
+                            filteredTags.map(tag => (
+                              <label key={tag.value} className="flex items-center text-sm cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 p-2 rounded">
+                                <input
+                                  type="checkbox"
+                                  checked={metadata.tags.includes(tag.value)}
+                                  onChange={(e) => {
+                                    const currentTags = metadata.tags;
+                                    const newTags = e.target.checked
+                                      ? [...currentTags, tag.value]
+                                      : currentTags.filter(t => t !== tag.value);
+                                    updateMetadata('tags', newTags);
+                                  }}
+                                  className="mr-3 w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                                />
+                                <span className="text-gray-900 dark:text-gray-100">{tag.text}</span>
+                                {metadata.tags.includes(tag.value) && (
+                                  <svg className="w-4 h-4 ml-auto text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                  </svg>
+                                )}
+                              </label>
+                            ))
+                          ) : (
+                            <div className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
+                              No tags found matching "{tagsSearchTerm}"
+                            </div>
+                          )}
                         </div>
                         <div className="text-xs text-gray-500 dark:text-gray-400 mb-4">
                           Select multiple tags for better searchability.
                         </div>
                         <button
                           type="button"
-                          onClick={() => setTagsDropdownOpen(false)}
+                          onClick={() => {
+                            setTagsDropdownOpen(false);
+                            setTagsSearchTerm('');
+                          }}
                           className="w-full bg-primary text-white px-4 py-2 text-sm rounded-lg hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/20"
                         >
                           Done
