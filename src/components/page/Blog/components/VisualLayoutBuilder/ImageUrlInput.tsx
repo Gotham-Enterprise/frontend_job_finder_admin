@@ -1,6 +1,8 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import { validateImageUrl, generateImagePlaceholder } from './imageUtils';
+import { useModal } from '@/hooks/useModal';
+import ImageGalleryModal from './components/ImageGalleryModal';
 
 interface ImageUrlInputProps {
   imageUrl: string;
@@ -41,6 +43,7 @@ const ImageUrlInput: React.FC<ImageUrlInputProps> = ({
 }) => {
   const [localImageUrl, setLocalImageUrl] = useState(imageUrl);
   const [localAltText, setLocalAltText] = useState(altText);
+  const galleryModal = useModal();
 
   useEffect(() => {
     setLocalImageUrl(imageUrl);
@@ -83,12 +86,26 @@ const ImageUrlInput: React.FC<ImageUrlInputProps> = ({
     onImageUrlChange('');
   };
 
+  const selectImageFromGallery = (selectedImageUrl: string) => {
+    setLocalImageUrl(selectedImageUrl);
+    onImageUrlChange(selectedImageUrl);
+  };
+
   return (
     <div className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Image URL
-        </label>
+        <div className="flex items-center justify-between mb-2">
+          <label className="block text-sm font-medium text-gray-700">
+            Image URL
+          </label>
+          <button
+            type="button"
+            onClick={galleryModal.openModal}
+            className="px-3 py-1.5 bg-purple-500 text-white rounded-lg hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-400 transition-all text-xs font-medium"
+          >
+            Browse Gallery
+          </button>
+        </div>
         <input
           type="url"
           value={localImageUrl}
@@ -249,6 +266,12 @@ const ImageUrlInput: React.FC<ImageUrlInputProps> = ({
           </p>
         </div>
       )}
+
+      <ImageGalleryModal
+        isOpen={galleryModal.isOpen}
+        onClose={galleryModal.closeModal}
+        onImageSelect={selectImageFromGallery}
+      />
     </div>
   );
 };
