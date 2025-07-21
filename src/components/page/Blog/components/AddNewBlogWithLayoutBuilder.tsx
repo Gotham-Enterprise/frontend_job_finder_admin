@@ -1,8 +1,9 @@
 "use client";
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback, useMemo, useEffect } from "react";
 import { Modal } from "@/components/ui/modal";
 import { useModal } from "@/hooks/useModal";
 import Button from "@/components/ui/button/Button";
+import DatePicker from "@/components/form/date-picker";
 import VisualLayoutBuilder from "./VisualLayoutBuilder/VisualLayoutBuilder";
 
 import { 
@@ -124,6 +125,8 @@ export default function AddNewBlogWithLayoutBuilder() {
 
   const [currentLayout, setCurrentLayout] = useState<BlogLayout>(createInitialLayout());
   const [viewMode, setViewMode] = useState<ViewMode>('builder');
+  const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
+  const [visibilityDropdownOpen, setVisibilityDropdownOpen] = useState(false);
   
 
   const [metadata, setMetadata] = useState<BlogMetadata>({
@@ -176,10 +179,10 @@ export default function AddNewBlogWithLayoutBuilder() {
   ];
 
   const statusOptions = [
-    { value: 'draft', label: 'Draft' },
-    { value: 'published', label: 'Published' },
-    { value: 'pending', label: 'Pending Review' },
-    { value: 'private', label: 'Private' },
+    { value: 'draft', label: 'Draft', description: 'This job posting will no longer be publicly accessible.' },
+    { value: 'published', label: 'Published', description: 'This job posting can be viewed by anyone who has the link.' },
+    { value: 'pending', label: 'Pending Review', description: 'This job posting is waiting for review before being published.' },
+    { value: 'private', label: 'Private', description: 'This job posting is only visible to you and selected users.' },
   ];
 
 
@@ -366,6 +369,22 @@ export default function AddNewBlogWithLayoutBuilder() {
 
   const canSave = metadata.title.trim().length > 0;
 
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (!target.closest('.dropdown-container')) {
+        setStatusDropdownOpen(false);
+        setVisibilityDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
   return (
     <>
       {/* Full-screen overlay that covers everything including the admin header */}
@@ -382,9 +401,174 @@ export default function AddNewBlogWithLayoutBuilder() {
               </svg>
               Back
             </button>
-            <div>
-              <h1 className="text-xl font-semibold text-gray-900 dark:text-white">Add New Blog Post</h1>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Create content with our visual layout builder</p>
+            <div className="flex items-center space-x-6">
+              <div className="ml-4 flex items-center space-x-3">
+                <label htmlFor="blog-title" className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                  Blog Title:
+                </label>
+                <input
+                  id="blog-title"
+                  type="text"
+                  value={metadata.title}
+                  onChange={(e) => updateTitle(e.target.value)}
+                  placeholder="Enter your blog title..."
+                  className="w-80 px-3 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 transition-colors"
+                />
+              </div>
+              
+              {/* Status Field */}
+              <div className="flex items-center space-x-2">
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                  Status:
+                </label>
+                <div className="relative dropdown-container">
+                  <button
+                    type="button"
+                    onClick={() => setStatusDropdownOpen(!statusDropdownOpen)}
+                    className="flex items-center justify-between bg-blue-600 text-white px-4 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer min-w-[120px]"
+                  >
+                    <span>{statusOptions.find(option => option.value === metadata.status)?.label || 'Draft'}</span>
+                    <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  {statusDropdownOpen && (
+                    <div className="absolute top-full left-0 mt-1 w-80 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg z-50">
+                      {statusOptions.map(option => (
+                        <button
+                          key={option.value}
+                          type="button"
+                          onClick={() => {
+                            updateMetadata('status', option.value);
+                            setStatusDropdownOpen(false);
+                          }}
+                          className="w-full text-left px-4 py-3 text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 first:rounded-t-lg last:rounded-b-lg flex items-start space-x-3"
+                        >
+                          <div className="flex-shrink-0 mt-0.5">
+                            {metadata.status === option.value ? (
+                              <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                              </svg>
+                            ) : (
+                              <div className="w-4 h-4"></div>
+                            )}
+                          </div>
+                          <div className="flex-1">
+                            <div className="font-medium">{option.label}</div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">{option.description}</div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Visibility Field */}
+              <div className="flex items-center space-x-2">
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                  Visibility:
+                </label>
+                <div className="relative dropdown-container">
+                  <button
+                    type="button"
+                    onClick={() => setVisibilityDropdownOpen(!visibilityDropdownOpen)}
+                    className="flex items-center justify-between bg-blue-600 text-white px-4 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer min-w-[120px]"
+                  >
+                    <span className="capitalize">{metadata.visibility}</span>
+                    <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  {visibilityDropdownOpen && (
+                    <div className="absolute top-full left-0 mt-1 w-80 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg z-50">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          updateMetadata('visibility', 'public');
+                          setVisibilityDropdownOpen(false);
+                        }}
+                        className="w-full text-left px-4 py-3 text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 first:rounded-t-lg flex items-start space-x-3"
+                      >
+                        <div className="flex-shrink-0 mt-0.5">
+                          {metadata.visibility === 'public' ? (
+                            <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                          ) : (
+                            <div className="w-4 h-4"></div>
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <div className="font-medium">Public</div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">This blog post can be viewed by anyone who has the link.</div>
+                        </div>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          updateMetadata('visibility', 'private');
+                          setVisibilityDropdownOpen(false);
+                        }}
+                        className="w-full text-left px-4 py-3 text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-start space-x-3"
+                      >
+                        <div className="flex-shrink-0 mt-0.5">
+                          {metadata.visibility === 'private' ? (
+                            <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                          ) : (
+                            <div className="w-4 h-4"></div>
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <div className="font-medium">Private</div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">This blog post is only visible to you and selected users.</div>
+                        </div>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          updateMetadata('visibility', 'password');
+                          setVisibilityDropdownOpen(false);
+                        }}
+                        className="w-full text-left px-4 py-3 text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 last:rounded-b-lg flex items-start space-x-3"
+                      >
+                        <div className="flex-shrink-0 mt-0.5">
+                          {metadata.visibility === 'password' ? (
+                            <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                          ) : (
+                            <div className="w-4 h-4"></div>
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <div className="font-medium">Password Protected</div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">This blog post requires a password to view.</div>
+                        </div>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Date Posted Field */}
+              <div className="flex items-center space-x-2">
+                <DatePicker
+                  id="blog-publish-date-header"
+                  label="Date Posted:"
+                  defaultDate={metadata.publishDate}
+                  placeholder="Select date..."
+                  onChange={(selectedDates: Date[]) => {
+                    if (selectedDates && selectedDates.length > 0) {
+                      const date = selectedDates[0];
+                      const formattedDate = date.toISOString().split('T')[0];
+                      updateMetadata('publishDate', formattedDate);
+                    }
+                  }}
+                />
+              </div>
             </div>
           </div>
           <div className="flex items-center space-x-3">
@@ -402,7 +586,7 @@ export default function AddNewBlogWithLayoutBuilder() {
               disabled={!canSave}
               className="px-4 py-2"
             >
-              Add Blog
+              Publish
             </Button>
           </div>
         </div>
@@ -414,42 +598,6 @@ export default function AddNewBlogWithLayoutBuilder() {
               {/* Blog Settings Section */}
               <div className="mb-6">
                 <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wide mb-3">Blog Settings</h3>
-                <div className="space-y-3">
-                  <div>
-                    <label className="block text-xs text-gray-400 mb-1">Title *</label>
-                    <input
-                      type="text"
-                      value={metadata.title}
-                      onChange={(e) => updateTitle(e.target.value)}
-                      placeholder="Enter blog title..."
-                      className="w-full px-2 py-1 text-sm bg-gray-800 border border-gray-600 rounded focus:border-blue-500 focus:outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-gray-400 mb-1">Status</label>
-                    <select
-                      value={metadata.status}
-                      onChange={(e) => updateMetadata('status', e.target.value)}
-                      className="w-full px-2 py-1 text-sm bg-gray-800 border border-gray-600 rounded focus:border-blue-500 focus:outline-none"
-                    >
-                      {statusOptions.map(option => (
-                        <option key={option.value} value={option.value}>{option.label}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs text-gray-400 mb-1">Visibility</label>
-                    <select
-                      value={metadata.visibility}
-                      onChange={(e) => updateMetadata('visibility', e.target.value)}
-                      className="w-full px-2 py-1 text-sm bg-gray-800 border border-gray-600 rounded focus:border-blue-500 focus:outline-none"
-                    >
-                      <option value="public">Public</option>
-                      <option value="private">Private</option>
-                      <option value="password">Password Protected</option>
-                    </select>
-                  </div>
-                </div>
               </div>
 
               {/* Categories & Tags */}
