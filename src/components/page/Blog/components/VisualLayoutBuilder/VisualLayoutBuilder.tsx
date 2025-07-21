@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   DndContext, 
   closestCenter, 
@@ -31,6 +31,7 @@ interface VisualLayoutBuilderProps {
   onSave?: () => void;
   initialLayout?: LayoutBlock[];
   blogData?: any;
+  onAddBlockRef?: (addBlockFn: (type: BlockType) => void) => void;
 }
 
 const demoBlocks: LayoutBlock[] = [
@@ -90,6 +91,7 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
   onSave,
   initialLayout,
   blogData = {},
+  onAddBlockRef,
 }) => {
   const [blocks, setBlocks] = useState<LayoutBlock[]>(() => {
     const result = Array.isArray(initialLayout) ? initialLayout : [];
@@ -113,11 +115,18 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
     }
   }, [initialLayout]);
 
+  useEffect(() => {
+    // Notify parent component when blocks change
+    if (onLayoutChange) {
+      onLayoutChange(blocks);
+    }
+  }, [blocks, onLayoutChange]);
+
   const generateBlockId = (): string => {
     return `block_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   };
 
-  const addBlock = (type: BlockType) => {
+  const addBlock = useCallback((type: BlockType) => {
     const template = BLOCK_TEMPLATES[type];
     const newBlock: LayoutBlock = {
       id: generateBlockId(),
@@ -130,7 +139,14 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
     setBlocks(prev => [...prev, newBlock]);
     setSelectedBlockId(newBlock.id);
     setShowPropertiesPanel(true);
-  };
+  }, []);
+
+  useEffect(() => {
+    // Pass the addBlock function to parent component
+    if (onAddBlockRef) {
+      onAddBlockRef(addBlock);
+    }
+  }, [onAddBlockRef, addBlock]);
 
   const removeBlock = (blockId: string) => {
     setBlocks(prev => prev.filter(block => block.id !== blockId));

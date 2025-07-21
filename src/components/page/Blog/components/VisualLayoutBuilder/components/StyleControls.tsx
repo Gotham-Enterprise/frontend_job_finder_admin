@@ -209,11 +209,15 @@ const StyleControls: React.FC<StyleControlsProps> = ({ block, onFloatingPanelOpe
           <div className="flex gap-2 mb-3">
             {TEXT_STYLE_BUTTONS.map((button) => {
               const isActive = (block.styles as any)[button.key] === button.activeValue;
-              return renderButton(
-                isActive,
-                () => toggleTextStyle(button.key, button.activeValue, button.inactiveValue),
-                button.title,
-                button.icon
+              return (
+                <div key={button.key}>
+                  {renderButton(
+                    isActive,
+                    () => toggleTextStyle(button.key, button.activeValue, button.inactiveValue),
+                    button.title,
+                    button.icon
+                  )}
+                </div>
               );
             })}
           </div>
@@ -223,11 +227,15 @@ const StyleControls: React.FC<StyleControlsProps> = ({ block, onFloatingPanelOpe
             <div className="flex gap-2">
               {ALIGNMENT_OPTIONS.map((option) => {
                 const isActive = block.styles.textAlign === option.value;
-                return renderButton(
-                  isActive,
-                  () => updateTextAlignment(option.value),
-                  option.title,
-                  option.icon
+                return (
+                  <div key={option.value}>
+                    {renderButton(
+                      isActive,
+                      () => updateTextAlignment(option.value),
+                      option.title,
+                      option.icon
+                    )}
+                  </div>
                 );
               })}
             </div>

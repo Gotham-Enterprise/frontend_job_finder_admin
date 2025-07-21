@@ -100,6 +100,7 @@ export default function AddNewBlogWithLayoutBuilder() {
   });
 
   const [isElementsPanelVisible, setIsElementsPanelVisible] = useState(true);
+  const [childAddBlock, setChildAddBlock] = useState<((type: BlockType) => void) | null>(null);
 
   const previewModal = useModal();
 
@@ -193,25 +194,39 @@ export default function AddNewBlogWithLayoutBuilder() {
     previewModal.openModal();
   }, [previewModal]);
 
-  const addElement = useCallback((type: BlockType) => {
-    const template = BLOCK_TEMPLATES[type];
-    const newBlock: LayoutBlock = {
-      id: `block_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      ...template,
-      styles: template.styles || {},
-      content: template.content || {},
-      position: template.position || { x: 0, y: 0, width: 100, height: 100 },
-    } as LayoutBlock;
-
-    setCurrentLayout(prev => ({
-      ...prev,
-      blocks: [...prev.blocks, newBlock],
-      metadata: {
-        ...prev.metadata,
-        updated: new Date().toISOString(),
-      },
-    }));
+  const handleAddBlockRef = useCallback((addBlockFn: (type: BlockType) => void) => {
+    setChildAddBlock(() => addBlockFn);
   }, []);
+
+  const addElement = useCallback((type: BlockType) => {
+    // Use the child's addBlock function if available, otherwise fallback to parent logic
+    if (childAddBlock) {
+      childAddBlock(type);
+    } else {
+      // Fallback to parent logic (keeping existing behavior)
+      const template = BLOCK_TEMPLATES[type];
+      const newBlock: LayoutBlock = {
+        id: `block_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        ...template,
+        styles: template.styles || {},
+        content: template.content || {},
+        position: template.position || { x: 0, y: 0, width: 100, height: 100 },
+      } as LayoutBlock;
+
+      // Update the layout by adding the new block to current blocks
+      setCurrentLayout(prev => {
+        const currentBlocks = Array.isArray(prev.blocks) ? prev.blocks : [];
+        return {
+          ...prev,
+          blocks: [...currentBlocks, newBlock],
+          metadata: {
+            ...prev.metadata,
+            updated: new Date().toISOString(),
+          },
+        };
+      });
+    }
+  }, [childAddBlock]);
 
   const canSave = metadata.title.trim().length > 0;
 
@@ -696,6 +711,7 @@ export default function AddNewBlogWithLayoutBuilder() {
               onLayoutChange={updateLayout}
               onSave={saveBlog}
               blogData={metadata}
+              onAddBlockRef={handleAddBlockRef}
             />
             
             {/* Floating Elements Panel */}
