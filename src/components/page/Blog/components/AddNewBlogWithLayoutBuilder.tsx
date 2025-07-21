@@ -128,6 +128,8 @@ export default function AddNewBlogWithLayoutBuilder() {
   const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
   const [visibilityDropdownOpen, setVisibilityDropdownOpen] = useState(false);
   const [dateDropdownOpen, setDateDropdownOpen] = useState(false);
+  const [categoriesDropdownOpen, setCategoriesDropdownOpen] = useState(false);
+  const [tagsDropdownOpen, setTagsDropdownOpen] = useState(false);
   
 
   const [metadata, setMetadata] = useState<BlogMetadata>({
@@ -378,6 +380,8 @@ export default function AddNewBlogWithLayoutBuilder() {
         setStatusDropdownOpen(false);
         setVisibilityDropdownOpen(false);
         setDateDropdownOpen(false);
+        setCategoriesDropdownOpen(false);
+        setTagsDropdownOpen(false);
       }
     };
 
@@ -609,6 +613,136 @@ export default function AddNewBlogWithLayoutBuilder() {
                   )}
                 </div>
               </div>
+
+              {/* Categories Field */}
+              <div className="flex items-center space-x-2">
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                  Categories:
+                </label>
+                <div className="relative dropdown-container">
+                  <button
+                    type="button"
+                    onClick={() => setCategoriesDropdownOpen(!categoriesDropdownOpen)}
+                    className="flex items-center justify-between bg-primary text-white px-4 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer min-w-[120px]"
+                  >
+                    <span>{metadata.categories.length > 0 ? `${metadata.categories.length} selected` : 'Select'}</span>
+                    <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  {categoriesDropdownOpen && (
+                    <div className="absolute top-full left-0 mt-1 w-80 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg z-50 max-h-64 overflow-y-auto">
+                      <div className="px-4 py-3">
+                        <div className="flex items-center space-x-3 mb-3">
+                          <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                          </svg>
+                          <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Select Categories</span>
+                        </div>
+                        <div className="space-y-2 mb-4">
+                          {categoryOptions.map(category => (
+                            <label key={category.value} className="flex items-center text-sm cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 p-2 rounded">
+                              <input
+                                type="checkbox"
+                                checked={metadata.categories.includes(category.value)}
+                                onChange={(e) => {
+                                  const currentCategories = metadata.categories;
+                                  const newCategories = e.target.checked
+                                    ? [...currentCategories, category.value]
+                                    : currentCategories.filter(c => c !== category.value);
+                                  updateMetadata('categories', newCategories);
+                                }}
+                                className="mr-3 w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                              />
+                              <span className="text-gray-900 dark:text-gray-100">{category.text}</span>
+                              {metadata.categories.includes(category.value) && (
+                                <svg className="w-4 h-4 ml-auto text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                </svg>
+                              )}
+                            </label>
+                          ))}
+                        </div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400 mb-4">
+                          Select multiple categories for better organization.
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setCategoriesDropdownOpen(false)}
+                          className="w-full bg-primary text-white px-4 py-2 text-sm rounded-lg hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/20"
+                        >
+                          Done
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Tags Field */}
+              <div className="flex items-center space-x-2">
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                  Tags:
+                </label>
+                <div className="relative dropdown-container">
+                  <button
+                    type="button"
+                    onClick={() => setTagsDropdownOpen(!tagsDropdownOpen)}
+                    className="flex items-center justify-between bg-primary text-white px-4 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer min-w-[120px]"
+                  >
+                    <span>{metadata.tags.length > 0 ? `${metadata.tags.length} selected` : 'Select'}</span>
+                    <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  {tagsDropdownOpen && (
+                    <div className="absolute top-full left-0 mt-1 w-80 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg z-50 max-h-64 overflow-y-auto">
+                      <div className="px-4 py-3">
+                        <div className="flex items-center space-x-3 mb-3">
+                          <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                          </svg>
+                          <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Select Tags</span>
+                        </div>
+                        <div className="space-y-2 mb-4">
+                          {tagOptions.map(tag => (
+                            <label key={tag.value} className="flex items-center text-sm cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 p-2 rounded">
+                              <input
+                                type="checkbox"
+                                checked={metadata.tags.includes(tag.value)}
+                                onChange={(e) => {
+                                  const currentTags = metadata.tags;
+                                  const newTags = e.target.checked
+                                    ? [...currentTags, tag.value]
+                                    : currentTags.filter(t => t !== tag.value);
+                                  updateMetadata('tags', newTags);
+                                }}
+                                className="mr-3 w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                              />
+                              <span className="text-gray-900 dark:text-gray-100">{tag.text}</span>
+                              {metadata.tags.includes(tag.value) && (
+                                <svg className="w-4 h-4 ml-auto text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                </svg>
+                              )}
+                            </label>
+                          ))}
+                        </div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400 mb-4">
+                          Select multiple tags for better searchability.
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setTagsDropdownOpen(false)}
+                          className="w-full bg-primary text-white px-4 py-2 text-sm rounded-lg hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/20"
+                        >
+                          Done
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
           <div className="flex items-center space-x-3">
@@ -640,55 +774,65 @@ export default function AddNewBlogWithLayoutBuilder() {
                 <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wide mb-3">Blog Settings</h3>
               </div>
 
-              {/* Categories & Tags */}
-              <div className="space-y-4 mb-6">
-                <div>
-                  <label className="block text-xs text-gray-400 mb-2">Categories</label>
-                  <div className="max-h-32 overflow-y-auto bg-gray-800 border border-gray-600 rounded p-2 space-y-1">
-                    {categoryOptions.map(category => (
-                      <label key={category.value} className="flex items-center text-xs cursor-pointer hover:bg-gray-700 p-1 rounded">
-                        <input
-                          type="checkbox"
-                          checked={metadata.categories.includes(category.value)}
-                          onChange={(e) => {
-                            const currentCategories = metadata.categories;
-                            const newCategories = e.target.checked
-                              ? [...currentCategories, category.value]
-                              : currentCategories.filter(c => c !== category.value);
-                            updateMetadata('categories', newCategories);
-                          }}
-                          className="mr-2 w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
-                        />
-                        <span className="text-gray-300">{category.text}</span>
-                      </label>
-                    ))}
+              {/* Element Library */}
+              <div className="space-y-2">
+                <button
+                  onClick={() => addElement('heading')}
+                  className="w-full flex items-center p-3 text-left hover:bg-gray-800 rounded-lg transition-colors"
+                >
+                  <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center mr-3">
+                    <span className="text-white font-bold text-lg">H</span>
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">Select multiple categories</p>
-                </div>
+                  <div>
+                    <div className="text-sm font-medium">Heading</div>
+                    <div className="text-xs text-gray-400">Add a title or heading</div>
+                  </div>
+                </button>
 
-                <div>
-                  <label className="block text-xs text-gray-400 mb-2">Tags</label>
-                  <div className="max-h-32 overflow-y-auto bg-gray-800 border border-gray-600 rounded p-2 space-y-1">
-                    {tagOptions.map(tag => (
-                      <label key={tag.value} className="flex items-center text-xs cursor-pointer hover:bg-gray-700 p-1 rounded">
-                        <input
-                          type="checkbox"
-                          checked={metadata.tags.includes(tag.value)}
-                          onChange={(e) => {
-                            const currentTags = metadata.tags;
-                            const newTags = e.target.checked
-                              ? [...currentTags, tag.value]
-                              : currentTags.filter(t => t !== tag.value);
-                            updateMetadata('tags', newTags);
-                          }}
-                          className="mr-2 w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
-                        />
-                        <span className="text-gray-300">{tag.text}</span>
-                      </label>
-                    ))}
+                <button
+                  onClick={() => addElement('paragraph')}
+                  className="w-full flex items-center p-3 text-left hover:bg-gray-800 rounded-lg transition-colors"
+                >
+                  <div className="w-8 h-8 bg-gray-600 rounded flex items-center justify-center mr-3">
+                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
+                    </svg>
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">Select multiple tags</p>
-                </div>
+                  <div>
+                    <div className="text-sm font-medium">Text</div>
+                    <div className="text-xs text-gray-400">Add a paragraph of text</div>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => addElement('image')}
+                  className="w-full flex items-center p-3 text-left hover:bg-gray-800 rounded-lg transition-colors"
+                >
+                  <div className="w-8 h-8 bg-green-600 rounded flex items-center justify-center mr-3">
+                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <div className="text-sm font-medium">Image</div>
+                    <div className="text-xs text-gray-400">Add an image or photo</div>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => addElement('button')}
+                  className="w-full flex items-center p-3 text-left hover:bg-gray-800 rounded-lg transition-colors"
+                >
+                  <div className="w-8 h-8 bg-purple-600 rounded flex items-center justify-center mr-3">
+                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
+                    </svg>
+                  </div>
+                  <div>
+                    <div className="text-sm font-medium">Button</div>
+                    <div className="text-xs text-gray-400">Add a call-to-action button</div>
+                  </div>
+                </button>
               </div>
 
            
