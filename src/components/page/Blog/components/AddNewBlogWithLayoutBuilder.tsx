@@ -43,69 +43,7 @@ const createInitialLayout = (): BlogLayout => {
   return {
     id: `layout-${Date.now()}`,
     name: 'New Blog Post',
-    blocks: [
-      {
-        id: 'demo-heading-1',
-        type: 'heading',
-        content: {
-          text: 'Gotham Visual Layout Builder',
-          level: 1,
-        },
-        styles: {
-          fontSize: '2.5rem',
-          fontWeight: 'bold',
-          textAlign: 'center',
-          textColor: '#1f2937',
-          margin: { top: 0, right: 0, bottom: 24, left: 0 },
-          padding: { top: 0, right: 0, bottom: 0, left: 0 },
-        },
-        position: { x: 0, y: 0, width: 100, height: 80 },
-        metadata: {
-          created: new Date().toISOString(),
-          updated: new Date().toISOString(),
-        },
-      },
-      {
-        id: 'demo-paragraph-1',
-        type: 'paragraph',
-        content: {
-          text: 'Click on any block to see the floating style controls. Try clicking the Style buttons on the right to see the floating panels in action!',
-          richText: true,
-        },
-        styles: {
-          fontSize: '1.125rem',
-          textAlign: 'center',
-          textColor: '#4b5563',
-          margin: { top: 0, right: 0, bottom: 32, left: 0 },
-          padding: { top: 0, right: 0, bottom: 0, left: 0 },
-        },
-        position: { x: 0, y: 0, width: 100, height: 80 },
-        metadata: {
-          created: new Date().toISOString(),
-          updated: new Date().toISOString(),
-        },
-      },
-      {
-        id: 'demo-image-1',
-        type: 'image',
-        content: {
-          url: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&h=400&fit=crop',
-          alt: 'Demo image of a laptop with code',
-          size: 'large',
-          aspectRatio: '16:9',
-        },
-        styles: {
-          margin: { top: 0, right: 0, bottom: 24, left: 0 },
-          padding: { top: 0, right: 0, bottom: 0, left: 0 },
-          border: { width: 0, style: 'solid', color: '#e5e7eb', radius: 12 },
-        },
-        position: { x: 0, y: 0, width: 100, height: 300 },
-        metadata: {
-          created: new Date().toISOString(),
-          updated: new Date().toISOString(),
-        },
-      }
-    ],
+    blocks: [],
     settings: {
       maxWidth: 800,
       backgroundColor: '#ffffff',
