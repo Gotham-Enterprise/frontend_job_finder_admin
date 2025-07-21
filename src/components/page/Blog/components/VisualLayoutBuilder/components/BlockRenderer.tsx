@@ -592,6 +592,40 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
     );
   };
 
+  const renderQuote = () => {
+    const text = (block.content as any)?.text || 'Do you have a design in mind for your blog? Whether you prefer a trendy postcard look or you\'re going for a more editorial style blog - there\'s a stunning layout for everyone.';
+    const author = (block.content as any)?.author || '';
+    const citation = (block.content as any)?.citation || '';
+    const style = createStyle('paragraph');
+    
+    return (
+      <blockquote 
+        style={{
+          ...style,
+          borderLeft: `4px solid ${block.styles?.accentColor || '#8b5cf6'}`,
+          paddingLeft: '1.5rem',
+          margin: '1rem 0',
+          fontStyle: 'italic',
+          backgroundColor: block.styles?.backgroundColor || '#f8f9fa',
+          padding: '1.5rem',
+        }}
+        className="relative"
+        onDoubleClick={() => onOpenSettings?.('paragraph', block)}
+      >
+        <div className="text-lg leading-relaxed text-gray-700 mb-3">
+          "{text}"
+        </div>
+        {(author || citation) && (
+          <footer className="text-sm text-gray-500">
+            {author && <cite className="font-medium">{author}</cite>}
+            {author && citation && <span className="mx-2">•</span>}
+            {citation && <span>{citation}</span>}
+          </footer>
+        )}
+      </blockquote>
+    );
+  };
+
   const renderColumn = () => {
     const columnCount = (block.content as any)?.columnCount || 2;
     const columns = (block.content as any)?.columns || [];
@@ -745,6 +779,7 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
     image: renderImage,
     video: renderVideo,
     list: renderList,
+    quote: renderQuote,
     button: renderButton,
     column: renderColumn,
   };

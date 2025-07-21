@@ -377,6 +377,81 @@ const ContentControls: React.FC<ContentControlsProps> = memo(({ block, onContent
       );
     },
 
+    quote: () => (
+      <div className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Quote Text</label>
+          <textarea
+            value={(block.content as any)?.text || 'Do you have a design in mind for your blog? Whether you prefer a trendy postcard look or you\'re going for a more editorial style blog - there\'s a stunning layout for everyone.'}
+            onChange={(e) => onContentUpdate('text', e.target.value)}
+            placeholder="Enter your quote..."
+            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 placeholder-gray-400 focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-100 resize-none transition-all"
+            rows={4}
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Author (Optional)</label>
+          <input
+            type="text"
+            value={(block.content as any)?.author || ''}
+            onChange={(e) => onContentUpdate('author', e.target.value)}
+            placeholder="Quote author..."
+            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 placeholder-gray-400 focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-100 transition-all"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Citation (Optional)</label>
+          <input
+            type="text"
+            value={(block.content as any)?.citation || ''}
+            onChange={(e) => onContentUpdate('citation', e.target.value)}
+            placeholder="Source or publication..."
+            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 placeholder-gray-400 focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-100 transition-all"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Background Color</label>
+          <div className="flex items-center space-x-2">
+            <input
+              type="color"
+              value={block.styles?.backgroundColor || '#f8f9fa'}
+              onChange={(e) => onStyleUpdate?.('backgroundColor', e.target.value)}
+              className="w-10 h-10 rounded-lg border border-gray-200 cursor-pointer"
+            />
+            <input
+              type="text"
+              value={block.styles?.backgroundColor || '#f8f9fa'}
+              onChange={(e) => onStyleUpdate?.('backgroundColor', e.target.value)}
+              placeholder="#f8f9fa"
+              className="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-100"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Border Color</label>
+          <div className="flex items-center space-x-2">
+            <input
+              type="color"
+              value={block.styles?.accentColor || '#8b5cf6'}
+              onChange={(e) => onStyleUpdate?.('accentColor', e.target.value)}
+              className="w-10 h-10 rounded-lg border border-gray-200 cursor-pointer"
+            />
+            <input
+              type="text"
+              value={block.styles?.accentColor || '#8b5cf6'}
+              onChange={(e) => onStyleUpdate?.('accentColor', e.target.value)}
+              placeholder="#8b5cf6"
+              className="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-100"
+            />
+          </div>
+        </div>
+      </div>
+    ),
+
     default: () => null
   };
 

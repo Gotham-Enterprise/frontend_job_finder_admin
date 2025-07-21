@@ -35,6 +35,7 @@ export interface BlockStyles {
   backgroundColor?: string;
   textColor?: string;
   linkColor?: string;
+  accentColor?: string;
   fontSize?: string;
   fontWeight?: string;
   fontFamily?: string;
