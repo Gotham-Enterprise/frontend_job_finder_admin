@@ -408,13 +408,9 @@ export default function AddNewBlogWithLayoutBuilder() {
     closeTitleModal();
   }, [metadata.title, seoData, closeTitleModal]);
 
-  const saveBlog = useCallback(async (isDraft = true) => {
-    if (isDraft) {
-      await saveDraft();
-    } else {
-      await publishBlog();
-    }
-  }, [saveDraft, publishBlog]);
+  const saveBlog = useCallback(async () => {
+    await publishBlog();
+  }, [publishBlog]);
 
   const previewBlog = useCallback(() => {
     previewModal.openModal();
@@ -948,15 +944,7 @@ export default function AddNewBlogWithLayoutBuilder() {
               Preview
             </Button>
             <Button
-              variant="secondary"
-              onClick={() => saveBlog(true)}
-              disabled={!canSave}
-              className="px-4 py-2"
-            >
-              Save Draft
-            </Button>
-            <Button
-              onClick={() => saveBlog(false)}
+              onClick={() => saveBlog()}
               disabled={!canSave}
               className="px-4 py-2"
             >
