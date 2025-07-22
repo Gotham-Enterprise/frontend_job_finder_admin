@@ -110,12 +110,6 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
   );
 
   useEffect(() => {
-    if (Array.isArray(initialLayout)) {
-      setBlocks(initialLayout);
-    }
-  }, [initialLayout]);
-
-  useEffect(() => {
     // Notify parent component when blocks change
     if (onLayoutChange) {
       onLayoutChange(blocks);
