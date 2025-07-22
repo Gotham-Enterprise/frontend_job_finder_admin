@@ -28,7 +28,7 @@ interface BlogMetadata {
   visibility: 'public' | 'private' | 'password';
   password?: string;
   publishDate: string;
-  categories: string[];
+  categories: string;
   tags: string[];
   seoTitle: string;
   seoDescription: string;
@@ -90,7 +90,7 @@ export default function AddNewBlogWithLayoutBuilder() {
     visibility: 'public',
     password: '',
     publishDate: new Date().toISOString().split('T')[0],
-    categories: [],
+    categories: '',
     tags: [],
     seoTitle: '',
     seoDescription: '',
@@ -573,7 +573,12 @@ export default function AddNewBlogWithLayoutBuilder() {
                     }}
                     className="flex items-center justify-between bg-primary text-white px-4 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer min-w-[120px]"
                   >
-                    <span>{metadata.categories.length > 0 ? `${metadata.categories.length} selected` : 'Select'}</span>
+                    <span>
+                      {metadata.categories 
+                        ? categoryOptions.find(cat => cat.value === metadata.categories)?.text || metadata.categories
+                        : 'Select'
+                      }
+                    </span>
                     <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
@@ -604,28 +609,46 @@ export default function AddNewBlogWithLayoutBuilder() {
 
                         <div className="max-h-32 overflow-y-auto space-y-2 mb-4">
                           {filteredCategories.length > 0 ? (
-                            filteredCategories.map(category => (
-                              <label key={category.value} className="flex items-center text-sm cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 p-2 rounded">
+                            <>
+                              {/* None option */}
+                              <label className="flex items-center text-sm cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 p-2 rounded">
                                 <input
-                                  type="checkbox"
-                                  checked={metadata.categories.includes(category.value)}
-                                  onChange={(e) => {
-                                    const currentCategories = metadata.categories;
-                                    const newCategories = e.target.checked
-                                      ? [...currentCategories, category.value]
-                                      : currentCategories.filter(c => c !== category.value);
-                                    updateMetadata('categories', newCategories);
+                                  type="radio"
+                                  name="category"
+                                  checked={metadata.categories === ''}
+                                  onChange={() => {
+                                    updateMetadata('categories', '');
                                   }}
-                                  className="mr-3 w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                                  className="mr-3 w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500"
                                 />
-                                <span className="text-gray-900 dark:text-gray-100">{category.text}</span>
-                                {metadata.categories.includes(category.value) && (
+                                <span className="text-gray-500 dark:text-gray-400 italic">None</span>
+                                {metadata.categories === '' && (
                                   <svg className="w-4 h-4 ml-auto text-green-500" fill="currentColor" viewBox="0 0 20 20">
                                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                                   </svg>
                                 )}
                               </label>
-                            ))
+                              
+                              {filteredCategories.map(category => (
+                                <label key={category.value} className="flex items-center text-sm cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 p-2 rounded">
+                                  <input
+                                    type="radio"
+                                    name="category"
+                                    checked={metadata.categories === category.value}
+                                    onChange={() => {
+                                      updateMetadata('categories', category.value);
+                                    }}
+                                    className="mr-3 w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500"
+                                  />
+                                  <span className="text-gray-900 dark:text-gray-100">{category.text}</span>
+                                  {metadata.categories === category.value && (
+                                    <svg className="w-4 h-4 ml-auto text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                    </svg>
+                                  )}
+                                </label>
+                              ))}
+                            </>
                           ) : (
                             <div className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
                               No categories found matching "{categoriesSearchTerm}"
@@ -633,7 +656,7 @@ export default function AddNewBlogWithLayoutBuilder() {
                           )}
                         </div>
                         <div className="text-xs text-gray-500 dark:text-gray-400 mb-4">
-                          Select multiple categories for better organization.
+                          Select one category for your blog post.
                         </div>
                         <button
                           type="button"
