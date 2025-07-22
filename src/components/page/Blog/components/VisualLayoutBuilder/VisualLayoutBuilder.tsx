@@ -152,7 +152,6 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
     const blockToDuplicate = blocks.find(block => block.id === blockId);
     if (!blockToDuplicate) return;
 
-    // Create a copy of the block with a new ID
     const duplicatedBlock: LayoutBlock = {
       ...blockToDuplicate,
       id: generateBlockId(),
@@ -165,7 +164,6 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
       }
     };
 
-    // Add the duplicated block after the original block
     const originalIndex = blocks.findIndex(block => block.id === blockId);
     const newBlocks = [...blocks];
     newBlocks.splice(originalIndex + 1, 0, duplicatedBlock);

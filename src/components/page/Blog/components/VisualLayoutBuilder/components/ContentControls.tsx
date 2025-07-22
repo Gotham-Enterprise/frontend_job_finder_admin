@@ -265,7 +265,7 @@ const ContentControls: React.FC<ContentControlsProps> = memo(({ block, onContent
           onImageUrlChange={(value: string) => onContentUpdate('url', value)}
           onAltTextChange={(value: string) => onContentUpdate('alt', value)}
           imageWidth={block.styles?.width || 100}
-          imageHeight={block.styles?.height || 400}
+          imageHeight={block.styles?.height !== undefined ? block.styles.height : 400}
           widthUnit={(block.styles?.widthUnit as 'px' | '%') || '%'}
           heightUnit={(block.styles?.heightUnit as 'px' | '%') || 'px'}
           imageAlign={(block.styles?.imageAlign as 'left' | 'center' | 'right') || 'center'}
@@ -292,7 +292,7 @@ const ContentControls: React.FC<ContentControlsProps> = memo(({ block, onContent
           controls={(block.content as any)?.controls !== false}
           muted={(block.content as any)?.muted || false}
           videoWidth={block.styles.width || 100}
-          videoHeight={block.styles.height || 400}
+          videoHeight={block.styles.height !== undefined ? block.styles.height : 400}
           widthUnit={(block.styles.widthUnit as 'px' | '%') || '%'}
           heightUnit={(block.styles.heightUnit as 'px' | '%') || 'px'}
           videoAlign={(block.styles.videoAlign as 'left' | 'center' | 'right') || 'center'}

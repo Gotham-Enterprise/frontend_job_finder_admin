@@ -147,13 +147,37 @@ const ImageUrlInput: React.FC<ImageUrlInputProps> = ({
           <div className="flex gap-2">
             <input
               type="number"
-              min={widthUnit === '%' ? "1" : "50"}
+              min="0"
               max={widthUnit === '%' ? "100" : "1200"}
+              step="1"
               value={imageWidth}
               onChange={(e) => {
-                const value = parseInt(e.target.value);
-                if (!isNaN(value) && value > 0) {
-                  onWidthChange?.(value);
+                const inputValue = e.target.value;
+                if (inputValue === '') {
+                  // Allow empty input temporarily for better UX
+                  return;
+                } else {
+                  const value = parseInt(inputValue);
+                  if (!isNaN(value) && value >= 0) {
+                    onWidthChange?.(value);
+                  }
+                }
+              }}
+              onBlur={(e) => {
+                const inputValue = e.target.value;
+                if (inputValue === '' || inputValue === null || inputValue === undefined) {
+                  // Set default when user leaves empty field
+                  onWidthChange?.(widthUnit === '%' ? 100 : 300);
+                }
+              }}
+              onKeyDown={(e) => {
+                // Allow manual typing by preventing default arrow behavior if user is typing
+                if (e.key === 'Backspace' || e.key === 'Delete' || 
+                    (e.key >= '0' && e.key <= '9') || 
+                    e.key === 'ArrowLeft' || e.key === 'ArrowRight' ||
+                    e.key === 'Tab' || e.key === 'Enter') {
+                  // Allow these keys
+                  return;
                 }
               }}
               className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-100 transition-all"
@@ -175,13 +199,37 @@ const ImageUrlInput: React.FC<ImageUrlInputProps> = ({
           <div className="flex gap-2">
             <input
               type="number"
-              min={heightUnit === '%' ? "1" : "50"}
+              min="0"
               max={heightUnit === '%' ? "100" : "800"}
+              step="1"
               value={imageHeight}
               onChange={(e) => {
-                const value = parseInt(e.target.value);
-                if (!isNaN(value) && value > 0) {
-                  onHeightChange?.(value);
+                const inputValue = e.target.value;
+                if (inputValue === '') {
+                  // Allow empty input temporarily for better UX
+                  return;
+                } else {
+                  const value = parseInt(inputValue);
+                  if (!isNaN(value) && value >= 0) {
+                    onHeightChange?.(value);
+                  }
+                }
+              }}
+              onBlur={(e) => {
+                const inputValue = e.target.value;
+                if (inputValue === '' || inputValue === null || inputValue === undefined) {
+                  // Set default when user leaves empty field
+                  onHeightChange?.(heightUnit === '%' ? 100 : 400);
+                }
+              }}
+              onKeyDown={(e) => {
+                // Allow manual typing by preventing default arrow behavior if user is typing
+                if (e.key === 'Backspace' || e.key === 'Delete' || 
+                    (e.key >= '0' && e.key <= '9') || 
+                    e.key === 'ArrowLeft' || e.key === 'ArrowRight' ||
+                    e.key === 'Tab' || e.key === 'Enter') {
+                  // Allow these keys
+                  return;
                 }
               }}
               className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-100 transition-all"

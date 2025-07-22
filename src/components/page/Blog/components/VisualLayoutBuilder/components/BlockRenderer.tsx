@@ -268,7 +268,7 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
     const imageUrl = (block.content as any)?.url;
     const altText = (block.content as any)?.alt || 'Image';
     const imageWidth = block.styles.width || 100;
-    const imageHeight = block.styles.height || 400;
+    const imageHeight = block.styles.height !== undefined ? block.styles.height : 400;
     const widthUnit = block.styles.widthUnit || '%';
     const heightUnit = block.styles.heightUnit || 'px';
     const imageAlign = block.styles.imageAlign || 'center';
@@ -328,7 +328,7 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
     const videoUrl = (block.content as any)?.url;
     const videoTitle = (block.content as any)?.title || 'Video';
     const videoWidth = block.styles.width || 100;
-    const videoHeight = block.styles.height || 400;
+    const videoHeight = block.styles.height !== undefined ? block.styles.height : 400;
     const widthUnit = block.styles.widthUnit || '%';
     const heightUnit = block.styles.heightUnit || 'px';
     const videoAlign = block.styles.videoAlign || 'center';

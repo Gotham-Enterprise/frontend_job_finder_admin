@@ -34,6 +34,8 @@ import {
   TagOption 
 } from "@/services/types/blogPostType";
 
+import { openBlogPreview } from "@/services/blogPreviewService";
+
 interface BlogMetadata {
   title: string;
   permalink: string;
@@ -428,8 +430,8 @@ export default function AddNewBlogWithLayoutBuilder() {
   }, [publishBlog]);
 
   const previewBlog = useCallback(() => {
-    previewModal.openModal();
-  }, [previewModal]);
+    openBlogPreview(metadata, currentLayout.blocks, categoryOptions, tagOptions);
+  }, [metadata, currentLayout.blocks, categoryOptions, tagOptions]);
 
   const handleAddBlockRef = useCallback((addBlockFn: (type: BlockType) => void) => {
     setChildAddBlock(() => addBlockFn);
@@ -1048,7 +1050,7 @@ export default function AddNewBlogWithLayoutBuilder() {
                 type="text"
                 value={tempSeoData.title}
                 onChange={(e) => setTempSeoData(prev => ({ ...prev, title: e.target.value }))}
-                placeholder="Enter SEO title (recommended: 50-60 characters)"
+                placeholder="Enter Meta title (recommended: 50-60 characters)"
                 className="w-full px-3 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 transition-colors"
                 maxLength={60}
               />
@@ -1066,7 +1068,7 @@ export default function AddNewBlogWithLayoutBuilder() {
                 id="seo-description"
                 value={tempSeoData.description}
                 onChange={(e) => setTempSeoData(prev => ({ ...prev, description: e.target.value }))}
-                placeholder="Enter SEO description (recommended: 150-160 characters)"
+                placeholder="Enter Meta description (recommended: 150-160 characters)"
                 rows={3}
                 className="w-full px-3 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 transition-colors resize-none"
                 maxLength={160}
@@ -1079,7 +1081,7 @@ export default function AddNewBlogWithLayoutBuilder() {
             {/* Keywords */}
             <div className="mb-4">
               <label htmlFor="seo-keywords" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Keywords <span className="text-gray-500">(Optional - 0/10 keywords)</span>
+                Keywords 
               </label>
               <input
                 id="seo-keywords"
