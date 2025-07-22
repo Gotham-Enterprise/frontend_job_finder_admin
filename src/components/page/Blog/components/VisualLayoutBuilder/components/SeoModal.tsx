@@ -56,10 +56,6 @@ const SeoModal: React.FC<SeoModalProps> = ({
       newErrors.description = 'Meta description should be under 160 characters';
     }
 
-    if (seoData.keywords.trim() && seoData.keywords.split(',').length > 10) {
-      newErrors.keywords = 'Maximum 10 keywords allowed';
-    }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -151,7 +147,7 @@ const SeoModal: React.FC<SeoModalProps> = ({
             <Label htmlFor="seoKeywords" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
               Keywords
               <span className="text-xs font-normal text-gray-500 ml-2">
-                (Optional - {seoData.keywords ? seoData.keywords.split(',').filter(k => k.trim()).length : 0}/10 keywords)
+                (Optional - {seoData.keywords ? seoData.keywords.split(',').filter(k => k.trim()).length : 0} keywords)
               </span>
             </Label>
             <Input

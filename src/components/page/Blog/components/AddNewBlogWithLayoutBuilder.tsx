@@ -19,6 +19,7 @@ import {
 } from '@/lib/blogPayloadUtils';
 import { logPayloadFormatted, generatePayloadPreview } from '@/lib/blogPayloadLogger';
 import { createBlogApiService } from '@/services/blogApiService';
+import { authUtils } from '@/services/utils/authUtils';
 
 import { 
   BlogLayout as LayoutType, 
@@ -79,9 +80,40 @@ const blogApiService = createBlogApiService({
   apiKey: process.env.NEXT_PUBLIC_API_KEY
 });
 
+// Move static data outside component to prevent recreation on every render
+const categoryOptions: CategoryOption[] = [
+  { value: '1', text: 'Technology', selected: false },
+  { value: '2', text: 'Design', selected: false },
+  { value: '3', text: 'Business', selected: false },
+  { value: '4', text: 'Marketing', selected: false },
+  { value: '5', text: 'Development', selected: false },
+  { value: '6', text: 'Tutorial', selected: false },
+  { value: '7', text: 'News', selected: false },
+];
+
+const tagOptions: TagOption[] = [
+  { value: '1', text: 'React', selected: false },
+  { value: '2', text: 'TypeScript', selected: false },
+  { value: '3', text: 'JavaScript', selected: false },
+  { value: '4', text: 'CSS', selected: false },
+  { value: '5', text: 'Next.js', selected: false },
+  { value: '6', text: 'Node.js', selected: false },
+  { value: '7', text: 'API', selected: false },
+  { value: '8', text: 'Frontend', selected: false },
+  { value: '9', text: 'Backend', selected: false },
+  { value: '10', text: 'UI/UX', selected: false },
+];
+
+const statusOptions = [
+  { value: 'draft', label: 'Draft', description: 'This job posting will no longer be publicly accessible.' },
+  { value: 'published', label: 'Published', description: 'This job posting can be viewed by anyone who has the link.' },
+  { value: 'pending', label: 'Pending Review', description: 'This job posting is waiting for review before being published.' },
+  { value: 'private', label: 'Private', description: 'This job posting is only visible to you and selected users.' },
+];
+
 export default function AddNewBlogWithLayoutBuilder() {
 
-  const [currentLayout, setCurrentLayout] = useState<LayoutType>(createInitialLayout());
+  const [currentLayout, setCurrentLayout] = useState<LayoutType>(() => createInitialLayout());
   const [viewMode, setViewMode] = useState<ViewMode>('builder');
   const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
   const [visibilityDropdownOpen, setVisibilityDropdownOpen] = useState(false);
@@ -104,9 +136,9 @@ export default function AddNewBlogWithLayoutBuilder() {
     showLoader,
     hideLoader
   } = useProgressLoader({
-    onComplete: () => {
-      hideLoader();
-    }
+    onComplete: useCallback(() => {
+      // onComplete will be handled by the progress loader itself
+    }, [])
   });
   
 
@@ -161,43 +193,16 @@ export default function AddNewBlogWithLayoutBuilder() {
 
   const previewModal = useModal();
 
-  const categoryOptions: CategoryOption[] = [
-    { value: '1', text: 'Technology', selected: false },
-    { value: '2', text: 'Design', selected: false },
-    { value: '3', text: 'Business', selected: false },
-    { value: '4', text: 'Marketing', selected: false },
-    { value: '5', text: 'Development', selected: false },
-    { value: '6', text: 'Tutorial', selected: false },
-    { value: '7', text: 'News', selected: false },
-  ];
-
-  const tagOptions: TagOption[] = [
-    { value: '1', text: 'React', selected: false },
-    { value: '2', text: 'TypeScript', selected: false },
-    { value: '3', text: 'JavaScript', selected: false },
-    { value: '4', text: 'CSS', selected: false },
-    { value: '5', text: 'Next.js', selected: false },
-    { value: '6', text: 'Node.js', selected: false },
-    { value: '7', text: 'API', selected: false },
-    { value: '8', text: 'Frontend', selected: false },
-    { value: '9', text: 'Backend', selected: false },
-    { value: '10', text: 'UI/UX', selected: false },
-  ];
-
-  const statusOptions = [
-    { value: 'draft', label: 'Draft', description: 'This job posting will no longer be publicly accessible.' },
-    { value: 'published', label: 'Published', description: 'This job posting can be viewed by anyone who has the link.' },
-    { value: 'pending', label: 'Pending Review', description: 'This job posting is waiting for review before being published.' },
-    { value: 'private', label: 'Private', description: 'This job posting is only visible to you and selected users.' },
-  ];
-
-  // Filtered categories and tags based on search terms
-  const filteredCategories = categoryOptions.filter(category =>
-    category.text.toLowerCase().includes(categoriesSearchTerm.toLowerCase())
+  const filteredCategories = useMemo(() => 
+    categoryOptions.filter(category =>
+      category.text.toLowerCase().includes(categoriesSearchTerm.toLowerCase())
+    ), [categoriesSearchTerm]
   );
 
-  const filteredTags = tagOptions.filter(tag =>
-    tag.text.toLowerCase().includes(tagsSearchTerm.toLowerCase())
+  const filteredTags = useMemo(() => 
+    tagOptions.filter(tag =>
+      tag.text.toLowerCase().includes(tagsSearchTerm.toLowerCase())
+    ), [tagsSearchTerm]
   );
 
   const transformedLayoutData = useMemo(() => {
@@ -235,6 +240,20 @@ export default function AddNewBlogWithLayoutBuilder() {
     return { transformedLayout, transformedMetadata };
   }, [currentLayout, metadata]);
 
+
+  const authorInfo = useMemo(() => {
+    const currentUser = authUtils.getUser();
+    return currentUser ? {
+      id: currentUser.id,
+      name: authUtils.getUserDisplayName(),
+      email: currentUser.email
+    } : {
+      id: 'guest-user',
+      name: 'Guest User',
+      email: 'guest@example.com'
+    };
+  }, []);
+
   const generateBlogPayloadData = useCallback(() => {
     try {
       const { transformedLayout, transformedMetadata } = transformedLayoutData;
@@ -244,11 +263,7 @@ export default function AddNewBlogWithLayoutBuilder() {
         transformedMetadata,
         categoryOptions,
         tagOptions,
-        {
-          id: 'current-user-id',
-          name: 'Current User',
-          email: 'user@example.com'
-        }
+        authorInfo
       );
 
       const validation = validateBlogPayload(payload);
@@ -263,7 +278,7 @@ export default function AddNewBlogWithLayoutBuilder() {
       console.error('Error generating blog payload:', error);
       return null;
     }
-  }, [transformedLayoutData, categoryOptions, tagOptions]);
+  }, [transformedLayoutData, authorInfo]);
 
   const publishBlog = useCallback(async () => {
     const payloadData = generateBlogPayloadData();
@@ -421,11 +436,11 @@ export default function AddNewBlogWithLayoutBuilder() {
   }, []);
 
   const addElement = useCallback((type: BlockType) => {
-    // Use the child's addBlock function if available, otherwise fallback to parent logic
+   
     if (childAddBlock) {
       childAddBlock(type);
     } else {
-      // Fallback to parent logic (keeping existing behavior)
+   
       const template = BLOCK_TEMPLATES[type];
       const newBlock: LayoutBlock = {
         id: `block_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -435,7 +450,6 @@ export default function AddNewBlogWithLayoutBuilder() {
         position: template.position || { x: 0, y: 0, width: 100, height: 100 },
       } as LayoutBlock;
 
-      // Update the layout by adding the new block to current blocks
       setCurrentLayout(prev => {
         const currentBlocks = Array.isArray(prev.blocks) ? prev.blocks : [];
         return {
@@ -451,8 +465,6 @@ export default function AddNewBlogWithLayoutBuilder() {
   }, [childAddBlock]);
 
   const canSave = metadata.title.trim().length > 0;
-
-  // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Element;

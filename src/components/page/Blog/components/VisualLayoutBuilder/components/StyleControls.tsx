@@ -165,36 +165,41 @@ const StyleControls: React.FC<StyleControlsProps> = ({ block, onFloatingPanelOpe
   const renderTypographyControl = (control: typeof TYPOGRAPHY_CONTROLS[0]) => {
     const value = getTypographyValue(control.key, control.defaultValue, control.unit);
     const numericValue = parseInt(value);
-    const progressPercentage = ((numericValue - control.min) / (control.max - control.min)) * 100;
+
+    const handleIncrement = () => {
+      const newValue = Math.min(numericValue + 1, control.max);
+      updateTypography(control.key, newValue.toString(), control.unit);
+    };
+
+    const handleDecrement = () => {
+      const newValue = Math.max(numericValue - 1, control.min);
+      updateTypography(control.key, newValue.toString(), control.unit);
+    };
 
     return (
       <div key={control.key} className="space-y-2">
         <label className="text-xs font-medium text-gray-600">{control.label}</label>
-        <div className="flex items-center gap-3">
-          <div className="flex-1">
-            <input
-              type="range"
-              min={control.min}
-              max={control.max}
-              value={numericValue}
-              onChange={(e) => updateTypography(control.key, e.target.value, control.unit)}
-              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
-              style={{
-                background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${progressPercentage}%, #e5e7eb ${progressPercentage}%, #e5e7eb 100%)`
-              }}
-            />
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleDecrement}
+            disabled={numericValue <= control.min}
+            className="w-8 h-8 flex items-center justify-center rounded border border-gray-200 bg-gray-50 text-gray-600 hover:bg-gray-100 hover:text-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            title={`Decrease ${control.label}`}
+          >
+            -
+          </button>
+          <div className="flex items-center gap-1 min-w-[60px] justify-center">
+            <span className="text-sm font-medium text-gray-700">{numericValue}</span>
+            <span className="text-xs text-gray-500">{control.unit}</span>
           </div>
-          <div className="w-12">
-            <input
-              type="number"
-              min={control.min}
-              max={control.max}
-              value={numericValue}
-              onChange={(e) => updateTypography(control.key, e.target.value, control.unit)}
-              className="w-full px-2 py-1 text-xs border border-gray-200 rounded text-center bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-          <span className="text-xs text-gray-500 w-6">{control.unit}</span>
+          <button
+            onClick={handleIncrement}
+            disabled={numericValue >= control.max}
+            className="w-8 h-8 flex items-center justify-center rounded border border-gray-200 bg-gray-50 text-gray-600 hover:bg-gray-100 hover:text-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            title={`Increase ${control.label}`}
+          >
+            +
+          </button>
         </div>
       </div>
     );
