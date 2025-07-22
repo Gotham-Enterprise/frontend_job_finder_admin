@@ -1,5 +1,24 @@
 import { BlogFilters, BlogPostsResponse, BlogPost } from '../types/blog';
-import { apiGet, apiDelete } from './apiUtils';
+import { apiGet, apiDelete, apiPost, apiPut } from './apiUtils';
+import { CategoryWithSubCategories, ApiResponse } from '@/services/types/subCategoryTypes';
+
+export interface CategoryFilters {
+  keywords?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface CategoryCreateData {
+  name: string;
+  description: string;
+  subCategories: Array<{ name: string }>;
+}
+
+export interface CategoryUpdateData {
+  name: string;
+  description: string;
+  subCategories: Array<{ name: string }>;
+}
 
 export const blogApi = {
   async getBlogPosts(filters: BlogFilters = {}): Promise<BlogPostsResponse> {
@@ -34,4 +53,34 @@ export const blogApi = {
       body: { postIds: ids }
     });
   },
+
+  async getCategories(filters?: CategoryFilters): Promise<ApiResponse<CategoryWithSubCategories[]>> {
+    const queryParams = new URLSearchParams();
+    
+    if (filters?.keywords) queryParams.append('keywords', filters.keywords);
+    if (filters?.page) queryParams.append('page', filters.page.toString());
+    if (filters?.limit) queryParams.append('limit', filters.limit.toString());
+    
+    const endpoint = `/api/admin/blogs/category${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    
+    return apiGet<ApiResponse<CategoryWithSubCategories[]>>(endpoint);
+  },
+
+  async createCategory(categoryData: CategoryCreateData): Promise<ApiResponse<CategoryWithSubCategories>> {
+    const endpoint = '/api/admin/blogs/category';
+    
+    return apiPost<ApiResponse<CategoryWithSubCategories>>(endpoint, categoryData);
+  },
+
+  async updateCategory(categoryId: string, categoryData: CategoryUpdateData): Promise<ApiResponse<CategoryWithSubCategories>> {
+    const endpoint = `/api/admin/blogs/category/${categoryId}`;
+    
+    return apiPut<ApiResponse<CategoryWithSubCategories>>(endpoint, categoryData);
+  },
+
+  async deleteCategory(categoryId: string): Promise<ApiResponse<any>> {
+    const endpoint = `/api/admin/blogs/category/${categoryId}`;
+    
+    return apiDelete<ApiResponse<any>>(endpoint);
+  }
 };

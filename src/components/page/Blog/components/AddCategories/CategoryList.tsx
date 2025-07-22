@@ -9,7 +9,10 @@ export default function CategoryList({
   onSearchChange,
   onEditCategory,
   onDeleteCategory,
-  getParentCategoryName
+  getParentCategoryName,
+  isLoading = false,
+  error = null,
+  deletingCategoryId = null
 }: CategoryListProps) {
   const filteredCategories = categories.filter(category =>
     category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -39,6 +42,16 @@ export default function CategoryList({
             </svg>
           </div>
         </div>
+        
+        {isLoading && (
+          <p className="text-sm text-blue-500 dark:text-blue-400 mt-2">Loading categories...</p>
+        )}
+        
+        {error && (
+          <div className="mt-2 p-3 bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-200 rounded-md">
+            <p className="text-sm">{error}</p>
+          </div>
+        )}
       </div>
 
       <div className="overflow-x-auto">
@@ -51,11 +64,9 @@ export default function CategoryList({
               <TableCell isHeader className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                 Description
               </TableCell>
+            
               <TableCell isHeader className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                Slug
-              </TableCell>
-              <TableCell isHeader className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                Parent
+                Subcategories
               </TableCell>
               <TableCell isHeader className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                 Posts
@@ -78,14 +89,26 @@ export default function CategoryList({
                     {category.description || '—'}
                   </div>
                 </TableCell>
-                <TableCell className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-500 dark:text-gray-400 font-mono">
-                    {category.slug}
-                  </div>
-                </TableCell>
-                <TableCell className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-500 dark:text-gray-400">
-                    {getParentCategoryName(category.parent)}
+             
+                <TableCell className="px-6 py-4">
+                  <div className="flex flex-wrap gap-1">
+                    {category.subCategories && category.subCategories.length > 0 ? (
+                      category.subCategories.slice(0, 3).map((subCat, index) => (
+                        <span
+                          key={subCat.id || index}
+                          className="inline-flex items-center px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs font-medium rounded-full"
+                        >
+                          {subCat.name}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="text-gray-400 dark:text-gray-500 text-xs">—</span>
+                    )}
+                    {category.subCategories && category.subCategories.length > 3 && (
+                      <span className="text-xs text-gray-500 dark:text-gray-400">
+                        +{category.subCategories.length - 3} more
+                      </span>
+                    )}
                   </div>
                 </TableCell>
                 <TableCell className="px-6 py-4 whitespace-nowrap">
@@ -98,14 +121,16 @@ export default function CategoryList({
                     <button
                       onClick={() => onEditCategory(category)}
                       className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
+                      disabled={deletingCategoryId === category.id}
                     >
                       Edit
                     </button>
                     <button
                       onClick={() => onDeleteCategory(category.id)}
                       className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
+                      disabled={deletingCategoryId === category.id}
                     >
-                      Delete
+                      {deletingCategoryId === category.id ? "Deleting..." : "Delete"}
                     </button>
                   </div>
                 </TableCell>

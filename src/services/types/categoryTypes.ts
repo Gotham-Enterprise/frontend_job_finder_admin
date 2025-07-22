@@ -7,6 +7,7 @@ export interface Category {
   description: string;
   parent: string;
   count: number;
+  subCategories?: Array<{ name: string; id?: string }>;
 }
 
 export interface NewCategory {
@@ -14,6 +15,7 @@ export interface NewCategory {
   slug: string;
   description: string;
   parent: string;
+  subCategories?: Array<{ name: string; id?: string }>;
 }
 
 export interface CategoryOption {
@@ -25,7 +27,8 @@ export interface CategoryFormProps {
   newCategory: NewCategory;
   onInputChange: (field: keyof NewCategory, value: string) => void;
   onAddCategory: () => void;
-  parentOptions: CategoryOption[];
+  onSubCategoryChange?: (subCategories: Array<{ name: string; id?: string }>) => void;
+  isLoading?: boolean;
 }
 
 export interface CategoryListProps {
@@ -35,6 +38,9 @@ export interface CategoryListProps {
   onEditCategory: (category: Category) => void;
   onDeleteCategory: (categoryId: string) => void;
   getParentCategoryName: (parentId: string) => string;
+  isLoading?: boolean;
+  error?: string | null;
+  deletingCategoryId?: string | null;
 }
 
 export interface CategoryEditModalProps {
@@ -43,5 +49,5 @@ export interface CategoryEditModalProps {
   editingCategory: Category | null;
   setEditingCategory: React.Dispatch<React.SetStateAction<Category | null>>;
   onUpdateCategory: () => void;
-  parentOptions: CategoryOption[];
+  isUpdating?: boolean;
 }

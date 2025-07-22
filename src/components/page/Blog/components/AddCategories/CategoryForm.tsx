@@ -3,15 +3,27 @@ import Input from "@/components/form/input/InputField";
 import TextArea from "@/components/form/input/TextArea";
 import Button from "@/components/ui/button/Button";
 import Label from "@/components/form/Label";
-import Select from "@/components/form/Select";
+import SubCategoryDropdown from "@/components/form/SubCategoryDropdown";
 import { CategoryFormProps } from "@/services/types/categoryTypes";
+import { useSubCategories } from "@/services/hooks/useSubCategories";
 
 export default function CategoryForm({
   newCategory,
   onInputChange,
   onAddCategory,
-  parentOptions
+  onSubCategoryChange,
+  isLoading = false
 }: CategoryFormProps) {
+  const { subCategories, isLoading: isLoadingSubCategories } = useSubCategories();
+
+  const currentSubCategories = newCategory.subCategories || [];
+
+  const onSubCategoriesUpdate = (selectedSubCategories: Array<{ name: string; id?: string }>) => {
+    if (onSubCategoryChange) {
+      onSubCategoryChange(selectedSubCategories);
+    }
+  };
+
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
       <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">Add New Category</h2>
@@ -38,14 +50,25 @@ export default function CategoryForm({
           <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
             The &quot;slug&quot; is the URL-friendly version of the name.
           </p>
-        </div>        <div>
-          <Label>Parent Category</Label>
-          <Select
-            options={parentOptions}
-            placeholder="None"
-            defaultValue={newCategory.parent}
-            onChange={(value) => onInputChange('parent', value)}
+        </div>        
+        
+        <div>
+          <Label>Sub Categories</Label>
+          <SubCategoryDropdown
+            selectedSubCategories={currentSubCategories}
+            availableSubCategories={subCategories}
+            onSelectionChange={onSubCategoriesUpdate}
+            placeholder="Search or add subcategories..."
+            maxSelections={10}
           />
+          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+            Select existing subcategories or type to create new ones.
+          </p>
+          {isLoadingSubCategories && (
+            <p className="mt-1 text-xs text-blue-500 dark:text-blue-400">
+              Loading subcategories...
+            </p>
+          )}
         </div>
 
         <div>
@@ -62,9 +85,9 @@ export default function CategoryForm({
           variant="default"
           onClick={onAddCategory}
           className="w-full"
-          disabled={!newCategory.name.trim()}
+          disabled={!newCategory.name.trim() || isLoading}
         >
-          Add New Category
+          {isLoading ? "Adding..." : "Add New Category"}
         </Button>
       </div>
     </div>
