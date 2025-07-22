@@ -11,6 +11,7 @@ interface PropertyPanelProps {
   onClose: () => void;
   onUpdate: (blockId: string, content: any) => void;
   onStyleUpdate: (blockId: string, styles: any) => void;
+  onDuplicate?: (blockId: string) => void;
   activeTab: 'style' | 'settings';
   onTabChange: (tab: 'style' | 'settings') => void;
 }
@@ -27,6 +28,7 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({
   onClose,
   onUpdate,
   onStyleUpdate,
+  onDuplicate,
   activeTab,
   onTabChange
 }) => {
@@ -48,6 +50,12 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({
 
   const updateStyle = (field: string, value: any) => {
     onStyleUpdate(block.id, { [field]: value });
+  };
+
+  const duplicateBlock = () => {
+    if (onDuplicate && block) {
+      onDuplicate(block.id);
+    }
   };
 
   const openFloatingPanel = (panelType: string, event: React.MouseEvent) => {
@@ -144,6 +152,7 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({
                     block={block} 
                     onFloatingPanelOpen={openFloatingPanel}
                     onStyleUpdate={updateStyle}
+                    onDuplicate={duplicateBlock}
                   />
                 )}
                 {activeTab === 'settings' && (

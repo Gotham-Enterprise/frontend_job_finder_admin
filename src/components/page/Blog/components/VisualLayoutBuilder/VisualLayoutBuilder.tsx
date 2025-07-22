@@ -148,6 +148,33 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
     }
   }, [onAddBlockRef, addBlock]);
 
+  const duplicateBlock = (blockId: string) => {
+    const blockToDuplicate = blocks.find(block => block.id === blockId);
+    if (!blockToDuplicate) return;
+
+    // Create a copy of the block with a new ID
+    const duplicatedBlock: LayoutBlock = {
+      ...blockToDuplicate,
+      id: generateBlockId(),
+      content: { ...blockToDuplicate.content },
+      styles: { ...blockToDuplicate.styles },
+      position: { ...blockToDuplicate.position },
+      metadata: {
+        created: new Date().toISOString(),
+        updated: new Date().toISOString(),
+      }
+    };
+
+    // Add the duplicated block after the original block
+    const originalIndex = blocks.findIndex(block => block.id === blockId);
+    const newBlocks = [...blocks];
+    newBlocks.splice(originalIndex + 1, 0, duplicatedBlock);
+    
+    setBlocks(newBlocks);
+    setSelectedBlockId(duplicatedBlock.id);
+    setShowPropertiesPanel(true);
+  };
+
   const removeBlock = (blockId: string) => {
     setBlocks(prev => prev.filter(block => block.id !== blockId));
     if (selectedBlockId === blockId) {
@@ -351,6 +378,7 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
         }}
         onUpdate={updateBlock}
         onStyleUpdate={updateBlockStyle}
+        onDuplicate={duplicateBlock}
         activeTab={propertyPanelActiveTab}
         onTabChange={setPropertyPanelActiveTab}
       />

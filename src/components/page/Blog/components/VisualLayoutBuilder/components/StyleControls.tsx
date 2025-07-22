@@ -20,6 +20,7 @@ interface StyleControlsProps {
   block: LayoutBlock;
   onFloatingPanelOpen: (panelType: string, event: React.MouseEvent) => void;
   onStyleUpdate: (field: string, value: any) => void;
+  onDuplicate?: () => void;
 }
 
 const TEXT_STYLE_BUTTONS = [
@@ -120,7 +121,7 @@ const TYPOGRAPHY_CONTROLS = [
   }
 ];
 
-const StyleControls: React.FC<StyleControlsProps> = ({ block, onFloatingPanelOpen, onStyleUpdate }) => {
+const StyleControls: React.FC<StyleControlsProps> = ({ block, onFloatingPanelOpen, onStyleUpdate, onDuplicate }) => {
   const showTextFormatting = ['heading', 'paragraph'].includes(block.type);
   const showImageControls = block.type === 'image';
   const showVideoControls = block.type === 'video';
@@ -207,6 +208,22 @@ const StyleControls: React.FC<StyleControlsProps> = ({ block, onFloatingPanelOpe
 
   return (
     <div className="p-5 space-y-4">
+      {/* Duplicate Button */}
+      {onDuplicate && (
+        <div className="pb-3 border-b border-gray-200">
+          <button
+            onClick={onDuplicate}
+            className="w-full flex items-center gap-3 px-3 py-2 text-sm bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg text-blue-700 transition-all hover:shadow-sm text-left"
+            title="Duplicate this element"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+            </svg>
+            <span>duplicate</span>
+          </button>
+        </div>
+      )}
+
       {showTextFormatting && (
         <div className="space-y-3">
           <h3 className="text-sm font-medium text-gray-700 mb-3">Text Formatting</h3>
