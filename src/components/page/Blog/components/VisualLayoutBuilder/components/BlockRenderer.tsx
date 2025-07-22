@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { LayoutBlock } from '../../../../../../services/types/visualLayoutTypes';
 import { getButtonDefaultStyles, getSizeStyles } from '../utils/buttonUtils';
+import RichTextEditor from './RichTextEditor';
 
 interface BlockRendererProps {
   block: LayoutBlock;
@@ -74,6 +75,7 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
 
 
   const startEditing = (currentText: string) => {
+    // If the text contains HTML tags, preserve them for rich text editing
     setEditValue(currentText);
     setIsEditing(true);
   };
@@ -124,22 +126,19 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
     if (isEditing) {
       return (
         <div>
-          <input
-            type="text"
+          <RichTextEditor
             value={editValue}
-            onChange={(e) => setEditValue(e.target.value)}
+            onChange={setEditValue}
             onBlur={saveEdit}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') saveEdit();
-              if (e.key === 'Escape') cancelEdit();
-            }}
+            onCancel={cancelEdit}
             style={{
               ...style,
               minHeight: '1.2em',
               overflow: 'visible',
             }}
             className="w-full bg-transparent border-none outline-none"
-            autoFocus
+            isMultiline={false}
+            placeholder="Enter heading text..."
           />
         </div>
       );
@@ -165,7 +164,7 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
             onDoubleClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              startEditing(text.replace(/<[^>]*>/g, ''));
+              startEditing(text);
             }}
           >
             {styledText.includes('<a ') ? (
@@ -188,7 +187,7 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
           }}
           dangerouslySetInnerHTML={{ __html: styledText }}
           onClick={preventClickPropagation}
-          onDoubleClick={() => startEditing(text.replace(/<[^>]*>/g, ''))}
+          onDoubleClick={() => startEditing(text)}
         />
       );
     }
@@ -200,10 +199,9 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
           wordWrap: 'break-word',
           overflowWrap: 'break-word'
         }}
+        dangerouslySetInnerHTML={{ __html: styledText }}
         onDoubleClick={() => startEditing(text)}
-      >
-        {styledText}
-      </Tag>
+      />
     );
   };
 
@@ -213,14 +211,11 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
 
     if (isEditing) {
       return (
-        <textarea
-          ref={textareaRef}
+        <RichTextEditor
           value={editValue}
-          onChange={(e) => setEditValue(e.target.value)}
+          onChange={setEditValue}
           onBlur={saveEdit}
-          onKeyDown={(e) => {
-            if (e.key === 'Escape') cancelEdit();
-          }}
+          onCancel={cancelEdit}
           style={{
             ...style,
             minHeight: '80px',
@@ -228,13 +223,8 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
             overflow: 'hidden',
           }}
           className="w-full bg-transparent border-none outline-none resize-none"
-          autoFocus
-          onInput={(e) => {
-         
-            const target = e.target as HTMLTextAreaElement;
-            target.style.height = 'auto';
-            target.style.height = `${Math.max(target.scrollHeight, 80)}px`;
-          }}
+          isMultiline={true}
+          placeholder="Enter paragraph text..."
         />
       );
     }
@@ -256,7 +246,7 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
           }}
           dangerouslySetInnerHTML={{ __html: linkStyledText }}
           onClick={preventClickPropagation}
-          onDoubleClick={() => startEditing(text.replace(/<[^>]*>/g, ''))}
+          onDoubleClick={() => startEditing(text)}
         />
       );
     }
@@ -268,10 +258,9 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
           wordWrap: 'break-word',
           overflowWrap: 'break-word'
         }}
+        dangerouslySetInnerHTML={{ __html: text }}
         onDoubleClick={() => startEditing(text)}
-      >
-        {text}
-      </p>
+      />
     );
   };
 

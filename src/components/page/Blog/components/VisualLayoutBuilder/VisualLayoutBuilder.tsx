@@ -39,7 +39,7 @@ const demoBlocks: LayoutBlock[] = [
     id: 'demo-heading-1',
     type: 'heading',
     content: {
-      text: 'Gotham Visual Layout Builder',
+      text: '<strong>Gotham</strong> Visual <em>Layout Builder</em>',
       level: 1,
     },
     styles: {
@@ -56,7 +56,7 @@ const demoBlocks: LayoutBlock[] = [
     id: 'demo-paragraph-1',
     type: 'paragraph',
     content: {
-      text: 'Click on any block to see the floating style controls. Try clicking the Style buttons on the right to see the floating panels in action!',
+      text: 'Click on any block to see the floating style controls. Try <strong>selecting text</strong> to see the <em>rich text formatting</em> toolbar with <u>bold, italic, and underline</u> options!',
       richText: true,
     },
     styles: {
