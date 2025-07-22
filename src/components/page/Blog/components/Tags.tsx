@@ -5,7 +5,6 @@ import { generateSlug } from "@/services/utils";
 import {
   TagForm,
   TagList,
-  PopularTags,
   TagEditModal,
   BulkAddModal
 } from "./Tags/";
@@ -177,10 +176,7 @@ export default function Tags() {
             onBulkModalOpen={bulkModal.openModal}
           />
 
-          <PopularTags
-            tags={tags}
-            onEditTag={editTag}
-          />
+  
         </div>
         <div className="lg:col-span-2">
           <TagList

@@ -27,7 +27,7 @@ export default function AddNewCategories() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isSlugManuallyEdited, setIsSlugManuallyEdited] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(5); // Show 5 categories per page
+  const [itemsPerPage, setItemsPerPage] = useState(5); // Show 5 categories per page
   const editModal = useModal();
   const confirmDialog = useConfirmation();
   
@@ -172,6 +172,11 @@ export default function AddNewCategories() {
     setCurrentPage(page);
   };
 
+  const handleItemsPerPageChange = (newItemsPerPage: number) => {
+    setItemsPerPage(newItemsPerPage);
+    setCurrentPage(1); // Reset to first page when changing items per page
+  };
+
   return (
     <div className="mx-auto p-6">
       
@@ -216,6 +221,7 @@ export default function AddNewCategories() {
             currentPage={currentPage}
             onPageChange={handlePageChange}
             itemsPerPage={itemsPerPage}
+            onItemsPerPageChange={handleItemsPerPageChange}
           />
         </div>
       </div>

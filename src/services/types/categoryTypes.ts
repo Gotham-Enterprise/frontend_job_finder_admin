@@ -45,6 +45,7 @@ export interface CategoryListProps {
   totalPages?: number;
   onPageChange?: (page: number) => void;
   itemsPerPage?: number;
+  onItemsPerPageChange?: (itemsPerPage: number) => void;
 }
 
 export interface CategoryEditModalProps {

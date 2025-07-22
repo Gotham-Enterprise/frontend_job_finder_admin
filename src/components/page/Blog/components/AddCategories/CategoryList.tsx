@@ -17,7 +17,8 @@ export default function CategoryList({
   currentPage = 1,
   totalPages = 1,
   onPageChange,
-  itemsPerPage = 10
+  itemsPerPage = 10,
+  onItemsPerPageChange
 }: CategoryListProps) {
   const filteredCategories = categories.filter(category =>
     category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -158,14 +159,35 @@ export default function CategoryList({
       </div>
 
       {/* Pagination */}
-      {calculatedTotalPages > 1 && onPageChange && (
+      {filteredCategories.length > 0 && onPageChange && (
         <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700">
-          <div className="flex justify-center">
-            <Pagination
-              currentPage={currentPage}
-              totalPages={calculatedTotalPages}
-              onPageChange={onPageChange}
-            />
+          <div className="flex items-center justify-between">
+            {/* Items per page selector */}
+            <div className="flex items-center space-x-2">
+              <span className="text-sm text-gray-700 dark:text-gray-300">Items per page:</span>
+              <select
+                value={itemsPerPage}
+                onChange={(e) => onItemsPerPageChange?.(Number(e.target.value))}
+                className="rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-1 text-sm text-gray-900 dark:text-white focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+              >
+                <option value={5}>5</option>
+                <option value={10}>10</option>
+                <option value={20}>20</option>
+              </select>
+            </div>
+            
+            {/* Pagination controls - only show when there are multiple pages */}
+            {calculatedTotalPages > 1 ? (
+              <Pagination
+                currentPage={currentPage}
+                totalPages={calculatedTotalPages}
+                onPageChange={onPageChange}
+              />
+            ) : (
+              <div className="text-sm text-gray-500 dark:text-gray-400">
+                Showing {filteredCategories.length} of {filteredCategories.length} items
+              </div>
+            )}
           </div>
         </div>
       )}
