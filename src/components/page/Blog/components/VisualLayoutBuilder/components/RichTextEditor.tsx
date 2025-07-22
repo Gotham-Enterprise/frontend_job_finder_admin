@@ -1,4 +1,12 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import SeoModal from './SeoModal';
+import { useModal } from '@/hooks/useModal';
+
+interface SeoData {
+  title: string;
+  description: string;
+  keywords: string;
+}
 
 interface RichTextEditorProps {
   value: string;
@@ -9,6 +17,9 @@ interface RichTextEditorProps {
   style?: React.CSSProperties;
   className?: string;
   isMultiline?: boolean;
+  seoData?: SeoData;
+  onSeoDataChange?: (data: SeoData) => void;
+  showSeoButton?: boolean;
 }
 
 interface FormatButtonProps {
@@ -48,7 +59,10 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
   placeholder = "Enter text...",
   style,
   className = "",
-  isMultiline = true
+  isMultiline = true,
+  seoData = { title: '', description: '', keywords: '' },
+  onSeoDataChange,
+  showSeoButton = false
 }) => {
   const editorRef = useRef<HTMLDivElement>(null);
   const [isToolbarVisible, setIsToolbarVisible] = useState(false);
@@ -58,6 +72,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
     italic: false,
     underline: false
   });
+  const seoModal = useModal();
 
   useEffect(() => {
     if (editorRef.current && editorRef.current.innerHTML !== value) {
@@ -174,6 +189,14 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
     document.execCommand('insertText', false, text);
   }, []);
 
+  const openSeoModal = useCallback(() => {
+    seoModal.openModal();
+  }, [seoModal]);
+
+  const saveSeoData = useCallback((data: SeoData) => {
+    onSeoDataChange?.(data);
+  }, [onSeoDataChange]);
+
   // Setup event listeners
   useEffect(() => {
     const handleSelectionChange = () => {
@@ -207,6 +230,22 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
 
   return (
     <div className="relative">
+      {/* SEO Button - Always visible when enabled */}
+      {showSeoButton && (
+        <div className="mb-3 flex justify-end">
+          <button
+            type="button"
+            onClick={openSeoModal}
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+            SEO Settings
+          </button>
+        </div>
+      )}
+
       {/* Formatting Toolbar */}
       {isToolbarVisible && (
         <div
@@ -310,6 +349,13 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
           }
         `
       }} />
+
+      <SeoModal
+        isOpen={seoModal.isOpen}
+        onClose={seoModal.closeModal}
+        initialData={seoData}
+        onSave={saveSeoData}
+      />
     </div>
   );
 };
