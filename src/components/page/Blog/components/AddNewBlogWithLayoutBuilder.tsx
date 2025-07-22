@@ -1,14 +1,27 @@
 "use client";
-import React, { useState, useCallback, useMemo, useEffect } from "react";
+
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { Modal } from "@/components/ui/modal";
 import { useModal } from "@/hooks/useModal";
+import { useProgressLoader } from "@/hooks/useProgressLoader";
 import Button from "@/components/ui/button/Button";
 import DatePicker from "@/components/form/date-picker";
 import VisualLayoutBuilder from "./VisualLayoutBuilder/VisualLayoutBuilder";
 import FloatingElementsPanel from "./VisualLayoutBuilder/components/FloatingElementsPanel";
+import ProgressLoader from "@/components/ui/ProgressLoader";
+
+import { BlogMetadata as OriginalBlogMetadata, BlogLayout, BlogPayload } from '@/types/blog';
+import { 
+  generateBlogPayload, 
+  validateBlogPayload, 
+  formatPayloadForApi,
+  createBlogAnalytics 
+} from '@/lib/blogPayloadUtils';
+import { logPayloadFormatted, generatePayloadPreview } from '@/lib/blogPayloadLogger';
+import { createBlogApiService } from '@/services/blogApiService';
 
 import { 
-  BlogLayout, 
+  BlogLayout as LayoutType, 
   LayoutBlock,
   convertLayoutToBlogPayload,
   BlockType,
@@ -38,8 +51,7 @@ interface BlogMetadata {
 
 type ViewMode = 'builder' | 'classic' | 'preview';
 
-
-const createInitialLayout = (): BlogLayout => {
+const createInitialLayout = (): LayoutType => {
   return {
     id: `layout-${Date.now()}`,
     name: 'New Blog Post',
@@ -62,9 +74,14 @@ const createInitialLayout = (): BlogLayout => {
   };
 };
 
+const blogApiService = createBlogApiService({
+  baseUrl: process.env.NEXT_PUBLIC_API_URL || '/api',
+  apiKey: process.env.NEXT_PUBLIC_API_KEY
+});
+
 export default function AddNewBlogWithLayoutBuilder() {
 
-  const [currentLayout, setCurrentLayout] = useState<BlogLayout>(createInitialLayout());
+  const [currentLayout, setCurrentLayout] = useState<LayoutType>(createInitialLayout());
   const [viewMode, setViewMode] = useState<ViewMode>('builder');
   const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
   const [visibilityDropdownOpen, setVisibilityDropdownOpen] = useState(false);
@@ -74,12 +91,23 @@ export default function AddNewBlogWithLayoutBuilder() {
   const [categoriesSearchTerm, setCategoriesSearchTerm] = useState('');
   const [tagsSearchTerm, setTagsSearchTerm] = useState('');
   
-  // Title Modal State
+
   const { 
     isOpen: isTitleModalOpen, 
     openModal: openTitleModal, 
     closeModal: closeTitleModal 
   } = useModal();
+  
+
+  const {
+    isVisible: isProgressVisible,
+    showLoader,
+    hideLoader
+  } = useProgressLoader({
+    onComplete: () => {
+      hideLoader();
+    }
+  });
   
 
   const [metadata, setMetadata] = useState<BlogMetadata>({
@@ -172,6 +200,148 @@ export default function AddNewBlogWithLayoutBuilder() {
     tag.text.toLowerCase().includes(tagsSearchTerm.toLowerCase())
   );
 
+  const transformedLayoutData = useMemo(() => {
+    const transformedLayout: BlogLayout = {
+      id: currentLayout.id,
+      name: currentLayout.name,
+      blocks: currentLayout.blocks.map(block => ({
+        id: block.id,
+        type: block.type === 'paragraph' ? 'text' : block.type as any,
+        content: block.content,
+        styles: block.styles,
+        position: block.position,
+        metadata: block.metadata
+      })),
+      settings: currentLayout.settings,
+      metadata: currentLayout.metadata
+    };
+
+    const transformedMetadata: OriginalBlogMetadata = {
+      title: metadata.title,
+      permalink: metadata.permalink,
+      excerpt: metadata.excerpt,
+      status: metadata.status,
+      visibility: metadata.visibility,
+      password: metadata.password,
+      publishDate: metadata.publishDate,
+      categories: metadata.categories,
+      tags: metadata.tags,
+      seoTitle: metadata.seoTitle,
+      seoDescription: metadata.seoDescription,
+      allowComments: metadata.allowComments,
+      allowPings: metadata.allowPings
+    };
+
+    return { transformedLayout, transformedMetadata };
+  }, [currentLayout, metadata]);
+
+  const generateBlogPayloadData = useCallback(() => {
+    try {
+      const { transformedLayout, transformedMetadata } = transformedLayoutData;
+
+      const payload = generateBlogPayload(
+        transformedLayout,
+        transformedMetadata,
+        categoryOptions,
+        tagOptions,
+        {
+          id: 'current-user-id',
+          name: 'Current User',
+          email: 'user@example.com'
+        }
+      );
+
+      const validation = validateBlogPayload(payload);
+      const apiPayload = formatPayloadForApi(payload);
+      
+      return {
+        blogPayload: payload,
+        apiPayload,
+        validation
+      };
+    } catch (error) {
+      console.error('Error generating blog payload:', error);
+      return null;
+    }
+  }, [transformedLayoutData, categoryOptions, tagOptions]);
+
+  const publishBlog = useCallback(async () => {
+    const payloadData = generateBlogPayloadData();
+    
+    if (!payloadData) {
+      console.error('Failed to generate blog payload');
+      return;
+    }
+
+    const { blogPayload, apiPayload, validation } = payloadData;
+
+    const logResult = logPayloadFormatted(blogPayload, apiPayload, validation, 'publish');
+    
+    console.log('\n📋 Payload Preview:');
+    console.log(generatePayloadPreview(blogPayload));
+
+    if (!validation.isValid) {
+      console.warn('⚠️ Validation failed - blog contains errors that should be fixed before publishing');
+      return;
+    }
+
+    try {
+      showLoader({
+        title: 'Publishing Blog...',
+        subtitle: 'Preparing your content for publication',
+        duration: 3000
+      });
+
+      const response = await blogApiService.publishBlog(blogPayload);
+      
+      if (response.success) {
+        console.log('✅ Blog published successfully:', response.data);
+        // Let the progress loader complete naturally before hiding
+      } else {
+        console.error('❌ Failed to publish blog:', response.message, response.errors);
+        hideLoader();
+      }
+    } catch (error) {
+      console.error('💥 Error publishing blog:', error);
+      hideLoader();
+    }
+  }, [generateBlogPayloadData, showLoader, hideLoader]);
+
+  const saveDraft = useCallback(async () => {
+    const payloadData = generateBlogPayloadData();
+    
+    if (!payloadData) {
+      console.error('Failed to generate blog payload');
+      return;
+    }
+
+    const { blogPayload, apiPayload, validation } = payloadData;
+
+    const logResult = logPayloadFormatted(blogPayload, apiPayload, validation, 'draft');
+    
+    console.log('\n📋 Draft Preview:');
+    console.log(generatePayloadPreview(blogPayload));
+
+    try {
+      showLoader({
+        title: 'Saving Draft...',
+        subtitle: 'Preserving your content as draft',
+        duration: 2000
+      });
+
+      const response = await blogApiService.draftBlog(blogPayload);
+      
+      if (response.success) {
+        console.log('✅ Blog draft saved successfully:', response.data);
+      } else {
+        hideLoader();
+      }
+    } catch (error) {
+      console.error('💥 Error saving blog draft:', error);
+      hideLoader();
+    }
+  }, [generateBlogPayloadData, showLoader, hideLoader]);
+
 
   const updateMetadata = useCallback((field: keyof BlogMetadata, value: any) => {
     setMetadata(prev => ({
@@ -210,7 +380,6 @@ export default function AddNewBlogWithLayoutBuilder() {
     }));
   }, []);
 
-  // Title Modal Handlers
   const handleOpenTitleModal = useCallback(() => {
     setTempTitle(metadata.title);
     setTempSeoData({
@@ -240,13 +409,12 @@ export default function AddNewBlogWithLayoutBuilder() {
   }, [metadata.title, seoData, closeTitleModal]);
 
   const saveBlog = useCallback(async (isDraft = true) => {
-    try {
-      const layoutPayload = convertLayoutToBlogPayload(currentLayout, metadata.title);
-      console.log('Saving blog post:', layoutPayload);
-    } catch (error) {
-      console.error('Error saving blog post:', error);
+    if (isDraft) {
+      await saveDraft();
+    } else {
+      await publishBlog();
     }
-  }, [currentLayout, metadata]);
+  }, [saveDraft, publishBlog]);
 
   const previewBlog = useCallback(() => {
     previewModal.openModal();
@@ -780,7 +948,15 @@ export default function AddNewBlogWithLayoutBuilder() {
               Preview
             </Button>
             <Button
-              onClick={saveBlog}
+              variant="secondary"
+              onClick={() => saveBlog(true)}
+              disabled={!canSave}
+              className="px-4 py-2"
+            >
+              Save Draft
+            </Button>
+            <Button
+              onClick={() => saveBlog(false)}
               disabled={!canSave}
               className="px-4 py-2"
             >
@@ -954,6 +1130,14 @@ export default function AddNewBlogWithLayoutBuilder() {
           </div>
         </div>
       </Modal>
+
+      {isProgressVisible && (
+        <ProgressLoader 
+          isVisible={isProgressVisible}
+          title="Publishing Blog..."
+          subtitle="Preparing your content for publication"
+        />
+      )}
     </>
   );
 }
