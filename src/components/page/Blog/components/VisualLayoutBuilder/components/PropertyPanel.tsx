@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { LayoutBlock } from '../../../../../../services/types/visualLayoutTypes';
 import FloatingPanel from './FloatingPanel';
 import StyleControls from './StyleControls';
@@ -35,11 +35,8 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({
   const [activeFloatingPanel, setActiveFloatingPanel] = useState<string | null>(null);
   const [floatingPanelPosition, setFloatingPanelPosition] = useState({ x: 0, y: 0 });
 
-  if (!block) return null;
-
-  const currentConfig = blockTypeConfig[block.type as keyof typeof blockTypeConfig] || blockTypeConfig.default;
-
   const updateContent = (field: string, value: any) => {
+    if (!block) return;
     onUpdate(block.id, { 
       content: { 
         ...block.content, 
@@ -49,6 +46,7 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({
   };
 
   const updateStyle = (field: string, value: any) => {
+    if (!block) return;
     onStyleUpdate(block.id, { [field]: value });
   };
 
@@ -57,6 +55,10 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({
       onDuplicate(block.id);
     }
   };
+
+  if (!block) return null;
+
+  const currentConfig = blockTypeConfig[block.type as keyof typeof blockTypeConfig] || blockTypeConfig.default;
 
   const openFloatingPanel = (panelType: string, event: React.MouseEvent) => {
     const rect = event.currentTarget.getBoundingClientRect();

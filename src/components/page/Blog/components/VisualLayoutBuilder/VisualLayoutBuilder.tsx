@@ -181,30 +181,22 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
     }
   };
 
-  const updateBlock = (blockId: string, updates: Partial<LayoutBlock>) => {
-    if (temporaryBlock?.id === blockId) {
-      setTemporaryBlock(prev => prev ? { ...prev, ...updates } : null);
-    } else {
-      setBlocks(prev => prev.map(block => {
-        if (block.id === blockId) {
-          return { ...block, ...updates };
-        }
-        return block;
-      }));
-    }
-  };
+  const updateBlock = useCallback((blockId: string, updates: Partial<LayoutBlock>) => {
+    setBlocks(prev => prev.map(block => {
+      if (block.id === blockId) {
+        return { ...block, ...updates };
+      }
+      return block;
+    }));
+  }, []);
 
-  const updateBlockStyle = (blockId: string, styles: any) => {
-    if (temporaryBlock?.id === blockId) {
-      setTemporaryBlock(prev => prev ? updateBlockStyles(prev, styles) : null);
-    } else {
-      setBlocks(prev => 
-        prev.map(block => 
-          block.id === blockId ? updateBlockStyles(block, styles) : block
-        )
-      );
-    }
-  };
+  const updateBlockStyle = useCallback((blockId: string, styles: any) => {
+    setBlocks(prev => 
+      prev.map(block => 
+        block.id === blockId ? updateBlockStyles(block, styles) : block
+      )
+    );
+  }, []);
 
   const reorderBlocks = (event: DragEndEvent) => {
     const { active, over } = event;
@@ -221,22 +213,14 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
     });
   };
 
-  const [temporaryBlock, setTemporaryBlock] = useState<LayoutBlock | null>(null);
-
-  const openSettings = (type: 'image' | 'video' | 'paragraph' | 'button' | 'list', block: LayoutBlock) => {
-    if (block.id.startsWith('temp-')) {
-      setTemporaryBlock(block);
-      setSelectedBlockId(block.id);
-    } else {
-      setTemporaryBlock(null);
-      setSelectedBlockId(block.id);
-    }
+  const openSettings = (type: 'image' | 'video' | 'paragraph' | 'button' | 'list' | 'quote', block: LayoutBlock) => {
+    setSelectedBlockId(block.id);
     setShowPropertiesPanel(true);
     setPropertyPanelActiveTab('settings');
   };
 
   const selectedBlock = selectedBlockId 
-    ? (temporaryBlock?.id === selectedBlockId ? temporaryBlock : blocks.find(block => block.id === selectedBlockId))
+    ? blocks.find(block => block.id === selectedBlockId)
     : undefined;
 
   const getContainerMaxWidth = () => {
@@ -255,7 +239,6 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
           if (e.target === e.currentTarget) {
             setSelectedBlockId(null);
             setShowPropertiesPanel(false);
-            setTemporaryBlock(null);
           }
         }}
       >
@@ -372,7 +355,6 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
         isVisible={showPropertiesPanel}
         onClose={() => {
           setShowPropertiesPanel(false);
-          setTemporaryBlock(null);
         }}
         onUpdate={updateBlock}
         onStyleUpdate={updateBlockStyle}

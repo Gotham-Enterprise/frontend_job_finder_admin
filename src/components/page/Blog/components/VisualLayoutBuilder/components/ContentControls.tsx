@@ -1,4 +1,4 @@
-import React, { useState, useRef, memo, useCallback } from 'react';
+import React, { useState, useRef, memo, useCallback, useEffect } from 'react';
 import { LayoutBlock } from '../../../../../../services/types/visualLayoutTypes';
 import ImageUrlInput from '../ImageUrlInput';
 import VideoUrlInput from '../VideoUrlInput';
@@ -26,6 +26,25 @@ const ContentControls: React.FC<ContentControlsProps> = memo(({ block, onContent
   const [linkTarget, setLinkTarget] = useState('_self');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Debounced state for quote text to prevent rapid updates
+  const [localQuoteText, setLocalQuoteText] = useState((block.content as any)?.text || '');
+  const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Update local state when block content changes from outside
+  useEffect(() => {
+    setLocalQuoteText((block.content as any)?.text || '');
+  }, [block.content?.text]);
+
+  // Debounced update function
+  const debouncedUpdateQuoteText = useCallback((value: string) => {
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current);
+    }
+    debounceTimeoutRef.current = setTimeout(() => {
+      onContentUpdate('text', value);
+    }, 300); // 300ms debounce
+  }, [onContentUpdate]);
 
   const listItems = (block.content as any)?.items || [];
   const isListOrdered = (block.content as any)?.ordered || false;
@@ -397,8 +416,11 @@ const ContentControls: React.FC<ContentControlsProps> = memo(({ block, onContent
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">Quote Text</label>
           <textarea
-            value={(block.content as any)?.text || 'Do you have a design in mind for your blog? Whether you prefer a trendy postcard look or you\'re going for a more editorial style blog - there\'s a stunning layout for everyone.'}
-            onChange={(e) => onContentUpdate('text', e.target.value)}
+            value={localQuoteText}
+            onChange={(e) => {
+              setLocalQuoteText(e.target.value);
+              debouncedUpdateQuoteText(e.target.value);
+            }}
             placeholder="Enter your quote..."
             className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 placeholder-gray-400 focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-100 resize-none transition-all"
             rows={4}
@@ -473,6 +495,14 @@ const ContentControls: React.FC<ContentControlsProps> = memo(({ block, onContent
   const renderer = CONTENT_RENDERERS[block.type as keyof typeof CONTENT_RENDERERS] || CONTENT_RENDERERS.default;
   
   return renderer();
+}, (prevProps, nextProps) => {
+  // Only re-render if the block content or type has actually changed
+  return (
+    prevProps.block.id === nextProps.block.id &&
+    prevProps.block.type === nextProps.block.type &&
+    JSON.stringify(prevProps.block.content) === JSON.stringify(nextProps.block.content) &&
+    JSON.stringify(prevProps.block.styles) === JSON.stringify(nextProps.block.styles)
+  );
 });
 
 ContentControls.displayName = 'ContentControls';

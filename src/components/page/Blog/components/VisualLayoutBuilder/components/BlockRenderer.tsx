@@ -10,7 +10,7 @@ interface BlockRendererProps {
   onRemove?: () => void;
   onContentUpdate?: (field: string, value: any) => void;
   onStyleUpdate?: (field: string, value: any) => void;
-  onOpenSettings?: (type: 'image' | 'video' | 'paragraph' | 'button' | 'list', block: LayoutBlock) => void;
+  onOpenSettings?: (type: 'image' | 'video' | 'paragraph' | 'button' | 'list' | 'quote', block: LayoutBlock) => void;
 }
 
 const HEADING_TAGS = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'] as const;
@@ -599,7 +599,10 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
           padding: '1.5rem',
         }}
         className="relative"
-        onDoubleClick={() => onOpenSettings?.('paragraph', block)}
+        onDoubleClick={(e) => {
+          e.stopPropagation();
+          onOpenSettings?.('quote', block);
+        }}
       >
         <div className="text-lg leading-relaxed text-gray-700 mb-3">
           "{text}"
