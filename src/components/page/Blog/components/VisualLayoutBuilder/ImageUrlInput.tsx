@@ -150,7 +150,12 @@ const ImageUrlInput: React.FC<ImageUrlInputProps> = ({
               min={widthUnit === '%' ? "1" : "50"}
               max={widthUnit === '%' ? "100" : "1200"}
               value={imageWidth}
-              onChange={(e) => onWidthChange?.(parseInt(e.target.value) || (widthUnit === '%' ? 100 : 400))}
+              onChange={(e) => {
+                const value = parseInt(e.target.value);
+                if (!isNaN(value) && value > 0) {
+                  onWidthChange?.(value);
+                }
+              }}
               className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-100 transition-all"
             />
             <select
@@ -173,7 +178,12 @@ const ImageUrlInput: React.FC<ImageUrlInputProps> = ({
               min={heightUnit === '%' ? "1" : "50"}
               max={heightUnit === '%' ? "100" : "800"}
               value={imageHeight}
-              onChange={(e) => onHeightChange?.(parseInt(e.target.value) || (heightUnit === '%' ? 50 : 400))}
+              onChange={(e) => {
+                const value = parseInt(e.target.value);
+                if (!isNaN(value) && value > 0) {
+                  onHeightChange?.(value);
+                }
+              }}
               className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-100 transition-all"
             />
             <select
