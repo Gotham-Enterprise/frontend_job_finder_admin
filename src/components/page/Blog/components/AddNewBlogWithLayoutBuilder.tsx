@@ -294,7 +294,7 @@ export default function AddNewBlogWithLayoutBuilder() {
 
     const logResult = logPayloadFormatted(blogPayload, apiPayload, validation, 'publish');
     
-    console.log('\n📋 Payload Preview:');
+
     console.log(generatePayloadPreview(blogPayload));
 
     if (!validation.isValid) {
@@ -336,7 +336,7 @@ export default function AddNewBlogWithLayoutBuilder() {
 
     const logResult = logPayloadFormatted(blogPayload, apiPayload, validation, 'draft');
     
-    console.log('\n📋 Draft Preview:');
+
     console.log(generatePayloadPreview(blogPayload));
 
     try {
@@ -949,14 +949,14 @@ export default function AddNewBlogWithLayoutBuilder() {
             </div>
           </div>
           <div className="flex items-center space-x-3">
-            <Button
+            {/* <Button
               variant="secondary"
               onClick={previewBlog}
               disabled={!canSave}
-              className="px-4 py-2"
+              className="px-4 py-2 hidden"
             >
               Preview
-            </Button>
+            </Button> */}
             <Button
               onClick={() => saveBlog()}
               disabled={!canSave}
