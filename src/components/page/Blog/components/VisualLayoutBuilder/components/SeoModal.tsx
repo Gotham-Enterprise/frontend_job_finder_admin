@@ -45,15 +45,15 @@ const SeoModal: React.FC<SeoModalProps> = ({
     const newErrors: Partial<SeoData> = {};
 
     if (!seoData.title.trim()) {
-      newErrors.title = 'SEO title is required';
+      newErrors.title = 'Meta title is required';
     } else if (seoData.title.length > 60) {
-      newErrors.title = 'SEO title should be under 60 characters';
+      newErrors.title = 'Metatitle should be under 60 characters';
     }
 
     if (!seoData.description.trim()) {
-      newErrors.description = 'SEO description is required';
+      newErrors.description = 'Meta description is required';
     } else if (seoData.description.length > 160) {
-      newErrors.description = 'SEO description should be under 160 characters';
+      newErrors.description = 'Meta description should be under 160 characters';
     }
 
     if (seoData.keywords.trim() && seoData.keywords.split(',').length > 10) {

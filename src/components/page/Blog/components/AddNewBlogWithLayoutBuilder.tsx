@@ -6,7 +6,6 @@ import Button from "@/components/ui/button/Button";
 import DatePicker from "@/components/form/date-picker";
 import VisualLayoutBuilder from "./VisualLayoutBuilder/VisualLayoutBuilder";
 import FloatingElementsPanel from "./VisualLayoutBuilder/components/FloatingElementsPanel";
-import SeoModal from "./VisualLayoutBuilder/components/SeoModal";
 
 import { 
   BlogLayout, 
@@ -75,11 +74,11 @@ export default function AddNewBlogWithLayoutBuilder() {
   const [categoriesSearchTerm, setCategoriesSearchTerm] = useState('');
   const [tagsSearchTerm, setTagsSearchTerm] = useState('');
   
-  // SEO Modal State
+  // Title Modal State
   const { 
-    isOpen: isSeoModalOpen, 
-    openModal: openSeoModal, 
-    closeModal: closeSeoModal 
+    isOpen: isTitleModalOpen, 
+    openModal: openTitleModal, 
+    closeModal: closeTitleModal 
   } = useModal();
   
 
@@ -100,6 +99,13 @@ export default function AddNewBlogWithLayoutBuilder() {
   });
 
   const [seoData, setSeoData] = useState({
+    title: '',
+    description: '',
+    keywords: ''
+  });
+
+  const [tempTitle, setTempTitle] = useState('');
+  const [tempSeoData, setTempSeoData] = useState({
     title: '',
     description: '',
     keywords: ''
@@ -204,15 +210,34 @@ export default function AddNewBlogWithLayoutBuilder() {
     }));
   }, []);
 
-  // SEO Save Handler
-  const handleSeoSave = useCallback((seoFormData: { title: string; description: string; keywords: string }) => {
-    setSeoData(seoFormData);
-    updateMetadata('seoTitle', seoFormData.title);
-    updateMetadata('seoDescription', seoFormData.description);
-    // Note: keywords would typically be stored in a separate field or as part of metadata
-    closeSeoModal();
-    console.log('SEO data saved:', seoFormData);
-  }, [updateMetadata, closeSeoModal]);
+  // Title Modal Handlers
+  const handleOpenTitleModal = useCallback(() => {
+    setTempTitle(metadata.title);
+    setTempSeoData({
+      title: seoData.title,
+      description: seoData.description,
+      keywords: seoData.keywords
+    });
+    openTitleModal();
+  }, [metadata.title, seoData, openTitleModal]);
+
+  const handleTitleSave = useCallback(() => {
+    updateTitle(tempTitle);
+    setSeoData(tempSeoData);
+    updateMetadata('seoTitle', tempSeoData.title);
+    updateMetadata('seoDescription', tempSeoData.description);
+    closeTitleModal();
+  }, [tempTitle, tempSeoData, updateTitle, updateMetadata, closeTitleModal]);
+
+  const handleTitleCancel = useCallback(() => {
+    setTempTitle(metadata.title);
+    setTempSeoData({
+      title: seoData.title,
+      description: seoData.description,
+      keywords: seoData.keywords
+    });
+    closeTitleModal();
+  }, [metadata.title, seoData, closeTitleModal]);
 
   const saveBlog = useCallback(async (isDraft = true) => {
     try {
@@ -300,17 +325,25 @@ export default function AddNewBlogWithLayoutBuilder() {
             </button>
             <div className="flex items-center space-x-6">
               <div className="ml-4 flex items-center space-x-3">
-                <label htmlFor="blog-title" className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">
                   Blog Title:
                 </label>
-                <input
-                  id="blog-title"
-                  type="text"
-                  value={metadata.title}
-                  onChange={(e) => updateTitle(e.target.value)}
-                  placeholder="Enter your blog title..."
-                  className="w-80 px-3 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 transition-colors"
-                />
+                <button
+                  type="button"
+                  onClick={handleOpenTitleModal}
+                  className="w-60 px-3 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:border-blue-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none text-gray-900 dark:text-gray-100 transition-colors text-left flex items-center justify-between"
+                >
+                  <span className="truncate flex-1 mr-2">
+                    {metadata.title || (
+                      <span className="text-gray-500 dark:text-gray-400">Click to add blog title...</span>
+                    )}
+                  </span>
+                  {metadata.title && (
+                    <svg className="w-4 h-4 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                  )}
+                </button>
               </div>
               
               {/* Status Field */}
@@ -717,16 +750,6 @@ export default function AddNewBlogWithLayoutBuilder() {
           <div className="flex items-center space-x-3">
             <Button
               variant="secondary"
-              onClick={openSeoModal}
-              className="px-4 py-2 flex items-center space-x-2"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-              <span>SEO</span>
-            </Button>
-            <Button
-              variant="secondary"
               onClick={previewBlog}
               disabled={!canSave}
               className="px-4 py-2"
@@ -777,13 +800,137 @@ export default function AddNewBlogWithLayoutBuilder() {
         </div>
       </Modal>
 
-      {/* SEO Modal */}
-      <SeoModal
-        isOpen={isSeoModalOpen}
-        onClose={closeSeoModal}
-        onSave={handleSeoSave}
-        initialData={seoData}
-      />
+      {/* Title & SEO Modal */}
+      <Modal
+        isOpen={isTitleModalOpen}
+        onClose={handleTitleCancel}
+        showCloseButton={false}
+        isFullscreen={false}
+        className="max-w-3xl w-full mx-auto my-8 rounded-lg shadow-xl"
+      >
+        <div className="p-6">
+          <h2 className="text-xl font-bold mb-6">Edit Blog Title & SEO Settings</h2>
+          
+          {/* Blog Title Section */}
+          <div className="mb-6">
+            <label htmlFor="modal-blog-title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Blog Title
+            </label>
+            <input
+              id="modal-blog-title"
+              type="text"
+              value={tempTitle}
+              onChange={(e) => setTempTitle(e.target.value)}
+              placeholder="Enter your blog title..."
+              className="w-full px-3 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 transition-colors"
+              autoFocus
+            />
+          </div>
+
+          {/* SEO Settings Section */}
+          <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+            <h3 className="text-lg font-semibold mb-4 flex items-center">
+              <svg className="w-5 h-5 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              SEO Settings
+            </h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+              Optimize your content for search engines by adding meta information
+            </p>
+
+            {/* SEO Title */}
+            <div className="mb-4">
+              <label htmlFor="seo-title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Meta title <span className="text-gray-500">({tempSeoData.title.length}/60 characters)</span>
+              </label>
+              <input
+                id="seo-title"
+                type="text"
+                value={tempSeoData.title}
+                onChange={(e) => setTempSeoData(prev => ({ ...prev, title: e.target.value }))}
+                placeholder="Enter SEO title (recommended: 50-60 characters)"
+                className="w-full px-3 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 transition-colors"
+                maxLength={60}
+              />
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                This title will appear in search engine results and browser tabs
+              </p>
+            </div>
+
+            {/* SEO Description */}
+            <div className="mb-4">
+              <label htmlFor="seo-description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Meta Description <span className="text-gray-500">({tempSeoData.description.length}/160 characters)</span>
+              </label>
+              <textarea
+                id="seo-description"
+                value={tempSeoData.description}
+                onChange={(e) => setTempSeoData(prev => ({ ...prev, description: e.target.value }))}
+                placeholder="Enter SEO description (recommended: 150-160 characters)"
+                rows={3}
+                className="w-full px-3 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 transition-colors resize-none"
+                maxLength={160}
+              />
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                This description will appear in search engine results under your title
+              </p>
+            </div>
+
+            {/* Keywords */}
+            <div className="mb-4">
+              <label htmlFor="seo-keywords" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Keywords <span className="text-gray-500">(Optional - 0/10 keywords)</span>
+              </label>
+              <input
+                id="seo-keywords"
+                type="text"
+                value={tempSeoData.keywords}
+                onChange={(e) => setTempSeoData(prev => ({ ...prev, keywords: e.target.value }))}
+                placeholder="Enter keywords separated by commas (e.g., react, javascript, web development)"
+                className="w-full px-3 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 transition-colors"
+              />
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                Add relevant keywords to help search engines understand your content
+              </p>
+            </div>
+
+            {/* SEO Best Practices */}
+            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+              <div className="flex items-start">
+                <svg className="w-5 h-5 text-blue-500 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                </svg>
+                <div className="flex-1">
+                  <h4 className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-2">SEO Best Practices</h4>
+                  <ul className="text-xs text-blue-800 dark:text-blue-200 space-y-1">
+                    <li>• Keep titles under 60 characters for optimal display</li>
+                    <li>• Write descriptions between 150-160 characters</li>
+                    <li>• Use descriptive, relevant keywords naturally</li>
+                    <li>• Make titles and descriptions compelling for users</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-end space-x-3 mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+            <Button
+              variant="secondary"
+              onClick={handleTitleCancel}
+              className="px-4 py-2"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleTitleSave}
+              className="px-4 py-2"
+            >
+              Save Changes
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </>
   );
 }
