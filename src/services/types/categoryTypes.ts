@@ -41,6 +41,10 @@ export interface CategoryListProps {
   isLoading?: boolean;
   error?: string | null;
   deletingCategoryId?: string | null;
+  currentPage?: number;
+  totalPages?: number;
+  onPageChange?: (page: number) => void;
+  itemsPerPage?: number;
 }
 
 export interface CategoryEditModalProps {

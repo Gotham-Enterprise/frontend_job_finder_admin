@@ -1,6 +1,7 @@
 import React from "react";
 import Input from "@/components/form/input/InputField";
 import { Table, TableHeader, TableBody, TableRow, TableCell } from "@/components/ui/table";
+import Pagination from "@/components/tables/Pagination";
 import { CategoryListProps } from "@/services/types/categoryTypes";
 
 export default function CategoryList({
@@ -12,12 +13,22 @@ export default function CategoryList({
   getParentCategoryName,
   isLoading = false,
   error = null,
-  deletingCategoryId = null
+  deletingCategoryId = null,
+  currentPage = 1,
+  totalPages = 1,
+  onPageChange,
+  itemsPerPage = 10
 }: CategoryListProps) {
   const filteredCategories = categories.filter(category =>
     category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     category.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Calculate pagination for filtered categories
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedCategories = filteredCategories.slice(startIndex, endIndex);
+  const calculatedTotalPages = Math.ceil(filteredCategories.length / itemsPerPage);
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
@@ -77,7 +88,7 @@ export default function CategoryList({
             </TableRow>
           </TableHeader>
           <TableBody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-            {filteredCategories.map((category) => (
+            {paginatedCategories.map((category) => (
               <TableRow key={category.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                 <TableCell className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm font-medium text-gray-900 dark:text-white">
@@ -139,12 +150,25 @@ export default function CategoryList({
           </TableBody>
         </Table>
 
-        {filteredCategories.length === 0 && (
+        {paginatedCategories.length === 0 && filteredCategories.length === 0 && (
           <div className="p-6 text-center">
             <p className="text-gray-500 dark:text-gray-400">No categories found.</p>
           </div>
         )}
       </div>
+
+      {/* Pagination */}
+      {calculatedTotalPages > 1 && onPageChange && (
+        <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700">
+          <div className="flex justify-center">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={calculatedTotalPages}
+              onPageChange={onPageChange}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

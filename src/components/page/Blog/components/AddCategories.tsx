@@ -26,6 +26,8 @@ export default function AddNewCategories() {
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [isSlugManuallyEdited, setIsSlugManuallyEdited] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(5); // Show 5 categories per page
   const editModal = useModal();
   const confirmDialog = useConfirmation();
   
@@ -163,6 +165,11 @@ export default function AddNewCategories() {
 
   const searchChange = async (value: string) => {
     setSearchTerm(value);
+    setCurrentPage(1); // Reset to first page when searching
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
   };
 
   return (
@@ -206,6 +213,9 @@ export default function AddNewCategories() {
             isLoading={isSearching}
             error={categoriesError}
             deletingCategoryId={deleteCategoryMutation.variables || null}
+            currentPage={currentPage}
+            onPageChange={handlePageChange}
+            itemsPerPage={itemsPerPage}
           />
         </div>
       </div>
