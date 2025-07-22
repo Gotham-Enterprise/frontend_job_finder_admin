@@ -47,19 +47,6 @@ export default function CategoryEditModal({
                   className="mt-1"
                 />
               </div>
-
-              <div>
-                <Label htmlFor="editCategorySlug">Slug</Label>
-                <Input
-                  id="editCategorySlug"
-                  type="text"
-                  placeholder="category-slug"
-                  defaultValue={editingCategory.slug}
-                  onChange={(e) => setEditingCategory((prev: Category | null) => prev ? { ...prev, slug: e.target.value } : null)}
-                  className="mt-1"
-                />
-              </div>
-
               <div>
                 <Label>Sub Categories</Label>
                 <SubCategoryDropdown

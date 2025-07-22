@@ -38,20 +38,7 @@ export default function CategoryForm({
             onChange={(e) => onInputChange('name', e.target.value)}
           />
         </div>        
-        <div>
-          <Label>Slug</Label>
-          <Input
-            key={newCategory.slug} 
-            type="text"
-            placeholder="category-slug"
-            defaultValue={newCategory.slug}
-            onChange={(e) => onInputChange('slug', e.target.value)}
-          />
-          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-            The &quot;slug&quot; is the URL-friendly version of the name.
-          </p>
-        </div>        
-        
+         
         <div>
           <Label>Sub Categories</Label>
           <SubCategoryDropdown

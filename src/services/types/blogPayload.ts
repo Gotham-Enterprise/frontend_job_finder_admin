@@ -16,7 +16,6 @@ export interface CreateBlogPostPayload {
   password?: string;
   publishDate: string;
   
-  // Content Organization
   categories: string[];
   tags: string[];
   featuredImage?: {
@@ -26,27 +25,22 @@ export interface CreateBlogPostPayload {
     width?: number;
     height?: number;
   };
-  
-  // SEO Settings
+
   seoTitle: string;
   seoDescription: string;
   seoKeywords?: string[];
   canonical?: string;
-  
-  // Social Media
+
   socialImage?: {
     url: string;
     alt: string;
   };
-  
-  // Content Settings
+
   allowComments: boolean;
   allowPings: boolean;
-  
-  // Author Information
+
   authorId?: string;
-  
-  // Additional Metadata
+
   customFields?: Record<string, any>;
   readingTime?: number;
   wordCount?: number;
