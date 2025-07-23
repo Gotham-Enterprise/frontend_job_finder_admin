@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { CategoryFormData } from '@/services/types/subCategoryTypes';
 import { useSubCategories } from '@/services/hooks/useSubCategories';
+import { useCreateCategory, useCategories } from '@/services/hooks/useCategories';
 import SubCategoryDropdown from '@/components/form/SubCategoryDropdown';
 import Input from '@/components/form/input/InputField';
 import TextArea from '@/components/form/input/TextArea';
@@ -20,14 +21,11 @@ export default function CategoryManager({ onCategoryCreated, onCategoryUpdated }
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [searchKeywords, setSearchKeywords] = useState<string | undefined>();
 
-  const { 
-    subCategories, 
-    isLoading, 
-    error, 
-    createCategory, 
-    fetchCategoriesByKeyword 
-  } = useSubCategories();
+  const { subCategories, isLoading: isLoadingSubCategories, error: subCategoriesError } = useSubCategories();
+  const { refetch: refetchCategories } = useCategories(searchKeywords ? { keywords: searchKeywords } : undefined);
+  const createCategoryMutation = useCreateCategory();
 
   const showNotification = useCallback((type: 'success' | 'error', message: string) => {
     setNotification({ type, message });
@@ -53,7 +51,12 @@ export default function CategoryManager({ onCategoryCreated, onCategoryUpdated }
         subCategories: formData.subCategories.map(sub => ({ name: sub.name.trim() }))
       };
 
-      const createdCategory = await createCategory(categoryData);
+      const response = await new Promise((resolve, reject) => {
+        createCategoryMutation.mutate(categoryData, {
+          onSuccess: (data) => resolve(data),
+          onError: (error) => reject(error)
+        });
+      });
       
       showNotification('success', `Category "${formData.name}" created successfully!`);
       
@@ -64,7 +67,7 @@ export default function CategoryManager({ onCategoryCreated, onCategoryUpdated }
       });
 
       if (onCategoryCreated) {
-        onCategoryCreated(createdCategory);
+        onCategoryCreated(response);
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to create category';
@@ -72,7 +75,7 @@ export default function CategoryManager({ onCategoryCreated, onCategoryUpdated }
     } finally {
       setIsSubmitting(false);
     }
-  }, [formData, validateForm, createCategory, showNotification, onCategoryCreated]);
+  }, [formData, validateForm, createCategoryMutation, showNotification, onCategoryCreated]);
 
   const updateFormField = useCallback((field: keyof CategoryFormData, value: any) => {
     setFormData(prev => ({
@@ -84,12 +87,13 @@ export default function CategoryManager({ onCategoryCreated, onCategoryUpdated }
   const searchCategories = useCallback(async (keywords: string) => {
     if (keywords.trim()) {
       try {
-        await fetchCategoriesByKeyword(keywords);
+        setSearchKeywords(keywords);
+        await refetchCategories();
       } catch (err) {
         showNotification('error', 'Failed to search categories');
       }
     }
-  }, [fetchCategoriesByKeyword, showNotification]);
+  }, [refetchCategories, showNotification]);
 
   return (
     <div className="space-y-6">
@@ -144,7 +148,7 @@ export default function CategoryManager({ onCategoryCreated, onCategoryUpdated }
             <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
               Type to search existing subcategories or create new ones. Press Enter to add.
             </p>
-            {isLoading && (
+            {isLoadingSubCategories && (
               <p className="mt-1 text-xs text-blue-500 dark:text-blue-400">
                 Loading subcategories...
               </p>
@@ -163,7 +167,7 @@ export default function CategoryManager({ onCategoryCreated, onCategoryUpdated }
             <Button
               variant="ghost"
               onClick={() => searchCategories('WEB')}
-              disabled={isLoading}
+              disabled={isLoadingSubCategories}
               className="px-6"
             >
               Search Example
@@ -172,10 +176,10 @@ export default function CategoryManager({ onCategoryCreated, onCategoryUpdated }
         </div>
       </div>
 
-      {error && (
+      {subCategoriesError && (
         <div className="p-4 bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-200 rounded-md">
           <h3 className="font-medium">API Error:</h3>
-          <p className="text-sm mt-1">{error}</p>
+          <p className="text-sm mt-1">{subCategoriesError}</p>
         </div>
       )}
 

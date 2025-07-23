@@ -605,7 +605,7 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
         }}
       >
         <div className="text-lg leading-relaxed text-gray-700 mb-3">
-          "{text}"
+          &ldquo;{text}&rdquo;
         </div>
         {(author || citation) && (
           <footer className="text-sm text-gray-500">

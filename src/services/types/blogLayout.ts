@@ -143,34 +143,28 @@ export interface VisualBlogPayload {
     };
   };
   
-  // Generated HTML (for backward compatibility)
   generatedHtml: string;
   
-  // Publishing settings
   status: 'draft' | 'published' | 'scheduled';
   visibility: 'public' | 'private' | 'password';
   publishDate: string;
   
-  // SEO & Meta
+
   seoTitle: string;
   seoDescription: string;
-  socialImage?: string; // Image ID reference
+  socialImage?: string; 
   
-  // Categories & Tags
   categories: string[];
   tags: string[];
   
-  // Settings
   allowComments: boolean;
   featuredPost: boolean;
-  
-  // Metadata
+
   createdAt: string;
   updatedAt: string;
   authorId: string;
 }
 
-// Sample templates
 export const BLOG_TEMPLATES: BlogTemplate[] = [
   {
     id: 'modern-article',
@@ -182,7 +176,7 @@ export const BLOG_TEMPLATES: BlogTemplate[] = [
       id: 'modern-article-layout',
       name: 'Modern Article Layout',
       description: 'Professional article layout with hero image',
-      thumbnail: '/templates/modern-article.jpg',
+      thumbnail: '/templates/modern-article.jpg`',
       components: [
         {
           id: 'hero-image',
@@ -218,9 +212,9 @@ export const BLOG_TEMPLATES: BlogTemplate[] = [
             level: 1
           },
           responsive: {
-            mobile: { styles: { fontSize: '1.875rem' } },
-            tablet: { styles: { fontSize: '2.25rem' } },
-            desktop: { styles: { fontSize: '2.5rem' } }
+            mobile: { width: '100%' },
+            tablet: { width: '100%' },
+            desktop: { width: '100%' }
           }
         },
         {

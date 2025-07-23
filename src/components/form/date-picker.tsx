@@ -33,24 +33,24 @@ export default function DatePicker({
       defaultDate,
       onChange,
       onOpen: function() {
-        // Ensure calendar doesn't get cut off in sidebar
+      
         const calendar = document.querySelector('.flatpickr-calendar') as HTMLElement;
         if (calendar) {
           calendar.style.zIndex = '999999';
           calendar.style.position = 'fixed';
           
-          // Get input position
+         
           const input = document.getElementById(id);
           if (input) {
             const rect = input.getBoundingClientRect();
-            const calendarWidth = 280; // Approximate calendar width
+            const calendarWidth = 280;
             const viewportWidth = window.innerWidth;
             
-            // Position to the right if there's space, otherwise to the left
+         
             if (rect.right + calendarWidth > viewportWidth) {
               calendar.style.left = `${Math.max(10, rect.left - calendarWidth + rect.width)}px`;
             } else {
-              calendar.style.left = `${rect.left + 124}px`; // Add 124px margin-left as shown in DevTools
+              calendar.style.left = `${rect.left + 124}px`; 
             }
             
             calendar.style.top = `${rect.bottom + 5}px`;

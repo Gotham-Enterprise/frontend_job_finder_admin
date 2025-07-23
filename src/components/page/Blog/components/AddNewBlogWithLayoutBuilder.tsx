@@ -829,7 +829,7 @@ export default function AddNewBlogWithLayoutBuilder() {
                             </>
                           ) : (
                             <div className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
-                              No categories found matching "{categoriesSearchTerm}"
+                              No categories found matching &ldquo;{categoriesSearchTerm}&rdquo;
                             </div>
                           )}
                         </div>
@@ -924,7 +924,7 @@ export default function AddNewBlogWithLayoutBuilder() {
                             ))
                           ) : (
                             <div className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
-                              No tags found matching "{tagsSearchTerm}"
+                              No tags found matching &ldquo;{tagsSearchTerm}&rdquo;
                             </div>
                           )}
                         </div>

@@ -138,7 +138,7 @@ const ContentControls: React.FC<ContentControlsProps> = memo(({ block, onContent
         <div>
           <label className="block text-xs font-medium text-gray-600 mb-1">Selected Text</label>
           <div className="px-2 py-1 bg-gray-50 rounded-lg text-sm text-gray-800 font-medium">
-            "{selectedText}"
+            &ldquo;{selectedText}&rdquo;
           </div>
         </div>
         
