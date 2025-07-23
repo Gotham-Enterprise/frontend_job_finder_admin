@@ -23,9 +23,6 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = memo(({
   onClose, 
   onImageSelect 
 }) => {
-  // Debug render tracking
-  console.log('ImageGalleryModal render:', { isOpen });
-  
   const { images, loading, error, uploadMedia, deleteMediaItem, deleteMultipleMedia, refreshMedia } = useMedia({
     initialFilters: { type: 'IMAGE', limit: 50 },
     autoFetch: false,
@@ -156,26 +153,18 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = memo(({
   }, [uploadPreviews]);
 
   const confirmSelection = useCallback(async () => {
-    console.log('confirmSelection called with state:', {
-      activeTab,
-      selectedGalleryImage: !!selectedGalleryImage,
-      uploadPreviewsLength: uploadPreviews.length,
-      selectedUploadedFilesSize: selectedUploadedFiles.size,
-      hasSelectionToConfirm
-    });
+   
     
     if (activeTab === 'gallery' && selectedGalleryImage) {
       onImageSelect(selectedGalleryImage.url);
       closeModal();
     } else if (activeTab === 'upload' && uploadPreviews.length > 0) {
-      // Upload all images if multiple, or the selected one if user has made a selection
       const filesToUpload = selectedUploadedFiles.size > 0 
         ? Array.from(selectedUploadedFiles)
         : uploadPreviews.map(preview => preview.file);
       
       if (filesToUpload.length === 0) return;
       
-      // For single image selection, upload and select immediately
       if (filesToUpload.length === 1) {
         const file = filesToUpload[0];
         const fileName = `upload-${Date.now()}`;
@@ -195,7 +184,7 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = memo(({
           });
         }
       } else {
-        // For multiple images, upload all and let user select from gallery
+     
         const uploadPromises = filesToUpload.map(async (file) => {
           const fileName = `upload-${file.name}-${Date.now()}`;
           setUploadingFiles(prev => new Set(prev).add(fileName));
@@ -248,6 +237,8 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = memo(({
     }));
 
     setUploadPreviews(prev => [...prev, ...newPreviews]);
+    
+    setActiveTab('upload');
   }, []);
 
   const fileInputChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
@@ -347,36 +338,27 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = memo(({
   }, []);
 
   const hasSelectionToConfirm = useMemo(() => {
-    if (isMultiSelectMode) return false;
+  
+    if (isMultiSelectMode) {
+      return false;
+    }
+
+    if (activeTab === 'gallery') {
+      const result = !!selectedGalleryImage;
+      return result;
+    }
     
-    const hasGallerySelection = activeTab === 'gallery' && selectedGalleryImage;
-    const hasUploadSelection = activeTab === 'upload' && uploadPreviews.length > 0;
-    const result = hasGallerySelection || hasUploadSelection;
-    
-    // Debug logging to help troubleshoot button state
-    console.log('hasSelectionToConfirm calculation:', {
-      isMultiSelectMode,
-      activeTab,
-      selectedGalleryImage: !!selectedGalleryImage,
-      uploadPreviewsLength: uploadPreviews.length,
-      hasGallerySelection,
-      hasUploadSelection,
-      result
-    });
-    
-    return result;
+   
+    if (activeTab === 'upload') {
+      const result = uploadPreviews.length > 0;
+  
+      return result;
+    }
+   
+    return false;
   }, [activeTab, selectedGalleryImage, uploadPreviews.length, isMultiSelectMode]);
 
   const isUploading = useMemo(() => uploadingFiles.size > 0, [uploadingFiles]);
-
-  // Debug upload previews changes
-  useEffect(() => {
-    console.log('uploadPreviews changed:', {
-      length: uploadPreviews.length,
-      files: uploadPreviews.map(p => p.file.name)
-    });
-  }, [uploadPreviews]);
-
   if (!isOpen) return null;
 
   return createPortal(
@@ -796,16 +778,30 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = memo(({
                     : 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
                 }`}
               >
-                {isUploading ? (
-                  <div className="flex items-center gap-2">
-                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
-                    Uploading...
-                  </div>
-                ) : activeTab === 'gallery' ? (
-                  isMultiSelectMode ? 'Multi-Select Mode' : 'Select an Image'
-                ) : (
-                  uploadPreviews.length === 1 ? 'Upload & Select' : uploadPreviews.length > 1 ? `Upload ${uploadPreviews.length} Images` : 'Select & Upload'
-                )}
+                {(() => {
+                
+                  if (isUploading) {
+                    return (
+                      <div className="flex items-center gap-2">
+                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                        Uploading...
+                      </div>
+                    );
+                  }
+                  
+                  if (activeTab === 'gallery') {
+                    return isMultiSelectMode ? 'Multi-Select Mode' : 'Select an Image';
+                  }
+                  
+                
+                  if (uploadPreviews.length === 1) {
+                    return 'Upload & Select';
+                  } else if (uploadPreviews.length > 1) {
+                    return `Upload ${uploadPreviews.length} Images`;
+                  } else {
+                    return 'Select & Upload';
+                  }
+                })()}
               </button>
             </div>
           </div>
