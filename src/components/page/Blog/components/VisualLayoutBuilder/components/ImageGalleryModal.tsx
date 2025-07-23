@@ -21,12 +21,14 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = memo(({
   onClose, 
   onImageSelect 
 }) => {
-  const { images, loading, error, uploadMedia, deleteMediaItem, refreshMedia } = useMedia({
+  const { images, loading, error, uploadMedia, deleteMediaItem, deleteMultipleMedia, refreshMedia } = useMedia({
     initialFilters: { type: 'IMAGE', limit: 50 },
     autoFetch: false,
   });
 
   const [selectedGalleryImage, setSelectedGalleryImage] = useState<MediaItem | null>(null);
+  const [selectedGalleryImages, setSelectedGalleryImages] = useState<Set<string>>(new Set());
+  const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
   const [loadedImages, setLoadedImages] = useState<Set<string>>(new Set());
   const [activeTab, setActiveTab] = useState<'gallery' | 'upload'>('gallery');
   const [uploadPreviews, setUploadPreviews] = useState<UploadPreview[]>([]);
@@ -68,10 +70,60 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = memo(({
   }, [uploadPreviews]);
 
   const toggleImageSelection = useCallback((image: MediaItem) => {
-    setSelectedGalleryImage(prev => 
-      prev?.id === image.id ? null : image
-    );
+    if (isMultiSelectMode) {
+      setSelectedGalleryImages(prev => {
+        const newSet = new Set(prev);
+        if (newSet.has(image.id)) {
+          newSet.delete(image.id);
+        } else {
+          newSet.add(image.id);
+        }
+        return newSet;
+      });
+    } else {
+      setSelectedGalleryImage(prev => 
+        prev?.id === image.id ? null : image
+      );
+    }
+  }, [isMultiSelectMode]);
+
+  const toggleMultiSelectMode = useCallback(() => {
+    setIsMultiSelectMode(prev => !prev);
+    setSelectedGalleryImage(null);
+    setSelectedGalleryImages(new Set());
   }, []);
+
+  const selectAllImages = useCallback(() => {
+    setSelectedGalleryImages(new Set(images.map(img => img.id)));
+  }, [images]);
+
+  const deselectAllImages = useCallback(() => {
+    setSelectedGalleryImages(new Set());
+  }, []);
+
+  const bulkDeleteImages = useCallback(async () => {
+    if (selectedGalleryImages.size === 0) return;
+    
+    const imageIds = Array.from(selectedGalleryImages);
+    const confirmMessage = `Are you sure you want to delete ${imageIds.length} image${imageIds.length > 1 ? 's' : ''}?`;
+    
+    if (!confirm(confirmMessage)) return;
+    
+    setDeletingItems(prev => new Set([...prev, ...imageIds]));
+    
+    try {
+      const success = await deleteMultipleMedia(imageIds);
+      if (success) {
+        setSelectedGalleryImages(new Set());
+      }
+    } finally {
+      setDeletingItems(prev => {
+        const newSet = new Set(prev);
+        imageIds.forEach(id => newSet.delete(id));
+        return newSet;
+      });
+    }
+  }, [selectedGalleryImages, deleteMultipleMedia]);
 
   const confirmSelection = useCallback(async () => {
     if (activeTab === 'gallery' && selectedGalleryImage) {
@@ -101,6 +153,8 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = memo(({
   const closeModal = useCallback(() => {
     onClose();
     setSelectedGalleryImage(null);
+    setSelectedGalleryImages(new Set());
+    setIsMultiSelectMode(false);
     resetUploadState();
   }, [onClose]);
 
@@ -212,9 +266,10 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = memo(({
   }, []);
 
   const hasSelectionToConfirm = useMemo(() => {
+    if (isMultiSelectMode) return false; // Disable confirm button in multi-select mode
     return (activeTab === 'gallery' && selectedGalleryImage) || 
            (activeTab === 'upload' && selectedUploadedFiles.size > 0);
-  }, [activeTab, selectedGalleryImage, selectedUploadedFiles]);
+  }, [activeTab, selectedGalleryImage, selectedUploadedFiles, isMultiSelectMode]);
 
   const isUploading = useMemo(() => uploadingFiles.size > 0, [uploadingFiles]);
 
@@ -233,10 +288,20 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = memo(({
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
                 Select Images
+                {isMultiSelectMode && selectedGalleryImages.size > 0 && (
+                  <span className="ml-2 text-sm font-normal text-purple-600 dark:text-purple-400">
+                    ({selectedGalleryImages.size} selected)
+                  </span>
+                )}
               </h3>
               <div className="flex items-center gap-4">
                 <div className="text-sm text-gray-500 dark:text-gray-400">
-                  {activeTab === 'gallery' ? 'Click on images to select them' : 'Upload and select your images'}
+                  {activeTab === 'gallery' 
+                    ? isMultiSelectMode 
+                      ? 'Click on images to select multiple for deletion'
+                      : 'Click on images to select them'
+                    : 'Upload and select your images'
+                  }
                 </div>
                 <button
                   onClick={closeModal}
@@ -280,6 +345,58 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = memo(({
 
             {activeTab === 'gallery' ? (
               <>
+                {/* Multi-select controls */}
+                {images.length > 0 && (
+                  <div className="flex items-center justify-between mb-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <div className="flex items-center gap-4">
+                      <button
+                        onClick={toggleMultiSelectMode}
+                        className={`px-3 py-1.5 text-sm font-medium rounded transition-colors ${
+                          isMultiSelectMode
+                            ? 'bg-purple-600 text-white hover:bg-purple-700'
+                            : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 dark:bg-gray-600 dark:text-gray-200 dark:border-gray-500 dark:hover:bg-gray-500'
+                        }`}
+                      >
+                        {isMultiSelectMode ? 'Single Select' : 'Multi Select'}
+                      </button>
+                      
+                      {isMultiSelectMode && (
+                        <>
+                          <button
+                            onClick={selectAllImages}
+                            disabled={selectedGalleryImages.size === images.length}
+                            className="text-sm text-purple-600 hover:text-purple-700 disabled:text-gray-400 dark:text-purple-400 dark:hover:text-purple-300"
+                          >
+                            Select All
+                          </button>
+                          <button
+                            onClick={deselectAllImages}
+                            disabled={selectedGalleryImages.size === 0}
+                            className="text-sm text-purple-600 hover:text-purple-700 disabled:text-gray-400 dark:text-purple-400 dark:hover:text-purple-300"
+                          >
+                            Deselect All
+                          </button>
+                        </>
+                      )}
+                    </div>
+                    
+                    {isMultiSelectMode && selectedGalleryImages.size > 0 && (
+                      <div className="flex items-center gap-3">
+                        <span className="text-sm text-gray-600 dark:text-gray-400">
+                          {selectedGalleryImages.size} selected
+                        </span>
+                        <button
+                          onClick={bulkDeleteImages}
+                          disabled={Array.from(selectedGalleryImages).some(id => deletingItems.has(id))}
+                          className="px-3 py-1.5 bg-red-600 text-white text-sm font-medium rounded hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
+                          Delete Selected
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {loading ? (
                   <div className="flex items-center justify-center py-12">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
@@ -298,7 +415,9 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = memo(({
                 ) : (
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 mb-6">
                     {images.map((image) => {
-                      const isSelected = selectedGalleryImage?.id === image.id;
+                      const isSingleSelected = selectedGalleryImage?.id === image.id;
+                      const isMultiSelected = selectedGalleryImages.has(image.id);
+                      const isSelected = isMultiSelectMode ? isMultiSelected : isSingleSelected;
                       const isDeleting = deletingItems.has(image.id);
                       return (
                         <div
@@ -321,8 +440,8 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = memo(({
                           
                           <div className="absolute top-2 left-2 z-10">
                             <input
-                              type="radio"
-                              name="gallery-selection"
+                              type={isMultiSelectMode ? "checkbox" : "radio"}
+                              name={isMultiSelectMode ? undefined : "gallery-selection"}
                               checked={isSelected}
                               onChange={(e) => {
                                 e.stopPropagation();
@@ -334,25 +453,27 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = memo(({
                             />
                           </div>
 
-                          <div className="absolute top-2 right-2 z-10">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                deleteImage(image);
-                              }}
-                              disabled={isDeleting}
-                              className="w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center transition-colors"
-                              title="Delete image"
-                            >
-                              {isDeleting ? (
-                                <div className="animate-spin rounded-full h-3 w-3 border border-white border-t-transparent"></div>
-                              ) : (
-                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                              )}
-                            </button>
-                          </div>
+                          {!isMultiSelectMode && (
+                            <div className="absolute top-2 right-2 z-10">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  deleteImage(image);
+                                }}
+                                disabled={isDeleting}
+                                className="w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center transition-colors"
+                                title="Delete image"
+                              >
+                                {isDeleting ? (
+                                  <div className="animate-spin rounded-full h-3 w-3 border border-white border-t-transparent"></div>
+                                ) : (
+                                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                  </svg>
+                                )}
+                              </button>
+                            </div>
+                          )}
 
                           {isSelected && (
                             <div className="absolute inset-0 bg-black opacity-[0.4] flex items-center justify-center">
@@ -564,7 +685,7 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = memo(({
                     Uploading...
                   </div>
                 ) : activeTab === 'gallery' ? (
-                  'Select an Image'
+                  isMultiSelectMode ? 'Multi-Select Mode' : 'Select an Image'
                 ) : (
                   'Select & Upload'
                 )}

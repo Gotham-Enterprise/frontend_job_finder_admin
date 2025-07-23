@@ -38,7 +38,7 @@ export interface MediaUploadData {
 }
 
 export interface MediaDeleteData {
-  categoryIds: string[];
+  mediaIds: string[];
 }
 
 export type MediaType = 'IMAGE' | 'VIDEO';

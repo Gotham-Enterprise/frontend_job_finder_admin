@@ -140,10 +140,10 @@ export const blogApi = {
   },
 
   async deleteMediaItem(id: string): Promise<{ success: boolean }> {
-    return this.deleteMedia({ categoryIds: [id] });
+    return this.deleteMedia({ mediaIds: [id] });
   },
 
   async deleteMultipleMedia(ids: string[]): Promise<{ success: boolean }> {
-    return this.deleteMedia({ categoryIds: ids });
+    return this.deleteMedia({ mediaIds: ids });
   }
 };
