@@ -5,9 +5,8 @@ import { useTags, useCreateTag, useDeleteTag, useBulkDeleteTags } from "@/servic
 import { NewTag } from "@/services/api/tag";
 import { showToast } from "@/services/utils/toast";
 import { useConfirmation } from "@/hooks/useConfirmation";
-import BulkActionBar from "@/components/ui/BulkActionBar";
-import BulkActionDropdown from "@/components/ui/BulkActionDropdown";
 import FullScreenSpinner from "@/components/ui/FullScreenSpinner";
+import ConfirmationDialog from "@/components/ui/ConfirmationDialog";
 import { TagForm, TagList, TagEditModal } from "./Tags/";
 
 export default function AddTags() {
@@ -18,8 +17,8 @@ export default function AddTags() {
 
   const [editingTag, setEditingTag] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [isSlugManuallyEdited, setIsSlugManuallyEdited] = useState(false);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
   const editModal = useModal();
   const confirmation = useConfirmation();
@@ -27,11 +26,10 @@ export default function AddTags() {
   const { data: tagsResponse, isLoading, error, refetch } = useTags();
   const createTagMutation = useCreateTag();
   const deleteTagMutation = useDeleteTag();
-  const bulkDeleteTagsMutation = useBulkDeleteTags();
+  const bulkDeleteMutation = useBulkDeleteTags();
 
   const tags = tagsResponse?.data || [];
   const isDeleting = deleteTagMutation.isPending;
-  const isBulkDeleting = bulkDeleteTagsMutation.isPending;
   const isCreating = createTagMutation.isPending;
 
   const filteredTags = useMemo(() => {
@@ -92,7 +90,6 @@ export default function AddTags() {
         const response = await deleteTagMutation.mutateAsync(tagId);
         if (response.success) {
           showToast.success('Success', 'Tag deleted successfully');
-          setSelectedTags(prev => prev.filter(id => id !== tagId));
         } else {
           showToast.error('Error', response.message || 'Failed to delete tag');
         }
@@ -103,7 +100,8 @@ export default function AddTags() {
     }
   };
 
-  const toggleTagSelection = (tagId: string, selected: boolean) => {
+  // Bulk selection functions
+  const selectTag = (tagId: string, selected: boolean) => {
     setSelectedTags(prev => 
       selected 
         ? [...prev, tagId]
@@ -111,7 +109,7 @@ export default function AddTags() {
     );
   };
 
-  const selectAllTags = (selected: boolean) => {
+  const selectAll = (selected: boolean) => {
     if (selected) {
       setSelectedTags(sortedTags.map(tag => tag.id));
     } else {
@@ -124,32 +122,27 @@ export default function AddTags() {
   };
 
   const bulkDeleteTags = async () => {
-    if (selectedTags.length === 0) {
-      showToast.error('No Selection', 'Please select tags to delete');
-      return;
-    }
-
+    if (selectedTags.length === 0) return;
+    
     const count = selectedTags.length;
     const message = count === 1 
       ? 'Are you sure you want to delete this tag?' 
       : `Are you sure you want to delete ${count} tags?`;
-
+    
     const confirmed = await confirmation.confirm({
       title: 'Delete Tags',
-      message: `${message} This action cannot be undone.`
+      message,
+      confirmText: 'Delete',
+      cancelText: 'Cancel'
     });
 
     if (confirmed) {
       try {
-        const response = await bulkDeleteTagsMutation.mutateAsync({ tagIds: selectedTags });
-        if (response.success) {
-          showToast.success('Success', `${count} tag${count > 1 ? 's' : ''} deleted successfully`);
-          setSelectedTags([]);
-        } else {
-          showToast.error('Error', response.message || 'Failed to delete tags');
-        }
+        await bulkDeleteMutation.mutateAsync({ tagIds: selectedTags });
+        setSelectedTags([]);
+        showToast.success('Success', 'Tags deleted successfully');
       } catch (error) {
-        console.error('Error bulk deleting tags:', error);
+        console.error('Failed to delete tags:', error);
         showToast.error('Error', 'Failed to delete tags');
       }
     }
@@ -196,59 +189,20 @@ export default function AddTags() {
         </div>
         
         <div className="lg:col-span-2">
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
-            <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                  Tags ({tags.length})
-                </h2>
-                <div className="flex items-center gap-3">
-                  <div className="relative">
-                    <input
-                      type="text"
-                      placeholder="Search tags..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                      </svg>
-                    </div>
-                  </div>
-                  <BulkActionDropdown
-                    selectedItems={selectedTags}
-                    onBulkDelete={bulkDeleteTags}
-                    onClearSelection={clearSelection}
-                    isDeleting={isBulkDeleting}
-                    itemType="tags"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <BulkActionBar
-              selectedItems={selectedTags}
-              totalItems={sortedTags.length}
-              itemType="tags"
-              onBulkDelete={bulkDeleteTags}
-              onSelectAll={selectAllTags}
-              onClearSelection={clearSelection}
-              isDeleting={isBulkDeleting}
-            />
-
-            <TagList
-              tags={sortedTags}
-              searchTerm={searchTerm}
-              selectedTags={selectedTags}
-              onSearchChange={setSearchTerm}
-              onEditTag={editTag}
-              onDeleteTag={deleteTag}
-              onToggleSelection={toggleTagSelection}
-              isDeleting={isDeleting}
-            />
-          </div>
+          <TagList
+            tags={sortedTags}
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
+            onEditTag={editTag}
+            onDeleteTag={deleteTag}
+            isDeleting={isDeleting}
+            selectedTags={selectedTags}
+            onSelectTag={selectTag}
+            onSelectAll={selectAll}
+            onBulkDelete={bulkDeleteTags}
+            onClearSelection={clearSelection}
+            isBulkDeleting={bulkDeleteMutation.isPending}
+          />
         </div>
       </div>
 
@@ -257,6 +211,18 @@ export default function AddTags() {
         onClose={editModal.closeModal}
         editingTag={editingTag}
         setEditingTag={setEditingTag}
+      />
+
+      <ConfirmationDialog
+        isOpen={confirmation.isOpen}
+        onClose={confirmation.onClose}
+        onConfirm={confirmation.onConfirm}
+        onCancel={confirmation.onCancel}
+        title={confirmation.config?.title || ''}
+        message={confirmation.config?.message || ''}
+        confirmText={confirmation.config?.confirmText}
+        cancelText={confirmation.config?.cancelText}
+        isLoading={deleteTagMutation.isPending || bulkDeleteMutation.isPending}
       />
     </div>
   );
