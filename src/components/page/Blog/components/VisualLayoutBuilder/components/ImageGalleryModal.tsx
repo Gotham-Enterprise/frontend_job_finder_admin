@@ -1,8 +1,10 @@
 import React, { memo, useState, useEffect, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useMedia } from '@/hooks/useMedia';
+import { useConfirmation } from '@/hooks/useConfirmation';
 import { MediaItem } from '@/services/types/mediaTypes';
 import { validateMediaType, createObjectUrl, revokeObjectUrl, formatFileSize, isValidImageType } from '@/utils/mediaUtils';
+import ConfirmationDialog from '@/components/ui/ConfirmationDialog';
 
 interface ImageGalleryModalProps {
   isOpen: boolean;
@@ -21,10 +23,15 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = memo(({
   onClose, 
   onImageSelect 
 }) => {
+  // Debug render tracking
+  console.log('ImageGalleryModal render:', { isOpen });
+  
   const { images, loading, error, uploadMedia, deleteMediaItem, deleteMultipleMedia, refreshMedia } = useMedia({
     initialFilters: { type: 'IMAGE', limit: 50 },
     autoFetch: false,
   });
+
+  const confirmation = useConfirmation();
 
   const [selectedGalleryImage, setSelectedGalleryImage] = useState<MediaItem | null>(null);
   const [selectedGalleryImages, setSelectedGalleryImages] = useState<Set<string>>(new Set());
@@ -35,6 +42,7 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = memo(({
   const [isDragOver, setIsDragOver] = useState(false);
   const [selectedUploadedFiles, setSelectedUploadedFiles] = useState<Set<File>>(new Set());
   const [uploadingFiles, setUploadingFiles] = useState<Set<string>>(new Set());
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const [deletingItems, setDeletingItems] = useState<Set<string>>(new Set());
 
   useEffect(() => {
@@ -105,9 +113,16 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = memo(({
     if (selectedGalleryImages.size === 0) return;
     
     const imageIds = Array.from(selectedGalleryImages);
-    const confirmMessage = `Are you sure you want to delete ${imageIds.length} image${imageIds.length > 1 ? 's' : ''}?`;
+    const count = imageIds.length;
     
-    if (!confirm(confirmMessage)) return;
+    const confirmed = await confirmation.confirm({
+      title: 'Delete Images',
+      message: `Are you sure you want to delete ${count} image${count > 1 ? 's' : ''}? This action cannot be undone.`,
+      confirmText: 'Delete',
+      cancelText: 'Cancel'
+    });
+    
+    if (!confirmed) return;
     
     setDeletingItems(prev => new Set([...prev, ...imageIds]));
     
@@ -123,32 +138,7 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = memo(({
         return newSet;
       });
     }
-  }, [selectedGalleryImages, deleteMultipleMedia]);
-
-  const confirmSelection = useCallback(async () => {
-    if (activeTab === 'gallery' && selectedGalleryImage) {
-      onImageSelect(selectedGalleryImage.url);
-      closeModal();
-    } else if (activeTab === 'upload' && selectedUploadedFiles.size > 0) {
-      const firstFile = Array.from(selectedUploadedFiles)[0];
-      const fileName = `upload-${Date.now()}`;
-      setUploadingFiles(prev => new Set(prev).add(fileName));
-      
-      try {
-        const uploadedMedia = await uploadMedia(firstFile, 'IMAGE');
-        if (uploadedMedia) {
-          onImageSelect(uploadedMedia.url, firstFile);
-          closeModal();
-        }
-      } finally {
-        setUploadingFiles(prev => {
-          const newSet = new Set(prev);
-          newSet.delete(fileName);
-          return newSet;
-        });
-      }
-    }
-  }, [activeTab, selectedGalleryImage, selectedUploadedFiles, uploadMedia, onImageSelect]);
+  }, [selectedGalleryImages, deleteMultipleMedia, confirmation]);
 
   const closeModal = useCallback(() => {
     onClose();
@@ -165,14 +155,91 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = memo(({
     setIsDragOver(false);
   }, [uploadPreviews]);
 
+  const confirmSelection = useCallback(async () => {
+    console.log('confirmSelection called with state:', {
+      activeTab,
+      selectedGalleryImage: !!selectedGalleryImage,
+      uploadPreviewsLength: uploadPreviews.length,
+      selectedUploadedFilesSize: selectedUploadedFiles.size,
+      hasSelectionToConfirm
+    });
+    
+    if (activeTab === 'gallery' && selectedGalleryImage) {
+      onImageSelect(selectedGalleryImage.url);
+      closeModal();
+    } else if (activeTab === 'upload' && uploadPreviews.length > 0) {
+      // Upload all images if multiple, or the selected one if user has made a selection
+      const filesToUpload = selectedUploadedFiles.size > 0 
+        ? Array.from(selectedUploadedFiles)
+        : uploadPreviews.map(preview => preview.file);
+      
+      if (filesToUpload.length === 0) return;
+      
+      // For single image selection, upload and select immediately
+      if (filesToUpload.length === 1) {
+        const file = filesToUpload[0];
+        const fileName = `upload-${Date.now()}`;
+        setUploadingFiles(prev => new Set(prev).add(fileName));
+        
+        try {
+          const uploadedMedia = await uploadMedia(file, 'IMAGE');
+          if (uploadedMedia) {
+            onImageSelect(uploadedMedia.url, file);
+            closeModal();
+          }
+        } finally {
+          setUploadingFiles(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(fileName);
+            return newSet;
+          });
+        }
+      } else {
+        // For multiple images, upload all and let user select from gallery
+        const uploadPromises = filesToUpload.map(async (file) => {
+          const fileName = `upload-${file.name}-${Date.now()}`;
+          setUploadingFiles(prev => new Set(prev).add(fileName));
+          
+          try {
+            const result = await uploadMedia(file, 'IMAGE');
+            return result;
+          } finally {
+            setUploadingFiles(prev => {
+              const newSet = new Set(prev);
+              newSet.delete(fileName);
+              return newSet;
+            });
+          }
+        });
+        
+        try {
+          const results = await Promise.all(uploadPromises);
+          const successfulUploads = results.filter(result => result !== null);
+          
+          if (successfulUploads.length > 0) {
+            // Clear upload previews and switch to gallery tab
+            resetUploadState();
+            setActiveTab('gallery');
+            // Refresh gallery to show newly uploaded images
+            await refreshMedia();
+          }
+        } catch (error) {
+          console.error('Error uploading multiple images:', error);
+        }
+      }
+    }
+  }, [activeTab, selectedGalleryImage, uploadPreviews, selectedUploadedFiles, uploadMedia, onImageSelect, resetUploadState, refreshMedia, closeModal]);
+
   const processFileUpload = useCallback((files: FileList | File[]) => {
     const fileArray = Array.from(files);
     const imageFiles = fileArray.filter(file => isValidImageType(file));
     
     if (imageFiles.length === 0) {
-      alert('Please select valid image files (PNG, JPG, JPEG, GIF, WebP)');
+      setUploadError('Please select valid image files (PNG, JPG, JPEG, GIF, WebP)');
       return;
     }
+
+    setUploadError(null);
 
     const newPreviews = imageFiles.map(file => ({
       file,
@@ -227,20 +294,34 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = memo(({
   }, []);
 
   const removeUploadedImage = useCallback((file: File) => {
-    const preview = uploadPreviews.find(p => p.file === file);
-    if (preview) {
-      revokeObjectUrl(preview.url);
-    }
+    setUploadPreviews(prev => {
+      const preview = prev.find(p => p.file === file);
+      if (preview) {
+        revokeObjectUrl(preview.url);
+      }
+      return prev.filter(preview => preview.file !== file);
+    });
     
-    setUploadPreviews(prev => prev.filter(preview => preview.file !== file));
     setSelectedUploadedFiles(prev => {
       const newSet = new Set(prev);
       newSet.delete(file);
       return newSet;
     });
-  }, [uploadPreviews]);
+    
+    // Clear any upload errors when removing images
+    setUploadError(null);
+  }, []);
 
   const deleteImage = useCallback(async (image: MediaItem) => {
+    const confirmed = await confirmation.confirm({
+      title: 'Delete Image',
+      message: `Are you sure you want to delete "${image.fileName}"? This action cannot be undone.`,
+      confirmText: 'Delete',
+      cancelText: 'Cancel'
+    });
+    
+    if (!confirmed) return;
+    
     setDeletingItems(prev => new Set(prev).add(image.id));
     
     try {
@@ -255,7 +336,7 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = memo(({
         return newSet;
       });
     }
-  }, [deleteMediaItem, selectedGalleryImage]);
+  }, [deleteMediaItem, selectedGalleryImage, confirmation]);
 
   const imageLoad = useCallback((imageUrl: string) => {
     setLoadedImages(prev => new Set(prev).add(imageUrl));
@@ -266,12 +347,35 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = memo(({
   }, []);
 
   const hasSelectionToConfirm = useMemo(() => {
-    if (isMultiSelectMode) return false; // Disable confirm button in multi-select mode
-    return (activeTab === 'gallery' && selectedGalleryImage) || 
-           (activeTab === 'upload' && selectedUploadedFiles.size > 0);
-  }, [activeTab, selectedGalleryImage, selectedUploadedFiles, isMultiSelectMode]);
+    if (isMultiSelectMode) return false;
+    
+    const hasGallerySelection = activeTab === 'gallery' && selectedGalleryImage;
+    const hasUploadSelection = activeTab === 'upload' && uploadPreviews.length > 0;
+    const result = hasGallerySelection || hasUploadSelection;
+    
+    // Debug logging to help troubleshoot button state
+    console.log('hasSelectionToConfirm calculation:', {
+      isMultiSelectMode,
+      activeTab,
+      selectedGalleryImage: !!selectedGalleryImage,
+      uploadPreviewsLength: uploadPreviews.length,
+      hasGallerySelection,
+      hasUploadSelection,
+      result
+    });
+    
+    return result;
+  }, [activeTab, selectedGalleryImage, uploadPreviews.length, isMultiSelectMode]);
 
   const isUploading = useMemo(() => uploadingFiles.size > 0, [uploadingFiles]);
+
+  // Debug upload previews changes
+  useEffect(() => {
+    console.log('uploadPreviews changed:', {
+      length: uploadPreviews.length,
+      files: uploadPreviews.map(p => p.file.name)
+    });
+  }, [uploadPreviews]);
 
   if (!isOpen) return null;
 
@@ -300,7 +404,9 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = memo(({
                     ? isMultiSelectMode 
                       ? 'Click on images to select multiple for deletion'
                       : 'Click on images to select them'
-                    : 'Upload and select your images'
+                    : uploadPreviews.length > 0
+                      ? `${uploadPreviews.length} image${uploadPreviews.length > 1 ? 's' : ''} ready to upload`
+                      : 'Upload and select your images'
                   }
                 </div>
                 <button
@@ -357,7 +463,7 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = memo(({
                             : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 dark:bg-gray-600 dark:text-gray-200 dark:border-gray-500 dark:hover:bg-gray-500'
                         }`}
                       >
-                        {isMultiSelectMode ? 'Single Select' : 'Multi Select'}
+                        {isMultiSelectMode ? 'Exit Bulk Mode' : 'Bulk Actions'}
                       </button>
                       
                       {isMultiSelectMode && (
@@ -523,6 +629,12 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = memo(({
               </>
             ) : (
               <>
+                {uploadError && (
+                  <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
+                    {uploadError}
+                  </div>
+                )}
+                
                 <div className="mb-6">
                   <div
                     className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
@@ -563,9 +675,14 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = memo(({
 
                 {uploadPreviews.length > 0 && (
                   <div className="mb-6">
-                    <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                      Uploaded Images ({uploadPreviews.length})
-                    </h4>
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Uploaded Images ({uploadPreviews.length})
+                      </h4>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                        {uploadPreviews.length === 1 ? 'Click "Upload & Select" to use this image' : 'Click to select specific image or upload all'}
+                      </div>
+                    </div>
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                       {uploadPreviews.map((preview, index) => {
                         const isSelected = selectedUploadedFiles.has(preview.file);
@@ -687,13 +804,27 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = memo(({
                 ) : activeTab === 'gallery' ? (
                   isMultiSelectMode ? 'Multi-Select Mode' : 'Select an Image'
                 ) : (
-                  'Select & Upload'
+                  uploadPreviews.length === 1 ? 'Upload & Select' : uploadPreviews.length > 1 ? `Upload ${uploadPreviews.length} Images` : 'Select & Upload'
                 )}
               </button>
             </div>
           </div>
         </div>
       </div>
+      
+      {/* Confirmation Dialog */}
+      {confirmation.isOpen && confirmation.config && (
+        <ConfirmationDialog
+          isOpen={confirmation.isOpen}
+          onClose={confirmation.onClose}
+          onConfirm={confirmation.onConfirm}
+          onCancel={confirmation.onCancel}
+          title={confirmation.config.title}
+          message={confirmation.config.message}
+          confirmText={confirmation.config.confirmText}
+          cancelText={confirmation.config.cancelText}
+        />
+      )}
     </div>,
     document.body
   );
