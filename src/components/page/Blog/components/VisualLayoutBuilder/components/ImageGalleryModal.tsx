@@ -236,7 +236,7 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = memo(({
               </h3>
               <div className="flex items-center gap-4">
                 <div className="text-sm text-gray-500 dark:text-gray-400">
-                  {activeTab === 'gallery' ? 'Click checkboxes to select images' : 'Upload and select your images'}
+                  {activeTab === 'gallery' ? 'Click on images to select them' : 'Upload and select your images'}
                 </div>
                 <button
                   onClick={closeModal}
@@ -303,11 +303,12 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = memo(({
                       return (
                         <div
                           key={image.id}
+                          onClick={() => !isDeleting && toggleImageSelection(image)}
                           className={`relative aspect-square cursor-pointer rounded-lg overflow-hidden border-2 transition-all duration-200 ${
                             isSelected
                               ? 'border-purple-500 ring-2 ring-purple-200 dark:ring-purple-800'
                               : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'
-                          } ${isDeleting ? 'opacity-50' : ''}`}
+                          } ${isDeleting ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
                           <img
                             src={image.url}
@@ -323,7 +324,11 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = memo(({
                               type="radio"
                               name="gallery-selection"
                               checked={isSelected}
-                              onChange={() => toggleImageSelection(image)}
+                              onChange={(e) => {
+                                e.stopPropagation();
+                                toggleImageSelection(image);
+                              }}
+                              onClick={(e) => e.stopPropagation()}
                               disabled={isDeleting}
                               className="w-5 h-5 text-purple-600 bg-white border-2 border-gray-300 rounded focus:ring-purple-500 focus:ring-2"
                             />
@@ -350,7 +355,7 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = memo(({
                           </div>
 
                           {isSelected && (
-                            <div className="absolute inset-0 bg-purple-500 bg-opacity-20 flex items-center justify-center">
+                            <div className="absolute inset-0 bg-black opacity-[0.4] flex items-center justify-center">
                               <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
                                 <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                               </svg>
@@ -446,6 +451,7 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = memo(({
                         return (
                           <div
                             key={index}
+                            onClick={() => toggleUploadedImageSelection(preview.file)}
                             className={`relative aspect-square cursor-pointer rounded-lg overflow-hidden border-2 transition-all duration-200 ${
                               isSelected
                                 ? 'border-purple-500 ring-2 ring-purple-200 dark:ring-purple-800'
@@ -464,7 +470,11 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = memo(({
                                 type="radio"
                                 name="upload-selection"
                                 checked={isSelected}
-                                onChange={() => toggleUploadedImageSelection(preview.file)}
+                                onChange={(e) => {
+                                  e.stopPropagation();
+                                  toggleUploadedImageSelection(preview.file);
+                                }}
+                                onClick={(e) => e.stopPropagation()}
                                 className="w-5 h-5 text-purple-600 bg-white border-2 border-gray-300 rounded focus:ring-purple-500 focus:ring-2"
                               />
                             </div>
