@@ -1,6 +1,7 @@
 import { BlogFilters, BlogPostsResponse, BlogPost } from '../types/blog';
 import { apiGet, apiDelete, apiPost, apiPut } from './apiUtils';
 import { CategoryWithSubCategories, ApiResponse } from '@/services/types/subCategoryTypes';
+import { MediaFilters, MediaResponse, MediaUploadResponse, MediaUploadData, MediaDeleteData } from '../types/mediaTypes';
 
 export interface CategoryFilters {
   keywords?: string;
@@ -90,5 +91,59 @@ export const blogApi = {
     return apiDelete<ApiResponse<any>>(endpoint, {
       body: { categoryIds }
     });
+  },
+
+  async getMedia(filters: MediaFilters = {}): Promise<MediaResponse> {
+    const queryParams = new URLSearchParams();
+    
+    if (filters.page) queryParams.append('page', filters.page.toString());
+    if (filters.limit) queryParams.append('limit', filters.limit.toString());
+    if (filters.type) queryParams.append('type', filters.type);
+
+    const endpoint = `/api/admin/blogs/media?${queryParams.toString()}`;
+    
+    return apiGet<MediaResponse>(endpoint);
+  },
+
+  async uploadMedia(data: MediaUploadData): Promise<MediaUploadResponse> {
+    const formData = new FormData();
+    formData.append('mediaUpload', data.mediaUpload);
+    formData.append('type', data.type);
+
+    const endpoint = '/api/admin/blogs/media';
+
+    try {
+      const response = await apiPost<MediaUploadResponse>(endpoint, formData);
+      console.log('Upload response:', response);
+      return response;
+    } catch (error) {
+      console.error('Upload error:', error);
+      throw error;
+    }
+  },
+
+  async updateMedia(id: string, data: MediaUploadData): Promise<MediaUploadResponse> {
+    const formData = new FormData();
+    formData.append('mediaUpload', data.mediaUpload);
+    formData.append('type', data.type);
+
+    const endpoint = `/api/admin/blogs/media/${id}`;
+    return apiPut<MediaUploadResponse>(endpoint, formData);
+  },
+
+  async deleteMedia(data: MediaDeleteData): Promise<{ success: boolean }> {
+    const endpoint = '/api/admin/blogs/media';
+    
+    return apiDelete<{ success: boolean }>(endpoint, {
+      body: data,
+    });
+  },
+
+  async deleteMediaItem(id: string): Promise<{ success: boolean }> {
+    return this.deleteMedia({ categoryIds: [id] });
+  },
+
+  async deleteMultipleMedia(ids: string[]): Promise<{ success: boolean }> {
+    return this.deleteMedia({ categoryIds: ids });
   }
 };

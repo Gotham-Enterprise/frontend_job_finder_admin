@@ -33,10 +33,13 @@ export async function apiRequest<T = any>(
     Object.assign(requestHeaders, authUtils.getAuthHeaders());
   }
 
-  if (body && !requestHeaders['Content-Type']) {
-    requestHeaders['Content-Type'] = 'application/json';
-  }
 
+  if (body && !(body instanceof FormData) && !requestHeaders['Content-Type']) {
+    requestHeaders['Content-Type'] = 'application/json';
+  } else if (body instanceof FormData) {
+    delete requestHeaders['Content-Type'];
+  }
+  
   const requestConfig: RequestInit = {
     method,
     headers: requestHeaders,
@@ -44,7 +47,9 @@ export async function apiRequest<T = any>(
   };
 
   if (body) {
-    requestConfig.body = typeof body === 'string' ? body : JSON.stringify(body);
+
+    requestConfig.body = body instanceof FormData ? body : 
+                         typeof body === 'string' ? body : JSON.stringify(body);
   }
 
   try {
@@ -54,11 +59,26 @@ export async function apiRequest<T = any>(
       await errorUtils.throwApiError(response);
     }
 
+    if (response.status === 204) {
+      return {} as T;
+    }
+
     const contentType = response.headers.get('content-type');
     if (contentType && contentType.includes('application/json')) {
-      return response.json();
+      const jsonResponse = await response.json();
+      return jsonResponse;
     }
-    return response.text() as T;
+    
+    const textResponse = await response.text();
+    if (textResponse) {
+      try {
+        return JSON.parse(textResponse);
+      } catch {
+        return textResponse as T;
+      }
+    }
+    
+    return {} as T;
   } catch (error) {
     throw error;
   }

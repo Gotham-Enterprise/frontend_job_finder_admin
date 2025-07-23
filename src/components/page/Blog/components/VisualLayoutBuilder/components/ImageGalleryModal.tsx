@@ -1,5 +1,8 @@
-import React, { memo, useState, useEffect } from 'react';
+import React, { memo, useState, useEffect, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
+import { useMedia } from '@/hooks/useMedia';
+import { MediaItem } from '@/services/types/mediaTypes';
+import { validateMediaType, createObjectUrl, revokeObjectUrl, formatFileSize, isValidImageType } from '@/utils/mediaUtils';
 
 interface ImageGalleryModalProps {
   isOpen: boolean;
@@ -7,28 +10,36 @@ interface ImageGalleryModalProps {
   onImageSelect: (imageUrl: string, file?: File) => void;
 }
 
-const DEFAULT_IMAGES = [
-  'https://images.pexels.com/photos/2383010/pexels-photo-2383010.jpeg?_gl=1*1mrq6t6*_ga*MTM1Mzg3ODAwOS4xNzUyNTU5MTk2*_ga_8JE65Q40S6*czE3NTMwNzI2NTQkbzE4JGcxJHQxNzUzMDcyNjU3JGo1NyRsMCRoMA..',
-  'https://images.pexels.com/photos/40568/medical-appointment-doctor-healthcare-40568.jpeg?_gl=1*17kav5q*_ga*MTM1Mzg3ODAwOS4xNzUyNTU5MTk2*_ga_8JE65Q40S6*czE3NTMwNzI2NTQkbzE4JGcxJHQxNzUzMDcyNjc0JGo0MCRsMCRoMA..',
-  'https://images.pexels.com/photos/339620/pexels-photo-339620.jpeg?_gl=1*g6asze*_ga*MTM1Mzg3ODAwOS4xNzUyNTU5MTk2*_ga_8JE65Q40S6*czE3NTMwNzI2NTQkbzE4JGcxJHQxNzUzMDcyNjg5JGoyNSRsMCRoMA..',
-  'https://images.pexels.com/photos/1350560/pexels-photo-1350560.jpeg?_gl=1*1wrk7so*_ga*MTM1Mzg3ODAwOS4xNzUyNTU5MTk2*_ga_8JE65Q40S6*czE3NTMwNzI2NTQkbzE4JGcxJHQxNzUzMDcyNzA1JGo5JGwwJGgw',
-  'https://images.pexels.com/photos/4033148/pexels-photo-4033148.jpeg?_gl=1*13j6icw*_ga*MTM1Mzg3ODAwOS4xNzUyNTU5MTk2*_ga_8JE65Q40S6*czE3NTMwNzI2NTQkbzE4JGcxJHQxNzUzMDcyNzI1JGo1MSRsMCRoMA..',
-  'https://images.pexels.com/photos/3768131/pexels-photo-3768131.jpeg?_gl=1*qrgp8y*_ga*MTM1Mzg3ODAwOS4xNzUyNTU5MTk2*_ga_8JE65Q40S6*czE3NTMwNzI2NTQkbzE4JGcxJHQxNzUzMDcyNzUxJGoyNSRsMCRoMA..',
-  'https://images.pexels.com/photos/5206923/pexels-photo-5206923.jpeg?_gl=1*wc3m04*_ga*MTM1Mzg3ODAwOS4xNzUyNTU5MTk2*_ga_8JE65Q40S6*czE3NTMwNzI2NTQkbzE4JGcxJHQxNzUzMDcyNzY3JGo5JGwwJGgw'
-];
+interface UploadPreview {
+  file: File;
+  url: string;
+  selected: boolean;
+}
 
 const ImageGalleryModal: React.FC<ImageGalleryModalProps> = memo(({ 
   isOpen, 
   onClose, 
   onImageSelect 
 }) => {
-  const [selectedGalleryImage, setSelectedGalleryImage] = useState<string | null>(null);
+  const { images, loading, error, uploadMedia, deleteMediaItem, refreshMedia } = useMedia({
+    initialFilters: { type: 'IMAGE', limit: 50 },
+    autoFetch: false,
+  });
+
+  const [selectedGalleryImage, setSelectedGalleryImage] = useState<MediaItem | null>(null);
   const [loadedImages, setLoadedImages] = useState<Set<string>>(new Set());
   const [activeTab, setActiveTab] = useState<'gallery' | 'upload'>('gallery');
-  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
-  const [uploadPreviews, setUploadPreviews] = useState<{ file: File; url: string; selected: boolean }[]>([]);
+  const [uploadPreviews, setUploadPreviews] = useState<UploadPreview[]>([]);
   const [isDragOver, setIsDragOver] = useState(false);
   const [selectedUploadedFiles, setSelectedUploadedFiles] = useState<Set<File>>(new Set());
+  const [uploadingFiles, setUploadingFiles] = useState<Set<string>>(new Set());
+  const [deletingItems, setDeletingItems] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (isOpen) {
+      refreshMedia();
+    }
+  }, [isOpen, refreshMedia]);
 
   useEffect(() => {
     const escapeKey = (event: KeyboardEvent) => {
@@ -48,95 +59,108 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = memo(({
     };
   }, [isOpen, onClose]);
 
-  // Cleanup object URLs when component unmounts or files change
   useEffect(() => {
     return () => {
       uploadPreviews.forEach(preview => {
-        URL.revokeObjectURL(preview.url);
+        revokeObjectUrl(preview.url);
       });
     };
   }, [uploadPreviews]);
 
-  const toggleImageSelection = (imageUrl: string) => {
-    setSelectedGalleryImage(prev => prev === imageUrl ? null : imageUrl);
-  };
+  const toggleImageSelection = useCallback((image: MediaItem) => {
+    setSelectedGalleryImage(prev => 
+      prev?.id === image.id ? null : image
+    );
+  }, []);
 
-  const confirmSelection = () => {
+  const confirmSelection = useCallback(async () => {
     if (activeTab === 'gallery' && selectedGalleryImage) {
-      onImageSelect(selectedGalleryImage);
-      onClose();
-      setSelectedGalleryImage(null);
+      onImageSelect(selectedGalleryImage.url);
+      closeModal();
     } else if (activeTab === 'upload' && selectedUploadedFiles.size > 0) {
-      // For multiple uploaded files, we'll select the first one for now
-      // You could modify this to handle multiple files differently
       const firstFile = Array.from(selectedUploadedFiles)[0];
-      const objectUrl = URL.createObjectURL(firstFile);
-      onImageSelect(objectUrl, firstFile);
-      onClose();
-      resetUploadState();
+      const fileName = `upload-${Date.now()}`;
+      setUploadingFiles(prev => new Set(prev).add(fileName));
+      
+      try {
+        const uploadedMedia = await uploadMedia(firstFile, 'IMAGE');
+        if (uploadedMedia) {
+          onImageSelect(uploadedMedia.url, firstFile);
+          closeModal();
+        }
+      } finally {
+        setUploadingFiles(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(fileName);
+          return newSet;
+        });
+      }
     }
-  };
+  }, [activeTab, selectedGalleryImage, selectedUploadedFiles, uploadMedia, onImageSelect]);
 
-  const closeModal = () => {
+  const closeModal = useCallback(() => {
     onClose();
     setSelectedGalleryImage(null);
     resetUploadState();
-  };
+  }, [onClose]);
 
-  const resetUploadState = () => {
-    setUploadedFiles([]);
+  const resetUploadState = useCallback(() => {
+    uploadPreviews.forEach(preview => revokeObjectUrl(preview.url));
     setUploadPreviews([]);
     setSelectedUploadedFiles(new Set());
     setIsDragOver(false);
-  };
+  }, [uploadPreviews]);
 
-  const handleFileUpload = (files: FileList | File[]) => {
+  const processFileUpload = useCallback((files: FileList | File[]) => {
     const fileArray = Array.from(files);
-    const imageFiles = fileArray.filter(file => file.type.startsWith('image/'));
+    const imageFiles = fileArray.filter(file => isValidImageType(file));
     
     if (imageFiles.length === 0) {
       alert('Please select valid image files (PNG, JPG, JPEG, GIF, WebP)');
       return;
     }
 
-    imageFiles.forEach(file => {
-      const objectUrl = URL.createObjectURL(file);
-      setUploadPreviews(prev => [...prev, { file, url: objectUrl, selected: false }]);
-    });
-    
-    setUploadedFiles(prev => [...prev, ...imageFiles]);
-  };
+    const newPreviews = imageFiles.map(file => ({
+      file,
+      url: createObjectUrl(file),
+      selected: false,
+    }));
 
-  const handleFileInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setUploadPreviews(prev => [...prev, ...newPreviews]);
+  }, []);
+
+  const fileInputChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
-      handleFileUpload(event.target.files);
+      processFileUpload(event.target.files);
     }
-  };
+    event.target.value = '';
+  }, [processFileUpload]);
 
-  const handleDrop = (event: React.DragEvent) => {
+  const dropFile = useCallback((event: React.DragEvent) => {
     event.preventDefault();
     setIsDragOver(false);
     if (event.dataTransfer.files) {
-      handleFileUpload(event.dataTransfer.files);
+      processFileUpload(event.dataTransfer.files);
     }
-  };
+  }, [processFileUpload]);
 
-  const handleDragOver = (event: React.DragEvent) => {
+  const dragOver = useCallback((event: React.DragEvent) => {
     event.preventDefault();
     setIsDragOver(true);
-  };
+  }, []);
 
-  const handleDragLeave = (event: React.DragEvent) => {
+  const dragLeave = useCallback((event: React.DragEvent) => {
     event.preventDefault();
     setIsDragOver(false);
-  };
+  }, []);
 
-  const toggleUploadedImageSelection = (file: File) => {
+  const toggleUploadedImageSelection = useCallback((file: File) => {
     setSelectedUploadedFiles(prev => {
       const newSet = new Set(prev);
       if (newSet.has(file)) {
         newSet.delete(file);
       } else {
+        newSet.clear();
         newSet.add(file);
       }
       return newSet;
@@ -144,33 +168,55 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = memo(({
     
     setUploadPreviews(prev => prev.map(preview => ({
       ...preview,
-      selected: preview.file === file ? !preview.selected : preview.selected
+      selected: preview.file === file,
     })));
-  };
+  }, []);
 
-  const removeUploadedImage = (file: File) => {
+  const removeUploadedImage = useCallback((file: File) => {
+    const preview = uploadPreviews.find(p => p.file === file);
+    if (preview) {
+      revokeObjectUrl(preview.url);
+    }
+    
     setUploadPreviews(prev => prev.filter(preview => preview.file !== file));
-    setUploadedFiles(prev => prev.filter(f => f !== file));
     setSelectedUploadedFiles(prev => {
       const newSet = new Set(prev);
       newSet.delete(file);
       return newSet;
     });
+  }, [uploadPreviews]);
+
+  const deleteImage = useCallback(async (image: MediaItem) => {
+    setDeletingItems(prev => new Set(prev).add(image.id));
     
-    // Clean up object URL
-    const preview = uploadPreviews.find(p => p.file === file);
-    if (preview) {
-      URL.revokeObjectURL(preview.url);
+    try {
+      const success = await deleteMediaItem(image.id);
+      if (success && selectedGalleryImage?.id === image.id) {
+        setSelectedGalleryImage(null);
+      }
+    } finally {
+      setDeletingItems(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(image.id);
+        return newSet;
+      });
     }
-  };
+  }, [deleteMediaItem, selectedGalleryImage]);
 
-  const imageLoad = (imageUrl: string) => {
+  const imageLoad = useCallback((imageUrl: string) => {
     setLoadedImages(prev => new Set(prev).add(imageUrl));
-  };
+  }, []);
 
-  const imageError = (imageUrl: string) => {
+  const imageError = useCallback((imageUrl: string) => {
     console.warn(`Failed to load image: ${imageUrl}`);
-  };
+  }, []);
+
+  const hasSelectionToConfirm = useMemo(() => {
+    return (activeTab === 'gallery' && selectedGalleryImage) || 
+           (activeTab === 'upload' && selectedUploadedFiles.size > 0);
+  }, [activeTab, selectedGalleryImage, selectedUploadedFiles]);
+
+  const isUploading = useMemo(() => uploadingFiles.size > 0, [uploadingFiles]);
 
   if (!isOpen) return null;
 
@@ -182,8 +228,8 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = memo(({
         onClick={closeModal}
       />
       <div className="flex min-h-screen items-center justify-center px-4 py-8">
-        <div className="relative w-full max-w-4xl bg-white dark:bg-gray-800 rounded-lg shadow-xl">
-          <div className="p-6 max-h-[80vh] overflow-y-auto">
+        <div className="relative w-full max-w-6xl bg-white dark:bg-gray-800 rounded-lg shadow-xl">
+          <div className="p-6 max-h-[85vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
                 Select Images
@@ -203,7 +249,6 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = memo(({
               </div>
             </div>
 
-            {/* Tab Navigation */}
             <div className="flex border-b border-gray-200 dark:border-gray-600 mb-6">
               <button
                 onClick={() => setActiveTab('gallery')}
@@ -227,266 +272,292 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = memo(({
               </button>
             </div>
 
-            {/* Tab Content */}
+            {error && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
+                {error}
+              </div>
+            )}
+
             {activeTab === 'gallery' ? (
-              /* Gallery Tab Content */
               <>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
-                  {DEFAULT_IMAGES.map((imageUrl, index) => {
-                    const isSelected = selectedGalleryImage === imageUrl;
-                    return (
-                      <div
-                        key={index}
-                        className={`relative aspect-square cursor-pointer rounded-lg overflow-hidden border-2 transition-all duration-200 ${
-                          isSelected
-                            ? 'border-purple-500 ring-2 ring-purple-200 dark:ring-purple-800'
-                            : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'
-                        }`}
-                      >
-                        <img
-                          src={imageUrl}
-                          alt={`Gallery image ${index + 1}`}
-                          className="w-full h-full object-cover transition-transform duration-200 hover:scale-105"
-                          onLoad={() => imageLoad(imageUrl)}
-                          onError={() => imageError(imageUrl)}
-                          loading="lazy"
-                        />
-                        
-                        <div className="absolute top-2 left-2 z-10">
-                          <input
-                            type="radio"
-                            name="gallery-selection"
-                            checked={isSelected}
-                            onChange={() => toggleImageSelection(imageUrl)}
-                            className="w-5 h-5 text-purple-600 bg-white border-2 border-gray-300 rounded focus:ring-purple-500 focus:ring-2"
+                {loading ? (
+                  <div className="flex items-center justify-center py-12">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+                    <span className="ml-2 text-gray-600 dark:text-gray-400">Loading images...</span>
+                  </div>
+                ) : images.length === 0 ? (
+                  <div className="text-center py-12">
+                    <div className="text-gray-500 dark:text-gray-400 mb-4">No images found</div>
+                    <button
+                      onClick={() => setActiveTab('upload')}
+                      className="text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300"
+                    >
+                      Upload your first image
+                    </button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 mb-6">
+                    {images.map((image) => {
+                      const isSelected = selectedGalleryImage?.id === image.id;
+                      const isDeleting = deletingItems.has(image.id);
+                      return (
+                        <div
+                          key={image.id}
+                          className={`relative aspect-square cursor-pointer rounded-lg overflow-hidden border-2 transition-all duration-200 ${
+                            isSelected
+                              ? 'border-purple-500 ring-2 ring-purple-200 dark:ring-purple-800'
+                              : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'
+                          } ${isDeleting ? 'opacity-50' : ''}`}
+                        >
+                          <img
+                            src={image.url}
+                            alt={image.fileName}
+                            className="w-full h-full object-cover transition-transform duration-200 hover:scale-105"
+                            onLoad={() => imageLoad(image.url)}
+                            onError={() => imageError(image.url)}
+                            loading="lazy"
                           />
+                          
+                          <div className="absolute top-2 left-2 z-10">
+                            <input
+                              type="radio"
+                              name="gallery-selection"
+                              checked={isSelected}
+                              onChange={() => toggleImageSelection(image)}
+                              disabled={isDeleting}
+                              className="w-5 h-5 text-purple-600 bg-white border-2 border-gray-300 rounded focus:ring-purple-500 focus:ring-2"
+                            />
+                          </div>
+
+                          <div className="absolute top-2 right-2 z-10">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                deleteImage(image);
+                              }}
+                              disabled={isDeleting}
+                              className="w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center transition-colors"
+                              title="Delete image"
+                            >
+                              {isDeleting ? (
+                                <div className="animate-spin rounded-full h-3 w-3 border border-white border-t-transparent"></div>
+                              ) : (
+                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                              )}
+                            </button>
+                          </div>
+
+                          {isSelected && (
+                            <div className="absolute inset-0 bg-purple-500 bg-opacity-20 flex items-center justify-center">
+                              <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                              </svg>
+                            </div>
+                          )}
+
+                          {!loadedImages.has(image.url) && (
+                            <div className="absolute inset-0 bg-gray-200 dark:bg-gray-700 animate-pulse flex items-center justify-center">
+                              <div className="w-8 h-8 text-gray-400">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                              </div>
+                            </div>
+                          )}
                         </div>
-
-                        {isSelected && (
-                          <div className="absolute inset-0 bg-purple-500 bg-opacity-20 flex items-center justify-center">
-                            <div className="bg-purple-500 text-white rounded-full p-1">
-                              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                <path 
-                                  fillRule="evenodd" 
-                                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" 
-                                  clipRule="evenodd" 
-                                />
-                              </svg>
-                            </div>
-                          </div>
-                        )}
-
-                        {!loadedImages.has(imageUrl) && (
-                          <div className="absolute inset-0 bg-gray-100 dark:bg-gray-700 animate-pulse flex items-center justify-center">
-                            <div className="text-gray-400 dark:text-gray-500">
-                              <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
-                                <path 
-                                  fillRule="evenodd" 
-                                  d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" 
-                                  clipRule="evenodd" 
-                                />
-                              </svg>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
+                      );
+                    })}
+                  </div>
+                )}
 
                 {selectedGalleryImage && (
                   <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
                     <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Selected Image:
                     </h4>
-                    <div className="flex items-center gap-2 p-2 bg-white dark:bg-gray-600 rounded border w-fit">
+                    <div className="flex items-center gap-3 p-3 bg-white dark:bg-gray-600 rounded border">
                       <img
-                        src={selectedGalleryImage}
-                        alt="Selected image"
+                        src={selectedGalleryImage.url}
+                        alt={selectedGalleryImage.fileName}
                         className="w-12 h-12 object-cover rounded border border-gray-200 dark:border-gray-500"
                       />
-                      <button
-                        onClick={() => toggleImageSelection(selectedGalleryImage)}
-                        className="text-red-500 hover:text-red-700 transition-colors"
-                        title="Remove selection"
-                      >
-                        ×
-                      </button>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                          {selectedGalleryImage.fileName}
+                        </div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400">
+                          {new Date(selectedGalleryImage.createdAt).toLocaleDateString()}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 )}
               </>
             ) : (
-              /* Upload Tab Content */
               <>
-                {/* Upload Area */}
                 <div className="mb-6">
                   <div
-                    onDrop={handleDrop}
-                    onDragOver={handleDragOver}
-                    onDragLeave={handleDragLeave}
                     className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
                       isDragOver
                         ? 'border-purple-400 bg-purple-50 dark:bg-purple-900/20'
                         : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
                     }`}
+                    onDrop={dropFile}
+                    onDragOver={dragOver}
+                    onDragLeave={dragLeave}
                   >
-                    <input
-                      type="file"
-                      multiple
-                      accept="image/*"
-                      onChange={handleFileInputChange}
-                      className="hidden"
-                      id="file-upload"
-                    />
-                    <label htmlFor="file-upload" className="cursor-pointer">
-                      <div className="flex flex-col items-center gap-3">
-                        <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                        </svg>
-                        <div>
-                          <p className="text-lg font-medium text-gray-900 dark:text-white">
-                            Drop your images here
-                          </p>
-                          <p className="text-sm text-gray-500 dark:text-gray-400">
-                            or <span className="text-purple-600 dark:text-purple-400 underline">browse to upload</span>
-                          </p>
-                        </div>
-                        <p className="text-xs text-gray-400 dark:text-gray-500">
-                          Supports: PNG, JPG, JPEG, GIF, WebP (Max 10MB each)
-                        </p>
-                      </div>
-                    </label>
+                    <div className="mx-auto w-12 h-12 text-gray-400 mb-4">
+                      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                      </svg>
+                    </div>
+                    <div className="text-xl font-medium text-gray-900 dark:text-white mb-2">
+                      Drop your images here
+                    </div>
+                    <div className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                      or{' '}
+                      <label className="text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 cursor-pointer">
+                        browse to upload
+                        <input
+                          type="file"
+                          multiple
+                          accept="image/*"
+                          onChange={fileInputChange}
+                          className="hidden"
+                        />
+                      </label>
+                    </div>
+                    <div className="text-xs text-gray-400 dark:text-gray-500">
+                      Supports: JPEG, PNG, GIF, WebP (Max 100MB each)
+                    </div>
                   </div>
                 </div>
 
-                {/* Uploaded Images Grid */}
                 {uploadPreviews.length > 0 && (
                   <div className="mb-6">
                     <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                      Uploaded Images ({uploadPreviews.length}):
+                      Uploaded Images ({uploadPreviews.length})
                     </h4>
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                      {uploadPreviews.map((preview, index) => (
-                        <div
-                          key={index}
-                          className={`relative aspect-square cursor-pointer rounded-lg overflow-hidden border-2 transition-all duration-200 ${
-                            preview.selected
-                              ? 'border-purple-500 ring-2 ring-purple-200 dark:ring-purple-800'
-                              : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'
-                          }`}
-                        >
-                          <img
-                            src={preview.url}
-                            alt={`Uploaded ${index + 1}`}
-                            className="w-full h-full object-cover transition-transform duration-200 hover:scale-105"
-                          />
-                          
-                          <div className="absolute top-2 left-2 z-10">
-                            <input
-                              type="checkbox"
-                              checked={preview.selected}
-                              onChange={() => toggleUploadedImageSelection(preview.file)}
-                              className="w-5 h-5 text-purple-600 bg-white border-2 border-gray-300 rounded focus:ring-purple-500 focus:ring-2"
-                            />
-                          </div>
-
-                          <button
-                            onClick={() => removeUploadedImage(preview.file)}
-                            className="absolute top-2 right-2 z-10 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
-                            title="Remove image"
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                      {uploadPreviews.map((preview, index) => {
+                        const isSelected = selectedUploadedFiles.has(preview.file);
+                        return (
+                          <div
+                            key={index}
+                            className={`relative aspect-square cursor-pointer rounded-lg overflow-hidden border-2 transition-all duration-200 ${
+                              isSelected
+                                ? 'border-purple-500 ring-2 ring-purple-200 dark:ring-purple-800'
+                                : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'
+                            }`}
                           >
-                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                            </svg>
-                          </button>
+                            <img
+                              src={preview.url}
+                              alt={preview.file.name}
+                              className="w-full h-full object-cover"
+                              loading="lazy"
+                            />
+                            
+                            <div className="absolute top-2 left-2 z-10">
+                              <input
+                                type="radio"
+                                name="upload-selection"
+                                checked={isSelected}
+                                onChange={() => toggleUploadedImageSelection(preview.file)}
+                                className="w-5 h-5 text-purple-600 bg-white border-2 border-gray-300 rounded focus:ring-purple-500 focus:ring-2"
+                              />
+                            </div>
 
-                          {preview.selected && (
-                            <div className="absolute inset-0 bg-purple-500 bg-opacity-20 flex items-center justify-center">
-                              <div className="bg-purple-500 text-white rounded-full p-1">
-                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                  <path 
-                                    fillRule="evenodd" 
-                                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" 
-                                    clipRule="evenodd" 
-                                  />
+                            <div className="absolute top-2 right-2 z-10">
+                              <button
+                                onClick={() => removeUploadedImage(preview.file)}
+                                className="w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center transition-colors"
+                                title="Remove image"
+                              >
+                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                              </button>
+                            </div>
+
+                            {isSelected && (
+                              <div className="absolute inset-0 bg-purple-500 bg-opacity-20 flex items-center justify-center">
+                                <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                                 </svg>
                               </div>
-                            </div>
-                          )}
-
-                          {/* File Info Overlay */}
-                          <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white p-2">
-                            <p className="text-xs truncate">{preview.file.name}</p>
-                            <p className="text-xs text-gray-300">
-                              {(preview.file.size / 1024 / 1024).toFixed(1)} MB
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Selected Files Preview */}
-                {selectedUploadedFiles.size > 0 && (
-                  <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                    <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Selected Files ({selectedUploadedFiles.size}):
-                    </h4>
-                    <div className="flex flex-wrap gap-2">
-                      {Array.from(selectedUploadedFiles).map((file, index) => {
-                        const preview = uploadPreviews.find(p => p.file === file);
-                        return (
-                          <div key={index} className="flex items-center gap-2 p-2 bg-white dark:bg-gray-600 rounded border">
-                            {preview && (
-                              <img
-                                src={preview.url}
-                                alt={`Selected ${index + 1}`}
-                                className="w-12 h-12 object-cover rounded border border-gray-200 dark:border-gray-500"
-                              />
                             )}
-                            <div className="flex-1 min-w-0">
-                              <p className="text-xs font-medium truncate">{file.name}</p>
-                              <p className="text-xs text-gray-500">{(file.size / 1024 / 1024).toFixed(1)} MB</p>
+
+                            <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs p-2">
+                              <div className="truncate" title={preview.file.name}>
+                                {preview.file.name}
+                              </div>
+                              <div className="text-gray-300">
+                                {formatFileSize(preview.file.size)}
+                              </div>
                             </div>
-                            <button
-                              onClick={() => toggleUploadedImageSelection(file)}
-                              className="text-red-500 hover:text-red-700 transition-colors"
-                              title="Remove selection"
-                            >
-                              ×
-                            </button>
                           </div>
                         );
                       })}
                     </div>
                   </div>
                 )}
+
+                {selectedUploadedFiles.size > 0 && (
+                  <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Selected for Upload:
+                    </h4>
+                    {Array.from(selectedUploadedFiles).map((file, index) => (
+                      <div key={index} className="flex items-center gap-2 p-2 bg-white dark:bg-gray-600 rounded border mb-2 last:mb-0">
+                        <div className="w-8 h-8 bg-purple-100 dark:bg-purple-900 rounded flex items-center justify-center">
+                          <svg className="w-4 h-4 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                            {file.name}
+                          </div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400">
+                            {formatFileSize(file.size)}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </>
             )}
 
-            <div className="flex justify-end gap-3">
+            <div className="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-600">
               <button
                 onClick={closeModal}
-                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors"
               >
                 Cancel
               </button>
+              
               <button
                 onClick={confirmSelection}
-                disabled={
-                  (activeTab === 'gallery' && !selectedGalleryImage) ||
-                  (activeTab === 'upload' && selectedUploadedFiles.size === 0)
-                }
-                className="px-4 py-2 text-sm font-medium text-white bg-purple-500 border border-purple-500 rounded-lg hover:bg-purple-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                disabled={!hasSelectionToConfirm || isUploading}
+                className={`px-6 py-2 rounded-lg font-medium transition-all ${
+                  hasSelectionToConfirm && !isUploading
+                    ? 'bg-purple-600 hover:bg-purple-700 text-white'
+                    : 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+                }`}
               >
-                {activeTab === 'gallery' 
-                  ? selectedGalleryImage ? 'Use Selected Image' : 'Select an Image'
-                  : selectedUploadedFiles.size > 0
-                    ? `Use Selected Image${selectedUploadedFiles.size > 1 ? 's' : ''} (${selectedUploadedFiles.size})`
-                    : 'Select an Image'
-                }
+                {isUploading ? (
+                  <div className="flex items-center gap-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                    Uploading...
+                  </div>
+                ) : activeTab === 'gallery' ? (
+                  'Select an Image'
+                ) : (
+                  'Select & Upload'
+                )}
               </button>
             </div>
           </div>
