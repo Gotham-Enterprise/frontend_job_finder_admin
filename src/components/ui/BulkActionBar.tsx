@@ -5,7 +5,7 @@ import { TrashBinIcon } from '@/icons';
 interface BulkActionBarProps {
   selectedItems: string[];
   totalItems: number;
-  itemType: string; // e.g., "categories", "posts", "tags"
+  itemType: string;
   onBulkDelete: () => void;
   onSelectAll: (selected: boolean) => void;
   onClearSelection: () => void;

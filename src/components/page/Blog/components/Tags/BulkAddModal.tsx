@@ -11,6 +11,7 @@ interface BulkAddModalProps {
   bulkTags: string;
   setBulkTags: (value: string) => void;
   onBulkAddTags: () => void;
+  isCreating?: boolean;
 }
 
 const BulkAddModal: React.FC<BulkAddModalProps> = ({
@@ -18,7 +19,8 @@ const BulkAddModal: React.FC<BulkAddModalProps> = ({
   onClose,
   bulkTags,
   setBulkTags,
-  onBulkAddTags
+  onBulkAddTags,
+  isCreating = false
 }) => {
   return (
     <Modal
@@ -48,14 +50,15 @@ const BulkAddModal: React.FC<BulkAddModalProps> = ({
               variant="ghost"
               onClick={onClose}
               className="dark:text-white"
+              disabled={isCreating}
             >
               Cancel
             </Button>
             <Button
               onClick={onBulkAddTags}
-              disabled={!bulkTags.trim()}
+              disabled={!bulkTags.trim() || isCreating}
             >
-              Add Tags
+              {isCreating ? 'Adding...' : 'Add Tags'}
             </Button>
           </div>
         </div>

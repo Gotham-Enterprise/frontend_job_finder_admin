@@ -4,20 +4,20 @@ import Input from "@/components/form/input/InputField";
 import TextArea from "@/components/form/input/TextArea";
 import Button from "@/components/ui/button/Button";
 import Label from "@/components/form/Label";
-import { NewTag } from "@/services/types/tagTypes";
+import { NewTag } from "@/services/api/tag";
 
 interface TagFormProps {
   newTag: NewTag;
   onInputChange: (field: keyof NewTag, value: string) => void;
   onAddTag: () => void;
-  onBulkModalOpen: () => void;
+  isCreating?: boolean;
 }
 
 const TagForm: React.FC<TagFormProps> = ({
   newTag,
   onInputChange,
   onAddTag,
-  onBulkModalOpen
+  isCreating = false
 }) => {
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
@@ -32,18 +32,6 @@ const TagForm: React.FC<TagFormProps> = ({
             defaultValue={newTag.name}
             onChange={(e) => onInputChange('name', e.target.value)}
           />
-        </div>        <div>
-          <Label>Slug</Label>
-          <Input
-            key={newTag.slug} 
-            type="text"
-            placeholder="tag-slug"
-            defaultValue={newTag.slug}
-            onChange={(e) => onInputChange('slug', e.target.value)}
-          />
-          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-            The &quot;slug&quot; is the URL-friendly version of the name.
-          </p>
         </div>
 
         <div>
@@ -56,22 +44,14 @@ const TagForm: React.FC<TagFormProps> = ({
           />
         </div>
 
-        <div className="space-y-2">
+        <div>
           <Button
             variant="default"
             onClick={onAddTag}
             className="w-full"
-            disabled={!newTag.name.trim()}
+            disabled={!newTag.name.trim() || isCreating}
           >
-            Add New Tag
-          </Button>
-          
-          <Button
-            variant="outline"
-            onClick={onBulkModalOpen}
-            className="w-full dark:text-white"
-          >
-            Bulk Add Tags
+            {isCreating ? 'Adding...' : 'Add New Tag'}
           </Button>
         </div>
       </div>
