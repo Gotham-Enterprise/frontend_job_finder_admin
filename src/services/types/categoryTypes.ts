@@ -46,6 +46,12 @@ export interface CategoryListProps {
   onPageChange?: (page: number) => void;
   itemsPerPage?: number;
   onItemsPerPageChange?: (itemsPerPage: number) => void;
+  selectedCategories?: string[];
+  onSelectCategory?: (categoryId: string, selected: boolean) => void;
+  onSelectAll?: (selected: boolean) => void;
+  onBulkDelete?: () => void;
+  onClearSelection?: () => void;
+  isDeleting?: boolean;
 }
 
 export interface CategoryEditModalProps {

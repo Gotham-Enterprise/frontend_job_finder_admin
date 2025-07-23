@@ -4,6 +4,7 @@ import { useModal } from "@/hooks/useModal";
 import { useConfirmation } from "@/hooks/useConfirmation";
 import { generateSlug } from "@/services/utils";
 import { showToast } from "@/services/utils/toast";
+import { useBulkDeleteCategories } from "@/services/hooks/useBulkCategories";
 import ConfirmationDialog from "@/components/ui/ConfirmationDialog";
 import {
   CategoryForm,
@@ -28,6 +29,7 @@ export default function AddNewCategories() {
   const [isSlugManuallyEdited, setIsSlugManuallyEdited] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5); // Show 5 categories per page
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const editModal = useModal();
   const confirmDialog = useConfirmation();
   
@@ -44,6 +46,7 @@ export default function AddNewCategories() {
   const createCategoryMutation = useCreateCategory();
   const updateCategoryMutation = useUpdateCategory();
   const deleteCategoryMutation = useDeleteCategory();
+  const bulkDeleteMutation = useBulkDeleteCategories();
 
   const apiCategories = categoriesData?.categories || [];
   const categoriesError = categoriesQueryError?.message || null;
@@ -177,6 +180,54 @@ export default function AddNewCategories() {
     setCurrentPage(1); // Reset to first page when changing items per page
   };
 
+  // Bulk selection functions
+  const selectCategory = (categoryId: string, selected: boolean) => {
+    setSelectedCategories(prev => 
+      selected 
+        ? [...prev, categoryId]
+        : prev.filter(id => id !== categoryId)
+    );
+  };
+
+  const selectAll = (selected: boolean) => {
+    if (selected) {
+      setSelectedCategories(categories.map(category => category.id));
+    } else {
+      setSelectedCategories([]);
+    }
+  };
+
+  const clearSelection = () => {
+    setSelectedCategories([]);
+  };
+
+  const bulkDeleteCategories = async () => {
+    if (selectedCategories.length === 0) return;
+    
+    const count = selectedCategories.length;
+    const message = count === 1 
+      ? 'Are you sure you want to delete this category?' 
+      : `Are you sure you want to delete ${count} categories?`;
+    
+    const confirmed = await confirmDialog.confirm({
+      title: 'Delete Categories',
+      message,
+      confirmText: 'Delete',
+      cancelText: 'Cancel'
+    });
+
+    if (confirmed) {
+      try {
+        await bulkDeleteMutation.mutateAsync(selectedCategories);
+        setSelectedCategories([]);
+        showToast.success('Categories deleted successfully', '');
+      } catch (error) {
+        console.error('Failed to delete categories:', error);
+        showToast.error('Failed to delete categories', '');
+      }
+    }
+  };
+
   return (
     <div className="mx-auto p-6">
       
@@ -222,6 +273,12 @@ export default function AddNewCategories() {
             onPageChange={handlePageChange}
             itemsPerPage={itemsPerPage}
             onItemsPerPageChange={handleItemsPerPageChange}
+            selectedCategories={selectedCategories}
+            onSelectCategory={selectCategory}
+            onSelectAll={selectAll}
+            onBulkDelete={bulkDeleteCategories}
+            onClearSelection={clearSelection}
+            isDeleting={bulkDeleteMutation.isPending}
           />
         </div>
       </div>

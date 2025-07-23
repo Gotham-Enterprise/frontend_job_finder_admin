@@ -82,5 +82,13 @@ export const blogApi = {
     const endpoint = `/api/admin/blogs/category/${categoryId}`;
     
     return apiDelete<ApiResponse<any>>(endpoint);
+  },
+
+  async deleteBulkCategories(categoryIds: string[]): Promise<ApiResponse<any>> {
+    const endpoint = '/api/admin/blogs/category';
+    
+    return apiDelete<ApiResponse<any>>(endpoint, {
+      body: { categoryIds }
+    });
   }
 };

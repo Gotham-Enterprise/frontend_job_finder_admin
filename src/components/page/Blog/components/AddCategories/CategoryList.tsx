@@ -1,7 +1,9 @@
 import React from "react";
 import Input from "@/components/form/input/InputField";
+import Checkbox from "@/components/form/input/Checkbox";
 import { Table, TableHeader, TableBody, TableRow, TableCell } from "@/components/ui/table";
 import Pagination from "@/components/tables/Pagination";
+import BulkActionDropdown from "@/components/ui/BulkActionDropdown";
 import { CategoryListProps } from "@/services/types/categoryTypes";
 
 export default function CategoryList({
@@ -18,7 +20,13 @@ export default function CategoryList({
   totalPages = 1,
   onPageChange,
   itemsPerPage = 10,
-  onItemsPerPageChange
+  onItemsPerPageChange,
+  selectedCategories = [],
+  onSelectCategory,
+  onSelectAll,
+  onBulkDelete,
+  onClearSelection,
+  isDeleting = false,
 }: CategoryListProps) {
   const filteredCategories = categories.filter(category =>
     category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -40,19 +48,31 @@ export default function CategoryList({
           </h2>
         </div>
         
-        <div className="relative">
-          <Input
-            type="text"
-            placeholder="Search categories..."
-            defaultValue={searchTerm}
-            onChange={(e) => onSearchChange(e.target.value)}
-            className="pl-10"
-          />
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
+        <div className="flex items-center gap-4">
+          <div className="relative flex-1">
+            <Input
+              type="text"
+              placeholder="Search categories..."
+              defaultValue={searchTerm}
+              onChange={(e) => onSearchChange(e.target.value)}
+              className="pl-10"
+            />
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
           </div>
+
+          {onBulkDelete && onClearSelection && (
+            <BulkActionDropdown
+              selectedItems={selectedCategories || []}
+              itemType="categories"
+              onBulkDelete={onBulkDelete}
+              onClearSelection={onClearSelection}
+              isDeleting={isDeleting}
+            />
+          )}
         </div>
         
         {isLoading && (
@@ -70,6 +90,14 @@ export default function CategoryList({
         <Table className="w-full">
           <TableHeader className="bg-gray-50 dark:bg-gray-700">
             <TableRow>
+              {onSelectCategory && onSelectAll && (
+                <TableCell isHeader className="px-6 py-3 w-12">
+                  <Checkbox
+                    checked={selectedCategories.length === paginatedCategories.length && paginatedCategories.length > 0}
+                    onChange={(checked) => onSelectAll(checked)}
+                  />
+                </TableCell>
+              )}
               <TableCell isHeader className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                 Name
               </TableCell>
@@ -91,6 +119,14 @@ export default function CategoryList({
           <TableBody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
             {paginatedCategories.map((category) => (
               <TableRow key={category.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                {onSelectCategory && (
+                  <TableCell className="px-6 py-4 w-12">
+                    <Checkbox
+                      checked={selectedCategories.includes(category.id)}
+                      onChange={(checked) => onSelectCategory(category.id, checked)}
+                    />
+                  </TableCell>
+                )}
                 <TableCell className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm font-medium text-gray-900 dark:text-white">
                     {category.name}
@@ -129,20 +165,13 @@ export default function CategoryList({
                   </span>
                 </TableCell>
                 <TableCell className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center justify-end">
                     <button
                       onClick={() => onEditCategory(category)}
                       className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
                       disabled={deletingCategoryId === category.id}
                     >
                       Edit
-                    </button>
-                    <button
-                      onClick={() => onDeleteCategory(category.id)}
-                      className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
-                      disabled={deletingCategoryId === category.id}
-                    >
-                      {deletingCategoryId === category.id ? "Deleting..." : "Delete"}
                     </button>
                   </div>
                 </TableCell>
