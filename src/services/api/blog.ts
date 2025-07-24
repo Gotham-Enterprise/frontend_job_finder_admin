@@ -123,7 +123,6 @@ export const blogApi = {
 
     try {
       const response = await apiPost<MediaUploadResponse>(endpoint, formData);
-      console.log('Upload response:', response);
       return response;
     } catch (error) {
       console.error('Upload error:', error);

@@ -69,7 +69,7 @@ export const tagApi = {
 
   async getTagsForDropdown(): Promise<TagsResponse> {
     const queryParams = new URLSearchParams();
-    queryParams.append('limit', '0'); // Get maximum allowed tags
+    queryParams.append('limit', '0'); 
     
     const endpoint = `/api/admin/blogs/tag?${queryParams.toString()}`;
     
