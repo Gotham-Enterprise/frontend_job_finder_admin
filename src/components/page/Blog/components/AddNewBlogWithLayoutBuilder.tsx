@@ -109,8 +109,6 @@ const tagOptions: TagOption[] = [
 const statusOptions = [
   { value: 'draft', label: 'Draft', description: 'This job posting will no longer be publicly accessible.' },
   { value: 'published', label: 'Published', description: 'This job posting can be viewed by anyone who has the link.' },
-  { value: 'pending', label: 'Pending Review', description: 'This job posting is waiting for review before being published.' },
-  { value: 'private', label: 'Private', description: 'This job posting is only visible to you and selected users.' },
 ];
 
 export default function AddNewBlogWithLayoutBuilder() {
@@ -118,7 +116,6 @@ export default function AddNewBlogWithLayoutBuilder() {
   const [currentLayout, setCurrentLayout] = useState<LayoutType>(() => createInitialLayout());
   const [viewMode, setViewMode] = useState<ViewMode>('builder');
   const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
-  const [visibilityDropdownOpen, setVisibilityDropdownOpen] = useState(false);
   const [dateDropdownOpen, setDateDropdownOpen] = useState(false);
   const [categoriesDropdownOpen, setCategoriesDropdownOpen] = useState(false);
   const [tagsDropdownOpen, setTagsDropdownOpen] = useState(false);
@@ -472,7 +469,6 @@ export default function AddNewBlogWithLayoutBuilder() {
       const target = event.target as Element;
       if (!target.closest('.dropdown-container')) {
         setStatusDropdownOpen(false);
-        setVisibilityDropdownOpen(false);
         setDateDropdownOpen(false);
         setCategoriesDropdownOpen(false);
         setTagsDropdownOpen(false);
@@ -534,7 +530,6 @@ export default function AddNewBlogWithLayoutBuilder() {
                     type="button"
                     onClick={() => {
                       setStatusDropdownOpen(!statusDropdownOpen);
-                      setVisibilityDropdownOpen(false);
                       setDateDropdownOpen(false);
                       setCategoriesDropdownOpen(false);
                       setTagsDropdownOpen(false);
@@ -578,101 +573,6 @@ export default function AddNewBlogWithLayoutBuilder() {
                 </div>
               </div>
 
-              {/* Visibility Field */}
-              <div className="flex items-center space-x-2">
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">
-                  Visibility:
-                </label>
-                <div className="relative dropdown-container">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setVisibilityDropdownOpen(!visibilityDropdownOpen);
-                      setStatusDropdownOpen(false);
-                      setDateDropdownOpen(false);
-                      setCategoriesDropdownOpen(false);
-                      setTagsDropdownOpen(false);
-                    }}
-                    className="flex items-center justify-between bg-primary text-white px-4 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer min-w-[120px]"
-                  >
-                    <span className="capitalize">{metadata.visibility}</span>
-                    <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
-                  {visibilityDropdownOpen && (
-                    <div className="absolute top-full left-0 mt-1 w-80 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg z-50">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          updateMetadata('visibility', 'public');
-                          setVisibilityDropdownOpen(false);
-                        }}
-                        className="w-full text-left px-4 py-3 text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 first:rounded-t-lg flex items-start space-x-3"
-                      >
-                        <div className="flex-shrink-0 mt-0.5">
-                          {metadata.visibility === 'public' ? (
-                            <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                            </svg>
-                          ) : (
-                            <div className="w-4 h-4"></div>
-                          )}
-                        </div>
-                        <div className="flex-1">
-                          <div className="font-medium">Public</div>
-                          <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">This blog post can be viewed by anyone who has the link.</div>
-                        </div>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          updateMetadata('visibility', 'private');
-                          setVisibilityDropdownOpen(false);
-                        }}
-                        className="w-full text-left px-4 py-3 text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-start space-x-3"
-                      >
-                        <div className="flex-shrink-0 mt-0.5">
-                          {metadata.visibility === 'private' ? (
-                            <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                            </svg>
-                          ) : (
-                            <div className="w-4 h-4"></div>
-                          )}
-                        </div>
-                        <div className="flex-1">
-                          <div className="font-medium">Private</div>
-                          <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">This blog post is only visible to you and selected users.</div>
-                        </div>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          updateMetadata('visibility', 'password');
-                          setVisibilityDropdownOpen(false);
-                        }}
-                        className="w-full text-left px-4 py-3 text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 last:rounded-b-lg flex items-start space-x-3"
-                      >
-                        <div className="flex-shrink-0 mt-0.5">
-                          {metadata.visibility === 'password' ? (
-                            <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                            </svg>
-                          ) : (
-                            <div className="w-4 h-4"></div>
-                          )}
-                        </div>
-                        <div className="flex-1">
-                          <div className="font-medium">Password Protected</div>
-                          <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">This blog post requires a password to view.</div>
-                        </div>
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
-
               {/* Date Posted Field */}
               <div className="flex items-center space-x-2">
                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">
@@ -684,7 +584,6 @@ export default function AddNewBlogWithLayoutBuilder() {
                     onClick={() => {
                       setDateDropdownOpen(!dateDropdownOpen);
                       setStatusDropdownOpen(false);
-                      setVisibilityDropdownOpen(false);
                       setCategoriesDropdownOpen(false);
                       setTagsDropdownOpen(false);
                     }}
@@ -745,7 +644,6 @@ export default function AddNewBlogWithLayoutBuilder() {
                     onClick={() => {
                       setCategoriesDropdownOpen(!categoriesDropdownOpen);
                       setStatusDropdownOpen(false);
-                      setVisibilityDropdownOpen(false);
                       setDateDropdownOpen(false);
                       setTagsDropdownOpen(false);
                     }}
@@ -863,7 +761,6 @@ export default function AddNewBlogWithLayoutBuilder() {
                     onClick={() => {
                       setTagsDropdownOpen(!tagsDropdownOpen);
                       setStatusDropdownOpen(false);
-                      setVisibilityDropdownOpen(false);
                       setDateDropdownOpen(false);
                       setCategoriesDropdownOpen(false);
                     }}
