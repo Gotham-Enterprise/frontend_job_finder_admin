@@ -21,7 +21,6 @@ import { logPayloadFormatted, generatePayloadPreview } from '@/lib/blogPayloadLo
 import { createBlogApiService } from '@/services/blogApiService';
 import { authUtils } from '@/services/utils/authUtils';
 import { blogApi } from '@/services/api/blog';
-import { tagApi } from '@/services/api/tag';
 
 
 import { 
@@ -38,7 +37,6 @@ import {
 } from "@/services/types/blogPostType";
 
 import { CategoryWithSubCategories } from '@/services/types/subCategoryTypes';
-import { Tag } from '@/services/api/tag';
 import { openBlogPreview } from "@/services/blogPreviewService";
 
 interface BlogMetadata {
@@ -88,6 +86,19 @@ const blogApiService = createBlogApiService({
 });
 
 // Move static data outside component to prevent recreation on every render
+const tagOptions: TagOption[] = [
+  { value: '1', text: 'React', selected: false },
+  { value: '2', text: 'TypeScript', selected: false },
+  { value: '3', text: 'JavaScript', selected: false },
+  { value: '4', text: 'CSS', selected: false },
+  { value: '5', text: 'Next.js', selected: false },
+  { value: '6', text: 'Node.js', selected: false },
+  { value: '7', text: 'API', selected: false },
+  { value: '8', text: 'Frontend', selected: false },
+  { value: '9', text: 'Backend', selected: false },
+  { value: '10', text: 'UI/UX', selected: false },
+];
+
 const statusOptions = [
   { value: 'draft', label: 'Draft', description: 'This job posting will no longer be publicly accessible.' },
   { value: 'published', label: 'Published', description: 'This job posting can be viewed by anyone who has the link.' },
@@ -97,10 +108,6 @@ export default function AddNewBlogWithLayoutBuilder() {
   // Dynamic categories state
   const [categoryOptions, setCategoryOptions] = useState<CategoryOption[]>([]);
   const [categoriesLoading, setCategoriesLoading] = useState(false);
-
-  // Dynamic tags state
-  const [tagOptions, setTagOptions] = useState<TagOption[]>([]);
-  const [tagsLoading, setTagsLoading] = useState(false);
 
   const [currentLayout, setCurrentLayout] = useState<LayoutType>(() => createInitialLayout());
   const [viewMode, setViewMode] = useState<ViewMode>('builder');
@@ -197,35 +204,6 @@ export default function AddNewBlogWithLayoutBuilder() {
     fetchCategories();
   }, []);
 
-  // Fetch tags on component mount
-  useEffect(() => {
-    const fetchTags = async () => {
-      setTagsLoading(true);
-      try {
-        const response = await tagApi.getTagsForDropdown();
-        
-        if (response.success && response.data) {
-          // Transform API tags to TagOption format
-          const transformedTags: TagOption[] = response.data.map((tag: Tag) => ({
-            value: tag.id,
-            text: tag.name,
-            selected: false
-          }));
-          
-          setTagOptions(transformedTags);
-        }
-      } catch (error) {
-        console.error('Error fetching tags:', error);
-        // Fallback to empty array if fetch fails
-        setTagOptions([]);
-      } finally {
-        setTagsLoading(false);
-      }
-    };
-
-    fetchTags();
-  }, []);
-
   const [expandedSections, setExpandedSections] = useState({
     publish: true,
     categories: true,
@@ -248,7 +226,7 @@ export default function AddNewBlogWithLayoutBuilder() {
   const filteredTags = useMemo(() => 
     tagOptions.filter(tag =>
       tag.text.toLowerCase().includes(tagsSearchTerm.toLowerCase())
-    ), [tagOptions, tagsSearchTerm]
+    ), [tagsSearchTerm]
   );
 
   const transformedLayoutData = useMemo(() => {
@@ -829,34 +807,20 @@ export default function AddNewBlogWithLayoutBuilder() {
                 <div className="relative dropdown-container">
                   <button
                     type="button"
-                    disabled={tagsLoading}
                     onClick={() => {
-                      if (!tagsLoading) {
-                        setTagsDropdownOpen(!tagsDropdownOpen);
-                        setStatusDropdownOpen(false);
-                        setDateDropdownOpen(false);
-                        setCategoriesDropdownOpen(false);
-                      }
+                      setTagsDropdownOpen(!tagsDropdownOpen);
+                      setStatusDropdownOpen(false);
+                      setDateDropdownOpen(false);
+                      setCategoriesDropdownOpen(false);
                     }}
-                    className={`flex items-center justify-between bg-primary text-white px-4 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer min-w-[120px] ${tagsLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    className="flex items-center justify-between bg-primary text-white px-4 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer min-w-[120px]"
                   >
-                    <span>
-                      {tagsLoading ? (
-                        <div className="flex items-center space-x-2">
-                          <svg className="animate-spin h-3 w-3 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                          </svg>
-                          <span>Loading...</span>
-                        </div>
-                      ) : metadata.tags.length > 0 ? `${metadata.tags.length} selected` : 'Select'
-                      }
-                    </span>
+                    <span>{metadata.tags.length > 0 ? `${metadata.tags.length} selected` : 'Select'}</span>
                     <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
                   </button>
-                  {tagsDropdownOpen && !tagsLoading && (
+                  {tagsDropdownOpen && (
                     <div className="absolute top-full left-0 mt-1 w-80 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg z-50 max-h-64 overflow-hidden">
                       <div className="px-4 py-3">
                         <div className="flex items-center space-x-3 mb-3">
@@ -881,17 +845,7 @@ export default function AddNewBlogWithLayoutBuilder() {
                         </div>
 
                         <div className="max-h-32 overflow-y-auto space-y-2 mb-4">
-                          {tagsLoading ? (
-                            <div className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
-                              <div className="flex items-center justify-center space-x-2">
-                                <svg className="animate-spin h-4 w-4 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                                <span>Loading tags...</span>
-                              </div>
-                            </div>
-                          ) : filteredTags.length > 0 ? (
+                          {filteredTags.length > 0 ? (
                             filteredTags.map(tag => (
                               <label key={tag.value} className="flex items-center text-sm cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 p-2 rounded">
                                 <input
@@ -916,10 +870,7 @@ export default function AddNewBlogWithLayoutBuilder() {
                             ))
                           ) : (
                             <div className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
-                              {tagsSearchTerm ? 
-                                `No tags found matching "${tagsSearchTerm}"` : 
-                                'No tags available'
-                              }
+                              No tags found matching &ldquo;{tagsSearchTerm}&rdquo;
                             </div>
                           )}
                         </div>

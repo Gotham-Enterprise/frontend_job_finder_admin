@@ -69,7 +69,7 @@ export const blogApi = {
 
   async getCategoriesForDropdown(): Promise<ApiResponse<CategoryWithSubCategories[]>> {
     const queryParams = new URLSearchParams();
-    queryParams.append('limit', '100'); // Get maximum allowed categories
+    queryParams.append('limit', '0');
     
     const endpoint = `/api/admin/blogs/category?${queryParams.toString()}`;
     
