@@ -48,9 +48,32 @@ export interface BulkDeleteTagsPayload {
   tagIds: string[];
 }
 
+export interface TagFilters {
+  keywords?: string;
+  page?: number;
+  limit?: number;
+}
+
 export const tagApi = {
-  async getTags(): Promise<TagsResponse> {
-    return apiGet<TagsResponse>('/api/admin/blogs/tag');
+  async getTags(filters?: TagFilters): Promise<TagsResponse> {
+    const queryParams = new URLSearchParams();
+    
+    if (filters?.keywords) queryParams.append('keywords', filters.keywords);
+    if (filters?.page) queryParams.append('page', filters.page.toString());
+    if (filters?.limit) queryParams.append('limit', filters.limit.toString());
+    
+    const endpoint = `/api/admin/blogs/tag${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    
+    return apiGet<TagsResponse>(endpoint);
+  },
+
+  async getTagsForDropdown(): Promise<TagsResponse> {
+    const queryParams = new URLSearchParams();
+    queryParams.append('limit', '100'); // Get maximum allowed tags
+    
+    const endpoint = `/api/admin/blogs/tag?${queryParams.toString()}`;
+    
+    return apiGet<TagsResponse>(endpoint);
   },
 
   async createTag(data: NewTag): Promise<CreateTagResponse> {

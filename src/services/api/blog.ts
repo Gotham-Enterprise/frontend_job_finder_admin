@@ -67,6 +67,15 @@ export const blogApi = {
     return apiGet<ApiResponse<CategoryWithSubCategories[]>>(endpoint);
   },
 
+  async getCategoriesForDropdown(): Promise<ApiResponse<CategoryWithSubCategories[]>> {
+    const queryParams = new URLSearchParams();
+    queryParams.append('limit', '100'); // Get maximum allowed categories
+    
+    const endpoint = `/api/admin/blogs/category?${queryParams.toString()}`;
+    
+    return apiGet<ApiResponse<CategoryWithSubCategories[]>>(endpoint);
+  },
+
   async createCategory(categoryData: CategoryCreateData): Promise<ApiResponse<CategoryWithSubCategories>> {
     const endpoint = '/api/admin/blogs/category';
     
