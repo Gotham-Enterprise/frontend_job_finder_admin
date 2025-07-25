@@ -32,8 +32,6 @@ export default function AddNewCategories() {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const editModal = useModal();
   const confirmDialog = useConfirmation();
-  
-  // Use TanStack Query hooks
   const filters = searchTerm ? { keywords: searchTerm } : undefined;
   const { 
     data: categoriesData, 
@@ -98,7 +96,6 @@ export default function AddNewCategories() {
       
       setNewCategory({ name: '', slug: '', description: '', parent: '', subCategories: [] });
       setIsSlugManuallyEdited(false); 
-      console.log('Added category successfully');
     } catch (error) {
       console.error('Failed to create category:', error);
     }
@@ -126,7 +123,6 @@ export default function AddNewCategories() {
       
       editModal.closeModal();
       setEditingCategory(null);
-      console.log('Updated category successfully');
     } catch (error) {
       console.error('Failed to update category:', error);
     }
@@ -148,7 +144,6 @@ export default function AddNewCategories() {
     if (confirmed) {
       try {
         await bulkDeleteMutation.mutateAsync(categoryIds);
-        console.log('Deleted categories:', categoryIds);
       } catch (error) {
         console.error('Failed to delete categories:', error);
       }
@@ -170,7 +165,7 @@ export default function AddNewCategories() {
 
   const searchChange = async (value: string) => {
     setSearchTerm(value);
-    setCurrentPage(1); // Reset to first page when searching
+    setCurrentPage(1);
   };
 
   const handlePageChange = (page: number) => {
@@ -179,10 +174,9 @@ export default function AddNewCategories() {
 
   const handleItemsPerPageChange = (newItemsPerPage: number) => {
     setItemsPerPage(newItemsPerPage);
-    setCurrentPage(1); // Reset to first page when changing items per page
+    setCurrentPage(1); 
   };
 
-  // Bulk selection functions
   const selectCategory = (categoryId: string, selected: boolean) => {
     setSelectedCategories(prev => 
       selected 

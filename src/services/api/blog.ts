@@ -41,8 +41,18 @@ export const blogApi = {
   },
 
   async getBlogPostById(id: string): Promise<BlogPost> {
-    const response = await apiGet<{ data: BlogPost }>(`/api/admin/blogs/${id}/details`);
-    return response.data;
+    try {
+      const response = await apiGet<{ success: boolean; data: BlogPost; message?: string }>(`/api/admin/blogs/${id}/details`);
+      
+      if (response.success && response.data) {
+        return response.data;
+      } else {
+        throw new Error(response.message || 'Blog post not found');
+      }
+    } catch (error: any) {
+      console.error('Error in getBlogPostById:', error);
+      throw error;
+    }
   },
 
   async deleteBlogPost(id: string): Promise<void> {

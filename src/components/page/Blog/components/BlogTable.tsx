@@ -10,7 +10,7 @@ import {
 import Badge from '../../../ui/badge/Badge';
 import Button from '../../../ui/button/Button';
 import Checkbox from '../../../form/input/Checkbox';
-import { PencilIcon, TrashBinIcon } from '@/icons';
+import { PencilIcon, TrashBinIcon, EyeIcon } from '@/icons';
 import { BlogTableProps } from '@/services/types/BlogTypes';
 
 const BlogTable: React.FC<BlogTableProps> = ({
@@ -20,6 +20,7 @@ const BlogTable: React.FC<BlogTableProps> = ({
   getStatusVariant,
   onEditPost,
   onDeletePost,
+  onPreviewPost,
   selectedPosts,
   onSelectPost,
   onSelectAll,
@@ -136,6 +137,15 @@ const BlogTable: React.FC<BlogTableProps> = ({
                 </TableCell>
                 <TableCell className="py-4 px-6 text-right">
                   <div className="flex items-center justify-end">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="text-blue-600"
+                      onClick={() => onPreviewPost && onPreviewPost(post.id)}
+                      startIcon={<EyeIcon />}
+                    >
+                      View
+                    </Button>
                     <Button 
                       variant="ghost" 
                       size="sm" 

@@ -204,6 +204,10 @@ export const useBlogLogic = () => {
     router.push(`/admin/blog/edit/${postId}`);
   };
 
+  const previewPost = (postId: string) => {
+    window.open(`/blog/preview/${postId}`, '_blank');
+  };
+
   const deletePost = async (postId: string) => {
     const confirmed = await confirmation.confirm({
       title: 'Delete Blog Post',
@@ -300,6 +304,7 @@ export const useBlogLogic = () => {
     selectPost,
     selectAll,
     editPost,
+    previewPost,
     deletePost,
     bulkDeletePosts,
     clearSelectedPosts,

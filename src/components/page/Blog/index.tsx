@@ -46,6 +46,7 @@ const AllBlogPosts: React.FC<AllBlogPostsProps> = ({ className = "" }) => {
     selectPost,
     selectAll,
     editPost,
+    previewPost,
     deletePost,
     bulkDeletePosts,
     clearSelectedPosts,
@@ -127,6 +128,7 @@ const AllBlogPosts: React.FC<AllBlogPostsProps> = ({ className = "" }) => {
         tableColumns={tableColumns}
         getStatusVariant={getStatusVariant}
         onEditPost={editPost}
+        onPreviewPost={previewPost}
         onDeletePost={deletePost}
         selectedPosts={selectedPosts}
         onSelectPost={selectPost}

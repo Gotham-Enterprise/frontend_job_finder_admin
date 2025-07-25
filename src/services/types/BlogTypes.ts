@@ -40,6 +40,7 @@ export interface BlogTableProps {
   getStatusVariant: (status: string) => 'light' | 'solid';
   onEditPost: (postId: string) => void;
   onDeletePost: (postId: string) => void;
+  onPreviewPost?: (postId: string) => void;
   selectedPosts: string[];
   onSelectPost: (postId: string, selected: boolean) => void;
   onSelectAll: (selected: boolean) => void;

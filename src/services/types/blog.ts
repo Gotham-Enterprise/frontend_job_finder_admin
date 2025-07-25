@@ -46,7 +46,7 @@ export interface BlogFilters {
   page?: number;
   limit?: number;
   search?: string;
-  status?: string; // Changed to allow multiple statuses separated by comma
+  status?: string;
   category?: string;
   tag?: string;
   author?: string;
