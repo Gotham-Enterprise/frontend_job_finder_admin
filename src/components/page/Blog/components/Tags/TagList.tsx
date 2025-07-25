@@ -147,28 +147,22 @@ const TagList: React.FC<TagListProps> = ({
                 </TableCell>
                 <TableCell className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <div className="flex items-center justify-end space-x-2">
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      disabled={deletingTagIds.includes(tag.id)}
-                      className="text-brand-400"
-                     onClick={() => onEditTag(tag)}
-                      startIcon={<PencilIcon />}
-                    >
-                      Edit
-                    </Button>
-                  
-                      <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      disabled={deletingTagIds.includes(tag.id)}
-                      className="text-red-600 hover:text-red-700"
-                      onClick={() => onDeleteTag([tag.id])}
-                      startIcon={<TrashBinIcon />}
-                    >
-                      Delete
-                    </Button>
-
+                 <button
+                                                           onClick={() => onEditTag(tag)}
+                                                          className="inline-flex text-brand-400  items-center justify-center w-8 h-8 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-md transition-colors"
+                                                          title="Edit"
+                                                            disabled={deletingTagIds.includes(tag.id)}
+                                                        >
+                                                          <PencilIcon className="text-brand-400" />
+                                                        </button>
+                                                        <button
+                                                          onClick={() => onDeleteTag([tag.id])}
+                                                          className="inline-flex text-brand-400 items-center justify-center w-8 h-8 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
+                                                          title="Delete"
+                                                          disabled={deletingTagIds.includes(tag.id)}
+                                                        >
+                                                          <TrashBinIcon className="text-brand-400" />
+                                                        </button>
 
                   </div>
                 </TableCell>

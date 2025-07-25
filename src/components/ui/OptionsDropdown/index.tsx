@@ -93,13 +93,13 @@ const OptionsDropdown: React.FC<OptionsDropdownProps> = ({
       </button>
       {isOpen && (
         <div
-          className={`absolute z-[9999] w-48 rounded-lg shadow-lg bg-white border-0 focus:outline-none ${
+          className={`absolute z-[999999] w-48 rounded-lg shadow-lg bg-white border-0 focus:outline-none ${
             align === 'right' ? 'right-0' : 'left-0'
           } ${
             dropdownPosition === 'top' ? 'bottom-full mb-1' : 'top-full mt-1'
           }`}
           style={{ 
-            boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05)' 
+            boxShadow: '0 10px 25px rgba(0, 0, 0, 0.15), 0 4px 6px rgba(0, 0, 0, 0.1)' 
           }}
         >
           <div className="py-1">

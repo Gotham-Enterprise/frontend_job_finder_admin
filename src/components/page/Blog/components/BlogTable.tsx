@@ -29,7 +29,14 @@ const BlogTable: React.FC<BlogTableProps> = ({
   const someSelected = selectedPosts.length > 0 && !allSelected;
 
   return (
-    <div className="overflow-x-auto overflow-y-visible">
+    <div 
+      className="relative overflow-auto"
+      style={{ 
+        maxHeight: '600px',
+        scrollbarWidth: 'thin',
+        scrollbarColor: '#9CA3AF #F3F4F6'
+      }}
+    >
       <div className="min-w-full">
         <Table>        
         <TableHeader>
@@ -137,33 +144,29 @@ const BlogTable: React.FC<BlogTableProps> = ({
                     {formatDate(post.createdAt)}
                   </p>
                 </TableCell>
-                <TableCell className="py-4 px-6 text-right relative">
-                  <div className="flex items-center justify-end">
-                    <OptionsDropdown
-                      triggerIcon={<HorizontaLDots />}
-                      options={[
-                        {
-                          id: 'view',
-                          label: 'View',
-                          icon: <EyeIcon />,
-                          onClick: () => onPreviewPost && onPreviewPost(post.id),
-                        },
-                        {
-                          id: 'edit',
-                          label: 'Edit',
-                          icon: <PencilIcon />,
-                          onClick: () => onEditPost(post.id),
-                        },
-                        {
-                          id: 'delete',
-                          label: 'Delete',
-                          icon: <TrashBinIcon />,
-                          onClick: () => onDeletePost(post.id),
-                          variant: 'danger' as const,
-                        },
-                      ]}
-                      align="right"
-                    />
+                <TableCell className="py-4 px-6 text-right">
+                  <div className="flex items-center justify-end gap-1">
+                    <button
+                      onClick={() => onPreviewPost && onPreviewPost(post.id)}
+                      className="inline-flex text-brand-400 items-center justify-center w-8 h-8 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+                      title="View"
+                    >
+                      <EyeIcon className="text-brand-400"/>
+                    </button>
+                    <button
+                      onClick={() => onEditPost(post.id)}
+                      className="inline-flex text-brand-400  items-center justify-center w-8 h-8 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-md transition-colors"
+                      title="Edit"
+                    >
+                      <PencilIcon className="text-brand-400" />
+                    </button>
+                    <button
+                      onClick={() => onDeletePost(post.id)}
+                      className="inline-flex text-brand-400 items-center justify-center w-8 h-8 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
+                      title="Delete"
+                    >
+                      <TrashBinIcon className="text-brand-400" />
+                    </button>
                   </div>
                 </TableCell>
               </TableRow>
