@@ -29,7 +29,6 @@ export interface BlogFiltersProps {
   tagOptions: Array<{ value: string; label: string }>;
   statusOptions: Array<{ value: string; label: string }>;
   sortOptions: Array<{ value: string; label: string }>;
-  itemsPerPageOptions: Array<{ value: string; label: string }>;
   selectedStatuses?: string[];
   onStatusToggle?: (statuses: string[]) => void;
   hasActiveFilters?: boolean;
@@ -52,4 +51,6 @@ export interface BlogTablePaginationProps {
   data: any;
   filters: BlogFilters;
   onPageChange: (page: number) => void;
+  itemsPerPageOptions?: Array<{ value: string; label: string }>;
+  onFilterChange?: (key: keyof BlogFilters, value: any) => void;
 }

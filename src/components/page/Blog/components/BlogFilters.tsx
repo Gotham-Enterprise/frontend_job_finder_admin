@@ -11,7 +11,6 @@ const BlogFilters: React.FC<BlogFiltersProps> = ({
   tagOptions,
   statusOptions,
   sortOptions,
-  itemsPerPageOptions,
   selectedStatuses,
   onStatusToggle,
   hasActiveFilters,
@@ -70,20 +69,6 @@ const BlogFilters: React.FC<BlogFiltersProps> = ({
             options={sortOptions}
             placeholder="Sort posts..."
             searchPlaceholder="Search sort options..."
-            className="w-full"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-            Items per page
-          </Label>
-          <SearchableSelect
-            value={filters.limit?.toString() || '10'}
-            onChange={(value: string) => onFilterChange('limit', parseInt(value))}
-            options={itemsPerPageOptions}
-            placeholder="Items per page..."
-            searchPlaceholder="Search page sizes..."
             className="w-full"
           />
         </div>

@@ -117,7 +117,6 @@ const AllBlogPosts: React.FC<AllBlogPostsProps> = ({ className = "" }) => {
             tagOptions={tagOptions}
             statusOptions={statusOptions}
             sortOptions={sortOptions}
-            itemsPerPageOptions={itemsPerPageOptions}
             selectedStatuses={selectedStatuses}
             onStatusToggle={handleStatusToggle}
             hasActiveFilters={hasActiveFilters}
@@ -142,6 +141,8 @@ const AllBlogPosts: React.FC<AllBlogPostsProps> = ({ className = "" }) => {
         data={data}
         filters={filters}
         onPageChange={initPageChange}
+        itemsPerPageOptions={itemsPerPageOptions}
+        onFilterChange={filterChange}
       />
       
       <FullScreenSpinner 
