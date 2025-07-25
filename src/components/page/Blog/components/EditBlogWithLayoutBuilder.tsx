@@ -448,11 +448,17 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
             <div className="flex items-center gap-4">
               <Button
                 onClick={() => router.push('/admin/blog')}
-                variant="outline"
+                variant="ghost"
                 size="sm"
+                  className='text-brand-400'
               >
-                ← Back
-              </Button>
+             <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              Back
+            </Button>
+
+                        
               
               <div className="flex items-center gap-6">
                 <div className="flex items-center gap-2">
@@ -531,15 +537,17 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
                         <div className="mb-4">
                           <DatePicker
                             id="blog-publish-date"
+                            key={metadata.publishDate} // Add key to force re-render when date changes
                             defaultDate={metadata.publishDate}
                             onChange={(selectedDates) => {
                               if (selectedDates.length > 0) {
                                 const selectedDate = selectedDates[0];
                                 const formattedDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate()).toISOString();
                                 updateMetadataField('publishDate', formattedDate);
+                                // Close dropdown after a short delay to allow the date to update
                                 setTimeout(() => {
                                   setDateDropdownOpen(false);
-                                }, 100);
+                                }, 300);
                               }
                             }}
                             placeholder="Select date"

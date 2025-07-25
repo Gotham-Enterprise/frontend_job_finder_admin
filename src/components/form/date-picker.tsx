@@ -59,12 +59,17 @@ export default function DatePicker({
       }
     });
 
+    // Update the date if defaultDate changes
+    if (defaultDate && flatPickr && !Array.isArray(flatPickr)) {
+      flatPickr.setDate(defaultDate, false);
+    }
+
     return () => {
       if (!Array.isArray(flatPickr)) {
         flatPickr.destroy();
       }
     };
-  }, [mode, onChange, id, defaultDate]);
+  }, [mode, onChange, id, defaultDate]); // Added defaultDate to dependency array
 
   return (
     <div>
