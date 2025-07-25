@@ -13,6 +13,7 @@ import ProgressLoader from "@/components/ui/ProgressLoader";
 
 import { authUtils } from '@/services/utils/authUtils';
 import { blogApi } from '@/services/api/blog';
+import { tagApi } from '@/services/api/tag';
 import { 
   transformBlogDataForAPI, 
   validateBlogData, 
@@ -77,19 +78,6 @@ const createInitialLayout = (): LayoutType => {
   };
 };
 
-// Move static data outside component to prevent recreation on every render
-const tagOptions: TagOption[] = [
-  { value: '1', text: 'React', selected: false },
-  { value: '2', text: 'TypeScript', selected: false },
-  { value: '3', text: 'JavaScript', selected: false },
-  { value: '4', text: 'CSS', selected: false },
-  { value: '5', text: 'Next.js', selected: false },
-  { value: '6', text: 'Node.js', selected: false },
-  { value: '7', text: 'API', selected: false },
-  { value: '8', text: 'Frontend', selected: false },
-  { value: '9', text: 'Backend', selected: false },
-  { value: '10', text: 'UI/UX', selected: false },
-];
 
 const statusOptions = [
   { value: 'draft', label: 'Draft', description: 'This job posting will no longer be publicly accessible.' },
@@ -102,6 +90,9 @@ export default function AddNewBlogWithLayoutBuilder() {
   
   const [categoryOptions, setCategoryOptions] = useState<CategoryOption[]>([]);
   const [categoriesLoading, setCategoriesLoading] = useState(false);
+  
+  const [tagOptions, setTagOptions] = useState<TagOption[]>([]);
+  const [tagsLoading, setTagsLoading] = useState(false);
 
   const [currentLayout, setCurrentLayout] = useState<LayoutType>(() => createInitialLayout());
   const [viewMode, setViewMode] = useState<ViewMode>('builder');
@@ -126,7 +117,6 @@ export default function AddNewBlogWithLayoutBuilder() {
     hideLoader
   } = useProgressLoader({
     onComplete: useCallback(() => {
-      // Redirect to blog list after successful operation
       router.push('/admin/blog');
     }, [router])
   });
@@ -199,6 +189,35 @@ export default function AddNewBlogWithLayoutBuilder() {
     fetchCategories();
   }, []);
 
+  // Fetch tags on component mount
+  useEffect(() => {
+    const fetchTags = async () => {
+      setTagsLoading(true);
+      try {
+        const response = await tagApi.getTagsForDropdown();
+        
+        if (response.success && response.data) {
+          // Transform API tags to TagOption format
+          const transformedTags: TagOption[] = response.data.map((tag) => ({
+            value: tag.id,
+            text: tag.name,
+            selected: false
+          }));
+          
+          setTagOptions(transformedTags);
+        }
+      } catch (error) {
+        console.error('Error fetching tags:', error);
+        // Fallback to empty array if fetch fails
+        setTagOptions([]);
+      } finally {
+        setTagsLoading(false);
+      }
+    };
+
+    fetchTags();
+  }, []);
+
   const [expandedSections, setExpandedSections] = useState({
     publish: true,
     categories: true,
@@ -221,7 +240,7 @@ export default function AddNewBlogWithLayoutBuilder() {
   const filteredTags = useMemo(() => 
     tagOptions.filter(tag =>
       tag.text.toLowerCase().includes(tagsSearchTerm.toLowerCase())
-    ), [tagsSearchTerm]
+    ), [tagOptions, tagsSearchTerm]
   );
 
   const transformedLayoutData = useMemo(() => {
@@ -284,17 +303,17 @@ export default function AddNewBlogWithLayoutBuilder() {
 
     try {
       showLoader({
-        title: `${metadata.status === 'draft' ? 'Saving Draft' : 'Publishing Blog'}...`,
-        subtitle: `${metadata.status === 'draft' ? 'Preserving your content as draft' : 'Preparing your content for publication'}`,
+        title: 'Publishing Blog...',
+        subtitle: 'Preparing your content for publication',
         duration: 3000
       });
 
-      // Use the status from metadata dropdown
+      // Always publish when the Publish button is clicked
       const publishPayload = {
         ...blogPayload,
         metadata: {
           ...blogPayload.metadata,
-          status: metadata.status
+          status: 'published'
         }
       };
 
@@ -778,7 +797,12 @@ export default function AddNewBlogWithLayoutBuilder() {
                         </div>
 
                         <div className="max-h-32 overflow-y-auto space-y-2 mb-4">
-                          {filteredTags.length > 0 ? (
+                          {tagsLoading ? (
+                            <div className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
+                              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary mx-auto mb-2"></div>
+                              Loading tags...
+                            </div>
+                          ) : filteredTags.length > 0 ? (
                             filteredTags.map(tag => (
                               <label key={tag.value} className="flex items-center text-sm cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 p-2 rounded">
                                 <input
@@ -803,23 +827,13 @@ export default function AddNewBlogWithLayoutBuilder() {
                             ))
                           ) : (
                             <div className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
-                              No tags found matching &ldquo;{tagsSearchTerm}&rdquo;
+                              {tagsSearchTerm ? `No tags found matching "${tagsSearchTerm}"` : 'No tags available'}
                             </div>
                           )}
                         </div>
                         <div className="text-xs text-gray-500 dark:text-gray-400 mb-4">
                           Select multiple tags for better searchability.
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setTagsDropdownOpen(false);
-                            setTagsSearchTerm('');
-                          }}
-                          className="w-full bg-primary text-white px-4 py-2 text-sm rounded-lg hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/20"
-                        >
-                          Done
-                        </button>
                       </div>
                     </div>
                   )}
@@ -833,7 +847,7 @@ export default function AddNewBlogWithLayoutBuilder() {
               disabled={!canSave}
               className="px-4 py-2"
             >
-              {metadata.status === 'draft' ? 'Save Draft' : 'Publish'}
+              Publish
             </Button>
           </div>
         </div>
