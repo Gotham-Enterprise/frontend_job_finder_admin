@@ -2,6 +2,7 @@ import { useState, useMemo, useTransition, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation';
 import { useBlogPosts, useDeleteBlogPost, useBulkDeleteBlogPosts } from '@/services/hooks/useBlog';
 import { BlogFilters } from '@/services/types/blog';
+import { useConfirmation } from '@/hooks/useConfirmation';
 
 export const useBlogLogic = () => {
   const router = useRouter();
@@ -25,6 +26,7 @@ export const useBlogLogic = () => {
   const { data, isLoading, error, refetch } = useBlogPosts(filters);
   const { mutate: deleteBlogPost, isPending: isDeleting } = useDeleteBlogPost();
   const { mutate: bulkDeleteBlogPosts, isPending: isBulkDeleting } = useBulkDeleteBlogPosts();
+  const confirmation = useConfirmation();
 
   const tableColumns = useMemo(() => [
     { key: 'select', label: '', className: 'w-12' },
@@ -209,29 +211,50 @@ export const useBlogLogic = () => {
     router.push(`/admin/blog/edit/${postId}`);
   };
 
-  const deletePost = (postId: string) => {
-    if (window.confirm('Are you sure you want to delete this blog post?')) {
+  const deletePost = async (postId: string) => {
+    const confirmed = await confirmation.confirm({
+      title: 'Delete Blog Post',
+      message: 'Are you sure you want to delete this blog post? This action cannot be undone.',
+      confirmText: 'Delete',
+      cancelText: 'Cancel'
+    });
+
+    if (confirmed) {
       deleteBlogPost(postId, {
         onSuccess: () => {
-        
+          console.log('Blog post deleted successfully');
           setSelectedPosts(prev => prev.filter(id => id !== postId));
+        },
+        onError: (error) => {
+          console.error('Error deleting blog post:', error);
         }
       });
     }
   };
 
-  const bulkDeletePosts = () => {
+  const bulkDeletePosts = async () => {
     if (selectedPosts.length === 0) return;
     
     const count = selectedPosts.length;
     const message = count === 1 
-      ? 'Are you sure you want to delete this blog post?' 
-      : `Are you sure you want to delete ${count} blog posts?`;
+      ? 'Are you sure you want to delete this blog post? This action cannot be undone.' 
+      : `Are you sure you want to delete ${count} blog posts? This action cannot be undone.`;
     
-    if (window.confirm(message)) {
+    const confirmed = await confirmation.confirm({
+      title: `Delete ${count === 1 ? 'Blog Post' : 'Blog Posts'}`,
+      message,
+      confirmText: 'Delete',
+      cancelText: 'Cancel'
+    });
+
+    if (confirmed) {
       bulkDeleteBlogPosts(selectedPosts, {
         onSuccess: () => {
+          console.log('Blog posts deleted successfully');
           setSelectedPosts([]);
+        },
+        onError: (error) => {
+          console.error('Error deleting blog posts:', error);
         }
       });
     }
@@ -298,5 +321,8 @@ export const useBlogLogic = () => {
     handleStatusToggle,
     clearIndividualFilter,
     clearAllFilters,
+    
+    // Confirmation dialog
+    confirmation,
   };
 };

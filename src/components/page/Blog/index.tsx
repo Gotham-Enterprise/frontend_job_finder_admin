@@ -3,6 +3,7 @@ import React from 'react';
 import { BoltIcon } from '@/icons';
 import ErrorState from '../../common/ErrorState';
 import FullScreenSpinner from '../../ui/FullScreenSpinner';
+import ConfirmationDialog from '@/components/ui/ConfirmationDialog';
 import { useBlogLogic } from '@/services/hooks/useBlogLogic';
 import {
   BlogHeader,
@@ -52,6 +53,9 @@ const AllBlogPosts: React.FC<AllBlogPostsProps> = ({ className = "" }) => {
     handleStatusToggle,
     clearIndividualFilter,
     clearAllFilters,
+    
+    // Confirmation dialog
+    confirmation,
   } = useBlogLogic();
 
   if (error && !isPending) {
@@ -119,6 +123,18 @@ const AllBlogPosts: React.FC<AllBlogPostsProps> = ({ className = "" }) => {
       <FullScreenSpinner 
         isVisible={isDeleting || isBulkDeleting} 
         message={isBulkDeleting ? 'Deleting posts...' : 'Deleting post...'} 
+      />
+
+      <ConfirmationDialog
+        isOpen={confirmation.isOpen}
+        onClose={confirmation.onClose}
+        onConfirm={confirmation.onConfirm}
+        onCancel={confirmation.onCancel}
+        title={confirmation.config?.title || ''}
+        message={confirmation.config?.message || ''}
+        confirmText={confirmation.config?.confirmText}
+        cancelText={confirmation.config?.cancelText}
+        isLoading={isDeleting || isBulkDeleting}
       />
     </div>
   );

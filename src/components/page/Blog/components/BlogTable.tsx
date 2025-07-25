@@ -136,11 +136,11 @@ const BlogTable: React.FC<BlogTableProps> = ({
                   </p>
                 </TableCell>
                 <TableCell className="py-4 px-6 text-right">
-                  <div className="flex items-center justify-end gap-2">
+                  <div className="flex items-center justify-end">
                     <Button 
                       variant="ghost" 
                       size="sm" 
-                      className="text-green-600 dark:text-green-400"
+                      className="text-brand-400"
                       onClick={() => onEditPost(post.id)}
                       startIcon={<PencilIcon />}
                     >
@@ -149,7 +149,7 @@ const BlogTable: React.FC<BlogTableProps> = ({
                     <Button 
                       variant="ghost" 
                       size="sm" 
-                      className="text-red-600 dark:text-red-400"
+                      className="text-brand-400"
                       onClick={() => onDeletePost(post.id)}
                       startIcon={<TrashBinIcon />}
                     >

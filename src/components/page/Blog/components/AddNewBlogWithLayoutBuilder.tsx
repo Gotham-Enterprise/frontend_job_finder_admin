@@ -399,7 +399,7 @@ export default function AddNewBlogWithLayoutBuilder() {
   }, [publishBlog]);
 
   const previewBlog = useCallback(() => {
-    // Open preview logic can be implemented here
+   
     console.log('Preview blog functionality');
   }, []);
 

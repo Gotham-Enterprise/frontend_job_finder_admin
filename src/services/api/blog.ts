@@ -55,6 +55,12 @@ export const blogApi = {
     });
   },
 
+  async deleteBlogsByCategory(categoryIds: string[]): Promise<void> {
+    return apiDelete<void>('/api/admin/blogs/category', {
+      body: { categoryIds }
+    });
+  },
+
   async getCategories(filters?: CategoryFilters): Promise<ApiResponse<CategoryWithSubCategories[]>> {
     const queryParams = new URLSearchParams();
     
