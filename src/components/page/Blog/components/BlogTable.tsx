@@ -8,10 +8,10 @@ import {
   TableHeader,
 } from '../../../ui/table';
 import Badge from '../../../ui/badge/Badge';
-import Button from '../../../ui/button/Button';
 import Checkbox from '../../../form/input/Checkbox';
-import { PencilIcon, TrashBinIcon, EyeIcon } from '@/icons';
+import { PencilIcon, TrashBinIcon, EyeIcon, HorizontaLDots } from '@/icons';
 import { BlogTableProps } from '@/services/types/BlogTypes';
+import OptionsDropdown, { DropdownOption } from '../../../ui/OptionsDropdown/index';
 
 const BlogTable: React.FC<BlogTableProps> = ({
   data,
@@ -137,33 +137,30 @@ const BlogTable: React.FC<BlogTableProps> = ({
                 </TableCell>
                 <TableCell className="py-4 px-6 text-right">
                   <div className="flex items-center justify-end">
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="text-blue-600"
-                      onClick={() => onPreviewPost && onPreviewPost(post.id)}
-                      startIcon={<EyeIcon />}
-                    >
-                      View
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="text-brand-400"
-                      onClick={() => onEditPost(post.id)}
-                      startIcon={<PencilIcon />}
-                    >
-                      Edit
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="text-red-600"
-                      onClick={() => onDeletePost(post.id)}
-                      startIcon={<TrashBinIcon />}
-                    >
-                      Delete
-                    </Button>
+                    <OptionsDropdown
+                      triggerIcon={<HorizontaLDots className="w-4 h-4" />}
+                      options={[
+                        {
+                          id: 'view',
+                          label: 'View',
+                          icon: <EyeIcon />,
+                          onClick: () => onPreviewPost && onPreviewPost(post.id),
+                        },
+                        {
+                          id: 'edit',
+                          label: 'Edit',
+                          icon: <PencilIcon />,
+                          onClick: () => onEditPost(post.id),
+                        },
+                        {
+                          id: 'delete',
+                          label: 'Delete',
+                          icon: <TrashBinIcon />,
+                          onClick: () => onDeletePost(post.id),
+                        },
+                      ]}
+                      align="right"
+                    />
                   </div>
                 </TableCell>
               </TableRow>
