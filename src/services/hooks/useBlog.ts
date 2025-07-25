@@ -79,10 +79,13 @@ export const useUpdateBlogPost = () => {
   
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: any }) => blogApi.updateBlogPost(id, data),
-    onSuccess: () => {
+    onSuccess: (response, variables) => {
       // Invalidate both the list and individual post details
       queryClient.invalidateQueries({ queryKey: blogQueryKeys.lists() });
       queryClient.invalidateQueries({ queryKey: blogQueryKeys.details() });
+      // Also invalidate the specific post that was updated
+      queryClient.invalidateQueries({ queryKey: blogQueryKeys.detail(variables.id) });
+      console.log('Blog post updated successfully, cache invalidated');
     },
     onError: (error) => {
       console.error('Failed to update blog post:', error);

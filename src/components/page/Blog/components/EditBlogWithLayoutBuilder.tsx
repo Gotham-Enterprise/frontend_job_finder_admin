@@ -66,7 +66,6 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
   const { mutate: updateBlogPost, isPending: isUpdating } = useUpdateBlogPost();
 
   const [isPageLoading, setIsPageLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
   const [blogData, setBlogData] = useState<any>(null);
 
   const [categoryOptions, setCategoryOptions] = useState<CategoryOption[]>([]);
@@ -374,7 +373,7 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
     setChildAddBlock(() => addBlockFn);
   }, []);
 
-  const publishBlog = useCallback(async () => {
+  const saveBlog = useCallback(async () => {
     try {
       const payload = {
         title: metadata.title,
@@ -386,7 +385,7 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
           time: Date.now()
         },
         metadata: {
-          status: 'published',
+          status: metadata.status, // Use the actual status from metadata instead of hardcoded 'published'
           visibility: metadata.visibility,
           publishDate: metadata.publishDate,
           categories: metadata.categories ? [metadata.categories] : [],
@@ -405,10 +404,15 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
         }
       };
       
+      // Debug: Log the status being sent
+      console.log('Saving blog with status:', metadata.status);
+      console.log('Full payload:', payload);
+      
       updateBlogPost(
         { id, data: payload },
         {
           onSuccess: () => {
+            console.log('Blog updated successfully');
             // Navigate back to blog list after successful update
             router.push('/admin/blog');
           },
@@ -746,11 +750,18 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
 
             <div className="flex items-center space-x-3">
               <Button
-                onClick={publishBlog}
-                disabled={isSaving}
+                onClick={saveBlog}
+                disabled={isUpdating}
                 className="bg-brand-500 hover:bg-brand-600 text-white"
               >
-                {isSaving ? 'Publishing...' : 'Update & Publish'}
+                {isUpdating 
+                  ? 'Saving...' 
+                  : metadata.status === 'published' 
+                    ? 'Update & Publish' 
+                    : metadata.status === 'draft'
+                      ? 'Save as Draft'
+                      : 'Save Changes'
+                }
               </Button>
             </div>
           </div>
