@@ -46,12 +46,14 @@ export const blogApi = {
   },
 
   async deleteBlogPost(id: string): Promise<void> {
-    return apiDelete<void>(`/api/admin/blogs/${id}`);
+    return apiDelete<void>('/api/admin/blogs/multiple', {
+      body: { blogIds: [id] }
+    });
   },
 
   async deleteBlogPosts(ids: string[]): Promise<void> {
-    return apiDelete<void>('/api/admin/blogs/bulk-delete', {
-      body: { postIds: ids }
+    return apiDelete<void>('/api/admin/blogs/multiple', {
+      body: { blogIds: ids }
     });
   },
 

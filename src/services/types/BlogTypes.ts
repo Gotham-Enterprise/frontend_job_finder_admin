@@ -16,6 +16,10 @@ export interface BlogHeaderProps {
   onClearFilters: () => void;
   hasActiveFilters: boolean;
   filterDropdownContent?: React.ReactNode;
+  selectedPosts: string[];
+  onBulkDelete: () => void;
+  onClearSelection: () => void;
+  isBulkDeleting: boolean;
 }
 
 export interface BlogFiltersProps {

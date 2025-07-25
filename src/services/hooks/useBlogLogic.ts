@@ -264,6 +264,10 @@ export const useBlogLogic = () => {
     router.push('/admin/blog/add-new');
   };
 
+  const clearSelectedPosts = () => {
+    setSelectedPosts([]);
+  };
+
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       startTransition(() => {
@@ -316,6 +320,7 @@ export const useBlogLogic = () => {
     editPost,
     deletePost,
     bulkDeletePosts,
+    clearSelectedPosts,
     addNewPost,
     hasActiveFilters,
     handleStatusToggle,

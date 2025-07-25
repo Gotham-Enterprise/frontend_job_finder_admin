@@ -4,6 +4,7 @@ import React, { useRef } from 'react';
 import Button from '../../../ui/button/Button';
 import Input from '../../../ui/input/Input';
 import FilterDropdown from '../../../ui/FilterDropdown';
+import BulkActionDropdown from '../../../ui/BulkActionDropdown';
 import { DownloadIcon, FunnelIcon, PlusIcon } from '@/icons';
 import { SearchIcon } from '../../../ui/icons';
 import { BlogHeaderProps } from '@/services/types/BlogTypes';
@@ -20,6 +21,10 @@ const BlogHeader: React.FC<BlogHeaderProps> = ({
   onClearFilters,
   hasActiveFilters,
   filterDropdownContent,
+  selectedPosts,
+  onBulkDelete,
+  onClearSelection,
+  isBulkDeleting,
 }) => {
   const filterButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -59,15 +64,24 @@ const BlogHeader: React.FC<BlogHeaderProps> = ({
               </span>
             )}
           </button>
-          <Button
+            <Button
             variant="text-primary"
             size="sm"
-            className="whitespace-nowrap"
+            className="flex gap-2 whitespace-nowrap"
             onClick={() => window.location.href = '/admin/blog/add-new'}
-            startIcon={<PlusIcon />}
+         
           >
+            <PlusIcon class name="w-4 h-4" />
             Add New
           </Button>
+          <BulkActionDropdown
+            selectedItems={selectedPosts}
+            itemType="posts"
+            onBulkDelete={onBulkDelete}
+            onClearSelection={onClearSelection}
+            isDeleting={isBulkDeleting}
+          />
+        
         </div>
       </div>
       

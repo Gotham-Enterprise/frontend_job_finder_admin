@@ -49,6 +49,7 @@ const AllBlogPosts: React.FC<AllBlogPostsProps> = ({ className = "" }) => {
     editPost,
     deletePost,
     bulkDeletePosts,
+    clearSelectedPosts,
     hasActiveFilters,
     handleStatusToggle,
     clearIndividualFilter,
@@ -82,6 +83,10 @@ const AllBlogPosts: React.FC<AllBlogPostsProps> = ({ className = "" }) => {
         onRefetch={refetch}
         onClearFilters={clearAllFilters}
         hasActiveFilters={hasActiveFilters}
+        selectedPosts={selectedPosts}
+        onBulkDelete={bulkDeletePosts}
+        onClearSelection={clearSelectedPosts}
+        isBulkDeleting={isBulkDeleting}
         filterDropdownContent={
           <BlogFilters
             filters={filters}
@@ -115,9 +120,6 @@ const AllBlogPosts: React.FC<AllBlogPostsProps> = ({ className = "" }) => {
         data={data}
         filters={filters}
         onPageChange={initPageChange}
-        selectedPosts={selectedPosts}
-        onBulkDelete={bulkDeletePosts}
-        isBulkDeleting={isBulkDeleting}
       />
       
       <FullScreenSpinner 
