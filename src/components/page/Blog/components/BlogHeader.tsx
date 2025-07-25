@@ -71,7 +71,7 @@ const BlogHeader: React.FC<BlogHeaderProps> = ({
             onClick={() => window.location.href = '/admin/blog/add-new'}
          
           >
-            <PlusIcon class name="w-4 h-4" />
+            <PlusIcon className="w-4 h-4" />
             Add New
           </Button>
           <BulkActionDropdown

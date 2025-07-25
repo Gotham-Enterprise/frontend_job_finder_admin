@@ -41,7 +41,7 @@ export const blogApi = {
   },
 
   async getBlogPostById(id: string): Promise<BlogPost> {
-    const response = await apiGet<{ data: BlogPost }>(`/api/admin/blogs/${id}`);
+    const response = await apiGet<{ data: BlogPost }>(`/api/admin/blogs/${id}/details`);
     return response.data;
   },
 
@@ -171,6 +171,18 @@ export const blogApi = {
       return response;
     } catch (error) {
       console.error('Create blog error:', error);
+      throw error;
+    }
+  },
+
+  async updateBlogPost(id: string, blogData: any): Promise<{ success: boolean; data?: any; message?: string; errors?: any }> {
+    const endpoint = `/api/admin/blogs/${id}/details`;
+    
+    try {
+      const response = await apiPut<{ success: boolean; data?: any; message?: string }>(endpoint, blogData);
+      return response;
+    } catch (error) {
+      console.error('Update blog error:', error);
       throw error;
     }
   }
