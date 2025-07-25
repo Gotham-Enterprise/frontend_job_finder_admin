@@ -293,11 +293,8 @@ export default function AddNewBlogWithLayoutBuilder() {
 
     const { blogPayload, validation } = payloadData;
 
-    console.log('Publishing blog with payload:', blogPayload);
-
     if (!validation.isValid) {
-      console.warn('⚠️ Validation failed - blog contains errors that should be fixed before publishing');
-      console.log('Validation errors:', validation.errors);
+    
       return;
     }
 
@@ -308,7 +305,6 @@ export default function AddNewBlogWithLayoutBuilder() {
         duration: 3000
       });
 
-      // Always publish when the Publish button is clicked
       const publishPayload = {
         ...blogPayload,
         metadata: {
@@ -320,17 +316,18 @@ export default function AddNewBlogWithLayoutBuilder() {
       const response = await blogApi.createBlog(publishPayload);
       
       if (response.success) {
-        console.log('✅ Blog published successfully:', response.data);
-        // Let the progress loader complete naturally - it will trigger the redirect
+               setTimeout(() => {
+          hideLoader();
+          router.push('/admin/blog');
+        }, 3500);
       } else {
-        console.error('❌ Failed to publish blog:', response.message, response.errors);
+      
         hideLoader();
       }
     } catch (error) {
-      console.error('💥 Error publishing blog:', error);
       hideLoader();
     }
-  }, [generateBlogPayloadData, showLoader, hideLoader, metadata.status]);
+  }, [generateBlogPayloadData, showLoader, hideLoader, router]);
 
   const updateMetadata = useCallback((field: keyof BlogMetadata, value: any) => {
     setMetadata(prev => ({
