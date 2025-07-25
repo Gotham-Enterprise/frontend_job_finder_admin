@@ -36,11 +36,11 @@ export interface CategoryListProps {
   searchTerm: string;
   onSearchChange: (value: string) => void;
   onEditCategory: (category: Category) => void;
-  onDeleteCategory: (categoryId: string) => void;
+  onDeleteCategory: (categoryIds: string[]) => void;
   getParentCategoryName: (parentId: string) => string;
   isLoading?: boolean;
   error?: string | null;
-  deletingCategoryId?: string | null;
+  deletingCategoryIds?: string[];
   currentPage?: number;
   totalPages?: number;
   onPageChange?: (page: number) => void;

@@ -5,6 +5,9 @@ import { Table, TableHeader, TableBody, TableRow, TableCell } from "@/components
 import Pagination from "@/components/tables/Pagination";
 import BulkActionDropdown from "@/components/ui/BulkActionDropdown";
 import { CategoryListProps } from "@/services/types/categoryTypes";
+import Button from '../../../../ui/button/Button';
+import { PencilIcon, TrashBinIcon } from '@/icons';
+import FullScreenSpinner from '@/components/ui/FullScreenSpinner';
 
 export default function CategoryList({
   categories,
@@ -15,7 +18,7 @@ export default function CategoryList({
   getParentCategoryName,
   isLoading = false,
   error = null,
-  deletingCategoryId = null,
+  deletingCategoryIds = [],
   currentPage = 1,
   totalPages = 1,
   onPageChange,
@@ -32,15 +35,20 @@ export default function CategoryList({
     category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     category.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
-
-  // Calculate pagination for filtered categories
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const paginatedCategories = filteredCategories.slice(startIndex, endIndex);
   const calculatedTotalPages = Math.ceil(filteredCategories.length / itemsPerPage);
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+    <>
+      {/* Show FullScreenSpinner during delete operations */}
+      <FullScreenSpinner 
+        isVisible={isDeleting} 
+        message="Deleting category..." 
+      />
+      
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
       <div className="p-6 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -165,14 +173,28 @@ export default function CategoryList({
                   </span>
                 </TableCell>
                 <TableCell className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <div className="flex items-center justify-end">
-                    <button
-                      onClick={() => onEditCategory(category)}
-                      className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
-                      disabled={deletingCategoryId === category.id}
+                  <div className="flex items-center justify-end gap-2">
+                      <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      disabled={deletingCategoryIds.includes(category.id)}
+                      className="text-brand-400"
+                     onClick={() => onEditCategory(category)}
+                      startIcon={<PencilIcon />}
                     >
                       Edit
-                    </button>
+                    </Button>
+                  
+                      <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      disabled={deletingCategoryIds.includes(category.id)}
+                      className="text-red-600 hover:text-red-700"
+                      onClick={() => onDeleteCategory([category.id])}
+                      startIcon={<TrashBinIcon />}
+                    >
+                      Delete
+                    </Button>
                   </div>
                 </TableCell>
               </TableRow>
@@ -221,5 +243,6 @@ export default function CategoryList({
         </div>
       )}
     </div>
+    </>
   );
 }

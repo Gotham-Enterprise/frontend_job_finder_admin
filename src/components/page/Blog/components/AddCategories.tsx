@@ -132,23 +132,25 @@ export default function AddNewCategories() {
     }
   };
 
-  const deleteCategory = async (categoryId: string) => {
-    const category = categories.find(cat => cat.id === categoryId);
-    const categoryName = category?.name || 'this category';
+  const deleteCategory = async (categoryIds: string[]) => {
+    const categoryNames = categoryIds.map(id => {
+      const category = categories.find(cat => cat.id === id);
+      return category?.name || 'unknown';
+    }).join(', ');
     
     const confirmed = await confirmDialog.confirm({
-      title: 'Delete Category',
-      message: `Are you sure you want to delete "${categoryName}"? This action cannot be undone.`,
+      title: `Delete ${categoryIds.length > 1 ? 'Categories' : 'Category'}`,
+      message: `Are you sure you want to delete "${categoryNames}"? This action cannot be undone.`,
       confirmText: 'Delete',
       cancelText: 'Cancel'
     });
 
     if (confirmed) {
       try {
-        await deleteCategoryMutation.mutateAsync(categoryId);
-        console.log('Deleted category:', categoryId);
+        await bulkDeleteMutation.mutateAsync(categoryIds);
+        console.log('Deleted categories:', categoryIds);
       } catch (error) {
-        console.error('Failed to delete category:', error);
+        console.error('Failed to delete categories:', error);
       }
     }
   };
@@ -268,7 +270,7 @@ export default function AddNewCategories() {
             getParentCategoryName={getParentCategoryName}
             isLoading={isSearching}
             error={categoriesError}
-            deletingCategoryId={deleteCategoryMutation.variables || null}
+            deletingCategoryIds={bulkDeleteMutation.isPending ? (bulkDeleteMutation.variables || []) : []}
             currentPage={currentPage}
             onPageChange={handlePageChange}
             itemsPerPage={itemsPerPage}
