@@ -62,18 +62,15 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
 }) => {
   const router = useRouter();
 
-  // Core state management
   const [isPageLoading, setIsPageLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [blogData, setBlogData] = useState<any>(null);
-  
-  // Categories and Tags state
+
   const [categoryOptions, setCategoryOptions] = useState<CategoryOption[]>([]);
   const [categoriesLoading, setCategoriesLoading] = useState(false);
   const [tagOptions, setTagOptions] = useState<TagOption[]>([]);
   const [tagsLoading, setTagsLoading] = useState(false);
   
-  // Dropdown states
   const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
   const [dateDropdownOpen, setDateDropdownOpen] = useState(false);
   const [categoriesDropdownOpen, setCategoriesDropdownOpen] = useState(false);
@@ -81,7 +78,7 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
   const [categoriesSearchTerm, setCategoriesSearchTerm] = useState('');
   const [tagsSearchTerm, setTagsSearchTerm] = useState('');
   
-  // Modal states
+
   const titleModal = useModal();
   const [tempTitle, setTempTitle] = useState('');
   const [tempSeoData, setTempSeoData] = useState({
@@ -96,7 +93,6 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
     keywords: ''
   });
   
-  // Expanded sections state
   const [expandedSections, setExpandedSections] = useState({
     publish: true,
     categories: true,
@@ -121,11 +117,10 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
   });
   const [currentLayout, setCurrentLayout] = useState<BlogLayout>(createEmptyBlogLayout());
 
-  // State for managing floating elements panel
+
   const [isElementsPanelVisible, setIsElementsPanelVisible] = useState(true);
   const [childAddBlock, setChildAddBlock] = useState<((type: BlockType) => void) | null>(null);
 
-  // Data fetching
   const fetchBlogData = useCallback(async () => {
     try {
       setIsPageLoading(true);
@@ -155,23 +150,22 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
           allowPings: true
         });
         
-        // Set layout from content
         if (response.content) {
           try {
-            // Try to parse the content as JSON first (if it's a layout structure)
+           
             let parsedContent;
             if (typeof response.content === 'string') {
               try {
                 parsedContent = JSON.parse(response.content);
               } catch {
-                // If parsing fails, treat as plain text
+              
                 parsedContent = response.content;
               }
             } else {
               parsedContent = response.content;
             }
 
-            // Check if the parsed content has a blocks structure (visual layout)
+           
             if (parsedContent && parsedContent.blocks && Array.isArray(parsedContent.blocks)) {
               setCurrentLayout(prev => ({
                 ...prev,
@@ -182,7 +176,7 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
                 }))
               }));
             } else {
-              // If it's plain text or HTML, create a text block
+            
               const textContent = typeof parsedContent === 'string' ? parsedContent : JSON.stringify(parsedContent);
               setCurrentLayout(prev => ({
                 ...prev,
@@ -197,7 +191,7 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
             }
           } catch (error) {
             console.error('Error parsing content:', error);
-            // Fallback to empty layout
+          
             setCurrentLayout(prev => ({
               ...prev,
               blocks: []
@@ -219,7 +213,6 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
     fetchBlogData();
   }, [fetchBlogData]);
 
-  // Fetch categories on component mount
   useEffect(() => {
     const fetchCategories = async () => {
       setCategoriesLoading(true);
@@ -242,7 +235,6 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
     fetchCategories();
   }, []);
 
-  // Fetch tags on component mount
   useEffect(() => {
     const fetchTags = async () => {
       setTagsLoading(true);
@@ -265,7 +257,6 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
     fetchTags();
   }, []);
 
-  // Handle clicks outside dropdowns to close them
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Element;
@@ -283,7 +274,6 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
     };
   }, []);
 
-  // Sync seoData with metadata changes
   useEffect(() => {
     setSeoData(prev => ({
       ...prev,
@@ -292,7 +282,7 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
     }));
   }, [metadata.seoTitle, metadata.seoDescription]);
 
-  // Filtered options
+
   const filteredCategories = useMemo(() => 
     categoryOptions.filter(category =>
       category.text.toLowerCase().includes(categoriesSearchTerm.toLowerCase())
@@ -305,7 +295,6 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
     ), [tagOptions, tagsSearchTerm]
   );
 
-  // Helper function to toggle sections
   const toggleSection = useCallback((section: keyof typeof expandedSections) => {
     setExpandedSections(prev => ({
       ...prev,
@@ -313,15 +302,12 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
     }));
   }, []);
 
-  // Update handlers
   const updateMetadataField = useCallback((field: string, value: any) => {
     setMetadata(prev => ({
       ...prev,
       [field]: value
     }));
   }, []);
-
-  // Title modal handlers
   const handleOpenTitleModal = useCallback(() => {
     setTempTitle(metadata.title);
     setTempSeoData({
@@ -362,11 +348,10 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
   }, []);
 
   const addNewBlock = useCallback((blockType: BlockType) => {
-    // Use the child's addBlock function if available (from VisualLayoutBuilder)
     if (childAddBlock) {
       childAddBlock(blockType);
     } else {
-      // Fallback: add block directly to the layout
+     
       const newBlock: LayoutBlock = {
         id: `block-${Date.now()}`,
         type: blockType,
@@ -382,35 +367,41 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
     }
   }, [childAddBlock]);
 
-  // Handle the addBlock reference from VisualLayoutBuilder
   const handleAddBlockRef = useCallback((addBlockFn: (type: BlockType) => void) => {
     setChildAddBlock(() => addBlockFn);
   }, []);
 
-  // Publishing functionality
   const publishBlog = useCallback(async () => {
     try {
       setIsSaving(true);
-      
-      // Create payload in the format expected by the API
+     
       const payload = {
         title: metadata.title,
         slug: metadata.permalink,
         excerpt: metadata.excerpt,
-        status: 'published',
         content: {
           blocks: currentLayout.blocks,
           version: "1.0.0",
           time: Date.now()
         },
-        category: metadata.categories,
-        tags: metadata.tags,
-        seo: {
-          title: metadata.seoTitle || metadata.title,
-          description: metadata.seoDescription || metadata.excerpt,
-          keywords: metadata.seoTitle ? metadata.seoTitle.split(' ').filter(word => word.length > 3) : []
-        },
-        publishedDate: metadata.publishDate
+        metadata: {
+          status: 'published',
+          visibility: metadata.visibility,
+          publishDate: metadata.publishDate,
+          categories: metadata.categories ? [metadata.categories] : [],
+          tags: metadata.tags,
+          seo: {
+            title: metadata.seoTitle || metadata.title,
+            description: metadata.seoDescription || metadata.excerpt,
+            keywords: metadata.seoTitle ? metadata.seoTitle.split(' ').filter(word => word.length > 3) : []
+          },
+          settings: {
+            allowComments: metadata.allowComments,
+            allowPings: metadata.allowPings,
+            featured: false,
+            sticky: false
+          }
+        }
       };
       
       const response = await blogApi.updateBlogPost(id, payload);
@@ -429,25 +420,34 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
     try {
       setIsSaving(true);
       
-      // Create payload in the format expected by the API
+      // Create payload in the format expected by the API (matching successful creation structure)
       const payload = {
         title: metadata.title,
         slug: metadata.permalink,
         excerpt: metadata.excerpt,
-        status: 'draft',
         content: {
           blocks: currentLayout.blocks,
           version: "1.0.0",
           time: Date.now()
         },
-        category: metadata.categories,
-        tags: metadata.tags,
-        seo: {
-          title: metadata.seoTitle || metadata.title,
-          description: metadata.seoDescription || metadata.excerpt,
-          keywords: metadata.seoTitle ? metadata.seoTitle.split(' ').filter(word => word.length > 3) : []
-        },
-        publishedDate: metadata.publishDate
+        metadata: {
+          status: 'draft',
+          visibility: metadata.visibility,
+          publishDate: metadata.publishDate,
+          categories: metadata.categories ? [metadata.categories] : [],
+          tags: metadata.tags,
+          seo: {
+            title: metadata.seoTitle || metadata.title,
+            description: metadata.seoDescription || metadata.excerpt,
+            keywords: metadata.seoTitle ? metadata.seoTitle.split(' ').filter(word => word.length > 3) : []
+          },
+          settings: {
+            allowComments: metadata.allowComments,
+            allowPings: metadata.allowPings,
+            featured: false,
+            sticky: false
+          }
+        }
       };
 
       const response = await blogApi.updateBlogPost(id, payload);
