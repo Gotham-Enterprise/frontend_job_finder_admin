@@ -5,13 +5,16 @@ import Checkbox from "@/components/form/input/Checkbox";
 import { Table, TableHeader, TableBody, TableRow, TableCell } from "@/components/ui/table";
 import BulkActionDropdown from "@/components/ui/BulkActionDropdown";
 import { Tag } from "@/services/api/tag";
+import Button from '../../../../ui/button/Button';
+import { PencilIcon, TrashBinIcon } from '@/icons';
+import FullScreenSpinner from '@/components/ui/FullScreenSpinner';
 
 interface TagListProps {
   tags: Tag[];
   searchTerm: string;
   onSearchChange: (value: string) => void;
   onEditTag: (tag: Tag) => void;
-  onDeleteTag: (tagId: string) => void;
+  onDeleteTag: (tagIds: string[]) => void;
   isDeleting?: boolean;
   selectedTags?: string[];
   onSelectTag?: (tagId: string, selected: boolean) => void;
@@ -19,6 +22,7 @@ interface TagListProps {
   onBulkDelete?: () => void;
   onClearSelection?: () => void;
   isBulkDeleting?: boolean;
+  deletingTagIds?: string[];
 }
 
 const TagList: React.FC<TagListProps> = ({
@@ -33,7 +37,8 @@ const TagList: React.FC<TagListProps> = ({
   onSelectAll,
   onBulkDelete,
   onClearSelection,
-  isBulkDeleting = false
+  isBulkDeleting = false,
+  deletingTagIds = []
 }) => {
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -44,7 +49,14 @@ const TagList: React.FC<TagListProps> = ({
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+    <>
+      {/* Show FullScreenSpinner during delete operations */}
+      <FullScreenSpinner 
+        isVisible={isDeleting || isBulkDeleting} 
+        message="Deleting tag..." 
+      />
+      
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
       <div className="p-6 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -136,21 +148,29 @@ const TagList: React.FC<TagListProps> = ({
                 </TableCell>
                 <TableCell className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <div className="flex items-center justify-end space-x-2">
-                    <button
-                      onClick={() => onEditTag(tag)}
-                      className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 p-1 rounded transition-colors"
-                      title="Edit tag"
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      disabled={deletingTagIds.includes(tag.id)}
+                      className="text-brand-400"
+                     onClick={() => onEditTag(tag)}
+                      startIcon={<PencilIcon />}
                     >
                       Edit
-                    </button>
-                    <button
-                      onClick={() => onDeleteTag(tag.id)}
-                      disabled={isDeleting}
-                      className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 p-1 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                      title="Delete tag"
+                    </Button>
+                  
+                      <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      disabled={deletingTagIds.includes(tag.id)}
+                      className="text-red-600 hover:text-red-700"
+                      onClick={() => onDeleteTag([tag.id])}
+                      startIcon={<TrashBinIcon />}
                     >
-                      {isDeleting ? 'Deleting...' : 'Delete'}
-                    </button>
+                      Delete
+                    </Button>
+
+
                   </div>
                 </TableCell>
               </TableRow>
@@ -165,6 +185,7 @@ const TagList: React.FC<TagListProps> = ({
         )}
       </div>
     </div>
+    </>
   );
 };
 

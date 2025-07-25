@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useMemo } from "react";
 import { useModal } from "@/hooks/useModal";
-import { useTags, useCreateTag, useDeleteTag, useBulkDeleteTags } from "@/services/hooks/useTags";
+import { useTags, useCreateTag, useBulkDeleteTags } from "@/services/hooks/useTags";
 import { NewTag } from "@/services/api/tag";
 import { showToast } from "@/services/utils/toast";
 import { useConfirmation } from "@/hooks/useConfirmation";
@@ -25,11 +25,9 @@ export default function AddTags() {
 
   const { data: tagsResponse, isLoading, error, refetch } = useTags();
   const createTagMutation = useCreateTag();
-  const deleteTagMutation = useDeleteTag();
   const bulkDeleteMutation = useBulkDeleteTags();
 
   const tags = tagsResponse?.data || [];
-  const isDeleting = deleteTagMutation.isPending;
   const isCreating = createTagMutation.isPending;
 
   const filteredTags = useMemo(() => {
@@ -79,23 +77,30 @@ export default function AddTags() {
     editModal.openModal();
   };
 
-  const deleteTag = async (tagId: string) => {
+  const deleteTag = async (tagIds: string[]) => {
+    const tagNames = tagIds.map(id => {
+      const tag = sortedTags.find(t => t.id === id);
+      return tag?.name || 'unknown';
+    }).join(', ');
+    
     const confirmed = await confirmation.confirm({
-      title: 'Delete Tag',
-      message: 'Are you sure you want to delete this tag? This action cannot be undone.'
+      title: `Delete ${tagIds.length > 1 ? 'Tags' : 'Tag'}`,
+      message: `Are you sure you want to delete "${tagNames}"? This action cannot be undone.`,
+      confirmText: 'Delete',
+      cancelText: 'Cancel'
     });
 
     if (confirmed) {
       try {
-        const response = await deleteTagMutation.mutateAsync(tagId);
+        const response = await bulkDeleteMutation.mutateAsync({ tagIds });
         if (response.success) {
-          showToast.success('Success', 'Tag deleted successfully');
+          showToast.success('Success', 'Tag(s) deleted successfully');
         } else {
-          showToast.error('Error', response.message || 'Failed to delete tag');
+          showToast.error('Error', response.message || 'Failed to delete tag(s)');
         }
       } catch (error) {
-        console.error('Error deleting tag:', error);
-        showToast.error('Error', 'Failed to delete tag');
+        console.error('Error deleting tag(s):', error);
+        showToast.error('Error', 'Failed to delete tag(s)');
       }
     }
   };
@@ -195,7 +200,8 @@ export default function AddTags() {
             onSearchChange={setSearchTerm}
             onEditTag={editTag}
             onDeleteTag={deleteTag}
-            isDeleting={isDeleting}
+            isDeleting={bulkDeleteMutation.isPending}
+            deletingTagIds={bulkDeleteMutation.isPending ? (bulkDeleteMutation.variables?.tagIds || []) : []}
             selectedTags={selectedTags}
             onSelectTag={selectTag}
             onSelectAll={selectAll}
@@ -222,7 +228,7 @@ export default function AddTags() {
         message={confirmation.config?.message || ''}
         confirmText={confirmation.config?.confirmText}
         cancelText={confirmation.config?.cancelText}
-        isLoading={deleteTagMutation.isPending || bulkDeleteMutation.isPending}
+        isLoading={bulkDeleteMutation.isPending}
       />
     </div>
   );

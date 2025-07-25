@@ -148,7 +148,7 @@ const BlogTable: React.FC<BlogTableProps> = ({
                     <Button 
                       variant="ghost" 
                       size="sm" 
-                      className="text-brand-400"
+                      className="text-red-600"
                       onClick={() => onDeletePost(post.id)}
                       startIcon={<TrashBinIcon />}
                     >
