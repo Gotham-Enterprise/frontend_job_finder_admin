@@ -77,11 +77,8 @@ export const useBlogLogic = () => {
     { value: '50', label: '50 per page' },
   ], []);
 
-  // Status toggle handler
   const handleStatusToggle = useCallback((statuses: string[]) => {
     setSelectedStatuses(statuses);
-    
-    // Update filters with the new status selection
     startTransition(() => {
       setFilters(prevFilters => ({
         ...prevFilters,
@@ -91,7 +88,7 @@ export const useBlogLogic = () => {
     });
   }, []);
 
-  // Clear individual filter handler
+
   const clearIndividualFilter = useCallback((filterKey: string) => {
     startTransition(() => {
       switch (filterKey) {
@@ -122,7 +119,6 @@ export const useBlogLogic = () => {
     });
   }, []);
 
-  // Clear all filters handler
   const clearAllFilters = useCallback(() => {
     startTransition(() => {
       setFilters({
@@ -141,7 +137,6 @@ export const useBlogLogic = () => {
     });
   }, []);
 
-  // Check if there are active filters
   const hasActiveFilters = useMemo(() => {
     return !!(
       searchInput ||
@@ -278,7 +273,6 @@ export const useBlogLogic = () => {
     return () => clearTimeout(timeoutId);
   }, [searchInput]);
 
-  // Sync selectedStatuses with filters.status
   useEffect(() => {
     if (filters.status) {
       const statusArray = filters.status.split(',').filter(Boolean);
@@ -326,8 +320,6 @@ export const useBlogLogic = () => {
     handleStatusToggle,
     clearIndividualFilter,
     clearAllFilters,
-    
-    // Confirmation dialog
     confirmation,
   };
 };

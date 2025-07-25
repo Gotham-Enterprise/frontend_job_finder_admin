@@ -1,6 +1,5 @@
 import React from 'react';
 import { formatDate } from '@/services/utils/dateUtils';
-import Image from "next/image";
 import {
   Table,
   TableBody,
