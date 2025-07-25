@@ -11,13 +11,6 @@ import DatePicker from "@/components/form/date-picker";
 import VisualLayoutBuilder from "./VisualLayoutBuilder/VisualLayoutBuilder";
 import FloatingElementsPanel from "./VisualLayoutBuilder/components/FloatingElementsPanel";
 import BlogDropdown from "./BlogDropdown";
-
-import { 
-  transformBlogDataForAPI, 
-  validateBlogData, 
-  type BlogMetadata
-} from "@/services/utils/blogPayloadUtils";
-
 import { blogApi } from "@/services/api/blog";
 import { tagApi } from '@/services/api/tag';
 import { 
@@ -119,8 +112,8 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
     permalink: '',
     visibility: 'public' as 'public' | 'private' | 'password',
     publishDate: new Date().toISOString(),
-    categories: '',
-    tags: [] as string[],
+    categories: null as { id: string; name: string } | null,
+    tags: [] as { id: string; name: string }[],
     seoTitle: '',
     seoDescription: '',
     allowComments: true,
@@ -140,18 +133,24 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
       
       if (response) {
         setBlogData(response);
+        const blogResponse = response as any;
+        
         setMetadata({
-          title: response.title || '',
-          slug: response.slug || '',
-          excerpt: response.excerpt || '',
-          status: response.status || 'draft',
-          permalink: response.slug || '',
-          visibility: response.visibility || 'public',
-          publishDate: response.publishedDate || new Date().toISOString(),
-          categories: response.category?.name || '',
-          tags: response.tags?.map(tag => tag.name) || [],
-          seoTitle: response.seo?.title || response.title || '',
-          seoDescription: response.seo?.description || response.excerpt || '',
+          title: blogResponse.title || '',
+          slug: blogResponse.slug || '',
+          excerpt: blogResponse.excerpt || '',
+          status: blogResponse.metadata?.status || blogResponse.status || 'draft',
+          permalink: blogResponse.slug || '',
+          visibility: blogResponse.metadata?.visibility || blogResponse.visibility || 'public',
+          publishDate: blogResponse.metadata?.publishDate || blogResponse.publishedDate || new Date().toISOString(),
+          categories: blogResponse.metadata?.categories?.[0] ? { 
+            id: blogResponse.metadata.categories[0].id, 
+            name: blogResponse.metadata.categories[0].name 
+          } : (blogResponse.category ? { id: blogResponse.category.id, name: blogResponse.category.name } : null),
+          tags: blogResponse.metadata?.tags?.map((tag: any) => ({ id: tag.id, name: tag.name })) || 
+                blogResponse.tags?.map((tag: any) => ({ id: tag.id, name: tag.name })) || [],
+          seoTitle: blogResponse.metadata?.seo?.title || blogResponse.seo?.title || blogResponse.title || '',
+          seoDescription: blogResponse.metadata?.seo?.description || blogResponse.seo?.description || blogResponse.excerpt || '',
           allowComments: true,
           allowPings: true
         });
@@ -393,21 +392,26 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
     try {
       setIsSaving(true);
       
-      const payload = transformBlogDataForAPI(
-        { 
-          ...metadata, 
-          status: 'published'
-        } as unknown as BlogMetadata,
-        currentLayout.blocks,
-        [],
-        []
-      );
-      
-      const validation = validateBlogData(payload);
-      if (!validation.isValid) {
-        console.error('Validation errors:', validation.errors);
-        return;
-      }
+      // Create payload in the format expected by the API
+      const payload = {
+        title: metadata.title,
+        slug: metadata.permalink,
+        excerpt: metadata.excerpt,
+        status: 'published',
+        content: {
+          blocks: currentLayout.blocks,
+          version: "1.0.0",
+          time: Date.now()
+        },
+        category: metadata.categories,
+        tags: metadata.tags,
+        seo: {
+          title: metadata.seoTitle || metadata.title,
+          description: metadata.seoDescription || metadata.excerpt,
+          keywords: metadata.seoTitle ? metadata.seoTitle.split(' ').filter(word => word.length > 3) : []
+        },
+        publishedDate: metadata.publishDate
+      };
       
       const response = await blogApi.updateBlogPost(id, payload);
       
@@ -425,15 +429,26 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
     try {
       setIsSaving(true);
       
-      const payload = transformBlogDataForAPI(
-        {
-          ...metadata,
-          status: 'draft'
-        } as unknown as BlogMetadata,
-        currentLayout.blocks,
-        [],
-        []
-      );
+      // Create payload in the format expected by the API
+      const payload = {
+        title: metadata.title,
+        slug: metadata.permalink,
+        excerpt: metadata.excerpt,
+        status: 'draft',
+        content: {
+          blocks: currentLayout.blocks,
+          version: "1.0.0",
+          time: Date.now()
+        },
+        category: metadata.categories,
+        tags: metadata.tags,
+        seo: {
+          title: metadata.seoTitle || metadata.title,
+          description: metadata.seoDescription || metadata.excerpt,
+          keywords: metadata.seoTitle ? metadata.seoTitle.split(' ').filter(word => word.length > 3) : []
+        },
+        publishedDate: metadata.publishDate
+      };
 
       const response = await blogApi.updateBlogPost(id, payload);
       
@@ -557,34 +572,42 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
                     </button>
                     
                     {dateDropdownOpen && (
-                      <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-50 min-w-[250px] p-4">
-                        <div className="flex items-center gap-2 mb-3">
-                          <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <div className="absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg z-50 min-w-[300px] p-4">
+                        <div className="flex items-center gap-2 mb-4">
+                          <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                           </svg>
-                          <span className="font-medium text-gray-900">Select Publication Date</span>
+                          <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Select Publication Date</span>
                         </div>
-                        <div>
-                          <input
-                            type="date"
-                            value={metadata.publishDate.split('T')[0]}
-                            onChange={(e) => {
-                              const newDate = new Date(e.target.value + 'T00:00:00');
-                              updateMetadataField('publishDate', newDate.toISOString());
+                        <div className="mb-4">
+                          <DatePicker
+                            id="blog-publish-date"
+                            defaultDate={metadata.publishDate}
+                            onChange={(selectedDates) => {
+                              if (selectedDates.length > 0) {
+                                const selectedDate = selectedDates[0];
+                                const formattedDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate()).toISOString();
+                                updateMetadataField('publishDate', formattedDate);
+                                // Auto-close dropdown after selection
+                                setTimeout(() => {
+                                  setDateDropdownOpen(false);
+                                }, 100);
+                              }
                             }}
-                            className="w-full p-2 border border-gray-300 rounded-md"
+                            placeholder="Select date"
                           />
                         </div>
-                        <p className="text-xs text-gray-500 mt-2">
+                        <div className="text-xs text-gray-500 dark:text-gray-400 mb-4">
                           Choose when this blog post should be published.
-                        </p>
-                        <div className="flex justify-end mt-3">
-                          <button
+                        </div>
+                        <div className="flex justify-end">
+                          <Button
                             onClick={() => setDateDropdownOpen(false)}
-                            className="px-3 py-1 bg-green-500 text-white text-sm rounded hover:bg-green-600"
+                            size="sm"
+                            className="px-4 py-2"
                           >
                             Done
-                          </button>
+                          </Button>
                         </div>
                       </div>
                     )}
@@ -603,7 +626,7 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
                       }}
                       className="flex items-center justify-between bg-primary text-white px-4 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer min-w-[120px]"
                     >
-                      <span>{metadata.categories || 'Select'}</span>
+                      <span>{metadata.categories?.name || 'Select'}</span>
                       <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                       </svg>
@@ -634,7 +657,7 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
                                 name="category"
                                 checked={!metadata.categories}
                                 onChange={() => {
-                                  updateMetadataField('categories', '');
+                                  updateMetadataField('categories', null);
                                 }}
                                 className="text-green-500"
                               />
@@ -650,14 +673,14 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
                                 <input
                                   type="radio"
                                   name="category"
-                                  checked={metadata.categories === category.text}
+                                  checked={metadata.categories?.id === category.value}
                                   onChange={() => {
-                                    updateMetadataField('categories', category.text);
+                                    updateMetadataField('categories', { id: category.value, name: category.text });
                                   }}
                                   className="text-green-500"
                                 />
                                 <span className="text-sm text-gray-700">{category.text}</span>
-                                {metadata.categories === category.text && (
+                                {metadata.categories?.id === category.value && (
                                   <svg className="w-4 h-4 text-green-500 ml-auto" fill="currentColor" viewBox="0 0 20 20">
                                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                                   </svg>
@@ -715,15 +738,15 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
                               <label key={tag.value} className="flex items-center gap-2 p-2 hover:bg-gray-50 rounded cursor-pointer">
                                 <input
                                   type="checkbox"
-                                  checked={metadata.tags.includes(tag.text)}
+                                  checked={metadata.tags.some(selectedTag => selectedTag.id === tag.value)}
                                   onChange={(e) => {
                                     const isChecked = e.target.checked;
                                     const currentTags = [...metadata.tags];
                                     
-                                    if (isChecked && !currentTags.includes(tag.text)) {
-                                      currentTags.push(tag.text);
+                                    if (isChecked && !currentTags.some(t => t.id === tag.value)) {
+                                      currentTags.push({ id: tag.value, name: tag.text });
                                     } else if (!isChecked) {
-                                      const index = currentTags.indexOf(tag.text);
+                                      const index = currentTags.findIndex(t => t.id === tag.value);
                                       if (index > -1) {
                                         currentTags.splice(index, 1);
                                       }
@@ -734,7 +757,7 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
                                   className="text-green-500 rounded"
                                 />
                                 <span className="text-sm text-gray-700">{tag.text}</span>
-                                {metadata.tags.includes(tag.text) && (
+                                {metadata.tags.some(selectedTag => selectedTag.id === tag.value) && (
                                   <svg className="w-4 h-4 text-green-500 ml-auto" fill="currentColor" viewBox="0 0 20 20">
                                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                                   </svg>
