@@ -1,11 +1,9 @@
 "use client"
 
 import React, { useRef } from 'react';
-import Button from '../../../ui/button/Button';
 import Input from '../../../ui/input/Input';
 import FilterDropdown from '../../../ui/FilterDropdown';
 import BulkActionDropdown from '../../../ui/BulkActionDropdown';
-import { DownloadIcon, FunnelIcon, PlusIcon } from '@/icons';
 import { SearchIcon } from '../../../ui/icons';
 import { BlogHeaderProps } from '@/services/types/BlogTypes';
 

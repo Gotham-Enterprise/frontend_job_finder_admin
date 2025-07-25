@@ -42,7 +42,6 @@ export default function CategoryList({
 
   return (
     <>
-      {/* Show FullScreenSpinner during delete operations */}
       <FullScreenSpinner 
         isVisible={isDeleting} 
         message="Deleting category..." 
@@ -209,11 +208,10 @@ export default function CategoryList({
         )}
       </div>
 
-      {/* Pagination */}
       {filteredCategories.length > 0 && onPageChange && (
         <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between">
-            {/* Items per page selector */}
+          
             <div className="flex items-center space-x-2">
               <span className="text-sm text-gray-700 dark:text-gray-300">Items per page:</span>
               <select
@@ -227,7 +225,7 @@ export default function CategoryList({
               </select>
             </div>
             
-            {/* Pagination controls - only show when there are multiple pages */}
+  
             {calculatedTotalPages > 1 ? (
               <Pagination
                 currentPage={currentPage}

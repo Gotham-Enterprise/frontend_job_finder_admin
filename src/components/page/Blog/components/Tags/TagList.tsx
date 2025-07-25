@@ -50,7 +50,6 @@ const TagList: React.FC<TagListProps> = ({
 
   return (
     <>
-      {/* Show FullScreenSpinner during delete operations */}
       <FullScreenSpinner 
         isVisible={isDeleting || isBulkDeleting} 
         message="Deleting tag..." 
