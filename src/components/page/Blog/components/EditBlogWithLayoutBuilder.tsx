@@ -417,52 +417,6 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
     }
   }, [metadata, currentLayout, id, router]);
 
-  const saveDraft = useCallback(async () => {
-    try {
-      setIsSaving(true);
-    
-      const payload = {
-        title: metadata.title,
-        slug: metadata.permalink,
-        excerpt: metadata.excerpt,
-        content: {
-          blocks: currentLayout.blocks,
-          version: "1.0.0",
-          time: Date.now()
-        },
-        metadata: {
-          status: 'draft',
-          visibility: metadata.visibility,
-          publishDate: metadata.publishDate,
-          categories: metadata.categories ? [metadata.categories] : [],
-          tags: metadata.tags,
-          seo: {
-            title: metadata.seoTitle || metadata.title,
-            description: metadata.seoDescription || metadata.excerpt,
-            keywords: metadata.seoTitle ? metadata.seoTitle.split(' ').filter(word => word.length > 3) : []
-          },
-          settings: {
-            allowComments: metadata.allowComments,
-            allowPings: metadata.allowPings,
-            featured: false,
-            sticky: false
-          }
-        }
-      };
-
-      const response = await blogApi.updateBlogPost(id, payload);
-      
-      if (!response.success) {
-        throw new Error(response.message || 'Failed to save draft');
-      }
-    } catch (error) {
-      console.error('Error saving draft:', error);
-    } finally {
-      setIsSaving(false);
-    }
-  }, [metadata, currentLayout, id]);
-
-  // Loading state
   if (isPageLoading) {
     return <FullScreenSpinner isVisible={true} message="Loading blog data..." />;
   }
@@ -771,13 +725,6 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
             </div>
 
             <div className="flex items-center space-x-3">
-              <Button
-                onClick={saveDraft}
-                disabled={isSaving}
-                variant="outline"
-              >
-                {isSaving ? 'Saving...' : 'Save Draft'}
-              </Button>
               <Button
                 onClick={publishBlog}
                 disabled={isSaving}
