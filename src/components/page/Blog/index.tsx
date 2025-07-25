@@ -1,5 +1,5 @@
 "use client";
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BoltIcon } from '@/icons';
 import ErrorState from '../../common/ErrorState';
 import FullScreenSpinner from '../../ui/FullScreenSpinner';
@@ -58,6 +58,34 @@ const AllBlogPosts: React.FC<AllBlogPostsProps> = ({ className = "" }) => {
     // Confirmation dialog
     confirmation,
   } = useBlogLogic();
+
+  // Automatically refetch data when component mounts
+  // This ensures fresh data when navigating back from edit/create pages
+  useEffect(() => {
+    refetch();
+  }, [refetch]);
+
+  // Refetch data when user returns to the window/tab
+  // This ensures data stays fresh when switching between tabs
+  useEffect(() => {
+    const handleFocus = () => {
+      refetch();
+    };
+    
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        refetch();
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [refetch]);
 
   if (error && !isPending) {
     return (

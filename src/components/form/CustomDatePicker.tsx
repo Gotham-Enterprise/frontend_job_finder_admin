@@ -24,7 +24,6 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
   useEffect(() => {
     if (value) {
       const date = new Date(value);
-      // Format date to show only MM/DD/YYYY format
       const formattedDate = date.toLocaleDateString('en-US', {
         year: 'numeric',
         month: '2-digit',
@@ -33,12 +32,10 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
       setDisplayDate(formattedDate);
       setCurrentMonth(new Date(date.getFullYear(), date.getMonth(), 1));
     } else {
-      // Clear display when no value
       setDisplayDate('');
     }
   }, [value]);
 
-  // Close calendar when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
@@ -84,17 +81,13 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
     const days = [];
     const totalDays = daysInMonth(currentMonth);
     const startDay = firstDayOfMonth(currentMonth);
-    
-    // Get selected date for highlighting
+  
     const selectedDate = value ? new Date(value) : null;
     const today = new Date();
-
-    // Add empty cells for days before the first day of the month
     for (let i = 0; i < startDay; i++) {
       days.push(<div key={`empty-${i}`} className="p-2"></div>);
     }
 
-    // Add days of the month
     for (let day = 1; day <= totalDays; day++) {
       const isSelected = selectedDate && 
         selectedDate.getDate() === day && 
@@ -150,7 +143,7 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
 
       {isOpen && (
         <div className="absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-xl z-[999999] min-w-[280px] p-4">
-          {/* Header */}
+      
           <div className="flex items-center justify-between mb-4">
             <button
               onClick={handlePrevMonth}
@@ -175,7 +168,6 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
             </button>
           </div>
 
-          {/* Week days header */}
           <div className="grid grid-cols-7 gap-1 mb-2">
             {weekDays.map(day => (
               <div key={day} className="p-2 text-center text-sm font-medium text-gray-500 dark:text-gray-400">
@@ -184,7 +176,7 @@ const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
             ))}
           </div>
 
-          {/* Calendar grid */}
+         
           <div className="grid grid-cols-7 gap-1">
             {renderCalendar()}
           </div>

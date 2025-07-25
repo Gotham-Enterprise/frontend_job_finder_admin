@@ -14,6 +14,7 @@ import FloatingElementsPanel from "./VisualLayoutBuilder/components/FloatingElem
 import BlogDropdown from "./BlogDropdown";
 import { blogApi } from "@/services/api/blog";
 import { tagApi } from '@/services/api/tag';
+import { useUpdateBlogPost } from '@/services/hooks/useBlog';
 import { 
   LayoutBlock, 
   BlockType, 
@@ -62,6 +63,7 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
   blogId: id 
 }) => {
   const router = useRouter();
+  const { mutate: updateBlogPost, isPending: isUpdating } = useUpdateBlogPost();
 
   const [isPageLoading, setIsPageLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -374,8 +376,6 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
 
   const publishBlog = useCallback(async () => {
     try {
-      setIsSaving(true);
-     
       const payload = {
         title: metadata.title,
         slug: metadata.permalink,
@@ -405,17 +405,22 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
         }
       };
       
-      const response = await blogApi.updateBlogPost(id, payload);
-      
-      if (response.success) {
-        router.push('/admin/blog');
-      }
+      updateBlogPost(
+        { id, data: payload },
+        {
+          onSuccess: () => {
+            // Navigate back to blog list after successful update
+            router.push('/admin/blog');
+          },
+          onError: (error) => {
+            console.error('Error updating blog:', error);
+          }
+        }
+      );
     } catch (error) {
-      console.error('Error publishing blog:', error);
-    } finally {
-      setIsSaving(false);
+      console.error('Error preparing blog data:', error);
     }
-  }, [metadata, currentLayout, id, router]);
+  }, [metadata, currentLayout, id, router, updateBlogPost]);
 
   if (isPageLoading) {
     return <FullScreenSpinner isVisible={true} message="Loading blog data..." />;
@@ -917,6 +922,12 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
           </div>
         </div>
       </Modal>
+
+      {/* Show FullScreenSpinner when updating */}
+      <FullScreenSpinner 
+        isVisible={isUpdating} 
+        message="Updating blog post..." 
+      />
     </>
   );
 };

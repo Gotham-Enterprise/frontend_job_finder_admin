@@ -4,16 +4,16 @@ import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Modal } from "@/components/ui/modal";
 import { useModal } from "@/hooks/useModal";
-import { useProgressLoader } from "@/hooks/useProgressLoader";
 import Button from "@/components/ui/button/Button";
 import CustomDatePicker from "@/components/form/CustomDatePicker";
+import FullScreenSpinner from "@/components/ui/FullScreenSpinner";
 import VisualLayoutBuilder from "./VisualLayoutBuilder/VisualLayoutBuilder";
 import FloatingElementsPanel from "./VisualLayoutBuilder/components/FloatingElementsPanel";
-import ProgressLoader from "@/components/ui/ProgressLoader";
 
 import { authUtils } from '@/services/utils/authUtils';
 import { blogApi } from '@/services/api/blog';
 import { tagApi } from '@/services/api/tag';
+import { useCreateBlogPost } from '@/services/hooks/useBlog';
 import { 
   transformBlogDataForAPI, 
   validateBlogData, 
@@ -87,6 +87,7 @@ const statusOptions = [
 export default function AddNewBlogWithLayoutBuilder() {
   const router = useRouter();
   const titleModal = useModal();
+  const { mutate: createBlogPost, isPending: isCreating } = useCreateBlogPost();
   
   const [categoryOptions, setCategoryOptions] = useState<CategoryOption[]>([]);
   const [categoriesLoading, setCategoriesLoading] = useState(false);
@@ -109,18 +110,6 @@ export default function AddNewBlogWithLayoutBuilder() {
     openModal: openTitleModal, 
     closeModal: closeTitleModal 
   } = useModal();
-  
-
-  const {
-    isVisible: isProgressVisible,
-    showLoader,
-    hideLoader
-  } = useProgressLoader({
-    onComplete: useCallback(() => {
-      router.push('/admin/blog');
-    }, [router])
-  });
-  
 
   const [metadata, setMetadata] = useState<BlogMetadata>({
     title: '',
@@ -294,17 +283,10 @@ export default function AddNewBlogWithLayoutBuilder() {
     const { blogPayload, validation } = payloadData;
 
     if (!validation.isValid) {
-    
       return;
     }
 
     try {
-      showLoader({
-        title: 'Publishing Blog...',
-        subtitle: 'Preparing your content for publication',
-        duration: 3000
-      });
-
       const publishPayload = {
         ...blogPayload,
         metadata: {
@@ -313,21 +295,19 @@ export default function AddNewBlogWithLayoutBuilder() {
         }
       };
 
-      const response = await blogApi.createBlog(publishPayload);
-      
-      if (response.success) {
-               setTimeout(() => {
-          hideLoader();
+      createBlogPost(publishPayload, {
+        onSuccess: () => {
+          // Navigate back to blog list after successful creation
           router.push('/admin/blog');
-        }, 3500);
-      } else {
-      
-        hideLoader();
-      }
+        },
+        onError: (error) => {
+          console.error('Error creating blog:', error);
+        }
+      });
     } catch (error) {
-      hideLoader();
+      console.error('Error preparing blog data:', error);
     }
-  }, [generateBlogPayloadData, showLoader, hideLoader, router]);
+  }, [generateBlogPayloadData, router, createBlogPost]);
 
   const updateMetadata = useCallback((field: keyof BlogMetadata, value: any) => {
     setMetadata(prev => ({
@@ -1018,13 +998,11 @@ export default function AddNewBlogWithLayoutBuilder() {
         </div>
       </Modal>
 
-      {isProgressVisible && (
-        <ProgressLoader 
-          isVisible={isProgressVisible}
-          title="Publishing Blog..."
-          subtitle="Preparing your content for publication"
-        />
-      )}
+      {/* Show FullScreenSpinner when creating */}
+      <FullScreenSpinner 
+        isVisible={isCreating} 
+        message="Publishing blog post..." 
+      />
     </>
   );
 }

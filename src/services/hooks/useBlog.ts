@@ -73,3 +73,34 @@ export const useBulkDeleteBlogPosts = () => {
     },
   });
 };
+
+export const useUpdateBlogPost = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) => blogApi.updateBlogPost(id, data),
+    onSuccess: () => {
+      // Invalidate both the list and individual post details
+      queryClient.invalidateQueries({ queryKey: blogQueryKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: blogQueryKeys.details() });
+    },
+    onError: (error) => {
+      console.error('Failed to update blog post:', error);
+    },
+  });
+};
+
+export const useCreateBlogPost = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (data: any) => blogApi.createBlog(data),
+    onSuccess: () => {
+      // Invalidate the list to show the new post
+      queryClient.invalidateQueries({ queryKey: blogQueryKeys.lists() });
+    },
+    onError: (error) => {
+      console.error('Failed to create blog post:', error);
+    },
+  });
+};
