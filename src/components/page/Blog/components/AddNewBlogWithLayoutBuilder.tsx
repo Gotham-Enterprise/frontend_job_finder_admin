@@ -855,7 +855,6 @@ export default function AddNewBlogWithLayoutBuilder() {
         <div className="h-[calc(100vh-64px)] flex">
 
 
-          {/* Center Canvas - Visual Layout Builder */}
           <div className="flex-1 relative h-full bg-gray-100 dark:bg-gray-900">
             <VisualLayoutBuilder
               initialLayout={currentLayout.blocks}
@@ -865,7 +864,7 @@ export default function AddNewBlogWithLayoutBuilder() {
               onAddBlockRef={handleAddBlockRef}
             />
             
-            {/* Floating Elements Panel */}
+
             <FloatingElementsPanel
               onAddBlock={addElement}
               isVisible={isElementsPanelVisible}
