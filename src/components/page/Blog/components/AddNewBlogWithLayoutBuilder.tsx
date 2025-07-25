@@ -6,7 +6,7 @@ import { Modal } from "@/components/ui/modal";
 import { useModal } from "@/hooks/useModal";
 import { useProgressLoader } from "@/hooks/useProgressLoader";
 import Button from "@/components/ui/button/Button";
-import DatePicker from "@/components/form/date-picker";
+import CustomDatePicker from "@/components/form/CustomDatePicker";
 import VisualLayoutBuilder from "./VisualLayoutBuilder/VisualLayoutBuilder";
 import FloatingElementsPanel from "./VisualLayoutBuilder/components/FloatingElementsPanel";
 import ProgressLoader from "@/components/ui/ProgressLoader";
@@ -129,7 +129,7 @@ export default function AddNewBlogWithLayoutBuilder() {
     status: 'draft',
     visibility: 'public',
     password: '',
-    publishDate: new Date().toISOString().split('T')[0],
+    publishDate: new Date().toISOString(),
     categories: '',
     tags: [],
     seoTitle: '',
@@ -567,7 +567,7 @@ export default function AddNewBlogWithLayoutBuilder() {
                     }}
                     className="flex items-center justify-between bg-primary text-white px-4 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer min-w-[140px]"
                   >
-                    <span>{metadata.publishDate || '2025-07-21'}</span>
+                    <span>{metadata.publishDate ? new Date(metadata.publishDate).toLocaleDateString() : new Date().toLocaleDateString()}</span>
                     <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
@@ -582,17 +582,17 @@ export default function AddNewBlogWithLayoutBuilder() {
                           <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Select Publication Date</span>
                         </div>
                         <div className="mb-4">
-                          <DatePicker
+                          <CustomDatePicker
                             id="blog-publish-date"
-                            defaultDate={metadata.publishDate}
-                            onChange={(selectedDates) => {
-                              if (selectedDates.length > 0) {
-                                const selectedDate = selectedDates[0];
-                                const formattedDate = selectedDate.toISOString().split('T')[0];
-                                updateMetadata('publishDate', formattedDate);
-                              }
+                            value={metadata.publishDate}
+                            onChange={(selectedDate) => {
+                              updateMetadata('publishDate', selectedDate);
+                              // Close dropdown after a short delay to allow the date to update
+                              setTimeout(() => {
+                                setDateDropdownOpen(false);
+                              }, 100);
                             }}
-                            placeholder="Select date"
+                            placeholder="Select publication date"
                           />
                         </div>
                         <div className="text-xs text-gray-500 dark:text-gray-400 mb-4">

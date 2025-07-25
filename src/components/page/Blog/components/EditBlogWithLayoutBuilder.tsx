@@ -8,7 +8,7 @@ import Button from "@/components/ui/button/Button";
 import FullScreenSpinner from "@/components/ui/FullScreenSpinner";
 import Input from "@/components/ui/input/Input";
 import Label from "@/components/form/Label";
-import DatePicker from "@/components/form/date-picker";
+import CustomDatePicker from "@/components/form/CustomDatePicker";
 import VisualLayoutBuilder from "./VisualLayoutBuilder/VisualLayoutBuilder";
 import FloatingElementsPanel from "./VisualLayoutBuilder/components/FloatingElementsPanel";
 import BlogDropdown from "./BlogDropdown";
@@ -535,22 +535,17 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
                           <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Select Publication Date</span>
                         </div>
                         <div className="mb-4">
-                          <DatePicker
+                          <CustomDatePicker
                             id="blog-publish-date"
-                            key={metadata.publishDate} // Add key to force re-render when date changes
-                            defaultDate={metadata.publishDate}
-                            onChange={(selectedDates) => {
-                              if (selectedDates.length > 0) {
-                                const selectedDate = selectedDates[0];
-                                const formattedDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate()).toISOString();
-                                updateMetadataField('publishDate', formattedDate);
-                                // Close dropdown after a short delay to allow the date to update
-                                setTimeout(() => {
-                                  setDateDropdownOpen(false);
-                                }, 300);
-                              }
+                            value={metadata.publishDate}
+                            onChange={(selectedDate) => {
+                              updateMetadataField('publishDate', selectedDate);
+                              // Close dropdown after a short delay to allow the date to update
+                              setTimeout(() => {
+                                setDateDropdownOpen(false);
+                              }, 100);
                             }}
-                            placeholder="Select date"
+                            placeholder="Select publication date"
                           />
                         </div>
                         <div className="text-xs text-gray-500 dark:text-gray-400 mb-4">
