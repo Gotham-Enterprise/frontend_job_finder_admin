@@ -29,7 +29,9 @@ const BlogTable: React.FC<BlogTableProps> = ({
   const someSelected = selectedPosts.length > 0 && !allSelected;
 
   return (
-    <div className="overflow-x-auto">      <Table>        
+    <div className="overflow-x-auto overflow-y-visible">
+      <div className="min-w-full">
+        <Table>        
         <TableHeader>
           <TableRow className="border-b border-gray-200 dark:border-gray-800">
             <TableCell className="py-4 px-6 w-12 font-semibold text-gray-900 dark:text-white">
@@ -135,10 +137,10 @@ const BlogTable: React.FC<BlogTableProps> = ({
                     {formatDate(post.createdAt)}
                   </p>
                 </TableCell>
-                <TableCell className="py-4 px-6 text-right">
+                <TableCell className="py-4 px-6 text-right relative">
                   <div className="flex items-center justify-end">
                     <OptionsDropdown
-                      triggerIcon={<HorizontaLDots className="w-4 h-4" />}
+                      triggerIcon={<HorizontaLDots />}
                       options={[
                         {
                           id: 'view',
@@ -157,6 +159,7 @@ const BlogTable: React.FC<BlogTableProps> = ({
                           label: 'Delete',
                           icon: <TrashBinIcon />,
                           onClick: () => onDeletePost(post.id),
+                          variant: 'danger' as const,
                         },
                       ]}
                       align="right"
@@ -168,6 +171,7 @@ const BlogTable: React.FC<BlogTableProps> = ({
           )}
         </TableBody>
       </Table>
+      </div>
     </div>
   );
 };

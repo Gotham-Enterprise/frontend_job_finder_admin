@@ -26,7 +26,9 @@ const OptionsDropdown: React.FC<OptionsDropdownProps> = ({
   align = "right"
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [dropdownPosition, setDropdownPosition] = useState<'bottom' | 'top'>('bottom');
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -41,6 +43,26 @@ const OptionsDropdown: React.FC<OptionsDropdownProps> = ({
     };
   }, []);
 
+  useEffect(() => {
+    if (isOpen && buttonRef.current) {
+      // Small delay to ensure DOM is updated
+      setTimeout(() => {
+        if (buttonRef.current) {
+          const rect = buttonRef.current.getBoundingClientRect();
+          const viewportHeight = window.innerHeight;
+          const dropdownHeight = options.length * 40 + 16; // Approximate height
+          
+          // Check if dropdown would go off screen at bottom
+          if (rect.bottom + dropdownHeight > viewportHeight - 20) {
+            setDropdownPosition('top');
+          } else {
+            setDropdownPosition('bottom');
+          }
+        }
+      }, 10);
+    }
+  }, [isOpen, options.length]);
+
   const handleOptionClick = (option: DropdownOption) => {
     if (!option.disabled) {
       option.onClick();
@@ -51,6 +73,7 @@ const OptionsDropdown: React.FC<OptionsDropdownProps> = ({
   return (
     <div className={`relative inline-block text-left ${className}`} ref={dropdownRef}>
       <button
+        ref={buttonRef}
         type="button"
         className="inline-flex items-center justify-center px-3 py-2 text-sm font-medium text-gray-700 bg-white rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors shadow-sm"
         onClick={() => setIsOpen(!isOpen)}
@@ -70,8 +93,10 @@ const OptionsDropdown: React.FC<OptionsDropdownProps> = ({
       </button>
       {isOpen && (
         <div
-          className={`absolute z-[9999] mt-1 w-48 rounded-lg shadow-lg bg-white border-0 focus:outline-none ${
+          className={`absolute z-[9999] w-48 rounded-lg shadow-lg bg-white border-0 focus:outline-none ${
             align === 'right' ? 'right-0' : 'left-0'
+          } ${
+            dropdownPosition === 'top' ? 'bottom-full mb-1' : 'top-full mt-1'
           }`}
           style={{ 
             boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05)' 
