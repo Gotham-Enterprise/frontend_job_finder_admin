@@ -13,10 +13,12 @@ export interface BlogHeaderProps {
   isFilterOpen: boolean;
   setIsFilterOpen: (value: boolean) => void;
   onRefetch: () => void;
+  onClearFilters: () => void;
+  hasActiveFilters: boolean;
+  filterDropdownContent?: React.ReactNode;
 }
 
 export interface BlogFiltersProps {
-  isOpen: boolean;
   filters: BlogFilters;
   onFilterChange: (key: keyof BlogFilters, value: any) => void;
   categoryOptions: Array<{ value: string; label: string }>;
@@ -24,6 +26,10 @@ export interface BlogFiltersProps {
   statusOptions: Array<{ value: string; label: string }>;
   sortOptions: Array<{ value: string; label: string }>;
   itemsPerPageOptions: Array<{ value: string; label: string }>;
+  selectedStatuses?: string[];
+  onStatusToggle?: (statuses: string[]) => void;
+  hasActiveFilters?: boolean;
+  clearIndividualFilter?: (filterKey: string) => void;
 }
 
 export interface BlogTableProps {
@@ -31,7 +37,6 @@ export interface BlogTableProps {
   isLoading: boolean;
   tableColumns: Array<{ key: string; label: string; className?: string }>;
   getStatusVariant: (status: string) => 'light' | 'solid';
-  onViewPost: (postId: string) => void;
   onEditPost: (postId: string) => void;
   onDeletePost: (postId: string) => void;
   selectedPosts: string[];

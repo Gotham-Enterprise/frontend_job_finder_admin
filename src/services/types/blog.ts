@@ -2,43 +2,51 @@ export interface BlogPost {
   id: string;
   title: string;
   slug: string;
-  content: string;
-  excerpt: string;
-  status: 'draft' | 'published' | 'archived';
-  visibility: 'public' | 'private' | 'password';
-  publishedDate: string;
+  content?: string;
+  excerpt?: string;
+  status: string;
+  visibility?: 'public' | 'private' | 'password';
+  publishedDate?: string;
   createdAt: string;
-  updatedAt: string;
-  author: {
+  updatedAt?: string;
+  author?: {
     id: string;
     name: string;
     avatar?: string;
   };
-  categories: Array<{
+  category: {
     id: string;
     name: string;
-    slug: string;
-  }>;
+  };
   tags: Array<{
     id: string;
     name: string;
-    slug: string;
   }>;
   featuredImage?: {
     url: string;
     alt: string;
   };
-  seoTitle?: string;
-  seoDescription?: string;
-  commentCount: number;
-  viewCount: number;
+  seo: {
+    title: string;
+    description: string;
+    keywords: string[];
+  };
+  analytics: {
+    seoScore: number;
+    wordCount: number;
+    characterCount: number;
+    readabilityScore: number;
+    estimatedReadTime: number;
+  };
+  commentCount?: number;
+  viewCount?: number;
 }
 
 export interface BlogFilters {
   page?: number;
   limit?: number;
   search?: string;
-  status?: 'draft' | 'published' | 'archived';
+  status?: string; // Changed to allow multiple statuses separated by comma
   category?: string;
   tag?: string;
   author?: string;

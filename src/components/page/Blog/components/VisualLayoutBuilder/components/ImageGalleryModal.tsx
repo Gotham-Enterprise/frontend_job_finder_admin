@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { useMedia } from '@/hooks/useMedia';
 import { useConfirmation } from '@/hooks/useConfirmation';
 import { MediaItem } from '@/services/types/mediaTypes';
-import { validateMediaType, createObjectUrl, revokeObjectUrl, formatFileSize, isValidImageType } from '@/utils/mediaUtils';
+import { validateMediaType, createObjectUrl, revokeObjectUrl, formatFileSize, isValidImageType } from '@/services/utils/mediaUtils';
 import ConfirmationDialog from '@/components/ui/ConfirmationDialog';
 
 interface ImageGalleryModalProps {

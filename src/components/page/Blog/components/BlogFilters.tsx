@@ -1,9 +1,10 @@
 import React from 'react';
-import Select from '../../../form/Select';
+import SearchableSelect from '../../../ui/SearchableSelect';
+import StatusToggleFilter from '../../../ui/StatusToggleFilter';
+import Label from '../../../form/Label';
 import { BlogFiltersProps } from '@/services/types/BlogTypes';
 
 const BlogFilters: React.FC<BlogFiltersProps> = ({
-  isOpen,
   filters,
   onFilterChange,
   categoryOptions,
@@ -11,81 +12,80 @@ const BlogFilters: React.FC<BlogFiltersProps> = ({
   statusOptions,
   sortOptions,
   itemsPerPageOptions,
+  selectedStatuses,
+  onStatusToggle,
+  hasActiveFilters,
+  clearIndividualFilter,
 }) => {
-  if (!isOpen) return null;
-
   return (
-    <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/20">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 gap-6">
+        <div className="space-y-2">
+          <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
             Status
-          </label>          <Select
-            options={statusOptions}
-            defaultValue={filters.status || ''}
-            onChange={(value:any) => onFilterChange('status', value)}
-            placeholder="All Statuses"
+          </Label>
+          <StatusToggleFilter
+            selectedStatuses={selectedStatuses || []}
+            onChange={onStatusToggle || (() => {})}
+            options={statusOptions.filter(option => option.value !== '')}
+            className="w-full"
           />
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <div className="space-y-2">
+          <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
             Category
-          </label>          <Select
+          </Label>
+          <SearchableSelect
+            value={filters.category || ''}
+            onChange={(value: string) => onFilterChange('category', value)}
             options={categoryOptions}
-            defaultValue={filters.category || ''}
-            onChange={(value:any) => onFilterChange('category', value)}
-            placeholder="All Categories"
+            placeholder="Select category..."
+            searchPlaceholder="Search categories..."
+            className="w-full"
           />
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <div className="space-y-2">
+          <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
             Tag
-          </label>          <Select
+          </Label>
+          <SearchableSelect
+            value={filters.tag || ''}
+            onChange={(value: string) => onFilterChange('tag', value)}
             options={tagOptions}
-            defaultValue={filters.tag || ''}
-            onChange={(value) => onFilterChange('tag', value)}
-            placeholder="All Tags"
+            placeholder="Select tag..."
+            searchPlaceholder="Search tags..."
+            className="w-full"
           />
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <div className="space-y-2">
+          <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
             Sort By
-          </label>          <Select
+          </Label>
+          <SearchableSelect
+            value={`${filters.sortBy || 'createdAt'}-${filters.sortOrder || 'desc'}`}
+            onChange={(value: string) => onFilterChange('sortBy', value)}
             options={sortOptions}
-            defaultValue={`${filters.sortBy || 'createdAt'}-${filters.sortOrder || 'desc'}`}
-            onChange={(value) => onFilterChange('sortBy', value)}
-            placeholder="Sort Posts"
+            placeholder="Sort posts..."
+            searchPlaceholder="Search sort options..."
+            className="w-full"
           />
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <div className="space-y-2">
+          <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
             Items per page
-          </label>          <Select
+          </Label>
+          <SearchableSelect
+            value={filters.limit?.toString() || '10'}
+            onChange={(value: string) => onFilterChange('limit', parseInt(value))}
             options={itemsPerPageOptions}
-            defaultValue={filters.limit?.toString() || '10'}
-            onChange={(value) => onFilterChange('limit', parseInt(value))}
-            placeholder="Items per page"
+            placeholder="Items per page..."
+            searchPlaceholder="Search page sizes..."
+            className="w-full"
           />
-        </div>
-
-        <div className="flex items-end">
-          <button
-            type="button"
-            onClick={() => {
-              onFilterChange('status', '');
-              onFilterChange('category', '');
-              onFilterChange('tag', '');
-              onFilterChange('sortBy', 'createdAt-desc');
-              onFilterChange('limit', 10);
-            }}
-            className="w-full px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500"
-          >
-            Clear Filters
-          </button>
         </div>
       </div>
     </div>

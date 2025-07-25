@@ -24,6 +24,7 @@ const AllBlogPosts: React.FC<AllBlogPostsProps> = ({ className = "" }) => {
     setIsFilterOpen,
     isPending,
     selectedPosts,
+    selectedStatuses,
     
     data,
     isLoading,
@@ -44,10 +45,13 @@ const AllBlogPosts: React.FC<AllBlogPostsProps> = ({ className = "" }) => {
     getStatusVariant,
     selectPost,
     selectAll,
-    viewPost,
     editPost,
     deletePost,
     bulkDeletePosts,
+    hasActiveFilters,
+    handleStatusToggle,
+    clearIndividualFilter,
+    clearAllFilters,
   } = useBlogLogic();
 
   if (error && !isPending) {
@@ -72,17 +76,23 @@ const AllBlogPosts: React.FC<AllBlogPostsProps> = ({ className = "" }) => {
         isFilterOpen={isFilterOpen}
         setIsFilterOpen={setIsFilterOpen}
         onRefetch={refetch}
-      />
-
-      <BlogFilters
-        isOpen={isFilterOpen}
-        filters={filters}
-        onFilterChange={filterChange}
-        categoryOptions={categoryOptions}
-        tagOptions={tagOptions}
-        statusOptions={statusOptions}
-        sortOptions={sortOptions}
-        itemsPerPageOptions={itemsPerPageOptions}
+        onClearFilters={clearAllFilters}
+        hasActiveFilters={hasActiveFilters}
+        filterDropdownContent={
+          <BlogFilters
+            filters={filters}
+            onFilterChange={filterChange}
+            categoryOptions={categoryOptions}
+            tagOptions={tagOptions}
+            statusOptions={statusOptions}
+            sortOptions={sortOptions}
+            itemsPerPageOptions={itemsPerPageOptions}
+            selectedStatuses={selectedStatuses}
+            onStatusToggle={handleStatusToggle}
+            hasActiveFilters={hasActiveFilters}
+            clearIndividualFilter={clearIndividualFilter}
+          />
+        }
       />
 
       <BlogTable
@@ -90,7 +100,6 @@ const AllBlogPosts: React.FC<AllBlogPostsProps> = ({ className = "" }) => {
         isLoading={isLoading}
         tableColumns={tableColumns}
         getStatusVariant={getStatusVariant}
-        onViewPost={viewPost}
         onEditPost={editPost}
         onDeletePost={deletePost}
         selectedPosts={selectedPosts}

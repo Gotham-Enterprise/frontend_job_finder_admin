@@ -27,7 +27,7 @@ export const blogApi = {
     
     if (filters.page) queryParams.append('page', filters.page.toString());
     if (filters.limit) queryParams.append('limit', filters.limit.toString());
-    if (filters.search) queryParams.append('search', filters.search);
+    if (filters.search) queryParams.append('keywords', filters.search);
     if (filters.status) queryParams.append('status', filters.status);
     if (filters.category) queryParams.append('category', filters.category);
     if (filters.tag) queryParams.append('tag', filters.tag);
@@ -35,22 +35,22 @@ export const blogApi = {
     if (filters.sortBy) queryParams.append('sortBy', filters.sortBy);
     if (filters.sortOrder) queryParams.append('sortOrder', filters.sortOrder);
 
-    const endpoint = `/api/admin/blog/posts?${queryParams.toString()}`;
+    const endpoint = `/api/admin/blogs?${queryParams.toString()}`;
     
     return apiGet<BlogPostsResponse>(endpoint);
   },
 
   async getBlogPostById(id: string): Promise<BlogPost> {
-    const response = await apiGet<{ data: BlogPost }>(`/api/admin/blog/posts/${id}`);
+    const response = await apiGet<{ data: BlogPost }>(`/api/admin/blogs/${id}`);
     return response.data;
   },
 
   async deleteBlogPost(id: string): Promise<void> {
-    return apiDelete<void>(`/api/admin/blog/posts/${id}`);
+    return apiDelete<void>(`/api/admin/blogs/${id}`);
   },
 
   async deleteBlogPosts(ids: string[]): Promise<void> {
-    return apiDelete<void>('/api/admin/blog/posts/bulk-delete', {
+    return apiDelete<void>('/api/admin/blogs/bulk-delete', {
       body: { postIds: ids }
     });
   },
@@ -153,5 +153,17 @@ export const blogApi = {
 
   async deleteMultipleMedia(ids: string[]): Promise<{ success: boolean }> {
     return this.deleteMedia({ mediaIds: ids });
+  },
+
+  async createBlog(blogData: any): Promise<{ success: boolean; data?: any; message?: string; errors?: any }> {
+    const endpoint = '/api/admin/blogs';
+    
+    try {
+      const response = await apiPost<{ success: boolean; data?: any; message?: string }>(endpoint, blogData);
+      return response;
+    } catch (error) {
+      console.error('Create blog error:', error);
+      throw error;
+    }
   }
 };

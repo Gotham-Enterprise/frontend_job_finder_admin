@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { blogApi } from '@/services/api/blog';
 import { MediaItem, MediaFilters, MediaType, MediaUploadData } from '@/services/types/mediaTypes';
-import { validateMediaType, filterMediaByType } from '@/utils/mediaUtils';
+import { validateMediaType, filterMediaByType } from '@/services/utils/mediaUtils';
 
 interface UseMediaOptions {
   initialFilters?: MediaFilters;

@@ -1,4 +1,4 @@
-import { useState, useMemo, useTransition, useEffect } from 'react';
+import { useState, useMemo, useTransition, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useBlogPosts, useDeleteBlogPost, useBulkDeleteBlogPosts } from '@/services/hooks/useBlog';
 import { BlogFilters } from '@/services/types/blog';
@@ -20,6 +20,7 @@ export const useBlogLogic = () => {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [selectedPosts, setSelectedPosts] = useState<string[]>([]);
+  const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
 
   const { data, isLoading, error, refetch } = useBlogPosts(filters);
   const { mutate: deleteBlogPost, isPending: isDeleting } = useDeleteBlogPost();
@@ -28,17 +29,14 @@ export const useBlogLogic = () => {
   const tableColumns = useMemo(() => [
     { key: 'select', label: '', className: 'w-12' },
     { key: 'title', label: 'Title' },
-    { key: 'author', label: 'Author' },
-    { key: 'categories', label: 'Categories' },
+    { key: 'category', label: 'Category' },
+    { key: 'tags', label: 'Tags' },
     { key: 'status', label: 'Status' },
-    { key: 'publishedDate', label: 'Published' },
-    { key: 'comments', label: 'Comments', className: 'text-center' },
-    { key: 'views', label: 'Views', className: 'text-center' },
+    { key: 'createdAt', label: 'Created At' },
     { key: 'actions', label: '', className: 'text-right' },
   ], []);
 
   const statusOptions = useMemo(() => [
-    { value: '', label: 'All Statuses' },
     { value: 'published', label: 'Published' },
     { value: 'draft', label: 'Draft' },
     { value: 'archived', label: 'Archived' },
@@ -49,10 +47,6 @@ export const useBlogLogic = () => {
     { value: 'createdAt-asc', label: 'Oldest First' },
     { value: 'title-asc', label: 'Title A-Z' },
     { value: 'title-desc', label: 'Title Z-A' },
-    { value: 'publishedDate-desc', label: 'Published Date (Newest)' },
-    { value: 'publishedDate-asc', label: 'Published Date (Oldest)' },
-    { value: 'viewCount-desc', label: 'Most Views' },
-    { value: 'viewCount-asc', label: 'Least Views' },
   ], []);
 
 
@@ -80,6 +74,84 @@ export const useBlogLogic = () => {
     { value: '20', label: '20 per page' },
     { value: '50', label: '50 per page' },
   ], []);
+
+  // Status toggle handler
+  const handleStatusToggle = useCallback((statuses: string[]) => {
+    setSelectedStatuses(statuses);
+    
+    // Update filters with the new status selection
+    startTransition(() => {
+      setFilters(prevFilters => ({
+        ...prevFilters,
+        status: statuses.length > 0 ? statuses.join(',') : undefined,
+        page: 1
+      }));
+    });
+  }, []);
+
+  // Clear individual filter handler
+  const clearIndividualFilter = useCallback((filterKey: string) => {
+    startTransition(() => {
+      switch (filterKey) {
+        case 'status':
+          setSelectedStatuses([]);
+          setFilters(prev => ({ ...prev, status: undefined, page: 1 }));
+          break;
+        case 'category':
+          setFilters(prev => ({ ...prev, category: '', page: 1 }));
+          break;
+        case 'tag':
+          setFilters(prev => ({ ...prev, tag: '', page: 1 }));
+          break;
+        case 'sortBy':
+          setFilters(prev => ({ 
+            ...prev, 
+            sortBy: 'createdAt', 
+            sortOrder: 'desc', 
+            page: 1 
+          }));
+          break;
+        case 'limit':
+          setFilters(prev => ({ ...prev, limit: 10, page: 1 }));
+          break;
+        default:
+          break;
+      }
+    });
+  }, []);
+
+  // Clear all filters handler
+  const clearAllFilters = useCallback(() => {
+    startTransition(() => {
+      setFilters({
+        page: 1,
+        limit: 10,
+        search: '',
+        status: undefined,
+        category: '',
+        tag: '',
+        author: '',
+        sortBy: 'createdAt',
+        sortOrder: 'desc',
+      });
+      setSearchInput('');
+      setSelectedStatuses([]);
+    });
+  }, []);
+
+  // Check if there are active filters
+  const hasActiveFilters = useMemo(() => {
+    return !!(
+      searchInput ||
+      filters.category ||
+      filters.tag ||
+      filters.author ||
+      selectedStatuses.length > 0 ||
+      (filters.sortBy && filters.sortBy !== 'createdAt') ||
+      (filters.sortOrder && filters.sortOrder !== 'desc') ||
+      (filters.limit && filters.limit !== 10)
+    );
+  }, [searchInput, filters, selectedStatuses]);
 
   const filterChange = useMemo(() => (key: keyof BlogFilters, value: any) => {
     startTransition(() => {
@@ -133,10 +205,6 @@ export const useBlogLogic = () => {
     }
   };
 
-  const viewPost = (postId: string) => {
-    router.push(`/admin/blog/view/${postId}`);
-  };
-
   const editPost = (postId: string) => {
     router.push(`/admin/blog/edit/${postId}`);
   };
@@ -183,6 +251,16 @@ export const useBlogLogic = () => {
     return () => clearTimeout(timeoutId);
   }, [searchInput]);
 
+  // Sync selectedStatuses with filters.status
+  useEffect(() => {
+    if (filters.status) {
+      const statusArray = filters.status.split(',').filter(Boolean);
+      setSelectedStatuses(statusArray);
+    } else {
+      setSelectedStatuses([]);
+    }
+  }, [filters.status]);
+
   return {
     filters,
     searchInput,
@@ -191,6 +269,7 @@ export const useBlogLogic = () => {
     setIsFilterOpen,
     isPending,
     selectedPosts,
+    selectedStatuses,
     
     data,
     isLoading,
@@ -211,10 +290,13 @@ export const useBlogLogic = () => {
     getStatusVariant,
     selectPost,
     selectAll,
-    viewPost,
     editPost,
     deletePost,
     bulkDeletePosts,
     addNewPost,
+    hasActiveFilters,
+    handleStatusToggle,
+    clearIndividualFilter,
+    clearAllFilters,
   };
 };

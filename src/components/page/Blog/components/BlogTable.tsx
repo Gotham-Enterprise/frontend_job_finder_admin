@@ -11,7 +11,7 @@ import {
 import Badge from '../../../ui/badge/Badge';
 import Button from '../../../ui/button/Button';
 import Checkbox from '../../../form/input/Checkbox';
-import { EyeIcon, PencilIcon, TrashBinIcon } from '@/icons';
+import { PencilIcon, TrashBinIcon } from '@/icons';
 import { BlogTableProps } from '@/services/types/BlogTypes';
 
 const BlogTable: React.FC<BlogTableProps> = ({
@@ -19,7 +19,6 @@ const BlogTable: React.FC<BlogTableProps> = ({
   isLoading,
   tableColumns,
   getStatusVariant,
-  onViewPost,
   onEditPost,
   onDeletePost,
   selectedPosts,
@@ -52,7 +51,7 @@ const BlogTable: React.FC<BlogTableProps> = ({
         <TableBody>
           {isLoading ? (
             <TableRow>
-              <TableCell className="text-center py-8 px-6" colSpan={9}>
+              <TableCell className="text-center py-8 px-6" colSpan={7}>
                 <div className="flex items-center justify-center gap-3">
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-brand-500"></div>
                   <p className="text-gray-500 dark:text-gray-400">Loading...</p>
@@ -61,7 +60,7 @@ const BlogTable: React.FC<BlogTableProps> = ({
             </TableRow>
           ) : !data?.data?.length ? (
             <TableRow>
-              <TableCell className="text-center py-8 px-6" colSpan={9}>
+              <TableCell className="text-center py-8 px-6" colSpan={7}>
                 <div className="text-center">
                   <div className="w-16 h-16 mx-auto mb-4 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center">
                     <svg className="w-8 h-8 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -84,25 +83,6 @@ const BlogTable: React.FC<BlogTableProps> = ({
                 </TableCell>
                 <TableCell className="py-4 px-6">
                   <div className="flex items-center gap-3">
-                    {post.featuredImage?.url ? (
-                      <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-gray-200 dark:bg-gray-700 flex-shrink-0">
-                            <Image
-                                            width={231}
-                                            height={48}
-                                             className="w-full h-full object-cover"
-                                            src={post.featuredImage.url}
-                                            alt={post.featuredImage.alt || post.title}
-                                          />
-
-                     
-                      </div>
-                    ) : (
-                      <div className="w-12 h-12 rounded-lg bg-gray-200 dark:bg-gray-700 flex items-center justify-center flex-shrink-0">
-                        <svg className="w-6 h-6 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-                      </div>
-                    )}
                     <div className="min-w-0 flex-1">
                       <p className="font-medium text-gray-900 dark:text-white truncate">
                         {post.title}
@@ -117,46 +97,30 @@ const BlogTable: React.FC<BlogTableProps> = ({
                 </TableCell>
                 <TableCell className="py-4 px-6">
                   <div className="flex items-center gap-2">
-                    {post.author?.avatar ? (
-                      <Image
-                      width={231}
-                      height={48}
-                       className="w-6 h-6 rounded-full"
-                       src={post.author.avatar}
-                       alt={post.author.name}
-                    />
-
-                    ) : (
-                      <div className="w-6 h-6 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center">
-                        <span className="text-xs font-medium text-gray-600 dark:text-gray-300">
-                          {post.author?.name?.charAt(0) || 'U'}
-                        </span>
-                      </div>
-                    )}
-                    <span className="text-sm text-gray-900 dark:text-white">
-                      {post.author?.name || 'Unknown'}
+                    <span className="inline-block px-2 py-1 text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 rounded-md">
+                      {post.category?.name || 'No category'}
                     </span>
                   </div>
                 </TableCell>
                 <TableCell className="py-4 px-6">
                   <div className="flex flex-wrap gap-1">
-                    {post.categories?.length > 0 ? (
-                      post.categories.slice(0, 2).map((category: any) => (
+                    {post.tags?.length > 0 ? (
+                      post.tags.slice(0, 2).map((tag: any) => (
                         <span
-                          key={category.id}
-                          className="inline-block px-2 py-1 text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 rounded-md"
+                          key={tag.id}
+                          className="inline-block px-2 py-1 text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 rounded-md"
                         >
-                          {category.name}
+                          {tag.name}
                         </span>
                       ))
                     ) : (
                       <span className="text-sm text-gray-400 dark:text-gray-500">
-                        No categories
+                        No tags
                       </span>
                     )}
-                    {post.categories?.length > 2 && (
+                    {post.tags?.length > 2 && (
                       <span className="text-xs text-gray-500 dark:text-gray-400">
-                        +{post.categories.length - 2} more
+                        +{post.tags.length - 2} more
                       </span>
                     )}
                   </div>
@@ -168,36 +132,11 @@ const BlogTable: React.FC<BlogTableProps> = ({
                 </TableCell>
                 <TableCell className="py-4 px-6">
                   <p className="text-sm text-gray-900 dark:text-white">
-                    {post.status === 'published' && post.publishedDate ? (
-                      formatDate(post.publishedDate)
-                    ) : post.status === 'draft' ? (
-                      <span className="text-gray-400 dark:text-gray-500 italic">Draft</span>
-                    ) : (
-                      <span className="text-gray-400 dark:text-gray-500 italic">Not published</span>
-                    )}
+                    {formatDate(post.createdAt)}
                   </p>
-                </TableCell>
-                <TableCell className="py-4 px-6 text-center">
-                  <span className="text-sm text-gray-900 dark:text-white">
-                    {post.commentCount || 0}
-                  </span>
-                </TableCell>
-                <TableCell className="py-4 px-6 text-center">
-                  <span className="text-sm text-gray-900 dark:text-white">
-                    {post.viewCount || 0}
-                  </span>
                 </TableCell>
                 <TableCell className="py-4 px-6 text-right">
                   <div className="flex items-center justify-end gap-2">
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="text-blue-600 dark:text-blue-400"
-                      onClick={() => onViewPost(post.id)}
-                      startIcon={<EyeIcon />}
-                    >
-                      View
-                    </Button>
                     <Button 
                       variant="ghost" 
                       size="sm" 
