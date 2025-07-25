@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Modal } from "@/components/ui/modal";
 import { useModal } from "@/hooks/useModal";
 import Button from "@/components/ui/button/Button";
+import FullScreenSpinner from "@/components/ui/FullScreenSpinner";
 import Input from "@/components/ui/input/Input";
 import Label from "@/components/form/Label";
 import DatePicker from "@/components/form/date-picker";
@@ -419,8 +420,7 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
   const saveDraft = useCallback(async () => {
     try {
       setIsSaving(true);
-      
-      // Create payload in the format expected by the API (matching successful creation structure)
+    
       const payload = {
         title: metadata.title,
         slug: metadata.permalink,
@@ -464,11 +464,7 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
 
   // Loading state
   if (isPageLoading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-brand-600"></div>
-      </div>
-    );
+    return <FullScreenSpinner isVisible={true} message="Loading blog data..." />;
   }
 
   if (!blogData) {
@@ -490,10 +486,9 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
 
   return (
     <>
-      {/* Full-screen overlay that covers everything including the admin header */}
+     
       <div className="fixed inset-0 z-50 bg-gray-50 dark:bg-gray-900">
         
-        {/* Header */}
         <div className="bg-white border-b">
           <div className="flex items-center justify-between px-6 py-4">
             <div className="flex items-center gap-4">
@@ -588,7 +583,6 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
                                 const selectedDate = selectedDates[0];
                                 const formattedDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate()).toISOString();
                                 updateMetadataField('publishDate', formattedDate);
-                                // Auto-close dropdown after selection
                                 setTimeout(() => {
                                   setDateDropdownOpen(false);
                                 }, 100);
