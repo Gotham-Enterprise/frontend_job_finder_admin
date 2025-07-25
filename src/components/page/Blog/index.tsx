@@ -25,7 +25,6 @@ const AllBlogPosts: React.FC<AllBlogPostsProps> = ({ className = "" }) => {
     setIsFilterOpen,
     isPending,
     selectedPosts,
-    selectedStatuses,
     
     data,
     isLoading,
@@ -51,7 +50,6 @@ const AllBlogPosts: React.FC<AllBlogPostsProps> = ({ className = "" }) => {
     bulkDeletePosts,
     clearSelectedPosts,
     hasActiveFilters,
-    handleStatusToggle,
     clearIndividualFilter,
     clearAllFilters,
     confirmation,
@@ -117,8 +115,6 @@ const AllBlogPosts: React.FC<AllBlogPostsProps> = ({ className = "" }) => {
             tagOptions={tagOptions}
             statusOptions={statusOptions}
             sortOptions={sortOptions}
-            selectedStatuses={selectedStatuses}
-            onStatusToggle={handleStatusToggle}
             hasActiveFilters={hasActiveFilters}
             clearIndividualFilter={clearIndividualFilter}
           />

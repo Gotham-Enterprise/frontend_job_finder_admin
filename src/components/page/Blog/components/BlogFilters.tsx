@@ -1,6 +1,5 @@
 import React from 'react';
 import SearchableSelect from '../../../ui/SearchableSelect';
-import StatusToggleFilter from '../../../ui/StatusToggleFilter';
 import Label from '../../../form/Label';
 import { BlogFiltersProps } from '@/services/types/BlogTypes';
 
@@ -11,8 +10,6 @@ const BlogFilters: React.FC<BlogFiltersProps> = ({
   tagOptions,
   statusOptions,
   sortOptions,
-  selectedStatuses,
-  onStatusToggle,
   hasActiveFilters,
   clearIndividualFilter,
 }) => {
@@ -23,10 +20,12 @@ const BlogFilters: React.FC<BlogFiltersProps> = ({
           <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
             Status
           </Label>
-          <StatusToggleFilter
-            selectedStatuses={selectedStatuses || []}
-            onChange={onStatusToggle || (() => {})}
-            options={statusOptions.filter(option => option.value !== '')}
+          <SearchableSelect
+            value={filters.status || ''}
+            onChange={(value: string) => onFilterChange('status', value)}
+            options={statusOptions}
+            placeholder="Select status..."
+            searchPlaceholder="Search status..."
             className="w-full"
           />
         </div>

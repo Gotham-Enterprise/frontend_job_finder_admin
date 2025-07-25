@@ -9,6 +9,7 @@ export const categoryQueryKeys = {
     const serializedFilters = filters ? JSON.stringify(filters, Object.keys(filters).sort()) : 'all';
     return [...categoryQueryKeys.lists(), serializedFilters] as const;
   },
+  dropdown: () => [...categoryQueryKeys.all, 'dropdown'] as const,
 };
 
 interface CategoryData {
@@ -185,4 +186,34 @@ export const useCategoriesWithMutations = (filters?: { keywords?: string }) => {
     isSuccess: categoriesQuery.isSuccess,
     isError: categoriesQuery.isError,
   };
+};
+
+export const useCategoriesForDropdown = () => {
+  return useQuery({
+    queryKey: categoryQueryKeys.dropdown(),
+    queryFn: async () => {
+      try {
+        const data = await blogApi.getCategoriesForDropdown();
+        
+        if (data.success) {
+          return data.data;
+        } else {
+          throw new Error('Failed to fetch categories for dropdown');
+        }
+      } catch (error: any) {
+        console.error('Error fetching categories for dropdown:', error);
+        throw error;
+      }
+    },
+    staleTime: 1000 * 60 * 5, 
+    gcTime: 1000 * 60 * 10, 
+    retry: (failureCount, error: any) => {
+      if (error?.response?.status === 401 || error?.response?.status === 403) {
+        return false;
+      }
+      return failureCount < 3;
+    },
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    refetchOnWindowFocus: false,
+  });
 };

@@ -1,6 +1,8 @@
 import { useState, useMemo, useTransition, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useBlogPosts, useDeleteBlogPost, useBulkDeleteBlogPosts } from '@/services/hooks/useBlog';
+import { useCategoriesForDropdown } from '@/services/hooks/useCategories';
+import { useTagsForDropdown } from '@/services/hooks/useTags';
 import { BlogFilters } from '@/services/types/blog';
 import { useConfirmation } from '@/hooks/useConfirmation';
 
@@ -21,9 +23,10 @@ export const useBlogLogic = () => {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [selectedPosts, setSelectedPosts] = useState<string[]>([]);
-  const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
 
   const { data, isLoading, error, refetch } = useBlogPosts(filters);
+  const { data: categoriesData, isLoading: isCategoriesLoading } = useCategoriesForDropdown();
+  const { data: tagsData, isLoading: isTagsLoading } = useTagsForDropdown();
   const { mutate: deleteBlogPost, isPending: isDeleting } = useDeleteBlogPost();
   const { mutate: bulkDeleteBlogPosts, isPending: isBulkDeleting } = useBulkDeleteBlogPosts();
   const confirmation = useConfirmation();
@@ -39,9 +42,9 @@ export const useBlogLogic = () => {
   ], []);
 
   const statusOptions = useMemo(() => [
+    { value: '', label: 'All Status' },
     { value: 'published', label: 'Published' },
     { value: 'draft', label: 'Draft' },
-    { value: 'archived', label: 'Archived' },
   ], []);
 
   const sortOptions = useMemo(() => [
@@ -51,24 +54,33 @@ export const useBlogLogic = () => {
     { value: 'title-desc', label: 'Title Z-A' },
   ], []);
 
+  const categoryOptions = useMemo(() => {
+    if (isCategoriesLoading || !categoriesData) {
+      return [{ value: '', label: 'All Categories' }];
+    }
+    
+    const allOption = { value: '', label: 'All Categories' };
+    const dynamicCategories = categoriesData.map((category: any) => ({
+      value: category.id,
+      label: category.name,
+    }));
+    
+    return [allOption, ...dynamicCategories];
+  }, [categoriesData, isCategoriesLoading]);
 
-  const categoryOptions = useMemo(() => [
-    { value: '', label: 'All Categories' },
-    { value: 'technology', label: 'Technology' },
-    { value: 'business', label: 'Business' },
-    { value: 'lifestyle', label: 'Lifestyle' },
-    { value: 'travel', label: 'Travel' },
-    { value: 'food', label: 'Food' },
-  ], []);
-
-  const tagOptions = useMemo(() => [
-    { value: '', label: 'All Tags' },
-    { value: 'react', label: 'React' },
-    { value: 'nextjs', label: 'Next.js' },
-    { value: 'javascript', label: 'JavaScript' },
-    { value: 'typescript', label: 'TypeScript' },
-    { value: 'programming', label: 'Programming' },
-  ], []);
+  const tagOptions = useMemo(() => {
+    if (isTagsLoading || !tagsData) {
+      return [{ value: '', label: 'All Tags' }];
+    }
+    
+    const allOption = { value: '', label: 'All Tags' };
+    const dynamicTags = tagsData.map((tag: any) => ({
+      value: tag.id,
+      label: tag.name,
+    }));
+    
+    return [allOption, ...dynamicTags];
+  }, [tagsData, isTagsLoading]);
 
   const itemsPerPageOptions = useMemo(() => [
     { value: '5', label: '5 per page' },
@@ -77,23 +89,10 @@ export const useBlogLogic = () => {
     { value: '50', label: '50 per page' },
   ], []);
 
-  const handleStatusToggle = useCallback((statuses: string[]) => {
-    setSelectedStatuses(statuses);
-    startTransition(() => {
-      setFilters(prevFilters => ({
-        ...prevFilters,
-        status: statuses.length > 0 ? statuses.join(',') : undefined,
-        page: 1
-      }));
-    });
-  }, []);
-
-
   const clearIndividualFilter = useCallback((filterKey: string) => {
     startTransition(() => {
       switch (filterKey) {
         case 'status':
-          setSelectedStatuses([]);
           setFilters(prev => ({ ...prev, status: undefined, page: 1 }));
           break;
         case 'category':
@@ -133,22 +132,21 @@ export const useBlogLogic = () => {
         sortOrder: 'desc',
       });
       setSearchInput('');
-      setSelectedStatuses([]);
     });
   }, []);
 
   const hasActiveFilters = useMemo(() => {
     return !!(
       searchInput ||
+      filters.status ||
       filters.category ||
       filters.tag ||
       filters.author ||
-      selectedStatuses.length > 0 ||
       (filters.sortBy && filters.sortBy !== 'createdAt') ||
       (filters.sortOrder && filters.sortOrder !== 'desc') ||
       (filters.limit && filters.limit !== 10)
     );
-  }, [searchInput, filters, selectedStatuses]);
+  }, [searchInput, filters]);
 
   const filterChange = useMemo(() => (key: keyof BlogFilters, value: any) => {
     startTransition(() => {
@@ -273,15 +271,6 @@ export const useBlogLogic = () => {
     return () => clearTimeout(timeoutId);
   }, [searchInput]);
 
-  useEffect(() => {
-    if (filters.status) {
-      const statusArray = filters.status.split(',').filter(Boolean);
-      setSelectedStatuses(statusArray);
-    } else {
-      setSelectedStatuses([]);
-    }
-  }, [filters.status]);
-
   return {
     filters,
     searchInput,
@@ -290,7 +279,6 @@ export const useBlogLogic = () => {
     setIsFilterOpen,
     isPending,
     selectedPosts,
-    selectedStatuses,
     
     data,
     isLoading,
@@ -317,7 +305,6 @@ export const useBlogLogic = () => {
     clearSelectedPosts,
     addNewPost,
     hasActiveFilters,
-    handleStatusToggle,
     clearIndividualFilter,
     clearAllFilters,
     confirmation,

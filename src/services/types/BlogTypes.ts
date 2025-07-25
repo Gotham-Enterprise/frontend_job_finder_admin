@@ -29,8 +29,6 @@ export interface BlogFiltersProps {
   tagOptions: Array<{ value: string; label: string }>;
   statusOptions: Array<{ value: string; label: string }>;
   sortOptions: Array<{ value: string; label: string }>;
-  selectedStatuses?: string[];
-  onStatusToggle?: (statuses: string[]) => void;
   hasActiveFilters?: boolean;
   clearIndividualFilter?: (filterKey: string) => void;
 }
