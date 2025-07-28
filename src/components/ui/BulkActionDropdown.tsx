@@ -86,7 +86,7 @@ const BulkActionDropdown: React.FC<BulkActionDropdownProps> = ({
               </button>
             )}
             
-            {/* Add separator between Publish and Draft */}
+       
             {itemType === 'posts' && onBulkPublish && onBulkDraft && (
               <div className="border-t border-gray-100 dark:border-gray-700 mx-2"></div>
             )}

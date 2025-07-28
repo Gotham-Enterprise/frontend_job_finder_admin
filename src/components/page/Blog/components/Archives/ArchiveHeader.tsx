@@ -3,6 +3,7 @@
 import React, { useRef } from 'react';
 import Input from '../../../../ui/input/Input';
 import FilterDropdown from '../../../../ui/FilterDropdown';
+import ArchiveBulkActionDropdown from './ArchiveBulkActionDropdown';
 import { SearchIcon } from '../../../../ui/icons';
 
 interface ArchiveHeaderProps {
@@ -83,31 +84,16 @@ const ArchiveHeader: React.FC<ArchiveHeaderProps> = ({
             )}
           </button>
 
-          {selectedCount > 0 && (
-            <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 dark:bg-gray-800 rounded-sm border border-gray-200 dark:border-gray-700">
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                {selectedCount} selected
-              </span>
-              <div className="flex items-center gap-1">
-                <button
-                  onClick={onBulkRestore}
-                  disabled={isRestoring}
-                  className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-green-700 bg-green-50 hover:bg-green-100 border border-green-200 rounded-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed dark:bg-green-900/20 dark:text-green-400 dark:border-green-800 dark:hover:bg-green-900/30"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                  </svg>
-                  {isRestoring ? 'Restoring...' : 'Restore'}
-                </button>
-                <button
-                  onClick={onClearSelection}
-                  className="px-2 py-1.5 text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
-                >
-                  Clear
-                </button>
-              </div>
-            </div>
-          )}
+          <ArchiveBulkActionDropdown
+            selectedItems={selectedPosts}
+            itemType="posts"
+            onBulkRestore={() => {
+              console.log('onBulkRestore prop called');
+              onBulkRestore();
+            }}
+            onClearSelection={onClearSelection}
+            isRestoring={isRestoring}
+          />
         </div>
       </div>
       

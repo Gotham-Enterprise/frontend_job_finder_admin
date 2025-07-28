@@ -6,6 +6,7 @@ import ArchiveHeader from './ArchiveHeader';
 import ArchiveFilters from './ArchiveFilters';
 import ArchiveTable from './ArchiveTable';
 import PaginationComponent from '../../../../tables/Pagination';
+import ConfirmationDialog from '../../../../ui/ConfirmationDialog';
 
 export default function ArchiveBlog() {
   const {
@@ -39,6 +40,7 @@ export default function ArchiveBlog() {
     hasActiveFilters,
     clearIndividualFilter,
     clearAllFilters,
+    confirmation,
   } = useArchivedBlogLogic();
 
   const clearFilters = () => {
@@ -116,6 +118,18 @@ export default function ArchiveBlog() {
           />
         </div>
       )}
+
+      <ConfirmationDialog
+        isOpen={confirmation.isOpen}
+        onClose={confirmation.onClose}
+        onConfirm={confirmation.onConfirm}
+        onCancel={confirmation.onCancel}
+        title={confirmation.config?.title || ''}
+        message={confirmation.config?.message || ''}
+        confirmText={confirmation.config?.confirmText}
+        cancelText={confirmation.config?.cancelText}
+        isLoading={isRestoring}
+      />
     </div>
   );
 }

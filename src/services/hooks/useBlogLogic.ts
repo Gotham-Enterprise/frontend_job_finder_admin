@@ -236,8 +236,8 @@ export const useBlogLogic = () => {
     
     const count = selectedPosts.length;
     const message = count === 1 
-      ? 'Are you sure you want to delete this blog post? This action cannot be undone.' 
-      : `Are you sure you want to delete ${count} blog posts? This action cannot be undone.`;
+      ? 'Are you sure you want to delete this blog post?' 
+      : `Are you sure you want to delete ${count} blog posts?`;
     
     const confirmed = await confirmation.confirm({
       title: `Delete ${count === 1 ? 'Blog Post' : 'Blog Posts'}`,

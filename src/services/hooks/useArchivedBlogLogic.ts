@@ -208,13 +208,19 @@ export const useArchivedBlogLogic = () => {
   };
 
   const bulkRestorePosts = async () => {
-    if (selectedPosts.length === 0) return;
+    console.log('bulkRestorePosts called with selectedPosts:', selectedPosts);
+    
+    if (selectedPosts.length === 0) {
+      console.log('No posts selected, returning early');
+      return;
+    }
     
     const count = selectedPosts.length;
     const message = count === 1 
       ? 'Are you sure you want to restore this blog post?' 
       : `Are you sure you want to restore ${count} blog posts?`;
     
+    console.log('Showing confirmation dialog');
     const confirmed = await confirmation.confirm({
       title: `Restore ${count === 1 ? 'Blog Post' : 'Blog Posts'}`,
       message,
@@ -222,7 +228,10 @@ export const useArchivedBlogLogic = () => {
       cancelText: 'Cancel'
     });
 
+    console.log('Confirmation result:', confirmed);
+    
     if (confirmed) {
+      console.log('Calling restoreBlogPosts with:', selectedPosts);
       restoreBlogPosts(selectedPosts, {
         onSuccess: () => {
           console.log('Blog posts restored successfully');
