@@ -32,7 +32,7 @@ export default function AddNewCategories() {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const editModal = useModal();
   const confirmDialog = useConfirmation();
-  const filters = searchTerm ? { keywords: searchTerm } : undefined;
+  const filters = searchTerm ? { keyword: searchTerm } : undefined;
   const { 
     data: categoriesData, 
     isLoading: isLoadingCategories, 
@@ -52,11 +52,11 @@ export default function AddNewCategories() {
   const categories = apiCategories.map((apiCategory: CategoryWithSubCategories): Category => ({
     id: apiCategory.id,
     name: apiCategory.name,
-    slug: generateSlug(apiCategory.name),
     description: apiCategory.description,
-    parent: '',
-    count: 0,
-    subCategories: apiCategory.subCategories.map(sub => ({ name: sub.name, id: sub.id }))
+    blogCount: apiCategory.blogCount || 0,
+    subCategories: apiCategory.subCategories.map(sub => ({ name: sub.name, id: sub.id })),
+    createdAt: apiCategory.createdAt,
+    updatedAt: apiCategory.updatedAt
   }));
 
   const initInputChange = (field: keyof NewCategory, value: string) => {

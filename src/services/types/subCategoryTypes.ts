@@ -9,6 +9,7 @@ export interface CategoryWithSubCategories {
   id: string;
   name: string;
   description: string;
+  blogCount: number;
   subCategories: SubCategory[];
   createdAt: string;
   updatedAt: string;

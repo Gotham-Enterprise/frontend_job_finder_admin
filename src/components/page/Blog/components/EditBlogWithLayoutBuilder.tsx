@@ -6,8 +6,6 @@ import { Modal } from "@/components/ui/modal";
 import { useModal } from "@/hooks/useModal";
 import Button from "@/components/ui/button/Button";
 import FullScreenSpinner from "@/components/ui/FullScreenSpinner";
-import Input from "@/components/ui/input/Input";
-import Label from "@/components/form/Label";
 import CustomDatePicker from "@/components/form/CustomDatePicker";
 import VisualLayoutBuilder from "./VisualLayoutBuilder/VisualLayoutBuilder";
 import FloatingElementsPanel from "./VisualLayoutBuilder/components/FloatingElementsPanel";

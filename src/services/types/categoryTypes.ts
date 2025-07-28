@@ -3,11 +3,14 @@ import React from 'react';
 export interface Category {
   id: string;
   name: string;
-  slug: string;
   description: string;
-  parent: string;
-  count: number;
-  subCategories?: Array<{ name: string; id?: string }>;
+  blogCount: number;
+  subCategories: Array<{ 
+    id: string; 
+    name: string; 
+  }>;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface NewCategory {
