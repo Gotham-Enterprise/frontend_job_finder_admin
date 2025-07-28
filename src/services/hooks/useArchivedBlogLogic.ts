@@ -237,6 +237,28 @@ export const useArchivedBlogLogic = () => {
     }
   };
 
+  const restoreSinglePost = async (postId: string) => {
+    const confirmed = await confirmation.confirm({
+      title: 'Restore Blog Post',
+      message: 'Are you sure you want to restore this blog post?',
+      confirmText: 'Restore',
+      cancelText: 'Cancel'
+    });
+
+    if (confirmed) {
+      restoreBlogPosts([postId], {
+        onSuccess: () => {
+          console.log('Blog post restored successfully');
+          showToast.success('Success', 'Blog post restored successfully');
+        },
+        onError: (error) => {
+          console.error('Error restoring blog post:', error);
+          showToast.error('Error', 'Failed to restore blog post. Please try again.');
+        }
+      });
+    }
+  };
+
   const clearSelectedPosts = () => {
     setSelectedPosts([]);
   };
@@ -281,6 +303,7 @@ export const useArchivedBlogLogic = () => {
     editPost,
     previewPost,
     bulkRestorePosts,
+    restoreSinglePost,
     clearSelectedPosts,
     hasActiveFilters,
     clearIndividualFilter,

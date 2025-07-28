@@ -9,7 +9,6 @@ import {
 } from '../../../../ui/table';
 import Badge from '../../../../ui/badge/Badge';
 import Checkbox from '../../../../form/input/Checkbox';
-import { PencilIcon, EyeIcon } from '@/icons';
 
 interface ArchiveTableColumn {
   key: string;
@@ -28,11 +27,11 @@ interface ArchiveTableProps {
   isLoading: boolean;
   tableColumns: ArchiveTableColumn[];
   getStatusVariant: (status: string) => 'light' | 'solid';
-  onEditPost: (postId: string) => void;
-  onPreviewPost: (postId: string) => void;
+  onRestorePost: (postId: string) => void;
   selectedPosts: string[];
   onSelectPost: (postId: string, selected: boolean) => void;
   onSelectAll: (selected: boolean) => void;
+  isRestoring?: boolean;
 }
 
 const ArchiveTable: React.FC<ArchiveTableProps> = ({
@@ -40,11 +39,11 @@ const ArchiveTable: React.FC<ArchiveTableProps> = ({
   isLoading,
   tableColumns,
   getStatusVariant,
-  onEditPost,
-  onPreviewPost,
+  onRestorePost,
   selectedPosts,
   onSelectPost,
   onSelectAll,
+  isRestoring = false,
 }) => {
   const allSelected = data?.data && data.data.length > 0 && selectedPosts.length === data.data.length;
 
@@ -70,7 +69,7 @@ const ArchiveTable: React.FC<ArchiveTableProps> = ({
             {tableColumns.slice(1).map((column) => (
               <TableCell
                 key={column.key}
-                className={`py-4 px-6 font-semibold text-gray-900 dark:text-white ${column.className || ''}`}
+                className={`py-4 px-6 font-semibold text-gray-900 dark:text-white${column.className || ''}`}
               >
                 {column.label}
               </TableCell>
@@ -167,18 +166,24 @@ const ArchiveTable: React.FC<ArchiveTableProps> = ({
                 <TableCell className="py-4 px-6 text-right">
                   <div className="flex items-center justify-end gap-1">
                     <button
-                      onClick={() => onPreviewPost && onPreviewPost(post.id)}
-                      className="inline-flex text-brand-400 items-center justify-center w-8 h-8 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
-                      title="Preview"
+                      onClick={() => onRestorePost(post.id)}
+                      disabled={isRestoring}
+                      className="inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium bg-green-100 text-green-700 hover:bg-green-200 disabled:opacity-50 disabled:cursor-not-allowed rounded-md transition-colors"
+                      title="Restore Post"
                     >
-                      <EyeIcon className="text-brand-400"/>
-                    </button>
-                    <button
-                      onClick={() => onEditPost(post.id)}
-                      className="inline-flex text-brand-400 items-center justify-center w-8 h-8 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-md transition-colors"
-                      title="Edit"
-                    >
-                      <PencilIcon className="text-brand-400" />
+                      {isRestoring ? (
+                        <>
+                          <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-green-700 mr-1"></div>
+                          Restoring...
+                        </>
+                      ) : (
+                        <>
+                          <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                          </svg>
+                          Restore
+                        </>
+                      )}
                     </button>
                   </div>
                 </TableCell>

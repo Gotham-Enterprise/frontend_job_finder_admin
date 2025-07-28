@@ -36,6 +36,7 @@ export default function ArchiveBlog() {
     editPost,
     previewPost,
     bulkRestorePosts,
+    restoreSinglePost,
     clearSelectedPosts,
     hasActiveFilters,
     clearIndividualFilter,
@@ -102,11 +103,11 @@ export default function ArchiveBlog() {
         isLoading={isLoading}
         tableColumns={tableColumns}
         getStatusVariant={getStatusVariant}
-        onEditPost={editPost}
-        onPreviewPost={previewPost}
+        onRestorePost={restoreSinglePost}
         selectedPosts={selectedPosts}
         onSelectPost={selectPost}
         onSelectAll={selectAll}
+        isRestoring={isRestoring}
       />
 
       {data?.metaData && data.metaData.totalPages > 1 && (
