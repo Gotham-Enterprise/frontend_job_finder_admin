@@ -72,10 +72,7 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
     lineHeight: block.styles.lineHeight || DEFAULT_STYLES[type].lineHeight,
   } as React.CSSProperties);
 
-
-
   const startEditing = (currentText: string) => {
-    // If the text contains HTML tags, preserve them for rich text editing
     setEditValue(currentText);
     setIsEditing(true);
   };

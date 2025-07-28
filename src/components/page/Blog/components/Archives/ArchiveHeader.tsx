@@ -87,10 +87,7 @@ const ArchiveHeader: React.FC<ArchiveHeaderProps> = ({
           <ArchiveBulkActionDropdown
             selectedItems={selectedPosts}
             itemType="posts"
-            onBulkRestore={() => {
-              console.log('onBulkRestore prop called');
-              onBulkRestore();
-            }}
+            onBulkRestore={onBulkRestore}
             onClearSelection={onClearSelection}
             isRestoring={isRestoring}
           />

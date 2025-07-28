@@ -53,6 +53,7 @@ export const useDeleteBlogPost = () => {
     mutationFn: (postId: string) => blogApi.deleteBlogPost(postId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: blogQueryKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: [...blogQueryKeys.all, 'archived'] });
     },
     onError: (error) => {
       console.error('Failed to delete blog post:', error);
@@ -67,6 +68,7 @@ export const useBulkDeleteBlogPosts = () => {
     mutationFn: (postIds: string[]) => blogApi.deleteBlogPosts(postIds),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: blogQueryKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: [...blogQueryKeys.all, 'archived'] });
     },
     onError: (error) => {
       console.error('Failed to bulk delete blog posts:', error);
@@ -144,7 +146,6 @@ export const useRestoreBlogPosts = () => {
   return useMutation({
     mutationFn: (blogIds: string[]) => blogApi.restoreBlogPosts(blogIds),
     onSuccess: () => {
-      // Invalidate both archived and regular blog lists
       queryClient.invalidateQueries({ queryKey: [...blogQueryKeys.all, 'archived'] });
       queryClient.invalidateQueries({ queryKey: blogQueryKeys.lists() });
     },

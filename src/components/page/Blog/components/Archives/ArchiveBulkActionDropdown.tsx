@@ -63,7 +63,6 @@ const ArchiveBulkActionDropdown: React.FC<ArchiveBulkActionDropdownProps> = ({
           <div className="py-2">
             <button
               onClick={() => {
-                console.log('Restore button clicked');
                 onBulkRestore();
                 setIsOpen(false);
               }}

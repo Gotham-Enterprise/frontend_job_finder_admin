@@ -24,23 +24,17 @@ export interface CategoryUpdateData {
 export const blogApi = {
   async getBlogPosts(filters: BlogFilters = {}): Promise<BlogPostsResponse> {
     const queryParams = new URLSearchParams();
-    
-    // Basic pagination and search
     if (filters.page) queryParams.append('page', filters.page.toString());
     if (filters.limit) queryParams.append('limit', filters.limit.toString());
     if (filters.search) queryParams.append('keywords', filters.search);
-    
-    // Status filtering
+
     if (filters.status) queryParams.append('status', filters.status);
-    
-    // Category and tag filtering - these are the key additions
+
     if (filters.category) queryParams.append('category', filters.category);
     if (filters.tag) queryParams.append('tag', filters.tag);
-    
-    // Author filtering
+
     if (filters.author) queryParams.append('author', filters.author);
-    
-    // Sorting
+
     if (filters.sortBy) queryParams.append('sortBy', filters.sortBy);
     if (filters.sortOrder) queryParams.append('sortOrder', filters.sortOrder);
 
@@ -223,23 +217,18 @@ export const blogApi = {
 
   async getArchivedBlogPosts(filters: BlogFilters = {}): Promise<BlogPostsResponse> {
     const queryParams = new URLSearchParams();
-    
-    // Basic pagination and search
+
     if (filters.page) queryParams.append('page', filters.page.toString());
     if (filters.limit) queryParams.append('limit', filters.limit.toString());
     if (filters.search) queryParams.append('keywords', filters.search);
     
-    // Status filtering
     if (filters.status) queryParams.append('status', filters.status);
-    
-    // Category and tag filtering
+
     if (filters.category) queryParams.append('category', filters.category);
     if (filters.tag) queryParams.append('tag', filters.tag);
     
-    // Author filtering
     if (filters.author) queryParams.append('author', filters.author);
     
-    // Sorting
     if (filters.sortBy) queryParams.append('sortBy', filters.sortBy);
     if (filters.sortOrder) queryParams.append('sortOrder', filters.sortOrder);
 
