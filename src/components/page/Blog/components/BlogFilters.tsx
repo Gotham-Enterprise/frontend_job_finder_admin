@@ -58,19 +58,7 @@ const BlogFilters: React.FC<BlogFiltersProps> = ({
           />
         </div>
 
-        <div className="space-y-2">
-          <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-            Sort By
-          </Label>
-          <SearchableSelect
-            value={`${filters.sortBy || 'createdAt'}-${filters.sortOrder || 'desc'}`}
-            onChange={(value: string) => onFilterChange('sortBy', value)}
-            options={sortOptions}
-            placeholder="Sort posts..."
-            searchPlaceholder="Search sort options..."
-            className="w-full"
-          />
-        </div>
+      
       </div>
     </div>
   );

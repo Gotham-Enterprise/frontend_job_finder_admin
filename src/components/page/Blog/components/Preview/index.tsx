@@ -2,55 +2,10 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { blogApi } from '@/services/api/blog';
+import { BlogPost } from '@/services/types/blog';
 import { formatDate } from '@/services/utils/dateUtils';
 import { ArrowRightIcon, CalenderIcon, UserIcon } from '@/icons';
 import FullScreenSpinner from '@/components/ui/FullScreenSpinner';
-
-interface BlogPostDetails {
-  id: string;
-  title: string;
-  slug: string;
-  excerpt?: string;
-  content?: string;
-  metadata: {
-    status: string;
-    visibility: string;
-    publishDate?: string;
-    categories: Array<{
-      id: string;
-      name: string;
-      slug: string;
-    }>;
-    tags: Array<{
-      id: string;
-      name: string;
-      slug: string;
-    }>;
-    author?: {
-      id: string;
-      name: string;
-      email: string;
-    };
-    seo: {
-      title: string;
-      description: string;
-      keywords: string[];
-      canonicalUrl?: string;
-    };
-    settings: {
-      allowComments: boolean;
-      allowPings: boolean;
-      featured: boolean;
-      sticky: boolean;
-    };
-  };
-  timestamps: {
-    created: string;
-    updated: string;
-    published?: string;
-  };
-  analytics: any;
-}
 
 interface BlogPreviewProps {
   blogId: string;
@@ -72,6 +27,10 @@ interface BlockContent {
 interface BlogContentRendererProps {
   content: BlockContent;
 }
+
+const isBlockContent = (content: any): content is BlockContent => {
+  return content && typeof content === 'object' && 'blocks' in content && Array.isArray(content.blocks);
+};
 
 const BlogContentRenderer: React.FC<BlogContentRendererProps> = ({ content }) => {
   const renderBlock = (block: any) => {
@@ -107,15 +66,27 @@ const BlogContentRenderer: React.FC<BlogContentRendererProps> = ({ content }) =>
     switch (type) {
       case 'heading':
         const level = blockContent?.level || 1;
-        const HeadingTag = `h${Math.min(level, 6)}` as keyof JSX.IntrinsicElements;
+        const headingLevel = Math.min(level, 6);
+        
+        const headingElements = {
+          1: (props: any) => <h1 {...props} />,
+          2: (props: any) => <h2 {...props} />,
+          3: (props: any) => <h3 {...props} />,
+          4: (props: any) => <h4 {...props} />,
+          5: (props: any) => <h5 {...props} />,
+          6: (props: any) => <h6 {...props} />
+        };
+        
+        const HeadingComponent = headingElements[headingLevel as keyof typeof headingElements];
+        
         return (
-          <HeadingTag 
-            key={block.id} 
+          <HeadingComponent
+            key={block.id}
             style={blockStyle}
             className="font-bold text-gray-900"
           >
             {blockContent?.text || ''}
-          </HeadingTag>
+          </HeadingComponent>
         );
 
       case 'paragraph':
@@ -236,7 +207,7 @@ interface BlogPreviewProps {
 
 const BlogPreview: React.FC<BlogPreviewProps> = ({ blogId }) => {
   const router = useRouter();
-  const [blogPost, setBlogPost] = useState<BlogPostDetails | null>(null);
+  const [blogPost, setBlogPost] = useState<BlogPost | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -244,15 +215,10 @@ const BlogPreview: React.FC<BlogPreviewProps> = ({ blogId }) => {
     const fetchBlogPost = async () => {
       try {
         setIsLoading(true);
-        console.log('Fetching blog post with ID:', blogId);
         const blogData = await blogApi.getBlogPostById(blogId);
-        console.log('Received blog data:', blogData);
-        console.log('Blog data structure:', JSON.stringify(blogData, null, 2));
-        console.log('Content field type:', typeof blogData.content);
-        console.log('Content field value:', blogData.content);
-        setBlogPost(blogData as BlogPostDetails);
+        setBlogPost(blogData);
       } catch (err: any) {
-        console.error('Error fetching blog post:', err);
+
         setError(err.message || 'Failed to fetch blog post');
       } finally {
         setIsLoading(false);
@@ -336,13 +302,13 @@ const BlogPreview: React.FC<BlogPreviewProps> = ({ blogId }) => {
 
             <div className="mb-6">
               <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                blogPost.metadata?.status === 'published' 
+                blogPost.status === 'published' 
                   ? 'bg-green-100 text-green-800' 
-                  : blogPost.metadata?.status === 'draft'
+                  : blogPost.status === 'draft'
                   ? 'bg-yellow-100 text-yellow-800'
                   : 'bg-gray-100 text-gray-800'
               }`}>
-                {blogPost.metadata?.status?.charAt(0).toUpperCase() + blogPost.metadata?.status?.slice(1) || 'Not specified'}
+                {blogPost.status?.charAt(0).toUpperCase() + blogPost.status?.slice(1) || 'Not specified'}
               </span>
             </div>
             <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-6 leading-tight">
@@ -355,27 +321,27 @@ const BlogPreview: React.FC<BlogPreviewProps> = ({ blogId }) => {
             )}
             <div className="flex flex-wrap items-center gap-6 mb-8 pb-8 border-b border-gray-200">
               {/* Author */}
-              {blogPost.metadata?.author && (
+              {blogPost.author && (
                 <div className="flex items-center text-sm text-gray-600">
                   <UserIcon className="mr-2" />
-                  <span>By {blogPost.metadata.author.name}</span>
+                  <span>By {blogPost.author.name}</span>
                 </div>
               )}
 
               <div className="flex items-center text-sm text-gray-600">
                 <CalenderIcon className="mr-2" />
-                <span>Published {formatDate(blogPost.timestamps?.created || blogPost.timestamps?.published)}</span>
+                <span>Published {formatDate(blogPost.createdAt || blogPost.publishedDate)}</span>
               </div>
 
-              {blogPost.metadata?.categories && blogPost.metadata.categories.length > 0 && (
+              {blogPost.category && (
                 <div className="flex items-center">
                   <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                    {blogPost.metadata.categories[0].name}
+                    {blogPost.category.name}
                   </span>
                 </div>
               )}
             </div>
-            {blogPost.metadata?.tags && blogPost.metadata.tags.length > 0 && (
+            {blogPost.tags && blogPost.tags.length > 0 && (
               <div className="mb-8">
                 <div className="flex items-center mb-3">
                   <svg className="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -384,7 +350,7 @@ const BlogPreview: React.FC<BlogPreviewProps> = ({ blogId }) => {
                   <span className="text-sm font-medium text-gray-700">Tags</span>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  {blogPost.metadata.tags.map((tag) => (
+                  {blogPost.tags.map((tag: { id: string; name: string }) => (
                     <span
                       key={tag.id}
                       className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800"
@@ -399,7 +365,7 @@ const BlogPreview: React.FC<BlogPreviewProps> = ({ blogId }) => {
               <div className="text-gray-800 leading-relaxed">
                 {typeof blogPost.content === 'string' ? (
                   <div dangerouslySetInnerHTML={{ __html: blogPost.content }} />
-                ) : blogPost.content && typeof blogPost.content === 'object' && blogPost.content.blocks ? (
+                ) : isBlockContent(blogPost.content) ? (
                   <BlogContentRenderer content={blogPost.content} />
                 ) : blogPost.content ? (
                   <div>
