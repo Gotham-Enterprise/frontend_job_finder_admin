@@ -219,5 +219,46 @@ export const blogApi = {
       console.error('Update blog status error:', error);
       throw error;
     }
+  },
+
+  async getArchivedBlogPosts(filters: BlogFilters = {}): Promise<BlogPostsResponse> {
+    const queryParams = new URLSearchParams();
+    
+    // Basic pagination and search
+    if (filters.page) queryParams.append('page', filters.page.toString());
+    if (filters.limit) queryParams.append('limit', filters.limit.toString());
+    if (filters.search) queryParams.append('keywords', filters.search);
+    
+    // Status filtering
+    if (filters.status) queryParams.append('status', filters.status);
+    
+    // Category and tag filtering
+    if (filters.category) queryParams.append('category', filters.category);
+    if (filters.tag) queryParams.append('tag', filters.tag);
+    
+    // Author filtering
+    if (filters.author) queryParams.append('author', filters.author);
+    
+    // Sorting
+    if (filters.sortBy) queryParams.append('sortBy', filters.sortBy);
+    if (filters.sortOrder) queryParams.append('sortOrder', filters.sortOrder);
+
+    const endpoint = `/api/admin/blogs/archived?${queryParams.toString()}`;
+    
+    return apiGet<BlogPostsResponse>(endpoint);
+  },
+
+  async restoreBlogPosts(blogIds: string[]): Promise<{ success: boolean; message?: string }> {
+    const endpoint = '/api/admin/blogs/restore';
+    
+    try {
+      const response = await apiPatch<{ success: boolean; message?: string }>(endpoint, {
+        blogIds
+      });
+      return response;
+    } catch (error) {
+      console.error('Restore blog posts error:', error);
+      throw error;
+    }
   }
 };

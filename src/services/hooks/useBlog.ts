@@ -119,3 +119,37 @@ export const useBulkUpdateBlogStatus = () => {
     },
   });
 };
+
+export const useArchivedBlogPosts = (filters: BlogFilters = {}) => {
+  return useQuery({
+    queryKey: [...blogQueryKeys.all, 'archived', filters],
+    queryFn: () => {
+      return blogApi.getArchivedBlogPosts(filters);
+    },
+    staleTime: 1000 * 60 * 5, 
+    retry: (failureCount, error: Error) => {
+      if (error.message.includes('HTTP 401')) {
+        return false;
+      }
+      console.error('Error fetching archived blog posts:', error);
+      return failureCount < 3;
+    },
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+  });
+};
+
+export const useRestoreBlogPosts = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (blogIds: string[]) => blogApi.restoreBlogPosts(blogIds),
+    onSuccess: () => {
+      // Invalidate both archived and regular blog lists
+      queryClient.invalidateQueries({ queryKey: [...blogQueryKeys.all, 'archived'] });
+      queryClient.invalidateQueries({ queryKey: blogQueryKeys.lists() });
+    },
+    onError: (error) => {
+      console.error('Failed to restore blog posts:', error);
+    },
+  });
+};
