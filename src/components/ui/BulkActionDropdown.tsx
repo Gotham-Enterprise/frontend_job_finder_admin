@@ -86,6 +86,11 @@ const BulkActionDropdown: React.FC<BulkActionDropdownProps> = ({
               </button>
             )}
             
+            {/* Add separator between Publish and Draft */}
+            {itemType === 'posts' && onBulkPublish && onBulkDraft && (
+              <div className="border-t border-gray-100 dark:border-gray-700 mx-2"></div>
+            )}
+            
             {itemType === 'posts' && onBulkDraft && (
               <button
                 onClick={() => {
@@ -118,9 +123,9 @@ const BulkActionDropdown: React.FC<BulkActionDropdownProps> = ({
               className="flex w-full items-start px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/20 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-left"
             >
               <div className="flex-1">
-                <div className="font-medium text-gray-900 dark:text-white">Delete</div>
+                <div className="font-medium text-gray-900 dark:text-white">Archive</div>
                 <div className="text-xs text-gray-500 dark:text-gray-400">
-                  Permanently delete selected {itemType}
+                Move to archive selected {itemType}
                 </div>
               </div>
             </button>
