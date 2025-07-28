@@ -45,14 +45,14 @@ const OptionsDropdown: React.FC<OptionsDropdownProps> = ({
 
   useEffect(() => {
     if (isOpen && buttonRef.current) {
-      // Small delay to ensure DOM is updated
+  
       setTimeout(() => {
         if (buttonRef.current) {
           const rect = buttonRef.current.getBoundingClientRect();
           const viewportHeight = window.innerHeight;
-          const dropdownHeight = options.length * 40 + 16; // Approximate height
+          const dropdownHeight = options.length * 40 + 16;
           
-          // Check if dropdown would go off screen at bottom
+        
           if (rect.bottom + dropdownHeight > viewportHeight - 20) {
             setDropdownPosition('top');
           } else {

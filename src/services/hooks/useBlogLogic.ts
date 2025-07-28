@@ -61,7 +61,7 @@ export const useBlogLogic = () => {
     
     const allOption = { value: '', label: 'All Categories' };
     const dynamicCategories = categoriesData.map((category: any) => ({
-      value: category.id,
+      value: category.name,  // Use name instead of id for API compatibility
       label: category.name,
     }));
     
@@ -75,7 +75,7 @@ export const useBlogLogic = () => {
     
     const allOption = { value: '', label: 'All Tags' };
     const dynamicTags = tagsData.map((tag: any) => ({
-      value: tag.id,
+      value: tag.name, 
       label: tag.name,
     }));
     
@@ -211,7 +211,7 @@ export const useBlogLogic = () => {
   const deletePost = async (postId: string) => {
     const confirmed = await confirmation.confirm({
       title: 'Delete Blog Post',
-      message: 'Are you sure you want to delete this blog post? This action cannot be undone.',
+      message: 'Are you sure you want to delete this blog post?',
       confirmText: 'Delete',
       cancelText: 'Cancel'
     });

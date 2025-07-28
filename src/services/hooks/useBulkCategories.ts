@@ -7,7 +7,7 @@ export const useBulkDeleteCategories = () => {
   return useMutation({
     mutationFn: (categoryIds: string[]) => blogApi.deleteBulkCategories(categoryIds),
     onSuccess: () => {
-      // Invalidate categories queries to refresh the data
+    
       queryClient.invalidateQueries({ queryKey: ['categories'] });
     },
     onError: (error) => {

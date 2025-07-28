@@ -61,6 +61,7 @@ const BlogHeader: React.FC<BlogHeaderProps> = ({
             <span>Filter</span>
             {hasActiveFilters && (
               <span className="ml-1 bg-primary text-white text-xs rounded-full px-1.5 py-0.5 min-w-[18px] h-4 flex items-center justify-center font-medium">
+                •
               </span>
             )}
           </button>
