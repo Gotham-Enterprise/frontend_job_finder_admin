@@ -1,5 +1,5 @@
 import { BlogFilters, BlogPostsResponse, BlogPost } from '../types/blog';
-import { apiGet, apiDelete, apiPost, apiPut } from './apiUtils';
+import { apiGet, apiDelete, apiPost, apiPut, apiPatch } from './apiUtils';
 import { CategoryWithSubCategories, ApiResponse } from '@/services/types/subCategoryTypes';
 import { MediaFilters, MediaResponse, MediaUploadResponse, MediaUploadData, MediaDeleteData } from '../types/mediaTypes';
 
@@ -202,6 +202,21 @@ export const blogApi = {
       return response;
     } catch (error) {
       console.error('Update blog error:', error);
+      throw error;
+    }
+  },
+
+  async updateBlogStatus(blogIds: string[], status: 'published' | 'draft'): Promise<{ success: boolean; message?: string }> {
+    const endpoint = '/api/admin/blogs/status';
+    
+    try {
+      const response = await apiPatch<{ success: boolean; message?: string }>(endpoint, {
+        blogIds,
+        status
+      });
+      return response;
+    } catch (error) {
+      console.error('Update blog status error:', error);
       throw error;
     }
   }

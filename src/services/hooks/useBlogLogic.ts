@@ -1,10 +1,11 @@
 import { useState, useMemo, useTransition, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { useBlogPosts, useDeleteBlogPost, useBulkDeleteBlogPosts } from '@/services/hooks/useBlog';
+import { useBlogPosts, useDeleteBlogPost, useBulkDeleteBlogPosts, useBulkUpdateBlogStatus } from '@/services/hooks/useBlog';
 import { useCategoriesForDropdown } from '@/services/hooks/useCategories';
 import { useTagsForDropdown } from '@/services/hooks/useTags';
 import { BlogFilters } from '@/services/types/blog';
 import { useConfirmation } from '@/hooks/useConfirmation';
+import { showToast } from '@/services/utils/toast';
 
 export const useBlogLogic = () => {
   const router = useRouter();
@@ -29,6 +30,7 @@ export const useBlogLogic = () => {
   const { data: tagsData, isLoading: isTagsLoading } = useTagsForDropdown();
   const { mutate: deleteBlogPost, isPending: isDeleting } = useDeleteBlogPost();
   const { mutate: bulkDeleteBlogPosts, isPending: isBulkDeleting } = useBulkDeleteBlogPosts();
+  const { mutate: bulkUpdateStatus, isPending: isUpdatingStatus } = useBulkUpdateBlogStatus();
   const confirmation = useConfirmation();
 
   const tableColumns = useMemo(() => [
@@ -249,9 +251,71 @@ export const useBlogLogic = () => {
         onSuccess: () => {
           console.log('Blog posts deleted successfully');
           setSelectedPosts([]);
+          showToast.success('Success', `${count} blog ${count === 1 ? 'post' : 'posts'} deleted successfully`);
         },
         onError: (error) => {
           console.error('Error deleting blog posts:', error);
+          showToast.error('Error', 'Failed to delete blog posts. Please try again.');
+        }
+      });
+    }
+  };
+
+  const bulkPublishPosts = async () => {
+    if (selectedPosts.length === 0) return;
+    
+    const count = selectedPosts.length;
+    const message = count === 1 
+      ? 'Are you sure you want to publish this blog post?' 
+      : `Are you sure you want to publish ${count} blog posts?`;
+    
+    const confirmed = await confirmation.confirm({
+      title: `Publish ${count === 1 ? 'Blog Post' : 'Blog Posts'}`,
+      message,
+      confirmText: 'Publish',
+      cancelText: 'Cancel'
+    });
+
+    if (confirmed) {
+      bulkUpdateStatus({ blogIds: selectedPosts, status: 'published' }, {
+        onSuccess: () => {
+          console.log('Blog posts published successfully');
+          setSelectedPosts([]);
+          showToast.success('Success', `${count} blog ${count === 1 ? 'post' : 'posts'} published successfully`);
+        },
+        onError: (error) => {
+          console.error('Error publishing blog posts:', error);
+          showToast.error('Error', 'Failed to publish blog posts. Please try again.');
+        }
+      });
+    }
+  };
+
+  const bulkDraftPosts = async () => {
+    if (selectedPosts.length === 0) return;
+    
+    const count = selectedPosts.length;
+    const message = count === 1 
+      ? 'Are you sure you want to set this blog post as draft?' 
+      : `Are you sure you want to set ${count} blog posts as draft?`;
+    
+    const confirmed = await confirmation.confirm({
+      title: `Set as Draft ${count === 1 ? 'Blog Post' : 'Blog Posts'}`,
+      message,
+      confirmText: 'Set as Draft',
+      cancelText: 'Cancel'
+    });
+
+    if (confirmed) {
+      bulkUpdateStatus({ blogIds: selectedPosts, status: 'draft' }, {
+        onSuccess: () => {
+          console.log('Blog posts set as draft successfully');
+          setSelectedPosts([]);
+          showToast.success('Success', `${count} blog ${count === 1 ? 'post' : 'posts'} set as draft successfully`);
+        },
+        onError: (error) => {
+          console.error('Error setting blog posts as draft:', error);
+          showToast.error('Error', 'Failed to set blog posts as draft. Please try again.');
         }
       });
     }
@@ -290,6 +354,7 @@ export const useBlogLogic = () => {
     refetch,
     isDeleting,
     isBulkDeleting,
+    isUpdatingStatus,
     
     tableColumns,
     statusOptions,
@@ -307,6 +372,8 @@ export const useBlogLogic = () => {
     previewPost,
     deletePost,
     bulkDeletePosts,
+    bulkPublishPosts,
+    bulkDraftPosts,
     clearSelectedPosts,
     addNewPost,
     hasActiveFilters,

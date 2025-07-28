@@ -32,6 +32,7 @@ const AllBlogPosts: React.FC<AllBlogPostsProps> = ({ className = "" }) => {
     refetch,
     isDeleting,
     isBulkDeleting,
+    isUpdatingStatus,
     
     tableColumns,
     statusOptions,
@@ -49,6 +50,8 @@ const AllBlogPosts: React.FC<AllBlogPostsProps> = ({ className = "" }) => {
     previewPost,
     deletePost,
     bulkDeletePosts,
+    bulkPublishPosts,
+    bulkDraftPosts,
     clearSelectedPosts,
     hasActiveFilters,
     clearIndividualFilter,
@@ -106,8 +109,11 @@ const AllBlogPosts: React.FC<AllBlogPostsProps> = ({ className = "" }) => {
         hasActiveFilters={hasActiveFilters}
         selectedPosts={selectedPosts}
         onBulkDelete={bulkDeletePosts}
+        onBulkPublish={bulkPublishPosts}
+        onBulkDraft={bulkDraftPosts}
         onClearSelection={clearSelectedPosts}
         isBulkDeleting={isBulkDeleting}
+        isUpdatingStatus={isUpdatingStatus}
         filterDropdownContent={
           <BlogFilters
             filters={filters}
@@ -144,8 +150,12 @@ const AllBlogPosts: React.FC<AllBlogPostsProps> = ({ className = "" }) => {
       />
       
       <FullScreenSpinner 
-        isVisible={isDeleting || isBulkDeleting} 
-        message={isBulkDeleting ? 'Deleting posts...' : 'Deleting post...'} 
+        isVisible={isDeleting || isBulkDeleting || isUpdatingStatus} 
+        message={
+          isUpdatingStatus ? 'Updating post status...' :
+          isBulkDeleting ? 'Deleting posts...' : 
+          'Deleting post...'
+        } 
       />
 
       <ConfirmationDialog
@@ -157,7 +167,7 @@ const AllBlogPosts: React.FC<AllBlogPostsProps> = ({ className = "" }) => {
         message={confirmation.config?.message || ''}
         confirmText={confirmation.config?.confirmText}
         cancelText={confirmation.config?.cancelText}
-        isLoading={isDeleting || isBulkDeleting}
+        isLoading={isDeleting || isBulkDeleting || isUpdatingStatus}
       />
     </div>
   );

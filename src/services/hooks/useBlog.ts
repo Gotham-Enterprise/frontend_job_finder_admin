@@ -80,12 +80,10 @@ export const useUpdateBlogPost = () => {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: any }) => blogApi.updateBlogPost(id, data),
     onSuccess: (response, variables) => {
-      // Invalidate both the list and individual post details
       queryClient.invalidateQueries({ queryKey: blogQueryKeys.lists() });
       queryClient.invalidateQueries({ queryKey: blogQueryKeys.details() });
-      // Also invalidate the specific post that was updated
       queryClient.invalidateQueries({ queryKey: blogQueryKeys.detail(variables.id) });
-      console.log('Blog post updated successfully, cache invalidated');
+     
     },
     onError: (error) => {
       console.error('Failed to update blog post:', error);
@@ -99,11 +97,25 @@ export const useCreateBlogPost = () => {
   return useMutation({
     mutationFn: (data: any) => blogApi.createBlog(data),
     onSuccess: () => {
-      // Invalidate the list to show the new post
       queryClient.invalidateQueries({ queryKey: blogQueryKeys.lists() });
     },
     onError: (error) => {
       console.error('Failed to create blog post:', error);
+    },
+  });
+};
+
+export const useBulkUpdateBlogStatus = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: ({ blogIds, status }: { blogIds: string[]; status: 'published' | 'draft' }) => 
+      blogApi.updateBlogStatus(blogIds, status),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: blogQueryKeys.lists() });
+    },
+    onError: (error) => {
+      console.error('Failed to update blog status:', error);
     },
   });
 };

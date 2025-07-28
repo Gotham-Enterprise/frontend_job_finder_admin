@@ -21,8 +21,11 @@ const BlogHeader: React.FC<BlogHeaderProps> = ({
   filterDropdownContent,
   selectedPosts,
   onBulkDelete,
+  onBulkPublish,
+  onBulkDraft,
   onClearSelection,
   isBulkDeleting,
+  isUpdatingStatus,
 }) => {
   const filterButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -79,8 +82,11 @@ const BlogHeader: React.FC<BlogHeaderProps> = ({
             selectedItems={selectedPosts}
             itemType="posts"
             onBulkDelete={onBulkDelete}
+            onBulkPublish={onBulkPublish}
+            onBulkDraft={onBulkDraft}
             onClearSelection={onClearSelection}
             isDeleting={isBulkDeleting}
+            isUpdatingStatus={isUpdatingStatus}
           />
         
         </div>

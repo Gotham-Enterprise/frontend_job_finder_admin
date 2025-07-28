@@ -18,8 +18,11 @@ export interface BlogHeaderProps {
   filterDropdownContent?: React.ReactNode;
   selectedPosts: string[];
   onBulkDelete: () => void;
+  onBulkPublish?: () => void;
+  onBulkDraft?: () => void;
   onClearSelection: () => void;
   isBulkDeleting: boolean;
+  isUpdatingStatus?: boolean;
 }
 
 export interface BlogFiltersProps {

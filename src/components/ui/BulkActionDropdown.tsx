@@ -7,7 +7,10 @@ interface BulkActionDropdownProps {
   itemType: string;
   onBulkDelete: () => void;
   onClearSelection: () => void;
+  onBulkPublish?: () => void;
+  onBulkDraft?: () => void;
   isDeleting?: boolean;
+  isUpdatingStatus?: boolean;
   className?: string;
 }
 
@@ -16,7 +19,10 @@ const BulkActionDropdown: React.FC<BulkActionDropdownProps> = ({
   itemType,
   onBulkDelete,
   onClearSelection,
+  onBulkPublish,
+  onBulkDraft,
   isDeleting = false,
+  isUpdatingStatus = false,
   className = "",
 }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -36,7 +42,7 @@ const BulkActionDropdown: React.FC<BulkActionDropdownProps> = ({
   }, []);
 
   const hasSelectedItems = selectedItems.length > 0;
-  const buttonDisabled = !hasSelectedItems || isDeleting;
+  const buttonDisabled = !hasSelectedItems || isDeleting || isUpdatingStatus;
 
   return (
     <div className={`relative inline-block text-left ${className}`} ref={dropdownRef}>
@@ -52,7 +58,7 @@ const BulkActionDropdown: React.FC<BulkActionDropdownProps> = ({
             : "bg-gray-300 text-gray-500 cursor-not-allowed"
         }`}
       >
-        {isDeleting ? 'Processing...' : 'Bulk Actions'}
+        {isDeleting ? 'Deleting...' : isUpdatingStatus ? 'Updating...' : 'Bulk Actions'}
       </Button>
 
       {isOpen && hasSelectedItems && (
@@ -61,6 +67,48 @@ const BulkActionDropdown: React.FC<BulkActionDropdownProps> = ({
           style={{ boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)' }}
         >
           <div className="py-2">
+            {/* Status Update Options - only show for posts */}
+            {itemType === 'posts' && onBulkPublish && (
+              <button
+                onClick={() => {
+                  onBulkPublish();
+                  setIsOpen(false);
+                }}
+                disabled={isUpdatingStatus}
+                className="flex w-full items-start px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/20 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-left"
+              >
+                <div className="flex-1">
+                  <div className="font-medium text-gray-900 dark:text-white">Publish</div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                    Set selected {itemType} as published
+                  </div>
+                </div>
+              </button>
+            )}
+            
+            {itemType === 'posts' && onBulkDraft && (
+              <button
+                onClick={() => {
+                  onBulkDraft();
+                  setIsOpen(false);
+                }}
+                disabled={isUpdatingStatus}
+                className="flex w-full items-start px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/20 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-left"
+              >
+                <div className="flex-1">
+                  <div className="font-medium text-gray-900 dark:text-white">Draft</div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                    Set selected {itemType} as draft
+                  </div>
+                </div>
+              </button>
+            )}
+            
+            {/* Add separator if status options are shown */}
+            {itemType === 'posts' && (onBulkPublish || onBulkDraft) && (
+              <div className="border-t border-gray-100 dark:border-gray-700 mx-2"></div>
+            )}
+            
             <button
               onClick={() => {
                 onBulkDelete();
