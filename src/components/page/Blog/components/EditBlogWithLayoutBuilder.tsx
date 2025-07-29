@@ -9,6 +9,7 @@ import FullScreenSpinner from "@/components/ui/FullScreenSpinner";
 import CustomDatePicker from "@/components/form/CustomDatePicker";
 import VisualLayoutBuilder from "./VisualLayoutBuilder/VisualLayoutBuilder";
 import FloatingElementsPanel from "./VisualLayoutBuilder/components/FloatingElementsPanel";
+import ImageGalleryModal from "./VisualLayoutBuilder/components/ImageGalleryModal";
 import BlogDropdown from "./BlogDropdown";
 import { blogApi } from "@/services/api/blog";
 import { tagApi } from '@/services/api/tag';
@@ -80,6 +81,7 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
   
 
   const titleModal = useModal();
+  const imageGalleryModal = useModal();
   const [tempTitle, setTempTitle] = useState('');
   const [tempSeoData, setTempSeoData] = useState({
     title: '',
@@ -113,7 +115,8 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
     seoTitle: '',
     seoDescription: '',
     allowComments: true,
-    allowPings: true
+    allowPings: true,
+    featuredImage: ''
   });
   const [currentLayout, setCurrentLayout] = useState<BlogLayout>(createEmptyBlogLayout());
 
@@ -147,7 +150,8 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
           seoTitle: blogResponse.metadata?.seo?.title || blogResponse.seo?.title || blogResponse.title || '',
           seoDescription: blogResponse.metadata?.seo?.description || blogResponse.seo?.description || blogResponse.excerpt || '',
           allowComments: true,
-          allowPings: true
+          allowPings: true,
+          featuredImage: blogResponse.metadata?.featuredImage || blogResponse.featuredImage || ''
         });
         
         if (response.content) {
@@ -336,6 +340,22 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
     titleModal.closeModal();
   }, [metadata.title, seoData, titleModal]);
 
+  const handleFeaturedImageSelect = useCallback((imageUrl: string) => {
+    updateMetadataField('featuredImage', imageUrl);
+    imageGalleryModal.closeModal();
+  }, [updateMetadataField, imageGalleryModal]);
+
+  const handleSetFeaturedImage = useCallback((imageUrl: string) => {
+    console.log('Setting featured image:', imageUrl);
+    updateMetadataField('featuredImage', imageUrl);
+    console.log('Featured image updated, closing modal');
+    imageGalleryModal.closeModal();
+  }, [updateMetadataField, imageGalleryModal]);
+
+  const handleRemoveFeaturedImage = useCallback(() => {
+    updateMetadataField('featuredImage', '');
+  }, [updateMetadataField]);
+
   const layoutUpdate = useCallback((newLayout: LayoutBlock[]) => {
     setCurrentLayout(prev => ({
       ...prev,
@@ -383,11 +403,12 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
           time: Date.now()
         },
         metadata: {
-          status: metadata.status, // Use the actual status from metadata instead of hardcoded 'published'
+          status: metadata.status, 
           visibility: metadata.visibility,
           publishDate: metadata.publishDate,
           categories: metadata.categories ? [metadata.categories] : [],
           tags: metadata.tags,
+          featuredImage: metadata.featuredImage,
           seo: {
             title: metadata.seoTitle || metadata.title,
             description: metadata.seoDescription || metadata.excerpt,
@@ -743,6 +764,41 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
                     )}
                   </div>
                 </div>
+
+                {/* Featured Image Field */}
+                <div className="flex items-center space-x-2">
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                    Featured Image:
+                  </label>
+                  <div className="flex items-center space-x-2">
+                    {metadata.featuredImage ? (
+                      <div className="flex items-center space-x-2">
+                        <div className="relative">
+                          <img 
+                            src={metadata.featuredImage} 
+                            alt="Featured" 
+                            className="w-8 h-8 object-cover rounded border border-gray-300"
+                          />
+                        </div>
+                        <button
+                          onClick={handleRemoveFeaturedImage}
+                          className="text-red-600 hover:text-red-700 text-sm"
+                          title="Remove featured image"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={imageGalleryModal.openModal}
+                        className="px-3 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:border-blue-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none text-gray-700 dark:text-gray-300 transition-colors"
+                      >
+                        Select Image
+                      </button>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -777,6 +833,8 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
                     onLayoutChange={layoutUpdate}
                     blogData={metadata}
                     onAddBlockRef={handleAddBlockRef}
+                    onSetFeaturedImage={handleSetFeaturedImage}
+                    currentFeaturedImage={metadata.featuredImage}
                   />
                 </div>
 
@@ -931,6 +989,15 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
           </div>
         </div>
       </Modal>
+
+      {/* Image Gallery Modal */}
+      <ImageGalleryModal
+        isOpen={imageGalleryModal.isOpen}
+        onClose={imageGalleryModal.closeModal}
+        onImageSelect={handleFeaturedImageSelect}
+        onSetFeaturedImage={handleSetFeaturedImage}
+        currentFeaturedImage={metadata.featuredImage || ''}
+      />
 
       {/* Show FullScreenSpinner when updating */}
       <FullScreenSpinner 

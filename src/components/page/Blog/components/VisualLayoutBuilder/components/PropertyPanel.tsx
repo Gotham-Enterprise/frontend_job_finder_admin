@@ -14,6 +14,8 @@ interface PropertyPanelProps {
   onDuplicate?: (blockId: string) => void;
   activeTab: 'style' | 'settings';
   onTabChange: (tab: 'style' | 'settings') => void;
+  onSetFeaturedImage?: (imageUrl: string) => void;
+  currentFeaturedImage?: string;
 }
 
 const blockTypeConfig = {
@@ -30,7 +32,9 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({
   onStyleUpdate,
   onDuplicate,
   activeTab,
-  onTabChange
+  onTabChange,
+  onSetFeaturedImage,
+  currentFeaturedImage
 }) => {
   const [activeFloatingPanel, setActiveFloatingPanel] = useState<string | null>(null);
   const [floatingPanelPosition, setFloatingPanelPosition] = useState({ x: 0, y: 0 });
@@ -145,6 +149,8 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({
                   block={block} 
                   onContentUpdate={updateContent}
                   onStyleUpdate={updateStyle}
+                  onSetFeaturedImage={onSetFeaturedImage}
+                  currentFeaturedImage={currentFeaturedImage}
                 />
               </div>
             ) : (
@@ -163,6 +169,8 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({
                       block={block} 
                       onContentUpdate={updateContent}
                       onStyleUpdate={updateStyle}
+                      onSetFeaturedImage={onSetFeaturedImage}
+                      currentFeaturedImage={currentFeaturedImage}
                     />
                   </div>
                 )}

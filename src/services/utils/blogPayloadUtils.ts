@@ -6,6 +6,7 @@ export interface BlogCreatePayload {
   slug: string;
   excerpt: string;
   content: any;
+  featuredImage?: string;
   metadata: {
     status: string;
     publishDate: string;
@@ -54,6 +55,7 @@ export interface BlogMetadata {
   publishDate: string;
   categories: string;
   tags: string[];
+  featuredImage?: string;
   seoTitle: string;
   seoDescription: string;
   allowComments: boolean;
@@ -187,6 +189,7 @@ export function transformBlogDataForAPI(
     slug: metadata.permalink,
     excerpt: metadata.excerpt,
     content,
+    featuredImage: metadata.featuredImage || '',
     metadata: {
       status: metadata.status,
       publishDate: metadata.publishDate,

@@ -16,9 +16,17 @@ interface ContentControlsProps {
   block: LayoutBlock;
   onContentUpdate: (field: string, value: any) => void;
   onStyleUpdate?: (field: string, value: any) => void;
+  onSetFeaturedImage?: (imageUrl: string) => void;
+  currentFeaturedImage?: string;
 }
 
-const ContentControls: React.FC<ContentControlsProps> = memo(({ block, onContentUpdate, onStyleUpdate }) => {
+const ContentControls: React.FC<ContentControlsProps> = memo(({ 
+  block, 
+  onContentUpdate, 
+  onStyleUpdate,
+  onSetFeaturedImage,
+  currentFeaturedImage 
+}) => {
   const [showLinkModal, setShowLinkModal] = useState(false);
   const [selectedText, setSelectedText] = useState('');
   const [linkUrl, setLinkUrl] = useState('');
@@ -26,23 +34,21 @@ const ContentControls: React.FC<ContentControlsProps> = memo(({ block, onContent
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Debounced state for quote text to prevent rapid updates
+ 
   const [localQuoteText, setLocalQuoteText] = useState((block.content as any)?.text || '');
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Update local state when block content changes from outside
   useEffect(() => {
     setLocalQuoteText((block.content as any)?.text || '');
   }, [block.content?.text]);
 
-  // Debounced update function
   const debouncedUpdateQuoteText = useCallback((value: string) => {
     if (debounceTimeoutRef.current) {
       clearTimeout(debounceTimeoutRef.current);
     }
     debounceTimeoutRef.current = setTimeout(() => {
       onContentUpdate('text', value);
-    }, 300); // 300ms debounce
+    }, 300); 
   }, [onContentUpdate]);
 
   const listItems = (block.content as any)?.items || [];
@@ -297,6 +303,8 @@ const ContentControls: React.FC<ContentControlsProps> = memo(({ block, onContent
             const currentBorder = block.styles?.border || { width: 0, style: 'solid', color: '#000000', radius: 1 };
             onStyleUpdate?.('border', { ...currentBorder, radius: value });
           }}
+          onSetFeaturedImage={onSetFeaturedImage}
+          currentFeaturedImage={currentFeaturedImage}
         />
       </div>
     ),

@@ -32,6 +32,8 @@ interface VisualLayoutBuilderProps {
   initialLayout?: LayoutBlock[];
   blogData?: any;
   onAddBlockRef?: (addBlockFn: (type: BlockType) => void) => void;
+  onSetFeaturedImage?: (imageUrl: string) => void;
+  currentFeaturedImage?: string;
 }
 
 const demoBlocks: LayoutBlock[] = [
@@ -92,6 +94,8 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
   initialLayout,
   blogData = {},
   onAddBlockRef,
+  onSetFeaturedImage,
+  currentFeaturedImage,
 }) => {
   const [blocks, setBlocks] = useState<LayoutBlock[]>(() => {
     const result = Array.isArray(initialLayout) ? initialLayout : [];
@@ -355,6 +359,8 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
         onDuplicate={duplicateBlock}
         activeTab={propertyPanelActiveTab}
         onTabChange={setPropertyPanelActiveTab}
+        onSetFeaturedImage={onSetFeaturedImage}
+        currentFeaturedImage={currentFeaturedImage}
       />
     </div>
   );

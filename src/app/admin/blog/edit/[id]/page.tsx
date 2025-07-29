@@ -2,13 +2,15 @@ import React from 'react';
 import EditBlogWithLayoutBuilder from '@/components/page/Blog/components/EditBlogWithLayoutBuilder';
 
 interface EditBlogPageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
-export default function EditBlog({ params }: EditBlogPageProps) {
+export default async function EditBlog({ params }: EditBlogPageProps) {
+  const { id } = await params;
+  
   return (
-    <EditBlogWithLayoutBuilder blogId={params.id} />
+    <EditBlogWithLayoutBuilder blogId={id} />
   );
 }

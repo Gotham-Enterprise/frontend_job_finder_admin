@@ -10,6 +10,8 @@ interface ImageGalleryModalProps {
   isOpen: boolean;
   onClose: () => void;
   onImageSelect: (imageUrl: string, file?: File) => void;
+  onSetFeaturedImage?: (imageUrl: string) => void;
+  currentFeaturedImage?: string;
 }
 
 interface UploadPreview {
@@ -21,7 +23,9 @@ interface UploadPreview {
 const ImageGalleryModal: React.FC<ImageGalleryModalProps> = memo(({ 
   isOpen, 
   onClose, 
-  onImageSelect 
+  onImageSelect,
+  onSetFeaturedImage,
+  currentFeaturedImage
 }) => {
   const { images, loading, error, uploadMedia, deleteMediaItem, deleteMultipleMedia, refreshMedia } = useMedia({
     initialFilters: { type: 'IMAGE', limit: 50 },
@@ -136,6 +140,12 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = memo(({
       });
     }
   }, [selectedGalleryImages, deleteMultipleMedia, confirmation]);
+
+  const setFeaturedImage = useCallback((image: MediaItem) => {
+    if (onSetFeaturedImage) {
+      onSetFeaturedImage(image.url);
+    }
+  }, [onSetFeaturedImage]);
 
   const closeModal = useCallback(() => {
     onClose();
@@ -507,13 +517,16 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = memo(({
                       const isMultiSelected = selectedGalleryImages.has(image.id);
                       const isSelected = isMultiSelectMode ? isMultiSelected : isSingleSelected;
                       const isDeleting = deletingItems.has(image.id);
+                      const isFeaturedImage = currentFeaturedImage === image.url;
                       return (
-                        <div
+                          <div
                           key={image.id}
                           onClick={() => !isDeleting && toggleImageSelection(image)}
                           className={`relative aspect-square cursor-pointer rounded-lg overflow-hidden border-2 transition-all duration-200 ${
                             isSelected
                               ? 'border-purple-500 ring-2 ring-purple-200 dark:ring-purple-800'
+                              : isFeaturedImage
+                              ? 'border-blue-500 ring-2 ring-blue-200 dark:ring-blue-800'
                               : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'
                           } ${isDeleting ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
@@ -526,7 +539,14 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = memo(({
                             loading="lazy"
                           />
                           
-                          <div className="absolute top-2 left-2 z-10">
+                          {/* Featured Image Badge */}
+                          {isFeaturedImage && (
+                            <div className="absolute top-2 left-1/2 transform -translate-x-1/2 z-20">
+                              <div className="bg-blue-500 text-white text-xs px-2 py-1 rounded-full font-medium shadow-lg">
+                                Featured
+                              </div>
+                            </div>
+                          )}                          <div className="absolute top-2 left-2 z-10">
                             <input
                               type={isMultiSelectMode ? "checkbox" : "radio"}
                               name={isMultiSelectMode ? undefined : "gallery-selection"}
@@ -542,25 +562,49 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = memo(({
                           </div>
 
                           {!isMultiSelectMode && (
-                            <div className="absolute top-2 right-2 z-10">
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  deleteImage(image);
-                                }}
-                                disabled={isDeleting}
-                                className="w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center transition-colors"
-                                title="Delete image"
-                              >
-                                {isDeleting ? (
-                                  <div className="animate-spin rounded-full h-3 w-3 border border-white border-t-transparent"></div>
-                                ) : (
-                                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                  </svg>
-                                )}
-                              </button>
-                            </div>
+                            <>
+                              {/* Featured Image Button - Always show for debugging */}
+                              <div className="absolute bottom-2 left-2 z-30">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (onSetFeaturedImage) {
+                                      setFeaturedImage(image);
+                                    }
+                                  }}
+                                  disabled={isDeleting || isFeaturedImage}
+                                  className={`px-4 py-2 text-sm font-bold rounded-lg shadow-xl border-2 transition-all duration-200 ${
+                                    isFeaturedImage
+                                      ? 'bg-blue-600 text-white border-blue-700 cursor-default'
+                                      : 'bg-white hover:bg-blue-50 text-blue-700 border-blue-300 hover:border-blue-500 hover:shadow-2xl transform hover:scale-105'
+                                  }`}
+                                  title={isFeaturedImage ? 'Currently featured image' : 'Set as featured image'}
+                                >
+                                  {isFeaturedImage ? '★ Featured' : '★ Feature'}
+                                </button>
+                              </div>
+                              
+                              {/* Delete Button */}
+                              <div className="absolute top-2 right-2 z-10">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    deleteImage(image);
+                                  }}
+                                  disabled={isDeleting}
+                                  className="w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center transition-colors"
+                                  title="Delete image"
+                                >
+                                  {isDeleting ? (
+                                    <div className="animate-spin rounded-full h-3 w-3 border border-white border-t-transparent"></div>
+                                  ) : (
+                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                  )}
+                                </button>
+                              </div>
+                            </>
                           )}
 
                           {isSelected && (

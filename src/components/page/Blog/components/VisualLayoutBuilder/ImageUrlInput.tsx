@@ -21,6 +21,8 @@ interface ImageUrlInputProps {
   onHeightUnitChange?: (unit: 'px' | '%') => void;
   onImageAlignChange?: (align: 'left' | 'center' | 'right') => void;
   onBorderRadiusChange?: (radius: number) => void;
+  onSetFeaturedImage?: (imageUrl: string) => void;
+  currentFeaturedImage?: string;
 }
 
 const ImageUrlInput: React.FC<ImageUrlInputProps> = ({
@@ -40,6 +42,8 @@ const ImageUrlInput: React.FC<ImageUrlInputProps> = ({
   onHeightUnitChange,
   onImageAlignChange,
   onBorderRadiusChange,
+  onSetFeaturedImage,
+  currentFeaturedImage = '',
 }) => {
   const [localImageUrl, setLocalImageUrl] = useState(imageUrl);
   const [localAltText, setLocalAltText] = useState(altText);
@@ -329,6 +333,8 @@ const ImageUrlInput: React.FC<ImageUrlInputProps> = ({
         isOpen={galleryModal.isOpen}
         onClose={galleryModal.closeModal}
         onImageSelect={selectImageFromGallery}
+        onSetFeaturedImage={onSetFeaturedImage}
+        currentFeaturedImage={currentFeaturedImage}
       />
     </div>
   );

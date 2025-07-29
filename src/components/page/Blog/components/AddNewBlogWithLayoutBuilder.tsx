@@ -9,6 +9,7 @@ import CustomDatePicker from "@/components/form/CustomDatePicker";
 import FullScreenSpinner from "@/components/ui/FullScreenSpinner";
 import VisualLayoutBuilder from "./VisualLayoutBuilder/VisualLayoutBuilder";
 import FloatingElementsPanel from "./VisualLayoutBuilder/components/FloatingElementsPanel";
+import ImageGalleryModal from "./VisualLayoutBuilder/components/ImageGalleryModal";
 
 import { authUtils } from '@/services/utils/authUtils';
 import { blogApi } from '@/services/api/blog';
@@ -47,6 +48,7 @@ interface BlogMetadata {
   publishDate: string;
   categories: string;
   tags: string[];
+  featuredImage?: string;
   seoTitle: string;
   seoDescription: string;
   allowComments: boolean;
@@ -121,6 +123,7 @@ export default function AddNewBlogWithLayoutBuilder() {
     publishDate: new Date().toISOString(),
     categories: '',
     tags: [],
+    featuredImage: '',
     seoTitle: '',
     seoDescription: '',
     allowComments: true,
@@ -219,6 +222,7 @@ export default function AddNewBlogWithLayoutBuilder() {
   const [childAddBlock, setChildAddBlock] = useState<((type: BlockType) => void) | null>(null);
 
   const previewModal = useModal();
+  const imageGalleryModal = useModal();
 
   const filteredCategories = useMemo(() => 
     categoryOptions.filter(category =>
@@ -382,6 +386,19 @@ export default function AddNewBlogWithLayoutBuilder() {
    
     console.log('Preview blog functionality');
   }, []);
+
+  const handleFeaturedImageSelect = useCallback((imageUrl: string) => {
+    updateMetadata('featuredImage', imageUrl);
+    imageGalleryModal.closeModal();
+  }, [updateMetadata, imageGalleryModal]);
+
+  const handleSetFeaturedImage = useCallback((imageUrl: string) => {
+    updateMetadata('featuredImage', imageUrl);
+  }, [updateMetadata]);
+
+  const handleRemoveFeaturedImage = useCallback(() => {
+    updateMetadata('featuredImage', '');
+  }, [updateMetadata]);
 
   const canSave = metadata.title.trim().length > 0;
 
@@ -820,6 +837,50 @@ export default function AddNewBlogWithLayoutBuilder() {
                   )}
                 </div>
               </div>
+
+              {/* Featured Image Field */}
+              <div className="flex items-center space-x-2">
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                  Featured Image:
+                </label>
+                <div className="flex items-center space-x-2">
+                  {metadata.featuredImage ? (
+                    <div className="flex items-center space-x-2">
+                      <div className="relative w-12 h-12 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-600">
+                        <img 
+                          src={metadata.featuredImage} 
+                          alt="Featured" 
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <span className="text-sm text-gray-600 dark:text-gray-400 truncate max-w-[150px]">
+                        Featured image selected
+                      </span>
+                      <button
+                        type="button"
+                        onClick={handleRemoveFeaturedImage}
+                        className="text-red-500 hover:text-red-700 p-1"
+                        title="Remove featured image"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={imageGalleryModal.openModal}
+                      className="flex items-center justify-center bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-4 py-2 text-sm rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
+                    >
+                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 002 2z" />
+                      </svg>
+                      Choose Image
+                    </button>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
           <div className="flex items-center space-x-3">
@@ -843,6 +904,8 @@ export default function AddNewBlogWithLayoutBuilder() {
               onSave={saveBlog}
               blogData={metadata}
               onAddBlockRef={handleAddBlockRef}
+              onSetFeaturedImage={handleSetFeaturedImage}
+              currentFeaturedImage={metadata.featuredImage}
             />
             
 
@@ -865,6 +928,15 @@ export default function AddNewBlogWithLayoutBuilder() {
           <div className="text-gray-600">Preview content will be displayed here</div>
         </div>
       </Modal>
+
+      {/* Image Gallery Modal */}
+      <ImageGalleryModal
+        isOpen={imageGalleryModal.isOpen}
+        onClose={imageGalleryModal.closeModal}
+        onImageSelect={handleFeaturedImageSelect}
+        onSetFeaturedImage={handleSetFeaturedImage}
+        currentFeaturedImage={metadata.featuredImage || ''}
+      />
 
       {/* Title & SEO Modal */}
       <Modal
