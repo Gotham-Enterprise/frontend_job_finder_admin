@@ -214,14 +214,31 @@ const VideoUrlInput: React.FC<VideoUrlInputProps> = ({
       <div>
         <div className="flex items-center justify-between mb-2">
           <label className="block text-sm font-medium text-gray-700">Video URL</label>
-          <button
-            type="button"
-            onClick={() => setIsVideoGalleryOpen(true)}
-            className="px-3 py-1.5 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded-lg text-purple-600 transition-colors font-medium text-sm flex items-center gap-2"
-          >
-           
-            Browse Videos
-          </button>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setIsVideoGalleryOpen(true)}
+              className="px-3 py-1.5 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded-lg text-purple-600 transition-colors font-medium text-sm flex items-center gap-2"
+            >
+              Browse Videos
+            </button>
+            {hasVideoUrl && (
+              <button
+                type="button"
+                onClick={() => {
+                  setLocalVideoUrl('');
+                  onVideoUrlChange('');
+                }}
+                className="px-3 py-1.5 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg text-red-600 transition-colors font-medium text-sm flex items-center gap-2"
+                title="Clear video URL"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+               
+              </button>
+            )}
+          </div>
         </div>
         <div className="space-y-2">
           <input
