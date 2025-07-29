@@ -114,7 +114,6 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
   );
 
   useEffect(() => {
-    // Notify parent component when blocks change
     if (onLayoutChange) {
       onLayoutChange(blocks);
     }
@@ -140,7 +139,6 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
   }, []);
 
   useEffect(() => {
-    // Pass the addBlock function to parent component
     if (onAddBlockRef) {
       onAddBlockRef(addBlock);
     }
@@ -301,7 +299,7 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
               <SortableContext items={Array.isArray(blocks) ? blocks.map(b => b.id) : []} strategy={verticalListSortingStrategy}>
                 <div className={`mx-auto transition-all duration-300 ${getContainerMaxWidth()}`}>
                   <div 
-                    className="bg-white p-12 min-h-[600px]" // Increased padding from p-8 to p-12
+                    className="bg-white p-12 min-h-[600px]" 
                     onClick={(e) => {
                       if (e.target === e.currentTarget) {
                         setSelectedBlockId(null);

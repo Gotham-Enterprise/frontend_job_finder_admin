@@ -132,7 +132,7 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
       if (response) {
         setBlogData(response);
         const blogResponse = response as any;
-        
+              
         setMetadata({
           title: blogResponse.title || '',
           slug: blogResponse.slug || '',
@@ -151,9 +151,10 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
           seoDescription: blogResponse.metadata?.seo?.description || blogResponse.seo?.description || blogResponse.excerpt || '',
           allowComments: true,
           allowPings: true,
-          featuredImage: blogResponse.metadata?.featuredImage || blogResponse.featuredImage || ''
+          featuredImage: blogResponse.featuredImage || ''
         });
         
+ 
         if (response.content) {
           try {
            
@@ -402,13 +403,13 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
           version: "1.0.0",
           time: Date.now()
         },
+        featuredImage: metadata.featuredImage || '',
         metadata: {
           status: metadata.status, 
           visibility: metadata.visibility,
           publishDate: metadata.publishDate,
           categories: metadata.categories ? [metadata.categories] : [],
           tags: metadata.tags,
-          featuredImage: metadata.featuredImage,
           seo: {
             title: metadata.seoTitle || metadata.title,
             description: metadata.seoDescription || metadata.excerpt,
@@ -422,17 +423,11 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
           }
         }
       };
-      
-      // Debug: Log the status being sent
-      console.log('Saving blog with status:', metadata.status);
-      console.log('Full payload:', payload);
-      
+
       updateBlogPost(
         { id, data: payload },
         {
           onSuccess: () => {
-            console.log('Blog updated successfully');
-            // Navigate back to blog list after successful update
             router.push('/admin/blog');
           },
           onError: (error) => {
@@ -580,7 +575,6 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
                             value={metadata.publishDate}
                             onChange={(selectedDate) => {
                               updateMetadataField('publishDate', selectedDate);
-                              // Close dropdown after a short delay to allow the date to update
                               setTimeout(() => {
                                 setDateDropdownOpen(false);
                               }, 100);

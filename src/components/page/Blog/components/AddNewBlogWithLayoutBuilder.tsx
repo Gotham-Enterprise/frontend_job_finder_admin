@@ -143,7 +143,6 @@ export default function AddNewBlogWithLayoutBuilder() {
     keywords: ''
   });
 
-  // Sync seoData with metadata changes
   useEffect(() => {
     setSeoData(prev => ({
       ...prev,
@@ -152,7 +151,6 @@ export default function AddNewBlogWithLayoutBuilder() {
     }));
   }, [metadata.seoTitle, metadata.seoDescription]);
 
-  // Fetch categories on component mount
   useEffect(() => {
     const fetchCategories = async () => {
       setCategoriesLoading(true);
@@ -160,7 +158,6 @@ export default function AddNewBlogWithLayoutBuilder() {
         const response = await blogApi.getCategoriesForDropdown();
         
         if (response.success && response.data) {
-          // Transform API categories to CategoryOption format
           const transformedCategories: CategoryOption[] = response.data.map((category: CategoryWithSubCategories) => ({
             value: category.id,
             text: category.name,
@@ -171,7 +168,6 @@ export default function AddNewBlogWithLayoutBuilder() {
         }
       } catch (error) {
         console.error('Error fetching categories:', error);
-        // Fallback to empty array if fetch fails
         setCategoryOptions([]);
       } finally {
         setCategoriesLoading(false);
@@ -181,7 +177,6 @@ export default function AddNewBlogWithLayoutBuilder() {
     fetchCategories();
   }, []);
 
-  // Fetch tags on component mount
   useEffect(() => {
     const fetchTags = async () => {
       setTagsLoading(true);
@@ -189,7 +184,7 @@ export default function AddNewBlogWithLayoutBuilder() {
         const response = await tagApi.getTagsForDropdown();
         
         if (response.success && response.data) {
-          // Transform API tags to TagOption format
+   
           const transformedTags: TagOption[] = response.data.map((tag) => ({
             value: tag.id,
             text: tag.name,
@@ -200,7 +195,7 @@ export default function AddNewBlogWithLayoutBuilder() {
         }
       } catch (error) {
         console.error('Error fetching tags:', error);
-        // Fallback to empty array if fetch fails
+     
         setTagOptions([]);
       } finally {
         setTagsLoading(false);
@@ -301,7 +296,6 @@ export default function AddNewBlogWithLayoutBuilder() {
 
       createBlogPost(publishPayload, {
         onSuccess: () => {
-          // Navigate back to blog list after successful creation
           router.push('/admin/blog');
         },
         onError: (error) => {
@@ -454,9 +448,9 @@ export default function AddNewBlogWithLayoutBuilder() {
 
   return (
     <>
-      {/* Full-screen overlay that covers everything including the admin header */}
+
       <div className="fixed inset-0 z-50 bg-gray-50 dark:bg-gray-900">
-        {/* Custom header for blog creation */}
+     
         <div className="h-16 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between px-6">
           <div className="flex items-center space-x-4">
           <Button
@@ -495,7 +489,7 @@ export default function AddNewBlogWithLayoutBuilder() {
                 </button>
               </div>
               
-              {/* Status Field */}
+             
               <div className="flex items-center space-x-2">
                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">
                   Status:
@@ -547,8 +541,6 @@ export default function AddNewBlogWithLayoutBuilder() {
                   )}
                 </div>
               </div>
-
-              {/* Date Posted Field */}
               <div className="flex items-center space-x-2">
                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">
                   Date Posted:
@@ -584,7 +576,7 @@ export default function AddNewBlogWithLayoutBuilder() {
                             value={metadata.publishDate}
                             onChange={(selectedDate) => {
                               updateMetadata('publishDate', selectedDate);
-                              // Close dropdown after a short delay to allow the date to update
+                           
                               setTimeout(() => {
                                 setDateDropdownOpen(false);
                               }, 100);
@@ -1069,8 +1061,6 @@ export default function AddNewBlogWithLayoutBuilder() {
           </div>
         </div>
       </Modal>
-
-      {/* Show FullScreenSpinner when creating */}
       <FullScreenSpinner 
         isVisible={isCreating} 
         message="Publishing blog post..." 

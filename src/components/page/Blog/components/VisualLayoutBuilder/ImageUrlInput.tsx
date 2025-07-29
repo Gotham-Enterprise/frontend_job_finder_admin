@@ -210,7 +210,7 @@ const ImageUrlInput: React.FC<ImageUrlInputProps> = ({
               onChange={(e) => {
                 const inputValue = e.target.value;
                 if (inputValue === '') {
-                  // Allow empty input temporarily for better UX
+                 
                   return;
                 } else {
                   const value = parseInt(inputValue);
@@ -222,17 +222,17 @@ const ImageUrlInput: React.FC<ImageUrlInputProps> = ({
               onBlur={(e) => {
                 const inputValue = e.target.value;
                 if (inputValue === '' || inputValue === null || inputValue === undefined) {
-                  // Set default when user leaves empty field
+                 
                   onHeightChange?.(heightUnit === '%' ? 100 : 400);
                 }
               }}
               onKeyDown={(e) => {
-                // Allow manual typing by preventing default arrow behavior if user is typing
+            
                 if (e.key === 'Backspace' || e.key === 'Delete' || 
                     (e.key >= '0' && e.key <= '9') || 
                     e.key === 'ArrowLeft' || e.key === 'ArrowRight' ||
                     e.key === 'Tab' || e.key === 'Enter') {
-                  // Allow these keys
+                
                   return;
                 }
               }}

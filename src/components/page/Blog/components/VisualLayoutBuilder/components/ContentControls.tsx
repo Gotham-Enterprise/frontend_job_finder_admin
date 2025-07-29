@@ -494,15 +494,12 @@ const ContentControls: React.FC<ContentControlsProps> = memo(({
   const renderer = CONTENT_RENDERERS[block.type as keyof typeof CONTENT_RENDERERS] || CONTENT_RENDERERS.default;
   
   return renderer();
-}, (prevProps, nextProps) => {
-  // Only re-render if the block content or type has actually changed
-  return (
+}, (prevProps, nextProps) => (
     prevProps.block.id === nextProps.block.id &&
     prevProps.block.type === nextProps.block.type &&
     JSON.stringify(prevProps.block.content) === JSON.stringify(nextProps.block.content) &&
     JSON.stringify(prevProps.block.styles) === JSON.stringify(nextProps.block.styles)
-  );
-});
+  ));
 
 ContentControls.displayName = 'ContentControls';
 
