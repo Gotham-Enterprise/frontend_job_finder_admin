@@ -5,7 +5,7 @@ import { useArchivedBlogLogic } from '@/services/hooks/useArchivedBlogLogic';
 import ArchiveHeader from './ArchiveHeader';
 import ArchiveFilters from './ArchiveFilters';
 import ArchiveTable from './ArchiveTable';
-import PaginationComponent from '../../../../tables/Pagination';
+import ArchiveTablePagination from './ArchiveTablePagination';
 import ConfirmationDialog from '../../../../ui/ConfirmationDialog';
 
 export default function ArchiveBlog() {
@@ -110,15 +110,13 @@ export default function ArchiveBlog() {
         isRestoring={isRestoring}
       />
 
-      {data?.metaData && data.metaData.totalPages > 1 && (
-        <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-800">
-          <PaginationComponent
-            currentPage={filters.page || 1}
-            totalPages={data.metaData.totalPages}
-            onPageChange={initPageChange}
-          />
-        </div>
-      )}
+      <ArchiveTablePagination
+        data={data}
+        filters={filters}
+        onPageChange={initPageChange}
+        itemsPerPageOptions={itemsPerPageOptions}
+        onFilterChange={filterChange}
+      />
 
       <ConfirmationDialog
         isOpen={confirmation.isOpen}
