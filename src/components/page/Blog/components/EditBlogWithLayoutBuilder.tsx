@@ -983,8 +983,6 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
           </div>
         </div>
       </Modal>
-
-      {/* Image Gallery Modal */}
       <ImageGalleryModal
         isOpen={imageGalleryModal.isOpen}
         onClose={imageGalleryModal.closeModal}
@@ -992,8 +990,6 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
         onSetFeaturedImage={handleSetFeaturedImage}
         currentFeaturedImage={metadata.featuredImage || ''}
       />
-
-      {/* Show FullScreenSpinner when updating */}
       <FullScreenSpinner 
         isVisible={isUpdating} 
         message="Updating blog post..." 

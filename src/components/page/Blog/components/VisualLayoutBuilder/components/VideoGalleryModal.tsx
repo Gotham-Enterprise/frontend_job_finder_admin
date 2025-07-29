@@ -48,7 +48,6 @@ const VideoGalleryModal: React.FC<VideoGalleryModalProps> = memo(({
   const [activeTab, setActiveTab] = useState<'gallery' | 'upload'>('gallery');
   const [uploadPreviews, setUploadPreviews] = useState<UploadPreview[]>([]);
   const [isDragOver, setIsDragOver] = useState(false);
-  const [selectedUploadedFiles, setSelectedUploadedFiles] = useState<Set<File>>(new Set());
   const [uploadingFiles, setUploadingFiles] = useState<Set<string>>(new Set());
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [deletingItems, setDeletingItems] = useState<Set<string>>(new Set());
@@ -153,29 +152,60 @@ const VideoGalleryModal: React.FC<VideoGalleryModalProps> = memo(({
       onVideoSelect(selectedGalleryVideo.url);
       closeModal();
     } else if (activeTab === 'upload' && uploadPreviews.length > 0) {
-      const selectedPreview = uploadPreviews.find(p => p.selected);
-      if (selectedPreview) {
-        setUploadingFiles(prev => new Set(prev).add(selectedPreview.file.name));
-        
-        try {
-          const uploadedVideo = await uploadMedia(selectedPreview.file, 'VIDEO');
-          if (uploadedVideo) {
-            onVideoSelect(uploadedVideo.url, selectedPreview.file);
-            await refreshMedia();
+      // Upload all videos simultaneously
+      const filesToUpload = uploadPreviews.map(preview => preview.file);
+      const fileNames = filesToUpload.map(file => file.name);
+      
+      // Set all files as uploading
+      setUploadingFiles(new Set(fileNames));
+      setUploadError(null);
+      
+      try {
+        // Upload all videos in parallel
+        const uploadPromises = filesToUpload.map(async (file) => {
+          try {
+            const uploadedVideo = await uploadMedia(file, 'VIDEO');
+            return { success: true, video: uploadedVideo, file };
+          } catch (error) {
+            console.error(`Upload failed for ${file.name}:`, error);
+            const errorMessage = error instanceof Error ? error.message : 'Upload failed';
+            return { success: false, error: errorMessage, file };
           }
-        } catch (error) {
-          console.error('Upload failed:', error);
-          setUploadError('Failed to upload video. Please try again.');
-        } finally {
-          setUploadingFiles(prev => {
-            const newSet = new Set(prev);
-            newSet.delete(selectedPreview.file.name);
-            return newSet;
-          });
+        });
+        
+        const results = await Promise.all(uploadPromises);
+        
+        // Check results
+        const successful = results.filter(result => result.success);
+        const failed = results.filter(result => !result.success);
+        
+        if (successful.length > 0) {
+          // Refresh media gallery to show newly uploaded videos
+          await refreshMedia();
+          
+          // If only one video was uploaded successfully, select it automatically
+          if (successful.length === 1 && successful[0].video) {
+            onVideoSelect(successful[0].video.url, successful[0].file);
+            resetUploadState();
+            closeModal();
+          } else {
+            // Multiple videos uploaded - switch to gallery tab to let user select
+            setActiveTab('gallery');
+            resetUploadState();
+          }
         }
         
-        resetUploadState();
-        closeModal();
+        if (failed.length > 0) {
+          const failedFileNames = failed.map(f => f.file.name).join(', ');
+          setUploadError(`Failed to upload: ${failedFileNames}`);
+        }
+        
+      } catch (error) {
+        console.error('Bulk upload failed:', error);
+        setUploadError('Failed to upload videos. Please try again.');
+      } finally {
+        // Clear uploading state
+        setUploadingFiles(new Set());
       }
     }
   }, [activeTab, selectedGalleryVideo, uploadPreviews, uploadMedia, onVideoSelect, refreshMedia]);
@@ -191,7 +221,6 @@ const VideoGalleryModal: React.FC<VideoGalleryModalProps> = memo(({
   const resetUploadState = useCallback(() => {
     uploadPreviews.forEach(preview => URL.revokeObjectURL(preview.url));
     setUploadPreviews([]);
-    setSelectedUploadedFiles(new Set());
     setIsDragOver(false);
     setUploadError(null);
   }, [uploadPreviews]);
@@ -210,7 +239,7 @@ const VideoGalleryModal: React.FC<VideoGalleryModalProps> = memo(({
     const newPreviews = videoFiles.map(file => ({
       file,
       url: URL.createObjectURL(file),
-      selected: false,
+      selected: false, // Keep for backwards compatibility but not used
     }));
 
     setUploadPreviews(prev => [...prev, ...newPreviews]);
@@ -242,24 +271,6 @@ const VideoGalleryModal: React.FC<VideoGalleryModalProps> = memo(({
     setIsDragOver(false);
   }, []);
 
-  const toggleUploadedVideoSelection = useCallback((file: File) => {
-    setSelectedUploadedFiles(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(file)) {
-        newSet.delete(file);
-      } else {
-        newSet.clear(); // Only allow single selection
-        newSet.add(file);
-      }
-      return newSet;
-    });
-    
-    setUploadPreviews(prev => prev.map(preview => ({
-      ...preview,
-      selected: preview.file === file,
-    })));
-  }, []);
-
   const removeUploadedVideo = useCallback((file: File) => {
     setUploadPreviews(prev => {
       const preview = prev.find(p => p.file === file);
@@ -267,12 +278,6 @@ const VideoGalleryModal: React.FC<VideoGalleryModalProps> = memo(({
         URL.revokeObjectURL(preview.url);
       }
       return prev.filter(preview => preview.file !== file);
-    });
-    
-    setSelectedUploadedFiles(prev => {
-      const newSet = new Set(prev);
-      newSet.delete(file);
-      return newSet;
     });
     
     setUploadError(null);
@@ -353,7 +358,7 @@ const VideoGalleryModal: React.FC<VideoGalleryModalProps> = memo(({
     }
     
     if (activeTab === 'upload') {
-      return uploadPreviews.some(preview => preview.selected);
+      return uploadPreviews.length > 0; // Any uploaded videos ready to upload
     }
    
     return false;
@@ -379,7 +384,7 @@ const VideoGalleryModal: React.FC<VideoGalleryModalProps> = memo(({
               </h3>
               <div className="flex items-center gap-4">
                 <div className="text-sm text-gray-500 dark:text-gray-400">
-                  {activeTab === 'gallery' ? 'Click to select videos' : 'Upload and select your videos'}
+                  {activeTab === 'gallery' ? 'Click to select videos' : 'Upload all videos at once'}
                 </div>
                 <button
                   onClick={closeModal}
@@ -662,17 +667,13 @@ const VideoGalleryModal: React.FC<VideoGalleryModalProps> = memo(({
                 {uploadPreviews.length > 0 && (
                   <div className="mb-6">
                     <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                      Uploaded Videos ({uploadPreviews.length}):
+                      Videos Ready to Upload ({uploadPreviews.length}):
                     </h4>
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                       {uploadPreviews.map((preview, index) => (
                         <div
                           key={index}
-                          className={`relative aspect-video cursor-pointer rounded-lg overflow-hidden border-2 transition-all duration-200 ${
-                            preview.selected
-                              ? 'border-purple-500 ring-2 ring-purple-200 dark:ring-purple-800'
-                              : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'
-                          }`}
+                          className="relative aspect-video rounded-lg overflow-hidden border-2 border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 transition-all duration-200"
                         >
                           <video
                             src={preview.url}
@@ -680,15 +681,6 @@ const VideoGalleryModal: React.FC<VideoGalleryModalProps> = memo(({
                             muted
                             preload="metadata"
                           />
-                          
-                          <div className="absolute top-2 left-2 z-10">
-                            <input
-                              type="checkbox"
-                              checked={preview.selected}
-                              onChange={() => toggleUploadedVideoSelection(preview.file)}
-                              className="w-5 h-5 text-purple-600 bg-white border-2 border-gray-300 rounded focus:ring-purple-500 focus:ring-2"
-                            />
-                          </div>
 
                           <button
                             onClick={() => removeUploadedVideo(preview.file)}
@@ -735,43 +727,6 @@ const VideoGalleryModal: React.FC<VideoGalleryModalProps> = memo(({
                     </div>
                   </div>
                 )}
-
-                {/* Selected Files Preview */}
-                {selectedUploadedFiles.size > 0 && (
-                  <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                    <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Selected Files ({selectedUploadedFiles.size}):
-                    </h4>
-                    <div className="flex flex-wrap gap-2">
-                      {Array.from(selectedUploadedFiles).map((file, index) => {
-                        const preview = uploadPreviews.find(p => p.file === file);
-                        return (
-                          <div key={index} className="flex items-center gap-2 p-2 bg-white dark:bg-gray-600 rounded border">
-                            {preview && (
-                              <video
-                                src={preview.url}
-                                className="w-12 h-8 object-cover rounded border border-gray-200 dark:border-gray-500"
-                                muted
-                                preload="metadata"
-                              />
-                            )}
-                            <div className="flex-1 min-w-0">
-                              <p className="text-xs font-medium truncate">{file.name}</p>
-                              <p className="text-xs text-gray-500">{(file.size / 1024 / 1024).toFixed(1)} MB</p>
-                            </div>
-                            <button
-                              onClick={() => toggleUploadedVideoSelection(file)}
-                              className="text-red-500 hover:text-red-700 transition-colors"
-                              title="Remove selection"
-                            >
-                              ×
-                            </button>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
               </>
             )}
 
@@ -796,6 +751,8 @@ const VideoGalleryModal: React.FC<VideoGalleryModalProps> = memo(({
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                     Uploading...
                   </div>
+                ) : activeTab === 'upload' && uploadPreviews.length > 0 ? (
+                  `Upload ${uploadPreviews.length} Video${uploadPreviews.length > 1 ? 's' : ''}`
                 ) : (
                   'Select a Video'
                 )}
