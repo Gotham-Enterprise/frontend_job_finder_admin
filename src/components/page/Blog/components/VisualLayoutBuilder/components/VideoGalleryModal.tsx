@@ -76,7 +76,6 @@ const VideoGalleryModal: React.FC<VideoGalleryModalProps> = memo(({
     };
   }, [isOpen, onClose]);
 
-  // Cleanup object URLs when component unmounts or files change
   useEffect(() => {
     return () => {
       uploadPreviews.forEach(preview => {
@@ -152,16 +151,16 @@ const VideoGalleryModal: React.FC<VideoGalleryModalProps> = memo(({
       onVideoSelect(selectedGalleryVideo.url);
       closeModal();
     } else if (activeTab === 'upload' && uploadPreviews.length > 0) {
-      // Upload all videos simultaneously
+      
       const filesToUpload = uploadPreviews.map(preview => preview.file);
       const fileNames = filesToUpload.map(file => file.name);
       
-      // Set all files as uploading
+   
       setUploadingFiles(new Set(fileNames));
       setUploadError(null);
       
       try {
-        // Upload all videos in parallel
+ 
         const uploadPromises = filesToUpload.map(async (file) => {
           try {
             const uploadedVideo = await uploadMedia(file, 'VIDEO');
@@ -174,22 +173,20 @@ const VideoGalleryModal: React.FC<VideoGalleryModalProps> = memo(({
         });
         
         const results = await Promise.all(uploadPromises);
-        
-        // Check results
+  
         const successful = results.filter(result => result.success);
         const failed = results.filter(result => !result.success);
         
         if (successful.length > 0) {
-          // Refresh media gallery to show newly uploaded videos
+        
           await refreshMedia();
-          
-          // If only one video was uploaded successfully, select it automatically
+       
           if (successful.length === 1 && successful[0].video) {
             onVideoSelect(successful[0].video.url, successful[0].file);
             resetUploadState();
             closeModal();
           } else {
-            // Multiple videos uploaded - switch to gallery tab to let user select
+            
             setActiveTab('gallery');
             resetUploadState();
           }
@@ -239,7 +236,7 @@ const VideoGalleryModal: React.FC<VideoGalleryModalProps> = memo(({
     const newPreviews = videoFiles.map(file => ({
       file,
       url: URL.createObjectURL(file),
-      selected: false, // Keep for backwards compatibility but not used
+      selected: false,
     }));
 
     setUploadPreviews(prev => [...prev, ...newPreviews]);
@@ -318,15 +315,15 @@ const VideoGalleryModal: React.FC<VideoGalleryModalProps> = memo(({
   };
 
   const getVideoThumbnail = (videoUrl: string) => {
-    // Generate YouTube thumbnail
+    
     if (videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be')) {
       const videoId = extractYouTubeVideoId(videoUrl);
       return videoId ? `https://img.youtube.com/vi/${videoId}/mqdefault.jpg` : null;
     }
     
-    // Generate Vimeo thumbnail (would need API call in real implementation)
+  
     if (videoUrl.includes('vimeo.com')) {
-      return 'https://i.vimeocdn.com/video/placeholder.jpg'; // Placeholder
+      return 'https://i.vimeocdn.com/video/placeholder.jpg'; 
     }
     
     return null;
@@ -350,7 +347,7 @@ const VideoGalleryModal: React.FC<VideoGalleryModalProps> = memo(({
 
   const hasSelectionToConfirm = useMemo(() => {
     if (isMultiSelectMode) {
-      return false; // No confirm button in multi-select mode
+      return false; 
     }
 
     if (activeTab === 'gallery') {
@@ -358,7 +355,7 @@ const VideoGalleryModal: React.FC<VideoGalleryModalProps> = memo(({
     }
     
     if (activeTab === 'upload') {
-      return uploadPreviews.length > 0; // Any uploaded videos ready to upload
+      return uploadPreviews.length > 0;
     }
    
     return false;

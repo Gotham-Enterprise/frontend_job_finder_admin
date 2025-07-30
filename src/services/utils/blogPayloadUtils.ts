@@ -6,9 +6,10 @@ export interface BlogCreatePayload {
   slug: string;
   excerpt: string;
   content: any;
-  featuredImage?: string;
+  featuredImage: string;
   metadata: {
     status: string;
+    visibility?: string;
     publishDate: string;
     categories: Array<{
       id: string;
@@ -55,7 +56,7 @@ export interface BlogMetadata {
   publishDate: string;
   categories: string;
   tags: string[];
-  featuredImage?: string;
+  featuredImage: string;
   seoTitle: string;
   seoDescription: string;
   allowComments: boolean;
@@ -142,6 +143,7 @@ export function transformBlogDataForAPI(
   const user = authUtils.getUser();
   const userDisplayName = authUtils.getUserDisplayName();
 
+  const featuredImage = metadata.featuredImage || '';
 
   const content = {
     blocks: blocks.length > 0 ? blocks : [],
@@ -149,11 +151,9 @@ export function transformBlogDataForAPI(
     time: Date.now()
   };
 
-
   const selectedCategories = metadata.categories
     ? metadata.categories.split(',').map(id => id.trim()).filter(Boolean)
     : [];
-
 
   const categories = selectedCategories.length > 0 
     ? selectedCategories.map(categoryId => {
@@ -164,7 +164,6 @@ export function transformBlogDataForAPI(
         };
       })
     : [];
-
 
   const tags = metadata.tags && metadata.tags.length > 0
     ? metadata.tags.map(tagId => {
@@ -178,20 +177,20 @@ export function transformBlogDataForAPI(
 
   const analytics = calculateAnalytics(content, metadata.title);
 
-
   const keywords = [
     ...metadata.seoTitle.split(' ').filter(word => word.length > 3),
     ...metadata.seoDescription.split(' ').filter(word => word.length > 3)
   ].slice(0, 10); 
 
-  return {
+  const payload = {
     title: metadata.title,
     slug: metadata.permalink,
     excerpt: metadata.excerpt,
     content,
-    featuredImage: metadata.featuredImage || '',
+    featuredImage: featuredImage,
     metadata: {
       status: metadata.status,
+      visibility: metadata.visibility,
       publishDate: metadata.publishDate,
       categories,
       tags,
@@ -215,6 +214,8 @@ export function transformBlogDataForAPI(
     },
     analytics
   };
+
+  return payload;
 }
 
 export function validateBlogData(data: BlogCreatePayload): { isValid: boolean; errors: string[] } {
@@ -235,6 +236,16 @@ export function validateBlogData(data: BlogCreatePayload): { isValid: boolean; e
   if (!data.metadata.author.id) {
     errors.push('Author information is required');
   }
+
+  if (data.featuredImage === undefined || data.featuredImage === null) {
+    console.error('Featured image validation failed:', {
+      featuredImage: data.featuredImage,
+      type: typeof data.featuredImage
+    });
+    errors.push('Featured image property is required (can be empty string)');
+  }
+
+  console.log('Validation complete - errors:', errors);
 
   return {
     isValid: errors.length === 0,
