@@ -211,6 +211,131 @@ const BlogPreview: React.FC<BlogPreviewProps> = ({ blogId }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const getAuthorName = (blogPost: BlogPost | null): string => {
+    if (!blogPost) return 'Unknown Author';
+    
+    const metadataAuthor = (blogPost as any)?.metadata?.author;
+    if (metadataAuthor) {
+      return metadataAuthor.name || `${metadataAuthor.firstName || ''} ${metadataAuthor.lastName || ''}`.trim() || 'Unknown Author';
+    }
+    
+
+    if (typeof blogPost.author === 'string') {
+      return blogPost.author;
+    } else if (blogPost.author && typeof blogPost.author === 'object') {
+      return blogPost.author.name || 'Unknown Author';
+    }
+    return 'Unknown Author';
+  };
+
+
+  const getPublishDate = (blogPost: BlogPost | null): string => {
+    if (!blogPost) return 'Not specified';
+    
+
+    const metadataPublishDate = (blogPost as any)?.metadata?.publishDate;
+    const timestampsPublished = (blogPost as any)?.timestamps?.published;
+    const timestampsCreated = (blogPost as any)?.timestamps?.created;
+    
+    const publishDate = metadataPublishDate || 
+                      timestampsPublished || 
+                      timestampsCreated ||
+                      (blogPost as any)?.published || 
+                      (blogPost as any)?.publishDate || 
+                      blogPost.publishedDate || 
+                      blogPost.createdAt;
+    
+    if (!publishDate) return 'Not specified';
+    try {
+      return formatDate(publishDate);
+    } catch (error) {
+      console.error('Date formatting error:', error, 'Raw date:', publishDate);
+      return publishDate || 'Not specified';
+    }
+  };
+
+
+  const getCategoryName = (blogPost: BlogPost | null): string => {
+    if (!blogPost) return 'No Category';
+    
+    const metadataCategories = (blogPost as any)?.metadata?.categories;
+    if (metadataCategories && Array.isArray(metadataCategories) && metadataCategories.length > 0) {
+      const firstCategory = metadataCategories[0];
+      return firstCategory?.name || 'Uncategorized';
+    }
+    
+    if (blogPost.category) {
+      if (typeof blogPost.category === 'string') {
+        return blogPost.category;
+      } else if (blogPost.category && typeof blogPost.category === 'object') {
+        return blogPost.category.name || 'Uncategorized';
+      }
+    }
+ 
+    const categories = (blogPost as any)?.categories;
+    if (categories && Array.isArray(categories) && categories.length > 0) {
+      const firstCategory = categories[0];
+      return typeof firstCategory === 'string' ? firstCategory : (firstCategory?.name || 'Uncategorized');
+    }
+    return 'No Category';
+  };
+
+  const getStatus = (blogPost: BlogPost | null): string => {
+    if (!blogPost) return 'Not specified';
+    
+    const status = (blogPost as any)?.metadata?.status || blogPost.status;
+    return status?.charAt(0).toUpperCase() + status?.slice(1) || 'Not specified';
+  };
+
+  const renderTags = (blogPost: BlogPost | null) => {
+    if (!blogPost) {
+      return (
+        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+          No Tags
+        </span>
+      );
+    }
+
+    const metadataTags = (blogPost as any)?.metadata?.tags;
+    if (metadataTags && Array.isArray(metadataTags) && metadataTags.length > 0) {
+      return metadataTags.map((tag: any, index: number) => {
+        const tagName = tag?.name || `Tag ${index + 1}`;
+        const tagKey = tag?.id || tag?.name || index;
+        
+        return (
+          <span
+            key={tagKey}
+            className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800"
+          >
+            {tagName}
+          </span>
+        );
+      });
+    }
+    
+    if (blogPost.tags && Array.isArray(blogPost.tags) && blogPost.tags.length > 0) {
+      return blogPost.tags.map((tag: any, index: number) => {
+        const tagName = typeof tag === 'string' ? tag : (tag?.name || `Tag ${index + 1}`);
+        const tagKey = tag?.id || tag?.name || index;
+        
+        return (
+          <span
+            key={tagKey}
+            className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800"
+          >
+            {tagName}
+          </span>
+        );
+      });
+    } else {
+      return (
+        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+          No Tags
+        </span>
+      );
+    }
+  };
+
   useEffect(() => {
     const fetchBlogPost = async () => {
       try {
@@ -218,7 +343,7 @@ const BlogPreview: React.FC<BlogPreviewProps> = ({ blogId }) => {
         const blogData = await blogApi.getBlogPostById(blogId);
         setBlogPost(blogData);
       } catch (err: any) {
-
+        console.error('Error fetching blog post:', err); 
         setError(err.message || 'Failed to fetch blog post');
       } finally {
         setIsLoading(false);
@@ -302,13 +427,13 @@ const BlogPreview: React.FC<BlogPreviewProps> = ({ blogId }) => {
 
             <div className="mb-6">
               <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                blogPost.status === 'published' 
+                ((blogPost as any)?.metadata?.status || blogPost.status) === 'published' 
                   ? 'bg-green-100 text-green-800' 
-                  : blogPost.status === 'draft'
+                  : ((blogPost as any)?.metadata?.status || blogPost.status) === 'draft'
                   ? 'bg-yellow-100 text-yellow-800'
                   : 'bg-gray-100 text-gray-800'
               }`}>
-                {blogPost.status?.charAt(0).toUpperCase() + blogPost.status?.slice(1) || 'Not specified'}
+                {getStatus(blogPost)}
               </span>
             </div>
             <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-6 leading-tight">
@@ -321,46 +446,37 @@ const BlogPreview: React.FC<BlogPreviewProps> = ({ blogId }) => {
             )}
             <div className="flex flex-wrap items-center gap-6 mb-8 pb-8 border-b border-gray-200">
               {/* Author */}
-              {blogPost.author && (
+              {((blogPost as any)?.metadata?.author || blogPost.author) && (
                 <div className="flex items-center text-sm text-gray-600">
                   <UserIcon className="mr-2" />
-                  <span>By {blogPost.author.name}</span>
+                  <span>By {getAuthorName(blogPost)}</span>
                 </div>
               )}
 
               <div className="flex items-center text-sm text-gray-600">
                 <CalenderIcon className="mr-2" />
-                <span>Published {formatDate(blogPost.createdAt || blogPost.publishedDate)}</span>
+                <span>Published {getPublishDate(blogPost)}</span>
               </div>
 
-              {blogPost.category && (
-                <div className="flex items-center">
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                    {blogPost.category.name}
-                  </span>
-                </div>
-              )}
-            </div>
-            {blogPost.tags && blogPost.tags.length > 0 && (
-              <div className="mb-8">
-                <div className="flex items-center mb-3">
-                  <svg className="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                  </svg>
-                  <span className="text-sm font-medium text-gray-700">Tags</span>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {blogPost.tags.map((tag: { id: string; name: string }) => (
-                    <span
-                      key={tag.id}
-                      className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800"
-                    >
-                      {tag.name}
-                    </span>
-                  ))}
-                </div>
+              {/* Category - Always show */}
+              <div className="flex items-center">
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                  {getCategoryName(blogPost)}
+                </span>
               </div>
-            )}
+            </div>
+            {/* Tags - Always show */}
+            <div className="mb-8">
+              <div className="flex items-center mb-3">
+                <svg className="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                </svg>
+                <span className="text-sm font-medium text-gray-700">Tags</span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {renderTags(blogPost)}
+              </div>
+            </div>
             <div className="prose prose-lg max-w-none">
               <div className="text-gray-800 leading-relaxed">
                 {typeof blogPost.content === 'string' ? (
