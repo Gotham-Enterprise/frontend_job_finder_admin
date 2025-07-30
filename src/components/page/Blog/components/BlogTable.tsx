@@ -60,7 +60,7 @@ const BlogTable: React.FC<BlogTableProps> = ({
         <TableBody>
           {isLoading ? (
             <TableRow>
-              <TableCell className="text-center py-8 px-6" colSpan={7}>
+              <TableCell className="text-center py-8 px-6" colSpan={8}>
                 <div className="flex items-center justify-center gap-3">
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-brand-500"></div>
                   <p className="text-gray-500 dark:text-gray-400">Loading...</p>
@@ -69,7 +69,7 @@ const BlogTable: React.FC<BlogTableProps> = ({
             </TableRow>
           ) : !data?.data?.length ? (
             <TableRow>
-              <TableCell className="text-center py-8 px-6" colSpan={7}>
+              <TableCell className="text-center py-8 px-6" colSpan={8}>
                 <div className="text-center">
                   <div className="w-16 h-16 mx-auto mb-4 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center">
                     <svg className="w-8 h-8 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -132,6 +132,27 @@ const BlogTable: React.FC<BlogTableProps> = ({
                         +{post.tags.length - 2} more
                       </span>
                     )}
+                  </div>
+                </TableCell>
+                <TableCell className="py-4 px-6">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-gray-900 dark:text-white">
+                      {(() => {
+                        // Handle author from metadata (nested structure)
+                        const metadataAuthor = (post as any)?.metadata?.author;
+                        if (metadataAuthor) {
+                          return metadataAuthor.name || `${metadataAuthor.firstName || ''} ${metadataAuthor.lastName || ''}`.trim() || 'Unknown Author';
+                        }
+                        
+                        // Handle root level author
+                        if (typeof post.author === 'string') {
+                          return post.author;
+                        } else if (post.author && typeof post.author === 'object') {
+                          return post.author.name || 'Unknown Author';
+                        }
+                        return 'No Author';
+                      })()}
+                    </span>
                   </div>
                 </TableCell>
                 <TableCell className="py-4 px-6">

@@ -38,6 +38,7 @@ export const useBlogLogic = () => {
     { key: 'title', label: 'Title' },
     { key: 'category', label: 'Category' },
     { key: 'tags', label: 'Tags' },
+    { key: 'author', label: 'Author' },
     { key: 'status', label: 'Status' },
     { key: 'createdAt', label: 'Created At' },
     { key: 'actions', label: '', className: 'text-right' },

@@ -49,12 +49,8 @@ const ArchiveTable: React.FC<ArchiveTableProps> = ({
 
   return (
     <div 
-      className="relative overflow-auto"
-      style={{ 
-        maxHeight: '600px',
-        scrollbarWidth: 'thin',
-        scrollbarColor: '#9CA3AF #F3F4F6'
-      }}
+      className="relative"
+    
     >
       <div className="min-w-full">
         <Table>        
