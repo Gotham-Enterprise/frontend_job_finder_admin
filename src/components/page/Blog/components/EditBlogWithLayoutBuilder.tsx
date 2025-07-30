@@ -815,9 +815,9 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
           </div>
         </div>
 
-        {/* Main Content */}
+     
         <div className="h-[calc(100vh-80px)] flex">
-          {/* Full Width - Visual Layout Builder */}
+       
           <div className="flex-1 bg-white">
             <div className="h-full">
               <div className="h-full relative">
@@ -842,8 +842,6 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
           </div>
         </div>
       </div>
-
-      {/* Title Modal */}
       <Modal
         isOpen={titleModal.isOpen}
         onClose={handleTitleCancel}

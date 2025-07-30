@@ -316,8 +316,6 @@ const VideoUrlInput: React.FC<VideoUrlInputProps> = ({
           ))}
         </div>
       </div>
-
-      {/* Video Gallery Modal */}
       <VideoGalleryModal
         isOpen={isVideoGalleryOpen}
         onClose={() => setIsVideoGalleryOpen(false)}
