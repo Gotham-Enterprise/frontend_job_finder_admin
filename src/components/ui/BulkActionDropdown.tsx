@@ -129,23 +129,6 @@ const BulkActionDropdown: React.FC<BulkActionDropdownProps> = ({
                 </div>
               </div>
             </button>
-            
-            <div className="border-t border-gray-100 dark:border-gray-700 mx-2"></div>
-            
-            <button
-              onClick={() => {
-                onClearSelection();
-                setIsOpen(false);
-              }}
-              className="flex w-full items-start px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/20 transition-colors text-left"
-            >
-              <div className="flex-1">
-                <div className="font-medium text-gray-900 dark:text-white">Clear</div>
-                <div className="text-xs text-gray-500 dark:text-gray-400">
-                  Clear selection ({selectedItems.length} {itemType})
-                </div>
-              </div>
-            </button>
           </div>
         </div>
       )}
