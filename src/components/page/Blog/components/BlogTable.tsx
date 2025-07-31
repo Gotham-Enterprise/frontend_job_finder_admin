@@ -29,6 +29,54 @@ const BlogTable: React.FC<BlogTableProps> = ({
   const allSelected = data?.data?.length > 0 && selectedPosts.length === data.data.length;
   const someSelected = selectedPosts.length > 0 && !allSelected;
 
+  const getAuthorName = (post: any): string => {
+
+    const metadataAuthor = post?.metadata?.author;
+    if (metadataAuthor) {
+      return metadataAuthor.name || `${metadataAuthor.firstName || ''} ${metadataAuthor.lastName || ''}`.trim() || 'Unknown Author';
+    }
+    if (typeof post.author === 'string') {
+      return post.author;
+    } else if (post.author && typeof post.author === 'object') {
+      return post.author.name || 'Unknown Author';
+    }
+    return 'No Author';
+  };
+
+  const getDropdownOptions = (post: any): DropdownOption[] => [
+    {
+      id: 'view',
+      label: 'View',
+      icon: <EyeIcon />,
+      onClick: () => {
+        onPreviewPost && onPreviewPost(post.id);
+      },
+    },
+    {
+      id: 'edit',
+      label: 'Edit',
+      icon: <PencilIcon />,
+      onClick: () => onEditPost(post.id),
+    },
+    {
+      id: 'share',
+      label: 'Share',
+      icon: (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
+        </svg>
+      ),
+      onClick: () => onPreviewPost && onPreviewPost(post.id),
+    },
+    {
+      id: 'delete',
+      label: 'Archive',
+      icon: <TrashBinIcon />,
+      onClick: () => onDeletePost(post.id),
+      variant: 'danger' as const,
+    },
+  ];
+
   return (
     <div 
       className="relative"
@@ -135,21 +183,7 @@ const BlogTable: React.FC<BlogTableProps> = ({
                 <TableCell className="py-4 px-6">
                   <div className="flex items-center gap-2">
                     <span className="text-sm text-gray-900 dark:text-white">
-                      {(() => {
-                        // Handle author from metadata (nested structure)
-                        const metadataAuthor = (post as any)?.metadata?.author;
-                        if (metadataAuthor) {
-                          return metadataAuthor.name || `${metadataAuthor.firstName || ''} ${metadataAuthor.lastName || ''}`.trim() || 'Unknown Author';
-                        }
-                        
-                        // Handle root level author
-                        if (typeof post.author === 'string') {
-                          return post.author;
-                        } else if (post.author && typeof post.author === 'object') {
-                          return post.author.name || 'Unknown Author';
-                        }
-                        return 'No Author';
-                      })()}
+                      {getAuthorName(post)}
                     </span>
                   </div>
                 </TableCell>
@@ -170,41 +204,7 @@ const BlogTable: React.FC<BlogTableProps> = ({
                         <HorizontaLDots />
                       </button>
                     }
-                    options={[
-                         {
-                        id: 'view',
-                        label: 'View',
-                        icon: (
-                         <EyeIcon />
-                        ),
-                        onClick: () => {
-                          onPreviewPost && onPreviewPost(post.id);
-                        },
-                      },
-                      {
-                        id: 'edit',
-                        label: 'Edit',
-                        icon: <PencilIcon />,
-                        onClick: () => onEditPost(post.id),
-                      },
-                      {
-                        id: 'share',
-                        label: 'Share',
-                        icon: (
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
-                          </svg>
-                        ),
-                        onClick: () => onPreviewPost && onPreviewPost(post.id),
-                      },
-                      {
-                        id: 'delete',
-                        label: 'Archive',
-                        icon: <TrashBinIcon />,
-                        onClick: () => onDeletePost(post.id),
-                        variant: 'danger' as const,
-                      },
-                    ]}
+                    options={getDropdownOptions(post)}
                   />
                 </TableCell>
               </TableRow>
