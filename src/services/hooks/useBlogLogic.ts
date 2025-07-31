@@ -6,6 +6,7 @@ import { useTagsForDropdown } from '@/services/hooks/useTags';
 import { BlogFilters } from '@/services/types/blog';
 import { useConfirmation } from '@/hooks/useConfirmation';
 import { showToast } from '@/services/utils/toast';
+import { processSlug } from '@/services/utils/slugUtils';
 
 export const useBlogLogic = () => {
   const router = useRouter();
@@ -64,7 +65,7 @@ export const useBlogLogic = () => {
     
     const allOption = { value: '', label: 'All Categories' };
     const dynamicCategories = categoriesData.map((category: any) => ({
-      value: category.name,  // Use name instead of id for API compatibility
+      value: category.name,  
       label: category.name,
     }));
     
@@ -210,22 +211,9 @@ export const useBlogLogic = () => {
   const previewPost = (postId: string) => {
     const post = data?.data?.find((p: any) => p.id === postId);
     if (post && post.slug) {
-     
-      let cleanSlug = post.slug.startsWith('/') ? post.slug.substring(1) : post.slug;
-      
-     
-      cleanSlug = cleanSlug
-        .replace(/\?/g, '') 
-        .replace(/:/g, '') 
-        .replace(/,/g, '') 
-        .replace(/—/g, '-') 
-        .replace(/'/g, '') 
-        .replace(/"/g, '')
-        .replace(/\s+/g, '-') 
-        .replace(/-+/g, '-') 
-        .replace(/^-|-$/g, ''); 
-      
-      window.open(`/blog/${cleanSlug}`, '_blank');
+      // Use the consolidated utility function to process the slug
+      const cleanedSlug = processSlug(post.slug);
+      window.open(`/blog/${cleanedSlug}`, '_blank');
     } else {
       window.open(`/blog/${postId}`, '_blank');
     }

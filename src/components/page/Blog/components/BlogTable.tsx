@@ -1,5 +1,6 @@
 import React from 'react';
 import { formatDate } from '@/services/utils/dateUtils';
+import { processSlug } from '@/services/utils/slugUtils';
 import {
   Table,
   TableBody,
@@ -99,20 +100,7 @@ const BlogTable: React.FC<BlogTableProps> = ({
                       )}
                       {post.slug && (
                         <p className="text-xs text-blue-600 dark:text-blue-400 truncate mt-1">
-                          /blog/{(() => {
-                          
-                            let cleanSlug = post.slug.startsWith('/') ? post.slug.substring(1) : post.slug;
-                            return cleanSlug
-                              .replace(/\?/g, '')
-                              .replace(/:/g, '')
-                              .replace(/,/g, '')
-                              .replace(/—/g, '-')
-                              .replace(/'/g, '')
-                              .replace(/"/g, '')
-                              .replace(/\s+/g, '-')
-                              .replace(/-+/g, '-')
-                              .replace(/^-|-$/g, '');
-                          })()}
+                          /blog/{processSlug(post.slug)}
                         </p>
                       )}
                     </div>

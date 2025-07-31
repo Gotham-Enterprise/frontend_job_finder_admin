@@ -2,6 +2,7 @@ import { BlogFilters, BlogPostsResponse, BlogPost } from '../types/blog';
 import { apiGet, apiDelete, apiPost, apiPut, apiPatch } from './apiUtils';
 import { CategoryWithSubCategories, ApiResponse } from '@/services/types/subCategoryTypes';
 import { MediaFilters, MediaResponse, MediaUploadResponse, MediaUploadData, MediaDeleteData } from '../types/mediaTypes';
+import { cleanSlug, processSlug, isValidUUID, generateSlugVariations } from '../utils/slugUtils';
 
 export interface CategoryFilters {
   keyword?: string;
@@ -60,42 +61,29 @@ export const blogApi = {
 
   async getBlogPostBySlug(slug: string): Promise<BlogPost> {
     try {
-      if (slug.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+      // Check if the slug is actually a UUID
+      if (isValidUUID(slug)) {
         return await this.getBlogPostById(slug);
       }
-      
-      const cleanSlugFunction = (inputSlug: string) => {
-        return inputSlug
-          .replace(/\?/g, '') 
-          .replace(/:/g, '') 
-          .replace(/,/g, '') 
-          .replace(/—/g, '-')
-          .replace(/'/g, '')
-          .replace(/"/g, '')
-          .replace(/\s+/g, '-') 
-          .replace(/-+/g, '-') 
-          .replace(/^-|-$/g, '');
-      };
 
       const response = await this.getBlogPosts();
       
       if (response.success && response.data) {
-       
+        // Generate all possible variations of the slug to match against
+        const slugVariations = generateSlugVariations(slug);
+        
         const blogPost = response.data.find(post => {
           if (!post.slug) return false;
           
-        
-          const storedSlugWithoutSlash = post.slug.startsWith('/') ? post.slug.substring(1) : post.slug;
-          const cleanedStoredSlug = cleanSlugFunction(storedSlugWithoutSlash);
+          // Try to match any of the slug variations
+          const postSlugVariations = generateSlugVariations(post.slug);
           
-        
-          return cleanedStoredSlug === slug || post.slug === `/${slug}` || post.slug === slug;
+          return slugVariations.some(variation => 
+            postSlugVariations.includes(variation)
+          );
         });
         
-        
-        
         if (blogPost) {
-    
           return await this.getBlogPostById(blogPost.id);
         } else {
           throw new Error(`Blog post not found for slug: ${slug}`);
