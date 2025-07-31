@@ -90,19 +90,16 @@ const BlogTable: React.FC<BlogTableProps> = ({
                 <TableCell className="py-4 px-6">
                   <div className="flex items-center gap-3">
                     <div className="min-w-0 flex-1">
-                      <p className="font-medium text-gray-900 dark:text-white truncate">
-                        {post.title}
-                      </p>
-                      {post.excerpt && (
-                        <p className="text-sm text-gray-500 dark:text-gray-400 truncate mt-1">
-                          {post.excerpt}
+                      <button
+                        onClick={() => onPreviewPost && onPreviewPost(post.id)}
+                        className="text-left w-full group"
+                      >
+                        <p className="font-medium text-gray-900 dark:text-white truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors cursor-pointer">
+                          {post.title}
                         </p>
-                      )}
-                      {post.slug && (
-                        <p className="text-xs text-blue-600 dark:text-blue-400 truncate mt-1">
-                          /blog/{processSlug(post.slug)}
-                        </p>
-                      )}
+                      </button>
+                   
+                     
                     </div>
                   </div>
                 </TableCell>
