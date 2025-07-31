@@ -1,15 +1,12 @@
 "use client";
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { blogApi } from '@/services/api/blog';
 import { BlogPost } from '@/services/types/blog';
 import { formatDate } from '@/services/utils/dateUtils';
-import { ArrowRightIcon, CalenderIcon, UserIcon } from '@/icons';
+import { ArrowRightIcon, CalenderIcon, UserIcon, GothamLogo } from '@/icons';
 import FullScreenSpinner from '@/components/ui/FullScreenSpinner';
-
-interface BlogPreviewProps {
-  blogId: string;
-}
 
 interface BlockContent {
   time: number;
@@ -406,22 +403,20 @@ const BlogPreview: React.FC<BlogPreviewProps> = ({ blogId, blogSlug }) => {
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <button
-              onClick={handleGoBack}
-              className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          <div className="flex items-center justify-center h-16">
+            <Link 
+              href="https://gothamenterprisesltd.com/home" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 rounded"
             >
-              <ArrowRightIcon className="w-4 h-4 mr-2" />
-              Back to Admin
-            </button>
-            <div className="text-sm text-gray-500">
-              Blog Preview
-            </div>
+              <GothamLogo className="h-8 w-auto" />
+            </Link>
           </div>
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <article className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
 
           {blogPost.featuredImage && typeof blogPost.featuredImage === 'object' && (
@@ -506,15 +501,6 @@ const BlogPreview: React.FC<BlogPreviewProps> = ({ blogId, blogSlug }) => {
             </div>
           </div>
         </article>
-        <div className="mt-8 text-center">
-          <button
-            onClick={handleGoBack}
-            className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-          >
-            <ArrowRightIcon className="mr-2" />
-            Back to Admin Panel
-          </button>
-        </div>
       </main>
     </div>
   );

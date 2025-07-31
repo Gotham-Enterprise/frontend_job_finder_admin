@@ -63,6 +63,7 @@ import QuoteIcon from "./quote";
 import CodeBlockIcon from "./code-block";
 import LinkIcon from "./link";
 import ImageIcon from "./image";
+import GothamLogo from "./GothamLogo";
 
 export {
   DownloadIcon,
@@ -129,4 +130,5 @@ export {
   CareerLadderIcon,
   TicketIcon,
   BlogIcon,
+  GothamLogo,
 };
