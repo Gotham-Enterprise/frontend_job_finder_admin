@@ -1,7 +1,6 @@
 "use client";
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import Head from 'next/head';
 import { blogApi } from '@/services/api/blog';
 import { BlogPost } from '@/services/types/blog';
@@ -56,10 +55,8 @@ const SocialShare: React.FC<SocialShareProps> = ({ url, title, description }) =>
 
   return (
     <>
-      {/* Desktop Social Share - Fixed Left Side */}
       <div className="fixed left-6 top-1/2 transform -translate-y-1/2 z-50 hidden lg:block">
         <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-3 space-y-3">
-          {/* Facebook */}
           <button
             onClick={() => openShare('facebook')}
             className={`w-12 h-12 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center justify-center transition-all duration-200 hover:scale-110 shadow-md ${isLocalhost ? 'opacity-75' : ''}`}
@@ -69,8 +66,6 @@ const SocialShare: React.FC<SocialShareProps> = ({ url, title, description }) =>
               <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
             </svg>
           </button>
-
-          {/* Twitter */}
           <button
             onClick={() => openShare('twitter')}
             className={`w-12 h-12 bg-sky-500 hover:bg-sky-600 text-white rounded-lg flex items-center justify-center transition-all duration-200 hover:scale-110 shadow-md ${isLocalhost ? 'opacity-75' : ''}`}
@@ -80,8 +75,6 @@ const SocialShare: React.FC<SocialShareProps> = ({ url, title, description }) =>
               <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
             </svg>
           </button>
-
-          {/* LinkedIn */}
           <button
             onClick={() => openShare('linkedin')}
             className={`w-12 h-12 bg-blue-700 hover:bg-blue-800 text-white rounded-lg flex items-center justify-center transition-all duration-200 hover:scale-110 shadow-md ${isLocalhost ? 'opacity-75' : ''}`}
@@ -92,7 +85,6 @@ const SocialShare: React.FC<SocialShareProps> = ({ url, title, description }) =>
             </svg>
           </button>
 
-          {/* Copy Link */}
           <button
             onClick={copyToClipboard}
             className="w-12 h-12 bg-gray-600 hover:bg-gray-700 text-white rounded-lg flex items-center justify-center transition-all duration-200 hover:scale-110 shadow-md relative"
@@ -108,8 +100,6 @@ const SocialShare: React.FC<SocialShareProps> = ({ url, title, description }) =>
               </svg>
             )}
           </button>
-
-          {/* Copied notification */}
           {showCopied && (
             <div className="absolute left-16 top-1/2 transform -translate-y-1/2 bg-gray-800 text-white px-3 py-1 rounded text-sm whitespace-nowrap shadow-lg">
               Link copied!
@@ -117,7 +107,6 @@ const SocialShare: React.FC<SocialShareProps> = ({ url, title, description }) =>
             </div>
           )}
 
-          {/* Localhost warning */}
           {showLocalhostWarning && (
             <div className="absolute left-16 top-1/2 transform -translate-y-1/2 bg-yellow-600 text-white px-3 py-2 rounded text-sm whitespace-nowrap shadow-lg max-w-xs">
               Social sharing works on live domains only
@@ -127,10 +116,8 @@ const SocialShare: React.FC<SocialShareProps> = ({ url, title, description }) =>
         </div>
       </div>
 
-      {/* Mobile Social Share - Fixed Bottom */}
       <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 lg:hidden">
         <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-3 flex space-x-3">
-          {/* Facebook */}
           <button
             onClick={() => openShare('facebook')}
             className={`w-10 h-10 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center justify-center transition-all duration-200 hover:scale-110 shadow-md ${isLocalhost ? 'opacity-75' : ''}`}
@@ -140,8 +127,6 @@ const SocialShare: React.FC<SocialShareProps> = ({ url, title, description }) =>
               <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
             </svg>
           </button>
-
-          {/* Twitter */}
           <button
             onClick={() => openShare('twitter')}
             className={`w-10 h-10 bg-sky-500 hover:bg-sky-600 text-white rounded-lg flex items-center justify-center transition-all duration-200 hover:scale-110 shadow-md ${isLocalhost ? 'opacity-75' : ''}`}
@@ -151,8 +136,6 @@ const SocialShare: React.FC<SocialShareProps> = ({ url, title, description }) =>
               <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
             </svg>
           </button>
-
-          {/* LinkedIn */}
           <button
             onClick={() => openShare('linkedin')}
             className={`w-10 h-10 bg-blue-700 hover:bg-blue-800 text-white rounded-lg flex items-center justify-center transition-all duration-200 hover:scale-110 shadow-md ${isLocalhost ? 'opacity-75' : ''}`}
@@ -162,8 +145,6 @@ const SocialShare: React.FC<SocialShareProps> = ({ url, title, description }) =>
               <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
             </svg>
           </button>
-
-          {/* Copy Link */}
           <button
             onClick={copyToClipboard}
             className="w-10 h-10 bg-gray-600 hover:bg-gray-700 text-white rounded-lg flex items-center justify-center transition-all duration-200 hover:scale-110 shadow-md relative"
@@ -179,16 +160,12 @@ const SocialShare: React.FC<SocialShareProps> = ({ url, title, description }) =>
               </svg>
             )}
           </button>
-
-          {/* Copied notification for mobile */}
           {showCopied && (
             <div className="absolute bottom-16 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-3 py-1 rounded text-sm whitespace-nowrap shadow-lg">
               Link copied!
               <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1 w-2 h-2 bg-gray-800 rotate-45"></div>
             </div>
           )}
-
-          {/* Localhost warning for mobile */}
           {showLocalhostWarning && (
             <div className="absolute bottom-16 left-1/2 transform -translate-x-1/2 bg-yellow-600 text-white px-3 py-2 rounded text-sm whitespace-nowrap shadow-lg">
               Social sharing works on live domains only
@@ -402,12 +379,11 @@ const BlogPreview: React.FC<BlogPreviewProps> = ({ blogId, blogSlug }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Generate Open Graph data for the current blog post
   const getOpenGraphData = () => {
     if (!blogPost) return null;
     
     const ogData = extractBlogOpenGraphData(blogPost);
-    // Set the current URL
+
     ogData.url = typeof window !== 'undefined' ? window.location.href : generateBlogUrl(processSlug(blogPost.slug || blogPost.title));
     
     return ogData;
@@ -515,7 +491,6 @@ const BlogPreview: React.FC<BlogPreviewProps> = ({ blogId, blogSlug }) => {
     return `Read about ${blogPost.title} on Gotham Enterprises blog.`;
   };
 
-  // Helper function to get SEO keywords
   const getSEOKeywords = (blogPost: BlogPost | null): string => {
     if (!blogPost) return 'blog, gotham enterprises';
     
@@ -523,8 +498,7 @@ const BlogPreview: React.FC<BlogPreviewProps> = ({ blogId, blogSlug }) => {
     if (seoKeywords && Array.isArray(seoKeywords) && seoKeywords.length > 0) {
       return seoKeywords.join(', ');
     }
-    
-    // Fallback to tags if no SEO keywords
+
     const tags = blogPost.tags;
     if (tags && Array.isArray(tags) && tags.length > 0) {
       const tagNames = tags.map((tag: any) => 
@@ -539,11 +513,10 @@ const BlogPreview: React.FC<BlogPreviewProps> = ({ blogId, blogSlug }) => {
     return `${blogPost.title}, blog, gotham enterprises`;
   };
 
-  // Helper function to get the blog post image
+
   const getBlogImage = (blogPost: BlogPost | null): string => {
     if (!blogPost) return SITE_CONFIG.DEFAULT_SHARE_IMAGE;
-    
-    // Try different image field variations
+
     const image = blogPost.featuredImage || 
                  (blogPost as any)?.image || 
                  (blogPost as any)?.metadata?.image ||
@@ -560,7 +533,6 @@ const BlogPreview: React.FC<BlogPreviewProps> = ({ blogId, blogSlug }) => {
     return SITE_CONFIG.DEFAULT_SHARE_IMAGE;
   };
 
-  // Helper function to get the current blog URL
   const getCurrentBlogUrl = (blogPost: BlogPost | null): string => {
     if (!blogPost) return '';
     
@@ -568,9 +540,30 @@ const BlogPreview: React.FC<BlogPreviewProps> = ({ blogId, blogSlug }) => {
       return window.location.href;
     }
     
-    // Fallback: generate URL using slug
     const slug = processSlug(blogPost.slug || blogPost.title);
     return generateBlogUrl(slug);
+  };
+
+  const getImageDimensions = (blogPost: BlogPost | null): { width: string; height: string } => {
+    if (!blogPost) return { width: '1200', height: '630' };
+    
+    const image = blogPost.featuredImage || 
+                 (blogPost as any)?.image || 
+                 (blogPost as any)?.metadata?.image ||
+                 (blogPost as any)?.thumbnail;
+    
+    if (image && typeof image === 'object') {
+      return {
+        width: image.width?.toString() || '1200',
+        height: image.height?.toString() || '630'
+      };
+    }
+
+    return { width: '1200', height: '630' };
+  };
+
+  const getSiteName = (): string => {
+    return 'Gotham Enterprises Blog';
   };
 
   const renderTags = (blogPost: BlogPost | null) => {
@@ -721,8 +714,16 @@ const BlogPreview: React.FC<BlogPreviewProps> = ({ blogId, blogSlug }) => {
         <title>{getSEOTitle(blogPost)}</title>
         <meta name="description" content={getSEODescription(blogPost)} />
         <meta name="keywords" content={getSEOKeywords(blogPost)} />
+        <meta name="robots" content="index, follow, max-image-preview:large" />
+        <meta property="og:title" content={blogPost?.title || 'Blog Post'} />
+        <meta property="og:description" content={getSEODescription(blogPost)} />
+        <meta property="og:image" content={getBlogImage(blogPost)} />
+        <meta property="og:image:width" content={getImageDimensions(blogPost).width} />
+        <meta property="og:image:height" content={getImageDimensions(blogPost).height} />
+        <meta property="og:url" content={getCurrentBlogUrl(blogPost)} />
+        <meta property="og:site_name" content={getSiteName()} />
+        <meta property="og:type" content="article" />
         
-        {/* Open Graph Meta Tags */}
         {(() => {
           const ogData = getOpenGraphData();
           if (!ogData) return null;
@@ -731,8 +732,7 @@ const BlogPreview: React.FC<BlogPreviewProps> = ({ blogId, blogSlug }) => {
             <meta key={index} property={tag.property} content={tag.content} />
           ));
         })()}
-        
-        {/* Twitter Card Meta Tags */}
+   
         {(() => {
           const ogData = getOpenGraphData();
           if (!ogData) return null;
@@ -742,20 +742,15 @@ const BlogPreview: React.FC<BlogPreviewProps> = ({ blogId, blogSlug }) => {
           ));
         })()}
         
-        {/* Additional SEO */}
         <meta name="author" content={getAuthorName(blogPost)} />
-        <meta name="robots" content="index, follow" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        
-        {/* Canonical URL */}
+
         {(() => {
           const ogData = getOpenGraphData();
           if (!ogData) return null;
           
           return <link rel="canonical" href={ogData.url} />;
         })()}
-        
-        {/* JSON-LD Structured Data */}
         {(() => {
           const ogData = getOpenGraphData();
           if (!ogData) return null;
@@ -772,7 +767,6 @@ const BlogPreview: React.FC<BlogPreviewProps> = ({ blogId, blogSlug }) => {
         })()}
       </Head>
       
-      {/* Social Share Component */}
       {blogPost && typeof window !== 'undefined' && (
         <SocialShare 
           url={`${window.location.origin}${window.location.pathname}`}
@@ -816,7 +810,6 @@ const BlogPreview: React.FC<BlogPreviewProps> = ({ blogId, blogSlug }) => {
               </p>
             )}
             <div className="flex flex-wrap items-center gap-6 mb-8 pb-8 border-b border-gray-200">
-              {/* Author */}
               {((blogPost as any)?.metadata?.author || blogPost.author) && (
                 <div className="flex items-center text-sm text-gray-600">
                   <UserIcon className="mr-2" />
@@ -828,15 +821,12 @@ const BlogPreview: React.FC<BlogPreviewProps> = ({ blogId, blogSlug }) => {
                 <CalenderIcon className="mr-2" />
                 <span>Published {getPublishDate(blogPost)}</span>
               </div>
-
-              {/* Category - Always show */}
               <div className="flex items-center">
                 <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                   {getCategoryName(blogPost)}
                 </span>
               </div>
             </div>
-            {/* Tags - Always show */}
             <div className="mb-8">
               <div className="flex items-center mb-3">
                 <svg className="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
