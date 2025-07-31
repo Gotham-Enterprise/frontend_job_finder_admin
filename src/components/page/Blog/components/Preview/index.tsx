@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Head from 'next/head';
 import { blogApi } from '@/services/api/blog';
 import { BlogPost } from '@/services/types/blog';
 import { formatDate } from '@/services/utils/dateUtils';
@@ -285,6 +286,55 @@ const BlogPreview: React.FC<BlogPreviewProps> = ({ blogId, blogSlug }) => {
     return status?.charAt(0).toUpperCase() + status?.slice(1) || 'Not specified';
   };
 
+  const getSEOTitle = (blogPost: BlogPost | null): string => {
+    if (!blogPost) return 'Blog Post | Gotham Enterprises';
+    
+    const seoTitle = (blogPost as any)?.seo?.title;
+    if (seoTitle && seoTitle.trim()) {
+      return `${seoTitle} | Gotham Enterprises`;
+    }
+    
+    return `${blogPost.title} | Gotham Enterprises`;
+  };
+
+  const getSEODescription = (blogPost: BlogPost | null): string => {
+    if (!blogPost) return 'Read our latest blog post on Gotham Enterprises.';
+    
+    const seoDescription = (blogPost as any)?.seo?.description;
+    if (seoDescription && seoDescription.trim()) {
+      return seoDescription;
+    }
+    
+    if (blogPost.excerpt && blogPost.excerpt.trim()) {
+      return blogPost.excerpt;
+    }
+    
+    return `Read about ${blogPost.title} on Gotham Enterprises blog.`;
+  };
+
+  const getSEOKeywords = (blogPost: BlogPost | null): string => {
+    if (!blogPost) return 'blog, gotham enterprises';
+    
+    const seoKeywords = (blogPost as any)?.seo?.keywords;
+    if (seoKeywords && Array.isArray(seoKeywords) && seoKeywords.length > 0) {
+      return seoKeywords.join(', ');
+    }
+    
+    // Fallback to tags if no SEO keywords
+    const tags = blogPost.tags;
+    if (tags && Array.isArray(tags) && tags.length > 0) {
+      const tagNames = tags.map((tag: any) => 
+        typeof tag === 'string' ? tag : (tag?.name || '')
+      ).filter(Boolean);
+      
+      if (tagNames.length > 0) {
+        return `${tagNames.join(', ')}, blog, gotham enterprises`;
+      }
+    }
+    
+    return `${blogPost.title}, blog, gotham enterprises`;
+  };
+
   const renderTags = (blogPost: BlogPost | null) => {
     if (!blogPost) {
       return (
@@ -362,6 +412,34 @@ const BlogPreview: React.FC<BlogPreviewProps> = ({ blogId, blogSlug }) => {
     }
   }, [blogId, blogSlug]);
 
+
+  useEffect(() => {
+    if (blogPost) {
+    
+      document.title = getSEOTitle(blogPost);
+  
+      const metaDescription = document.querySelector('meta[name="description"]');
+      if (metaDescription) {
+        metaDescription.setAttribute('content', getSEODescription(blogPost));
+      } else {
+        const newMetaDescription = document.createElement('meta');
+        newMetaDescription.name = 'description';
+        newMetaDescription.content = getSEODescription(blogPost);
+        document.head.appendChild(newMetaDescription);
+      }
+
+      const metaKeywords = document.querySelector('meta[name="keywords"]');
+      if (metaKeywords) {
+        metaKeywords.setAttribute('content', getSEOKeywords(blogPost));
+      } else {
+        const newMetaKeywords = document.createElement('meta');
+        newMetaKeywords.name = 'keywords';
+        newMetaKeywords.content = getSEOKeywords(blogPost);
+        document.head.appendChild(newMetaKeywords);
+      }
+    }
+  }, [blogPost]);
+
   const handleGoBack = () => {
     if (window.opener) {
       window.opener.location.href = '/admin/blog';
@@ -400,7 +478,97 @@ const BlogPreview: React.FC<BlogPreviewProps> = ({ blogId, blogSlug }) => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <>
+      <Head>
+        <title>{getSEOTitle(blogPost)}</title>
+        <meta name="description" content={getSEODescription(blogPost)} />
+        <meta name="keywords" content={getSEOKeywords(blogPost)} />
+        
+        {/* Open Graph / Facebook */}
+        <meta property="og:type" content="article" />
+        <meta property="og:title" content={getSEOTitle(blogPost)} />
+        <meta property="og:description" content={getSEODescription(blogPost)} />
+        <meta property="og:site_name" content="Gotham Enterprises" />
+        {blogPost && (
+          <>
+            <meta property="article:author" content={getAuthorName(blogPost)} />
+            <meta property="article:section" content={getCategoryName(blogPost)} />
+            {blogPost.createdAt && (
+              <meta property="article:published_time" content={new Date(blogPost.createdAt).toISOString()} />
+            )}
+            {blogPost.updatedAt && (
+              <meta property="article:modified_time" content={new Date(blogPost.updatedAt).toISOString()} />
+            )}
+            {/* Article tags */}
+            {blogPost.tags && Array.isArray(blogPost.tags) && blogPost.tags.map((tag: any, index: number) => {
+              const tagName = typeof tag === 'string' ? tag : (tag?.name || '');
+              return tagName ? <meta key={index} property="article:tag" content={tagName} /> : null;
+            })}
+          </>
+        )}
+        {blogPost?.featuredImage && typeof blogPost.featuredImage === 'object' && (
+          <meta property="og:image" content={blogPost.featuredImage.url} />
+        )}
+        
+        {/* Twitter */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={getSEOTitle(blogPost)} />
+        <meta name="twitter:description" content={getSEODescription(blogPost)} />
+        {blogPost?.featuredImage && typeof blogPost.featuredImage === 'object' && (
+          <meta name="twitter:image" content={blogPost.featuredImage.url} />
+        )}
+        
+        {/* Additional SEO */}
+        <meta name="author" content={getAuthorName(blogPost)} />
+        <meta name="robots" content="index, follow" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        
+        {/* Canonical URL - will be set on client side */}
+        {typeof window !== 'undefined' && (
+          <link rel="canonical" href={`${window.location.origin}${window.location.pathname}`} />
+        )}
+        
+        {/* JSON-LD Structured Data */}
+        {blogPost && (
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify({
+                "@context": "https://schema.org",
+                "@type": "Article",
+                "headline": blogPost.title,
+                "description": getSEODescription(blogPost),
+                "author": {
+                  "@type": "Person",
+                  "name": getAuthorName(blogPost)
+                },
+                "publisher": {
+                  "@type": "Organization",
+                  "name": "Gotham Enterprises",
+                  "url": "https://gothamenterprisesltd.com"
+                },
+                "datePublished": blogPost.createdAt ? new Date(blogPost.createdAt).toISOString() : undefined,
+                "dateModified": blogPost.updatedAt ? new Date(blogPost.updatedAt).toISOString() : (blogPost.createdAt ? new Date(blogPost.createdAt).toISOString() : undefined),
+                "articleSection": getCategoryName(blogPost),
+                "keywords": getSEOKeywords(blogPost),
+                ...(blogPost.featuredImage && typeof blogPost.featuredImage === 'object' && {
+                  "image": {
+                    "@type": "ImageObject",
+                    "url": blogPost.featuredImage.url,
+                    "alt": blogPost.featuredImage.alt || blogPost.title
+                  }
+                }),
+                "mainEntityOfPage": {
+                  "@type": "WebPage",
+                  "@id": typeof window !== 'undefined' ? `${window.location.origin}${window.location.pathname}` : ""
+                }
+              })
+            }}
+          />
+        )}
+      </Head>
+      
+      <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-center h-16">
@@ -503,6 +671,7 @@ const BlogPreview: React.FC<BlogPreviewProps> = ({ blogId, blogSlug }) => {
         </article>
       </main>
     </div>
+    </>
   );
 };
 
