@@ -694,7 +694,7 @@ const BlogPreview: React.FC<BlogPreviewProps> = ({ blogId, blogSlug }) => {
 
   if (error || !blogPost) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#fafafa' }}>
         <div className="text-center">
           <div className="w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
             <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -705,7 +705,7 @@ const BlogPreview: React.FC<BlogPreviewProps> = ({ blogId, blogSlug }) => {
           <p className="text-gray-600 mb-4">{error}</p>
           <button
             onClick={handleGoBack}
-            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="inline-flex items-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
           >
             <ArrowRightIcon className="w-4 h-4 mr-2" />
             Go Back
@@ -781,24 +781,9 @@ const BlogPreview: React.FC<BlogPreviewProps> = ({ blogId, blogSlug }) => {
         />
       )}
       
-      <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-center h-16">
-            <Link 
-              href="https://gothamenterprisesltd.com/home" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 rounded"
-            >
-              <GothamLogo className="h-8 w-auto" />
-            </Link>
-          </div>
-        </div>
-      </header>
-
+      <div className="min-h-screen" style={{ backgroundColor: '#fafafa' }}>
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <article className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        <article className="overflow-hidden">
 
           {blogPost.featuredImage && typeof blogPost.featuredImage === 'object' && (
             <div className="w-full h-64 md:h-80 lg:h-96 overflow-hidden">
