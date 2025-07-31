@@ -31,8 +31,7 @@ const BlogTable: React.FC<BlogTableProps> = ({
 
   return (
     <div 
-      className="relative overflow-auto"
-     
+      className="relative"
     >
       <div className="min-w-full">
         <Table>        
@@ -165,29 +164,48 @@ const BlogTable: React.FC<BlogTableProps> = ({
                   </p>
                 </TableCell>
                 <TableCell className="py-4 px-6 text-right">
-                  <div className="flex items-center justify-end gap-1">
-                    <button
-                      onClick={() => onPreviewPost && onPreviewPost(post.id)}
-                      className="inline-flex text-brand-400 items-center justify-center w-8 h-8 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
-                      title="View"
-                    >
-                      <EyeIcon className="text-brand-400"/>
-                    </button>
-                    <button
-                      onClick={() => onEditPost(post.id)}
-                      className="inline-flex text-brand-400  items-center justify-center w-8 h-8 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-md transition-colors"
-                      title="Edit"
-                    >
-                      <PencilIcon className="text-brand-400" />
-                    </button>
-                    <button
-                      onClick={() => onDeletePost(post.id)}
-                      className="inline-flex text-brand-400 items-center justify-center w-8 h-8 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
-                      title="Delete"
-                    >
-                      <TrashBinIcon className="text-brand-400" />
-                    </button>
-                  </div>
+                  <OptionsDropdown
+                    trigger={
+                      <button className="inline-flex items-center justify-center w-8 h-8 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-md transition-colors">
+                        <HorizontaLDots />
+                      </button>
+                    }
+                    options={[
+                         {
+                        id: 'view',
+                        label: 'View',
+                        icon: (
+                         <EyeIcon />
+                        ),
+                        onClick: () => {
+                          onPreviewPost && onPreviewPost(post.id);
+                        },
+                      },
+                      {
+                        id: 'edit',
+                        label: 'Edit',
+                        icon: <PencilIcon />,
+                        onClick: () => onEditPost(post.id),
+                      },
+                      {
+                        id: 'share',
+                        label: 'Share',
+                        icon: (
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
+                          </svg>
+                        ),
+                        onClick: () => onPreviewPost && onPreviewPost(post.id),
+                      },
+                      {
+                        id: 'delete',
+                        label: 'Archive',
+                        icon: <TrashBinIcon />,
+                        onClick: () => onDeletePost(post.id),
+                        variant: 'danger' as const,
+                      },
+                    ]}
+                  />
                 </TableCell>
               </TableRow>
             ))

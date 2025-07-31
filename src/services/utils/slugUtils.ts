@@ -82,5 +82,5 @@ export const generateSlugVariations = (slug: string): string[] => {
     cleanSlug(`/${slug}`),
     processSlug(slug),
     processSlug(`/${slug}`)
-  ].filter((variation, index, arr) => arr.indexOf(variation) === index); // Remove duplicates
-};
+  ].filter((variation, index, arr) => arr.indexOf(variation) === index); 
+}; 
