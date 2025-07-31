@@ -202,10 +202,11 @@ const BlogContentRenderer: React.FC<BlogContentRendererProps> = ({ content }) =>
 };
 
 interface BlogPreviewProps {
-  blogId: string;
+  blogId?: string;
+  blogSlug?: string;
 }
 
-const BlogPreview: React.FC<BlogPreviewProps> = ({ blogId }) => {
+const BlogPreview: React.FC<BlogPreviewProps> = ({ blogId, blogSlug }) => {
   const router = useRouter();
   const [blogPost, setBlogPost] = useState<BlogPost | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -340,7 +341,16 @@ const BlogPreview: React.FC<BlogPreviewProps> = ({ blogId }) => {
     const fetchBlogPost = async () => {
       try {
         setIsLoading(true);
-        const blogData = await blogApi.getBlogPostById(blogId);
+        let blogData;
+        
+        if (blogSlug) {
+          blogData = await blogApi.getBlogPostBySlug(blogSlug);
+        } else if (blogId) {
+          blogData = await blogApi.getBlogPostById(blogId);
+        } else {
+          throw new Error('Either blogId or blogSlug must be provided');
+        }
+        
         setBlogPost(blogData);
       } catch (err: any) {
         console.error('Error fetching blog post:', err); 
@@ -350,10 +360,10 @@ const BlogPreview: React.FC<BlogPreviewProps> = ({ blogId }) => {
       }
     };
 
-    if (blogId) {
+    if (blogId || blogSlug) {
       fetchBlogPost();
     }
-  }, [blogId]);
+  }, [blogId, blogSlug]);
 
   const handleGoBack = () => {
     if (window.opener) {

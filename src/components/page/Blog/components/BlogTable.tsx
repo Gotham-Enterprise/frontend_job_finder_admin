@@ -31,11 +31,7 @@ const BlogTable: React.FC<BlogTableProps> = ({
   return (
     <div 
       className="relative overflow-auto"
-      style={{ 
-        maxHeight: '600px',
-        scrollbarWidth: 'thin',
-        scrollbarColor: '#9CA3AF #F3F4F6'
-      }}
+     
     >
       <div className="min-w-full">
         <Table>        
@@ -99,6 +95,24 @@ const BlogTable: React.FC<BlogTableProps> = ({
                       {post.excerpt && (
                         <p className="text-sm text-gray-500 dark:text-gray-400 truncate mt-1">
                           {post.excerpt}
+                        </p>
+                      )}
+                      {post.slug && (
+                        <p className="text-xs text-blue-600 dark:text-blue-400 truncate mt-1">
+                          /blog/{(() => {
+                          
+                            let cleanSlug = post.slug.startsWith('/') ? post.slug.substring(1) : post.slug;
+                            return cleanSlug
+                              .replace(/\?/g, '')
+                              .replace(/:/g, '')
+                              .replace(/,/g, '')
+                              .replace(/—/g, '-')
+                              .replace(/'/g, '')
+                              .replace(/"/g, '')
+                              .replace(/\s+/g, '-')
+                              .replace(/-+/g, '-')
+                              .replace(/^-|-$/g, '');
+                          })()}
                         </p>
                       )}
                     </div>

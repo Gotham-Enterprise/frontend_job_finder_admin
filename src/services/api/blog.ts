@@ -58,6 +58,57 @@ export const blogApi = {
     }
   },
 
+  async getBlogPostBySlug(slug: string): Promise<BlogPost> {
+    try {
+      if (slug.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+        return await this.getBlogPostById(slug);
+      }
+      
+      const cleanSlugFunction = (inputSlug: string) => {
+        return inputSlug
+          .replace(/\?/g, '') 
+          .replace(/:/g, '') 
+          .replace(/,/g, '') 
+          .replace(/—/g, '-')
+          .replace(/'/g, '')
+          .replace(/"/g, '')
+          .replace(/\s+/g, '-') 
+          .replace(/-+/g, '-') 
+          .replace(/^-|-$/g, '');
+      };
+
+      const response = await this.getBlogPosts();
+      
+      if (response.success && response.data) {
+       
+        const blogPost = response.data.find(post => {
+          if (!post.slug) return false;
+          
+        
+          const storedSlugWithoutSlash = post.slug.startsWith('/') ? post.slug.substring(1) : post.slug;
+          const cleanedStoredSlug = cleanSlugFunction(storedSlugWithoutSlash);
+          
+        
+          return cleanedStoredSlug === slug || post.slug === `/${slug}` || post.slug === slug;
+        });
+        
+        
+        
+        if (blogPost) {
+    
+          return await this.getBlogPostById(blogPost.id);
+        } else {
+          throw new Error(`Blog post not found for slug: ${slug}`);
+        }
+      } else {
+        throw new Error('Failed to fetch blog posts');
+      }
+    } catch (error: any) {
+      console.error('Error in getBlogPostBySlug:', error);
+      throw error;
+    }
+  },
+
   async deleteBlogPost(id: string): Promise<void> {
     return apiDelete<void>('/api/admin/blogs/multiple', {
       body: { blogIds: [id] }

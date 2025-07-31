@@ -208,7 +208,27 @@ export const useBlogLogic = () => {
   };
 
   const previewPost = (postId: string) => {
-    window.open(`/blog/preview/${postId}`, '_blank');
+    const post = data?.data?.find((p: any) => p.id === postId);
+    if (post && post.slug) {
+     
+      let cleanSlug = post.slug.startsWith('/') ? post.slug.substring(1) : post.slug;
+      
+     
+      cleanSlug = cleanSlug
+        .replace(/\?/g, '') 
+        .replace(/:/g, '') 
+        .replace(/,/g, '') 
+        .replace(/—/g, '-') 
+        .replace(/'/g, '') 
+        .replace(/"/g, '')
+        .replace(/\s+/g, '-') 
+        .replace(/-+/g, '-') 
+        .replace(/^-|-$/g, ''); 
+      
+      window.open(`/blog/${cleanSlug}`, '_blank');
+    } else {
+      window.open(`/blog/${postId}`, '_blank');
+    }
   };
 
   const deletePost = async (postId: string) => {
