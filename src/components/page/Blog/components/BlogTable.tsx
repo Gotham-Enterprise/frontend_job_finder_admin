@@ -1,8 +1,9 @@
+"use client"
+
 import React, { useState } from 'react';
 import { formatDate } from '@/services/utils/dateUtils';
 import { processSlug } from '@/services/utils/slugUtils';
 import { generateBlogUrl } from '@/config/constants';
-import { extractBlogOpenGraphData } from '@/services/utils/openGraphUtils';
 import {
   Table,
   TableBody,
