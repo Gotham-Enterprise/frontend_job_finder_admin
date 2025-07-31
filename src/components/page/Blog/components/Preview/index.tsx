@@ -6,10 +6,17 @@ import Head from 'next/head';
 import { blogApi } from '@/services/api/blog';
 import { BlogPost } from '@/services/types/blog';
 import { formatDate } from '@/services/utils/dateUtils';
+import { processSlug } from '@/services/utils/slugUtils';
 import { ArrowRightIcon, CalenderIcon, UserIcon, GothamLogo } from '@/icons';
 import FullScreenSpinner from '@/components/ui/FullScreenSpinner';
+import { SITE_CONFIG, generateBlogUrl } from '@/config/constants';
+import { 
+  extractBlogOpenGraphData, 
+  generateOpenGraphTags, 
+  generateTwitterCardTags, 
+  generateStructuredData 
+} from '@/services/utils/openGraphUtils';
 
-// Social Share Component
 interface SocialShareProps {
   url: string;
   title: string;
@@ -20,7 +27,6 @@ const SocialShare: React.FC<SocialShareProps> = ({ url, title, description }) =>
   const [showCopied, setShowCopied] = useState(false);
   const [showLocalhostWarning, setShowLocalhostWarning] = useState(false);
 
-  // Check if we're on localhost
   const isLocalhost = url.includes('localhost') || url.includes('127.0.0.1');
 
   const shareUrls = {
@@ -396,6 +402,17 @@ const BlogPreview: React.FC<BlogPreviewProps> = ({ blogId, blogSlug }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Generate Open Graph data for the current blog post
+  const getOpenGraphData = () => {
+    if (!blogPost) return null;
+    
+    const ogData = extractBlogOpenGraphData(blogPost);
+    // Set the current URL
+    ogData.url = typeof window !== 'undefined' ? window.location.href : generateBlogUrl(processSlug(blogPost.slug || blogPost.title));
+    
+    return ogData;
+  };
+
   const getAuthorName = (blogPost: BlogPost | null): string => {
     if (!blogPost) return 'Unknown Author';
     
@@ -498,6 +515,7 @@ const BlogPreview: React.FC<BlogPreviewProps> = ({ blogId, blogSlug }) => {
     return `Read about ${blogPost.title} on Gotham Enterprises blog.`;
   };
 
+  // Helper function to get SEO keywords
   const getSEOKeywords = (blogPost: BlogPost | null): string => {
     if (!blogPost) return 'blog, gotham enterprises';
     
@@ -519,6 +537,40 @@ const BlogPreview: React.FC<BlogPreviewProps> = ({ blogId, blogSlug }) => {
     }
     
     return `${blogPost.title}, blog, gotham enterprises`;
+  };
+
+  // Helper function to get the blog post image
+  const getBlogImage = (blogPost: BlogPost | null): string => {
+    if (!blogPost) return SITE_CONFIG.DEFAULT_SHARE_IMAGE;
+    
+    // Try different image field variations
+    const image = blogPost.featuredImage || 
+                 (blogPost as any)?.image || 
+                 (blogPost as any)?.metadata?.image ||
+                 (blogPost as any)?.thumbnail;
+    
+    if (image) {
+      if (typeof image === 'string') {
+        return image;
+      } else if (typeof image === 'object' && image.url) {
+        return image.url;
+      }
+    }
+    
+    return SITE_CONFIG.DEFAULT_SHARE_IMAGE;
+  };
+
+  // Helper function to get the current blog URL
+  const getCurrentBlogUrl = (blogPost: BlogPost | null): string => {
+    if (!blogPost) return '';
+    
+    if (typeof window !== 'undefined') {
+      return window.location.href;
+    }
+    
+    // Fallback: generate URL using slug
+    const slug = processSlug(blogPost.slug || blogPost.title);
+    return generateBlogUrl(slug);
   };
 
   const renderTags = (blogPost: BlogPost | null) => {
@@ -670,88 +722,54 @@ const BlogPreview: React.FC<BlogPreviewProps> = ({ blogId, blogSlug }) => {
         <meta name="description" content={getSEODescription(blogPost)} />
         <meta name="keywords" content={getSEOKeywords(blogPost)} />
         
-        {/* Open Graph / Facebook */}
-        <meta property="og:type" content="article" />
-        <meta property="og:title" content={getSEOTitle(blogPost)} />
-        <meta property="og:description" content={getSEODescription(blogPost)} />
-        <meta property="og:site_name" content="Gotham Enterprises" />
-        {blogPost && (
-          <>
-            <meta property="article:author" content={getAuthorName(blogPost)} />
-            <meta property="article:section" content={getCategoryName(blogPost)} />
-            {blogPost.createdAt && (
-              <meta property="article:published_time" content={new Date(blogPost.createdAt).toISOString()} />
-            )}
-            {blogPost.updatedAt && (
-              <meta property="article:modified_time" content={new Date(blogPost.updatedAt).toISOString()} />
-            )}
-            {/* Article tags */}
-            {blogPost.tags && Array.isArray(blogPost.tags) && blogPost.tags.map((tag: any, index: number) => {
-              const tagName = typeof tag === 'string' ? tag : (tag?.name || '');
-              return tagName ? <meta key={index} property="article:tag" content={tagName} /> : null;
-            })}
-          </>
-        )}
-        {blogPost?.featuredImage && typeof blogPost.featuredImage === 'object' && (
-          <meta property="og:image" content={blogPost.featuredImage.url} />
-        )}
+        {/* Open Graph Meta Tags */}
+        {(() => {
+          const ogData = getOpenGraphData();
+          if (!ogData) return null;
+          
+          return generateOpenGraphTags(ogData).map((tag, index) => (
+            <meta key={index} property={tag.property} content={tag.content} />
+          ));
+        })()}
         
-        {/* Twitter */}
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={getSEOTitle(blogPost)} />
-        <meta name="twitter:description" content={getSEODescription(blogPost)} />
-        {blogPost?.featuredImage && typeof blogPost.featuredImage === 'object' && (
-          <meta name="twitter:image" content={blogPost.featuredImage.url} />
-        )}
+        {/* Twitter Card Meta Tags */}
+        {(() => {
+          const ogData = getOpenGraphData();
+          if (!ogData) return null;
+          
+          return generateTwitterCardTags(ogData).map((tag, index) => (
+            <meta key={index} name={tag.name} content={tag.content} />
+          ));
+        })()}
         
         {/* Additional SEO */}
         <meta name="author" content={getAuthorName(blogPost)} />
         <meta name="robots" content="index, follow" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         
-        {/* Canonical URL - will be set on client side */}
-        {typeof window !== 'undefined' && (
-          <link rel="canonical" href={`${window.location.origin}${window.location.pathname}`} />
-        )}
+        {/* Canonical URL */}
+        {(() => {
+          const ogData = getOpenGraphData();
+          if (!ogData) return null;
+          
+          return <link rel="canonical" href={ogData.url} />;
+        })()}
         
         {/* JSON-LD Structured Data */}
-        {blogPost && (
-          <script
-            type="application/ld+json"
-            dangerouslySetInnerHTML={{
-              __html: JSON.stringify({
-                "@context": "https://schema.org",
-                "@type": "Article",
-                "headline": blogPost.title,
-                "description": getSEODescription(blogPost),
-                "author": {
-                  "@type": "Person",
-                  "name": getAuthorName(blogPost)
-                },
-                "publisher": {
-                  "@type": "Organization",
-                  "name": "Gotham Enterprises",
-                  "url": "https://gothamenterprisesltd.com"
-                },
-                "datePublished": blogPost.createdAt ? new Date(blogPost.createdAt).toISOString() : undefined,
-                "dateModified": blogPost.updatedAt ? new Date(blogPost.updatedAt).toISOString() : (blogPost.createdAt ? new Date(blogPost.createdAt).toISOString() : undefined),
-                "articleSection": getCategoryName(blogPost),
-                "keywords": getSEOKeywords(blogPost),
-                ...(blogPost.featuredImage && typeof blogPost.featuredImage === 'object' && {
-                  "image": {
-                    "@type": "ImageObject",
-                    "url": blogPost.featuredImage.url,
-                    "alt": blogPost.featuredImage.alt || blogPost.title
-                  }
-                }),
-                "mainEntityOfPage": {
-                  "@type": "WebPage",
-                  "@id": typeof window !== 'undefined' ? `${window.location.origin}${window.location.pathname}` : ""
-                }
-              })
-            }}
-          />
-        )}
+        {(() => {
+          const ogData = getOpenGraphData();
+          if (!ogData) return null;
+          
+          const structuredData = generateStructuredData(ogData);
+          return (
+            <script
+              type="application/ld+json"
+              dangerouslySetInnerHTML={{
+                __html: JSON.stringify(structuredData, null, 2)
+              }}
+            />
+          );
+        })()}
       </Head>
       
       {/* Social Share Component */}

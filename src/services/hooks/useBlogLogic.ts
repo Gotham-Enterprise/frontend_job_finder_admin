@@ -211,8 +211,7 @@ export const useBlogLogic = () => {
   const previewPost = (postId: string) => {
     const post = data?.data?.find((p: any) => p.id === postId);
     if (post && post.slug) {
-      // Use the consolidated utility function to process the slug
-      const cleanedSlug = processSlug(post.slug);
+          const cleanedSlug = processSlug(post.slug);
       window.open(`/blog/${cleanedSlug}`, '_blank');
     } else {
       window.open(`/blog/${postId}`, '_blank');
