@@ -200,12 +200,26 @@ const BlogTable: React.FC<BlogTableProps> = ({
                           onClick={() => onPreviewPost && onPreviewPost(post.id)}
                           className="text-left w-full group"
                         >
-                          <p className="font-medium text-gray-900 dark:text-white truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors cursor-pointer">
-                            {post.title}
-                          </p>
+                          <div className="flex items-center gap-3">
+                            {getBlogImage(post) && (
+                              <div className="flex-shrink-0">
+                                <img
+                                  src={getBlogImage(post)}
+                                  alt={post.title}
+                                  className="w-8 h-8 rounded-full object-cover border border-gray-200 dark:border-gray-700"
+                                  onError={(e) => {
+                                    const target = e.target as HTMLImageElement;
+                                    target.style.display = 'none';
+                                  }}
+                                />
+                              </div>
+                            )}
+                            <p className="font-medium text-gray-900 dark:text-white truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors cursor-pointer">
+                              {post.title}
+                            </p>
+                           
+                          </div>
                         </button>
-                     
-                       
                       </div>
                     </div>
                   </TableCell>
