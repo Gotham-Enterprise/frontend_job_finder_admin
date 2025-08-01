@@ -34,14 +34,20 @@ export default function ProfileCard({
         return name.split(' ').map(n => n.charAt(0)).join('').substring(0, 2);
     };
 
+    const isResumeDocument = (doc: Document) => {
+        return (doc.type?.toLowerCase().includes('resume') || 
+                doc.type?.toLowerCase().includes('cv') ||
+                doc.fileName?.toLowerCase().includes('resume') ||
+                doc.fileName?.toLowerCase().includes('cv') ||
+                doc.objectKey?.toLowerCase().includes('resume') ||
+                doc.objectKey?.toLowerCase().includes('cv'));
+    };
+
     const getResumesToShow = () => {
         if (!profileData.documents || profileData.documents.length === 0) return [];
         
         const resumes = profileData.documents.filter(doc => 
-            (doc.type?.toLowerCase().includes('resume') || 
-            doc.type?.toLowerCase().includes('cv') ||
-            doc.fileName?.toLowerCase().includes('resume') ||
-            doc.fileName?.toLowerCase().includes('cv')) &&
+            isResumeDocument(doc) &&
             doc.objectKey
         );
         
@@ -58,10 +64,7 @@ export default function ProfileCard({
         if (!profileData.documents || profileData.documents.length === 0) return [];
         
         const documents = profileData.documents.filter(doc => 
-            !doc.type?.toLowerCase().includes('resume') && 
-            !doc.type?.toLowerCase().includes('cv') &&
-            !doc.fileName?.toLowerCase().includes('resume') &&
-            !doc.fileName?.toLowerCase().includes('cv') &&
+            !isResumeDocument(doc) &&
             doc.objectKey
         );
         
@@ -130,6 +133,11 @@ export default function ProfileCard({
                     <h2 className={`${variant === 'compact' ? 'text-lg' : 'text-lg'} font-bold text-gray-900 dark:text-white mb-2`}>
                         {profileData.name}
                     </h2>
+                    {profileData.email && (
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                            {profileData.email}
+                        </p>
+                    )}
                       <div className="flex items-center items-center justify-center gap-2">
                    {profileData.title && (
                         <span className="inline-block px-3 py-1 text-sm font-medium text-blue-600 bg-blue-100 rounded-full dark:bg-blue-900 dark:text-blue-300">
@@ -172,19 +180,13 @@ export default function ProfileCard({
                                 Resume
                             </h4>
                             {profileData.documents.filter(doc => 
-                                (doc.type?.toLowerCase().includes('resume') || 
-                                doc.type?.toLowerCase().includes('cv') ||
-                                doc.fileName?.toLowerCase().includes('resume') ||
-                                doc.fileName?.toLowerCase().includes('cv')) &&
+                                isResumeDocument(doc) &&
                                 doc.objectKey
                             ).length > 3 && (
                                 <div className="flex items-center gap-2">
                                     <span className="text-xs font-medium text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/30 px-2 py-1 rounded-full">
                                         {profileData.documents.filter(doc => 
-                                            (doc.type?.toLowerCase().includes('resume') || 
-                                            doc.type?.toLowerCase().includes('cv') ||
-                                            doc.fileName?.toLowerCase().includes('resume') ||
-                                            doc.fileName?.toLowerCase().includes('cv')) &&
+                                            isResumeDocument(doc) &&
                                             doc.objectKey
                                         ).length} files
                                     </span>
@@ -212,10 +214,7 @@ export default function ProfileCard({
                         </div>
                         
                         <div className={getContainerClasses(showAllResumes, profileData.documents.filter(doc => 
-                            (doc.type?.toLowerCase().includes('resume') || 
-                            doc.type?.toLowerCase().includes('cv') ||
-                            doc.fileName?.toLowerCase().includes('resume') ||
-                            doc.fileName?.toLowerCase().includes('cv')) &&
+                            isResumeDocument(doc) &&
                             doc.objectKey
                         ).length)}>
                             {getResumesToShow().map((document, index) => (
@@ -252,10 +251,7 @@ export default function ProfileCard({
                         </div>
                         
                         {showAllResumes && profileData.documents.filter(doc => 
-                            (doc.type?.toLowerCase().includes('resume') || 
-                            doc.type?.toLowerCase().includes('cv') ||
-                            doc.fileName?.toLowerCase().includes('resume') ||
-                            doc.fileName?.toLowerCase().includes('cv')) &&
+                            isResumeDocument(doc) &&
                             doc.objectKey
                         ).length > 5 && (
                             <div className="mt-3 text-center">
@@ -269,19 +265,13 @@ export default function ProfileCard({
                         )}
                         
                         {!showAllResumes && profileData.documents.filter(doc => 
-                            (doc.type?.toLowerCase().includes('resume') || 
-                            doc.type?.toLowerCase().includes('cv') ||
-                            doc.fileName?.toLowerCase().includes('resume') ||
-                            doc.fileName?.toLowerCase().includes('cv')) &&
+                            isResumeDocument(doc) &&
                             doc.objectKey
                         ).length > 3 && (
                             <div className="mt-3 text-center">
                                 <p className="text-xs text-gray-500 dark:text-gray-400">
                                     Showing 3 of {profileData.documents.filter(doc => 
-                                        (doc.type?.toLowerCase().includes('resume') || 
-                                        doc.type?.toLowerCase().includes('cv') ||
-                                        doc.fileName?.toLowerCase().includes('resume') ||
-                                        doc.fileName?.toLowerCase().includes('cv')) &&
+                                        isResumeDocument(doc) &&
                                         doc.objectKey
                                     ).length} resumes
                                 </p>

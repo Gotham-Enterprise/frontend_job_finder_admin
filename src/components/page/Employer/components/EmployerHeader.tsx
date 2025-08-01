@@ -1,15 +1,8 @@
 import React, { useRef } from 'react';
 import Input from '../../../ui/input/Input';
 import FilterDropdown from '../../../ui/FilterDropdown';
-import { SearchIcon, PlusIcon } from '../../../ui/icons';
+import { SearchIcon, PlusIcon, FilterIcon } from '../../../ui/icons';
 import { EmployerHeaderProps } from '@/services/types/EmployerTypes';
-
-// Filter Icon
-const FilterIcon = () => (
-  <svg viewBox="0 0 20 20" fill="currentColor" width="20" height="20" aria-hidden="true">
-    <path d="M17.8571 2.87669C18.107 3.41157 18.0246 4.04275 17.6457 4.49555L12.4892 10.6589V15.3856C12.4892 16.0185 12.097 16.5852 11.5048 16.8082L9.56669 17.5381C9.09976 17.7139 8.57627 17.6494 8.16598 17.3655C7.75569 17.0816 7.51084 16.6144 7.51084 16.1155V10.6589L2.35425 4.49555C1.97542 4.04275 1.89302 3.41157 2.14291 2.87669C2.39279 2.34182 2.92977 2 3.52013 2H16.4799C17.0702 2 17.6072 2.34182 17.8571 2.87669ZM16.4799 3.52012H3.52013L8.91611 9.96964C8.99036 10.0584 9.03096 10.1698 9.03096 10.2848V16.1155L10.969 15.3856V10.2848C10.969 10.1698 11.0096 10.0584 11.0839 9.96964L16.4799 3.52012Z" fill="currentColor" fillRule="evenodd" clipRule="evenodd" />
-  </svg>
-);
 
 const EmployerHeader: React.FC<EmployerHeaderProps> = ({
   totalCount,
@@ -60,7 +53,6 @@ const EmployerHeader: React.FC<EmployerHeaderProps> = ({
             <span>Filter</span>
             {hasActiveFilters && (
               <span className="ml-1 bg-primary text-white text-xs rounded-full px-1.5 py-0.5 min-w-[18px] h-4 flex items-center justify-center font-medium">
-                {/* You can add filter count here if needed */}
               </span>
             )}
           </button>

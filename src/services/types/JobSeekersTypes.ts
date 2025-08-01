@@ -26,6 +26,7 @@ export interface JobSeekersFiltersProps {
   selectedStatuses: string[];
   onStatusToggleChange: (statuses: string[]) => void;
   hasActiveFilters: boolean;
+  clearIndividualFilter: (filterType: string) => void;
 }
 
 export interface JobSeekersTableProps {
@@ -34,7 +35,7 @@ export interface JobSeekersTableProps {
   tableColumns: Array<{ key: string; label: string; className?: string }>;
   getStatusVariant: (status: string) => 'light' | 'solid';
   onViewJobSeeker: (jobSeekerId: string) => void;
-  onViewResume: (resumeId: string | null) => void;
+  onViewResume: (objectKey: string | null) => void;
   isViewingResume: boolean;
 }
 

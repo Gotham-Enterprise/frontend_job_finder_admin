@@ -30,6 +30,7 @@ export interface EmployerFiltersProps {
   selectedStatuses: string[];
   onStatusToggle: (statuses: string[]) => void;
   hasActiveFilters: boolean;
+  clearIndividualFilter: (filterType: string) => void;
 }
 
 export interface EmployerTableProps {

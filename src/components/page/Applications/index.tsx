@@ -45,6 +45,7 @@ const JobApplications: React.FC<JobApplicationsProps> = ({ className = "" }) => 
     initViewResume,
     viewJobApplication,
     clearAllFilters,
+    clearIndividualFilter,
     hasActiveFilters,
     selectedStatuses,
   } = useJobApplicationsLogic();
@@ -83,6 +84,7 @@ const JobApplications: React.FC<JobApplicationsProps> = ({ className = "" }) => 
             selectedStatuses={selectedStatuses}
             onStatusToggle={handleStatusToggle}
             hasActiveFilters={hasActiveFilters}
+            clearIndividualFilter={clearIndividualFilter}
           />
         }
       />

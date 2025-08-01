@@ -10,7 +10,7 @@ import {
 import Badge from '../../../ui/badge/Badge';
 import Button from '../../../ui/button/Button';
 import TableHeading from '../../../tables/tableHeader';
-import { EyeIcon, TimeIcon } from '@/icons';
+import { EyeIcon, TimeIcon, FileIcon, DownloadIcon } from '@/icons';
 import { JobSeekersTableProps } from '@/services/types/JobSeekersTypes';
 import Avatar from '../../../ui/avatar/Avatar';
 
@@ -73,8 +73,9 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
   isViewingResume,
 }) => {
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+  const [loadingResumeId, setLoadingResumeId] = useState<string | null>(null);
 
-  const handleToggleExpanded = (jobSeekerId: string) => {
+  const toggleExpanded = (jobSeekerId: string) => {
     const newExpandedRows = new Set(expandedRows);
     if (expandedRows.has(jobSeekerId)) {
       newExpandedRows.delete(jobSeekerId);
@@ -83,6 +84,100 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
     }
     setExpandedRows(newExpandedRows);
   };
+
+  const viewResume = async (jobSeekerId: string, objectKey: string) => {
+    setLoadingResumeId(jobSeekerId);
+    try {
+      await onViewResume(objectKey);
+    } finally {
+      setLoadingResumeId(null);
+    }
+  };
+
+  const renderResumeButton = (jobSeeker: any) => {
+    const isLoadingThisResume = loadingResumeId === jobSeeker.id;
+
+    if (jobSeeker.hasResume && jobSeeker.resumeFileObjectKey) {
+      return (
+        <Button
+          variant="default"
+          size="sm"
+          className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 text-xs font-medium rounded-md shadow-sm hover:shadow-md transition-all duration-200 flex items-center gap-1.5"
+          onClick={() => viewResume(jobSeeker.id, jobSeeker.resumeFileObjectKey)}
+          disabled={isLoadingThisResume}
+          startIcon={isLoadingThisResume ? null : <FileIcon  />}
+        >
+          {isLoadingThisResume ? (
+            <>
+              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
+              Opening...
+            </>
+          ) : (
+            'Resume'
+          )}
+        </Button>
+      );
+    }
+    
+    if (jobSeeker.resumeId && jobSeeker.resumeFileObjectKey) {
+      return (
+        <Button
+          variant="default"
+          size="sm"
+          className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 text-xs font-medium rounded-md shadow-sm hover:shadow-md transition-all duration-200 flex items-center gap-1.5"
+          onClick={() => viewResume(jobSeeker.id, jobSeeker.resumeFileObjectKey)}
+          disabled={isLoadingThisResume}
+          startIcon={isLoadingThisResume ? null : <FileIcon  />}
+        >
+          {isLoadingThisResume ? (
+            <>
+              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
+              Opening...
+            </>
+          ) : (
+            'Resume'
+          )}
+        </Button>
+      );
+    }
+
+    if (jobSeeker.documents && jobSeeker.documents.length > 0) {
+      const resumeDoc = jobSeeker.documents.find((doc: any) => 
+        doc.type?.toLowerCase().includes('resume') || 
+        doc.fileName?.toLowerCase().includes('resume')
+      ) || jobSeeker.documents[0];
+      
+      if (resumeDoc && resumeDoc.objectKey) {
+        return (
+          <Button
+            variant="default"
+            size="sm"
+            className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 text-xs font-medium rounded-md shadow-sm hover:shadow-md transition-all duration-200 flex items-center gap-1.5"
+            onClick={() => viewResume(jobSeeker.id, resumeDoc.objectKey)}
+            disabled={isLoadingThisResume}
+            startIcon={isLoadingThisResume ? null : <FileIcon />}
+          >
+            {isLoadingThisResume ? (
+              <>
+                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
+                Opening...
+              </>
+            ) : (
+              'Resume'
+            )}
+          </Button>
+        );
+      }
+    }
+
+    return (
+      <div className="flex items-center gap-1.5 text-gray-400 dark:text-gray-500 text-xs">
+        <FileIcon className="opacity-50" />
+        <span>No resume</span>
+      </div>
+    );
+  };
+
   return (
     <div className="overflow-x-auto">
       <Table>
@@ -105,7 +200,12 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
             </TableRow>
           ) : (
             data.data.map((jobSeeker: any) => (
-              <TableRow key={jobSeeker.id} className="border-b text-sm border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50">
+              <TableRow 
+                key={jobSeeker.id} 
+                data-item-id={jobSeeker.id}
+                data-jobseeker-id={jobSeeker.id}
+                className="border-b text-sm border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50"
+              >
                 <TableCell className="py-4 px-6">
                   <div className="flex items-center gap-3">
                     <Avatar
@@ -119,6 +219,11 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
                       <p className="font-medium text-gray-900 dark:text-white">
                         {jobSeeker.name}
                       </p>
+                      {jobSeeker.email && (
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                          {jobSeeker.email}
+                        </p>
+                      )}
                       <Link 
                         href={`/admin/applications?name=${encodeURIComponent(jobSeeker.name.split(' ')[0])}`}
                         className="text-sm text-blue-500 dark:text-blue-500 hover:text-brand-500 dark:hover:text-brand-400 cursor-pointer transition-colors duration-200"
@@ -138,7 +243,7 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
                     specialties={Array.isArray(jobSeeker.specialty) ? jobSeeker.specialty : (jobSeeker.specialty ? [jobSeeker.specialty] : [])} 
                     jobSeekerId={jobSeeker.id}
                     expandedRows={expandedRows}
-                    onToggleExpanded={handleToggleExpanded}
+                    onToggleExpanded={toggleExpanded}
                   />
                 </TableCell>
                 <TableCell className="py-4 px-6">
@@ -150,20 +255,7 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
                   </p>
                 </TableCell>
                 <TableCell className="py-4 px-6 text-left">
-                  {jobSeeker.hasResume && jobSeeker.resumeId ? (
-                    <Button
-                      variant="text-primary"
-                      size="sm"
-                      className="text-brand-400"
-                      onClick={() => onViewResume(jobSeeker.resumeId)}
-                      disabled={isViewingResume}
-                    
-                    >
-                      {isViewingResume ? 'Opening...' : 'View resume'}
-                    </Button>
-                  ) : (
-                    <span className="text-gray-400 dark:text-gray-500 text-sm">No resume</span>
-                  )}
+                  {renderResumeButton(jobSeeker)}
                 </TableCell>
                 <TableCell className="py-4 px-6 whitespace-nowrap">
                   {jobSeeker.dateJoined ? (() => {

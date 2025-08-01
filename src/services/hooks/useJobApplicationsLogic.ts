@@ -10,37 +10,64 @@ export const useJobApplicationsLogic = () => {
 
   const getInitialFilters = (): JobApplicationFilters => {
     const hasUrlParams = Array.from(searchParams.keys()).length > 0;
-    
+  
     if (hasUrlParams) {
       const nameParam = searchParams.get('name') || '';
       const decodedName = nameParam ? decodeURIComponent(nameParam) : '';
+      const urlPage = searchParams.get('page');
+      const urlLocation = searchParams.get('location');
+      const urlCompanyName = searchParams.get('companyName');
+      const urlStatus = searchParams.get('status');
       
-      return {
-        page: Math.max(1, parseInt(searchParams.get('page') || '1', 10)),
+      const urlFilters = {
+        page: Math.max(1, parseInt(urlPage || '1', 10)),
         limit: parseInt(searchParams.get('limit') || '100', 10),
         name: decodedName,
-        location: searchParams.get('location') || '',
-        companyName: searchParams.get('companyName') || '',
-        status: searchParams.get('status') || '',
+        location: urlLocation || '',
+        companyName: urlCompanyName || '',
+        status: urlStatus || '',
       };
+      
+      const isSimpleNavigation = 
+        (!urlPage || urlPage === '1') &&
+        !decodedName &&
+        !urlLocation &&
+        !urlCompanyName &&
+        !urlStatus;
+      
+      if (isSimpleNavigation && typeof window !== 'undefined') {
+        localStorage.removeItem('jobApplications-search-state');
+        localStorage.removeItem('jobApplications-scroll-position');
+      }
+      
+      return urlFilters;
     }
-    
+
     if (typeof window !== 'undefined') {
-      const savedState = localStorage.getItem('jobApplications-search-state');
-      if (savedState) {
-        try {
-          const parsed = JSON.parse(savedState);
-          return {
-            page: Math.max(1, parsed.page || 1),
-            limit: parsed.limit || 100,
-            name: parsed.name || '',
-            location: parsed.location || '',
-            companyName: parsed.companyName || '',
-            status: parsed.status || '',
-          };
-        } catch (error) {
-          console.warn('Failed to parse saved job applications state:', error);
+      const navigationFlag = sessionStorage.getItem('jobApplications-preserve-state');
+      
+      if (navigationFlag === 'true') {
+        sessionStorage.removeItem('jobApplications-preserve-state');
+        
+        const savedState = localStorage.getItem('jobApplications-search-state');
+        if (savedState) {
+          try {
+            const parsed = JSON.parse(savedState);
+            return {
+              page: Math.max(1, parsed.page || 1),
+              limit: parsed.limit || 100,
+              name: parsed.name || '',
+              location: parsed.location || '',
+              companyName: parsed.companyName || '',
+              status: parsed.status || '',
+            };
+          } catch (error) {
+            console.warn('Failed to parse saved job applications state:', error);
+          }
         }
+      } else {
+        localStorage.removeItem('jobApplications-search-state');
+        localStorage.removeItem('jobApplications-scroll-position');
       }
     }
     
@@ -179,12 +206,11 @@ export const useJobApplicationsLogic = () => {
 
   const statusOptions = useMemo(() => [
     { value: 'New Application', label: 'New Application' },
-    { value: 'Under Review', label: 'Under Review' },
-    { value: 'Interview Scheduled', label: 'Interview Scheduled' },
-    { value: 'Offer Extended', label: 'Offer Extended' },
-    { value: 'Hired', label: 'Hired' },
-    { value: 'Rejected', label: 'Rejected' },
-    { value: 'Withdrawn', label: 'Withdrawn' },
+    { value: 'Assessment', label: 'Assessment' },
+    { value: 'Pre-Screening', label: 'Pre-Screening' },
+    { value: 'Training', label: 'Training' },
+    { value: 'Completed', label: 'Completed' },
+    { value: 'Interview', label: 'Interview' },
   ], []);
 
   const stateOptions = useMemo(() => {
@@ -276,6 +302,10 @@ export const useJobApplicationsLogic = () => {
   const viewJobApplication = useCallback((jobApplicationId: string) => {
     saveScrollPosition();
     saveSearchState();
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('jobApplications-preserve-state', 'true');
+      sessionStorage.setItem('jobApplications-selected-item', jobApplicationId);
+    }
     
     router.push(`/admin/applications/details/${jobApplicationId}`);
   }, [router, saveScrollPosition, saveSearchState]);
@@ -298,6 +328,20 @@ export const useJobApplicationsLogic = () => {
     }
   }, []);
 
+  const clearIndividualFilter = useCallback((filterType: string) => {
+    switch (filterType) {
+      case 'location':
+        filterChange('location', '');
+        break;
+      case 'status':
+        setSelectedStatuses([]);
+        filterChange('status', '');
+        break;
+      default:
+        break;
+    }
+  }, [filterChange]);
+
   const hasActiveFilters = useMemo(() => {
     return !!(
       searchInput ||
@@ -315,19 +359,30 @@ export const useJobApplicationsLogic = () => {
       if (hasUrlParams) {
         restoreScrollPosition();
       } else {
-        const savedPosition = localStorage.getItem('jobApplications-scroll-position');
-        if (savedPosition) {
-          const position = parseInt(savedPosition, 10);
-          setTimeout(() => {
-            window.scrollTo({ top: position, behavior: 'smooth' });
-          }, 100);
-        }
+        import('@/services/utils/autoScroll').then(({ restoreScrollWithItemHighlight }) => {
+          restoreScrollWithItemHighlight(
+            'jobApplications-selected-item',
+            'jobApplications-scroll-position'
+          );
+        });
       }
     }
   }, [data, isLoading, searchParams, restoreScrollPosition]);
 
   useEffect(() => {
-    if (filters.name || filters.location || filters.companyName || filters.status || (filters.page && filters.page > 1)) {
+    const isOnPageOneWithNoFilters = 
+      filters.page === 1 &&
+      !filters.name &&
+      !filters.location &&
+      !filters.companyName &&
+      !filters.status;
+    
+    if (isOnPageOneWithNoFilters) {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('jobApplications-search-state');
+        localStorage.removeItem('jobApplications-scroll-position');
+      }
+    } else if (filters.name || filters.location || filters.companyName || filters.status || (filters.page && filters.page > 1)) {
       saveSearchState();
     }
   }, [filters, saveSearchState]);
@@ -382,6 +437,7 @@ export const useJobApplicationsLogic = () => {
     initViewResume,
     viewJobApplication,
     clearAllFilters,
+    clearIndividualFilter,
     hasActiveFilters,
     selectedStatuses,
     saveScrollPosition,

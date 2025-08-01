@@ -1,6 +1,7 @@
 export interface JobSeeker {
   id: string;
   name: string;
+  email?: string;
   specialty: string[];
   occupation: string;
   address: string;
@@ -9,15 +10,16 @@ export interface JobSeeker {
   zipCode: string;
   jobApplications: number;
   dateJoined: string;
-  resumeId: string | null; 
-  hasResume: boolean;
+  documents?: Document[];
   lastActivity: string;
   status: 'active' | 'inactive' | 'suspended' | 'pending';
-  profilePicture: {
+  profilePicture?: {
     fileName: string;
     url: string;
     expiresAt: string;
   };
+  hasResume?: boolean;
+  resumeObjectKey?: string;
 }
 
 export interface JobSeekerFilters {
@@ -84,6 +86,7 @@ export interface Document {
   url: string;
   type: string;
   uploadedAt: string;
+  objectKey?: string;
 }
 
 export interface ProfessionalBackground {

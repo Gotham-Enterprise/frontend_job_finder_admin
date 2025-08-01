@@ -33,4 +33,5 @@ export { default as BackgroundIcon } from './BackgroundIcon';
 export { default as BorderIcon } from './BorderIcon';
 export { default as TextColorIcon } from './TextColorIcon';
 
+export { default as FilterIcon } from './FilterIcon';
 export type { IconProps } from './Close';

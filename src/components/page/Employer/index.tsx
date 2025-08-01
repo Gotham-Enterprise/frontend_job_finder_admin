@@ -50,6 +50,7 @@ const Employers: React.FC<EmployersProps> = ({ className = "" }) => {
     onCreateJob,
     isCreatingJob,
     clearAllFilters,
+    clearIndividualFilter,
     hasActiveFilters,
   } = useEmployerLogic();
 
@@ -64,7 +65,6 @@ const Employers: React.FC<EmployersProps> = ({ className = "" }) => {
     );
   }
 
-  // Create filter content for the FilterDropdown
   const filterContent = (
     <EmployerFilters
       isOpen={true}
@@ -75,6 +75,7 @@ const Employers: React.FC<EmployersProps> = ({ className = "" }) => {
       selectedStatuses={selectedStatuses}
       onStatusToggle={statusToggle}
       hasActiveFilters={hasActiveFilters}
+      clearIndividualFilter={clearIndividualFilter}
     />
   );
 
