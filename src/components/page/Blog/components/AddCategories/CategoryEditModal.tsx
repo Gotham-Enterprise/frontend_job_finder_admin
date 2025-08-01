@@ -19,8 +19,14 @@ export default function CategoryEditModal({
   const { subCategories, isLoading: isLoadingSubCategories } = useSubCategories();
 
   const updateSubCategories = (selectedSubCategories: Array<{ name: string; id?: string }>) => {
+    // Ensure all subcategories have an id, generating one for new subcategories if needed
+    const subcategoriesWithIds = selectedSubCategories.map(subCat => ({
+      id: subCat.id || `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      name: subCat.name
+    }));
+    
     setEditingCategory((prev: Category | null) => 
-      prev ? { ...prev, subCategories: selectedSubCategories } : null
+      prev ? { ...prev, subCategories: subcategoriesWithIds } : null
     );
   };
 

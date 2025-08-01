@@ -107,7 +107,9 @@ const BlogTable: React.FC<BlogTableProps> = ({
       label: 'View',
       icon: <EyeIcon />,
       onClick: () => {
-        onPreviewPost && onPreviewPost(post.id);
+        if (onPreviewPost) {
+          onPreviewPost(post.id);
+        }
       },
     },
     {

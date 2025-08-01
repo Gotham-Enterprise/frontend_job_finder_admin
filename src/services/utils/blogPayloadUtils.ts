@@ -56,7 +56,7 @@ export interface BlogMetadata {
   publishDate: string;
   categories: string;
   tags: string[];
-  featuredImage: string;
+  featuredImage?: string;
   seoTitle: string;
   seoDescription: string;
   allowComments: boolean;

@@ -81,7 +81,7 @@ const SocialShareModal: React.FC<SocialShareModalProps> = ({
 
         {/* Title */}
         <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-          Share "{title}" on social media
+          Share &quot;{title}&quot; on social media
         </p>
 
         {/* Preview Image */}
