@@ -34,6 +34,7 @@ const navItems: NavItem[] = [
     icon: <GridIcon />,
     name: "Dashboard",
     path: "/",
+    isAllowed: true,
     //subItems: [{ name: "Ecommerce", path: "/", pro: false }],
   },
   {

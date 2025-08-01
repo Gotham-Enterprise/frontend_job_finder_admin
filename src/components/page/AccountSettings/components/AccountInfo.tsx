@@ -1,0 +1,401 @@
+import React, { useState, useCallback, useRef } from 'react';
+import { User } from '@/services/types/auth';
+import Button from '@/components/ui/button/Button';
+import Input from '@/components/ui/input/Input';
+import Label from '@/components/form/Label';
+import Select from '@/components/form/Select';
+import { PencilIcon, LockIcon, EyeIcon, EyeCloseIcon } from '@/icons';
+
+interface PersonalInformationFormData {
+  firstName: string;
+  lastName: string;
+  email: string;
+  username: string;
+}
+
+interface PasswordFormData {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
+interface AccountInfoProps {
+  user: User | null;
+  userInitials: string;
+  displayName: string;
+  onPasswordChange: (data: PasswordFormData) => Promise<void>;
+  onAvatarChange: (formData: FormData) => Promise<void>;
+  onPersonalInfoChange: (data: PersonalInformationFormData) => Promise<void>;
+  isChangingPassword: boolean;
+  isUpdatingAvatar?: boolean;
+  isUpdatingPersonalInfo?: boolean;
+}
+
+const AccountInfo: React.FC<AccountInfoProps> = ({
+  user,
+  userInitials,
+  displayName,
+  onPasswordChange,
+  onAvatarChange,
+  onPersonalInfoChange,
+  isChangingPassword,
+  isUpdatingAvatar = false,
+  isUpdatingPersonalInfo = false
+}) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [selectedAvatar, setSelectedAvatar] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [showPasswords, setShowPasswords] = useState({
+    current: false,
+    new: false,
+    confirm: false
+  });
+  
+  const [editFormData, setEditFormData] = useState<PersonalInformationFormData>({
+    firstName: user?.firstName || '',
+    lastName: user?.lastName || '',
+    email: user?.email || '',
+    username: user?.username || ''
+  });
+  
+  const [passwordFormData, setPasswordFormData] = useState<PasswordFormData>({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
+
+  const togglePasswordVisibility = useCallback((field: keyof typeof showPasswords) => {
+    setShowPasswords(prev => ({
+      ...prev,
+      [field]: !prev[field]
+    }));
+  }, []);
+
+  const validatePasswordForm = useCallback(() => {
+    if (!passwordFormData.currentPassword || !passwordFormData.newPassword || !passwordFormData.confirmPassword) {
+      return { valid: false, message: 'All fields are required' };
+    }
+    
+    if (passwordFormData.newPassword !== passwordFormData.confirmPassword) {
+      return { valid: false, message: 'New passwords do not match' };
+    }
+    
+    if (passwordFormData.newPassword.length < 8) {
+      return { valid: false, message: 'Password must be at least 8 characters long' };
+    }
+    
+    return { valid: true, message: '' };
+  }, [passwordFormData]);
+
+  const submitPasswordChange = useCallback(async () => {
+    const validation = validatePasswordForm();
+    if (!validation.valid) {
+      return;
+    }
+
+    try {
+      await onPasswordChange(passwordFormData);
+      setPasswordFormData({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      });
+    } catch (error) {
+      // Error handling is done in parent component
+    }
+  }, [passwordFormData, validatePasswordForm, onPasswordChange]);
+
+  const updateEditFormData = useCallback((updates: Partial<PersonalInformationFormData>) => {
+    setEditFormData(prev => ({ ...prev, ...updates }));
+  }, []);
+
+  const updatePasswordFormData = useCallback((updates: Partial<PasswordFormData>) => {
+    setPasswordFormData(prev => ({ ...prev, ...updates }));
+  }, []);
+
+  const savePersonalInfo = useCallback(async () => {
+    try {
+      await onPersonalInfoChange(editFormData);
+      console.log('Personal information saved successfully');
+    } catch (error) {
+      console.error('Failed to save personal information:', error);
+    }
+  }, [editFormData, onPersonalInfoChange]);
+
+  const handleAvatarClick = useCallback(() => {
+    fileInputRef.current?.click();
+  }, []);
+
+  const handleAvatarChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        alert('Please select an image file');
+        return;
+      }
+      
+      // Validate file size (1MB = 1048576 bytes)
+      if (file.size > 1048576) {
+        alert('File size must be less than 1MB');
+        return;
+      }
+
+      setSelectedAvatar(file);
+      
+      // Create preview
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setAvatarPreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  }, []);
+
+  const uploadAvatar = useCallback(async () => {
+    if (!selectedAvatar) return;
+    
+    const formData = new FormData();
+    formData.append('avatar', selectedAvatar);
+    
+    // Optional: Add additional form data if needed
+    // formData.append('userId', user?.id || '');
+    // formData.append('timestamp', new Date().toISOString());
+    
+    try {
+      await onAvatarChange(formData);
+      setSelectedAvatar(null);
+      setAvatarPreview(null);
+      console.log('Avatar uploaded successfully');
+      
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    } catch (error) {
+      console.error('Failed to upload avatar:', error);
+    }
+  }, [selectedAvatar, onAvatarChange]);
+
+  const validation = validatePasswordForm();
+
+  return (
+    <div className="space-y-6">
+      {/* Personal Information Section */}
+      <div className="border-b border-gray-200 dark:border-gray-700">
+        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Personal Information</h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Use a permanent address where you can receive mail.</p>
+        </div>
+
+        <div className="p-6">
+          {/* Avatar Section */}
+          <div className="flex items-start gap-6 mb-6">
+            <div className="flex-shrink-0">
+              <div className="relative">
+                {avatarPreview ? (
+                  <img 
+                    src={avatarPreview} 
+                    alt="Avatar preview"
+                    className="w-16 h-16 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center">
+                    <span className="text-lg font-semibold text-white">
+                      {userInitials || '?'}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center gap-3">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={handleAvatarClick}
+                  disabled={isUpdatingAvatar}
+                >
+                  Change avatar
+                </Button>
+                {selectedAvatar && (
+                  <Button 
+                    size="sm"
+                    onClick={uploadAvatar}
+                    disabled={isUpdatingAvatar}
+                  >
+                    {isUpdatingAvatar ? 'Uploading...' : 'Upload'}
+                  </Button>
+                )}
+              </div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                JPG, GIF or PNG. 1MB max.
+              </p>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleAvatarChange}
+                className="hidden"
+              />
+            </div>
+          </div>
+
+          {/* Form Fields */}
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="firstName" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  First name
+                </Label>
+                <Input
+                  id="firstName"
+                  type="text"
+                  value={editFormData.firstName}
+                  onChange={(e) => updateEditFormData({ firstName: e.target.value })}
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label htmlFor="lastName" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Last name
+                </Label>
+                <Input
+                  id="lastName"
+                  type="text"
+                  value={editFormData.lastName}
+                  onChange={(e) => updateEditFormData({ lastName: e.target.value })}
+                  className="mt-1"
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="email" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Email address
+              </Label>
+              <Input
+                id="email"
+                type="email"
+                value={editFormData.email}
+                onChange={(e) => updateEditFormData({ email: e.target.value })}
+                className="mt-1"
+              />
+            </div>
+            
+          </div>
+
+          <div className="flex justify-end pt-6">
+            <Button 
+              onClick={savePersonalInfo}
+              disabled={isUpdatingPersonalInfo}
+            >
+              {isUpdatingPersonalInfo ? 'Saving...' : 'Save'}
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Change Password Section */}
+      <div>
+        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Change password</h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Update your password associated with your account.</p>
+        </div>
+
+        <div className="p-6">
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="currentPassword" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Current password
+              </Label>
+              <div className="relative mt-1">
+                <Input
+                  id="currentPassword"
+                  type={showPasswords.current ? "text" : "password"}
+                  value={passwordFormData.currentPassword}
+                  onChange={(e) => updatePasswordFormData({ currentPassword: e.target.value })}
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => togglePasswordVisibility('current')}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                >
+                  {showPasswords.current ? (
+                    <EyeCloseIcon className="h-4 w-4" />
+                  ) : (
+                    <EyeIcon className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="newPassword" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                New password
+              </Label>
+              <div className="relative mt-1">
+                <Input
+                  id="newPassword"
+                  type={showPasswords.new ? "text" : "password"}
+                  value={passwordFormData.newPassword}
+                  onChange={(e) => updatePasswordFormData({ newPassword: e.target.value })}
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => togglePasswordVisibility('new')}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                >
+                  {showPasswords.new ? (
+                    <EyeCloseIcon className="h-4 w-4" />
+                  ) : (
+                    <EyeIcon className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="confirmPassword" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Confirm password
+              </Label>
+              <div className="relative mt-1">
+                <Input
+                  id="confirmPassword"
+                  type={showPasswords.confirm ? "text" : "password"}
+                  value={passwordFormData.confirmPassword}
+                  onChange={(e) => updatePasswordFormData({ confirmPassword: e.target.value })}
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => togglePasswordVisibility('confirm')}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                >
+                  {showPasswords.confirm ? (
+                    <EyeCloseIcon className="h-4 w-4" />
+                  ) : (
+                    <EyeIcon className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-end pt-6 border-t border-gray-200 dark:border-gray-700 mt-6">
+            <Button 
+              onClick={submitPasswordChange}
+              disabled={!validation.valid || isChangingPassword}
+            >
+              {isChangingPassword ? 'Saving...' : 'Save'}
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default AccountInfo;

@@ -1,13 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { User } from '@/services/types/auth';
 import { Table, TableHeader, TableBody, TableRow, TableCell } from '@/components/ui/table';
 import { DotsIcon } from '@/components/ui/icons';
 import { Dropdown } from '@/components/ui/dropdown/Dropdown';
 import { DropdownItem } from '@/components/ui/dropdown/DropdownItem';
 import Avatar from '@/components/ui/avatar/Avatar';
-
 
 interface ExtendedUser extends User {
   lastActivity?: string;
@@ -24,33 +23,40 @@ const UserActionDropdown: React.FC<{
 }> = ({ userId, onAction }) => {
   const [isOpen, setIsOpen] = useState(false);
 
+  const toggleDropdown = useCallback(() => {
+    setIsOpen(prev => !prev);
+  }, []);
+
+  const closeDropdown = useCallback(() => {
+    setIsOpen(false);
+  }, []);
+
+  const executeAction = useCallback((action: 'manage' | 'remove') => {
+    onAction(userId, action);
+    closeDropdown();
+  }, [userId, onAction, closeDropdown]);
+
   return (
     <div className="relative">
       <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+        onClick={toggleDropdown}
+        className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
       >
-        <DotsIcon className="w-5 h-5 text-gray-600" />
+        <DotsIcon className="w-5 h-5 text-gray-600 dark:text-gray-400" />
       </button>
       <Dropdown 
         isOpen={isOpen} 
-        onClose={() => setIsOpen(false)}
+        onClose={closeDropdown}
         className="w-32"
       >
         <DropdownItem
-          onClick={() => {
-            onAction(userId, 'manage');
-            setIsOpen(false);
-          }}
+          onClick={() => executeAction('manage')}
         >
           Manage
         </DropdownItem>
         <DropdownItem
-          onClick={() => {
-            onAction(userId, 'remove');
-            setIsOpen(false);
-          }}
-          className="text-red-600 hover:bg-red-50"
+          onClick={() => executeAction('remove')}
+          className="text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
         >
           Remove
         </DropdownItem>
@@ -60,38 +66,38 @@ const UserActionDropdown: React.FC<{
 };
 
 const UserTable: React.FC<UserTableProps> = ({ users, onUserAction }) => {
-  const getUserDisplayName = (user: User): string => {
+  const getUserDisplayName = useCallback((user: User): string => {
     return `${user.firstName} ${user.lastName}`.trim();
-  };
+  }, []);
 
-  const getUserInitials = (user: User): string => {
+  const getUserInitials = useCallback((user: User): string => {
     const firstInitial = user.firstName?.charAt(0)?.toUpperCase() || '';
     const lastInitial = user.lastName?.charAt(0)?.toUpperCase() || '';
     return firstInitial + lastInitial;
-  };
+  }, []);
 
-  const getRoleColor = (role: string) => {
+  const getRoleColor = useCallback((role: string) => {
     switch (role.toLowerCase()) {
       case 'admin':
-        return 'text-purple-600 dark:text-purple-400';
+        return 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300';
       case 'manager':
-        return 'text-blue-600 dark:text-blue-400';
+        return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300';
       case 'user':
-        return 'text-green-600 dark:text-green-400';
+        return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300';
       default:
-        return 'text-gray-600 dark:text-gray-400';
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300';
     }
-  };
+  }, []);
 
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
-      <div className="px-6 py-5 border-b border-gray-200 dark:border-gray-800">
+    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700">
+      <div className="px-8 py-6 border-b border-gray-200 dark:border-gray-700">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h3 className="text-xl font-semibold text-gray-800 dark:text-white">
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
               Users Management
             </h3>
-            <p className="text-sm text-gray-500 mt-1 dark:text-gray-400">
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
               {users.length} total users
             </p>
           </div>
@@ -100,29 +106,29 @@ const UserTable: React.FC<UserTableProps> = ({ users, onUserAction }) => {
       
       <div className="overflow-x-auto">
         <Table>
-          <TableHeader className="border-b border-gray-100">
-            <TableRow className="border-b text-sm border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50">
+          <TableHeader>
+            <TableRow className="border-b border-gray-200 dark:border-gray-700">
               <TableCell
                 isHeader
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                className="px-8 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white"
               >
                 Name
               </TableCell>
               <TableCell
                 isHeader
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                className="px-8 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white"
               >
                 Role
               </TableCell>
               <TableCell
                 isHeader
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                className="px-8 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white"
               >
                 Status
               </TableCell>
               <TableCell
                 isHeader
-                className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
+                className="px-8 py-4 text-right text-sm font-semibold text-gray-900 dark:text-white"
               >
                 Actions
               </TableCell>
@@ -130,16 +136,16 @@ const UserTable: React.FC<UserTableProps> = ({ users, onUserAction }) => {
           </TableHeader>
           <TableBody>
             {users.map((user) => (
-              <TableRow key={user.id} className="border-b text-sm border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                <TableCell className="py-4 px-6">
-                  <div className="flex items-center gap-3">
+              <TableRow key={user.id} className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                <TableCell className="py-6 px-8">
+                  <div className="flex items-center gap-4">
                     <Avatar
                       name={getUserDisplayName(user)}
                       size="medium"
                       className="flex-shrink-0"
                     />
                     <div>
-                      <p className="font-medium text-gray-900 dark:text-white">
+                      <p className="font-semibold text-gray-900 dark:text-white">
                         {getUserDisplayName(user)}
                       </p>
                       <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -148,20 +154,21 @@ const UserTable: React.FC<UserTableProps> = ({ users, onUserAction }) => {
                     </div>
                   </div>
                 </TableCell>
-                <TableCell className="py-4 px-6">
-                  <span className={`text-sm font-medium capitalize ${getRoleColor(user.role)}`}>
+                <TableCell className="py-6 px-8">
+                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium capitalize ${getRoleColor(user.role)}`}>
                     {user.role}
                   </span>
                 </TableCell>
-                <TableCell className="py-4 px-6">                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                <TableCell className="py-6 px-8">
+                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
                     user.status === 'active' 
-                      ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
-                      : 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400'
+                      ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                      : 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300'
                   }`}>
                     {user.status}
                   </span>
                 </TableCell>
-                <TableCell className="py-4 px-6 text-right">
+                <TableCell className="py-6 px-8 text-right">
                   <UserActionDropdown userId={user.id} onAction={onUserAction} />
                 </TableCell>
               </TableRow>
