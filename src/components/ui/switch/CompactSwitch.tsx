@@ -57,12 +57,7 @@ const CompactSwitch: React.FC<CompactSwitchProps> = ({
     },
   };
 
-  const variantConfig = {
-    primary: isChecked ? 'bg-blue-500' : 'bg-gray-200 dark:bg-gray-700',
-    success: isChecked ? 'bg-green-500' : 'bg-gray-200 dark:bg-gray-700',
-    warning: isChecked ? 'bg-yellow-500' : 'bg-gray-200 dark:bg-gray-700',
-    danger: isChecked ? 'bg-red-500' : 'bg-gray-200 dark:bg-gray-700',
-  };
+  const switchColor = isChecked ? 'bg-green-500' : 'bg-gray-200 dark:bg-gray-700';
 
   const config = sizeConfig[size];
 
@@ -73,9 +68,9 @@ const CompactSwitch: React.FC<CompactSwitchProps> = ({
         onClick={toggleSwitch}
         disabled={disabled}
         className={`
-          relative inline-flex flex-shrink-0 cursor-pointer rounded-full transition-all duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transform hover:scale-105
+          relative inline-flex flex-shrink-0 cursor-pointer rounded-full transition-all duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transform hover:scale-105
           ${config.container}
-          ${disabled ? 'opacity-50 cursor-not-allowed bg-gray-100 dark:bg-gray-800' : variantConfig[variant]}
+          ${disabled ? 'opacity-50 cursor-not-allowed bg-gray-100 dark:bg-gray-800' : switchColor}
         `}
       >
         <span
