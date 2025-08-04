@@ -180,217 +180,238 @@ const AccountInfo: React.FC<AccountInfoProps> = ({
   const validation = validatePasswordForm();
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Personal Information Section */}
-      <div className="border-b border-gray-200 dark:border-gray-700">
-        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Personal Information</h2>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Use a permanent address where you can receive mail.</p>
-        </div>
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 p-8">
+          {/* Left side - Title and Description */}
+          <div className="lg:col-span-1">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Personal Information</h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Use a permanent address where you can receive mail.</p>
+          </div>
 
-        <div className="p-6">
-          {/* Avatar Section */}
-          <div className="flex items-start gap-6 mb-6">
-            <div className="flex-shrink-0">
-              <div className="relative">
-                {avatarPreview ? (
-                  <img 
-                    src={avatarPreview} 
-                    alt="Avatar preview"
-                    className="w-16 h-16 rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center">
-                    <span className="text-lg font-semibold text-white">
-                      {userInitials || '?'}
-                    </span>
-                  </div>
-                )}
+          {/* Right side - Form */}
+          <div className="lg:col-span-2">
+            {/* Avatar Section */}
+            <div className="flex items-start gap-6 mb-6">
+              <div className="flex-shrink-0">
+                <div className="relative">
+                  {avatarPreview ? (
+                    <img 
+                      src={avatarPreview} 
+                      alt="Avatar preview"
+                      className="w-16 h-16 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center">
+                      <span className="text-lg font-semibold text-white">
+                        {userInitials || '?'}
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-            <div className="flex-1">
-              <div className="flex items-center gap-3">
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={handleAvatarClick}
-                  disabled={isUpdatingAvatar}
-                >
-                  Change avatar
-                </Button>
-                {selectedAvatar && (
-                  <Button 
-                    size="sm"
-                    onClick={uploadAvatar}
-                    disabled={isUpdatingAvatar}
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <span 
+                    onClick={handleAvatarClick}
+                    className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 cursor-pointer"
                   >
-                    {isUpdatingAvatar ? 'Uploading...' : 'Upload'}
-                  </Button>
-                )}
-              </div>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                JPG, GIF or PNG. 1MB max.
-              </p>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleAvatarChange}
-                className="hidden"
-              />
-            </div>
-          </div>
-
-          {/* Form Fields */}
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="firstName" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  First name
-                </Label>
-                <Input
-                  id="firstName"
-                  type="text"
-                  value={editFormData.firstName}
-                  onChange={(e) => updateEditFormData({ firstName: e.target.value })}
-                  className="mt-1"
-                />
-              </div>
-              <div>
-                <Label htmlFor="lastName" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Last name
-                </Label>
-                <Input
-                  id="lastName"
-                  type="text"
-                  value={editFormData.lastName}
-                  onChange={(e) => updateEditFormData({ lastName: e.target.value })}
-                  className="mt-1"
+                    Change avatar
+                  </span>
+                  {selectedAvatar && (
+                    <Button 
+                      size="sm"
+                      onClick={uploadAvatar}
+                      disabled={isUpdatingAvatar}
+                      className="px-3 py-1 text-xs"
+                    >
+                      {isUpdatingAvatar ? 'Uploading...' : 'Upload'}
+                    </Button>
+                  )}
+                </div>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  JPG, GIF or PNG. 1MB max.
+                </p>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleAvatarChange}
+                  className="hidden"
                 />
               </div>
             </div>
 
-            <div>
-              <Label htmlFor="email" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Email address
-              </Label>
-              <Input
-                id="email"
-                type="email"
-                value={editFormData.email}
-                onChange={(e) => updateEditFormData({ email: e.target.value })}
-                className="mt-1"
-              />
-            </div>
-            
-          </div>
+            {/* Form Fields */}
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="firstName" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    First name
+                  </Label>
+                  <Input
+                    id="firstName"
+                    type="text"
+                    value={editFormData.firstName}
+                    onChange={(e) => updateEditFormData({ firstName: e.target.value })}
+                    className="mt-1 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="lastName" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Last name
+                  </Label>
+                  <Input
+                    id="lastName"
+                    type="text"
+                    value={editFormData.lastName}
+                    onChange={(e) => updateEditFormData({ lastName: e.target.value })}
+                    className="mt-1 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600"
+                  />
+                </div>
+              </div>
 
-          <div className="flex justify-end pt-6">
-            <Button 
-              onClick={savePersonalInfo}
-              disabled={isUpdatingPersonalInfo}
-            >
-              {isUpdatingPersonalInfo ? 'Saving...' : 'Save'}
-            </Button>
+              <div>
+                <Label htmlFor="email" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Email address
+                </Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={editFormData.email}
+                  onChange={(e) => updateEditFormData({ email: e.target.value })}
+                  disabled={true}
+                  className="mt-1 bg-gray-100 dark:bg-gray-600 text-gray-500 dark:text-gray-400 border-gray-300 dark:border-gray-600 cursor-not-allowed"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="role" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Role
+                </Label>
+                <Input
+                  id="role"
+                  type="text"
+                  value={user?.role || ''}
+                  disabled={true}
+                  className="mt-1 bg-gray-100 dark:bg-gray-600 text-gray-500 dark:text-gray-400 border-gray-300 dark:border-gray-600 cursor-not-allowed"
+                />
+              </div>
+
+            </div>
+
+            <div className="flex justify-end pt-6">
+              <Button 
+                onClick={savePersonalInfo}
+                disabled={isUpdatingPersonalInfo}
+              >
+                {isUpdatingPersonalInfo ? 'Saving...' : 'Save'}
+              </Button>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Change Password Section */}
-      <div>
-        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Change password</h2>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Update your password associated with your account.</p>
-        </div>
-
-        <div className="p-6">
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="currentPassword" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Current password
-              </Label>
-              <div className="relative mt-1">
-                <Input
-                  id="currentPassword"
-                  type={showPasswords.current ? "text" : "password"}
-                  value={passwordFormData.currentPassword}
-                  onChange={(e) => updatePasswordFormData({ currentPassword: e.target.value })}
-                  className="pr-10"
-                />
-                <button
-                  type="button"
-                  onClick={() => togglePasswordVisibility('current')}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                >
-                  {showPasswords.current ? (
-                    <EyeCloseIcon className="h-4 w-4" />
-                  ) : (
-                    <EyeIcon className="h-4 w-4" />
-                  )}
-                </button>
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="newPassword" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                New password
-              </Label>
-              <div className="relative mt-1">
-                <Input
-                  id="newPassword"
-                  type={showPasswords.new ? "text" : "password"}
-                  value={passwordFormData.newPassword}
-                  onChange={(e) => updatePasswordFormData({ newPassword: e.target.value })}
-                  className="pr-10"
-                />
-                <button
-                  type="button"
-                  onClick={() => togglePasswordVisibility('new')}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                >
-                  {showPasswords.new ? (
-                    <EyeCloseIcon className="h-4 w-4" />
-                  ) : (
-                    <EyeIcon className="h-4 w-4" />
-                  )}
-                </button>
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="confirmPassword" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Confirm password
-              </Label>
-              <div className="relative mt-1">
-                <Input
-                  id="confirmPassword"
-                  type={showPasswords.confirm ? "text" : "password"}
-                  value={passwordFormData.confirmPassword}
-                  onChange={(e) => updatePasswordFormData({ confirmPassword: e.target.value })}
-                  className="pr-10"
-                />
-                <button
-                  type="button"
-                  onClick={() => togglePasswordVisibility('confirm')}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                >
-                  {showPasswords.confirm ? (
-                    <EyeCloseIcon className="h-4 w-4" />
-                  ) : (
-                    <EyeIcon className="h-4 w-4" />
-                  )}
-                </button>
-              </div>
-            </div>
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 p-8">
+          {/* Left side - Title and Description */}
+          <div className="lg:col-span-1">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Change password</h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Update your password associated with your account.</p>
           </div>
 
-          <div className="flex justify-end pt-6 border-t border-gray-200 dark:border-gray-700 mt-6">
-            <Button 
-              onClick={submitPasswordChange}
-              disabled={!validation.valid || isChangingPassword}
-            >
-              {isChangingPassword ? 'Saving...' : 'Save'}
-            </Button>
+          {/* Right side - Form */}
+          <div className="lg:col-span-2">
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="currentPassword" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Current password
+                </Label>
+                <div className="relative mt-1">
+                  <Input
+                    id="currentPassword"
+                    type={showPasswords.current ? "text" : "password"}
+                    value={passwordFormData.currentPassword}
+                    onChange={(e) => updatePasswordFormData({ currentPassword: e.target.value })}
+                    className="pr-10 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => togglePasswordVisibility('current')}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                  >
+                    {showPasswords.current ? (
+                      <EyeCloseIcon  />
+                    ) : (
+                      <EyeIcon  />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="newPassword" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  New password
+                </Label>
+                <div className="relative mt-1">
+                  <Input
+                    id="newPassword"
+                    type={showPasswords.new ? "text" : "password"}
+                    value={passwordFormData.newPassword}
+                    onChange={(e) => updatePasswordFormData({ newPassword: e.target.value })}
+                    className="pr-10 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => togglePasswordVisibility('new')}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                  >
+                    {showPasswords.new ? (
+                      <EyeCloseIcon />
+                    ) : (
+                      <EyeIcon />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="confirmPassword" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Confirm password
+                </Label>
+                <div className="relative mt-1">
+                  <Input
+                    id="confirmPassword"
+                    type={showPasswords.confirm ? "text" : "password"}
+                    value={passwordFormData.confirmPassword}
+                    onChange={(e) => updatePasswordFormData({ confirmPassword: e.target.value })}
+                    className="pr-10 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => togglePasswordVisibility('confirm')}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                  >
+                    {showPasswords.confirm ? (
+                      <EyeCloseIcon />
+                    ) : (
+                      <EyeIcon />
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-6">
+              <Button 
+                onClick={submitPasswordChange}
+                disabled={!validation.valid || isChangingPassword}
+              >
+                {isChangingPassword ? 'Saving...' : 'Save'}
+              </Button>
+            </div>
           </div>
         </div>
       </div>
