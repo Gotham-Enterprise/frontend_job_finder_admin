@@ -7,6 +7,8 @@ import Input from '@/components/ui/input/Input';
 import Label from '@/components/form/Label';
 import Select from '@/components/form/Select';
 import CompactSwitch from '@/components/ui/switch/CompactSwitch';
+import { Modal } from '@/components/ui/modal';
+import Button from '@/components/ui/button/Button';
 
 interface UserFormProps {
   onSubmit: (userData: CreateUserFormData) => void;
@@ -29,6 +31,12 @@ const UserForm: React.FC<UserFormProps> = ({
   });
 
   const [errors, setErrors] = useState<Partial<CreateUserFormData>>({});
+  const [availableRoles, setAvailableRoles] = useState(ROLE_OPTIONS);
+  const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
+  const [newRoleData, setNewRoleData] = useState({
+    value: '',
+    label: ''
+  });
 
   const updateRolePermissions = useCallback((role: string) => {
     if (role) {
@@ -108,6 +116,37 @@ const UserForm: React.FC<UserFormProps> = ({
     }
   }, [formData, validateForm, onSubmit]);
 
+  const handleCreateRole = useCallback(() => {
+    if (!newRoleData.value.trim() || !newRoleData.label.trim()) {
+      return;
+    }
+
+    const newRole = {
+      value: newRoleData.value.toLowerCase().replace(/\s+/g, '-'),
+      label: newRoleData.label.trim()
+    };
+
+    // Check if role already exists
+    if (availableRoles.some(role => role.value === newRole.value)) {
+      return;
+    }
+
+    // Add new role to available roles
+    setAvailableRoles(prev => [...prev, newRole]);
+    
+    // Set the new role as selected
+    updateFormField('role', newRole.value);
+    
+    // Close modal and reset form
+    setIsRoleModalOpen(false);
+    setNewRoleData({ value: '', label: '' });
+  }, [newRoleData, availableRoles, updateFormField]);
+
+  const closeRoleModal = useCallback(() => {
+    setIsRoleModalOpen(false);
+    setNewRoleData({ value: '', label: '' });
+  }, []);
+
   return (
     <>
       <style jsx>{`
@@ -186,9 +225,21 @@ const UserForm: React.FC<UserFormProps> = ({
             </div>
 
             <div className="transform transition-all duration-200 hover:scale-[1.02]">
-              <Label htmlFor="role">Role</Label>
+              <div className="flex items-center justify-between mb-2">
+                <Label htmlFor="role">Role</Label>
+                <button
+                  type="button"
+                  onClick={() => setIsRoleModalOpen(true)}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-primary bg-primary/10 border border-primary/20 rounded-md hover:bg-primary/20 transition-colors duration-200"
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  New Role
+                </button>
+              </div>
               <Select
-                options={ROLE_OPTIONS}
+                options={availableRoles}
                 placeholder="Select role"
                 value={formData.role}
                 onChange={(value) => updateFormField('role', value)}
@@ -460,7 +511,7 @@ const UserForm: React.FC<UserFormProps> = ({
             <button
               type="submit"
               disabled={isLoading}
-              className="inline-flex items-center justify-center font-medium gap-2 transition-all duration-200 h-[45px] rounded-lg px-7 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              className="inline-flex items-center justify-center font-medium gap-2 transition-all duration-200 h-[45px] rounded-lg px-7 bg-primary hover:bg-primary/90 text-white shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 focus:ring-2 focus:ring-primary/50 focus:ring-offset-2"
             >
               {isLoading ? (
                 <>
@@ -482,6 +533,52 @@ const UserForm: React.FC<UserFormProps> = ({
           </div>
         </div>
       </form>
+
+      {/* Create Role Modal */}
+      <Modal
+        isOpen={isRoleModalOpen}
+        onClose={closeRoleModal}
+        isFullscreen={false}
+        className="max-w-lg mx-auto mt-20 rounded-lg"
+      >
+        <div className="p-6 bg-white dark:bg-gray-800 rounded-lg">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Create New Role</h3>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="roleLabel">Role Name *</Label>
+              <Input
+                id="roleLabel"
+                type="text"
+                placeholder="e.g., Content Editor"
+                value={newRoleData.label}
+                onChange={(e) => setNewRoleData(prev => ({ 
+                  ...prev, 
+                  label: e.target.value,
+                  value: e.target.value.toLowerCase().replace(/\s+/g, '-')
+                }))}
+                className="mt-1"
+              />
+            </div>
+
+            <div className="flex justify-end space-x-3 pt-4">
+              <Button
+                variant="ghost"
+                onClick={closeRoleModal}
+                className="dark:text-white"
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleCreateRole}
+                disabled={!newRoleData.label.trim()}
+                className="bg-primary hover:bg-primary/90"
+              >
+                Create Role
+              </Button>
+            </div>
+          </div>
+        </div>
+      </Modal>
     </>
   );
 };
