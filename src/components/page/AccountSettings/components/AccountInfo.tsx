@@ -1,4 +1,6 @@
-import React, { useState, useCallback, useRef } from 'react';
+'use client';
+
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { User } from '@/services/types/auth';
 import Button from '@/components/ui/button/Button';
 import Input from '@/components/ui/input/Input';
@@ -42,6 +44,7 @@ const AccountInfo: React.FC<AccountInfoProps> = ({
   isUpdatingAvatar = false,
   isUpdatingPersonalInfo = false
 }) => {
+  const [mounted, setMounted] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedAvatar, setSelectedAvatar] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
@@ -50,6 +53,11 @@ const AccountInfo: React.FC<AccountInfoProps> = ({
     new: false,
     confirm: false
   });
+
+  // Prevent hydration mismatch by only rendering after mount
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   
   const [editFormData, setEditFormData] = useState<PersonalInformationFormData>({
     firstName: user?.firstName || '',
@@ -179,6 +187,22 @@ const AccountInfo: React.FC<AccountInfoProps> = ({
 
   const validation = validatePasswordForm();
 
+  // Prevent hydration mismatch
+  if (!mounted) {
+    return (
+      <div className="space-y-8">
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+          <div className="p-8">
+            <div className="animate-pulse">
+              <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/4 mb-4"></div>
+              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8">
       {/* Personal Information Section */}
@@ -205,7 +229,7 @@ const AccountInfo: React.FC<AccountInfoProps> = ({
                   ) : (
                     <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center">
                       <span className="text-lg font-semibold text-white">
-                        {userInitials || '?'}
+                        {mounted ? (userInitials || '?') : '?'}
                       </span>
                     </div>
                   )}

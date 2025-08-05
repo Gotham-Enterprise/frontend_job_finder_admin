@@ -1,34 +1,44 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
-import { CreateUserFormData, UserPermissions, ROLE_OPTIONS } from '@/services/types/permissions';
-import { GLOBAL_PERMISSION_CONFIG, getPermissionsForRole } from '@/config/permissions';
+import React, { useState, useCallback, useEffect } from 'react';
+import { CreateUserFormData, ROLE_OPTIONS } from '@/types/permissions';
+import { getPermissionsForRole } from '@/config/permissions';
+import { DEFAULT_PERMISSIONS, FlexiblePermissions } from '@/types/permissions';
+import { useCreateRole, useAdminRoles } from '@/services/hooks/useAdminUsers';
 import Input from '@/components/ui/input/Input';
 import Label from '@/components/form/Label';
 import Select from '@/components/form/Select';
 import CompactSwitch from '@/components/ui/switch/CompactSwitch';
 import { Modal } from '@/components/ui/modal';
 import Button from '@/components/ui/button/Button';
+import FullScreenSpinner from '@/components/ui/FullScreenSpinner';
 
 interface UserFormProps {
   onSubmit: (userData: CreateUserFormData) => void;
   onCancel: () => void;
   isLoading?: boolean;
+  initialData?: CreateUserFormData;
 }
 
 const UserForm: React.FC<UserFormProps> = ({
   onSubmit,
   onCancel,
   isLoading = false,
+  initialData,
 }) => {
-  const [formData, setFormData] = useState<CreateUserFormData>({
-    firstName: '',
-    lastName: '',
-    email: '',
-    password: '',
-    role: '',
-    permissions: GLOBAL_PERMISSION_CONFIG.defaultPermissions,
-  });
+  const createRoleMutation = useCreateRole();
+  const { data: apiRoles = [] } = useAdminRoles();
+  
+  const [formData, setFormData] = useState<CreateUserFormData>(
+    initialData || {
+      firstName: '',
+      lastName: '',
+      email: '',
+      password: '',
+      role: '',
+      permissions: DEFAULT_PERMISSIONS,
+    }
+  );
 
   const [errors, setErrors] = useState<Partial<CreateUserFormData>>({});
   const [availableRoles, setAvailableRoles] = useState(ROLE_OPTIONS);
@@ -38,12 +48,46 @@ const UserForm: React.FC<UserFormProps> = ({
     label: ''
   });
 
+  // Update available roles when API roles are loaded
+  useEffect(() => {
+    if (apiRoles.length > 0) {
+      console.log('API Roles:', apiRoles);
+      const mappedRoles = apiRoles.map(role => ({
+        value: role.roleName.toLowerCase().replace(/\s+/g, '-'),
+        label: role.roleName
+      }));
+      
+      console.log('Mapped Roles:', mappedRoles);
+      
+      // Remove duplicates based on value
+      const uniqueRoles = mappedRoles.filter((role, index, self) => 
+        index === self.findIndex(r => r.value === role.value)
+      );
+      
+      console.log('Unique Roles:', uniqueRoles);
+      setAvailableRoles(uniqueRoles);
+    }
+  }, [apiRoles]);
+
+  // Debug available roles
+  console.log('Current availableRoles:', availableRoles);
+
   const updateRolePermissions = useCallback((role: string) => {
     if (role) {
       const rolePermissions = getPermissionsForRole(role);
+      // Transform old permission structure to new flexible structure
+      const flexiblePermissions: FlexiblePermissions = {};
+      Object.entries(rolePermissions).forEach(([key, perm]) => {
+        flexiblePermissions[key] = {
+          view: perm.view,
+          add: perm.create,
+          edit: perm.update,
+          delete: perm.delete,
+        };
+      });
       setFormData(prev => ({
         ...prev,
-        permissions: rolePermissions,
+        permissions: flexiblePermissions,
       }));
     }
   }, []);
@@ -62,8 +106,8 @@ const UserForm: React.FC<UserFormProps> = ({
   }, [errors, updateRolePermissions]);
 
   const updatePermission = useCallback((
-    module: keyof UserPermissions,
-    permissionType: keyof UserPermissions[keyof UserPermissions],
+    module: string,
+    permissionType: 'add' | 'edit' | 'view' | 'delete',
     value: boolean
   ) => {
     setFormData(prev => ({
@@ -71,7 +115,10 @@ const UserForm: React.FC<UserFormProps> = ({
       permissions: {
         ...prev.permissions,
         [module]: {
-          ...prev.permissions[module],
+          add: prev.permissions[module]?.add || false,
+          edit: prev.permissions[module]?.edit || false,
+          view: prev.permissions[module]?.view || false,
+          delete: prev.permissions[module]?.delete || false,
           [permissionType]: value,
         },
       },
@@ -116,39 +163,83 @@ const UserForm: React.FC<UserFormProps> = ({
     }
   }, [formData, validateForm, onSubmit]);
 
-  const handleCreateRole = useCallback(() => {
-    if (!newRoleData.value.trim() || !newRoleData.label.trim()) {
+  const handleCreateRole = useCallback(async () => {
+    if (!newRoleData.label.trim()) {
       return;
     }
 
-    const newRole = {
-      value: newRoleData.value.toLowerCase().replace(/\s+/g, '-'),
-      label: newRoleData.label.trim()
-    };
+    try {
+      // Call the API to create the role
+      const response = await createRoleMutation.mutateAsync({
+        roleName: newRoleData.label.trim()
+      });
 
-    // Check if role already exists
-    if (availableRoles.some(role => role.value === newRole.value)) {
-      return;
+      if (response.success) {
+        // Add the new role to available roles
+        const newRole = {
+          value: response.data.roleName.toLowerCase().replace(/\s+/g, '-'),
+          label: response.data.roleName
+        };
+
+        // Check if role already exists before adding
+        setAvailableRoles(prev => {
+          const exists = prev.some(role => role.value === newRole.value);
+          if (exists) {
+            return prev;
+          }
+          return [...prev, newRole];
+        });
+        
+        // Set the new role as selected
+        updateFormField('role', newRole.value);
+        
+        // Close modal and reset form
+        setIsRoleModalOpen(false);
+        setNewRoleData({ value: '', label: '' });
+      }
+    } catch (error) {
+      console.error('Role creation error:', error);
     }
-
-    // Add new role to available roles
-    setAvailableRoles(prev => [...prev, newRole]);
-    
-    // Set the new role as selected
-    updateFormField('role', newRole.value);
-    
-    // Close modal and reset form
-    setIsRoleModalOpen(false);
-    setNewRoleData({ value: '', label: '' });
-  }, [newRoleData, availableRoles, updateFormField]);
+  }, [newRoleData, createRoleMutation, updateFormField]);
 
   const closeRoleModal = useCallback(() => {
     setIsRoleModalOpen(false);
     setNewRoleData({ value: '', label: '' });
   }, []);
 
+  // Create dynamic modules based on available permissions
+  const getDynamicModules = useCallback(() => {
+    const availableModules = new Set<string>();
+    
+    // Get available modules from current form permissions
+    Object.keys(formData.permissions).forEach(key => {
+      availableModules.add(key);
+    });
+    
+    // Get available modules from initial data
+    if (initialData?.permissions) {
+      Object.keys(initialData.permissions).forEach(key => {
+        availableModules.add(key);
+      });
+    }
+    
+    // Create module configs dynamically
+    return Array.from(availableModules).map(key => ({
+      key,
+      name: key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1').trim(),
+      description: `Manage ${key.toLowerCase().replace(/([A-Z])/g, ' $1').trim()} access and operations`,
+    }));
+  }, [formData.permissions, initialData]);
+
+  const dynamicModules = getDynamicModules();
+
   return (
     <>
+      <FullScreenSpinner 
+        isVisible={isLoading || createRoleMutation.isPending}
+        message={createRoleMutation.isPending ? "Creating role..." : "Saving user..."}
+      />
+      
       <style jsx>{`
         @keyframes slideInUp {
           from {
@@ -177,7 +268,7 @@ const UserForm: React.FC<UserFormProps> = ({
                   onChange={(e) => updateFormField('firstName', e.target.value)}
                   error={!!errors.firstName}
                   hint={errors.firstName}
-                  disabled={isLoading}
+                  disabled={isLoading || createRoleMutation.isPending}
                 />
               </div>
 
@@ -191,7 +282,7 @@ const UserForm: React.FC<UserFormProps> = ({
                   onChange={(e) => updateFormField('lastName', e.target.value)}
                   error={!!errors.lastName}
                   hint={errors.lastName}
-                  disabled={isLoading}
+                  disabled={isLoading || createRoleMutation.isPending}
                 />
               </div>
             </div>
@@ -206,7 +297,7 @@ const UserForm: React.FC<UserFormProps> = ({
                 onChange={(e) => updateFormField('email', e.target.value)}
                 error={!!errors.email}
                 hint={errors.email}
-                disabled={isLoading}
+                disabled={isLoading || createRoleMutation.isPending}
               />
             </div>
 
@@ -220,7 +311,7 @@ const UserForm: React.FC<UserFormProps> = ({
                 onChange={(e) => updateFormField('password', e.target.value)}
                 error={!!errors.password}
                 hint={errors.password}
-                disabled={isLoading}
+                disabled={isLoading || createRoleMutation.isPending}
               />
             </div>
 
@@ -230,7 +321,8 @@ const UserForm: React.FC<UserFormProps> = ({
                 <button
                   type="button"
                   onClick={() => setIsRoleModalOpen(true)}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-primary bg-primary/10 border border-primary/20 rounded-md hover:bg-primary/20 transition-colors duration-200"
+                  disabled={isLoading || createRoleMutation.isPending}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-primary bg-primary/10 border border-primary/20 rounded-md hover:bg-primary/20 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -242,8 +334,11 @@ const UserForm: React.FC<UserFormProps> = ({
                 options={availableRoles}
                 placeholder="Select role"
                 value={formData.role}
-                onChange={(value) => updateFormField('role', value)}
-                disabled={isLoading}
+                onChange={(value) => {
+                  console.log('Role selected:', value);
+                  updateFormField('role', value);
+                }}
+                disabled={isLoading || createRoleMutation.isPending}
               />
               {errors.role && (
                 <p className="mt-1.5 text-xs text-error-500 animate-pulse">{errors.role}</p>
@@ -272,7 +367,7 @@ const UserForm: React.FC<UserFormProps> = ({
               </div>
               
               <div className="space-y-3">
-                {GLOBAL_PERMISSION_CONFIG.modules.map((module, index) => (
+                {dynamicModules.map((module, index) => (
                   <div 
                     key={module.key} 
                     className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-md transition-all duration-200"
@@ -299,12 +394,12 @@ const UserForm: React.FC<UserFormProps> = ({
                         <div className="flex items-center justify-between p-3 rounded-lg border border-gray-100 dark:border-gray-700 hover:bg-green-50 dark:hover:bg-green-900/10 transition-colors duration-200">
                           <div className="flex items-center gap-3">
                             <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors duration-200 ${
-                              formData.permissions[module.key].view 
+                              formData.permissions[module.key]?.view 
                                 ? 'bg-green-100 dark:bg-green-900/30' 
                                 : 'bg-gray-100 dark:bg-gray-700'
                             }`}>
                               <svg className={`w-4 h-4 transition-colors duration-200 ${
-                                formData.permissions[module.key].view 
+                                formData.permissions[module.key]?.view 
                                   ? 'text-green-600 dark:text-green-400' 
                                   : 'text-gray-600 dark:text-gray-400'
                               }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -319,9 +414,9 @@ const UserForm: React.FC<UserFormProps> = ({
                           </div>
                           <CompactSwitch
                             label="View"
-                            checked={formData.permissions[module.key].view}
+                            checked={formData.permissions[module.key]?.view || false}
                             onChange={(checked) => updatePermission(module.key, 'view', checked)}
-                            disabled={isLoading}
+                            disabled={isLoading || createRoleMutation.isPending}
                             size="sm"
                           />
                         </div>
@@ -330,12 +425,12 @@ const UserForm: React.FC<UserFormProps> = ({
                         <div className="flex items-center justify-between p-3 rounded-lg border border-gray-100 dark:border-gray-700 hover:bg-green-50 dark:hover:bg-green-900/10 transition-colors duration-200">
                           <div className="flex items-center gap-3">
                             <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors duration-200 ${
-                              formData.permissions[module.key].create 
+                              formData.permissions[module.key]?.add 
                                 ? 'bg-green-100 dark:bg-green-900/30' 
                                 : 'bg-gray-100 dark:bg-gray-700'
                             }`}>
                               <svg className={`w-4 h-4 transition-colors duration-200 ${
-                                formData.permissions[module.key].create 
+                                formData.permissions[module.key]?.add 
                                   ? 'text-green-600 dark:text-green-400' 
                                   : 'text-gray-600 dark:text-gray-400'
                               }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -349,9 +444,9 @@ const UserForm: React.FC<UserFormProps> = ({
                           </div>
                           <CompactSwitch
                             label="Create"
-                            checked={formData.permissions[module.key].create}
-                            onChange={(checked) => updatePermission(module.key, 'create', checked)}
-                            disabled={isLoading}
+                            checked={formData.permissions[module.key]?.add || false}
+                            onChange={(checked) => updatePermission(module.key, 'add', checked)}
+                            disabled={isLoading || createRoleMutation.isPending}
                             size="sm"
                           />
                         </div>
@@ -360,12 +455,12 @@ const UserForm: React.FC<UserFormProps> = ({
                         <div className="flex items-center justify-between p-3 rounded-lg border border-gray-100 dark:border-gray-700 hover:bg-yellow-50 dark:hover:bg-yellow-900/10 transition-colors duration-200">
                           <div className="flex items-center gap-3">
                             <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors duration-200 ${
-                              formData.permissions[module.key].update 
+                              formData.permissions[module.key]?.edit 
                                 ? 'bg-green-100 dark:bg-green-900/30' 
                                 : 'bg-gray-100 dark:bg-gray-700'
                             }`}>
                               <svg className={`w-4 h-4 transition-colors duration-200 ${
-                                formData.permissions[module.key].update 
+                                formData.permissions[module.key]?.edit 
                                   ? 'text-green-600 dark:text-green-400' 
                                   : 'text-gray-600 dark:text-gray-400'
                               }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -379,9 +474,9 @@ const UserForm: React.FC<UserFormProps> = ({
                           </div>
                           <CompactSwitch
                             label="Update"
-                            checked={formData.permissions[module.key].update}
-                            onChange={(checked) => updatePermission(module.key, 'update', checked)}
-                            disabled={isLoading}
+                            checked={formData.permissions[module.key]?.edit || false}
+                            onChange={(checked) => updatePermission(module.key, 'edit', checked)}
+                            disabled={isLoading || createRoleMutation.isPending}
                             size="sm"
                           />
                         </div>
@@ -390,12 +485,12 @@ const UserForm: React.FC<UserFormProps> = ({
                         <div className="flex items-center justify-between p-3 rounded-lg border border-gray-100 dark:border-gray-700 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors duration-200">
                           <div className="flex items-center gap-3">
                             <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors duration-200 ${
-                              formData.permissions[module.key].delete 
+                              formData.permissions[module.key]?.delete 
                                 ? 'bg-green-100 dark:bg-green-900/30' 
                                 : 'bg-gray-100 dark:bg-gray-700'
                             }`}>
                               <svg className={`w-4 h-4 transition-colors duration-200 ${
-                                formData.permissions[module.key].delete 
+                                formData.permissions[module.key]?.delete 
                                   ? 'text-green-600 dark:text-green-400' 
                                   : 'text-gray-600 dark:text-gray-400'
                               }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -409,9 +504,9 @@ const UserForm: React.FC<UserFormProps> = ({
                           </div>
                           <CompactSwitch
                             label="Delete"
-                            checked={formData.permissions[module.key].delete}
+                            checked={formData.permissions[module.key]?.delete || false}
                             onChange={(checked) => updatePermission(module.key, 'delete', checked)}
-                            disabled={isLoading}
+                            disabled={isLoading || createRoleMutation.isPending}
                             size="sm"
                           />
                         </div>
@@ -427,7 +522,7 @@ const UserForm: React.FC<UserFormProps> = ({
                                 ...prev,
                                 permissions: {
                                   ...prev.permissions,
-                                  [module.key]: { view: true, create: true, update: true, delete: true }
+                                  [module.key]: { view: true, add: true, edit: true, delete: true }
                                 }
                               }));
                             }}
@@ -442,7 +537,7 @@ const UserForm: React.FC<UserFormProps> = ({
                                 ...prev,
                                 permissions: {
                                   ...prev.permissions,
-                                  [module.key]: { view: false, create: false, update: false, delete: false }
+                                  [module.key]: { view: false, add: false, edit: false, delete: false }
                                 }
                               }));
                             }}
@@ -463,11 +558,11 @@ const UserForm: React.FC<UserFormProps> = ({
                     <button
                       type="button"
                       onClick={() => {
-                        const allPermissions = { view: true, create: true, update: true, delete: true };
-                        const globalPermissions = GLOBAL_PERMISSION_CONFIG.modules.reduce((acc, module) => {
+                        const allPermissions = { view: true, add: true, edit: true, delete: true };
+                        const globalPermissions = dynamicModules.reduce((acc, module) => {
                           acc[module.key] = allPermissions;
                           return acc;
-                        }, {} as UserPermissions);
+                        }, {} as FlexiblePermissions);
                         setFormData(prev => ({ ...prev, permissions: globalPermissions }));
                       }}
                       className="flex-1 px-3 py-2 text-xs font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800 dark:hover:bg-blue-900/30 transition-colors duration-200"
@@ -477,11 +572,11 @@ const UserForm: React.FC<UserFormProps> = ({
                     <button
                       type="button"
                       onClick={() => {
-                        const noPermissions = { view: false, create: false, update: false, delete: false };
-                        const globalPermissions = GLOBAL_PERMISSION_CONFIG.modules.reduce((acc, module) => {
+                        const noPermissions = { view: false, add: false, edit: false, delete: false };
+                        const globalPermissions = dynamicModules.reduce((acc, module) => {
                           acc[module.key] = noPermissions;
                           return acc;
-                        }, {} as UserPermissions);
+                        }, {} as FlexiblePermissions);
                         setFormData(prev => ({ ...prev, permissions: globalPermissions }));
                       }}
                       className="flex-1 px-3 py-2 text-xs font-medium text-gray-700 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600 transition-colors duration-200"
@@ -500,8 +595,8 @@ const UserForm: React.FC<UserFormProps> = ({
             <button
               type="button"
               onClick={onCancel}
-              disabled={isLoading}
-              className="inline-flex items-center justify-center font-medium gap-2 transition-all duration-200 h-[45px] rounded-lg px-7 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 hover:shadow-md text-gray-700 dark:text-gray-300 transform hover:scale-105 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+              disabled={isLoading || createRoleMutation.isPending}
+              className="inline-flex items-center justify-center font-medium gap-2 transition-all duration-200 h-[45px] rounded-lg px-7 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 hover:shadow-md text-gray-700 dark:text-gray-300 transform hover:scale-105 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -510,25 +605,13 @@ const UserForm: React.FC<UserFormProps> = ({
             </button>
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={isLoading || createRoleMutation.isPending}
               className="inline-flex items-center justify-center font-medium gap-2 transition-all duration-200 h-[45px] rounded-lg px-7 bg-primary hover:bg-primary/90 text-white shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 focus:ring-2 focus:ring-primary/50 focus:ring-offset-2"
             >
-              {isLoading ? (
-                <>
-                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Creating...
-                </>
-              ) : (
-                <>
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                  </svg>
-                  Create User
-                </>
-              )}
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              {isLoading ? 'Saving...' : 'Create User'}
             </button>
           </div>
         </div>
@@ -564,16 +647,17 @@ const UserForm: React.FC<UserFormProps> = ({
               <Button
                 variant="ghost"
                 onClick={closeRoleModal}
+                disabled={createRoleMutation.isPending}
                 className="dark:text-white"
               >
                 Cancel
               </Button>
               <Button 
                 onClick={handleCreateRole}
-                disabled={!newRoleData.label.trim()}
+                disabled={!newRoleData.label.trim() || createRoleMutation.isPending}
                 className="bg-primary hover:bg-primary/90"
               >
-                Create Role
+                {createRoleMutation.isPending ? 'Creating...' : 'Create Role'}
               </Button>
             </div>
           </div>

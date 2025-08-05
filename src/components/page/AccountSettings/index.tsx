@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { User } from '@/services/types/auth';
 import { authUtils } from '@/services/utils/authUtils';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -9,87 +9,6 @@ import { showToast } from '@/services/utils/toast';
 import { useResetPassword } from '@/services/hooks/useAuth';
 import UserTable from './components/UserTable';
 import AccountInfo from './components/AccountInfo';
-
-const mockUsers: User[] = [
-  {
-    id: '1',
-    email: 'john.doe@company.com',
-    username: 'johndoe',
-    firstName: 'John',
-    lastName: 'Doe',
-    suffix: null,
-    salutation: null,
-    role: 'admin',
-    status: 'active',
-    sendNewsLetter: false,
-    failedLoginAttempts: 0,
-    accountLocked: false,
-    lockedUntil: null,
-    resetPasswordToken: null,
-    resetPasswordTokenExpires: null,
-    activationToken: null,
-    activationTokenExpires: null,
-    recommendationFrequency: 'weekly',
-    agreeToTermsAndConditions: true,
-    createdAt: '2024-01-01T00:00:00Z',
-    updatedAt: '2024-01-01T00:00:00Z',
-    lastEmailSentAt: null,
-    userType: 'admin',
-    forceChangePassword: false
-  },
-  {
-    id: '2',
-    email: 'jane.smith@company.com',
-    username: 'janesmith',
-    firstName: 'Jane',
-    lastName: 'Smith',
-    suffix: null,
-    salutation: null,
-    role: 'manager',
-    status: 'active',
-    sendNewsLetter: false,
-    failedLoginAttempts: 0,
-    accountLocked: false,
-    lockedUntil: null,
-    resetPasswordToken: null,
-    resetPasswordTokenExpires: null,
-    activationToken: null,
-    activationTokenExpires: null,
-    recommendationFrequency: 'weekly',
-    agreeToTermsAndConditions: true,
-    createdAt: '2024-01-01T00:00:00Z',
-    updatedAt: '2024-01-01T00:00:00Z',
-    lastEmailSentAt: null,
-    userType: 'manager',
-    forceChangePassword: false
-  },
-  {
-    id: '3',
-    email: 'bob.wilson@company.com',
-    username: 'bobwilson',
-    firstName: 'Bob',
-    lastName: 'Wilson',
-    suffix: null,
-    salutation: null,
-    role: 'user',
-    status: 'inactive',
-    sendNewsLetter: false,
-    failedLoginAttempts: 0,
-    accountLocked: false,
-    lockedUntil: null,
-    resetPasswordToken: null,
-    resetPasswordTokenExpires: null,
-    activationToken: null,
-    activationTokenExpires: null,
-    recommendationFrequency: 'weekly',
-    agreeToTermsAndConditions: true,
-    createdAt: '2024-01-01T00:00:00Z',
-    updatedAt: '2024-01-01T00:00:00Z',
-    lastEmailSentAt: null,
-    userType: 'user',
-    forceChangePassword: false
-  }
-];
 
 interface PasswordFormData {
   currentPassword: string;
@@ -105,10 +24,16 @@ interface PersonalInformationFormData {
 }
 
 const AccountSettings: React.FC = () => {
+  const [mounted, setMounted] = useState(false);
   const [activeTab, setActiveTab] = useState('account');
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [isUpdatingAvatar, setIsUpdatingAvatar] = useState(false);
   const [isUpdatingPersonalInfo, setIsUpdatingPersonalInfo] = useState(false);
+
+  // Prevent hydration mismatch
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const resetPasswordMutation = useResetPassword();
   const currentUser = authUtils.getUser();
@@ -187,10 +112,20 @@ const AccountSettings: React.FC = () => {
     }
   }, []);
 
-  const executeUserAction = useCallback((userId: string, action: 'manage' | 'remove') => {
-    console.log(`${action} user ${userId}`);
-    showToast.info('Action', `User ${action} action triggered for user ${userId}`);
-  }, []);
+  // Prevent hydration mismatch
+  if (!mounted) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
+        <div className="max-w-8xl mx-auto">
+          <div className="animate-pulse">
+            <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/4 mb-4"></div>
+            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2 mb-8"></div>
+            <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded w-1/3"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
@@ -223,10 +158,7 @@ const AccountSettings: React.FC = () => {
           </TabsContent>
 
           <TabsContent value="users">
-            <UserTable 
-              users={mockUsers} 
-              onUserAction={executeUserAction} 
-            />
+            <UserTable />
           </TabsContent>
         </Tabs>
       </div>

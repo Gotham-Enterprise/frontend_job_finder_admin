@@ -1,236 +1,476 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
-import { User } from '@/services/types/auth';
-import { CreateUserFormData } from '@/services/types/permissions';
-import { Table, TableHeader, TableBody, TableRow, TableCell } from '@/components/ui/table';
-import { DotsIcon } from '@/components/ui/icons';
-import { Dropdown } from '@/components/ui/dropdown/Dropdown';
-import { DropdownItem } from '@/components/ui/dropdown/DropdownItem';
-import Avatar from '@/components/ui/avatar/Avatar';
-import Button from '@/components/ui/button/Button';
-import Drawer from '@/components/ui/drawer/Drawer';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import { useAdminUsers, useDeleteAdminUsers, useUpdateAdminUser, useCreateAdminUser, useAdminRoles } from '@/services/hooks/useAdminUsers';
+import { AdminUser, CreateAdminUserRequest, UpdateAdminUserRequest } from '@/services/api/adminUsers';
+import { getUserInitials, formatUserRole, getUserStatusVariant, getRoleColor, transformApiUserToFormData } from '@/services/utils/userUtils';
 import UserForm from './UserForm';
+import Drawer from '@/components/ui/drawer/Drawer';
+import ConfirmationDialog from '@/components/ui/ConfirmationDialog';
+import LoadingSkeleton from '@/components/ui/LoadingSkeleton/LoadingSkeleton';
+import BulkActionDropdown from '@/components/ui/BulkActionDropdown';
+import { CreateUserFormData } from '@/services/types/permissions';
 
-interface ExtendedUser extends User {
-  lastActivity?: string;
-}
+const UserTable: React.FC = () => {
+  const [mounted, setMounted] = useState(false);
+  const [isCreateDrawerOpen, setIsCreateDrawerOpen] = useState(false);
+  const [isEditDrawerOpen, setIsEditDrawerOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
+  const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
-interface UserTableProps {
-  users: ExtendedUser[];
-  onUserAction: (userId: string, action: 'manage' | 'remove') => void;
-  onCreateUser?: (userData: CreateUserFormData) => void;
-  isCreatingUser?: boolean;
-}
+  const { data: users = [], isLoading, error, refetch } = useAdminUsers();
+  const { data: apiRoles = [] } = useAdminRoles();
+  const deleteUsersMutation = useDeleteAdminUsers();
+  const updateUserMutation = useUpdateAdminUser();
+  const createUserMutation = useCreateAdminUser();
 
-const UserActionDropdown: React.FC<{
-  userId: string;
-  onAction: (userId: string, action: 'manage' | 'remove') => void;
-}> = ({ userId, onAction }) => {
-  const [isOpen, setIsOpen] = useState(false);
+  // Debug logging
+  console.log('UserTable Debug:', { users, isLoading, error });
 
-  const toggleDropdown = useCallback(() => {
-    setIsOpen(prev => !prev);
+  // Prevent hydration mismatch
+  useEffect(() => {
+    setMounted(true);
   }, []);
 
-  const closeDropdown = useCallback(() => {
-    setIsOpen(false);
-  }, []);
+  const isAllSelected = users.length > 0 && selectedUsers.length === users.length;
+  const isIndeterminate = selectedUsers.length > 0 && selectedUsers.length < users.length;
 
-  const executeAction = useCallback((action: 'manage' | 'remove') => {
-    onAction(userId, action);
-    closeDropdown();
-  }, [userId, onAction, closeDropdown]);
+  const memoizedUsers = useMemo(() => users, [users]);
 
-  return (
-    <div className="relative">
-      <button
-        onClick={toggleDropdown}
-        className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
-      >
-        <DotsIcon className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-      </button>
-      <Dropdown 
-        isOpen={isOpen} 
-        onClose={closeDropdown}
-        className="w-32"
-      >
-        <DropdownItem
-          onClick={() => executeAction('manage')}
-        >
-          Manage
-        </DropdownItem>
-        <DropdownItem
-          onClick={() => executeAction('remove')}
-          className="text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
-        >
-          Remove
-        </DropdownItem>
-      </Dropdown>
-    </div>
-  );
-};
-
-const UserTable: React.FC<UserTableProps> = ({ 
-  users, 
-  onUserAction, 
-  onCreateUser,
-  isCreatingUser = false 
-}) => {
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-
-  const openDrawer = useCallback(() => {
-    setIsDrawerOpen(true);
-  }, []);
-
-  const closeDrawer = useCallback(() => {
-    setIsDrawerOpen(false);
-  }, []);
-
-  const submitUserCreation = useCallback((userData: CreateUserFormData) => {
-    if (onCreateUser) {
-      onCreateUser(userData);
-      closeDrawer();
+  const toggleAllUsers = () => {
+    if (isAllSelected) {
+      setSelectedUsers([]);
+    } else {
+      setSelectedUsers(users.map(user => user.userId));
     }
-  }, [onCreateUser, closeDrawer]);
-  const getUserDisplayName = useCallback((user: User): string => {
-    return `${user.firstName} ${user.lastName}`.trim();
-  }, []);
+  };
 
-  const getUserInitials = useCallback((user: User): string => {
-    const firstInitial = user.firstName?.charAt(0)?.toUpperCase() || '';
-    const lastInitial = user.lastName?.charAt(0)?.toUpperCase() || '';
-    return firstInitial + lastInitial;
-  }, []);
+  const toggleUserSelection = (userId: string) => {
+    setSelectedUsers(prev => 
+      prev.includes(userId) 
+        ? prev.filter(id => id !== userId)
+        : [...prev, userId]
+    );
+  };
 
-  const getRoleColor = useCallback((role: string) => {
-    switch (role.toLowerCase()) {
-      case 'admin':
-        return 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300';
-      case 'manager':
-        return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300';
-      case 'user':
-        return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300';
-      default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300';
+  const openEditDrawer = (user: AdminUser) => {
+    setSelectedUser(user);
+    setIsEditDrawerOpen(true);
+  };
+
+  const closeEditDrawer = () => {
+    setSelectedUser(null);
+    setIsEditDrawerOpen(false);
+  };
+
+  // Map role names to role IDs dynamically
+  const getRoleId = useCallback((roleName: string): number => {
+    // First try to find by exact role name
+    const exactMatch = apiRoles.find(role => role.roleName === roleName);
+    if (exactMatch) return exactMatch.id;
+    
+    // Then try to find by converted form value
+    const formValueMatch = apiRoles.find(role => 
+      role.roleName.toLowerCase().replace(/\s+/g, '-') === roleName
+    );
+    if (formValueMatch) return formValueMatch.id;
+    
+    // Default to first role if available, otherwise 1
+    return apiRoles.length > 0 ? apiRoles[0].id : 1;
+  }, [apiRoles]);
+
+  // Handle user creation
+  const handleCreateUser = useCallback(async (userData: CreateUserFormData) => {
+    try {
+      // Transform form data to API format
+      const apiData: CreateAdminUserRequest = {
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        email: userData.email,
+        password: userData.password,
+        roleId: getRoleId(userData.role), // Use the correct role ID mapping
+        access: {
+          'Tickets': {
+            add: userData.permissions.tickets?.create || false,
+            edit: userData.permissions.tickets?.update || false,
+            view: userData.permissions.tickets?.view || false,
+            delete: userData.permissions.tickets?.delete || false,
+          },
+          'Job Seekers': {
+            add: userData.permissions.jobSeekers?.create || false,
+            edit: userData.permissions.jobSeekers?.update || false,
+            view: userData.permissions.jobSeekers?.view || false,
+            delete: userData.permissions.jobSeekers?.delete || false,
+          },
+          'Employers': {
+            add: userData.permissions.employers?.create || false,
+            edit: userData.permissions.employers?.update || false,
+            view: userData.permissions.employers?.view || false,
+            delete: userData.permissions.employers?.delete || false,
+          },
+          'Applications': {
+            add: userData.permissions.applications?.create || false,
+            edit: userData.permissions.applications?.update || false,
+            view: userData.permissions.applications?.view || false,
+            delete: userData.permissions.applications?.delete || false,
+          },
+          'Coupons': {
+            add: userData.permissions.coupons?.create || false,
+            edit: userData.permissions.coupons?.update || false,
+            view: userData.permissions.coupons?.view || false,
+            delete: userData.permissions.coupons?.delete || false,
+          },
+          'Blog': {
+            add: userData.permissions.blog?.create || false,
+            edit: userData.permissions.blog?.update || false,
+            view: userData.permissions.blog?.view || false,
+            delete: userData.permissions.blog?.delete || false,
+          },
+          'Careers': {
+            add: userData.permissions.careers?.create || false,
+            edit: userData.permissions.careers?.update || false,
+            view: userData.permissions.careers?.view || false,
+            delete: userData.permissions.careers?.delete || false,
+          },
+        }
+      };
+
+      await createUserMutation.mutateAsync(apiData);
+      setIsCreateDrawerOpen(false);
+    } catch (error) {
+      console.error('Create user error:', error);
     }
-  }, []);
+  }, [createUserMutation]);
+
+  // Handle user update
+  const handleUpdateUser = useCallback(async (userData: CreateUserFormData) => {
+    if (!selectedUser) return;
+
+    try {
+      // Transform form data to API format
+      const apiData: UpdateAdminUserRequest = {
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        email: userData.email,
+        roleId: getRoleId(userData.role), // Use the correct role ID mapping
+        access: {
+          'Tickets': {
+            add: userData.permissions.tickets?.create || false,
+            edit: userData.permissions.tickets?.update || false,
+            view: userData.permissions.tickets?.view || false,
+            delete: userData.permissions.tickets?.delete || false,
+          },
+          'Job Seekers': {
+            add: userData.permissions.jobSeekers?.create || false,
+            edit: userData.permissions.jobSeekers?.update || false,
+            view: userData.permissions.jobSeekers?.view || false,
+            delete: userData.permissions.jobSeekers?.delete || false,
+          },
+          'Employers': {
+            add: userData.permissions.employers?.create || false,
+            edit: userData.permissions.employers?.update || false,
+            view: userData.permissions.employers?.view || false,
+            delete: userData.permissions.employers?.delete || false,
+          },
+          'Applications': {
+            add: userData.permissions.applications?.create || false,
+            edit: userData.permissions.applications?.update || false,
+            view: userData.permissions.applications?.view || false,
+            delete: userData.permissions.applications?.delete || false,
+          },
+          'Coupons': {
+            add: userData.permissions.coupons?.create || false,
+            edit: userData.permissions.coupons?.update || false,
+            view: userData.permissions.coupons?.view || false,
+            delete: userData.permissions.coupons?.delete || false,
+          },
+          'Blog': {
+            add: userData.permissions.blog?.create || false,
+            edit: userData.permissions.blog?.update || false,
+            view: userData.permissions.blog?.view || false,
+            delete: userData.permissions.blog?.delete || false,
+          },
+          'Careers': {
+            add: userData.permissions.careers?.create || false,
+            edit: userData.permissions.careers?.update || false,
+            view: userData.permissions.careers?.view || false,
+            delete: userData.permissions.careers?.delete || false,
+          },
+        }
+      };
+
+      await updateUserMutation.mutateAsync({ userId: selectedUser.userId, userData: apiData });
+      closeEditDrawer();
+    } catch (error) {
+      console.error('Update user error:', error);
+    }
+  }, [selectedUser, updateUserMutation]);
+
+  const handleBulkAction = (action: string) => {
+    if (action === 'delete' && selectedUsers.length > 0) {
+      setIsDeleteModalOpen(true);
+    }
+  };
+
+  const openDeleteModal = () => {
+    if (selectedUsers.length > 0) {
+      setIsDeleteModalOpen(true);
+    }
+  };
+
+  const closeDeleteModal = () => {
+    setIsDeleteModalOpen(false);
+  };
+
+  const confirmDeleteUsers = async () => {
+    try {
+      await deleteUsersMutation.mutateAsync(selectedUsers);
+      setSelectedUsers([]);
+      closeDeleteModal();
+    } catch (error) {
+      console.error('Delete operation failed:', error);
+    }
+  };
+
+  const refreshData = () => {
+    refetch();
+    setSelectedUsers([]);
+  };
+
+  // Prevent hydration mismatch
+  if (!mounted) {
+    return (
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+        <div className="p-8">
+          <LoadingSkeleton variant="card" />
+        </div>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <LoadingSkeleton variant="card" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <p className="text-red-600 dark:text-red-400 mb-4">Failed to load users</p>
+          <button 
+            onClick={refreshData}
+            className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700">
-        <div className="px-8 py-6 border-b border-gray-200 dark:border-gray-700">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+          <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-2xl text-gray-900 dark:text-white">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white">
                 Users Management
               </h3>
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                 {users.length} total users
               </p>
             </div>
-            <Button
-              variant="default"
-              onClick={openDrawer}
-              startIcon={
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="flex items-center gap-3">
+              <BulkActionDropdown
+                selectedItems={selectedUsers}
+                itemType="users"
+                onBulkDelete={() => setIsDeleteModalOpen(true)}
+                onClearSelection={() => setSelectedUsers([])}
+                isDeleting={deleteUsersMutation.isPending}
+              />
+              <button
+                onClick={() => setIsCreateDrawerOpen(true)}
+                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary hover:bg-primary/90 rounded-lg transition-colors duration-200"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                 </svg>
-              }
-            >
-              Add User
-            </Button>
+                Add User
+              </button>
+            </div>
           </div>
         </div>
-        
+
         <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow className="border-b border-gray-200 dark:border-gray-700">
-                <TableCell
-                  isHeader
-                  className="px-8 text-left text-sm font-semibold text-gray-900 dark:text-white"
-                >
+          <table className="w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead className="bg-gray-50 dark:bg-gray-900/50">
+              <tr>
+                <th className="w-12 px-6 py-3">
+                  <input
+                    type="checkbox"
+                    checked={isAllSelected}
+                    ref={(input) => {
+                      if (input) input.indeterminate = isIndeterminate;
+                    }}
+                    onChange={toggleAllUsers}
+                    className="rounded border-gray-300 text-primary focus:ring-primary"
+                  />
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Name
-                </TableCell>
-                <TableCell
-                  isHeader
-                  className="px-8 text-left text-sm font-semibold text-gray-900 dark:text-white"
-                >
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Role
-                </TableCell>
-                <TableCell
-                  isHeader
-                  className="px-8 text-left text-sm font-semibold text-gray-900 dark:text-white"
-                >
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Status
-                </TableCell>
-                <TableCell
-                  isHeader
-                  className="px-8 py-4 text-right text-sm font-semibold text-gray-900 dark:text-white"
-                >
+                </th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Actions
-                </TableCell>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {users.map((user) => (
-                <TableRow key={user.id} className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                  <TableCell className="py-3 px-8">
-                    <div className="flex items-center gap-4">
-                      <Avatar
-                        name={getUserDisplayName(user)}
-                        size="medium"
-                        className="flex-shrink-0"
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+              {memoizedUsers.map((user) => {
+                const statusVariant = getUserStatusVariant(user.status);
+                const roleColorClass = getRoleColor(user.role);
+                
+                return (
+                  <tr 
+                    key={user.userId}
+                    className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-200"
+                  >
+                    <td className="px-6 py-4">
+                      <input
+                        type="checkbox"
+                        checked={selectedUsers.includes(user.userId)}
+                        onChange={() => toggleUserSelection(user.userId)}
+                        className="rounded border-gray-300 text-primary focus:ring-primary"
                       />
-                      <div>
-                        <p className="font-semibold text-gray-900 dark:text-white">
-                          {getUserDisplayName(user)}
-                        </p>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                          {user.email}
-                        </p>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+                          {user.avatarUrl ? (
+                            <img 
+                              src={user.avatarUrl} 
+                              alt={user.name}
+                              className="w-10 h-10 rounded-full object-cover"
+                            />
+                          ) : (
+                            <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                              {mounted ? getUserInitials(user.name) : '?'}
+                            </span>
+                          )}
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-gray-900 dark:text-white">
+                            {user.name}
+                          </p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">
+                            {user.email}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  </TableCell>
-                  <TableCell className="py-3 px-8">
-                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium capitalize ${getRoleColor(user.role)}`}>
-                      {user.role}
-                    </span>
-                  </TableCell>
-                  <TableCell className="py-3 px-8">
-                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-                      user.status === 'active' 
-                        ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-                        : 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300'
-                    }`}>
-                      {user.status}
-                    </span>
-                  </TableCell>
-                  <TableCell className="py-3 px-8 text-right">
-                    <UserActionDropdown userId={user.id} onAction={onUserAction} />
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${roleColorClass}`}>
+                        {formatUserRole(user.role)}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${statusVariant.className}`}>
+                        {statusVariant.label}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => openEditDrawer(user)}
+                          className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-md hover:bg-blue-100 transition-colors duration-200"
+                        >
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                          Manage
+                        </button>
+                        <button
+                          onClick={() => {
+                            setSelectedUsers([user.userId]);
+                            openDeleteModal();
+                          }}
+                          className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-red-700 bg-red-50 border border-red-200 rounded-md hover:bg-red-100 transition-colors duration-200"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
+
+        {users.length === 0 && (
+          <div className="text-center py-12">
+            <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+            </svg>
+            <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-white">No users found</h3>
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              Get started by adding your first user.
+            </p>
+          </div>
+        )}
       </div>
 
       <Drawer
-        isOpen={isDrawerOpen}
-        onClose={closeDrawer}
+        isOpen={isCreateDrawerOpen}
+        onClose={() => setIsCreateDrawerOpen(false)}
         title="Add New User"
-        width="xl"
       >
         <UserForm
-          onSubmit={submitUserCreation}
-          onCancel={closeDrawer}
-          isLoading={isCreatingUser}
+          onSubmit={handleCreateUser}
+          onCancel={() => setIsCreateDrawerOpen(false)}
+          isLoading={createUserMutation.isPending}
         />
       </Drawer>
+
+      <Drawer
+        isOpen={isEditDrawerOpen}
+        onClose={closeEditDrawer}
+        title="Edit User"
+      >
+        {selectedUser && (
+          <UserForm
+            onSubmit={handleUpdateUser}
+            onCancel={closeEditDrawer}
+            isLoading={updateUserMutation.isPending}
+            initialData={transformApiUserToFormData(selectedUser, apiRoles)}
+          />
+        )}
+      </Drawer>
+
+      <ConfirmationDialog
+        isOpen={isDeleteModalOpen}
+        onClose={closeDeleteModal}
+        onConfirm={confirmDeleteUsers}
+        onCancel={closeDeleteModal}
+        title="Delete Users"
+        message={`Are you sure you want to delete ${selectedUsers.length} user${selectedUsers.length > 1 ? 's' : ''}? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        isLoading={deleteUsersMutation.isPending}
+      />
     </>
   );
 };
 
-export default UserTable;
+export default React.memo(UserTable);

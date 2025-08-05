@@ -50,9 +50,9 @@ export const DEFAULT_PERMISSIONS: UserPermissions = {
 };
 
 export const ROLE_OPTIONS = [
-  { value: 'admin', label: 'Admin' },
+  { value: 'admin', label: 'Super Admin' },
   { value: 'manager', label: 'Manager' },
   { value: 'user', label: 'User' },
-  { value: 'content-manager', label: 'Content Manager' },
+  { value: 'content-manager', label: 'Content Creator' },
   { value: 'viewer', label: 'Viewer' },
 ];

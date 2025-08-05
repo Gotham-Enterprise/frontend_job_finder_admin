@@ -15,13 +15,23 @@ export interface UserPermissions {
   careers: Permission;
 }
 
+
+export interface FlexiblePermissions {
+  [key: string]: {
+    add: boolean;
+    edit: boolean;
+    view: boolean;
+    delete: boolean;
+  };
+}
+
 export interface CreateUserFormData {
   firstName: string;
   lastName: string;
   email: string;
   password: string;
   role: string;
-  permissions: UserPermissions;
+  permissions: FlexiblePermissions;
 }
 
 export interface PermissionModule {
@@ -39,15 +49,7 @@ export const PERMISSION_MODULES: PermissionModule[] = [
   { key: 'careers', label: 'Careers' },
 ];
 
-export const DEFAULT_PERMISSIONS: UserPermissions = {
-  tickets: { view: true, create: false, update: false, delete: false },
-  jobSeekers: { view: true, create: false, update: false, delete: false },
-  employers: { view: true, create: false, update: false, delete: false },
-  applications: { view: true, create: false, update: false, delete: false },
-  coupons: { view: true, create: false, update: false, delete: false },
-  blog: { view: true, create: false, update: false, delete: false },
-  careers: { view: true, create: false, update: false, delete: false },
-};
+export const DEFAULT_PERMISSIONS: FlexiblePermissions = {};
 
 export const ROLE_OPTIONS = [
   { value: 'admin', label: 'Admin' },
