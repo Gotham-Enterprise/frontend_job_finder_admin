@@ -13,6 +13,7 @@ import Input from '@/components/ui/input/Input';
 import Label from '@/components/form/Label';
 import Button from '@/components/ui/button/Button';
 import BulkActionDropdown from '@/components/ui/BulkActionDropdown';
+import Checkbox from '@/components/form/input/Checkbox';
 import { CreateUserFormData } from '@/types/permissions';
 
 const UserTable: React.FC = () => {
@@ -49,7 +50,7 @@ const UserTable: React.FC = () => {
   const memoizedUsers = useMemo(() => users, [users]);
 
   const toggleAllUsers = () => {
-    if (isAllSelected) {
+    if (isAllSelected || isIndeterminate) {
       setSelectedUsers([]);
     } else {
       setSelectedUsers(users.map(user => user.userId));
@@ -138,64 +139,53 @@ const UserTable: React.FC = () => {
   }, [createUserMutation]);
 
   // Handle user update
-  const handleUpdateUser = useCallback(async (userData: CreateUserFormData | FormData) => {
+  const handleUpdateUser = useCallback(async (userData: CreateUserFormData) => {
     if (!selectedUser) return;
 
     try {
       console.log('Update user - incoming userData:', userData);
       
-      // Check if it's FormData (contains avatar)
-      if (userData instanceof FormData) {
-        console.log('Processing FormData submission with avatar');
-        await updateUserMutation.mutateAsync({ 
-          userId: selectedUser.userId, 
-          formData: userData 
-        });
-      } else {
-        console.log('Processing regular JSON submission');
+      // Transform form data to API format dynamically
+      const access: any = {};
+      
+      // Map form permission keys to API module names
+      const keyToApiNameMap: { [key: string]: string } = {
+        'tickets': 'Tickets',
+        'jobSeekers': 'Job Seekers',
+        'employers': 'Employers',
+        'applications': 'Applications',
+        'coupons': 'Coupons',
+        'blog': 'Blog',
+        'careers': 'Careers',
+        'jobs': 'Jobs',
+      };
+      
+      // Process each permission module dynamically
+      Object.keys(userData.permissions).forEach(permissionKey => {
+        const apiModuleName = keyToApiNameMap[permissionKey] || permissionKey;
+        const permissions = userData.permissions[permissionKey];
         
-        // Transform form data to API format dynamically
-        const access: any = {};
+        console.log(`Processing permission: ${permissionKey} -> ${apiModuleName}`, permissions);
         
-        // Map form permission keys to API module names
-        const keyToApiNameMap: { [key: string]: string } = {
-          'tickets': 'Tickets',
-          'jobSeekers': 'Job Seekers',
-          'employers': 'Employers',
-          'applications': 'Applications',
-          'coupons': 'Coupons',
-          'blog': 'Blog',
-          'careers': 'Careers',
-          'jobs': 'Jobs',
+        access[apiModuleName] = {
+          add: permissions?.add || false,
+          edit: permissions?.edit || false,
+          view: permissions?.view || false,
+          delete: permissions?.delete || false,
         };
-        
-        // Process each permission module dynamically
-        Object.keys(userData.permissions).forEach(permissionKey => {
-          const apiModuleName = keyToApiNameMap[permissionKey] || permissionKey;
-          const permissions = userData.permissions[permissionKey];
-          
-          console.log(`Processing permission: ${permissionKey} -> ${apiModuleName}`, permissions);
-          
-          access[apiModuleName] = {
-            add: permissions?.add || false,
-            edit: permissions?.edit || false,
-            view: permissions?.view || false,
-            delete: permissions?.delete || false,
-          };
-        });
+      });
 
-        console.log('Final API access object for update:', access);
+      console.log('Final API access object for update:', access);
 
-        const apiData: UpdateAdminUserRequest = {
-          firstName: userData.firstName,
-          lastName: userData.lastName,
-          email: userData.email,
-          roleId: getRoleId(userData.role), // Use the correct role ID mapping
-          access,
-        };
+      const apiData: UpdateAdminUserRequest = {
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        email: userData.email,
+        roleId: getRoleId(userData.role), // Use the correct role ID mapping
+        access,
+      };
 
-        await updateUserMutation.mutateAsync({ userId: selectedUser.userId, userData: apiData });
-      }
+      await updateUserMutation.mutateAsync({ userId: selectedUser.userId, userData: apiData });
       closeEditDrawer();
     } catch (error) {
       console.error('Update user error:', error);
@@ -322,7 +312,7 @@ const UserTable: React.FC = () => {
               />
               <button
                 onClick={() => setIsCreateDrawerOpen(true)}
-                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary hover:bg-primary/90 rounded-lg transition-colors duration-200"
+                className="inline-flex items-center justify-center gap-2 px-4 py-2 h-[45px] w-[140px] text-sm font-medium text-white bg-primary hover:bg-primary/90 rounded-sm transition-colors duration-200"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -338,14 +328,9 @@ const UserTable: React.FC = () => {
             <thead className="bg-gray-50 dark:bg-gray-900/50">
               <tr>
                 <th className="w-12 px-6 py-3">
-                  <input
-                    type="checkbox"
-                    checked={isAllSelected}
-                    ref={(input) => {
-                      if (input) input.indeterminate = isIndeterminate;
-                    }}
+                  <Checkbox
+                    checked={isAllSelected || isIndeterminate}
                     onChange={toggleAllUsers}
-                    className="rounded border-gray-300 text-primary focus:ring-primary"
                   />
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
@@ -373,11 +358,9 @@ const UserTable: React.FC = () => {
                     className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-200"
                   >
                     <td className="px-6 py-4">
-                      <input
-                        type="checkbox"
+                      <Checkbox
                         checked={selectedUsers.includes(user.userId)}
-                        onChange={() => toggleUserSelection(user.userId)}
-                        className="rounded border-gray-300 text-primary focus:ring-primary"
+                        onChange={(checked) => toggleUserSelection(user.userId)}
                       />
                     </td>
                     <td className="px-6 py-4">
