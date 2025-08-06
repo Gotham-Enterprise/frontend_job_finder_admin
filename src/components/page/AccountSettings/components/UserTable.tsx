@@ -409,6 +409,7 @@ const UserTable: React.FC = () => {
         isOpen={isCreateDrawerOpen}
         onClose={() => setIsCreateDrawerOpen(false)}
         title="Add New User"
+        width="xl"
       >
         <UserForm
           onSubmit={handleCreateUser}
@@ -421,6 +422,7 @@ const UserTable: React.FC = () => {
         isOpen={isEditDrawerOpen}
         onClose={closeEditDrawer}
         title="Edit User"
+        width="xl"
       >
         {selectedUser && (
           <UserForm

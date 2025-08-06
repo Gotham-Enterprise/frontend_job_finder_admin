@@ -321,7 +321,7 @@ const UserForm: React.FC<UserFormProps> = ({
       <form onSubmit={submitForm} className="flex h-full flex-col">
         <div className="flex-1 flex overflow-hidden">
           {/* Left Column - Form Fields */}
-          <div className="w-80 px-6 py-6 space-y-6 overflow-y-auto">
+          <div className="w-72 px-6 py-6 space-y-6 overflow-y-auto flex-shrink-0">
             <div className="grid grid-cols-1 gap-4">
               <div className="transform transition-all duration-200 hover:scale-[1.02]">
                 <Label htmlFor="firstName">First Name</Label>
@@ -415,8 +415,8 @@ const UserForm: React.FC<UserFormProps> = ({
           </div>
 
           {/* Right Column - Access Permissions */}
-          <div className="flex-1 border-l border-gray-200 dark:border-gray-700" style={{ backgroundColor: '#f5f8fa' }}>
-            <div className="px-6 py-6 space-y-4 overflow-y-auto h-full">
+          <div className="flex-1 min-w-0 border-l border-gray-200 dark:border-gray-700" style={{ backgroundColor: '#f5f8fa' }}>
+            <div className="px-8 py-6 space-y-4 overflow-y-auto h-full">
               <div className="py-2" style={{ backgroundColor: '#f5f8fa' }}>
                 <h3 className="text-lg font-medium text-gray-900 dark:text-white">
                   Access Permissions
@@ -434,7 +434,7 @@ const UserForm: React.FC<UserFormProps> = ({
                 )}
               </div>
               
-              <div className="space-y-3">
+              <div className="space-y-5">
                 {dynamicModules.map((module, index) => (
                   <div 
                     key={module.key} 
@@ -456,17 +456,17 @@ const UserForm: React.FC<UserFormProps> = ({
                     </div>
                     
                     {/* Permissions Grid */}
-                    <div className="p-4">
-                      <div className="grid grid-cols-2 gap-3">
+                    <div className="p-8">
+                      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                         {/* View Permission */}
-                        <div className="flex items-center justify-between p-3 rounded-lg border border-gray-100 dark:border-gray-700 hover:bg-green-50 dark:hover:bg-green-900/10 transition-colors duration-200">
-                          <div className="flex items-center gap-3">
-                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors duration-200 ${
+                        <div className="flex items-center justify-between p-6 rounded-lg border border-gray-100 dark:border-gray-700 hover:bg-green-50 dark:hover:bg-green-900/10 transition-colors duration-200">
+                          <div className="flex items-center gap-4">
+                            <div className={`w-12 h-12 rounded-lg flex items-center justify-center transition-colors duration-200 ${
                               formData.permissions[module.key]?.view 
                                 ? 'bg-green-100 dark:bg-green-900/30' 
                                 : 'bg-gray-100 dark:bg-gray-700'
                             }`}>
-                              <svg className={`w-4 h-4 transition-colors duration-200 ${
+                              <svg className={`w-5 h-5 transition-colors duration-200 ${
                                 formData.permissions[module.key]?.view 
                                   ? 'text-green-600 dark:text-green-400' 
                                   : 'text-gray-600 dark:text-gray-400'
@@ -490,14 +490,14 @@ const UserForm: React.FC<UserFormProps> = ({
                         </div>
 
                         {/* Create Permission */}
-                        <div className="flex items-center justify-between p-3 rounded-lg border border-gray-100 dark:border-gray-700 hover:bg-green-50 dark:hover:bg-green-900/10 transition-colors duration-200">
-                          <div className="flex items-center gap-3">
-                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors duration-200 ${
+                        <div className="flex items-center justify-between p-6 rounded-lg border border-gray-100 dark:border-gray-700 hover:bg-green-50 dark:hover:bg-green-900/10 transition-colors duration-200">
+                          <div className="flex items-center gap-4">
+                            <div className={`w-12 h-12 rounded-lg flex items-center justify-center transition-colors duration-200 ${
                               formData.permissions[module.key]?.add 
                                 ? 'bg-green-100 dark:bg-green-900/30' 
                                 : 'bg-gray-100 dark:bg-gray-700'
                             }`}>
-                              <svg className={`w-4 h-4 transition-colors duration-200 ${
+                              <svg className={`w-5 h-5 transition-colors duration-200 ${
                                 formData.permissions[module.key]?.add 
                                   ? 'text-green-600 dark:text-green-400' 
                                   : 'text-gray-600 dark:text-gray-400'
@@ -520,14 +520,14 @@ const UserForm: React.FC<UserFormProps> = ({
                         </div>
 
                         {/* Update Permission */}
-                        <div className="flex items-center justify-between p-3 rounded-lg border border-gray-100 dark:border-gray-700 hover:bg-yellow-50 dark:hover:bg-yellow-900/10 transition-colors duration-200">
-                          <div className="flex items-center gap-3">
-                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors duration-200 ${
+                        <div className="flex items-center justify-between p-6 rounded-lg border border-gray-100 dark:border-gray-700 hover:bg-yellow-50 dark:hover:bg-yellow-900/10 transition-colors duration-200">
+                          <div className="flex items-center gap-4">
+                            <div className={`w-12 h-12 rounded-lg flex items-center justify-center transition-colors duration-200 ${
                               formData.permissions[module.key]?.edit 
                                 ? 'bg-green-100 dark:bg-green-900/30' 
                                 : 'bg-gray-100 dark:bg-gray-700'
                             }`}>
-                              <svg className={`w-4 h-4 transition-colors duration-200 ${
+                              <svg className={`w-5 h-5 transition-colors duration-200 ${
                                 formData.permissions[module.key]?.edit 
                                   ? 'text-green-600 dark:text-green-400' 
                                   : 'text-gray-600 dark:text-gray-400'
@@ -550,14 +550,14 @@ const UserForm: React.FC<UserFormProps> = ({
                         </div>
 
                         {/* Delete Permission */}
-                        <div className="flex items-center justify-between p-3 rounded-lg border border-gray-100 dark:border-gray-700 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors duration-200">
-                          <div className="flex items-center gap-3">
-                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors duration-200 ${
+                        <div className="flex items-center justify-between p-6 rounded-lg border border-gray-100 dark:border-gray-700 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors duration-200">
+                          <div className="flex items-center gap-4">
+                            <div className={`w-12 h-12 rounded-lg flex items-center justify-center transition-colors duration-200 ${
                               formData.permissions[module.key]?.delete 
                                 ? 'bg-green-100 dark:bg-green-900/30' 
                                 : 'bg-gray-100 dark:bg-gray-700'
                             }`}>
-                              <svg className={`w-4 h-4 transition-colors duration-200 ${
+                              <svg className={`w-5 h-5 transition-colors duration-200 ${
                                 formData.permissions[module.key]?.delete 
                                   ? 'text-green-600 dark:text-green-400' 
                                   : 'text-gray-600 dark:text-gray-400'
