@@ -53,6 +53,14 @@ export const authUtils = {
     return authState?.user || null;
   },
 
+  updateUser(user: User): void {
+    const authState = this.getAuthState();
+    if (authState) {
+      authState.user = user;
+      this.saveAuthState(authState);
+    }
+  },
+
   getToken(): string | null {
     const authState = this.getAuthState();
     return authState?.token || null;

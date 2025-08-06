@@ -28,6 +28,7 @@ interface AccountInfoProps {
   onPasswordChange: (data: PasswordFormData) => Promise<void>;
   onAvatarChange: (formData: FormData) => Promise<void>;
   onPersonalInfoChange: (data: FormData) => Promise<void>;
+  onUserDataRefresh?: () => Promise<void>; // Add callback to refresh user data
   isChangingPassword: boolean;
   isUpdatingAvatar?: boolean;
   isUpdatingPersonalInfo?: boolean;
@@ -40,6 +41,7 @@ const AccountInfo: React.FC<AccountInfoProps> = ({
   onPasswordChange,
   onAvatarChange,
   onPersonalInfoChange,
+  onUserDataRefresh,
   isChangingPassword,
   isUpdatingAvatar = false,
   isUpdatingPersonalInfo = false
@@ -58,6 +60,18 @@ const AccountInfo: React.FC<AccountInfoProps> = ({
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Update form data when user data changes
+  useEffect(() => {
+    if (user) {
+      setEditFormData({
+        firstName: user.firstName || '',
+        lastName: user.lastName || '',
+        email: user.email || '',
+        username: user.username || ''
+      });
+    }
+  }, [user]);
   
   const [editFormData, setEditFormData] = useState<PersonalInformationFormData>({
     firstName: user?.firstName || '',
@@ -155,11 +169,16 @@ const AccountInfo: React.FC<AccountInfoProps> = ({
         }
       }
       
+      // Refresh user data to get updated avatar URL
+      if (onUserDataRefresh) {
+        await onUserDataRefresh();
+      }
+      
       console.log('Personal information and avatar saved successfully');
     } catch (error) {
       console.error('Failed to save personal information:', error);
     }
-  }, [editFormData, selectedAvatar, onPersonalInfoChange]);
+  }, [editFormData, selectedAvatar, onPersonalInfoChange, onUserDataRefresh]);
 
   const handleAvatarClick = useCallback(() => {
     fileInputRef.current?.click();
@@ -235,6 +254,12 @@ const AccountInfo: React.FC<AccountInfoProps> = ({
                     <img 
                       src={avatarPreview} 
                       alt="Avatar preview"
+                      className="w-16 h-16 rounded-full object-cover"
+                    />
+                  ) : user?.avatarUrl ? (
+                    <img 
+                      src={user.avatarUrl} 
+                      alt="Current avatar"
                       className="w-16 h-16 rounded-full object-cover"
                     />
                   ) : (

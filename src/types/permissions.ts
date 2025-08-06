@@ -32,7 +32,6 @@ export interface CreateUserFormData {
   password: string;
   role: string;
   permissions: FlexiblePermissions;
-  avatarFile?: File;
 }
 
 export interface PermissionModule {

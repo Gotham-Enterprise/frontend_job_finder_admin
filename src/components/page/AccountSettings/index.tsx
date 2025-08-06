@@ -22,15 +22,18 @@ const AccountSettings: React.FC = () => {
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [isUpdatingAvatar, setIsUpdatingAvatar] = useState(false);
   const [isUpdatingPersonalInfo, setIsUpdatingPersonalInfo] = useState(false);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
 
   // Prevent hydration mismatch
   useEffect(() => {
     setMounted(true);
+    // Initialize current user
+    const user = authUtils.getUser();
+    setCurrentUser(user);
   }, []);
 
   const resetPasswordMutation = useResetPassword();
   const updateProfileMutation = useUpdateProfile();
-  const currentUser = authUtils.getUser();
   const displayName = authUtils.getUserDisplayName();
   const userInitials = authUtils.getUserInitials();
 
@@ -43,6 +46,19 @@ const AccountSettings: React.FC = () => {
     role: 'admin',
     status: 'active'
   } as User;
+
+  const refreshUserData = useCallback(async (): Promise<void> => {
+    try {
+      // For now, we'll update the state from localStorage
+      // In a real app, you might want to fetch fresh data from the server
+      const updatedUser = authUtils.getUser();
+      if (updatedUser) {
+        setCurrentUser(updatedUser);
+      }
+    } catch (error) {
+      console.error('Failed to refresh user data:', error);
+    }
+  }, []);
 
   const executePasswordChange = useCallback(async (passwordData: PasswordFormData): Promise<void> => {
     setIsChangingPassword(true);
@@ -97,8 +113,19 @@ const AccountSettings: React.FC = () => {
       
       showToast.success('Success', 'Profile updated successfully!');
       
-      // Optionally update the current user in local state/storage
-      // You might want to refresh user data here
+      // Update user data after successful profile update
+      if (response.data && currentUser) {
+        // Update the current user with new data from response
+        const updatedUser = {
+          ...currentUser,
+          ...response.data
+        };
+        authUtils.updateUser(updatedUser);
+        setCurrentUser(updatedUser);
+      } else {
+        // If no data in response, refresh from storage
+        await refreshUserData();
+      }
       
     } catch (error: any) {
       console.error('Profile update error:', error);
@@ -107,7 +134,7 @@ const AccountSettings: React.FC = () => {
     } finally {
       setIsUpdatingPersonalInfo(false);
     }
-  }, [updateProfileMutation]);
+  }, [updateProfileMutation, currentUser, refreshUserData]);
 
   // Prevent hydration mismatch
   if (!mounted) {
@@ -148,6 +175,7 @@ const AccountSettings: React.FC = () => {
               onPasswordChange={executePasswordChange}
               onAvatarChange={executeAvatarChange}
               onPersonalInfoChange={executePersonalInfoChange}
+              onUserDataRefresh={refreshUserData}
               isChangingPassword={isChangingPassword}
               isUpdatingAvatar={isUpdatingAvatar}
               isUpdatingPersonalInfo={isUpdatingPersonalInfo}

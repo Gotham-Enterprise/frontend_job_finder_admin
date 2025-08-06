@@ -61,6 +61,7 @@ export interface User {
   lastEmailSentAt: string | null;
   userType: string;
   forceChangePassword: boolean;
+  avatarUrl?: string;
 }
 
 export interface AuthResponse {
