@@ -5,14 +5,14 @@ import { CreateUserFormData, ROLE_OPTIONS } from '@/types/permissions';
 import { CreateUserFormData as ServiceCreateUserFormData } from '@/services/types/permissions';
 import { getPermissionsForRole } from '@/config/permissions';
 import { DEFAULT_PERMISSIONS, FlexiblePermissions } from '@/types/permissions';
-import { useCreateRole, useAdminRoles } from '@/services/hooks/useAdminUsers';
+import { useAdminRoles } from '@/services/hooks/useAdminUsers';
 import { AdminUser } from '@/services/api/adminUsers';
 import { transformApiUserToFormData } from '@/services/utils/userUtils';
 import Input from '@/components/ui/input/Input';
 import Label from '@/components/form/Label';
 import Select from '@/components/form/Select';
 import CompactSwitch from '@/components/ui/switch/CompactSwitch';
-import { Modal } from '@/components/ui/modal';
+// Modal import removed since role modal moved to parent component
 import Button from '@/components/ui/button/Button';
 import FullScreenSpinner from '@/components/ui/FullScreenSpinner';
 
@@ -24,6 +24,7 @@ interface UserFormProps {
   isEditMode?: boolean;
   userId?: string;
   userData?: AdminUser;
+  onCreateRoleClick?: () => void;
 }
 
 const UserForm: React.FC<UserFormProps> = ({
@@ -34,8 +35,8 @@ const UserForm: React.FC<UserFormProps> = ({
   isEditMode = false,
   userId,
   userData,
+  onCreateRoleClick,
 }) => {
-  const createRoleMutation = useCreateRole();
   const { data: apiRoles = [] } = useAdminRoles();
   
   const [formData, setFormData] = useState<CreateUserFormData>(
@@ -51,11 +52,12 @@ const UserForm: React.FC<UserFormProps> = ({
 
   const [errors, setErrors] = useState<Partial<CreateUserFormData>>({});
   const [availableRoles, setAvailableRoles] = useState(ROLE_OPTIONS);
-  const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
-  const [newRoleData, setNewRoleData] = useState({
-    value: '',
-    label: ''
-  });
+  // Role modal state moved to parent component
+  // const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
+  // const [newRoleData, setNewRoleData] = useState({
+  //   value: '',
+  //   label: ''
+  // });
 
   // Update available roles when API roles are loaded
   useEffect(() => {
@@ -204,49 +206,7 @@ const UserForm: React.FC<UserFormProps> = ({
     }
   }, [formData, validateForm, onSubmit]);
 
-  const handleCreateRole = useCallback(async () => {
-    if (!newRoleData.label.trim()) {
-      return;
-    }
-
-    try {
-      // Call the API to create the role
-      const response = await createRoleMutation.mutateAsync({
-        roleName: newRoleData.label.trim()
-      });
-
-      if (response.success) {
-        // Add the new role to available roles
-        const newRole = {
-          value: response.data.roleName.toLowerCase().replace(/\s+/g, '-'),
-          label: response.data.roleName
-        };
-
-        // Check if role already exists before adding
-        setAvailableRoles(prev => {
-          const exists = prev.some(role => role.value === newRole.value);
-          if (exists) {
-            return prev;
-          }
-          return [...prev, newRole];
-        });
-        
-        // Set the new role as selected
-        updateFormField('role', newRole.value);
-        
-        // Close modal and reset form
-        setIsRoleModalOpen(false);
-        setNewRoleData({ value: '', label: '' });
-      }
-    } catch (error) {
-      console.error('Role creation error:', error);
-    }
-  }, [newRoleData, createRoleMutation, updateFormField]);
-
-  const closeRoleModal = useCallback(() => {
-    setIsRoleModalOpen(false);
-    setNewRoleData({ value: '', label: '' });
-  }, []);
+  // Role creation logic moved to parent component
 
   // Create dynamic modules based on available permissions
   const getDynamicModules = useCallback(() => {
@@ -301,8 +261,8 @@ const UserForm: React.FC<UserFormProps> = ({
   return (
     <>
       <FullScreenSpinner 
-        isVisible={isLoading || createRoleMutation.isPending}
-        message={createRoleMutation.isPending ? "Creating role..." : "Saving user..."}
+        isVisible={isLoading}
+        message="Saving user..."
       />
       
       <style jsx>{`
@@ -333,7 +293,7 @@ const UserForm: React.FC<UserFormProps> = ({
                   onChange={(e) => updateFormField('firstName', e.target.value)}
                   error={!!errors.firstName}
                   hint={errors.firstName}
-                  disabled={isLoading || createRoleMutation.isPending}
+                  disabled={isLoading}
                 />
               </div>
 
@@ -347,7 +307,7 @@ const UserForm: React.FC<UserFormProps> = ({
                   onChange={(e) => updateFormField('lastName', e.target.value)}
                   error={!!errors.lastName}
                   hint={errors.lastName}
-                  disabled={isLoading || createRoleMutation.isPending}
+                  disabled={isLoading}
                 />
               </div>
             </div>
@@ -362,7 +322,7 @@ const UserForm: React.FC<UserFormProps> = ({
                 onChange={(e) => updateFormField('email', e.target.value)}
                 error={!!errors.email}
                 hint={errors.email}
-                disabled={isLoading || createRoleMutation.isPending}
+                disabled={isLoading}
               />
             </div>
 
@@ -378,7 +338,7 @@ const UserForm: React.FC<UserFormProps> = ({
                   onChange={(e) => updateFormField('password', e.target.value)}
                   error={!!errors.password}
                   hint={errors.password}
-                  disabled={isLoading || createRoleMutation.isPending}
+                  disabled={isLoading}
                 />
               </div>
             )}
@@ -388,8 +348,8 @@ const UserForm: React.FC<UserFormProps> = ({
                 <Label htmlFor="role">Role</Label>
                 <button
                   type="button"
-                  onClick={() => setIsRoleModalOpen(true)}
-                  disabled={isLoading || createRoleMutation.isPending}
+                  onClick={onCreateRoleClick}
+                  disabled={isLoading}
                   className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-primary bg-primary/10 border border-primary/20 rounded-md hover:bg-primary/20 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -406,7 +366,7 @@ const UserForm: React.FC<UserFormProps> = ({
                   console.log('Role selected:', value);
                   updateFormField('role', value);
                 }}
-                disabled={isLoading || createRoleMutation.isPending}
+                disabled={isLoading}
               />
               {errors.role && (
                 <p className="mt-1.5 text-xs text-error-500 animate-pulse">{errors.role}</p>
@@ -484,7 +444,7 @@ const UserForm: React.FC<UserFormProps> = ({
                             label="View"
                             checked={formData.permissions[module.key]?.view || false}
                             onChange={(checked) => updatePermission(module.key, 'view', checked)}
-                            disabled={isLoading || createRoleMutation.isPending}
+                            disabled={isLoading}
                             size="sm"
                           />
                         </div>
@@ -514,7 +474,7 @@ const UserForm: React.FC<UserFormProps> = ({
                             label="Create"
                             checked={formData.permissions[module.key]?.add || false}
                             onChange={(checked) => updatePermission(module.key, 'add', checked)}
-                            disabled={isLoading || createRoleMutation.isPending}
+                            disabled={isLoading}
                             size="sm"
                           />
                         </div>
@@ -544,7 +504,7 @@ const UserForm: React.FC<UserFormProps> = ({
                             label="Update"
                             checked={formData.permissions[module.key]?.edit || false}
                             onChange={(checked) => updatePermission(module.key, 'edit', checked)}
-                            disabled={isLoading || createRoleMutation.isPending}
+                            disabled={isLoading}
                             size="sm"
                           />
                         </div>
@@ -574,7 +534,7 @@ const UserForm: React.FC<UserFormProps> = ({
                             label="Delete"
                             checked={formData.permissions[module.key]?.delete || false}
                             onChange={(checked) => updatePermission(module.key, 'delete', checked)}
-                            disabled={isLoading || createRoleMutation.isPending}
+                            disabled={isLoading}
                             size="sm"
                           />
                         </div>
@@ -663,7 +623,7 @@ const UserForm: React.FC<UserFormProps> = ({
             <button
               type="button"
               onClick={onCancel}
-              disabled={isLoading || createRoleMutation.isPending}
+              disabled={isLoading}
               className="inline-flex items-center justify-center font-medium gap-2 transition-all duration-200 h-[45px] rounded-lg px-7 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 hover:shadow-md text-gray-700 dark:text-gray-300 transform hover:scale-105 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -673,7 +633,7 @@ const UserForm: React.FC<UserFormProps> = ({
             </button>
             <button
               type="submit"
-              disabled={isLoading || createRoleMutation.isPending}
+              disabled={isLoading}
               className="inline-flex items-center justify-center font-medium gap-2 transition-all duration-200 h-[45px] rounded-lg px-7 bg-primary hover:bg-primary/90 text-white shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 focus:ring-2 focus:ring-primary/50 focus:ring-offset-2"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -684,53 +644,6 @@ const UserForm: React.FC<UserFormProps> = ({
           </div>
         </div>
       </form>
-
-      {/* Create Role Modal */}
-      <Modal
-        isOpen={isRoleModalOpen}
-        onClose={closeRoleModal}
-        isFullscreen={false}
-        className="max-w-lg mx-auto mt-20 rounded-lg"
-      >
-        <div className="p-6 bg-white dark:bg-gray-800 rounded-lg">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Create New Role</h3>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="roleLabel">Role Name *</Label>
-              <Input
-                id="roleLabel"
-                type="text"
-                placeholder="e.g., Content Editor"
-                value={newRoleData.label}
-                onChange={(e) => setNewRoleData(prev => ({ 
-                  ...prev, 
-                  label: e.target.value,
-                  value: e.target.value.toLowerCase().replace(/\s+/g, '-')
-                }))}
-                className="mt-1"
-              />
-            </div>
-
-            <div className="flex justify-end space-x-3 pt-4">
-              <Button
-                variant="ghost"
-                onClick={closeRoleModal}
-                disabled={createRoleMutation.isPending}
-                className="dark:text-white"
-              >
-                Cancel
-              </Button>
-              <Button 
-                onClick={handleCreateRole}
-                disabled={!newRoleData.label.trim() || createRoleMutation.isPending}
-                className="bg-primary hover:bg-primary/90"
-              >
-                {createRoleMutation.isPending ? 'Creating...' : 'Create Role'}
-              </Button>
-            </div>
-          </div>
-        </div>
-      </Modal>
     </>
   );
 };

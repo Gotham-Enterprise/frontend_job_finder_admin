@@ -1,13 +1,17 @@
 'use client';
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { useAdminUsers, useDeleteAdminUsers, useUpdateAdminUser, useCreateAdminUser, useAdminRoles } from '@/services/hooks/useAdminUsers';
+import { useAdminUsers, useDeleteAdminUsers, useUpdateAdminUser, useCreateAdminUser, useAdminRoles, useCreateRole } from '@/services/hooks/useAdminUsers';
 import { AdminUser, CreateAdminUserRequest, UpdateAdminUserRequest } from '@/services/api/adminUsers';
 import { getUserInitials, formatUserRole, getUserStatusVariant, getRoleColor, transformApiUserToFormData } from '@/services/utils/userUtils';
 import UserForm from './UserForm';
 import Drawer from '@/components/ui/drawer/Drawer';
+import { Modal } from '@/components/ui/modal';
 import ConfirmationDialog from '@/components/ui/ConfirmationDialog';
 import LoadingSkeleton from '@/components/ui/LoadingSkeleton/LoadingSkeleton';
+import Input from '@/components/ui/input/Input';
+import Label from '@/components/form/Label';
+import Button from '@/components/ui/button/Button';
 import BulkActionDropdown from '@/components/ui/BulkActionDropdown';
 import { CreateUserFormData } from '@/types/permissions';
 
@@ -18,12 +22,18 @@ const UserTable: React.FC = () => {
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
+  const [newRoleData, setNewRoleData] = useState({
+    value: '',
+    label: ''
+  });
 
   const { data: users = [], isLoading, error, refetch } = useAdminUsers();
   const { data: apiRoles = [] } = useAdminRoles();
   const deleteUsersMutation = useDeleteAdminUsers();
   const updateUserMutation = useUpdateAdminUser();
   const createUserMutation = useCreateAdminUser();
+  const createRoleMutation = useCreateRole();
 
   // Debug logging
   console.log('UserTable Debug:', { users, isLoading, error });
@@ -196,6 +206,37 @@ const UserTable: React.FC = () => {
   const closeDeleteModal = () => {
     setIsDeleteModalOpen(false);
   };
+
+  const openRoleModal = () => {
+    setIsRoleModalOpen(true);
+  };
+
+  const closeRoleModal = () => {
+    setIsRoleModalOpen(false);
+    setNewRoleData({ value: '', label: '' });
+  };
+
+  const handleCreateRole = useCallback(async () => {
+    if (!newRoleData.label.trim()) {
+      return;
+    }
+
+    try {
+      // Call the API to create the role
+      const response = await createRoleMutation.mutateAsync({
+        roleName: newRoleData.label.trim()
+      });
+
+      if (response.success) {
+        // Close modal and reset form
+        setIsRoleModalOpen(false);
+        setNewRoleData({ value: '', label: '' });
+        // Note: The role will be available on next form load through refetch
+      }
+    } catch (error) {
+      console.error('Role creation error:', error);
+    }
+  }, [newRoleData, createRoleMutation]);
 
   const confirmDeleteUsers = async () => {
     try {
@@ -415,6 +456,7 @@ const UserTable: React.FC = () => {
           onSubmit={handleCreateUser}
           onCancel={() => setIsCreateDrawerOpen(false)}
           isLoading={createUserMutation.isPending}
+          onCreateRoleClick={openRoleModal}
         />
       </Drawer>
 
@@ -432,6 +474,7 @@ const UserTable: React.FC = () => {
             isEditMode={true}
             userId={selectedUser.userId}
             userData={selectedUser}
+            onCreateRoleClick={openRoleModal}
           />
         )}
       </Drawer>
@@ -447,6 +490,53 @@ const UserTable: React.FC = () => {
         cancelText="Cancel"
         isLoading={deleteUsersMutation.isPending}
       />
+
+      {/* Create Role Modal - Centered in body DOM */}
+      <Modal
+        isOpen={isRoleModalOpen}
+        onClose={closeRoleModal}
+        isFullscreen={false}
+        className="max-w-lg mx-auto mt-20 rounded-lg"
+      >
+        <div className="p-6 bg-white dark:bg-gray-800 rounded-lg">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Create New Role</h3>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="roleLabel">Role Name *</Label>
+              <Input
+                id="roleLabel"
+                type="text"
+                placeholder="e.g., Content Editor"
+                value={newRoleData.label}
+                onChange={(e) => setNewRoleData(prev => ({ 
+                  ...prev, 
+                  label: e.target.value,
+                  value: e.target.value.toLowerCase().replace(/\s+/g, '-')
+                }))}
+                className="mt-1"
+              />
+            </div>
+
+            <div className="flex justify-end space-x-3 pt-4">
+              <Button
+                variant="ghost"
+                onClick={closeRoleModal}
+                disabled={createRoleMutation.isPending}
+                className="dark:text-white"
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleCreateRole}
+                disabled={!newRoleData.label.trim() || createRoleMutation.isPending}
+                className="bg-primary hover:bg-primary/90"
+              >
+                {createRoleMutation.isPending ? 'Creating...' : 'Create Role'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      </Modal>
     </>
   );
 };
