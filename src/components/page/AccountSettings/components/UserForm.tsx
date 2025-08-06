@@ -2,9 +2,12 @@
 
 import React, { useState, useCallback, useEffect } from 'react';
 import { CreateUserFormData, ROLE_OPTIONS } from '@/types/permissions';
+import { CreateUserFormData as ServiceCreateUserFormData } from '@/services/types/permissions';
 import { getPermissionsForRole } from '@/config/permissions';
 import { DEFAULT_PERMISSIONS, FlexiblePermissions } from '@/types/permissions';
 import { useCreateRole, useAdminRoles } from '@/services/hooks/useAdminUsers';
+import { AdminUser } from '@/services/api/adminUsers';
+import { transformApiUserToFormData } from '@/services/utils/userUtils';
 import Input from '@/components/ui/input/Input';
 import Label from '@/components/form/Label';
 import Select from '@/components/form/Select';
@@ -14,10 +17,13 @@ import Button from '@/components/ui/button/Button';
 import FullScreenSpinner from '@/components/ui/FullScreenSpinner';
 
 interface UserFormProps {
-  onSubmit: (userData: CreateUserFormData) => void;
+  onSubmit: (userData: any) => void; // Allow flexible type for now
   onCancel: () => void;
   isLoading?: boolean;
   initialData?: CreateUserFormData;
+  isEditMode?: boolean;
+  userId?: string;
+  userData?: AdminUser;
 }
 
 const UserForm: React.FC<UserFormProps> = ({
@@ -25,6 +31,9 @@ const UserForm: React.FC<UserFormProps> = ({
   onCancel,
   isLoading = false,
   initialData,
+  isEditMode = false,
+  userId,
+  userData,
 }) => {
   const createRoleMutation = useCreateRole();
   const { data: apiRoles = [] } = useAdminRoles();
@@ -68,6 +77,35 @@ const UserForm: React.FC<UserFormProps> = ({
       setAvailableRoles(uniqueRoles);
     }
   }, [apiRoles]);
+
+  // Load user data in edit mode
+  useEffect(() => {
+    if (isEditMode && userData && apiRoles.length > 0) {
+      console.log('Loading user data for edit mode:', userData);
+      const transformedData = transformApiUserToFormData(userData, apiRoles);
+      console.log('Transformed user data:', transformedData);
+      
+      // Ensure all standard modules have default permissions if not present
+      const standardModules = ['tickets', 'jobSeekers', 'employers', 'applications', 'coupons', 'blog', 'careers'];
+      const enhancedPermissions = { ...transformedData.permissions };
+      
+      standardModules.forEach(module => {
+        if (!enhancedPermissions[module]) {
+          enhancedPermissions[module] = {
+            view: false,
+            add: false,
+            edit: false,
+            delete: false,
+          };
+        }
+      });
+      
+      setFormData({
+        ...transformedData,
+        permissions: enhancedPermissions,
+      });
+    }
+  }, [isEditMode, userData, apiRoles]);
 
   // Debug available roles
   console.log('Current availableRoles:', availableRoles);
@@ -142,10 +180,13 @@ const UserForm: React.FC<UserFormProps> = ({
       newErrors.email = 'Invalid email format';
     }
 
-    if (!formData.password.trim()) {
-      newErrors.password = 'Password is required';
-    } else if (formData.password.length < 8) {
-      newErrors.password = 'Password must be at least 8 characters';
+    // Password validation only for create mode
+    if (!isEditMode) {
+      if (!formData.password.trim()) {
+        newErrors.password = 'Password is required';
+      } else if (formData.password.length < 8) {
+        newErrors.password = 'Password must be at least 8 characters';
+      }
     }
 
     if (!formData.role) {
@@ -211,6 +252,10 @@ const UserForm: React.FC<UserFormProps> = ({
   const getDynamicModules = useCallback(() => {
     const availableModules = new Set<string>();
     
+    // Add all standard modules first
+    const standardModules = ['tickets', 'jobSeekers', 'employers', 'applications', 'coupons', 'blog', 'careers'];
+    standardModules.forEach(module => availableModules.add(module));
+    
     // Get available modules from current form permissions
     Object.keys(formData.permissions).forEach(key => {
       availableModules.add(key);
@@ -223,13 +268,33 @@ const UserForm: React.FC<UserFormProps> = ({
       });
     }
     
+    // Get available modules from user data (for edit mode)
+    if (userData?.access) {
+      Object.keys(userData.access).forEach(moduleKey => {
+        // Map API module names to our form structure
+        const keyMap: { [key: string]: string } = {
+          'Job Seekers': 'jobSeekers',
+          'Tickets': 'tickets',
+          'Employers': 'employers',
+          'Applications': 'applications',
+          'Coupons': 'coupons',
+          'Blog': 'blog',
+          'Careers': 'careers',
+          'Jobs': 'jobs',
+        };
+        
+        const mappedKey = keyMap[moduleKey] || moduleKey.toLowerCase().replace(/\s+/g, '');
+        availableModules.add(mappedKey);
+      });
+    }
+    
     // Create module configs dynamically
     return Array.from(availableModules).map(key => ({
       key,
       name: key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1').trim(),
       description: `Manage ${key.toLowerCase().replace(/([A-Z])/g, ' $1').trim()} access and operations`,
     }));
-  }, [formData.permissions, initialData]);
+  }, [formData.permissions, initialData, userData]);
 
   const dynamicModules = getDynamicModules();
 
@@ -301,19 +366,22 @@ const UserForm: React.FC<UserFormProps> = ({
               />
             </div>
 
-            <div className="transform transition-all duration-200 hover:scale-[1.02]">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="Enter password"
-                value={formData.password}
-                onChange={(e) => updateFormField('password', e.target.value)}
-                error={!!errors.password}
-                hint={errors.password}
-                disabled={isLoading || createRoleMutation.isPending}
-              />
-            </div>
+            {/* Password field - only show in create mode */}
+            {!isEditMode && (
+              <div className="transform transition-all duration-200 hover:scale-[1.02]">
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="Enter password"
+                  value={formData.password}
+                  onChange={(e) => updateFormField('password', e.target.value)}
+                  error={!!errors.password}
+                  hint={errors.password}
+                  disabled={isLoading || createRoleMutation.isPending}
+                />
+              </div>
+            )}
 
             <div className="transform transition-all duration-200 hover:scale-[1.02]">
               <div className="flex items-center justify-between mb-2">
@@ -611,7 +679,7 @@ const UserForm: React.FC<UserFormProps> = ({
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
-              {isLoading ? 'Saving...' : 'Create User'}
+              {isLoading ? 'Saving...' : (isEditMode ? 'Update User' : 'Create User')}
             </button>
           </div>
         </div>

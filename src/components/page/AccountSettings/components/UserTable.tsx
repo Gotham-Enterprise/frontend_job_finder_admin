@@ -9,7 +9,7 @@ import Drawer from '@/components/ui/drawer/Drawer';
 import ConfirmationDialog from '@/components/ui/ConfirmationDialog';
 import LoadingSkeleton from '@/components/ui/LoadingSkeleton/LoadingSkeleton';
 import BulkActionDropdown from '@/components/ui/BulkActionDropdown';
-import { CreateUserFormData } from '@/services/types/permissions';
+import { CreateUserFormData } from '@/types/permissions';
 
 const UserTable: React.FC = () => {
   const [mounted, setMounted] = useState(false);
@@ -83,57 +83,41 @@ const UserTable: React.FC = () => {
   // Handle user creation
   const handleCreateUser = useCallback(async (userData: CreateUserFormData) => {
     try {
-      // Transform form data to API format
+      // Transform form data to API format dynamically
+      const access: any = {};
+      
+      // Map form permission keys to API module names
+      const keyToApiNameMap: { [key: string]: string } = {
+        'tickets': 'Tickets',
+        'jobSeekers': 'Job Seekers',
+        'employers': 'Employers',
+        'applications': 'Applications',
+        'coupons': 'Coupons',
+        'blog': 'Blog',
+        'careers': 'Careers',
+        'jobs': 'Jobs',
+      };
+      
+      // Process each permission module dynamically
+      Object.keys(userData.permissions).forEach(permissionKey => {
+        const apiModuleName = keyToApiNameMap[permissionKey] || permissionKey;
+        const permissions = userData.permissions[permissionKey];
+        
+        access[apiModuleName] = {
+          add: permissions?.add || false,
+          edit: permissions?.edit || false,
+          view: permissions?.view || false,
+          delete: permissions?.delete || false,
+        };
+      });
+
       const apiData: CreateAdminUserRequest = {
         firstName: userData.firstName,
         lastName: userData.lastName,
         email: userData.email,
         password: userData.password,
         roleId: getRoleId(userData.role), // Use the correct role ID mapping
-        access: {
-          'Tickets': {
-            add: userData.permissions.tickets?.create || false,
-            edit: userData.permissions.tickets?.update || false,
-            view: userData.permissions.tickets?.view || false,
-            delete: userData.permissions.tickets?.delete || false,
-          },
-          'Job Seekers': {
-            add: userData.permissions.jobSeekers?.create || false,
-            edit: userData.permissions.jobSeekers?.update || false,
-            view: userData.permissions.jobSeekers?.view || false,
-            delete: userData.permissions.jobSeekers?.delete || false,
-          },
-          'Employers': {
-            add: userData.permissions.employers?.create || false,
-            edit: userData.permissions.employers?.update || false,
-            view: userData.permissions.employers?.view || false,
-            delete: userData.permissions.employers?.delete || false,
-          },
-          'Applications': {
-            add: userData.permissions.applications?.create || false,
-            edit: userData.permissions.applications?.update || false,
-            view: userData.permissions.applications?.view || false,
-            delete: userData.permissions.applications?.delete || false,
-          },
-          'Coupons': {
-            add: userData.permissions.coupons?.create || false,
-            edit: userData.permissions.coupons?.update || false,
-            view: userData.permissions.coupons?.view || false,
-            delete: userData.permissions.coupons?.delete || false,
-          },
-          'Blog': {
-            add: userData.permissions.blog?.create || false,
-            edit: userData.permissions.blog?.update || false,
-            view: userData.permissions.blog?.view || false,
-            delete: userData.permissions.blog?.delete || false,
-          },
-          'Careers': {
-            add: userData.permissions.careers?.create || false,
-            edit: userData.permissions.careers?.update || false,
-            view: userData.permissions.careers?.view || false,
-            delete: userData.permissions.careers?.delete || false,
-          },
-        }
+        access,
       };
 
       await createUserMutation.mutateAsync(apiData);
@@ -148,56 +132,46 @@ const UserTable: React.FC = () => {
     if (!selectedUser) return;
 
     try {
-      // Transform form data to API format
+      console.log('Update user - incoming userData:', userData);
+      
+      // Transform form data to API format dynamically
+      const access: any = {};
+      
+      // Map form permission keys to API module names
+      const keyToApiNameMap: { [key: string]: string } = {
+        'tickets': 'Tickets',
+        'jobSeekers': 'Job Seekers',
+        'employers': 'Employers',
+        'applications': 'Applications',
+        'coupons': 'Coupons',
+        'blog': 'Blog',
+        'careers': 'Careers',
+        'jobs': 'Jobs',
+      };
+      
+      // Process each permission module dynamically
+      Object.keys(userData.permissions).forEach(permissionKey => {
+        const apiModuleName = keyToApiNameMap[permissionKey] || permissionKey;
+        const permissions = userData.permissions[permissionKey];
+        
+        console.log(`Processing permission: ${permissionKey} -> ${apiModuleName}`, permissions);
+        
+        access[apiModuleName] = {
+          add: permissions?.add || false,
+          edit: permissions?.edit || false,
+          view: permissions?.view || false,
+          delete: permissions?.delete || false,
+        };
+      });
+
+      console.log('Final API access object for update:', access);
+
       const apiData: UpdateAdminUserRequest = {
         firstName: userData.firstName,
         lastName: userData.lastName,
         email: userData.email,
         roleId: getRoleId(userData.role), // Use the correct role ID mapping
-        access: {
-          'Tickets': {
-            add: userData.permissions.tickets?.create || false,
-            edit: userData.permissions.tickets?.update || false,
-            view: userData.permissions.tickets?.view || false,
-            delete: userData.permissions.tickets?.delete || false,
-          },
-          'Job Seekers': {
-            add: userData.permissions.jobSeekers?.create || false,
-            edit: userData.permissions.jobSeekers?.update || false,
-            view: userData.permissions.jobSeekers?.view || false,
-            delete: userData.permissions.jobSeekers?.delete || false,
-          },
-          'Employers': {
-            add: userData.permissions.employers?.create || false,
-            edit: userData.permissions.employers?.update || false,
-            view: userData.permissions.employers?.view || false,
-            delete: userData.permissions.employers?.delete || false,
-          },
-          'Applications': {
-            add: userData.permissions.applications?.create || false,
-            edit: userData.permissions.applications?.update || false,
-            view: userData.permissions.applications?.view || false,
-            delete: userData.permissions.applications?.delete || false,
-          },
-          'Coupons': {
-            add: userData.permissions.coupons?.create || false,
-            edit: userData.permissions.coupons?.update || false,
-            view: userData.permissions.coupons?.view || false,
-            delete: userData.permissions.coupons?.delete || false,
-          },
-          'Blog': {
-            add: userData.permissions.blog?.create || false,
-            edit: userData.permissions.blog?.update || false,
-            view: userData.permissions.blog?.view || false,
-            delete: userData.permissions.blog?.delete || false,
-          },
-          'Careers': {
-            add: userData.permissions.careers?.create || false,
-            edit: userData.permissions.careers?.update || false,
-            view: userData.permissions.careers?.view || false,
-            delete: userData.permissions.careers?.delete || false,
-          },
-        }
+        access,
       };
 
       await updateUserMutation.mutateAsync({ userId: selectedUser.userId, userData: apiData });
@@ -453,7 +427,9 @@ const UserTable: React.FC = () => {
             onSubmit={handleUpdateUser}
             onCancel={closeEditDrawer}
             isLoading={updateUserMutation.isPending}
-            initialData={transformApiUserToFormData(selectedUser, apiRoles)}
+            isEditMode={true}
+            userId={selectedUser.userId}
+            userData={selectedUser}
           />
         )}
       </Drawer>
