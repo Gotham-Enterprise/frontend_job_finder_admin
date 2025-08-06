@@ -6,7 +6,7 @@ import { authUtils } from '@/services/utils/authUtils';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import FullScreenSpinner from '@/components/ui/FullScreenSpinner';
 import { showToast } from '@/services/utils/toast';
-import { useResetPassword } from '@/services/hooks/useAuth';
+import { useResetPassword, useUpdateProfile } from '@/services/hooks/useAuth';
 import UserTable from './components/UserTable';
 import AccountInfo from './components/AccountInfo';
 
@@ -14,13 +14,6 @@ interface PasswordFormData {
   currentPassword: string;
   newPassword: string;
   confirmPassword: string;
-}
-
-interface PersonalInformationFormData {
-  firstName: string;
-  lastName: string;
-  email: string;
-  username: string;
 }
 
 const AccountSettings: React.FC = () => {
@@ -36,6 +29,7 @@ const AccountSettings: React.FC = () => {
   }, []);
 
   const resetPasswordMutation = useResetPassword();
+  const updateProfileMutation = useUpdateProfile();
   const currentUser = authUtils.getUser();
   const displayName = authUtils.getUserDisplayName();
   const userInitials = authUtils.getUserInitials();
@@ -94,23 +88,26 @@ const AccountSettings: React.FC = () => {
     }
   }, []);
 
-  const executePersonalInfoChange = useCallback(async (personalData: PersonalInformationFormData): Promise<void> => {
+  const executePersonalInfoChange = useCallback(async (formData: FormData): Promise<void> => {
     setIsUpdatingPersonalInfo(true);
     
     try {
-      // Simulate API call for personal info update
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Call the actual profile update API
+      const response = await updateProfileMutation.mutateAsync(formData);
       
-      showToast.success('Success', 'Personal information updated successfully!');
+      showToast.success('Success', 'Profile updated successfully!');
+      
+      // Optionally update the current user in local state/storage
+      // You might want to refresh user data here
       
     } catch (error: any) {
-      console.error('Personal info update error:', error);
-      showToast.error('Error', error?.message || 'Failed to update personal information');
+      console.error('Profile update error:', error);
+      showToast.error('Error', error?.message || 'Failed to update profile');
       throw error;
     } finally {
       setIsUpdatingPersonalInfo(false);
     }
-  }, []);
+  }, [updateProfileMutation]);
 
   // Prevent hydration mismatch
   if (!mounted) {

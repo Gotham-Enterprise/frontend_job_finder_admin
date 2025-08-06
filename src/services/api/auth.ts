@@ -146,5 +146,34 @@ export const authApi = {
     } catch (error: any) {
       throw error;
     }
+  },
+
+  async updateProfile(formData: FormData): Promise<{ success: boolean; message: string; data?: any }> {
+    try {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL;
+      const authData = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('jobfinder_auth') || '{}') : {};
+      
+      const response = await fetch(`${API_URL}/api/admin/users/`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${authData.token}`,
+          // Don't set Content-Type for FormData, let browser set it with boundary
+        },
+        credentials: 'include',
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        const errorMessage = data.message || data.error || 'Profile update failed';
+        showToast.error('Update Error', errorMessage);
+        throw new Error(errorMessage);
+      }
+
+      return data;
+    } catch (error: any) {
+      throw error;
+    }
   }
 };

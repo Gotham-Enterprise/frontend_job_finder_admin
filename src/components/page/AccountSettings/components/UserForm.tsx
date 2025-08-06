@@ -47,11 +47,14 @@ const UserForm: React.FC<UserFormProps> = ({
       password: '',
       role: '',
       permissions: DEFAULT_PERMISSIONS,
+      avatarFile: undefined,
     }
   );
 
   const [errors, setErrors] = useState<Partial<CreateUserFormData>>({});
   const [availableRoles, setAvailableRoles] = useState(ROLE_OPTIONS);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [avatarError, setAvatarError] = useState<string | null>(null);
   // Role modal state moved to parent component
   // const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
   // const [newRoleData, setNewRoleData] = useState({
@@ -145,6 +148,46 @@ const UserForm: React.FC<UserFormProps> = ({
     }
   }, [errors, updateRolePermissions]);
 
+  const handleAvatarChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        setAvatarError('Please select a valid image file');
+        return;
+      }
+      
+      // Validate file size (1MB max)
+      if (file.size > 1024 * 1024) {
+        setAvatarError('File size must be less than 1MB');
+        return;
+      }
+      
+      // Create preview
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setAvatarPreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+      
+      // Update form data
+      setFormData(prev => ({ ...prev, avatarFile: file }));
+      
+      // Clear any existing errors
+      setAvatarError(null);
+    }
+  }, []);
+
+  const removeAvatar = useCallback(() => {
+    setFormData(prev => ({ ...prev, avatarFile: undefined }));
+    setAvatarPreview(null);
+    // Reset file input
+    const fileInput = document.getElementById('avatar') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.value = '';
+    }
+  }, []);
+
   const updatePermission = useCallback((
     module: string,
     permissionType: 'add' | 'edit' | 'view' | 'delete',
@@ -202,7 +245,25 @@ const UserForm: React.FC<UserFormProps> = ({
   const submitForm = useCallback((e: React.FormEvent) => {
     e.preventDefault();
     if (validateForm()) {
-      onSubmit(formData);
+      // If there's an avatar file in edit mode, we need to use FormData
+      if (isEditMode && formData.avatarFile) {
+        const formDataToSend = new FormData();
+        
+        // Add text fields
+        formDataToSend.append('firstName', formData.firstName);
+        formDataToSend.append('lastName', formData.lastName);
+        formDataToSend.append('email', formData.email);
+        formDataToSend.append('role', formData.role);
+        formDataToSend.append('permissions', JSON.stringify(formData.permissions));
+        
+        // Add avatar file
+        formDataToSend.append('avatarUpload', formData.avatarFile);
+        
+        onSubmit(formDataToSend);
+      } else {
+        // Regular JSON submission
+        onSubmit(formData);
+      }
     }
   }, [formData, validateForm, onSubmit]);
 
@@ -372,6 +433,61 @@ const UserForm: React.FC<UserFormProps> = ({
                 <p className="mt-1.5 text-xs text-error-500 animate-pulse">{errors.role}</p>
               )}
             </div>
+
+            {/* Avatar Upload - Only in edit mode */}
+            {isEditMode && (
+              <div className="transform transition-all duration-200 hover:scale-[1.02]">
+                <Label htmlFor="avatar">Profile Picture</Label>
+                <div className="mt-2 space-y-3">
+                  {/* Avatar Preview */}
+                  <div className="flex items-center gap-4">
+                    <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center overflow-hidden">
+                      {avatarPreview ? (
+                        <img 
+                          src={avatarPreview} 
+                          alt="Avatar preview" 
+                          className="w-full h-full object-cover"
+                        />
+                      ) : userData?.avatarUrl ? (
+                        <img 
+                          src={userData.avatarUrl} 
+                          alt="Current avatar" 
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <input
+                        id="avatar"
+                        type="file"
+                        accept="image/*"
+                        onChange={handleAvatarChange}
+                        disabled={isLoading}
+                        className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-medium file:bg-primary/10 file:text-primary hover:file:bg-primary/20 disabled:opacity-50"
+                      />
+                      <p className="mt-1 text-xs text-gray-500">JPG, GIF or PNG. 1MB max.</p>
+                      {formData.avatarFile && (
+                        <button
+                          type="button"
+                          onClick={removeAvatar}
+                          disabled={isLoading}
+                          className="mt-2 text-xs text-red-600 hover:text-red-800 disabled:opacity-50"
+                        >
+                          Remove selected file
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  {avatarError && (
+                    <p className="text-xs text-error-500 animate-pulse">{avatarError}</p>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Right Column - Access Permissions */}

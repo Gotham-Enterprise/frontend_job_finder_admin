@@ -27,7 +27,7 @@ interface AccountInfoProps {
   displayName: string;
   onPasswordChange: (data: PasswordFormData) => Promise<void>;
   onAvatarChange: (formData: FormData) => Promise<void>;
-  onPersonalInfoChange: (data: PersonalInformationFormData) => Promise<void>;
+  onPersonalInfoChange: (data: FormData) => Promise<void>;
   isChangingPassword: boolean;
   isUpdatingAvatar?: boolean;
   isUpdatingPersonalInfo?: boolean;
@@ -123,12 +123,43 @@ const AccountInfo: React.FC<AccountInfoProps> = ({
 
   const savePersonalInfo = useCallback(async () => {
     try {
-      await onPersonalInfoChange(editFormData);
-      console.log('Personal information saved successfully');
+      // Create FormData to include both profile data and avatar
+      const formData = new FormData();
+      
+      // Add only the fields that backend expects based on validateEditAdminMeUser
+      formData.append('firstName', editFormData.firstName);
+      formData.append('lastName', editFormData.lastName);
+      // Note: email and username are not expected by the backend for profile updates
+      
+      // Add avatar if selected - using 'avatarUpload' field name as expected by backend
+      if (selectedAvatar) {
+        formData.append('avatarUpload', selectedAvatar);
+      }
+      
+      // Debug: Log FormData contents
+      console.log('FormData contents:');
+      for (let [key, value] of formData.entries()) {
+        console.log(key, value);
+      }
+      
+      // Call the profile update API with FormData
+      await onPersonalInfoChange(formData);
+      
+      // Reset avatar state after successful update
+      if (selectedAvatar) {
+        setSelectedAvatar(null);
+        setAvatarPreview(null);
+        // Reset file input
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
+      }
+      
+      console.log('Personal information and avatar saved successfully');
     } catch (error) {
       console.error('Failed to save personal information:', error);
     }
-  }, [editFormData, onPersonalInfoChange]);
+  }, [editFormData, selectedAvatar, onPersonalInfoChange]);
 
   const handleAvatarClick = useCallback(() => {
     fileInputRef.current?.click();
@@ -161,29 +192,9 @@ const AccountInfo: React.FC<AccountInfoProps> = ({
   }, []);
 
   const uploadAvatar = useCallback(async () => {
-    if (!selectedAvatar) return;
-    
-    const formData = new FormData();
-    formData.append('avatar', selectedAvatar);
-    
-    // Optional: Add additional form data if needed
-    // formData.append('userId', user?.id || '');
-    // formData.append('timestamp', new Date().toISOString());
-    
-    try {
-      await onAvatarChange(formData);
-      setSelectedAvatar(null);
-      setAvatarPreview(null);
-      console.log('Avatar uploaded successfully');
-      
-      // Reset file input
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
-    } catch (error) {
-      console.error('Failed to upload avatar:', error);
-    }
-  }, [selectedAvatar, onAvatarChange]);
+    // This function is no longer needed as avatar upload is integrated with save
+    console.warn('uploadAvatar is deprecated - avatar upload is now integrated with save button');
+  }, []);
 
   const validation = validatePasswordForm();
 
@@ -244,18 +255,13 @@ const AccountInfo: React.FC<AccountInfoProps> = ({
                     Change avatar
                   </span>
                   {selectedAvatar && (
-                    <Button 
-                      size="sm"
-                      onClick={uploadAvatar}
-                      disabled={isUpdatingAvatar}
-                      className="px-3 py-1 text-xs"
-                    >
-                      {isUpdatingAvatar ? 'Uploading...' : 'Upload'}
-                    </Button>
+                    <span className="text-xs text-green-600 dark:text-green-400">
+                      Selected: {selectedAvatar.name}
+                    </span>
                   )}
                 </div>
                 <p className="text-xs text-gray-500 dark:text-gray-400">
-                  JPG, GIF or PNG. 1MB max.
+                  JPG, GIF or PNG. 1MB max. Click Save to upload.
                 </p>
                 <input
                   ref={fileInputRef}

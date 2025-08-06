@@ -138,53 +138,64 @@ const UserTable: React.FC = () => {
   }, [createUserMutation]);
 
   // Handle user update
-  const handleUpdateUser = useCallback(async (userData: CreateUserFormData) => {
+  const handleUpdateUser = useCallback(async (userData: CreateUserFormData | FormData) => {
     if (!selectedUser) return;
 
     try {
       console.log('Update user - incoming userData:', userData);
       
-      // Transform form data to API format dynamically
-      const access: any = {};
-      
-      // Map form permission keys to API module names
-      const keyToApiNameMap: { [key: string]: string } = {
-        'tickets': 'Tickets',
-        'jobSeekers': 'Job Seekers',
-        'employers': 'Employers',
-        'applications': 'Applications',
-        'coupons': 'Coupons',
-        'blog': 'Blog',
-        'careers': 'Careers',
-        'jobs': 'Jobs',
-      };
-      
-      // Process each permission module dynamically
-      Object.keys(userData.permissions).forEach(permissionKey => {
-        const apiModuleName = keyToApiNameMap[permissionKey] || permissionKey;
-        const permissions = userData.permissions[permissionKey];
+      // Check if it's FormData (contains avatar)
+      if (userData instanceof FormData) {
+        console.log('Processing FormData submission with avatar');
+        await updateUserMutation.mutateAsync({ 
+          userId: selectedUser.userId, 
+          formData: userData 
+        });
+      } else {
+        console.log('Processing regular JSON submission');
         
-        console.log(`Processing permission: ${permissionKey} -> ${apiModuleName}`, permissions);
+        // Transform form data to API format dynamically
+        const access: any = {};
         
-        access[apiModuleName] = {
-          add: permissions?.add || false,
-          edit: permissions?.edit || false,
-          view: permissions?.view || false,
-          delete: permissions?.delete || false,
+        // Map form permission keys to API module names
+        const keyToApiNameMap: { [key: string]: string } = {
+          'tickets': 'Tickets',
+          'jobSeekers': 'Job Seekers',
+          'employers': 'Employers',
+          'applications': 'Applications',
+          'coupons': 'Coupons',
+          'blog': 'Blog',
+          'careers': 'Careers',
+          'jobs': 'Jobs',
         };
-      });
+        
+        // Process each permission module dynamically
+        Object.keys(userData.permissions).forEach(permissionKey => {
+          const apiModuleName = keyToApiNameMap[permissionKey] || permissionKey;
+          const permissions = userData.permissions[permissionKey];
+          
+          console.log(`Processing permission: ${permissionKey} -> ${apiModuleName}`, permissions);
+          
+          access[apiModuleName] = {
+            add: permissions?.add || false,
+            edit: permissions?.edit || false,
+            view: permissions?.view || false,
+            delete: permissions?.delete || false,
+          };
+        });
 
-      console.log('Final API access object for update:', access);
+        console.log('Final API access object for update:', access);
 
-      const apiData: UpdateAdminUserRequest = {
-        firstName: userData.firstName,
-        lastName: userData.lastName,
-        email: userData.email,
-        roleId: getRoleId(userData.role), // Use the correct role ID mapping
-        access,
-      };
+        const apiData: UpdateAdminUserRequest = {
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          email: userData.email,
+          roleId: getRoleId(userData.role), // Use the correct role ID mapping
+          access,
+        };
 
-      await updateUserMutation.mutateAsync({ userId: selectedUser.userId, userData: apiData });
+        await updateUserMutation.mutateAsync({ userId: selectedUser.userId, userData: apiData });
+      }
       closeEditDrawer();
     } catch (error) {
       console.error('Update user error:', error);
