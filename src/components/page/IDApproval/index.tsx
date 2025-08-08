@@ -2,7 +2,7 @@
 
 import { useIdApprovalLogic } from "@/services/hooks/useIdApprovalLogic"
 
-import { IdApprovalHeader, IdApprovalTable, IdApprovalTablePagination } from "./components";
+import { IdApprovalHeader, IdApprovalTable, IdApprovalTablePagination, IdApprovalDetail } from "./components";
 
 interface Props {
   className?: string
@@ -38,6 +38,7 @@ const IDApproval: React.FC<Props> = ({ className }) => {
         itemsPerPageOptions={itemsPerPageOptions}
         onFilterChange={onFilterChange}
       />
+      <IdApprovalDetail selected={selected} setSelected={setSelected} />
     </div>
   )
 }

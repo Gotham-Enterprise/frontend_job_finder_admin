@@ -1,7 +1,6 @@
 import { FC } from 'react'
-import Image from 'next/image'
 
-import { StatusPending, StatusApproved, StatusDeclined } from '@/icons'
+import { StatusApproved, StatusDeclined, StatusPending } from '@/icons'
 
 interface Props {
   status: string
