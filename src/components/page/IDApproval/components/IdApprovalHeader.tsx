@@ -1,4 +1,4 @@
-import React from 'react'
+import { FC, useEffect, useState } from 'react'
 
 import { SearchIcon } from '@/components/ui/icons';
 import Input from '@/components/ui/input/Input';
@@ -8,10 +8,21 @@ import { UseIdApprovalLogic } from '@/services/types/idApproval';
 interface Props {
   isLoading: UseIdApprovalLogic['isLoading'];
   totalCount: UseIdApprovalLogic['totalCount'];
+  onFilterChange: UseIdApprovalLogic['onFilterChange'];
 }
 
-const IdApprovalHeader: React.FC<Props> = ({ totalCount, isLoading }) => {
-  const [searchInput, setSearchInput] = React.useState('');
+const IdApprovalHeader: FC<Props> = ({ totalCount, isLoading, onFilterChange }) => {
+  const [searchInput, setSearchInput] = useState('');
+
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      onFilterChange('search', searchInput.trim());
+    }, 500)
+
+    return () => clearTimeout(timeoutId);
+  }, [searchInput, onFilterChange]);
+
+
   return (
     <div className="px-6 py-5 border-b border-gray-200 dark:border-gray-800">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">

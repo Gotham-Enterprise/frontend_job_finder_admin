@@ -64,6 +64,11 @@ import CodeBlockIcon from "./code-block";
 import LinkIcon from "./link";
 import ImageIcon from "./image";
 import GothamLogo from "./GothamLogo";
+import StatusApproved from "./status-approved.svg";
+import StatusDeclined from "./status-declined.svg";
+import StatusPending from "./status-pending.svg";
+import AccountLocked from "./account-locked.svg";
+import AccountUnlocked from "./account-unlocked.svg";
 
 export {
   DownloadIcon,
@@ -131,4 +136,9 @@ export {
   TicketIcon,
   BlogIcon,
   GothamLogo,
+  StatusApproved,
+  StatusDeclined,
+  StatusPending,
+  AccountLocked,
+  AccountUnlocked
 };

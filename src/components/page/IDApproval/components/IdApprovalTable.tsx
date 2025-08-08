@@ -4,13 +4,19 @@ import { UseIdApprovalLogic } from '@/services/types/idApproval'
 import { Table, TableBody, TableCell, TableRow  } from '@/components/ui/table';
 import TableHeading from '@/components/tables/tableHeader';
 
+import AccountStatus from './AccountStatus';
+import Status from './Status';
+import Button from '@/components/ui/button/Button';
+import { EyeIcon } from '@/icons';
+
 interface Props {
   data: UseIdApprovalLogic['data'];
   isLoading: UseIdApprovalLogic['isLoading'];
   tableColumns: UseIdApprovalLogic['tableColumns'];
+  setSelected: UseIdApprovalLogic['setSelected'];
 }
 
-const IdApprovalTable: FC<Props> = ({ data, isLoading, tableColumns }) => {
+const IdApprovalTable: FC<Props> = ({ data, isLoading, tableColumns, setSelected }) => {
   return (
     <Table>
       <TableHeading columns={tableColumns} />
@@ -33,35 +39,40 @@ const IdApprovalTable: FC<Props> = ({ data, isLoading, tableColumns }) => {
           </TableRow>
         )}
         {data.length > 0 && !isLoading && (
-          data.map(({ id, fullName, email, isLocked, status }) => (
-            <TableRow key={`id-approval-${id}`}>
-              <TableCell className="text-gray-800 py-6 px-4">
-                <p className="text-sm text-gray-900 dark:text-white">
-                  {fullName}
-                </p>
-              </TableCell>
-              <TableCell className="text-gray-800 py-6 px-4">
-                <p className="text-sm text-gray-900 dark:text-white">
-                  {email}
-                </p>
-              </TableCell>
-              <TableCell className="text-gray-800 py-6 px-4">
-                <p className="text-sm text-gray-900 dark:text-white">
-                  {isLocked ? 'Locked' : 'Unlocked'}
-                </p>
-              </TableCell>
-              <TableCell className="text-gray-800 py-6 px-4">
-                <p className="text-sm text-gray-900 dark:text-white">
-                  {status}
-                </p>
-              </TableCell>
-              <TableCell className="text-gray-800 py-6 px-4">
-                <p className="text-sm text-gray-900 dark:text-white text-right">
-                  Manage
-                </p>
-              </TableCell>
-            </TableRow>
-          ))
+          data.map((row) => {
+            const { id, fullName, email, isLocked, status } = row
+
+            return (
+              <TableRow key={`id-approval-${id}`}>
+                <TableCell className="text-gray-800 py-6 px-4">
+                  <p className="text-sm text-gray-900 dark:text-white">
+                    {fullName}
+                  </p>
+                </TableCell>
+                <TableCell className="py-6 px-4">
+                  <p className="text-sm text-gray-900 dark:text-white">
+                    {email}
+                  </p>
+                </TableCell>
+                <TableCell className="text-gray-800 py-6 px-4">
+                  <AccountStatus isLocked={isLocked} />
+                </TableCell>
+                <TableCell className="text-gray-900 py-6 px-4">
+                  <Status status={status} />
+                </TableCell>
+                <TableCell className="text-gray-900 py-6 px-4 text-right">
+                  <Button 
+                    variant="ghost" 
+                    className="text-gray-900 text-sm"
+                    onClick={() => setSelected(row)}
+                    startIcon={<EyeIcon />}
+                  >
+                    Manage
+                  </Button>
+                </TableCell>
+              </TableRow>
+            )
+          })
         )}
       </TableBody>
     </Table>

@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { idApprovalApi } from '../api/idApproval';
+import { IdApprovalFilters } from '../types/idApproval';
 
 export const idApprovalQueryKeys = {
   all: ['idApprovals'] as const,
@@ -17,14 +18,14 @@ const retry = (failureCount: number, error: Error) => {
 const retryDelay = (attemptIndex: number) => Math.min(1000 * 2 ** attemptIndex, 30000);
 
 
-export const useGetIdApprovals = () => {
+export const useGetIdApprovals = (filters: IdApprovalFilters) => {
   return useQuery({
     retry,
     retryDelay,
     staleTime,
     queryKey: idApprovalQueryKeys.list(),
     queryFn: () => {
-      return idApprovalApi.getIdApprovals();
+      return idApprovalApi.getIdApprovals(filters);
     },
   });
 };
