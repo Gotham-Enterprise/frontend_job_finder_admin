@@ -9,8 +9,10 @@ export interface UseIdApprovalLogic {
   metaData: IdApprovals['metaData'];
   filters: IdApprovalFilters;
   itemsPerPageOptions: { value: string; label: string }[];
+  isUpdating: boolean;
   setSelected: Dispatch<SetStateAction<IdApproval | null>>;
   onFilterChange: (key: string, value: string | number) => void;
+  onUpdateStatus: (id: IdApprovalStatusUpdate['id'], status: IdApprovalStatusUpdate['status']) => void;
 }
 
 export interface IdApproval {
@@ -22,6 +24,7 @@ export interface IdApproval {
   isLocked: boolean;
   fullName: string;
   email: string;
+  profilePicture: string | null;
 }
 
 export interface IdApprovals {
@@ -43,4 +46,15 @@ export interface IdApprovalFilters {
   limit: number;
   page: number;
   status?: string;
+}
+
+export interface IdApprovalStatusUpdate {
+  id: string;
+  status: 'approved' | 'declined';
+}
+
+export interface IdApprovalStatusUpdateResponse {
+  success: boolean;
+  data: IdApproval;
+  message: string
 }

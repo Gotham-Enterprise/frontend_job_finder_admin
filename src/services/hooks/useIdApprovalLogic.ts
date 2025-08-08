@@ -1,8 +1,10 @@
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { IdApproval, IdApprovalFilters, UseIdApprovalLogic } from "../types/idApproval";
-import { useGetIdApprovals } from "./useIdApproval";
+import { showToast } from '@/services/utils/toast';
+
+import { IdApproval, IdApprovalFilters, IdApprovalStatusUpdate, UseIdApprovalLogic } from "../types/idApproval";
+import { useGetIdApprovals, useIdApprovalUpdateStatus } from "./useIdApproval";
 
 export const useIdApprovalLogic = (): UseIdApprovalLogic => {
   const router = useRouter();
@@ -23,6 +25,7 @@ export const useIdApprovalLogic = (): UseIdApprovalLogic => {
   const [filters, setFilters] = useState<IdApprovalFilters>(initialFilters);
   const [selected, setSelected] = useState<IdApproval | null>(null);
 
+  /** queries/mutations */
   const { data: idApprovals, isFetching: isLoading, refetch } = useGetIdApprovals(filters);
   const data = idApprovals?.data || [];
   const totalCount = idApprovals?.metaData.totalCount || 0;
@@ -34,7 +37,8 @@ export const useIdApprovalLogic = (): UseIdApprovalLogic => {
     currentPageTotalItems: 0,
     hasNextPage: false,
     hasPreviousPage: false,
-  }
+  };
+  const { mutate, isPending: isUpdating } = useIdApprovalUpdateStatus();
 
   /** useEffects */
   useEffect(() => {
@@ -75,6 +79,18 @@ export const useIdApprovalLogic = (): UseIdApprovalLogic => {
   const onFilterChange = useCallback((key: string, value: string | number) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
   }, []);
+  const onUpdateStatus = useCallback((id: IdApprovalStatusUpdate['id'], status: IdApprovalStatusUpdate['status']) => {
+    mutate({ id, status }, {
+      onSuccess: (data) => {
+        setSelected(null);
+        refetch();
+
+        const title = status === 'approved' ? 'Unlock Request Approved' : 'Unlock Request Declined';
+
+        showToast.success(title, data.message);
+      },
+    });
+  }, [mutate, refetch, setSelected]);
 
   return {
     data,
@@ -85,7 +101,9 @@ export const useIdApprovalLogic = (): UseIdApprovalLogic => {
     filters,
     itemsPerPageOptions,
     selected,
+    isUpdating,
     onFilterChange,
     setSelected,
+    onUpdateStatus,
   };
 }

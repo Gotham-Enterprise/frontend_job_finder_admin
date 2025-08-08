@@ -1,17 +1,18 @@
-import { FC, useEffect, useState } from 'react'
+import { FC, useEffect, useState } from 'react';
 
+import Select from '@/components/form/Select';
 import { SearchIcon } from '@/components/ui/icons';
 import Input from '@/components/ui/input/Input';
 import { UseIdApprovalLogic } from '@/services/types/idApproval';
 
-
 interface Props {
   isLoading: UseIdApprovalLogic['isLoading'];
   totalCount: UseIdApprovalLogic['totalCount'];
+  filters: UseIdApprovalLogic['filters'];
   onFilterChange: UseIdApprovalLogic['onFilterChange'];
 }
 
-const IdApprovalHeader: FC<Props> = ({ totalCount, isLoading, onFilterChange }) => {
+const IdApprovalHeader: FC<Props> = ({ totalCount, isLoading, filters,onFilterChange }) => {
   const [searchInput, setSearchInput] = useState('');
 
   useEffect(() => {
@@ -41,14 +42,14 @@ const IdApprovalHeader: FC<Props> = ({ totalCount, isLoading, onFilterChange }) 
         </div>
       </div>
 
-      <div className="mt-4">
-        <div className="relative">
+      <div className="mt-4 flex flex-row justify-between">
+        <div className="relative min-w-xl">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <SearchIcon className="h-4 w-4" />
           </div>
           <Input
             type="text"
-            placeholder="Search by email..."
+            placeholder="Search by name or email"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             className={`w-full pl-10 ${searchInput ? 'pr-10' : ''}`}
@@ -66,6 +67,19 @@ const IdApprovalHeader: FC<Props> = ({ totalCount, isLoading, onFilterChange }) 
               </button>
             </div>
           )}
+        </div>
+        <div>
+          <Select
+            value={filters.status || ''}
+            options={[
+              { value: 'pending', label: 'Pending' },
+              { value: 'approved', label: 'Approved' },
+              { value: 'declined', label: 'Declined' },
+            ]}
+            placeholder="Filter by status"
+            onChange={(value) => onFilterChange('status', value)}
+            className="w-sm"
+          />
         </div>
       </div>
     </div>
