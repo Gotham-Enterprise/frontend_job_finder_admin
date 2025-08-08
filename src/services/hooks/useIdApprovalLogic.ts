@@ -54,7 +54,7 @@ export const useIdApprovalLogic = (): UseIdApprovalLogic => {
 
   
     if (nextUrl !== url) {
-      router.replace(`/admin/id-approval${nextUrl}`, { scroll: false });
+      router.replace(`/admin/unlock-request${nextUrl}`, { scroll: false });
 
       refetch()
     }
