@@ -69,6 +69,7 @@ import StatusDeclined from "./status-declined.svg";
 import StatusPending from "./status-pending.svg";
 import AccountLocked from "./account-locked.svg";
 import AccountUnlocked from "./account-unlocked.svg";
+import IdCardIcon from "./id-card.svg";
 
 export {
   DownloadIcon,
@@ -140,5 +141,6 @@ export {
   StatusDeclined,
   StatusPending,
   AccountLocked,
-  AccountUnlocked
+  AccountUnlocked,
+  IdCardIcon,
 };

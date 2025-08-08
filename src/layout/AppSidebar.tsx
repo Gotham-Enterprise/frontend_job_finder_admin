@@ -12,6 +12,7 @@ import {
   PieChartIcon,
   UserCircleIcon,
   TaskIcon,
+  IdCardIcon,
 } from "../icons/index";
 import {
   BriefcaseIcon,
@@ -92,6 +93,11 @@ const navItems: NavItem[] = [
      ],
   },
 
+  {
+    icon: <IdCardIcon />,
+    name: "Unlock Requests",
+    path: "/admin/unlock-request",
+  },
 ];
 
 const othersItems: NavItem[] = [
