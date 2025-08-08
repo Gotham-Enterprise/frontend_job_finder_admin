@@ -1,8 +1,8 @@
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { authApi } from '../api/auth';
 import { authUtils } from '../utils/authUtils';
-import { LoginCredentials, AuthResponse, ForgotPasswordRequest, ResetPasswordRequest, ChangePasswordRequest, UpdateProfileRequest } from '../types/auth';
+import { LoginCredentials, AuthResponse, ForgotPasswordRequest, ResetPasswordRequest, ChangePasswordRequest } from '../types/auth';
 
 export const useLogin = () => {
   const router = useRouter();
@@ -76,14 +76,26 @@ export const useTokenResetPassword = () => {
   });
 };
 
-export const useUpdateProfile = () => {
-  return useMutation({
-    mutationFn: (formData: FormData) => authApi.updateProfile(formData),
-    onSuccess: (data) => {
-      return data; 
+export const useCurrentUser = () => {
+  return useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => authApi.getCurrentUser(),
+    enabled: authUtils.isAuthenticated(), // Only fetch if user is authenticated
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    cacheTime: 10 * 60 * 1000, // 10 minutes
+    retry: (failureCount, error: any) => {
+      // Don't retry if it's an auth error
+      if (error?.response?.status === 401 || error?.response?.status === 403) {
+        return false;
+      }
+      return failureCount < 2;
     },
-    onError: (error) => {
-      return error; 
-    }
+    onError: (error: any) => {
+      console.error('Failed to fetch current user:', error);
+      // If token is invalid, clear auth state
+      if (error?.response?.status === 401) {
+        authUtils.clearAuthState();
+      }
+    },
   });
 };

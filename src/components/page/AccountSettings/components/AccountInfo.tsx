@@ -27,8 +27,7 @@ interface AccountInfoProps {
   displayName: string;
   onPasswordChange: (data: PasswordFormData) => Promise<void>;
   onAvatarChange: (formData: FormData) => Promise<void>;
-  onPersonalInfoChange: (data: FormData) => Promise<void>;
-  onUserDataRefresh?: () => Promise<void>; // Add callback to refresh user data
+  onPersonalInfoChange: (data: PersonalInformationFormData) => Promise<void>;
   isChangingPassword: boolean;
   isUpdatingAvatar?: boolean;
   isUpdatingPersonalInfo?: boolean;
@@ -41,7 +40,6 @@ const AccountInfo: React.FC<AccountInfoProps> = ({
   onPasswordChange,
   onAvatarChange,
   onPersonalInfoChange,
-  onUserDataRefresh,
   isChangingPassword,
   isUpdatingAvatar = false,
   isUpdatingPersonalInfo = false
@@ -60,18 +58,6 @@ const AccountInfo: React.FC<AccountInfoProps> = ({
   useEffect(() => {
     setMounted(true);
   }, []);
-
-  // Update form data when user data changes
-  useEffect(() => {
-    if (user) {
-      setEditFormData({
-        firstName: user.firstName || '',
-        lastName: user.lastName || '',
-        email: user.email || '',
-        username: user.username || ''
-      });
-    }
-  }, [user]);
   
   const [editFormData, setEditFormData] = useState<PersonalInformationFormData>({
     firstName: user?.firstName || '',
@@ -137,48 +123,12 @@ const AccountInfo: React.FC<AccountInfoProps> = ({
 
   const savePersonalInfo = useCallback(async () => {
     try {
-      // Create FormData to include both profile data and avatar
-      const formData = new FormData();
-      
-      // Add only the fields that backend expects based on validateEditAdminMeUser
-      formData.append('firstName', editFormData.firstName);
-      formData.append('lastName', editFormData.lastName);
-      // Note: email and username are not expected by the backend for profile updates
-      
-      // Add avatar if selected - using 'avatarUpload' field name as expected by backend
-      if (selectedAvatar) {
-        formData.append('avatarUpload', selectedAvatar);
-      }
-      
-      // Debug: Log FormData contents
-      console.log('FormData contents:');
-      for (let [key, value] of formData.entries()) {
-        console.log(key, value);
-      }
-      
-      // Call the profile update API with FormData
-      await onPersonalInfoChange(formData);
-      
-      // Reset avatar state after successful update
-      if (selectedAvatar) {
-        setSelectedAvatar(null);
-        setAvatarPreview(null);
-        // Reset file input
-        if (fileInputRef.current) {
-          fileInputRef.current.value = '';
-        }
-      }
-      
-      // Refresh user data to get updated avatar URL
-      if (onUserDataRefresh) {
-        await onUserDataRefresh();
-      }
-      
-      console.log('Personal information and avatar saved successfully');
+      await onPersonalInfoChange(editFormData);
+      console.log('Personal information saved successfully');
     } catch (error) {
       console.error('Failed to save personal information:', error);
     }
-  }, [editFormData, selectedAvatar, onPersonalInfoChange, onUserDataRefresh]);
+  }, [editFormData, onPersonalInfoChange]);
 
   const handleAvatarClick = useCallback(() => {
     fileInputRef.current?.click();
@@ -211,9 +161,29 @@ const AccountInfo: React.FC<AccountInfoProps> = ({
   }, []);
 
   const uploadAvatar = useCallback(async () => {
-    // This function is no longer needed as avatar upload is integrated with save
-    console.warn('uploadAvatar is deprecated - avatar upload is now integrated with save button');
-  }, []);
+    if (!selectedAvatar) return;
+    
+    const formData = new FormData();
+    formData.append('avatar', selectedAvatar);
+    
+    // Optional: Add additional form data if needed
+    // formData.append('userId', user?.id || '');
+    // formData.append('timestamp', new Date().toISOString());
+    
+    try {
+      await onAvatarChange(formData);
+      setSelectedAvatar(null);
+      setAvatarPreview(null);
+      console.log('Avatar uploaded successfully');
+      
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    } catch (error) {
+      console.error('Failed to upload avatar:', error);
+    }
+  }, [selectedAvatar, onAvatarChange]);
 
   const validation = validatePasswordForm();
 
@@ -256,12 +226,6 @@ const AccountInfo: React.FC<AccountInfoProps> = ({
                       alt="Avatar preview"
                       className="w-16 h-16 rounded-full object-cover"
                     />
-                  ) : user?.avatarUrl ? (
-                    <img 
-                      src={user.avatarUrl} 
-                      alt="Current avatar"
-                      className="w-16 h-16 rounded-full object-cover"
-                    />
                   ) : (
                     <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center">
                       <span className="text-lg font-semibold text-white">
@@ -280,13 +244,18 @@ const AccountInfo: React.FC<AccountInfoProps> = ({
                     Change avatar
                   </span>
                   {selectedAvatar && (
-                    <span className="text-xs text-green-600 dark:text-green-400">
-                      Selected: {selectedAvatar.name}
-                    </span>
+                    <Button 
+                      size="sm"
+                      onClick={uploadAvatar}
+                      disabled={isUpdatingAvatar}
+                      className="px-3 py-1 text-xs"
+                    >
+                      {isUpdatingAvatar ? 'Uploading...' : 'Upload'}
+                    </Button>
                   )}
                 </div>
                 <p className="text-xs text-gray-500 dark:text-gray-400">
-                  JPG, GIF or PNG. 1MB max. Click Save to upload.
+                  JPG, GIF or PNG. 1MB max.
                 </p>
                 <input
                   ref={fileInputRef}

@@ -23,14 +23,6 @@ export interface ChangePasswordRequest {
   confirmPassword: string;
 }
 
-export interface UpdateProfileRequest {
-  firstName: string;
-  lastName: string;
-  email: string;
-  username?: string;
-  avatarUpload?: File;
-}
-
 export interface ResetPasswordResponse {
   success: boolean;
   message: string;
@@ -61,7 +53,6 @@ export interface User {
   lastEmailSentAt: string | null;
   userType: string;
   forceChangePassword: boolean;
-  avatarUrl?: string;
 }
 
 export interface AuthResponse {

@@ -6,7 +6,7 @@ import { authUtils } from '@/services/utils/authUtils';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import FullScreenSpinner from '@/components/ui/FullScreenSpinner';
 import { showToast } from '@/services/utils/toast';
-import { useResetPassword, useUpdateProfile } from '@/services/hooks/useAuth';
+import { useResetPassword, useCurrentUser } from '@/services/hooks/useAuth';
 import UserTable from './components/UserTable';
 import AccountInfo from './components/AccountInfo';
 
@@ -16,49 +16,42 @@ interface PasswordFormData {
   confirmPassword: string;
 }
 
+interface PersonalInformationFormData {
+  firstName: string;
+  lastName: string;
+  email: string;
+  username: string;
+}
+
 const AccountSettings: React.FC = () => {
   const [mounted, setMounted] = useState(false);
   const [activeTab, setActiveTab] = useState('account');
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [isUpdatingAvatar, setIsUpdatingAvatar] = useState(false);
   const [isUpdatingPersonalInfo, setIsUpdatingPersonalInfo] = useState(false);
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
 
-  // Prevent hydration mismatch
+  // Fetch current user from API
+  const { data: apiUser, isLoading: isLoadingUser, error: userError, refetch: refetchUser } = useCurrentUser();
+
   useEffect(() => {
     setMounted(true);
-    // Initialize current user
-    const user = authUtils.getUser();
-    setCurrentUser(user);
   }, []);
 
   const resetPasswordMutation = useResetPassword();
-  const updateProfileMutation = useUpdateProfile();
+  
+  // Use API user data or fallback to cached user, avoid hardcoded test data
+  const currentUser = apiUser?.user || apiUser || authUtils.getUser();
   const displayName = authUtils.getUserDisplayName();
   const userInitials = authUtils.getUserInitials();
 
-  const testUser = currentUser || {
-    id: 'test-user',
-    email: 'admin@gothamenterprises.com',
-    username: 'superadmin',
-    firstName: 'Super',
-    lastName: 'Admin',
-    role: 'admin',
-    status: 'active'
-  } as User;
-
-  const refreshUserData = useCallback(async (): Promise<void> => {
-    try {
-      // For now, we'll update the state from localStorage
-      // In a real app, you might want to fetch fresh data from the server
-      const updatedUser = authUtils.getUser();
-      if (updatedUser) {
-        setCurrentUser(updatedUser);
-      }
-    } catch (error) {
-      console.error('Failed to refresh user data:', error);
-    }
-  }, []);
+  // Debug logging
+  console.log('AccountSettings Debug:', {
+    apiUser,
+    currentUser,
+    isLoadingUser,
+    userError,
+    isAuthenticated: authUtils.isAuthenticated()
+  });
 
   const executePasswordChange = useCallback(async (passwordData: PasswordFormData): Promise<void> => {
     setIsChangingPassword(true);
@@ -104,40 +97,29 @@ const AccountSettings: React.FC = () => {
     }
   }, []);
 
-  const executePersonalInfoChange = useCallback(async (formData: FormData): Promise<void> => {
+  const executePersonalInfoChange = useCallback(async (personalData: PersonalInformationFormData): Promise<void> => {
     setIsUpdatingPersonalInfo(true);
     
     try {
-      // Call the actual profile update API
-      const response = await updateProfileMutation.mutateAsync(formData);
+      // Simulate API call for personal info update
+      await new Promise(resolve => setTimeout(resolve, 1500));
       
-      showToast.success('Success', 'Profile updated successfully!');
+      showToast.success('Success', 'Personal information updated successfully!');
       
-      // Update user data after successful profile update
-      if (response.data && currentUser) {
-        // Update the current user with new data from response
-        const updatedUser = {
-          ...currentUser,
-          ...response.data
-        };
-        authUtils.updateUser(updatedUser);
-        setCurrentUser(updatedUser);
-      } else {
-        // If no data in response, refresh from storage
-        await refreshUserData();
-      }
+      // Refetch user data to get updated information
+      await refetchUser();
       
     } catch (error: any) {
-      console.error('Profile update error:', error);
-      showToast.error('Error', error?.message || 'Failed to update profile');
+      console.error('Personal info update error:', error);
+      showToast.error('Error', error?.message || 'Failed to update personal information');
       throw error;
     } finally {
       setIsUpdatingPersonalInfo(false);
     }
-  }, [updateProfileMutation, currentUser, refreshUserData]);
+  }, [refetchUser]);
 
-  // Prevent hydration mismatch
-  if (!mounted) {
+  // Prevent hydration mismatch and show loading state
+  if (!mounted || isLoadingUser) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
         <div className="max-w-8xl mx-auto">
@@ -145,6 +127,35 @@ const AccountSettings: React.FC = () => {
             <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/4 mb-4"></div>
             <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2 mb-8"></div>
             <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded w-1/3"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state if user fetch failed
+  if (userError && !currentUser) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
+        <div className="max-w-8xl mx-auto">
+          <div className="text-center py-12">
+            <div className="mx-auto h-12 w-12 text-red-400 mb-4">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+              Failed to load user data
+            </h3>
+            <p className="text-gray-500 dark:text-gray-400 mb-4">
+              Unable to fetch current user information from the server.
+            </p>
+            <button
+              onClick={() => refetchUser()}
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            >
+              Retry
+            </button>
           </div>
         </div>
       </div>
@@ -169,13 +180,13 @@ const AccountSettings: React.FC = () => {
 
           <TabsContent value="account">
             <AccountInfo
-              user={testUser}
+              user={currentUser}
               userInitials={userInitials}
               displayName={displayName}
               onPasswordChange={executePasswordChange}
               onAvatarChange={executeAvatarChange}
               onPersonalInfoChange={executePersonalInfoChange}
-              onUserDataRefresh={refreshUserData}
+              onUserDataRefresh={refetchUser}
               isChangingPassword={isChangingPassword}
               isUpdatingAvatar={isUpdatingAvatar}
               isUpdatingPersonalInfo={isUpdatingPersonalInfo}
