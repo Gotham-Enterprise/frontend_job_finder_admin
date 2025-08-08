@@ -18,8 +18,10 @@ const IDApproval: React.FC<Props> = ({ className }) => {
     filters,
     itemsPerPageOptions,
     selected,
+    isUpdating,
     onFilterChange,
-    setSelected
+    setSelected,
+    onUpdateStatus,
   } = useIdApprovalLogic();
 
   return (
@@ -27,6 +29,7 @@ const IDApproval: React.FC<Props> = ({ className }) => {
       <IdApprovalHeader
         totalCount={totalCount}
         isLoading={isLoading}
+        filters={filters}
         onFilterChange={onFilterChange}
       />
       <IdApprovalTable data={data} isLoading={isLoading} tableColumns={tableColumns} setSelected={setSelected} />
@@ -38,7 +41,7 @@ const IDApproval: React.FC<Props> = ({ className }) => {
         itemsPerPageOptions={itemsPerPageOptions}
         onFilterChange={onFilterChange}
       />
-      <IdApprovalDetail selected={selected} setSelected={setSelected} />
+      <IdApprovalDetail selected={selected} setSelected={setSelected} isUpdating={isUpdating} onUpdateStatus={onUpdateStatus} />
     </div>
   )
 }

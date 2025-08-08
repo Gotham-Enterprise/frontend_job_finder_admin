@@ -1,13 +1,14 @@
 import { FC } from 'react';
 
-import { UseIdApprovalLogic } from '@/services/types/idApproval'
-import { Table, TableBody, TableCell, TableRow  } from '@/components/ui/table';
 import TableHeading from '@/components/tables/tableHeader';
+import Avatar from '@/components/ui/avatar/Avatar';
+import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
+import { UseIdApprovalLogic } from '@/services/types/idApproval';
 
-import AccountStatus from './AccountStatus';
-import Status from './Status';
 import Button from '@/components/ui/button/Button';
 import { EyeIcon } from '@/icons';
+import AccountStatus from './AccountStatus';
+import Status from './Status';
 
 interface Props {
   data: UseIdApprovalLogic['data'];
@@ -45,9 +46,18 @@ const IdApprovalTable: FC<Props> = ({ data, isLoading, tableColumns, setSelected
             return (
               <TableRow key={`id-approval-${id}`}>
                 <TableCell className="text-gray-800 py-6 px-4">
-                  <p className="text-sm text-gray-900 dark:text-white">
-                    {fullName}
-                  </p>
+                  <div className='flex items-center gap-2'>
+                    <Avatar
+                      src={row.profilePicture || undefined}
+                      alt={fullName}
+                      name={fullName}
+                      size="small"
+                      className="rounded-full" 
+                    />
+                    <p className="text-sm text-gray-900 dark:text-white">
+                      {fullName}
+                    </p>
+                  </div>
                 </TableCell>
                 <TableCell className="py-6 px-4">
                   <p className="text-sm text-gray-900 dark:text-white">

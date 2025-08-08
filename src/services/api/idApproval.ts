@@ -1,6 +1,6 @@
 
-import { apiGet } from './apiUtils';
-import { IdApprovalFilters, IdApprovals } from '../types/idApproval';
+import { apiGet, apiPatch } from './apiUtils';
+import { IdApprovalFilters, IdApprovals, IdApprovalStatusUpdate, IdApprovalStatusUpdateResponse } from '../types/idApproval';
 
 export const idApprovalApi = {
   async getIdApprovals(filters: IdApprovalFilters): Promise<IdApprovals> {
@@ -14,5 +14,11 @@ export const idApprovalApi = {
     const endpoint = `/api/admin/id-verifications?${queryParams.toString()}`;
 
     return apiGet<IdApprovals>(endpoint);
-   }
+  }
+}
+
+export const updateIdApprovalStatus = async (data: IdApprovalStatusUpdate): Promise<IdApprovalStatusUpdateResponse> => {
+  const endpoint = `/api/admin/id-verifications/${data.id}/status`;
+
+  return apiPatch<IdApprovalStatusUpdateResponse>(endpoint, { status: data.status });
 }
