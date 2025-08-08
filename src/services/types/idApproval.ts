@@ -4,15 +4,19 @@ export interface UseIdApprovalLogic {
   data: IdApproval[];
   isLoading: boolean;
   totalCount: number;
-  searchTerm: string;
-  setSearchTerm: Dispatch<SetStateAction<string>>;
+  selected: IdApproval | null;
   tableColumns: { key: string; label: string; className?: string }[];
+  metaData: IdApprovals['metaData'];
+  filters: IdApprovalFilters;
+  itemsPerPageOptions: { value: string; label: string }[];
+  setSelected: Dispatch<SetStateAction<IdApproval | null>>;
+  onFilterChange: (key: string, value: string | number) => void;
 }
 
 export interface IdApproval {
   id: string;
   userId: string;
-  status: 'pending' | 'approved' | 'rejected';
+  status: 'pending' | 'approved' | 'declined';
   front: string;
   back: string;
   isLocked: boolean;
@@ -36,4 +40,7 @@ export interface IdApprovals {
 
 export interface IdApprovalFilters {
   search?: string;
+  limit: number;
+  page: number;
+  status?: string;
 }

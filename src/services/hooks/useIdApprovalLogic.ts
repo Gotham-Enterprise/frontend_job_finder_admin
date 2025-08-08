@@ -1,25 +1,62 @@
-import { useSearchParams } from 'next/navigation';
-import { useMemo, useState } from "react";
+import { useSearchParams, useRouter } from 'next/navigation';
+import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { IdApprovalFilters, UseIdApprovalLogic } from "../types/idApproval";
+import { IdApproval, IdApprovalFilters, UseIdApprovalLogic } from "../types/idApproval";
 import { useGetIdApprovals } from "./useIdApproval";
 
 export const useIdApprovalLogic = (): UseIdApprovalLogic => {
+  const router = useRouter();
   const searchParams = useSearchParams();
 
   const getInitialFilters = (): IdApprovalFilters => {
     const search = searchParams.get('search') || '';
+    const limit = parseInt(searchParams.get('limit') || '50', 10);
+    const page = parseInt(searchParams.get('page') || '1', 10);
+    const status = searchParams.get('status') || '';
 
-    return { search };
+    return { search, limit, page, status };
   }
 
   const initialFilters = getInitialFilters();
-  const [searchTerm, setSearchTerm] = useState<string>(() => initialFilters.search || '');
 
-  const { data: idApprovals, isFetching: isLoading, } = useGetIdApprovals();
+  /** states */
+  const [filters, setFilters] = useState<IdApprovalFilters>(initialFilters);
+  const [selected, setSelected] = useState<IdApproval | null>(null);
+
+  const { data: idApprovals, isFetching: isLoading, refetch } = useGetIdApprovals(filters);
   const data = idApprovals?.data || [];
   const totalCount = idApprovals?.metaData.totalCount || 0;
+  const metaData = idApprovals?.metaData || {
+    page: 1,
+    limit: 50,
+    totalPages: 1,
+    totalCount: 0,
+    currentPageTotalItems: 0,
+    hasNextPage: false,
+    hasPreviousPage: false,
+  }
 
+  /** useEffects */
+  useEffect(() => {
+    const params = new URLSearchParams();
+    
+    if (filters.page) params.set('page', filters.page.toString());
+    if (filters.limit) params.set('limit', filters.limit.toString());
+    if (filters.search) params.set('search', encodeURIComponent(filters.search));
+    if (filters.status) params.set('status', filters.status);
+    
+    const nextUrl = params.toString() ? `?${params.toString()}` : '';
+    const url = window.location.search;
+
+  
+    if (nextUrl !== url) {
+      router.replace(`/admin/id-approval${nextUrl}`, { scroll: false });
+
+      refetch()
+    }
+  }, [filters, router, refetch]);
+
+  /** memos */
   const tableColumns = useMemo(() => [
     { key: 'name', label: 'Name' },
     { key: 'email', label: 'Email' },
@@ -27,6 +64,28 @@ export const useIdApprovalLogic = (): UseIdApprovalLogic => {
     { key: 'status', label: 'ID Status' },
     { key: 'actions', label: 'Action', className: 'text-right' },
   ], []);
+  const itemsPerPageOptions = useMemo(() => [
+    { value: '10', label: '10 per page' },
+    { value: '20', label: '20 per page' },
+    { value: '50', label: '50 per page' },
+    { value: '100', label: '100 per page' },
+  ], []);
 
-  return { data, isLoading, totalCount, searchTerm, setSearchTerm, tableColumns };
+  /** callbacks */
+  const onFilterChange = useCallback((key: string, value: string | number) => {
+    setFilters((prev) => ({ ...prev, [key]: value }));
+  }, []);
+
+  return {
+    data,
+    isLoading,
+    totalCount,
+    metaData,
+    tableColumns,
+    filters,
+    itemsPerPageOptions,
+    selected,
+    onFilterChange,
+    setSelected,
+  };
 }
