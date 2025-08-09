@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { Modal } from "@/components/ui/modal";
 import { useModal } from "@/hooks/useModal";
 import Button from "@/components/ui/button/Button";
-import CustomDatePicker from "@/components/form/CustomDatePicker";
 import FullScreenSpinner from "@/components/ui/FullScreenSpinner";
 import VisualLayoutBuilder from "./VisualLayoutBuilder/VisualLayoutBuilder";
 import FloatingElementsPanel from "./VisualLayoutBuilder/components/FloatingElementsPanel";
@@ -53,6 +52,7 @@ interface BlogMetadata {
   seoDescription: string;
   allowComments: boolean;
   allowPings: boolean;
+  author: string;
 }
 
 type ViewMode = 'builder' | 'classic' | 'preview';
@@ -100,7 +100,6 @@ export default function AddNewBlogWithLayoutBuilder() {
   const [currentLayout, setCurrentLayout] = useState<LayoutType>(() => createInitialLayout());
   const [viewMode, setViewMode] = useState<ViewMode>('builder');
   const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
-  const [dateDropdownOpen, setDateDropdownOpen] = useState(false);
   const [categoriesDropdownOpen, setCategoriesDropdownOpen] = useState(false);
   const [tagsDropdownOpen, setTagsDropdownOpen] = useState(false);
   const [categoriesSearchTerm, setCategoriesSearchTerm] = useState('');
@@ -109,7 +108,7 @@ export default function AddNewBlogWithLayoutBuilder() {
 
   const { 
     isOpen: isTitleModalOpen, 
-    openModal: openTitleModal, 
+    openModal: openTitleModalHandler, 
     closeModal: closeTitleModal 
   } = useModal();
 
@@ -128,6 +127,7 @@ export default function AddNewBlogWithLayoutBuilder() {
     seoDescription: '',
     allowComments: true,
     allowPings: true,
+    author: '',
   });
 
   const [seoData, setSeoData] = useState({
@@ -142,6 +142,15 @@ export default function AddNewBlogWithLayoutBuilder() {
     description: '',
     keywords: ''
   });
+  const [tempMetadata, setTempMetadata] = useState({
+    author: '',
+    status: 'draft' as 'draft' | 'published' | 'pending' | 'private',
+    publishDate: '',
+    categories: '',
+    tags: [] as string[],
+    featuredImage: ''
+  });
+  const [activeTab, setActiveTab] = useState<'general' | 'seo'>('general');
 
   useEffect(() => {
     setSeoData(prev => ({
@@ -344,33 +353,56 @@ export default function AddNewBlogWithLayoutBuilder() {
     }));
   }, []);
 
-  const handleOpenTitleModal = useCallback(() => {
+  const openTitleModal = useCallback(() => {
     setTempTitle(metadata.title);
     setTempSeoData({
       title: seoData.title,
       description: seoData.description,
       keywords: seoData.keywords
     });
-    openTitleModal();
-  }, [metadata.title, seoData, openTitleModal]);
+    setTempMetadata({
+      author: metadata.author,
+      status: metadata.status,
+      publishDate: metadata.publishDate,
+      categories: metadata.categories,
+      tags: metadata.tags,
+      featuredImage: metadata.featuredImage || ''
+    });
+    setActiveTab('general');
+    openTitleModalHandler();
+  }, [metadata.title, metadata.author, metadata.status, metadata.publishDate, metadata.categories, metadata.tags, metadata.featuredImage, seoData, openTitleModalHandler]);
 
-  const handleTitleSave = useCallback(() => {
+  const saveTitleModal = useCallback(() => {
     updateTitle(tempTitle);
     setSeoData(tempSeoData);
     updateMetadata('seoTitle', tempSeoData.title);
     updateMetadata('seoDescription', tempSeoData.description);
+    updateMetadata('author', tempMetadata.author);
+    updateMetadata('status', tempMetadata.status);
+    updateMetadata('publishDate', tempMetadata.publishDate);
+    updateMetadata('categories', tempMetadata.categories);
+    updateMetadata('tags', tempMetadata.tags);
+    updateMetadata('featuredImage', tempMetadata.featuredImage);
     closeTitleModal();
-  }, [tempTitle, tempSeoData, updateTitle, updateMetadata, closeTitleModal]);
+  }, [tempTitle, tempSeoData, tempMetadata, updateTitle, updateMetadata, closeTitleModal]);
 
-  const handleTitleCancel = useCallback(() => {
+  const cancelTitleModal = useCallback(() => {
     setTempTitle(metadata.title);
     setTempSeoData({
       title: seoData.title,
       description: seoData.description,
       keywords: seoData.keywords
     });
+    setTempMetadata({
+      author: metadata.author,
+      status: metadata.status,
+      publishDate: metadata.publishDate,
+      categories: metadata.categories,
+      tags: metadata.tags,
+      featuredImage: metadata.featuredImage || ''
+    });
     closeTitleModal();
-  }, [metadata.title, seoData, closeTitleModal]);
+  }, [metadata.title, metadata.author, metadata.status, metadata.publishDate, metadata.categories, metadata.tags, metadata.featuredImage, seoData, closeTitleModal]);
 
   const saveBlog = useCallback(async () => {
     await publishBlog();
@@ -381,10 +413,10 @@ export default function AddNewBlogWithLayoutBuilder() {
     console.log('Preview blog functionality');
   }, []);
 
-  const handleFeaturedImageSelect = useCallback((imageUrl: string) => {
-    updateMetadata('featuredImage', imageUrl);
+  const setFeaturedImageInModal = useCallback((imageUrl: string) => {
+    setTempMetadata(prev => ({ ...prev, featuredImage: imageUrl }));
     imageGalleryModal.closeModal();
-  }, [updateMetadata, imageGalleryModal]);
+  }, [imageGalleryModal]);
 
   const handleSetFeaturedImage = useCallback((imageUrl: string) => {
     updateMetadata('featuredImage', imageUrl);
@@ -434,7 +466,6 @@ export default function AddNewBlogWithLayoutBuilder() {
       const target = event.target as Element;
       if (!target.closest('.dropdown-container')) {
         setStatusDropdownOpen(false);
-        setDateDropdownOpen(false);
         setCategoriesDropdownOpen(false);
         setTagsDropdownOpen(false);
       }
@@ -473,7 +504,7 @@ export default function AddNewBlogWithLayoutBuilder() {
                 </label>
                 <button
                   type="button"
-                  onClick={handleOpenTitleModal}
+                  onClick={openTitleModal}
                   className="w-60 px-3 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:border-blue-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none text-gray-900 dark:text-gray-100 transition-colors text-left flex items-center justify-between"
                 >
                   <span className="truncate flex-1 mr-2">
@@ -489,390 +520,6 @@ export default function AddNewBlogWithLayoutBuilder() {
                 </button>
               </div>
               
-             
-              <div className="flex items-center space-x-2">
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">
-                  Status:
-                </label>
-                <div className="relative dropdown-container">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setStatusDropdownOpen(!statusDropdownOpen);
-                      setDateDropdownOpen(false);
-                      setCategoriesDropdownOpen(false);
-                      setTagsDropdownOpen(false);
-                    }}
-                    className="flex items-center justify-between bg-primary text-white px-4 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer min-w-[120px]"
-                  >
-                    <span>{statusOptions.find(option => option.value === metadata.status)?.label || 'Draft'}</span>
-                    <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
-                  {statusDropdownOpen && (
-                    <div className="absolute top-full left-0 mt-1 w-80 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg z-50">
-                      {statusOptions.map(option => (
-                        <button
-                          key={option.value}
-                          type="button"
-                          onClick={() => {
-                            updateMetadata('status', option.value);
-                            setStatusDropdownOpen(false);
-                          }}
-                          className="w-full text-left px-4 py-3 text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 first:rounded-t-lg last:rounded-b-lg flex items-start space-x-3"
-                        >
-                          <div className="flex-shrink-0 mt-0.5">
-                            {metadata.status === option.value ? (
-                              <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                              </svg>
-                            ) : (
-                              <div className="w-4 h-4"></div>
-                            )}
-                          </div>
-                          <div className="flex-1">
-                            <div className="font-medium">{option.label}</div>
-                            <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">{option.description}</div>
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-              <div className="flex items-center space-x-2">
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">
-                  Date Posted:
-                </label>
-                <div className="relative dropdown-container">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setDateDropdownOpen(!dateDropdownOpen);
-                      setStatusDropdownOpen(false);
-                      setCategoriesDropdownOpen(false);
-                      setTagsDropdownOpen(false);
-                    }}
-                    className="flex items-center justify-between bg-primary text-white px-4 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer min-w-[140px]"
-                  >
-                    <span>{metadata.publishDate ? new Date(metadata.publishDate).toLocaleDateString() : new Date().toLocaleDateString()}</span>
-                    <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
-                  {dateDropdownOpen && (
-                    <div className="absolute top-full left-0 mt-1 w-80 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg z-50">
-                      <div className="px-4 py-3">
-                        <div className="flex items-center space-x-3 mb-3">
-                          <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                          </svg>
-                          <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Select Publication Date</span>
-                        </div>
-                        <div className="mb-4">
-                          <CustomDatePicker
-                            id="blog-publish-date"
-                            value={metadata.publishDate}
-                            onChange={(selectedDate) => {
-                              updateMetadata('publishDate', selectedDate);
-                           
-                              setTimeout(() => {
-                                setDateDropdownOpen(false);
-                              }, 100);
-                            }}
-                            placeholder="Select publication date"
-                          />
-                        </div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400 mb-4">
-                          Choose when this blog post should be published.
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => setDateDropdownOpen(false)}
-                          className="w-full bg-primary text-white px-4 py-2 text-sm rounded-lg hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/20"
-                        >
-                          Done
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Categories Field */}
-              <div className="flex items-center space-x-2">
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">
-                  Categories:
-                </label>
-                <div className="relative dropdown-container">
-                  <button
-                    type="button"
-                    disabled={categoriesLoading}
-                    onClick={() => {
-                      if (!categoriesLoading) {
-                        setCategoriesDropdownOpen(!categoriesDropdownOpen);
-                        setStatusDropdownOpen(false);
-                        setDateDropdownOpen(false);
-                        setTagsDropdownOpen(false);
-                      }
-                    }}
-                    className={`flex items-center justify-between bg-primary text-white px-4 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer min-w-[120px] ${categoriesLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  >
-                    <span>
-                      {categoriesLoading ? (
-                        <div className="flex items-center space-x-2">
-                          <svg className="animate-spin h-3 w-3 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                          </svg>
-                          <span>Loading...</span>
-                        </div>
-                      ) : metadata.categories 
-                        ? categoryOptions.find(cat => cat.value === metadata.categories)?.text || metadata.categories
-                        : 'Select'
-                      }
-                    </span>
-                    <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
-                  {categoriesDropdownOpen && !categoriesLoading && (
-                    <div className="absolute top-full left-0 mt-1 w-80 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg z-50 max-h-64 overflow-hidden">
-                      <div className="px-4 py-3">
-                        <div className="flex items-center space-x-3 mb-3">
-                          <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                          </svg>
-                          <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Select Categories</span>
-                        </div>
-                        
-                        {/* Search Input */}
-                        <div className="mb-3 relative">
-                          <svg className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                          </svg>
-                          <input
-                            type="text"
-                            placeholder="Search categories..."
-                            value={categoriesSearchTerm}
-                            onChange={(e) => setCategoriesSearchTerm(e.target.value)}
-                            className="w-full pl-10 pr-3 py-2 text-sm bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
-                          />
-                        </div>
-
-                        <div className="max-h-32 overflow-y-auto space-y-2 mb-4">
-                          {categoriesLoading ? (
-                            <div className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
-                              <div className="flex items-center justify-center space-x-2">
-                                <svg className="animate-spin h-4 w-4 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                                <span>Loading categories...</span>
-                              </div>
-                            </div>
-                          ) : filteredCategories.length > 0 ? (
-                            <>
-                              {/* None option */}
-                              <label className="flex items-center text-sm cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 p-2 rounded">
-                                <input
-                                  type="radio"
-                                  name="category"
-                                  checked={metadata.categories === ''}
-                                  onChange={() => {
-                                    updateMetadata('categories', '');
-                                  }}
-                                  className="mr-3 w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500"
-                                />
-                                <span className="text-gray-500 dark:text-gray-400 italic">None</span>
-                                {metadata.categories === '' && (
-                                  <svg className="w-4 h-4 ml-auto text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                  </svg>
-                                )}
-                              </label>
-                              
-                              {filteredCategories.map(category => (
-                                <label key={category.value} className="flex items-center text-sm cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 p-2 rounded">
-                                  <input
-                                    type="radio"
-                                    name="category"
-                                    checked={metadata.categories === category.value}
-                                    onChange={() => {
-                                      updateMetadata('categories', category.value);
-                                    }}
-                                    className="mr-3 w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500"
-                                  />
-                                  <span className="text-gray-900 dark:text-gray-100">{category.text}</span>
-                                  {metadata.categories === category.value && (
-                                    <svg className="w-4 h-4 ml-auto text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                    </svg>
-                                  )}
-                                </label>
-                              ))}
-                            </>
-                          ) : (
-                            <div className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
-                              {categoriesSearchTerm ? 
-                                `No categories found matching "${categoriesSearchTerm}"` : 
-                                'No categories available'
-                              }
-                            </div>
-                          )}
-                        </div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400 mb-4">
-                          Select one category for your blog post.
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setCategoriesDropdownOpen(false);
-                            setCategoriesSearchTerm('');
-                          }}
-                          className="w-full bg-primary text-white px-4 py-2 text-sm rounded-lg hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/20"
-                        >
-                          Done
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Tags Field */}
-              <div className="flex items-center space-x-2">
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">
-                  Tags:
-                </label>
-                <div className="relative dropdown-container">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setTagsDropdownOpen(!tagsDropdownOpen);
-                      setStatusDropdownOpen(false);
-                      setDateDropdownOpen(false);
-                      setCategoriesDropdownOpen(false);
-                    }}
-                    className="flex items-center justify-between bg-primary text-white px-4 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer min-w-[120px]"
-                  >
-                    <span>{metadata.tags.length > 0 ? `${metadata.tags.length} selected` : 'Select'}</span>
-                    <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
-                  {tagsDropdownOpen && (
-                    <div className="absolute top-full left-0 mt-1 w-80 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg z-50 max-h-64 overflow-hidden">
-                      <div className="px-4 py-3">
-                        <div className="flex items-center space-x-3 mb-3">
-                          <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                          </svg>
-                          <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Select Tags</span>
-                        </div>
-                        
-                        {/* Search Input */}
-                        <div className="mb-3 relative">
-                          <svg className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                          </svg>
-                          <input
-                            type="text"
-                            placeholder="Search tags..."
-                            value={tagsSearchTerm}
-                            onChange={(e) => setTagsSearchTerm(e.target.value)}
-                            className="w-full pl-10 pr-3 py-2 text-sm bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
-                          />
-                        </div>
-
-                        <div className="max-h-32 overflow-y-auto space-y-2 mb-4">
-                          {tagsLoading ? (
-                            <div className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
-                              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary mx-auto mb-2"></div>
-                              Loading tags...
-                            </div>
-                          ) : filteredTags.length > 0 ? (
-                            filteredTags.map(tag => (
-                              <label key={tag.value} className="flex items-center text-sm cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 p-2 rounded">
-                                <input
-                                  type="checkbox"
-                                  checked={metadata.tags.includes(tag.value)}
-                                  onChange={(e) => {
-                                    const currentTags = metadata.tags;
-                                    const newTags = e.target.checked
-                                      ? [...currentTags, tag.value]
-                                      : currentTags.filter(t => t !== tag.value);
-                                    updateMetadata('tags', newTags);
-                                  }}
-                                  className="mr-3 w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
-                                />
-                                <span className="text-gray-900 dark:text-gray-100">{tag.text}</span>
-                                {metadata.tags.includes(tag.value) && (
-                                  <svg className="w-4 h-4 ml-auto text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                  </svg>
-                                )}
-                              </label>
-                            ))
-                          ) : (
-                            <div className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
-                              {tagsSearchTerm ? `No tags found matching "${tagsSearchTerm}"` : 'No tags available'}
-                            </div>
-                          )}
-                        </div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400 mb-4">
-                          Select multiple tags for better searchability.
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Featured Image Field */}
-              <div className="flex items-center space-x-2">
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">
-                  Featured Image:
-                </label>
-                <div className="flex items-center space-x-2">
-                  {metadata.featuredImage ? (
-                    <div className="flex items-center space-x-2">
-                      <div className="relative w-12 h-12 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-600">
-                        <img 
-                          src={metadata.featuredImage} 
-                          alt="Featured" 
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      <span className="text-sm text-gray-600 dark:text-gray-400 truncate max-w-[150px]">
-                        Featured image selected
-                      </span>
-                      <button
-                        type="button"
-                        onClick={handleRemoveFeaturedImage}
-                        className="text-red-500 hover:text-red-700 p-1"
-                        title="Remove featured image"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
-                    </div>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={imageGalleryModal.openModal}
-                      className="flex items-center justify-center bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-4 py-2 text-sm rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
-                    >
-                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 002 2z" />
-                      </svg>
-                      Choose Image
-                    </button>
-                  )}
-                </div>
-              </div>
             </div>
           </div>
           <div className="flex items-center space-x-3">
@@ -925,15 +572,15 @@ export default function AddNewBlogWithLayoutBuilder() {
       <ImageGalleryModal
         isOpen={imageGalleryModal.isOpen}
         onClose={imageGalleryModal.closeModal}
-        onImageSelect={handleFeaturedImageSelect}
-        onSetFeaturedImage={handleSetFeaturedImage}
-        currentFeaturedImage={metadata.featuredImage || ''}
+        onImageSelect={setFeaturedImageInModal}
+        onSetFeaturedImage={setFeaturedImageInModal}
+        currentFeaturedImage={tempMetadata.featuredImage}
       />
 
       {/* Title & SEO Modal */}
       <Modal
         isOpen={isTitleModalOpen}
-        onClose={handleTitleCancel}
+        onClose={cancelTitleModal}
         showCloseButton={false}
         isFullscreen={false}
         className="max-w-3xl w-full mx-auto my-8 rounded-lg shadow-xl"
@@ -941,120 +588,382 @@ export default function AddNewBlogWithLayoutBuilder() {
         <div className="p-6">
           <h2 className="text-xl font-bold mb-6">Edit Blog Title & SEO Settings</h2>
           
-          {/* Blog Title Section */}
-          <div className="mb-6">
-            <label htmlFor="modal-blog-title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Blog Title
-            </label>
-            <input
-              id="modal-blog-title"
-              type="text"
-              value={tempTitle}
-              onChange={(e) => setTempTitle(e.target.value)}
-              placeholder="Enter your blog title..."
-              className="w-full px-3 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 transition-colors"
-              autoFocus
-            />
+          {/* Tabs */}
+          <div className="border-b border-gray-200 dark:border-gray-700 mb-6">
+            <nav className="flex space-x-8" aria-label="Tabs">
+              <button
+                onClick={() => setActiveTab('general')}
+                className={`whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'general'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                General
+              </button>
+              <button
+                onClick={() => setActiveTab('seo')}
+                className={`whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'seo'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                SEO Settings
+              </button>
+            </nav>
           </div>
 
-          {/* SEO Settings Section */}
-          <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
-            <h3 className="text-lg font-semibold mb-4 flex items-center">
-              <svg className="w-5 h-5 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-              SEO Settings
-            </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-              Optimize your content for search engines by adding meta information
-            </p>
+          {/* General Tab Content */}
+          {activeTab === 'general' && (
+            <div className="space-y-6">
+              {/* Blog Title */}
+              <div>
+                <label htmlFor="modal-blog-title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Blog Title <span className="text-red-500">*</span>
+                </label>
+                <input
+                  id="modal-blog-title"
+                  type="text"
+                  value={tempTitle}
+                  onChange={(e) => setTempTitle(e.target.value)}
+                  placeholder="Enter your blog title..."
+                  className="w-full px-3 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 transition-colors"
+                  autoFocus
+                />
+              </div>
 
-            {/* SEO Title */}
-            <div className="mb-4">
-              <label htmlFor="seo-title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Meta title <span className="text-gray-500">({tempSeoData.title.length}/60 characters)</span>
-              </label>
-              <input
-                id="seo-title"
-                type="text"
-                value={tempSeoData.title}
-                onChange={(e) => setTempSeoData(prev => ({ ...prev, title: e.target.value }))}
-                placeholder="Enter Meta title (recommended: 50-60 characters)"
-                className="w-full px-3 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 transition-colors"
-                maxLength={60}
-              />
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                This title will appear in search engine results and browser tabs
-              </p>
-            </div>
+              {/* Author */}
+              <div>
+                <label htmlFor="modal-author" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Author <span className="text-red-500">*</span>
+                </label>
+                <input
+                  id="modal-author"
+                  type="text"
+                  value={tempMetadata.author}
+                  onChange={(e) => setTempMetadata(prev => ({ ...prev, author: e.target.value }))}
+                  placeholder="Enter author name..."
+                  className="w-full px-3 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 transition-colors"
+                />
+              </div>
 
-            {/* SEO Description */}
-            <div className="mb-4">
-              <label htmlFor="seo-description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Meta Description <span className="text-gray-500">({tempSeoData.description.length}/160 characters)</span>
-              </label>
-              <textarea
-                id="seo-description"
-                value={tempSeoData.description}
-                onChange={(e) => setTempSeoData(prev => ({ ...prev, description: e.target.value }))}
-                placeholder="Enter Meta description (recommended: 150-160 characters)"
-                rows={3}
-                className="w-full px-3 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 transition-colors resize-none"
-                maxLength={160}
-              />
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                This description will appear in search engine results under your title
-              </p>
-            </div>
+              {/* Status */}
+              <div className="dropdown-container">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Status <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <button
+                    onClick={() => setStatusDropdownOpen(!statusDropdownOpen)}
+                    className="w-full px-3 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none text-gray-900 dark:text-gray-100 transition-colors text-left flex items-center justify-between"
+                  >
+                    <span>{statusOptions.find(option => option.value === tempMetadata.status)?.label || 'Select Status'}</span>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  {statusDropdownOpen && (
+                    <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg">
+                      {statusOptions.map((option) => (
+                        <button
+                          key={option.value}
+                          onClick={() => {
+                            setTempMetadata(prev => ({ ...prev, status: option.value as any }));
+                            setStatusDropdownOpen(false);
+                          }}
+                          className="w-full px-3 py-2 text-left text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 first:rounded-t-lg last:rounded-b-lg"
+                        >
+                          <div>
+                            <div className="font-medium">{option.label}</div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">{option.description}</div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
 
-            {/* Keywords */}
-            <div className="mb-4">
-              <label htmlFor="seo-keywords" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Keywords 
-              </label>
-              <input
-                id="seo-keywords"
-                type="text"
-                value={tempSeoData.keywords}
-                onChange={(e) => setTempSeoData(prev => ({ ...prev, keywords: e.target.value }))}
-                placeholder="Enter keywords separated by commas (e.g., react, javascript, web development)"
-                className="w-full px-3 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 transition-colors"
-              />
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                Add relevant keywords to help search engines understand your content
-              </p>
-            </div>
+              {/* Date Posted */}
+              <div>
+                <label htmlFor="modal-publish-date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Date Posted <span className="text-red-500">*</span>
+                </label>
+                <input
+                  id="modal-publish-date"
+                  type="datetime-local"
+                  value={tempMetadata.publishDate ? new Date(tempMetadata.publishDate).toISOString().slice(0, 16) : ''}
+                  onChange={(e) => setTempMetadata(prev => ({ ...prev, publishDate: e.target.value ? new Date(e.target.value).toISOString() : '' }))}
+                  className="w-full px-3 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none text-gray-900 dark:text-gray-100 transition-colors"
+                />
+              </div>
 
-            {/* SEO Best Practices */}
-            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-              <div className="flex items-start">
-                <svg className="w-5 h-5 text-blue-500 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                </svg>
-                <div className="flex-1">
-                  <h4 className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-2">SEO Best Practices</h4>
-                  <ul className="text-xs text-blue-800 dark:text-blue-200 space-y-1">
-                    <li>• Keep titles under 60 characters for optimal display</li>
-                    <li>• Write descriptions between 150-160 characters</li>
-                    <li>• Use descriptive, relevant keywords naturally</li>
-                    <li>• Make titles and descriptions compelling for users</li>
-                  </ul>
+              {/* Categories */}
+              <div className="dropdown-container">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Categories <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <button
+                    onClick={() => setCategoriesDropdownOpen(!categoriesDropdownOpen)}
+                    className="w-full px-3 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none text-gray-900 dark:text-gray-100 transition-colors text-left flex items-center justify-between"
+                  >
+                    <span>
+                      {tempMetadata.categories ? 
+                        categoryOptions.find(cat => cat.value === tempMetadata.categories)?.text || 'Select Category' 
+                        : 'Select Category'
+                      }
+                    </span>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  {categoriesDropdownOpen && (
+                    <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                      <div className="p-2">
+                        <input
+                          type="text"
+                          placeholder="Search categories..."
+                          value={categoriesSearchTerm}
+                          onChange={(e) => setCategoriesSearchTerm(e.target.value)}
+                          className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                        />
+                      </div>
+                      {filteredCategories.map((category) => (
+                        <button
+                          key={category.value}
+                          onClick={() => {
+                            setTempMetadata(prev => ({ ...prev, categories: category.value }));
+                            setCategoriesDropdownOpen(false);
+                          }}
+                          className="w-full px-3 py-2 text-left text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700"
+                        >
+                          {category.text}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Tags */}
+              <div className="dropdown-container">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Tags <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <button
+                    onClick={() => setTagsDropdownOpen(!tagsDropdownOpen)}
+                    className="w-full px-3 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none text-gray-900 dark:text-gray-100 transition-colors text-left flex items-center justify-between"
+                  >
+                    <span>
+                      {tempMetadata.tags.length > 0 
+                        ? `${tempMetadata.tags.length} tag(s) selected`
+                        : 'Select Tags'
+                      }
+                    </span>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  {tagsDropdownOpen && (
+                    <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                      <div className="p-2">
+                        <input
+                          type="text"
+                          placeholder="Search tags..."
+                          value={tagsSearchTerm}
+                          onChange={(e) => setTagsSearchTerm(e.target.value)}
+                          className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                        />
+                      </div>
+                      {filteredTags.map((tag) => (
+                        <label
+                          key={tag.value}
+                          className="flex items-center px-3 py-2 text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={tempMetadata.tags.includes(tag.value)}
+                            onChange={(e) => {
+                              const isChecked = e.target.checked;
+                              setTempMetadata(prev => ({
+                                ...prev,
+                                tags: isChecked
+                                  ? [...prev.tags, tag.value]
+                                  : prev.tags.filter(t => t !== tag.value)
+                              }));
+                            }}
+                            className="mr-2"
+                          />
+                          {tag.text}
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                {tempMetadata.tags.length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {tempMetadata.tags.map((tagId) => {
+                      const tag = tagOptions.find(t => t.value === tagId);
+                      return tag ? (
+                        <span
+                          key={tagId}
+                          className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                        >
+                          {tag.text}
+                          <button
+                            onClick={() => setTempMetadata(prev => ({
+                              ...prev,
+                              tags: prev.tags.filter(t => t !== tagId)
+                            }))}
+                            className="ml-1 text-blue-600 hover:text-blue-800 dark:text-blue-300 dark:hover:text-blue-100"
+                          >
+                            ×
+                          </button>
+                        </span>
+                      ) : null;
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* Featured Image */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Featured Image <span className="text-red-500">*</span>
+                </label>
+                <div className="flex items-center space-x-3">
+                  <button
+                    onClick={() => imageGalleryModal.openModal()}
+                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+                  >
+                    Choose Image
+                  </button>
+                  {tempMetadata.featuredImage && (
+                    <div className="flex items-center space-x-2">
+                      <img
+                        src={tempMetadata.featuredImage}
+                        alt="Featured"
+                        className="w-12 h-12 object-cover rounded-lg border border-gray-300 dark:border-gray-600"
+                      />
+                      <button
+                        onClick={() => setTempMetadata(prev => ({ ...prev, featuredImage: '' }))}
+                        className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-200"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
-          </div>
+          )}
+
+          {/* SEO Settings Tab Content */}
+          {activeTab === 'seo' && (
+            <div className="space-y-6">
+              <div className="mb-4">
+                <div className="flex items-center mb-4">
+                  <svg className="w-5 h-5 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                  <h3 className="text-lg font-semibold">SEO Settings</h3>
+                </div>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Optimize your content for search engines by adding meta information
+                </p>
+              </div>
+
+              {/* SEO Title */}
+              <div>
+                <label htmlFor="seo-title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Meta title <span className="text-gray-500">({tempSeoData.title.length}/60 characters)</span>
+                </label>
+                <input
+                  id="seo-title"
+                  type="text"
+                  value={tempSeoData.title}
+                  onChange={(e) => setTempSeoData(prev => ({ ...prev, title: e.target.value }))}
+                  placeholder="Enter Meta title (recommended: 50-60 characters)"
+                  className="w-full px-3 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 transition-colors"
+                  maxLength={60}
+                />
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  This title will appear in search engine results and browser tabs
+                </p>
+              </div>
+
+              {/* SEO Description */}
+              <div>
+                <label htmlFor="seo-description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Meta Description <span className="text-gray-500">({tempSeoData.description.length}/160 characters)</span>
+                </label>
+                <textarea
+                  id="seo-description"
+                  value={tempSeoData.description}
+                  onChange={(e) => setTempSeoData(prev => ({ ...prev, description: e.target.value }))}
+                  placeholder="Enter Meta description (recommended: 150-160 characters)"
+                  rows={3}
+                  className="w-full px-3 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 transition-colors resize-none"
+                  maxLength={160}
+                />
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  This description will appear in search engine results under your title
+                </p>
+              </div>
+
+              {/* Keywords */}
+              <div>
+                <label htmlFor="seo-keywords" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Keywords 
+                </label>
+                <input
+                  id="seo-keywords"
+                  type="text"
+                  value={tempSeoData.keywords}
+                  onChange={(e) => setTempSeoData(prev => ({ ...prev, keywords: e.target.value }))}
+                  placeholder="Enter keywords separated by commas (e.g., react, javascript, web development)"
+                  className="w-full px-3 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 transition-colors"
+                />
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  Add relevant keywords to help search engines understand your content
+                </p>
+              </div>
+
+              {/* SEO Best Practices */}
+              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                <div className="flex items-start">
+                  <svg className="w-5 h-5 text-blue-500 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                  </svg>
+                  <div className="flex-1">
+                    <h4 className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-2">SEO Best Practices</h4>
+                    <ul className="text-xs text-blue-800 dark:text-blue-200 space-y-1">
+                      <li>• Keep titles under 60 characters for optimal display</li>
+                      <li>• Write descriptions between 150-160 characters</li>
+                      <li>• Use descriptive, relevant keywords naturally</li>
+                      <li>• Make titles and descriptions compelling for users</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="flex justify-end space-x-3 mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
             <Button
               variant="secondary"
-              onClick={handleTitleCancel}
+              onClick={cancelTitleModal}
               className="px-4 py-2"
             >
               Cancel
             </Button>
             <Button
-              onClick={handleTitleSave}
-              className="px-4 py-2"
+              onClick={saveTitleModal}
+              disabled={!tempTitle.trim() || !tempMetadata.author.trim() || !tempMetadata.categories || tempMetadata.tags.length === 0 || !tempMetadata.featuredImage}
+              className="px-4 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Save Changes
             </Button>
