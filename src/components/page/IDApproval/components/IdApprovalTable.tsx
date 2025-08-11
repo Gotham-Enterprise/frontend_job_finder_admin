@@ -73,7 +73,7 @@ const IdApprovalTable: FC<Props> = ({ data, isLoading, tableColumns, setSelected
                 <TableCell className="text-gray-900 py-6 px-4 text-right">
                   <Button 
                     variant="ghost" 
-                    className="text-gray-900 text-sm"
+                    className="inline-flex items-center justify-center font-medium gap-2 transition text-brand-400 h-[45px] w-[100px] rounded-sm px-3 text-xs  "
                     onClick={() => setSelected(row)}
                     startIcon={<EyeIcon />}
                   >

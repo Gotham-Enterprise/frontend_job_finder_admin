@@ -42,8 +42,8 @@ const IdApprovalHeader: FC<Props> = ({ totalCount, isLoading, filters,onFilterCh
         </div>
       </div>
 
-      <div className="mt-4 flex flex-row justify-between">
-        <div className="relative min-w-xl">
+      <div className="mt-4 flex flex-row justify-between gap-2">
+        <div className="relative min-w-xl md:min-w-md">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <SearchIcon className="h-4 w-4" />
           </div>
@@ -68,7 +68,7 @@ const IdApprovalHeader: FC<Props> = ({ totalCount, isLoading, filters,onFilterCh
             </div>
           )}
         </div>
-        <div>
+        <div  className="w-sm">
           <Select
             value={filters.status || ''}
             options={[
@@ -78,7 +78,7 @@ const IdApprovalHeader: FC<Props> = ({ totalCount, isLoading, filters,onFilterCh
             ]}
             placeholder="Filter by status"
             onChange={(value) => onFilterChange('status', value)}
-            className="w-sm"
+
           />
         </div>
       </div>
