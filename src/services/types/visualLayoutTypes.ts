@@ -329,7 +329,7 @@ export const BLOCK_TEMPLATES: Record<BlockType, Partial<LayoutBlock>> = {
   list: {
     type: 'list',
     content: {
-      items: ['First item', 'Second item', 'Third item'],
+      items: ['', '', ''],
       ordered: false,
     },
     styles: {
@@ -588,7 +588,9 @@ export const convertLayoutToHtml = (layout: BlogLayout): string => {
       case 'list':
         const listBlock = block as ListBlock;
         const listTag = listBlock.content.ordered ? 'ol' : 'ul';
-        const listItems = listBlock.content.items.map(item => `<li>${item}</li>`).join('');
+        const listItems = listBlock.content.items
+          .map((item, index) => `<li>${item.trim() === '' ? `Item ${index + 1}` : item}</li>`)
+          .join('');
         return `<${listTag}${styleAttr}>${listItems}</${listTag}>`;
       
       case 'code':

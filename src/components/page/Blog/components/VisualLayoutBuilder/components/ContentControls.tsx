@@ -55,7 +55,7 @@ const ContentControls: React.FC<ContentControlsProps> = memo(({
   const isListOrdered = (block.content as any)?.ordered || false;
 
   const addListItem = useCallback(() => {
-    const newItems = [...listItems, `Item ${listItems.length + 1}`];
+    const newItems = [...listItems, ''];
     onContentUpdate('items', newItems);
   }, [listItems, onContentUpdate]);
 
@@ -389,7 +389,7 @@ const ContentControls: React.FC<ContentControlsProps> = memo(({
                 <div key={index} className="flex items-center gap-2">
                   <input
                     type="text"
-                    value={item}
+                    value={item.startsWith('Item ') && /^Item \d+$/.test(item) ? '' : item}
                     onChange={(e) => updateListItem(index, e.target.value)}
                     placeholder={`Item ${index + 1}`}
                     className="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 placeholder-gray-400 focus:border-purple-400 focus:outline-none focus:ring-1 focus:ring-purple-100 transition-all"

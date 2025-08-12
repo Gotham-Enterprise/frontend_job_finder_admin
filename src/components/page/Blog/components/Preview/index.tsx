@@ -318,8 +318,10 @@ const BlogContentRenderer: React.FC<BlogContentRendererProps> = ({ content }) =>
             {blockContent?.items?.map((item: string, index: number) => (
               <li 
                 key={index} 
-                className="text-gray-800"
-                dangerouslySetInnerHTML={{ __html: item }}
+                className={item.trim() === '' ? "text-gray-400 italic" : "text-gray-800"}
+                dangerouslySetInnerHTML={{ 
+                  __html: item.trim() === '' ? `Item ${index + 1}` : item 
+                }}
               />
             ))}
           </ListTag>
