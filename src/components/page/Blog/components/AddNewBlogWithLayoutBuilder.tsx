@@ -633,7 +633,7 @@ export default function AddNewBlogWithLayoutBuilder() {
   return (
     <>
       <div className="fixed inset-0 z-50 bg-gray-50 dark:bg-gray-900">
-        <div className="h-16 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between px-6">
+        <div className="h-16 bg-white mr-auto dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between px-6">
           <div className="flex items-center space-x-4">
             <Button
               onClick={() => router.push('/admin/blog')}
@@ -646,8 +646,6 @@ export default function AddNewBlogWithLayoutBuilder() {
               </svg>
               Back
             </Button>
-
-            
             <div className="flex items-center space-x-6">
               <div className="ml-4 flex items-center space-x-3">
                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">
@@ -676,7 +674,8 @@ export default function AddNewBlogWithLayoutBuilder() {
 
              
           </div>
-          <div className="flex items-center space-x-3">
+        </div>
+         <div className="flex items-center space-x-3">
             <Button
               onClick={() => saveBlog()}
               disabled={!canSave}
@@ -685,7 +684,6 @@ export default function AddNewBlogWithLayoutBuilder() {
               Publish
             </Button>
           </div>
-        </div>
         </div>
         
         <div className="h-[calc(100vh-64px)] flex">
