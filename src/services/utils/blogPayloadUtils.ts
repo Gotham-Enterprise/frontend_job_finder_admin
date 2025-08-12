@@ -67,6 +67,7 @@ export interface BlogMetadata {
   seoDescription: string;
   allowComments: boolean;
   allowPings: boolean;
+  author: string;
 }
 
 export interface LayoutBlock {
@@ -232,8 +233,8 @@ export function transformBlogDataForAPI(
       },
       author: {
         id: user?.id || 'guest-user',
-        name: userDisplayName || 'Guest User',
-        email: user?.email || 'guest@example.com'
+        name: metadata.author || userDisplayName || 'Gotham',
+        email: user?.email || 'support@gothamenterprisesltd.com'
       }
     },
     analytics
@@ -258,7 +259,7 @@ export function validateBlogData(data: BlogCreatePayload): { isValid: boolean; e
     errors.push('Content is required');
   }
 
-  if (!data.metadata.author.id) {
+  if (!data.metadata.author.name) {
     errors.push('Author information is required');
   }
 

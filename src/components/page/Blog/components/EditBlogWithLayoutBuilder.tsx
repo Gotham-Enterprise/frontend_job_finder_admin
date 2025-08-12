@@ -102,7 +102,6 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
 
   const titleModal = useModal();
   const imageGalleryModal = useModal();
-  const [tempTitle, setTempTitle] = useState('');
   const [tempSeoData, setTempSeoData] = useState({
     title: '',
     description: '',
@@ -125,6 +124,7 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
     seoDescription: '',
     allowComments: true,
     allowPings: true,
+    author: '', // Will be set from blog data
   });
   
   const [seoData, setSeoData] = useState({
@@ -156,6 +156,7 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
     seoDescription: '',
     allowComments: true,
     allowPings: true,
+    author: '',
   });
   const [currentLayout, setCurrentLayout] = useState<BlogLayout>(createEmptyBlogLayout());
 
@@ -187,7 +188,19 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
           seoDescription: blogResponse.metadata?.seo?.description || blogResponse.seo?.description || blogResponse.excerpt || '',
           allowComments: true,
           allowPings: true,
-          featuredImage: blogResponse.featuredImage || ''
+          featuredImage: blogResponse.featuredImage || '',
+          author: (() => {
+            const metadataAuthor = blogResponse.metadata?.author;
+            if (metadataAuthor) {
+              return metadataAuthor.name || `${metadataAuthor.firstName || ''} ${metadataAuthor.lastName || ''}`.trim() || 'Unknown Author';
+            }
+            if (typeof blogResponse.author === 'string') {
+              return blogResponse.author;
+            } else if (blogResponse.author && typeof blogResponse.author === 'object') {
+              return blogResponse.author.name || 'Unknown Author';
+            }
+            return 'No Author';
+          })()
         });
         
  
@@ -426,7 +439,6 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
     }
   }, []);
   const handleOpenTitleModal = useCallback(() => {
-    setTempTitle(metadata.title);
     setTempSeoData({
       title: seoData.title,
       description: seoData.description,
@@ -444,6 +456,7 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
     updateMetadataField('title', tempMetadata.title);
     updateMetadataField('seoTitle', tempSeoData.title);
     updateMetadataField('seoDescription', tempSeoData.description);
+    updateMetadataField('author', tempMetadata.author);
     
     // Update SEO data
     setSeoData(tempSeoData);
@@ -517,6 +530,7 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
     try {
       console.log('=== DEBUG: Generating edit blog payload ===');
       console.log('Blog metadata:', metadata);
+      console.log('Blog metadata.author:', metadata.author);
       console.log('Blog metadata.subCategories:', metadata.subCategories);
       console.log('Current layout blocks:', currentLayout.blocks);
       console.log('Category options:', categoryOptions);
@@ -533,6 +547,7 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
 
       console.log('=== DEBUG: Generated edit payload ===');
       console.log('Full payload:', JSON.stringify(payload, null, 2));
+      console.log('Payload author:', payload.metadata.author);
 
       const validation = validateBlogData(payload);
       console.log('=== DEBUG: Validation result ===');
@@ -717,11 +732,26 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
                 <input
                   id="modal-blog-title"
                   type="text"
-                  value={tempTitle}
-                  onChange={(e) => setTempTitle(e.target.value)}
+                  value={tempMetadata.title}
+                  onChange={(e) => setTempMetadata(prev => ({ ...prev, title: e.target.value }))}
                   placeholder="Enter your blog title..."
                   className="w-full px-3 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 transition-colors"
                   autoFocus
+                />
+              </div>
+
+              {/* Author */}
+              <div>
+                <label htmlFor="modal-author" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Author <span className="text-red-500">*</span>
+                </label>
+                <input
+                  id="modal-author"
+                  type="text"
+                  value={tempMetadata.author}
+                  onChange={(e) => setTempMetadata(prev => ({ ...prev, author: e.target.value }))}
+                  placeholder="Enter author name..."
+                  className="w-full px-3 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 transition-colors"
                 />
               </div>
 
