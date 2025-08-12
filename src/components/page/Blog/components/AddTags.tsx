@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import { useModal } from "@/hooks/useModal";
 import { useTags, useCreateTag, useBulkDeleteTags } from "@/services/hooks/useTags";
 import { NewTag } from "@/services/api/tag";
@@ -19,29 +19,25 @@ export default function AddTags() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isSlugManuallyEdited, setIsSlugManuallyEdited] = useState(false);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(20);
 
   const editModal = useModal();
   const confirmation = useConfirmation();
 
-  const { data: tagsResponse, isLoading, error, refetch } = useTags();
+  const filters = {
+    ...(searchTerm && { keywords: searchTerm }),
+    page: currentPage,
+    limit: itemsPerPage
+  };
+
+  const { data: tagsResponse, isLoading, error, refetch } = useTags(filters);
   const createTagMutation = useCreateTag();
   const bulkDeleteMutation = useBulkDeleteTags();
 
   const tags = tagsResponse?.data || [];
+  const metaData = tagsResponse?.metaData;
   const isCreating = createTagMutation.isPending;
-
-  const filteredTags = useMemo(() => {
-    return tags.filter(tag =>
-      tag.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      tag.description.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [tags, searchTerm]);
-
-  const sortedTags = useMemo(() => {
-    return [...filteredTags].sort((a, b) => 
-      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
-  }, [filteredTags]);
 
   const initInputChange = (field: keyof NewTag, value: string) => {
     setNewTag(prev => {
@@ -79,7 +75,7 @@ export default function AddTags() {
 
   const deleteTag = async (tagIds: string[]) => {
     const tagNames = tagIds.map(id => {
-      const tag = sortedTags.find(t => t.id === id);
+      const tag = tags.find(t => t.id === id);
       return tag?.name || 'unknown';
     }).join(', ');
     
@@ -116,7 +112,7 @@ export default function AddTags() {
 
   const selectAll = (selected: boolean) => {
     if (selected) {
-      setSelectedTags(sortedTags.map(tag => tag.id));
+      setSelectedTags(tags.map(tag => tag.id));
     } else {
       setSelectedTags([]);
     }
@@ -124,6 +120,20 @@ export default function AddTags() {
 
   const clearSelection = () => {
     setSelectedTags([]);
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const handleItemsPerPageChange = (newItemsPerPage: number) => {
+    setItemsPerPage(newItemsPerPage);
+    setCurrentPage(1);
+  };
+
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value);
+    setCurrentPage(1);
   };
 
   const bulkDeleteTags = async () => {
@@ -195,9 +205,9 @@ export default function AddTags() {
         
         <div className="lg:col-span-2">
           <TagList
-            tags={sortedTags}
+            tags={tags}
             searchTerm={searchTerm}
-            onSearchChange={setSearchTerm}
+            onSearchChange={handleSearchChange}
             onEditTag={editTag}
             onDeleteTag={deleteTag}
             isDeleting={bulkDeleteMutation.isPending}
@@ -208,6 +218,12 @@ export default function AddTags() {
             onBulkDelete={bulkDeleteTags}
             onClearSelection={clearSelection}
             isBulkDeleting={bulkDeleteMutation.isPending}
+            currentPage={currentPage}
+            totalPages={metaData?.totalPages || 1}
+            onPageChange={handlePageChange}
+            itemsPerPage={itemsPerPage}
+            onItemsPerPageChange={handleItemsPerPageChange}
+            metaData={metaData}
           />
         </div>
       </div>

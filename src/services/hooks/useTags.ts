@@ -8,10 +8,10 @@ export const tagQueryKeys = {
   dropdown: () => [...tagQueryKeys.all, 'dropdown'] as const,
 };
 
-export const useTags = () => {
+export const useTags = (filters?: { keywords?: string; page?: number; limit?: number }) => {
   return useQuery({
-    queryKey: tagQueryKeys.list(),
-    queryFn: () => tagApi.getTags(),
+    queryKey: [...tagQueryKeys.list(), filters ? JSON.stringify(filters) : 'all'],
+    queryFn: () => tagApi.getTags(filters),
     staleTime: 1000 * 60 * 5,
     retry: (failureCount, error: Error) => {
       if (error.message.includes('HTTP 401')) {

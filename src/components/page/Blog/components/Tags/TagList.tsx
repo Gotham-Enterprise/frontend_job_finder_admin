@@ -3,6 +3,7 @@ import React from "react";
 import Input from "@/components/form/input/InputField";
 import Checkbox from "@/components/form/input/Checkbox";
 import { Table, TableHeader, TableBody, TableRow, TableCell } from "@/components/ui/table";
+import Pagination from "@/components/tables/Pagination";
 import BulkActionDropdown from "@/components/ui/BulkActionDropdown";
 import { Tag } from "@/services/api/tag";
 import Button from '../../../../ui/button/Button';
@@ -23,6 +24,20 @@ interface TagListProps {
   onClearSelection?: () => void;
   isBulkDeleting?: boolean;
   deletingTagIds?: string[];
+  currentPage?: number;
+  totalPages?: number;
+  onPageChange?: (page: number) => void;
+  itemsPerPage?: number;
+  onItemsPerPageChange?: (itemsPerPage: number) => void;
+  metaData?: {
+    page: number;
+    limit: number;
+    totalPages: number;
+    totalCount: number;
+    currentPageTotalItems: number;
+    hasNextPage: boolean;
+    hasPreviousPage: boolean;
+  };
 }
 
 const TagList: React.FC<TagListProps> = ({
@@ -38,7 +53,13 @@ const TagList: React.FC<TagListProps> = ({
   onBulkDelete,
   onClearSelection,
   isBulkDeleting = false,
-  deletingTagIds = []
+  deletingTagIds = [],
+  currentPage = 1,
+  totalPages = 1,
+  onPageChange,
+  itemsPerPage = 20,
+  onItemsPerPageChange,
+  metaData,
 }) => {
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -59,7 +80,7 @@ const TagList: React.FC<TagListProps> = ({
       <div className="p-6 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-            Tags ({tags.length})
+            Tags
           </h2>
         </div>
         
@@ -173,10 +194,46 @@ const TagList: React.FC<TagListProps> = ({
 
         {tags.length === 0 && (
           <div className="p-6 text-center">
-            <p className="text-gray-500 dark:text-gray-400">No tags found.</p>
+            <p className="text-gray-500 dark:text-gray-400">
+              {metaData?.totalCount === 0 ? 'No tags found.' : 'No tags on this page.'}
+            </p>
           </div>
         )}
       </div>
+
+      {metaData && metaData.totalCount > 0 && onPageChange && (
+        <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700">
+          <div className="flex items-center justify-between">
+          
+            <div className="flex items-center space-x-2">
+              <span className="text-sm text-gray-700 dark:text-gray-300">Items per page:</span>
+              <select
+                value={itemsPerPage}
+                onChange={(e) => onItemsPerPageChange?.(Number(e.target.value))}
+                className="rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-1 text-sm text-gray-900 dark:text-white focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+              >
+                <option value={5}>5</option>
+                <option value={10}>10</option>
+                <option value={20}>20</option>
+                <option value={50}>50</option>
+              </select>
+            </div>
+            
+            {/* Show pagination or item count */}
+            {metaData.totalPages > 1 ? (
+              <Pagination
+                currentPage={currentPage}
+                totalPages={metaData.totalPages}
+                onPageChange={onPageChange}
+              />
+            ) : (
+              <div className="text-sm text-gray-500 dark:text-gray-400">
+                Showing {((metaData.page - 1) * metaData.limit) + 1} to {Math.min(metaData.page * metaData.limit, metaData.totalCount)} of {metaData.totalCount} items
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
     </>
   );
