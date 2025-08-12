@@ -436,7 +436,7 @@ export default function AddNewBlogWithLayoutBuilder() {
         ...blogPayload,
         metadata: {
           ...blogPayload.metadata,
-          status: 'published'
+          status: tempMetadata.status
         }
       };
 
@@ -681,7 +681,7 @@ export default function AddNewBlogWithLayoutBuilder() {
               disabled={!canSave}
               className="px-4 py-2"
             >
-              Publish
+              {tempMetadata.status === 'draft' ? 'Save as Draft' : 'Publish'}
             </Button>
           </div>
         </div>
