@@ -18,9 +18,9 @@ const BlogTablePagination: React.FC<BlogTablePaginationProps> = ({
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center gap-4">
           <div className="text-sm text-gray-500 dark:text-gray-400">
-            Showing {((data.metaData.page - 1) * (filters.limit || 10)) + 1} to{' '}
-            {Math.min(data.metaData.page * (filters.limit || 10), data.metaData.totalCount)} of{' '}
-            {data.metaData.totalCount} results
+            Showing {((data.metaData.page - 1) * (filters.limit || 10)) + 1} of &nbsp;
+            {Math.min(data.metaData.page * (filters.limit || 10), data.metaData.totalCount)}
+             &nbsp;results
           </div>
         </div>
         

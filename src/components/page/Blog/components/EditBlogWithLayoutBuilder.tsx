@@ -281,10 +281,12 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
        
           setFullCategoriesData(response.data);
           
-          const transformedCategories: CategoryOption[] = response.data.map((category: CategoryWithSubCategories) => ({
-            value: category.id,
-            text: category.name
-          }));
+          const transformedCategories: CategoryOption[] = response.data
+            .map((category: CategoryWithSubCategories) => ({
+              value: category.id,
+              text: category.name
+            }))
+            .sort((a, b) => a.text.localeCompare(b.text)); // Sort alphabetically
           setCategoryOptions(transformedCategories);
         }
       } catch (error) {
@@ -303,10 +305,12 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
       try {
         const response = await tagApi.getTags();
         if (response.success && response.data) {
-          const tagOptions = response.data.map(tag => ({
-            value: tag.id,
-            text: tag.name
-          }));
+          const tagOptions = response.data
+            .map(tag => ({
+              value: tag.id,
+              text: tag.name
+            }))
+            .sort((a, b) => a.text.localeCompare(b.text)); // Sort alphabetically
           setTagOptions(tagOptions);
         }
       } catch (error) {
@@ -355,7 +359,8 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
         const response = await blogApi.getSubCategories(selectedCategory.text);
         
         if (response.success && response.data) {
-          setSubCategoryOptions(response.data);
+          const sortedSubCategories = response.data.sort((a: any, b: any) => a.name.localeCompare(b.name));
+          setSubCategoryOptions(sortedSubCategories);
         } else {
           setSubCategoryOptions([]);
         }
@@ -397,9 +402,12 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
 
 
   const filteredCategories = useMemo(() => 
-    categoryOptions.filter(category =>
-      category.text.toLowerCase().includes(categoriesSearchTerm.toLowerCase())
-    ), [categoryOptions, categoriesSearchTerm]
+    categoryOptions
+      .filter(category =>
+        category.text.toLowerCase().includes(categoriesSearchTerm.toLowerCase())
+      )
+      .sort((a, b) => a.text.localeCompare(b.text)), // Sort alphabetically
+    [categoryOptions, categoriesSearchTerm]
   );
 
   const filteredSubCategories = useMemo(() => {
@@ -408,15 +416,20 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
     const selectedCategory = fullCategoriesData.find(cat => cat.id === tempMetadata.categories);
     if (!selectedCategory?.subCategories) return [];
     
-    return selectedCategory.subCategories.filter(sub =>
-      sub.name.toLowerCase().includes(subCategoriesSearchTerm.toLowerCase())
-    );
+    return selectedCategory.subCategories
+      .filter(sub =>
+        sub.name.toLowerCase().includes(subCategoriesSearchTerm.toLowerCase())
+      )
+      .sort((a, b) => a.name.localeCompare(b.name)); // Sort alphabetically
   }, [fullCategoriesData, tempMetadata.categories, subCategoriesSearchTerm]);
 
   const filteredTags = useMemo(() => 
-    tagOptions.filter(tag =>
-      tag.text.toLowerCase().includes(tagsSearchTerm.toLowerCase())
-    ), [tagOptions, tagsSearchTerm]
+    tagOptions
+      .filter(tag =>
+        tag.text.toLowerCase().includes(tagsSearchTerm.toLowerCase())
+      )
+      .sort((a, b) => a.text.localeCompare(b.text)), // Sort alphabetically
+    [tagOptions, tagsSearchTerm]
   );
 
   const toggleSection = useCallback((section: keyof typeof expandedSections) => {

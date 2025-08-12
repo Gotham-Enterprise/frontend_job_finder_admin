@@ -184,11 +184,13 @@ export default function AddNewBlogWithLayoutBuilder() {
           // Store the full categories data with subcategories
           setFullCategoriesData(response.data);
           
-          const transformedCategories: CategoryOption[] = response.data.map((category: CategoryWithSubCategories) => ({
-            value: category.id,
-            text: category.name,
-            selected: false
-          }));
+          const transformedCategories: CategoryOption[] = response.data
+            .map((category: CategoryWithSubCategories) => ({
+              value: category.id,
+              text: category.name,
+              selected: false
+            }))
+            .sort((a, b) => a.text.localeCompare(b.text)); // Sort alphabetically
           
           setCategoryOptions(transformedCategories);
         }
@@ -211,11 +213,13 @@ export default function AddNewBlogWithLayoutBuilder() {
         
         if (response.success && response.data) {
    
-          const transformedTags: TagOption[] = response.data.map((tag) => ({
-            value: tag.id,
-            text: tag.name,
-            selected: false
-          }));
+          const transformedTags: TagOption[] = response.data
+            .map((tag) => ({
+              value: tag.id,
+              text: tag.name,
+              selected: false
+            }))
+            .sort((a, b) => a.text.localeCompare(b.text)); // Sort alphabetically
           
           setTagOptions(transformedTags);
         }
@@ -251,7 +255,8 @@ export default function AddNewBlogWithLayoutBuilder() {
         const response = await blogApi.getSubCategories(selectedCategory.text);
         
         if (response.success && response.data) {
-          setSubCategoryOptions(response.data);
+          const sortedSubCategories = response.data.sort((a: any, b: any) => a.name.localeCompare(b.name));
+          setSubCategoryOptions(sortedSubCategories);
         } else {
           setSubCategoryOptions([]);
         }
@@ -296,7 +301,8 @@ export default function AddNewBlogWithLayoutBuilder() {
         
         if (response.success && response.data) {
           console.log('Setting subcategory options:', response.data);
-          setSubCategoryOptions(response.data);
+          const sortedSubCategories = response.data.sort((a: any, b: any) => a.name.localeCompare(b.name));
+          setSubCategoryOptions(sortedSubCategories);
         } else {
           console.log('No subcategories found or API error');
           setSubCategoryOptions([]);
@@ -344,23 +350,31 @@ export default function AddNewBlogWithLayoutBuilder() {
   const imageGalleryModal = useModal();
 
   const filteredCategories = useMemo(() => 
-    categoryOptions.filter(category =>
-      category.text.toLowerCase().includes(categoriesSearchTerm.toLowerCase())
-    ), [categoryOptions, categoriesSearchTerm]
+    categoryOptions
+      .filter(category =>
+        category.text.toLowerCase().includes(categoriesSearchTerm.toLowerCase())
+      )
+      .sort((a, b) => a.text.localeCompare(b.text)), // Sort alphabetically
+    [categoryOptions, categoriesSearchTerm]
   );
 
   const filteredSubCategories = useMemo(() => {
     if (!subCategoryOptions || subCategoryOptions.length === 0) return [];
     
-    return subCategoryOptions.filter(subCat =>
-      subCat.name.toLowerCase().includes(subCategoriesSearchTerm.toLowerCase())
-    );
+    return subCategoryOptions
+      .filter(subCat =>
+        subCat.name.toLowerCase().includes(subCategoriesSearchTerm.toLowerCase())
+      )
+      .sort((a, b) => a.name.localeCompare(b.name)); // Sort alphabetically
   }, [subCategoryOptions, subCategoriesSearchTerm]);
 
   const filteredTags = useMemo(() => 
-    tagOptions.filter(tag =>
-      tag.text.toLowerCase().includes(tagsSearchTerm.toLowerCase())
-    ), [tagOptions, tagsSearchTerm]
+    tagOptions
+      .filter(tag =>
+        tag.text.toLowerCase().includes(tagsSearchTerm.toLowerCase())
+      )
+      .sort((a, b) => a.text.localeCompare(b.text)), // Sort alphabetically
+    [tagOptions, tagsSearchTerm]
   );
 
   const transformedLayoutData = useMemo(() => {
