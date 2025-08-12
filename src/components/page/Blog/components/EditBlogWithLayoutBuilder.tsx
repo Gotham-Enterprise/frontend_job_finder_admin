@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback, useEffect, useMemo } from 'react';
+import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Modal } from "@/components/ui/modal";
 import { useModal } from "@/hooks/useModal";
@@ -11,6 +11,14 @@ import VisualLayoutBuilder from "./VisualLayoutBuilder/VisualLayoutBuilder";
 import FloatingElementsPanel from "./VisualLayoutBuilder/components/FloatingElementsPanel";
 import ImageGalleryModal from "./VisualLayoutBuilder/components/ImageGalleryModal";
 import BlogDropdown from "./BlogDropdown";
+import { authUtils } from '@/services/utils/authUtils';
+import { 
+  transformBlogDataForAPI, 
+  validateBlogData, 
+  BlogCreatePayload,
+  BlogMetadata 
+} from '@/services/utils/blogPayloadUtils';
+import { CategoryWithSubCategories } from '@/services/types/subCategoryTypes';
 import { blogApi } from "@/services/api/blog";
 import { tagApi } from '@/services/api/tag';
 import { useUpdateBlogPost } from '@/services/hooks/useBlog';
@@ -79,6 +87,18 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
   const [categoriesSearchTerm, setCategoriesSearchTerm] = useState('');
   const [tagsSearchTerm, setTagsSearchTerm] = useState('');
   
+  // Additional state for subcategories
+  const [fullCategoriesData, setFullCategoriesData] = useState<CategoryWithSubCategories[]>([]);
+  const [subCategoryOptions, setSubCategoryOptions] = useState<{ id: string; name: string }[]>([]);
+  const [subCategoriesLoading, setSubCategoriesLoading] = useState(false);
+  const [subCategoriesDropdownOpen, setSubCategoriesDropdownOpen] = useState(false);
+  const [subCategoriesSearchTerm, setSubCategoriesSearchTerm] = useState('');
+  
+  // Refs for click outside handling
+  const subCategoriesDropdownRef = useRef<HTMLDivElement>(null);
+
+  const [activeTab, setActiveTab] = useState<'general' | 'seo'>('general');
+  
 
   const titleModal = useModal();
   const imageGalleryModal = useModal();
@@ -87,6 +107,24 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
     title: '',
     description: '',
     keywords: ''
+  });
+  
+  const [tempMetadata, setTempMetadata] = useState<BlogMetadata>({
+    title: '',
+    permalink: '',
+    excerpt: '',
+    status: 'draft',
+    visibility: 'public',
+    password: '',
+    publishDate: new Date().toISOString(),
+    categories: '',
+    subCategories: [],
+    tags: [],
+    featuredImage: '',
+    seoTitle: '',
+    seoDescription: '',
+    allowComments: true,
+    allowPings: true,
   });
   
   const [seoData, setSeoData] = useState({
@@ -102,21 +140,22 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
     seo: false,
     settings: false,
   });
-  const [metadata, setMetadata] = useState({
+  const [metadata, setMetadata] = useState<BlogMetadata>({
     title: '',
-    slug: '',
+    permalink: '',
     excerpt: '',
     status: 'draft',
-    permalink: '',
-    visibility: 'public' as 'public' | 'private' | 'password',
+    visibility: 'public',
+    password: '',
     publishDate: new Date().toISOString(),
-    categories: null as { id: string; name: string } | null,
-    tags: [] as { id: string; name: string }[],
+    categories: '',
+    subCategories: [],
+    tags: [],
+    featuredImage: '',
     seoTitle: '',
     seoDescription: '',
     allowComments: true,
     allowPings: true,
-    featuredImage: ''
   });
   const [currentLayout, setCurrentLayout] = useState<BlogLayout>(createEmptyBlogLayout());
 
@@ -135,18 +174,15 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
               
         setMetadata({
           title: blogResponse.title || '',
-          slug: blogResponse.slug || '',
           excerpt: blogResponse.excerpt || '',
           status: blogResponse.metadata?.status || blogResponse.status || 'draft',
           permalink: blogResponse.slug || '',
           visibility: blogResponse.metadata?.visibility || blogResponse.visibility || 'public',
           publishDate: blogResponse.metadata?.publishDate || blogResponse.publishedDate || new Date().toISOString(),
-          categories: blogResponse.metadata?.categories?.[0] ? { 
-            id: blogResponse.metadata.categories[0].id, 
-            name: blogResponse.metadata.categories[0].name 
-          } : (blogResponse.category ? { id: blogResponse.category.id, name: blogResponse.category.name } : null),
-          tags: blogResponse.metadata?.tags?.map((tag: any) => ({ id: tag.id, name: tag.name })) || 
-                blogResponse.tags?.map((tag: any) => ({ id: tag.id, name: tag.name })) || [],
+          categories: blogResponse.metadata?.categories?.[0]?.id || blogResponse.category?.id || '',
+          subCategories: blogResponse.metadata?.categories?.[0]?.subCategory?.map((sub: any) => sub.id) || [],
+          tags: blogResponse.metadata?.tags?.map((tag: any) => tag.id) || 
+                blogResponse.tags?.map((tag: any) => tag.id) || [],
           seoTitle: blogResponse.metadata?.seo?.title || blogResponse.seo?.title || blogResponse.title || '',
           seoDescription: blogResponse.metadata?.seo?.description || blogResponse.seo?.description || blogResponse.excerpt || '',
           allowComments: true,
@@ -224,11 +260,14 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
       try {
         const response = await blogApi.getCategoriesForDropdown();
         if (response.success && response.data) {
-          const categoryOptions = response.data.map(category => ({
+          // Store the full categories data with subcategories
+          setFullCategoriesData(response.data);
+          
+          const transformedCategories: CategoryOption[] = response.data.map((category: CategoryWithSubCategories) => ({
             value: category.id,
             text: category.name
           }));
-          setCategoryOptions(categoryOptions);
+          setCategoryOptions(transformedCategories);
         }
       } catch (error) {
         console.error('Error fetching categories:', error);
@@ -262,6 +301,59 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
     fetchTags();
   }, []);
 
+  // Handle click outside subcategory dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (subCategoriesDropdownRef.current && !subCategoriesDropdownRef.current.contains(event.target as Node)) {
+        setSubCategoriesDropdownOpen(false);
+      }
+    };
+
+    if (subCategoriesDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [subCategoriesDropdownOpen]);
+
+  // Fetch subcategories when category changes for modal
+  useEffect(() => {
+    const fetchSubCategoriesForModal = async () => {
+      if (!tempMetadata.categories) {
+        setSubCategoryOptions([]);
+        return;
+      }
+
+      setSubCategoriesLoading(true);
+      try {
+        // Find the category name from categoryOptions
+        const selectedCategory = categoryOptions.find(cat => cat.value === tempMetadata.categories);
+        
+        if (!selectedCategory) {
+          setSubCategoryOptions([]);
+          return;
+        }
+
+        const response = await blogApi.getSubCategories(selectedCategory.text);
+        
+        if (response.success && response.data) {
+          setSubCategoryOptions(response.data);
+        } else {
+          setSubCategoryOptions([]);
+        }
+      } catch (error) {
+        console.error('Error fetching subcategories for modal:', error);
+        setSubCategoryOptions([]);
+      } finally {
+        setSubCategoriesLoading(false);
+      }
+    };
+
+    fetchSubCategoriesForModal();
+  }, [tempMetadata.categories, categoryOptions]);
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Element;
@@ -294,6 +386,17 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
     ), [categoryOptions, categoriesSearchTerm]
   );
 
+  const filteredSubCategories = useMemo(() => {
+    if (!metadata.categories) return [];
+    
+    const selectedCategory = fullCategoriesData.find(cat => cat.id === metadata.categories);
+    if (!selectedCategory?.subCategories) return [];
+    
+    return selectedCategory.subCategories.filter(sub =>
+      sub.name.toLowerCase().includes(subCategoriesSearchTerm.toLowerCase())
+    );
+  }, [fullCategoriesData, metadata.categories, subCategoriesSearchTerm]);
+
   const filteredTags = useMemo(() => 
     tagOptions.filter(tag =>
       tag.text.toLowerCase().includes(tagsSearchTerm.toLowerCase())
@@ -312,6 +415,15 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
       ...prev,
       [field]: value
     }));
+    
+    // Clear subcategories when category changes
+    if (field === 'categories') {
+      setMetadata(prev => ({
+        ...prev,
+        categories: value,
+        subCategories: []
+      }));
+    }
   }, []);
   const handleOpenTitleModal = useCallback(() => {
     setTempTitle(metadata.title);
@@ -320,41 +432,50 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
       description: seoData.description,
       keywords: seoData.keywords
     });
+    setTempMetadata(metadata);
     titleModal.openModal();
-  }, [metadata.title, seoData, titleModal]);
+  }, [metadata, seoData, titleModal]);
 
   const handleTitleSave = useCallback(() => {
-    updateMetadataField('title', tempTitle);
-    setSeoData(tempSeoData);
+    // Update main metadata with all fields from General tab
+    setMetadata(tempMetadata);
+    
+    // Update specific fields for compatibility
+    updateMetadataField('title', tempMetadata.title);
     updateMetadataField('seoTitle', tempSeoData.title);
     updateMetadataField('seoDescription', tempSeoData.description);
+    
+    // Update SEO data
+    setSeoData(tempSeoData);
+    
+    // Reset to first tab and close modal
+    setActiveTab('general');
     titleModal.closeModal();
-  }, [tempTitle, tempSeoData, updateMetadataField, titleModal]);
+  }, [tempMetadata, tempSeoData, updateMetadataField, titleModal]);
 
   const handleTitleCancel = useCallback(() => {
-    setTempTitle(metadata.title);
+    // Reset all temporary states to current values
+    setTempMetadata(metadata);
     setTempSeoData({
       title: seoData.title,
       description: seoData.description,
       keywords: seoData.keywords
     });
+    
+    // Reset to first tab and close modal
+    setActiveTab('general');
     titleModal.closeModal();
-  }, [metadata.title, seoData, titleModal]);
+  }, [metadata, seoData, titleModal]);
 
-  const handleFeaturedImageSelect = useCallback((imageUrl: string) => {
-    updateMetadataField('featuredImage', imageUrl);
+  const setFeaturedImageInModal = useCallback((imageUrl: string) => {
+    console.log('Setting featured image in modal:', imageUrl);
+    setTempMetadata(prev => ({ ...prev, featuredImage: imageUrl }));
     imageGalleryModal.closeModal();
-  }, [updateMetadataField, imageGalleryModal]);
+  }, [imageGalleryModal]);
 
   const handleSetFeaturedImage = useCallback((imageUrl: string) => {
     console.log('Setting featured image:', imageUrl);
     updateMetadataField('featuredImage', imageUrl);
-    console.log('Featured image updated, closing modal');
-    imageGalleryModal.closeModal();
-  }, [updateMetadataField, imageGalleryModal]);
-
-  const handleRemoveFeaturedImage = useCallback(() => {
-    updateMetadataField('featuredImage', '');
   }, [updateMetadataField]);
 
   const layoutUpdate = useCallback((newLayout: LayoutBlock[]) => {
@@ -394,51 +515,53 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
 
   const saveBlog = useCallback(async () => {
     try {
-      const payload = {
-        title: metadata.title,
-        slug: metadata.permalink,
-        excerpt: metadata.excerpt,
-        content: {
-          blocks: currentLayout.blocks,
-          version: "1.0.0",
-          time: Date.now()
-        },
-        featuredImage: metadata.featuredImage || '',
-        metadata: {
-          status: metadata.status, 
-          visibility: metadata.visibility,
-          publishDate: metadata.publishDate,
-          categories: metadata.categories ? [metadata.categories] : [],
-          tags: metadata.tags,
-          seo: {
-            title: metadata.seoTitle || metadata.title,
-            description: metadata.seoDescription || metadata.excerpt,
-            keywords: metadata.seoTitle ? metadata.seoTitle.split(' ').filter(word => word.length > 3) : []
-          },
-          settings: {
-            allowComments: metadata.allowComments,
-            allowPings: metadata.allowPings,
-            featured: false,
-            sticky: false
-          }
-        }
-      };
+      console.log('=== DEBUG: Generating edit blog payload ===');
+      console.log('Blog metadata:', metadata);
+      console.log('Blog metadata.subCategories:', metadata.subCategories);
+      console.log('Current layout blocks:', currentLayout.blocks);
+      console.log('Category options:', categoryOptions);
+      console.log('Tag options:', tagOptions);
+      console.log('Full categories data:', fullCategoriesData);
+
+      const payload = transformBlogDataForAPI(
+        metadata,
+        currentLayout.blocks,
+        categoryOptions,
+        tagOptions,
+        fullCategoriesData
+      );
+
+      console.log('=== DEBUG: Generated edit payload ===');
+      console.log('Full payload:', JSON.stringify(payload, null, 2));
+
+      const validation = validateBlogData(payload);
+      console.log('=== DEBUG: Validation result ===');
+      console.log('Validation:', validation);
+
+      if (!validation.isValid) {
+        console.error('Payload validation failed:', validation.errors);
+        return;
+      }
 
       updateBlogPost(
         { id, data: payload },
         {
           onSuccess: () => {
+            console.log('=== DEBUG: Blog updated successfully ===');
             router.push('/admin/blog');
           },
           onError: (error) => {
-            console.error('Error updating blog:', error);
+            console.error('=== DEBUG: Error updating blog ===');
+            console.error('Error details:', error);
+            console.error('Error response:', (error as any).response);
+            console.error('Error data:', (error as any).response?.data);
           }
         }
       );
     } catch (error) {
       console.error('Error preparing blog data:', error);
     }
-  }, [metadata, currentLayout, id, router, updateBlogPost]);
+  }, [metadata, currentLayout, categoryOptions, tagOptions, fullCategoriesData, id, router, updateBlogPost]);
 
   if (isPageLoading) {
     return <FullScreenSpinner isVisible={true} message="Loading blog data..." />;
@@ -465,353 +588,58 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
     <>
      
       <div className="fixed inset-0 z-50 bg-gray-50 dark:bg-gray-900">
-        
-        <div className="bg-white border-b">
-          <div className="flex items-center justify-between px-6 py-4">
-            <div className="flex items-center gap-4">
-              <Button
-                onClick={() => router.push('/admin/blog')}
-                variant="ghost"
-                size="sm"
-                  className='text-brand-400'
-              >
+        <div className="h-16 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between px-6">
+          <div className="flex items-center space-x-4">
+            <Button
+              onClick={() => router.push('/admin/blog')}
+              variant="ghost"
+              size="sm"
+              className='text-brand-400'
+            >
              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
               Back
             </Button>
 
-                        
-              
-              <div className="flex items-center gap-6">
-                <div className="ml-4 flex items-center space-x-3">
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">
-                    Blog Title:
-                  </label>
-                  <button
-                    type="button"
-                    onClick={handleOpenTitleModal}
-                    className="w-60 px-3 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:border-blue-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none text-gray-900 dark:text-gray-100 transition-colors text-left flex items-center justify-between"
-                  >
-                    <span className="truncate flex-1 mr-2">
-                      {metadata.title || (
-                        <span className="text-gray-500 dark:text-gray-400">Click to add blog title...</span>
-                      )}
-                    </span>
-                    {metadata.title && (
-                      <svg className="w-4 h-4 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
-                    )}
-                  </button>
-                </div>
-
-                <BlogDropdown
-                  label="Status"
-                  value={statusOptions.find(opt => opt.value === metadata.status)?.label || 'Draft'}
-                  isOpen={statusDropdownOpen}
-                  onToggle={() => {
-                    setStatusDropdownOpen(!statusDropdownOpen);
-                    setDateDropdownOpen(false);
-                    setCategoriesDropdownOpen(false);
-                    setTagsDropdownOpen(false);
-                  }}
-                >
-                  <div className="absolute top-full left-0 mt-1 w-80 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg z-50">
-                    {statusOptions.map((option) => (
-                      <button
-                        key={option.value}
-                        onClick={() => {
-                          updateMetadataField('status', option.value);
-                          setStatusDropdownOpen(false);
-                        }}
-                        className="w-full px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 border-b border-gray-100 dark:border-gray-600 last:border-b-0 first:rounded-t-lg last:rounded-b-lg"
-                      >
-                        <div className="flex items-center gap-3">
-                          {metadata.status === option.value && (
-                            <svg className="w-4 h-4 text-primary" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                            </svg>
-                          )}
-                          <div>
-                            <div className="font-medium text-gray-900 dark:text-white">{option.label}</div>
-                            <div className="text-xs text-gray-500 dark:text-gray-400">{option.description}</div>
-                          </div>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                </BlogDropdown>
-
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-600">Date Posted:</span>
-                  <div className="relative dropdown-container">
-                    <button
-                      onClick={() => {
-                        setDateDropdownOpen(!dateDropdownOpen);
-                        setStatusDropdownOpen(false);
-                        setCategoriesDropdownOpen(false);
-                        setTagsDropdownOpen(false);
-                      }}
-                      className="flex items-center justify-between bg-primary text-white px-4 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer min-w-[120px]"
-                    >
-                      <span>{new Date(metadata.publishDate).toLocaleDateString()}</span>
-                      <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </button>
-                    
-                    {dateDropdownOpen && (
-                      <div className="absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg z-50 min-w-[300px] p-4">
-                        <div className="flex items-center gap-2 mb-4">
-                          <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                          </svg>
-                          <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Select Publication Date</span>
-                        </div>
-                        <div className="mb-4">
-                          <CustomDatePicker
-                            id="blog-publish-date"
-                            value={metadata.publishDate}
-                            onChange={(selectedDate) => {
-                              updateMetadataField('publishDate', selectedDate);
-                              setTimeout(() => {
-                                setDateDropdownOpen(false);
-                              }, 100);
-                            }}
-                            placeholder="Select publication date"
-                          />
-                        </div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400 mb-4">
-                          Choose when this blog post should be published.
-                        </div>
-                        <div className="flex justify-end">
-                          <Button
-                            onClick={() => setDateDropdownOpen(false)}
-                            size="sm"
-                            className="px-4 py-2"
-                          >
-                            Done
-                          </Button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-600">Categories:</span>
-                  <div className="relative dropdown-container">
-                    <button
-                      onClick={() => {
-                        setCategoriesDropdownOpen(!categoriesDropdownOpen);
-                        setStatusDropdownOpen(false);
-                        setDateDropdownOpen(false);
-                        setTagsDropdownOpen(false);
-                      }}
-                      className="flex items-center justify-between bg-primary text-white px-4 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer min-w-[120px]"
-                    >
-                      <span>{metadata.categories?.name || 'Select'}</span>
-                      <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </button>
-                    
-                    {categoriesDropdownOpen && (
-                      <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-50 min-w-[300px]">
-                        <div className="p-3 border-b border-gray-200">
-                          <div className="flex items-center gap-2 mb-2">
-                            <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                            </svg>
-                            <span className="font-medium text-gray-900">Select Categories</span>
-                          </div>
-                          <input
-                            type="text"
-                            placeholder="Search categories..."
-                            value={categoriesSearchTerm}
-                            onChange={(e) => setCategoriesSearchTerm(e.target.value)}
-                            className="w-full p-2 border border-gray-300 rounded-md text-sm"
-                          />
-                        </div>
-                        <div className="max-h-48 overflow-y-auto">
-                          <div className="p-2">
-                            <label className="flex items-center gap-2 p-2 hover:bg-gray-50 rounded cursor-pointer">
-                              <input
-                                type="radio"
-                                name="category"
-                                checked={!metadata.categories}
-                                onChange={() => {
-                                  updateMetadataField('categories', null);
-                                }}
-                                className="text-green-500"
-                              />
-                              <span className="text-sm text-gray-700">None</span>
-                              {!metadata.categories && (
-                                <svg className="w-4 h-4 text-green-500 ml-auto" fill="currentColor" viewBox="0 0 20 20">
-                                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                </svg>
-                              )}
-                            </label>
-                            {filteredCategories.map((category) => (
-                              <label key={category.value} className="flex items-center gap-2 p-2 hover:bg-gray-50 rounded cursor-pointer">
-                                <input
-                                  type="radio"
-                                  name="category"
-                                  checked={metadata.categories?.id === category.value}
-                                  onChange={() => {
-                                    updateMetadataField('categories', { id: category.value, name: category.text });
-                                  }}
-                                  className="text-green-500"
-                                />
-                                <span className="text-sm text-gray-700">{category.text}</span>
-                                {metadata.categories?.id === category.value && (
-                                  <svg className="w-4 h-4 text-green-500 ml-auto" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                  </svg>
-                                )}
-                              </label>
-                            ))}
-                          </div>
-                        </div>
-                        <div className="p-3 border-t border-gray-200 text-xs text-gray-500">
-                          Select one category for your blog post.
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-600">Tags:</span>
-                  <div className="relative dropdown-container">
-                    <button
-                      onClick={() => {
-                        setTagsDropdownOpen(!tagsDropdownOpen);
-                        setStatusDropdownOpen(false);
-                        setDateDropdownOpen(false);
-                        setCategoriesDropdownOpen(false);
-                      }}
-                      className="flex items-center justify-between bg-primary text-white px-4 py-2 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer min-w-[120px]"
-                    >
-                      <span>{metadata.tags.length > 0 ? `${metadata.tags.length} selected` : 'Select'}</span>
-                      <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </button>
-                    
-                    {tagsDropdownOpen && (
-                      <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-50 min-w-[300px]">
-                        <div className="p-3 border-b border-gray-200">
-                          <div className="flex items-center gap-2 mb-2">
-                            <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c1.1 0 2 .9 2 2v1M9 21h1c1.1 0 2-.9 2-2V7.5M3 18V7a2 2 0 012-2h.01" />
-                            </svg>
-                            <span className="font-medium text-gray-900">Select Tags</span>
-                          </div>
-                          <input
-                            type="text"
-                            placeholder="Search tags..."
-                            value={tagsSearchTerm}
-                            onChange={(e) => setTagsSearchTerm(e.target.value)}
-                            className="w-full p-2 border border-gray-300 rounded-md text-sm"
-                          />
-                        </div>
-                        <div className="max-h-48 overflow-y-auto">
-                          <div className="p-2">
-                            {filteredTags.map((tag) => (
-                              <label key={tag.value} className="flex items-center gap-2 p-2 hover:bg-gray-50 rounded cursor-pointer">
-                                <input
-                                  type="checkbox"
-                                  checked={metadata.tags.some(selectedTag => selectedTag.id === tag.value)}
-                                  onChange={(e) => {
-                                    const isChecked = e.target.checked;
-                                    const currentTags = [...metadata.tags];
-                                    
-                                    if (isChecked && !currentTags.some(t => t.id === tag.value)) {
-                                      currentTags.push({ id: tag.value, name: tag.text });
-                                    } else if (!isChecked) {
-                                      const index = currentTags.findIndex(t => t.id === tag.value);
-                                      if (index > -1) {
-                                        currentTags.splice(index, 1);
-                                      }
-                                    }
-                                    
-                                    updateMetadataField('tags', currentTags);
-                                  }}
-                                  className="text-green-500 rounded"
-                                />
-                                <span className="text-sm text-gray-700">{tag.text}</span>
-                                {metadata.tags.some(selectedTag => selectedTag.id === tag.value) && (
-                                  <svg className="w-4 h-4 text-green-500 ml-auto" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                  </svg>
-                                )}
-                              </label>
-                            ))}
-                          </div>
-                        </div>
-                        <div className="p-3 border-t border-gray-200 text-xs text-gray-500">
-                          Select multiple tags for better searchability.
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Featured Image Field */}
-                <div className="flex items-center space-x-2">
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">
-                    Featured Image:
-                  </label>
-                  <div className="flex items-center space-x-2">
-                    {metadata.featuredImage ? (
-                      <div className="flex items-center space-x-2">
-                        <div className="relative">
-                          <img 
-                            src={metadata.featuredImage} 
-                            alt="Featured" 
-                            className="w-8 h-8 object-cover rounded border border-gray-300"
-                          />
-                        </div>
-                        <button
-                          onClick={handleRemoveFeaturedImage}
-                          className="text-red-600 hover:text-red-700 text-sm"
-                          title="Remove featured image"
-                        >
-                          Remove
-                        </button>
-                      </div>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={imageGalleryModal.openModal}
-                        className="px-3 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:border-blue-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none text-gray-700 dark:text-gray-300 transition-colors"
-                      >
-                        Select Image
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-
             <div className="flex items-center space-x-3">
-              <Button
-                onClick={saveBlog}
-                disabled={isUpdating}
-                className="bg-brand-500 hover:bg-brand-600 text-white"
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                Blog Title:
+              </label>
+              <button
+                type="button"
+                onClick={handleOpenTitleModal}
+                className="w-60 px-3 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:border-blue-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none text-gray-900 dark:text-gray-100 transition-colors text-left flex items-center justify-between"
               >
-                {isUpdating 
-                  ? 'Saving...' 
-                  : metadata.status === 'published' 
-                    ? 'Update & Publish' 
-                    : metadata.status === 'draft'
-                      ? 'Save as Draft'
-                      : 'Save Changes'
-                }
-              </Button>
+                <span className="truncate flex-1 mr-2">
+                  {metadata.title || (
+                    <span className="text-gray-500 dark:text-gray-400">Click to add blog title...</span>
+                  )}
+                </span>
+                {metadata.title && (
+                  <svg className="w-4 h-4 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                )}
+              </button>
             </div>
+          </div>
+
+          <div className="flex items-center space-x-3">
+            <Button
+              onClick={saveBlog}
+              disabled={isUpdating}
+              className="bg-brand-500 hover:bg-brand-600 text-white"
+            >
+              {isUpdating 
+                ? 'Saving...' 
+                : metadata.status === 'published' 
+                  ? 'Update & Publish' 
+                  : metadata.status === 'draft'
+                    ? 'Save as Draft'
+                    : 'Save Changes'
+              }
+            </Button>
           </div>
         </div>
 
@@ -847,47 +675,391 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
         onClose={handleTitleCancel}
         showCloseButton={false}
         isFullscreen={false}
-        className="max-w-3xl w-full mx-auto my-8 rounded-lg shadow-xl"
+        className="max-w-4xl w-full mx-auto my-8 rounded-lg shadow-xl"
       >
         <div className="p-6">
-          <h2 className="text-xl font-semibold mb-6 text-gray-900 dark:text-gray-100 flex items-center">
-            <span className="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center mr-3">
-              <svg className="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-              </svg>
-            </span>
-            Edit Blog Title & SEO Settings
-          </h2>
+          <h2 className="text-xl font-bold mb-6">Edit Blog Title & SEO Settings</h2>
           
-          <div className="space-y-6">
-            {/* Blog Title */}
-            <div>
-              <label htmlFor="blog-title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Blog Title <span className="text-gray-500">({tempTitle.length}/100 characters)</span>
-              </label>
-              <input
-                id="blog-title"
-                type="text"
-                value={tempTitle}
-                onChange={(e) => setTempTitle(e.target.value)}
-                placeholder="Enter blog title"
-                className="w-full px-3 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 transition-colors"
-                maxLength={100}
-              />
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                This title will be displayed as the main heading of your blog post
-              </p>
-            </div>
-
-            {/* SEO Section */}
-            <div className="border-t pt-6 border-gray-200 dark:border-gray-700">
-              <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-4 flex items-center">
-                <svg className="w-4 h-4 mr-2 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
+          {/* Tabs */}
+          <div className="border-b border-gray-200 dark:border-gray-700 mb-6">
+            <nav className="flex space-x-8" aria-label="Tabs">
+              <button
+                onClick={() => setActiveTab('general')}
+                className={`whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'general'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                General
+              </button>
+              <button
+                onClick={() => setActiveTab('seo')}
+                className={`whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'seo'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
                 SEO Settings
-              </h3>
+              </button>
+            </nav>
+          </div>
 
+          {/* General Tab Content */}
+          {activeTab === 'general' && (
+            <div className="space-y-6">
+              {/* Blog Title */}
+              <div>
+                <label htmlFor="modal-blog-title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Blog Title <span className="text-red-500">*</span>
+                </label>
+                <input
+                  id="modal-blog-title"
+                  type="text"
+                  value={tempTitle}
+                  onChange={(e) => setTempTitle(e.target.value)}
+                  placeholder="Enter your blog title..."
+                  className="w-full px-3 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 transition-colors"
+                  autoFocus
+                />
+              </div>
+
+              {/* Status */}
+              <div className="dropdown-container">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Status <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <button
+                    onClick={() => setStatusDropdownOpen(!statusDropdownOpen)}
+                    className="w-full px-3 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none text-gray-900 dark:text-gray-100 transition-colors text-left flex items-center justify-between"
+                  >
+                    <span>{statusOptions.find(option => option.value === tempMetadata.status)?.label || 'Select Status'}</span>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  {statusDropdownOpen && (
+                    <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg">
+                      {statusOptions.map((option) => (
+                        <button
+                          key={option.value}
+                          onClick={() => {
+                            setTempMetadata(prev => ({ ...prev, status: option.value as any }));
+                            setStatusDropdownOpen(false);
+                          }}
+                          className="w-full px-3 py-2 text-left text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 first:rounded-t-lg last:rounded-b-lg"
+                        >
+                          <div>
+                            <div className="font-medium">{option.label}</div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">{option.description}</div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Date Posted */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Date Posted <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="datetime-local"
+                  value={tempMetadata.publishDate ? new Date(tempMetadata.publishDate).toISOString().slice(0, 16) : ''}
+                  onChange={(e) => {
+                    const selectedDate = e.target.value ? new Date(e.target.value).toISOString() : new Date().toISOString();
+                    setTempMetadata(prev => ({ ...prev, publishDate: selectedDate }));
+                  }}
+                  className="w-full px-3 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none text-gray-900 dark:text-gray-100"
+                />
+              </div>
+
+              {/* Categories */}
+              <div className="dropdown-container">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Categories <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <button
+                    onClick={() => setCategoriesDropdownOpen(!categoriesDropdownOpen)}
+                    className="w-full px-3 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:border-blue-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none text-gray-900 dark:text-gray-100 transition-colors text-left flex items-center justify-between"
+                  >
+                    <span>
+                      {tempMetadata.categories ? 
+                        (categoryOptions.find(cat => cat.value === tempMetadata.categories)?.text || 'Select Category') : 
+                        'Select Category'
+                      }
+                    </span>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  {categoriesDropdownOpen && (
+                    <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                      <div className="p-2">
+                        <input
+                          type="text"
+                          placeholder="Search categories..."
+                          value={categoriesSearchTerm}
+                          onChange={(e) => setCategoriesSearchTerm(e.target.value)}
+                          className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                        />
+                      </div>
+                      {filteredCategories.map((category) => (
+                        <button
+                          key={category.value}
+                          onClick={() => {
+                            setTempMetadata(prev => ({ ...prev, categories: category.value, subCategories: [] }));
+                            setCategoriesDropdownOpen(false);
+                          }}
+                          className="w-full px-3 py-2 text-left text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700"
+                        >
+                          {category.text}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* SubCategories */}
+              <div className="dropdown-container">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  SubCategories
+                </label>
+                <div className="relative" ref={subCategoriesDropdownRef}>
+                  <button
+                    onClick={() => setSubCategoriesDropdownOpen(!subCategoriesDropdownOpen)}
+                    disabled={!tempMetadata.categories}
+                    className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-colors text-left flex items-center justify-between ${
+                      !tempMetadata.categories 
+                        ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 border-gray-300 dark:border-gray-600 cursor-not-allowed' 
+                        : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600 hover:border-blue-500'
+                    }`}
+                  >
+                    <span>
+                      {!tempMetadata.categories ? 
+                        'Select a category first' : 
+                        tempMetadata.subCategories.length > 0 ? 
+                          `${tempMetadata.subCategories.length} subcategory(ies) selected` : 
+                          'Select subcategories'
+                      }
+                    </span>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  {subCategoriesDropdownOpen && tempMetadata.categories && (
+                    <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                      <div className="p-2">
+                        <input
+                          type="text"
+                          placeholder="Search subcategories..."
+                          value={subCategoriesSearchTerm}
+                          onChange={(e) => setSubCategoriesSearchTerm(e.target.value)}
+                          className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                        />
+                      </div>
+                      
+                      <div className="max-h-32 overflow-y-auto">
+                        {subCategoriesLoading ? (
+                          <div className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
+                            <div className="flex items-center justify-center space-x-2">
+                              <svg className="animate-spin h-4 w-4 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                              </svg>
+                              <span>Loading subcategories...</span>
+                            </div>
+                          </div>
+                        ) : filteredSubCategories.length > 0 ? (
+                          <>
+                            {filteredSubCategories.map(subCategory => (
+                              <label key={subCategory.id} className="flex items-center px-3 py-2 text-sm cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700">
+                                <input
+                                  type="checkbox"
+                                  checked={tempMetadata.subCategories.includes(subCategory.id)}
+                                  onChange={(e) => {
+                                    const isChecked = e.target.checked;
+                                    const currentSubCategories = [...tempMetadata.subCategories];
+                                    
+                                    if (isChecked && !currentSubCategories.includes(subCategory.id)) {
+                                      currentSubCategories.push(subCategory.id);
+                                    } else if (!isChecked) {
+                                      const index = currentSubCategories.indexOf(subCategory.id);
+                                      if (index > -1) {
+                                        currentSubCategories.splice(index, 1);
+                                      }
+                                    }
+                                    
+                                    setTempMetadata(prev => ({ ...prev, subCategories: currentSubCategories }));
+                                  }}
+                                  className="mr-3 w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 rounded"
+                                />
+                                <span className="text-gray-900 dark:text-gray-100">{subCategory.name}</span>
+                                {tempMetadata.subCategories.includes(subCategory.id) && (
+                                  <svg className="w-4 h-4 ml-auto text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                  </svg>
+                                )}
+                              </label>
+                            ))}
+                          </>
+                        ) : (
+                          <div className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
+                            {subCategoriesSearchTerm ? 
+                              'No subcategories found matching your search.' : 
+                              'No subcategories available for this category.'
+                            }
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="p-3 border-t border-gray-200 dark:border-gray-700 text-xs text-gray-500 dark:text-gray-400">
+                        Select subcategories for more specific categorization. Please select a category first.
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Tags */}
+              <div className="dropdown-container">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Tags <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <button
+                    onClick={() => setTagsDropdownOpen(!tagsDropdownOpen)}
+                    className="w-full px-3 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:border-blue-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none text-gray-900 dark:text-gray-100 transition-colors text-left flex items-center justify-between"
+                  >
+                    <span>
+                      {tempMetadata.tags.length > 0 
+                        ? `${tempMetadata.tags.length} tag(s) selected`
+                        : 'Select Tags'
+                      }
+                    </span>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  {tagsDropdownOpen && (
+                    <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                      <div className="p-2">
+                        <input
+                          type="text"
+                          placeholder="Search tags..."
+                          value={tagsSearchTerm}
+                          onChange={(e) => setTagsSearchTerm(e.target.value)}
+                          className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                        />
+                      </div>
+                      {filteredTags.map((tag) => (
+                        <label
+                          key={tag.value}
+                          className="flex items-center px-3 py-2 text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={tempMetadata.tags.includes(tag.value)}
+                            onChange={(e) => {
+                              const isChecked = e.target.checked;
+                              setTempMetadata(prev => ({
+                                ...prev,
+                                tags: isChecked
+                                  ? [...prev.tags, tag.value]
+                                  : prev.tags.filter(t => t !== tag.value)
+                              }));
+                            }}
+                            className="mr-2"
+                          />
+                          {tag.text}
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                {tempMetadata.tags.length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {tempMetadata.tags.map((tagId) => {
+                      const tag = tagOptions.find(t => t.value === tagId);
+                      return tag ? (
+                        <span
+                          key={tagId}
+                          className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                        >
+                          {tag.text}
+                          <button
+                            onClick={() => {
+                              setTempMetadata(prev => ({
+                                ...prev,
+                                tags: prev.tags.filter(t => t !== tagId)
+                              }));
+                            }}
+                            className="ml-1 text-blue-600 hover:text-blue-800 dark:text-blue-300 dark:hover:text-blue-100"
+                          >
+                            ×
+                          </button>
+                        </span>
+                      ) : null;
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* Featured Image */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Featured Image <span className="text-red-500">*</span>
+                </label>
+                <div className="flex items-center space-x-4">
+                  {tempMetadata.featuredImage ? (
+                    <div className="flex items-center space-x-3">
+                      <img 
+                        src={tempMetadata.featuredImage} 
+                        alt="Featured" 
+                        className="w-16 h-16 object-cover rounded border border-gray-300"
+                      />
+                      <div className="flex flex-col space-y-2">
+                        <button
+                          onClick={() => imageGalleryModal.openModal()}
+                          className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+                        >
+                          Change Image
+                        </button>
+                        <button
+                          onClick={() => setTempMetadata(prev => ({ ...prev, featuredImage: '' }))}
+                          className="px-3 py-1 text-sm bg-red-600 text-white rounded hover:bg-red-700"
+                        >
+                          Remove Image
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => imageGalleryModal.openModal()}
+                      className="w-full px-4 py-8 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg hover:border-gray-400 dark:hover:border-gray-500 transition-colors"
+                    >
+                      <div className="flex flex-col items-center">
+                        <svg className="w-8 h-8 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                        </svg>
+                        <span className="text-sm text-gray-600 dark:text-gray-400">Choose Featured Image</span>
+                      </div>
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* SEO Tab Content */}
+          {activeTab === 'seo' && (
+            <div className="space-y-6">
               {/* SEO Title */}
               <div className="mb-4">
                 <label htmlFor="seo-title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -962,7 +1134,7 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
                 </div>
               </div>
             </div>
-          </div>
+          )}
 
           <div className="flex justify-end space-x-3 mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
             <Button
@@ -984,9 +1156,9 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
       <ImageGalleryModal
         isOpen={imageGalleryModal.isOpen}
         onClose={imageGalleryModal.closeModal}
-        onImageSelect={handleFeaturedImageSelect}
-        onSetFeaturedImage={handleSetFeaturedImage}
-        currentFeaturedImage={metadata.featuredImage || ''}
+        onImageSelect={setFeaturedImageInModal}
+        onSetFeaturedImage={setFeaturedImageInModal}
+        currentFeaturedImage={tempMetadata.featuredImage || ''}
       />
       <FullScreenSpinner 
         isVisible={isUpdating} 

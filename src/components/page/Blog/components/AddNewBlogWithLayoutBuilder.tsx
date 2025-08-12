@@ -633,7 +633,7 @@ export default function AddNewBlogWithLayoutBuilder() {
   return (
     <>
       <div className="fixed inset-0 z-50 bg-gray-50 dark:bg-gray-900">
-        <div className="h-16 bg-white mr-auto dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between px-6">
+        <div className="h-16 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between px-6">
           <div className="flex items-center space-x-4">
             <Button
               onClick={() => router.push('/admin/blog')}

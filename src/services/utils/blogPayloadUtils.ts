@@ -166,11 +166,10 @@ export function transformBlogDataForAPI(
     ? selectedCategories.map(categoryId => {
         const category = categoryOptions.find(opt => opt.value === categoryId);
         
-        // Only include subcategories that were actually selected by the user
         const selectedSubCategories = metadata.subCategories || [];
         console.log('DEBUG: Selected subcategories from metadata:', selectedSubCategories);
         
-        // Find the full category data with subcategories if available
+    
         const fullCategoryData = fullCategoriesData?.find(cat => cat.id === categoryId);
         
         const filteredSubCategories = fullCategoryData?.subCategories 
@@ -240,9 +239,6 @@ export function transformBlogDataForAPI(
     analytics
   };
 
-  console.log('=== DEBUG: Final payload structure ===');
-  console.log('Categories in payload:', JSON.stringify(categories, null, 2));
-  console.log('Full payload:', JSON.stringify(payload, null, 2));
 
   return payload;
 }
@@ -273,8 +269,6 @@ export function validateBlogData(data: BlogCreatePayload): { isValid: boolean; e
     });
     errors.push('Featured image property is required (can be empty string)');
   }
-
-  console.log('Validation complete - errors:', errors);
 
   return {
     isValid: errors.length === 0,
