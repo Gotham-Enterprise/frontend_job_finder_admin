@@ -55,6 +55,15 @@ export interface CategoryListProps {
   onBulkDelete?: () => void;
   onClearSelection?: () => void;
   isDeleting?: boolean;
+  metaData?: {
+    page: number;
+    limit: number;
+    totalPages: number;
+    totalCount: number;
+    currentPageTotalItems: number;
+    hasNextPage: boolean;
+    hasPreviousPage: boolean;
+  };
 }
 
 export interface CategoryEditModalProps {

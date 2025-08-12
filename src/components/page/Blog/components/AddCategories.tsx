@@ -28,11 +28,15 @@ export default function AddNewCategories() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isSlugManuallyEdited, setIsSlugManuallyEdited] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(5); // Show 5 categories per page
+  const [itemsPerPage, setItemsPerPage] = useState(20); 
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const editModal = useModal();
   const confirmDialog = useConfirmation();
-  const filters = searchTerm ? { keyword: searchTerm } : undefined;
+  const filters = {
+    ...(searchTerm && { keyword: searchTerm }),
+    page: currentPage,
+    limit: itemsPerPage
+  };
   const { 
     data: categoriesData, 
     isLoading: isLoadingCategories, 
@@ -266,6 +270,7 @@ export default function AddNewCategories() {
             error={categoriesError}
             deletingCategoryIds={bulkDeleteMutation.isPending ? (bulkDeleteMutation.variables || []) : []}
             currentPage={currentPage}
+            totalPages={categoriesData?.metaData?.totalPages || 1}
             onPageChange={handlePageChange}
             itemsPerPage={itemsPerPage}
             onItemsPerPageChange={handleItemsPerPageChange}
@@ -275,6 +280,7 @@ export default function AddNewCategories() {
             onBulkDelete={bulkDeleteCategories}
             onClearSelection={clearSelection}
             isDeleting={bulkDeleteMutation.isPending}
+            metaData={categoriesData?.metaData}
           />
         </div>
       </div>

@@ -30,16 +30,10 @@ export default function CategoryList({
   onBulkDelete,
   onClearSelection,
   isDeleting = false,
+  metaData,
 }: CategoryListProps) {
-  const filteredCategories = categories.filter(category =>
-    category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    category.description.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-  
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const paginatedCategories = filteredCategories.slice(startIndex, endIndex);
-  const calculatedTotalPages = Math.ceil(filteredCategories.length / itemsPerPage);
+
+  const displayedCategories = categories;
 
   return (
     <>
@@ -52,7 +46,7 @@ export default function CategoryList({
       <div className="p-6 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-            Categories ({categories.length})
+            Categories
           </h2>
         </div>
         
@@ -101,7 +95,7 @@ export default function CategoryList({
               {onSelectCategory && onSelectAll && (
                 <TableCell isHeader className="px-6 py-3 w-12">
                   <Checkbox
-                    checked={selectedCategories.length === paginatedCategories.length && paginatedCategories.length > 0}
+                    checked={selectedCategories.length === displayedCategories.length && displayedCategories.length > 0}
                     onChange={(checked) => onSelectAll(checked)}
                   />
                 </TableCell>
@@ -125,7 +119,7 @@ export default function CategoryList({
             </TableRow>
           </TableHeader>
           <TableBody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-            {paginatedCategories.map((category) => (
+            {displayedCategories.map((category) => (
               <TableRow key={category.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                 {onSelectCategory && (
                   <TableCell className="px-6 py-4 w-12">
@@ -199,14 +193,16 @@ export default function CategoryList({
           </TableBody>
         </Table>
 
-        {paginatedCategories.length === 0 && filteredCategories.length === 0 && (
+        {displayedCategories.length === 0 && (
           <div className="p-6 text-center">
-            <p className="text-gray-500 dark:text-gray-400">No categories found.</p>
+            <p className="text-gray-500 dark:text-gray-400">
+              {metaData?.totalCount === 0 ? 'No categories found.' : 'No categories on this page.'}
+            </p>
           </div>
         )}
       </div>
 
-      {filteredCategories.length > 0 && onPageChange && (
+      {metaData && metaData.totalCount > 0 && onPageChange && (
         <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between">
           
@@ -220,19 +216,20 @@ export default function CategoryList({
                 <option value={5}>5</option>
                 <option value={10}>10</option>
                 <option value={20}>20</option>
+                <option value={50}>50</option>
               </select>
             </div>
             
-  
-            {calculatedTotalPages > 1 ? (
+            {/* Show pagination or item count */}
+            {metaData.totalPages > 1 ? (
               <Pagination
                 currentPage={currentPage}
-                totalPages={calculatedTotalPages}
+                totalPages={metaData.totalPages}
                 onPageChange={onPageChange}
               />
             ) : (
               <div className="text-sm text-gray-500 dark:text-gray-400">
-                Showing {filteredCategories.length} of {filteredCategories.length} items
+                Showing {((metaData.page - 1) * metaData.limit) + 1} of {Math.min(metaData.page * metaData.limit, metaData.totalCount)}  items
               </div>
             )}
           </div>
