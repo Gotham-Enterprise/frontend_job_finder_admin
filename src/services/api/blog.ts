@@ -136,6 +136,12 @@ export const blogApi = {
     return apiGet<ApiResponse<CategoryWithSubCategories[]>>(endpoint);
   },
 
+  async getSubCategories(categoryName: string): Promise<ApiResponse<{ id: string; name: string }[]>> {
+    const endpoint = `/api/admin/blogs/sub-category?category=${encodeURIComponent(categoryName)}`;
+    
+    return apiGet<ApiResponse<{ id: string; name: string }[]>>(endpoint);
+  },
+
   async createCategory(categoryData: CategoryCreateData): Promise<ApiResponse<CategoryWithSubCategories>> {
     const endpoint = '/api/admin/blogs/category';
     

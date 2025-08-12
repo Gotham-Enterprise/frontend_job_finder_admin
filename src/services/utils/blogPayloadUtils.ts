@@ -1,4 +1,5 @@
 import { authUtils } from '@/services/utils/authUtils';
+import { CategoryWithSubCategories } from '@/services/types/subCategoryTypes';
 
 
 export interface BlogCreatePayload {
@@ -14,6 +15,10 @@ export interface BlogCreatePayload {
     categories: Array<{
       id: string;
       name: string;
+      subCategory?: Array<{
+        id: string;
+        name: string;
+      }>;
     }>;
     tags: Array<{
       id: string;
@@ -55,6 +60,7 @@ export interface BlogMetadata {
   password?: string;
   publishDate: string;
   categories: string;
+  subCategories: string[];
   tags: string[];
   featuredImage?: string;
   seoTitle: string;
@@ -138,7 +144,8 @@ export function transformBlogDataForAPI(
   metadata: BlogMetadata,
   blocks: LayoutBlock[],
   categoryOptions: Array<{ value: string; text: string }>,
-  tagOptions: Array<{ value: string; text: string }>
+  tagOptions: Array<{ value: string; text: string }>,
+  fullCategoriesData?: CategoryWithSubCategories[]
 ): BlogCreatePayload {
   const user = authUtils.getUser();
   const userDisplayName = authUtils.getUserDisplayName();
@@ -158,9 +165,27 @@ export function transformBlogDataForAPI(
   const categories = selectedCategories.length > 0 
     ? selectedCategories.map(categoryId => {
         const category = categoryOptions.find(opt => opt.value === categoryId);
+        
+        // Only include subcategories that were actually selected by the user
+        const selectedSubCategories = metadata.subCategories || [];
+        console.log('DEBUG: Selected subcategories from metadata:', selectedSubCategories);
+        
+        // Find the full category data with subcategories if available
+        const fullCategoryData = fullCategoriesData?.find(cat => cat.id === categoryId);
+        
+        const filteredSubCategories = fullCategoryData?.subCategories 
+          ? fullCategoryData.subCategories.filter(sub => selectedSubCategories.includes(sub.id))
+          : [];
+        
+        console.log('DEBUG: Filtered subcategories for payload:', filteredSubCategories);
+        
         return {
           id: categoryId,
-          name: category?.text || categoryId
+          name: category?.text || categoryId,
+          subCategory: filteredSubCategories.map(sub => ({
+            id: sub.id,
+            name: sub.name
+          }))
         };
       })
     : [];
@@ -214,6 +239,10 @@ export function transformBlogDataForAPI(
     },
     analytics
   };
+
+  console.log('=== DEBUG: Final payload structure ===');
+  console.log('Categories in payload:', JSON.stringify(categories, null, 2));
+  console.log('Full payload:', JSON.stringify(payload, null, 2));
 
   return payload;
 }

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Modal } from "@/components/ui/modal";
 import { useModal } from "@/hooks/useModal";
 import Button from "@/components/ui/button/Button";
+import CustomDatePicker from "@/components/form/CustomDatePicker";
 import FullScreenSpinner from "@/components/ui/FullScreenSpinner";
 import VisualLayoutBuilder from "./VisualLayoutBuilder/VisualLayoutBuilder";
 import FloatingElementsPanel from "./VisualLayoutBuilder/components/FloatingElementsPanel";
@@ -46,6 +47,7 @@ interface BlogMetadata {
   password?: string;
   publishDate: string;
   categories: string;
+  subCategories: string[];
   tags: string[];
   featuredImage?: string;
   seoTitle: string;
@@ -92,7 +94,11 @@ export default function AddNewBlogWithLayoutBuilder() {
   const { mutate: createBlogPost, isPending: isCreating } = useCreateBlogPost();
   
   const [categoryOptions, setCategoryOptions] = useState<CategoryOption[]>([]);
+  const [fullCategoriesData, setFullCategoriesData] = useState<CategoryWithSubCategories[]>([]);
   const [categoriesLoading, setCategoriesLoading] = useState(false);
+  
+  const [subCategoryOptions, setSubCategoryOptions] = useState<{ id: string; name: string }[]>([]);
+  const [subCategoriesLoading, setSubCategoriesLoading] = useState(false);
   
   const [tagOptions, setTagOptions] = useState<TagOption[]>([]);
   const [tagsLoading, setTagsLoading] = useState(false);
@@ -100,9 +106,12 @@ export default function AddNewBlogWithLayoutBuilder() {
   const [currentLayout, setCurrentLayout] = useState<LayoutType>(() => createInitialLayout());
   const [viewMode, setViewMode] = useState<ViewMode>('builder');
   const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
+  const [dateDropdownOpen, setDateDropdownOpen] = useState(false);
   const [categoriesDropdownOpen, setCategoriesDropdownOpen] = useState(false);
+  const [subCategoriesDropdownOpen, setSubCategoriesDropdownOpen] = useState(false);
   const [tagsDropdownOpen, setTagsDropdownOpen] = useState(false);
   const [categoriesSearchTerm, setCategoriesSearchTerm] = useState('');
+  const [subCategoriesSearchTerm, setSubCategoriesSearchTerm] = useState('');
   const [tagsSearchTerm, setTagsSearchTerm] = useState('');
   
 
@@ -121,6 +130,7 @@ export default function AddNewBlogWithLayoutBuilder() {
     password: '',
     publishDate: new Date().toISOString(),
     categories: '',
+    subCategories: [],
     tags: [],
     featuredImage: '',
     seoTitle: '',
@@ -147,6 +157,7 @@ export default function AddNewBlogWithLayoutBuilder() {
     status: 'draft' as 'draft' | 'published' | 'pending' | 'private',
     publishDate: '',
     categories: '',
+    subCategories: [] as string[],
     tags: [] as string[],
     featuredImage: ''
   });
@@ -167,6 +178,9 @@ export default function AddNewBlogWithLayoutBuilder() {
         const response = await blogApi.getCategoriesForDropdown();
         
         if (response.success && response.data) {
+          // Store the full categories data with subcategories
+          setFullCategoriesData(response.data);
+          
           const transformedCategories: CategoryOption[] = response.data.map((category: CategoryWithSubCategories) => ({
             value: category.id,
             text: category.name,
@@ -214,6 +228,87 @@ export default function AddNewBlogWithLayoutBuilder() {
     fetchTags();
   }, []);
 
+  // Fetch subcategories when category changes
+  useEffect(() => {
+    const fetchSubCategories = async () => {
+      if (!metadata.categories) {
+        setSubCategoryOptions([]);
+        return;
+      }
+
+      setSubCategoriesLoading(true);
+      try {
+        // Find the category name from categoryOptions
+        const selectedCategory = categoryOptions.find(cat => cat.value === metadata.categories);
+        if (!selectedCategory) {
+          setSubCategoryOptions([]);
+          return;
+        }
+
+        const response = await blogApi.getSubCategories(selectedCategory.text);
+        
+        if (response.success && response.data) {
+          setSubCategoryOptions(response.data);
+        } else {
+          setSubCategoryOptions([]);
+        }
+      } catch (error) {
+        console.error('Error fetching subcategories:', error);
+        setSubCategoryOptions([]);
+      } finally {
+        setSubCategoriesLoading(false);
+      }
+    };
+
+    fetchSubCategories();
+  }, [metadata.categories, categoryOptions]);
+
+  // Fetch subcategories when tempMetadata category changes (for modal)
+  useEffect(() => {
+    const fetchSubCategoriesForModal = async () => {
+      if (!tempMetadata.categories) {
+        console.log('No category selected, clearing subcategories');
+        setSubCategoryOptions([]);
+        return;
+      }
+
+      console.log('tempMetadata.categories:', tempMetadata.categories);
+      console.log('categoryOptions:', categoryOptions);
+
+      setSubCategoriesLoading(true);
+      try {
+        // Find the category name from categoryOptions
+        const selectedCategory = categoryOptions.find(cat => cat.value === tempMetadata.categories);
+        console.log('selectedCategory:', selectedCategory);
+        
+        if (!selectedCategory) {
+          console.log('Selected category not found in categoryOptions');
+          setSubCategoryOptions([]);
+          return;
+        }
+
+        console.log('Fetching subcategories for category:', selectedCategory.text);
+        const response = await blogApi.getSubCategories(selectedCategory.text);
+        console.log('Subcategories API response:', response);
+        
+        if (response.success && response.data) {
+          console.log('Setting subcategory options:', response.data);
+          setSubCategoryOptions(response.data);
+        } else {
+          console.log('No subcategories found or API error');
+          setSubCategoryOptions([]);
+        }
+      } catch (error) {
+        console.error('Error fetching subcategories for modal:', error);
+        setSubCategoryOptions([]);
+      } finally {
+        setSubCategoriesLoading(false);
+      }
+    };
+
+    fetchSubCategoriesForModal();
+  }, [tempMetadata.categories, categoryOptions]);
+
   const [expandedSections, setExpandedSections] = useState({
     publish: true,
     categories: true,
@@ -233,6 +328,14 @@ export default function AddNewBlogWithLayoutBuilder() {
       category.text.toLowerCase().includes(categoriesSearchTerm.toLowerCase())
     ), [categoryOptions, categoriesSearchTerm]
   );
+
+  const filteredSubCategories = useMemo(() => {
+    if (!subCategoryOptions || subCategoryOptions.length === 0) return [];
+    
+    return subCategoryOptions.filter(subCat =>
+      subCat.name.toLowerCase().includes(subCategoriesSearchTerm.toLowerCase())
+    );
+  }, [subCategoryOptions, subCategoriesSearchTerm]);
 
   const filteredTags = useMemo(() => 
     tagOptions.filter(tag =>
@@ -261,14 +364,28 @@ export default function AddNewBlogWithLayoutBuilder() {
     try {
       const { metadata: blogMetadata } = transformedLayoutData;
 
+      console.log('=== DEBUG: Generating blog payload ===');
+      console.log('Blog metadata:', blogMetadata);
+      console.log('Blog metadata.subCategories:', blogMetadata.subCategories);
+      console.log('Current layout blocks:', currentLayout.blocks);
+      console.log('Category options:', categoryOptions);
+      console.log('Tag options:', tagOptions);
+      console.log('Full categories data:', fullCategoriesData);
+
       const payload = transformBlogDataForAPI(
         blogMetadata,
         currentLayout.blocks,
         categoryOptions,
-        tagOptions
+        tagOptions,
+        fullCategoriesData
       );
 
+      console.log('=== DEBUG: Generated payload ===');
+      console.log('Full payload:', JSON.stringify(payload, null, 2));
+
       const validation = validateBlogData(payload);
+      console.log('=== DEBUG: Validation result ===');
+      console.log('Validation:', validation);
       
       return {
         blogPayload: payload,
@@ -278,7 +395,7 @@ export default function AddNewBlogWithLayoutBuilder() {
       console.error('Error generating blog payload:', error);
       return null;
     }
-  }, [transformedLayoutData, currentLayout.blocks, categoryOptions, tagOptions]);
+  }, [transformedLayoutData, currentLayout.blocks, categoryOptions, tagOptions, fullCategoriesData]);
 
   const publishBlog = useCallback(async () => {
     const payloadData = generateBlogPayloadData();
@@ -303,12 +420,19 @@ export default function AddNewBlogWithLayoutBuilder() {
         }
       };
 
+      console.log('=== DEBUG: Final payload being sent to API ===');
+      console.log('Publish payload:', JSON.stringify(publishPayload, null, 2));
+
       createBlogPost(publishPayload, {
         onSuccess: () => {
+          console.log('=== DEBUG: Blog created successfully ===');
           router.push('/admin/blog');
         },
         onError: (error) => {
-          console.error('Error creating blog:', error);
+          console.error('=== DEBUG: Error creating blog ===');
+          console.error('Error details:', error);
+          console.error('Error response:', (error as any).response);
+          console.error('Error data:', (error as any).response?.data);
         }
       });
     } catch (error) {
@@ -319,7 +443,9 @@ export default function AddNewBlogWithLayoutBuilder() {
   const updateMetadata = useCallback((field: keyof BlogMetadata, value: any) => {
     setMetadata(prev => ({
       ...prev,
-      [field]: value
+      [field]: value,
+      // Clear subcategories when category changes
+      ...(field === 'categories' ? { subCategories: [] } : {})
     }));
   }, []);
 
@@ -365,6 +491,7 @@ export default function AddNewBlogWithLayoutBuilder() {
       status: metadata.status,
       publishDate: metadata.publishDate,
       categories: metadata.categories,
+      subCategories: metadata.subCategories,
       tags: metadata.tags,
       featuredImage: metadata.featuredImage || ''
     });
@@ -373,6 +500,9 @@ export default function AddNewBlogWithLayoutBuilder() {
   }, [metadata.title, metadata.author, metadata.status, metadata.publishDate, metadata.categories, metadata.tags, metadata.featuredImage, seoData, openTitleModalHandler]);
 
   const saveTitleModal = useCallback(() => {
+    console.log('=== DEBUG: Saving modal data ===');
+    console.log('tempMetadata.subCategories:', tempMetadata.subCategories);
+    
     updateTitle(tempTitle);
     setSeoData(tempSeoData);
     updateMetadata('seoTitle', tempSeoData.title);
@@ -381,6 +511,7 @@ export default function AddNewBlogWithLayoutBuilder() {
     updateMetadata('status', tempMetadata.status);
     updateMetadata('publishDate', tempMetadata.publishDate);
     updateMetadata('categories', tempMetadata.categories);
+    updateMetadata('subCategories', tempMetadata.subCategories);
     updateMetadata('tags', tempMetadata.tags);
     updateMetadata('featuredImage', tempMetadata.featuredImage);
     closeTitleModal();
@@ -398,11 +529,12 @@ export default function AddNewBlogWithLayoutBuilder() {
       status: metadata.status,
       publishDate: metadata.publishDate,
       categories: metadata.categories,
+      subCategories: metadata.subCategories,
       tags: metadata.tags,
       featuredImage: metadata.featuredImage || ''
     });
     closeTitleModal();
-  }, [metadata.title, metadata.author, metadata.status, metadata.publishDate, metadata.categories, metadata.tags, metadata.featuredImage, seoData, closeTitleModal]);
+  }, [metadata.title, metadata.author, metadata.status, metadata.publishDate, metadata.categories, metadata.subCategories, metadata.tags, metadata.featuredImage, seoData, closeTitleModal]);
 
   const saveBlog = useCallback(async () => {
     await publishBlog();
@@ -466,6 +598,7 @@ export default function AddNewBlogWithLayoutBuilder() {
       const target = event.target as Element;
       if (!target.closest('.dropdown-container')) {
         setStatusDropdownOpen(false);
+        setDateDropdownOpen(false);
         setCategoriesDropdownOpen(false);
         setTagsDropdownOpen(false);
       }
@@ -479,17 +612,15 @@ export default function AddNewBlogWithLayoutBuilder() {
 
   return (
     <>
-
       <div className="fixed inset-0 z-50 bg-gray-50 dark:bg-gray-900">
-     
         <div className="h-16 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between px-6">
           <div className="flex items-center space-x-4">
-          <Button
-                onClick={() => router.push('/admin/blog')}
-                variant="ghost"
-                size="sm"
-                  className='text-brand-400'
-              >
+            <Button
+              onClick={() => router.push('/admin/blog')}
+              variant="ghost"
+              size="sm"
+              className='text-brand-400'
+            >
              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
@@ -520,7 +651,10 @@ export default function AddNewBlogWithLayoutBuilder() {
                 </button>
               </div>
               
-            </div>
+             
+        
+
+             
           </div>
           <div className="flex items-center space-x-3">
             <Button
@@ -531,6 +665,7 @@ export default function AddNewBlogWithLayoutBuilder() {
               Publish
             </Button>
           </div>
+        </div>
         </div>
         
         <div className="h-[calc(100vh-64px)] flex">
@@ -586,7 +721,7 @@ export default function AddNewBlogWithLayoutBuilder() {
         className="max-w-3xl w-full mx-auto my-8 rounded-lg shadow-xl"
       >
         <div className="p-6">
-          <h2 className="text-xl font-bold mb-6">Edit Blog Title & SEO Settings</h2>
+          <h2 className="text-xl font-bold mb-6">Add Blog Title & SEO Settings</h2>
           
           {/* Tabs */}
           <div className="border-b border-gray-200 dark:border-gray-700 mb-6">
@@ -734,7 +869,11 @@ export default function AddNewBlogWithLayoutBuilder() {
                         <button
                           key={category.value}
                           onClick={() => {
-                            setTempMetadata(prev => ({ ...prev, categories: category.value }));
+                            setTempMetadata(prev => ({ 
+                              ...prev, 
+                              categories: category.value,
+                              subCategories: [] // Clear subcategories when category changes
+                            }));
                             setCategoriesDropdownOpen(false);
                           }}
                           className="w-full px-3 py-2 text-left text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700"
@@ -745,6 +884,106 @@ export default function AddNewBlogWithLayoutBuilder() {
                     </div>
                   )}
                 </div>
+              </div>
+
+              {/* SubCategories */}
+              <div className="dropdown-container">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  SubCategories
+                </label>
+                <div className="relative">
+                  <button
+                    onClick={() => setSubCategoriesDropdownOpen(!subCategoriesDropdownOpen)}
+                    disabled={!tempMetadata.categories}
+                    className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-colors text-left flex items-center justify-between ${
+                      !tempMetadata.categories 
+                        ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 border-gray-300 dark:border-gray-600 cursor-not-allowed' 
+                        : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600 hover:border-blue-500'
+                    }`}
+                  >
+                    <span>
+                      {!tempMetadata.categories ? 
+                        'Select a category first' : 
+                        tempMetadata.subCategories.length > 0 ? 
+                          `${tempMetadata.subCategories.length} subcategory(ies) selected` : 
+                          'Select subcategories'
+                      }
+                    </span>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  {subCategoriesDropdownOpen && tempMetadata.categories && (
+                    <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                      <div className="p-2">
+                        <input
+                          type="text"
+                          placeholder="Search subcategories..."
+                          value={subCategoriesSearchTerm}
+                          onChange={(e) => setSubCategoriesSearchTerm(e.target.value)}
+                          className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                        />
+                      </div>
+                      
+                      <div className="max-h-32 overflow-y-auto">
+                        {subCategoriesLoading ? (
+                          <div className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
+                            <div className="flex items-center justify-center space-x-2">
+                              <svg className="animate-spin h-4 w-4 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                              </svg>
+                              <span>Loading subcategories...</span>
+                            </div>
+                          </div>
+                        ) : filteredSubCategories.length > 0 ? (
+                          <>
+                            {filteredSubCategories.map(subCategory => (
+                              <label key={subCategory.id} className="flex items-center px-3 py-2 text-sm cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700">
+                                <input
+                                  type="checkbox"
+                                  checked={tempMetadata.subCategories.includes(subCategory.id)}
+                                  onChange={(e) => {
+                                    const isChecked = e.target.checked;
+                                    const currentSubCategories = [...tempMetadata.subCategories];
+                                    
+                                    if (isChecked && !currentSubCategories.includes(subCategory.id)) {
+                                      currentSubCategories.push(subCategory.id);
+                                    } else if (!isChecked) {
+                                      const index = currentSubCategories.indexOf(subCategory.id);
+                                      if (index > -1) {
+                                        currentSubCategories.splice(index, 1);
+                                      }
+                                    }
+                                    
+                                    setTempMetadata(prev => ({ ...prev, subCategories: currentSubCategories }));
+                                  }}
+                                  className="mr-3 w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 rounded"
+                                />
+                                <span className="text-gray-900 dark:text-gray-100">{subCategory.name}</span>
+                                {tempMetadata.subCategories.includes(subCategory.id) && (
+                                  <svg className="w-4 h-4 ml-auto text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                  </svg>
+                                )}
+                              </label>
+                            ))}
+                          </>
+                        ) : (
+                          <div className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
+                            {subCategoriesSearchTerm ? 
+                              `No subcategories found matching "${subCategoriesSearchTerm}"` : 
+                              'No subcategories available for this category'
+                            }
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  Select subcategories for more specific categorization. {!tempMetadata.categories && 'Please select a category first.'}
+                </p>
               </div>
 
               {/* Tags */}
