@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback, useEffect, useMemo } from 'react';
+import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Modal } from "@/components/ui/modal";
 import { useModal } from "@/hooks/useModal";
@@ -113,6 +113,9 @@ export default function AddNewBlogWithLayoutBuilder() {
   const [categoriesSearchTerm, setCategoriesSearchTerm] = useState('');
   const [subCategoriesSearchTerm, setSubCategoriesSearchTerm] = useState('');
   const [tagsSearchTerm, setTagsSearchTerm] = useState('');
+  
+  // Refs for click outside handling
+  const subCategoriesDropdownRef = useRef<HTMLDivElement>(null);
   
 
   const { 
@@ -308,6 +311,23 @@ export default function AddNewBlogWithLayoutBuilder() {
 
     fetchSubCategoriesForModal();
   }, [tempMetadata.categories, categoryOptions]);
+
+  // Handle click outside subcategory dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (subCategoriesDropdownRef.current && !subCategoriesDropdownRef.current.contains(event.target as Node)) {
+        setSubCategoriesDropdownOpen(false);
+      }
+    };
+
+    if (subCategoriesDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [subCategoriesDropdownOpen]);
 
   const [expandedSections, setExpandedSections] = useState({
     publish: true,
@@ -891,7 +911,7 @@ export default function AddNewBlogWithLayoutBuilder() {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   SubCategories
                 </label>
-                <div className="relative">
+                <div className="relative" ref={subCategoriesDropdownRef}>
                   <button
                     onClick={() => setSubCategoriesDropdownOpen(!subCategoriesDropdownOpen)}
                     disabled={!tempMetadata.categories}
