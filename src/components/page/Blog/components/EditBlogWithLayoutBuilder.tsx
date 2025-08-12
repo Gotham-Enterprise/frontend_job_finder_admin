@@ -173,6 +173,9 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
         setBlogData(response);
         const blogResponse = response as any;
               
+        console.log('=== Loading blog data ===');
+        console.log('Blog response:', blogResponse);
+        
         setMetadata({
           title: blogResponse.title || '',
           excerpt: blogResponse.excerpt || '',
@@ -181,7 +184,9 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
           visibility: blogResponse.metadata?.visibility || blogResponse.visibility || 'public',
           publishDate: blogResponse.metadata?.publishDate || blogResponse.publishedDate || new Date().toISOString(),
           categories: blogResponse.metadata?.categories?.[0]?.id || blogResponse.category?.id || '',
-          subCategories: blogResponse.metadata?.categories?.[0]?.subCategory?.map((sub: any) => sub.id) || [],
+          subCategories: blogResponse.metadata?.subCategories?.map((sub: any) => sub.id) || 
+                        blogResponse.metadata?.categories?.[0]?.subCategory?.map((sub: any) => sub.id) || 
+                        blogResponse.metadata?.categories?.[0]?.subCategories?.map((sub: any) => sub.id) || [],
           tags: blogResponse.metadata?.tags?.map((tag: any) => tag.id) || 
                 blogResponse.tags?.map((tag: any) => tag.id) || [],
           seoTitle: blogResponse.metadata?.seo?.title || blogResponse.seo?.title || blogResponse.title || '',
@@ -273,7 +278,7 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
       try {
         const response = await blogApi.getCategoriesForDropdown();
         if (response.success && response.data) {
-          // Store the full categories data with subcategories
+       
           setFullCategoriesData(response.data);
           
           const transformedCategories: CategoryOption[] = response.data.map((category: CategoryWithSubCategories) => ({
@@ -314,7 +319,6 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
     fetchTags();
   }, []);
 
-  // Handle click outside subcategory dropdown
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (subCategoriesDropdownRef.current && !subCategoriesDropdownRef.current.contains(event.target as Node)) {
@@ -331,7 +335,6 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
     };
   }, [subCategoriesDropdownOpen]);
 
-  // Fetch subcategories when category changes for modal
   useEffect(() => {
     const fetchSubCategoriesForModal = async () => {
       if (!tempMetadata.categories) {
@@ -341,7 +344,7 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
 
       setSubCategoriesLoading(true);
       try {
-        // Find the category name from categoryOptions
+
         const selectedCategory = categoryOptions.find(cat => cat.value === tempMetadata.categories);
         
         if (!selectedCategory) {
@@ -400,15 +403,15 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
   );
 
   const filteredSubCategories = useMemo(() => {
-    if (!metadata.categories) return [];
+    if (!tempMetadata.categories) return [];
     
-    const selectedCategory = fullCategoriesData.find(cat => cat.id === metadata.categories);
+    const selectedCategory = fullCategoriesData.find(cat => cat.id === tempMetadata.categories);
     if (!selectedCategory?.subCategories) return [];
     
     return selectedCategory.subCategories.filter(sub =>
       sub.name.toLowerCase().includes(subCategoriesSearchTerm.toLowerCase())
     );
-  }, [fullCategoriesData, metadata.categories, subCategoriesSearchTerm]);
+  }, [fullCategoriesData, tempMetadata.categories, subCategoriesSearchTerm]);
 
   const filteredTags = useMemo(() => 
     tagOptions.filter(tag =>
@@ -428,8 +431,7 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
       ...prev,
       [field]: value
     }));
-    
-    // Clear subcategories when category changes
+
     if (field === 'categories') {
       setMetadata(prev => ({
         ...prev,
@@ -449,25 +451,29 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
   }, [metadata, seoData, titleModal]);
 
   const handleTitleSave = useCallback(() => {
-    // Update main metadata with all fields from General tab
+
     setMetadata(tempMetadata);
-    
-    // Update specific fields for compatibility
+
     updateMetadataField('title', tempMetadata.title);
     updateMetadataField('seoTitle', tempSeoData.title);
     updateMetadataField('seoDescription', tempSeoData.description);
     updateMetadataField('author', tempMetadata.author);
-    
-    // Update SEO data
+    updateMetadataField('status', tempMetadata.status);
+    updateMetadataField('publishDate', tempMetadata.publishDate);
+    updateMetadataField('categories', tempMetadata.categories);
+    updateMetadataField('subCategories', tempMetadata.subCategories);
+    updateMetadataField('tags', tempMetadata.tags);
+    updateMetadataField('featuredImage', tempMetadata.featuredImage);
+
+
     setSeoData(tempSeoData);
     
-    // Reset to first tab and close modal
+
     setActiveTab('general');
     titleModal.closeModal();
   }, [tempMetadata, tempSeoData, updateMetadataField, titleModal]);
 
   const handleTitleCancel = useCallback(() => {
-    // Reset all temporary states to current values
     setTempMetadata(metadata);
     setTempSeoData({
       title: seoData.title,
@@ -475,7 +481,6 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
       keywords: seoData.keywords
     });
     
-    // Reset to first tab and close modal
     setActiveTab('general');
     titleModal.closeModal();
   }, [metadata, seoData, titleModal]);
@@ -528,14 +533,7 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
 
   const saveBlog = useCallback(async () => {
     try {
-      console.log('=== DEBUG: Generating edit blog payload ===');
-      console.log('Blog metadata:', metadata);
-      console.log('Blog metadata.author:', metadata.author);
-      console.log('Blog metadata.subCategories:', metadata.subCategories);
-      console.log('Current layout blocks:', currentLayout.blocks);
-      console.log('Category options:', categoryOptions);
-      console.log('Tag options:', tagOptions);
-      console.log('Full categories data:', fullCategoriesData);
+    
 
       const payload = transformBlogDataForAPI(
         metadata,
@@ -545,13 +543,8 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
         fullCategoriesData
       );
 
-      console.log('=== DEBUG: Generated edit payload ===');
-      console.log('Full payload:', JSON.stringify(payload, null, 2));
-      console.log('Payload author:', payload.metadata.author);
-
+    
       const validation = validateBlogData(payload);
-      console.log('=== DEBUG: Validation result ===');
-      console.log('Validation:', validation);
 
       if (!validation.isValid) {
         console.error('Payload validation failed:', validation.errors);
@@ -562,14 +555,11 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
         { id, data: payload },
         {
           onSuccess: () => {
-            console.log('=== DEBUG: Blog updated successfully ===');
+          
             router.push('/admin/blog');
           },
           onError: (error) => {
-            console.error('=== DEBUG: Error updating blog ===');
-            console.error('Error details:', error);
-            console.error('Error response:', (error as any).response);
-            console.error('Error data:', (error as any).response?.data);
+            console.error('Error updating blog:', error);
           }
         }
       );
