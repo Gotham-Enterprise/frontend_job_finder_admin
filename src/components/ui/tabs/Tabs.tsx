@@ -24,6 +24,7 @@ interface TabsTriggerProps {
   value: string;
   children: ReactNode;
   className?: string;
+  activeClassName?: string;
 }
 
 interface TabsContentProps {
@@ -69,7 +70,7 @@ const TabsList: React.FC<TabsListProps> = ({ children, className = '' }) => {
   );
 };
 
-const TabsTrigger: React.FC<TabsTriggerProps> = ({ value, children, className = '' }) => {
+const TabsTrigger: React.FC<TabsTriggerProps> = ({ value, children, className = '', activeClassName = '' }) => {
   const context = useContext(TabsContext);
   if (!context) {
     throw new Error('TabsTrigger must be used within a Tabs component');
@@ -84,7 +85,7 @@ const TabsTrigger: React.FC<TabsTriggerProps> = ({ value, children, className = 
       className={`
         px-6 py-4 text-sm font-medium transition-colors relative
         ${isActive 
-          ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400 bg-blue-50/50 dark:bg-blue-900/20' 
+          ? activeClassName || 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400 bg-blue-50/50 dark:bg-blue-900/20' 
           : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50'
         }
         ${className}

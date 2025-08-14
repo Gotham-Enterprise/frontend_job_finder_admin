@@ -1,6 +1,6 @@
-import { FC, useEffect, useState } from 'react';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { FC, ReactNode, useEffect, useState } from 'react';
 
-import Select from '@/components/form/Select';
 import { SearchIcon } from '@/components/ui/icons';
 import Input from '@/components/ui/input/Input';
 import { UseIdApprovalLogic } from '@/services/types/idApproval';
@@ -12,7 +12,15 @@ interface Props {
   onFilterChange: UseIdApprovalLogic['onFilterChange'];
 }
 
-const IdApprovalHeader: FC<Props> = ({ totalCount, isLoading, filters,onFilterChange }) => {
+const CustomTabTrigger: FC<{ value: string, children: ReactNode }> = ({ value, children,}) => {
+  return (
+    <TabsTrigger value={value} activeClassName="text-green-700 border-b-3 border-green-700">
+      {children}
+    </TabsTrigger>
+  );
+};
+
+const IdApprovalHeader: FC<Props> = ({ totalCount, isLoading, filters, onFilterChange }) => {
   const [searchInput, setSearchInput] = useState('');
 
   useEffect(() => {
@@ -23,22 +31,32 @@ const IdApprovalHeader: FC<Props> = ({ totalCount, isLoading, filters,onFilterCh
     return () => clearTimeout(timeoutId);
   }, [searchInput, onFilterChange]);
 
+  const onChangeTab = (value: string) => {
+    onFilterChange('status', value);
+  };
 
   return (
     <div className="px-6 py-5 border-b border-gray-200 dark:border-gray-800">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
+        <div className="flex flex-col flex-1 gap-2">
           <h3 className="text-xl font-semibold text-gray-800 dark:text-white">
             Unlock Request
           </h3>
-          <p className="text-sm text-gray-500 mt-1 dark:text-gray-400">
+          <Tabs className="w-full" value={filters.status} onValueChange={onChangeTab}>
+            <TabsList className="mb-2">
+              <CustomTabTrigger value="pending" >Need to Review</CustomTabTrigger>
+              <CustomTabTrigger value="declined">Declined</CustomTabTrigger>
+              <CustomTabTrigger value="approved">Approved</CustomTabTrigger>
+            </TabsList>
+          </Tabs>
+          {/*<p className="text-sm text-gray-500 dark:text-gray-400">
             {totalCount || 0} total unlock requests
             {isLoading && (
               <span className="ml-2 text-xs text-primary">
                 Updating...
               </span>
             )}
-          </p>
+          </p>*/}
         </div>
       </div>
 
@@ -67,19 +85,6 @@ const IdApprovalHeader: FC<Props> = ({ totalCount, isLoading, filters,onFilterCh
               </button>
             </div>
           )}
-        </div>
-        <div  className="w-sm">
-          <Select
-            value={filters.status || ''}
-            options={[
-              { value: 'pending', label: 'Pending' },
-              { value: 'approved', label: 'Approved' },
-              { value: 'declined', label: 'Declined' },
-            ]}
-            placeholder="Filter by status"
-            onChange={(value) => onFilterChange('status', value)}
-
-          />
         </div>
       </div>
     </div>

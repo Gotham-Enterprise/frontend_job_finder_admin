@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { ReactNode } from 'react';
 import { TableHeader, TableRow, TableCell } from '../ui/table';
 
-interface TableHeaderColumn {
+export interface TableHeaderColumn {
   key: string;
-  label: string;
+  label: string | ReactNode;
   className?: string;
 }
 

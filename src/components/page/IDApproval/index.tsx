@@ -19,9 +19,13 @@ const IDApproval: React.FC<Props> = ({ className }) => {
     itemsPerPageOptions,
     selected,
     isUpdating,
+    checked,
+    checkedItems,
     onFilterChange,
     setSelected,
     onUpdateStatus,
+    onChangeChecked,
+    onChangeCheckedItem,
   } = useIdApprovalLogic();
 
   return (
@@ -32,7 +36,17 @@ const IDApproval: React.FC<Props> = ({ className }) => {
         filters={filters}
         onFilterChange={onFilterChange}
       />
-      <IdApprovalTable data={data} isLoading={isLoading} tableColumns={tableColumns} setSelected={setSelected} />
+      <IdApprovalTable
+        filters={filters}
+        data={data}
+        isLoading={isLoading}
+        tableColumns={tableColumns}
+        checked={checked}
+        checkedItems={checkedItems}
+        setSelected={setSelected}
+        onChangeChecked={onChangeChecked}
+        onChangeCheckedItem={onChangeCheckedItem}
+      />
       <IdApprovalTablePagination
         data={data}
         isLoading={isLoading}
