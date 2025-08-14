@@ -18,6 +18,7 @@ interface Props {
   filters: UseIdApprovalLogic['filters'];
   checked: UseIdApprovalLogic['checked'];
   checkedItems: UseIdApprovalLogic['checkedItems'];
+  isPending: UseIdApprovalLogic['isPending']
   setSelected: UseIdApprovalLogic['setSelected'];
   onChangeChecked: UseIdApprovalLogic['onChangeChecked'];
   onChangeCheckedItem: UseIdApprovalLogic['onChangeCheckedItem'];
@@ -27,29 +28,32 @@ const IdApprovalTable: FC<Props> = ({
   data,
   isLoading,
   tableColumns,
-  filters,
   checked,
   checkedItems,
+  isPending,
   setSelected,
   onChangeChecked,
   onChangeCheckedItem,
 }) => {
-  const { status } = filters;
-  const isPending = status === 'pending';
 
   const columns = useMemo(() => { 
     if (isPending) {
       return [
         {
           key: 'id',
-          label: <Checkbox checked={checked} onChange={onChangeChecked} />,
+          label: (
+            <Checkbox
+              checked={checkedItems.length ? checked : false}
+              onChange={onChangeChecked}
+            />
+          ),
         },
         ...tableColumns,
       ]
     }
 
     return tableColumns;
-  }, [checked, isPending, tableColumns, onChangeChecked])
+  }, [checked, isPending, tableColumns, checkedItems, onChangeChecked])
 
   return (
     <Table>

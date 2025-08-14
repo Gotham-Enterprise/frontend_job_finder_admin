@@ -42,6 +42,24 @@ export const useIdApprovalLogic = (): UseIdApprovalLogic => {
   };
   const { mutate, isPending: isUpdating } = useIdApprovalUpdateStatus();
 
+  /** memos */
+  const tableColumns = useMemo(() => [
+    { key: 'name', label: 'Name' },
+    { key: 'email', label: 'Email' },
+    { key: 'accountStatus', label: 'Account Status' },
+    { key: 'status', label: 'ID Status' },
+    { key: 'actions', label: 'Action', className: 'text-right' },
+  ], []);
+  const itemsPerPageOptions = useMemo(() => [
+    { value: '10', label: '10 per page' },
+    { value: '20', label: '20 per page' },
+    { value: '50', label: '50 per page' },
+    { value: '100', label: '100 per page' },
+  ], []);
+  const data = useMemo(() => idApprovals?.data || [], [idApprovals]);
+  const isPending = useMemo(() => filters.status === 'pending', [filters.status]);
+
+
   /** useEffects */
   useEffect(() => {
     const params = new URLSearchParams();
@@ -61,22 +79,11 @@ export const useIdApprovalLogic = (): UseIdApprovalLogic => {
       refetch()
     }
   }, [filters, router, refetch]);
+  useEffect(() => {
+    const isAllChecked = data.every((item) => checkedItems.includes(item.id));
 
-  /** memos */
-  const tableColumns = useMemo(() => [
-    { key: 'name', label: 'Name' },
-    { key: 'email', label: 'Email' },
-    { key: 'accountStatus', label: 'Account Status' },
-    { key: 'status', label: 'ID Status' },
-    { key: 'actions', label: 'Action', className: 'text-right' },
-  ], []);
-  const itemsPerPageOptions = useMemo(() => [
-    { value: '10', label: '10 per page' },
-    { value: '20', label: '20 per page' },
-    { value: '50', label: '50 per page' },
-    { value: '100', label: '100 per page' },
-  ], []);
-  const data = useMemo(() => idApprovals?.data || [], [idApprovals]);
+    setChecked(isAllChecked);
+  }, [checkedItems, data])
 
   /** callbacks */
   const onFilterChange = useCallback((key: string, value: string | number) => {
@@ -123,6 +130,7 @@ export const useIdApprovalLogic = (): UseIdApprovalLogic => {
     isUpdating,
     checked,
     checkedItems,
+    isPending,
     onFilterChange,
     setSelected,
     onUpdateStatus,

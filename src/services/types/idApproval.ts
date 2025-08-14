@@ -12,6 +12,7 @@ export interface UseIdApprovalLogic {
   isUpdating: boolean;
   checked: boolean;
   checkedItems: IdApproval['id'][];
+  isPending: boolean;
   setSelected: Dispatch<SetStateAction<IdApproval | null>>;
   onFilterChange: (key: string, value: string | number) => void;
   onUpdateStatus: (id: IdApprovalStatusUpdate['id'], status: IdApprovalStatusUpdate['status']) => void;
