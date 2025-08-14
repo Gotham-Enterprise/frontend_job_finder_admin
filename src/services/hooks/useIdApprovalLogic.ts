@@ -14,7 +14,7 @@ export const useIdApprovalLogic = (): UseIdApprovalLogic => {
     const search = searchParams.get('search') || '';
     const limit = parseInt(searchParams.get('limit') || '50', 10);
     const page = parseInt(searchParams.get('page') || '1', 10);
-    const status = searchParams.get('status') || '';
+    const status = searchParams.get('status') || 'pending';
 
     return { search, limit, page, status };
   }
@@ -24,10 +24,12 @@ export const useIdApprovalLogic = (): UseIdApprovalLogic => {
   /** states */
   const [filters, setFilters] = useState<IdApprovalFilters>(initialFilters);
   const [selected, setSelected] = useState<IdApproval | null>(null);
+  const [checked, setChecked] = useState<boolean>(false);
+  const [checkedItems, setCheckedItems] = useState<IdApproval['id'][]>([]);
 
   /** queries/mutations */
   const { data: idApprovals, isFetching: isLoading, refetch } = useGetIdApprovals(filters);
-  const data = idApprovals?.data || [];
+  
   const totalCount = idApprovals?.metaData.totalCount || 0;
   const metaData = idApprovals?.metaData || {
     page: 1,
@@ -74,6 +76,7 @@ export const useIdApprovalLogic = (): UseIdApprovalLogic => {
     { value: '50', label: '50 per page' },
     { value: '100', label: '100 per page' },
   ], []);
+  const data = useMemo(() => idApprovals?.data || [], [idApprovals]);
 
   /** callbacks */
   const onFilterChange = useCallback((key: string, value: string | number) => {
@@ -91,6 +94,22 @@ export const useIdApprovalLogic = (): UseIdApprovalLogic => {
       },
     });
   }, [mutate, refetch, setSelected]);
+  const onChangeChecked = useCallback((checked: boolean) => {
+    setChecked(checked);
+
+    if (checked) {
+      setCheckedItems(data.map((item) => item.id));
+    } else {
+      setCheckedItems([]);
+    }
+  }, [data]);
+  const onChangeCheckedItem = useCallback((id: IdApproval['id']) => {
+    if (checkedItems.includes(id)) {
+      setCheckedItems((prev) => prev.filter((item) => item !== id));
+    } else {
+      setCheckedItems((prev) => [...prev, id]);
+    }
+  }, [checkedItems])
 
   return {
     data,
@@ -102,8 +121,12 @@ export const useIdApprovalLogic = (): UseIdApprovalLogic => {
     itemsPerPageOptions,
     selected,
     isUpdating,
+    checked,
+    checkedItems,
     onFilterChange,
     setSelected,
     onUpdateStatus,
+    onChangeChecked,
+    onChangeCheckedItem,
   };
 }

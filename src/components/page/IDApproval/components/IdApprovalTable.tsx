@@ -1,10 +1,11 @@
-import { FC } from 'react';
+import { FC, useMemo } from 'react';
 
 import TableHeading from '@/components/tables/tableHeader';
 import Avatar from '@/components/ui/avatar/Avatar';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 import { UseIdApprovalLogic } from '@/services/types/idApproval';
 
+import Checkbox from '@/components/form/input/Checkbox';
 import Button from '@/components/ui/button/Button';
 import { EyeIcon } from '@/icons';
 import AccountStatus from './AccountStatus';
@@ -14,13 +15,45 @@ interface Props {
   data: UseIdApprovalLogic['data'];
   isLoading: UseIdApprovalLogic['isLoading'];
   tableColumns: UseIdApprovalLogic['tableColumns'];
+  filters: UseIdApprovalLogic['filters'];
+  checked: UseIdApprovalLogic['checked'];
+  checkedItems: UseIdApprovalLogic['checkedItems'];
   setSelected: UseIdApprovalLogic['setSelected'];
+  onChangeChecked: UseIdApprovalLogic['onChangeChecked'];
+  onChangeCheckedItem: UseIdApprovalLogic['onChangeCheckedItem'];
 }
 
-const IdApprovalTable: FC<Props> = ({ data, isLoading, tableColumns, setSelected }) => {
+const IdApprovalTable: FC<Props> = ({
+  data,
+  isLoading,
+  tableColumns,
+  filters,
+  checked,
+  checkedItems,
+  setSelected,
+  onChangeChecked,
+  onChangeCheckedItem,
+}) => {
+  const { status } = filters;
+  const isPending = status === 'pending';
+
+  const columns = useMemo(() => { 
+    if (isPending) {
+      return [
+        {
+          key: 'id',
+          label: <Checkbox checked={checked} onChange={onChangeChecked} />,
+        },
+        ...tableColumns,
+      ]
+    }
+
+    return tableColumns;
+  }, [checked, isPending, tableColumns, onChangeChecked])
+
   return (
     <Table>
-      <TableHeading columns={tableColumns} />
+      <TableHeading columns={columns} />
       <TableBody>
         {isLoading && (
           <TableRow>
@@ -42,9 +75,15 @@ const IdApprovalTable: FC<Props> = ({ data, isLoading, tableColumns, setSelected
         {data.length > 0 && !isLoading && (
           data.map((row) => {
             const { id, fullName, email, isLocked, status } = row
+            const isChecked = checkedItems.includes(id);
 
             return (
               <TableRow key={`id-approval-${id}`}>
+                {isPending && (
+                  <TableCell className="py-4 px-6">
+                    <Checkbox checked={isChecked} onChange={() => onChangeCheckedItem(id)} />
+                  </TableCell>
+                )}
                 <TableCell className="text-gray-800 py-6 px-4">
                   <div className='flex items-center gap-2'>
                     <Avatar

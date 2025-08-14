@@ -10,9 +10,13 @@ export interface UseIdApprovalLogic {
   filters: IdApprovalFilters;
   itemsPerPageOptions: { value: string; label: string }[];
   isUpdating: boolean;
+  checked: boolean;
+  checkedItems: IdApproval['id'][];
   setSelected: Dispatch<SetStateAction<IdApproval | null>>;
   onFilterChange: (key: string, value: string | number) => void;
   onUpdateStatus: (id: IdApprovalStatusUpdate['id'], status: IdApprovalStatusUpdate['status']) => void;
+  onChangeChecked: (checked: boolean) => void;
+  onChangeCheckedItem: (id: IdApproval['id']) => void;
 }
 
 export interface IdApproval {
