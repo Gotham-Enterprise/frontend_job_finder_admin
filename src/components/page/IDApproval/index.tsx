@@ -21,6 +21,7 @@ const IDApproval: React.FC<Props> = ({ className }) => {
     isUpdating,
     checked,
     checkedItems,
+    isPending,
     onFilterChange,
     setSelected,
     onUpdateStatus,
@@ -43,6 +44,7 @@ const IDApproval: React.FC<Props> = ({ className }) => {
         tableColumns={tableColumns}
         checked={checked}
         checkedItems={checkedItems}
+        isPending={isPending}
         setSelected={setSelected}
         onChangeChecked={onChangeChecked}
         onChangeCheckedItem={onChangeCheckedItem}
