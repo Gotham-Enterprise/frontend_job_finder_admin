@@ -166,15 +166,45 @@ const StyleControls: React.FC<StyleControlsProps> = ({ block, onFloatingPanelOpe
   const renderTypographyControl = (control: typeof TYPOGRAPHY_CONTROLS[0]) => {
     const value = getTypographyValue(control.key, control.defaultValue, control.unit);
     const numericValue = parseInt(value);
+    const [inputValue, setInputValue] = React.useState(numericValue.toString());
 
-    const handleIncrement = () => {
+    React.useEffect(() => {
+      setInputValue(numericValue.toString());
+    }, [numericValue]);
+
+    const incrementValue = () => {
       const newValue = Math.min(numericValue + 1, control.max);
       updateTypography(control.key, newValue.toString(), control.unit);
     };
 
-    const handleDecrement = () => {
+    const decrementValue = () => {
       const newValue = Math.max(numericValue - 1, control.min);
       updateTypography(control.key, newValue.toString(), control.unit);
+    };
+
+    const onInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const newValue = e.target.value;
+      setInputValue(newValue);
+      
+      if (newValue === '') return;
+      
+      const parsedValue = parseInt(newValue);
+      if (!isNaN(parsedValue)) {
+        const clampedValue = Math.max(control.min, Math.min(parsedValue, control.max));
+        updateTypography(control.key, clampedValue.toString(), control.unit);
+      }
+    };
+
+    const onInputBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+      const newValue = e.target.value;
+      if (newValue === '' || isNaN(parseInt(newValue))) {
+        setInputValue(numericValue.toString());
+      } else {
+        const parsedValue = parseInt(newValue);
+        const clampedValue = Math.max(control.min, Math.min(parsedValue, control.max));
+        setInputValue(clampedValue.toString());
+        updateTypography(control.key, clampedValue.toString(), control.unit);
+      }
     };
 
     return (
@@ -182,19 +212,28 @@ const StyleControls: React.FC<StyleControlsProps> = ({ block, onFloatingPanelOpe
         <label className="text-xs font-medium text-gray-600">{control.label}</label>
         <div className="flex items-center gap-2">
           <button
-            onClick={handleDecrement}
+            onClick={decrementValue}
             disabled={numericValue <= control.min}
             className="w-8 h-8 flex items-center justify-center rounded border border-gray-200 bg-gray-50 text-gray-600 hover:bg-gray-100 hover:text-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             title={`Decrease ${control.label}`}
           >
             -
           </button>
-          <div className="flex items-center gap-1 min-w-[60px] justify-center">
-            <span className="text-sm font-medium text-gray-700">{numericValue}</span>
+          <div className="flex items-center gap-1 min-w-[80px]">
+            <input
+              type="number"
+              value={inputValue}
+              onChange={onInputChange}
+              onBlur={onInputBlur}
+              min={control.min}
+              max={control.max}
+              className="w-12 px-1 py-1 text-xs text-center bg-gray-50 border border-gray-200 rounded focus:border-purple-400 focus:outline-none focus:ring-1 focus:ring-purple-100 transition-all"
+              title={`Enter ${control.label} (${control.min}-${control.max}${control.unit})`}
+            />
             <span className="text-xs text-gray-500">{control.unit}</span>
           </div>
           <button
-            onClick={handleIncrement}
+            onClick={incrementValue}
             disabled={numericValue >= control.max}
             className="w-8 h-8 flex items-center justify-center rounded border border-gray-200 bg-gray-50 text-gray-600 hover:bg-gray-100 hover:text-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             title={`Increase ${control.label}`}
@@ -208,7 +247,6 @@ const StyleControls: React.FC<StyleControlsProps> = ({ block, onFloatingPanelOpe
 
   return (
     <div className="p-5 space-y-4">
-      {/* Duplicate Button */}
       {onDuplicate && (
         <div className="pb-3 border-b border-gray-200">
           <button
