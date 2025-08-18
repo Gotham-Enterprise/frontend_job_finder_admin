@@ -10,6 +10,7 @@ import FullScreenSpinner from "@/components/ui/FullScreenSpinner";
 import VisualLayoutBuilder from "./VisualLayoutBuilder/VisualLayoutBuilder";
 import FloatingElementsPanel from "./VisualLayoutBuilder/components/FloatingElementsPanel";
 import ImageGalleryModal from "./VisualLayoutBuilder/components/ImageGalleryModal";
+import BlogExitConfirmationModal from "@/components/ui/BlogExitConfirmationModal";
 
 import { authUtils } from '@/services/utils/authUtils';
 import { blogApi } from '@/services/api/blog';
@@ -345,9 +346,11 @@ export default function AddNewBlogWithLayoutBuilder() {
 
   const [isElementsPanelVisible, setIsElementsPanelVisible] = useState(true);
   const [childAddBlock, setChildAddBlock] = useState<((type: BlockType) => void) | null>(null);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   const previewModal = useModal();
   const imageGalleryModal = useModal();
+  const exitConfirmationModal = useModal();
 
   const filteredCategories = useMemo(() => 
     categoryOptions
@@ -592,6 +595,55 @@ export default function AddNewBlogWithLayoutBuilder() {
     updateMetadata('featuredImage', '');
   }, [updateMetadata]);
 
+  const handleBackClick = useCallback(() => {
+    if (hasUnsavedChanges) {
+      exitConfirmationModal.openModal();
+    } else {
+      router.push('/admin/blog');
+    }
+  }, [hasUnsavedChanges, exitConfirmationModal, router]);
+
+  const handleSaveAsDraft = useCallback(async () => {
+    const updatedMetadata = { ...metadata, status: 'draft' as const };
+    setMetadata(updatedMetadata);
+    
+    const payloadData = generateBlogPayloadData();
+    if (!payloadData) {
+      console.error('Failed to generate blog payload');
+      return;
+    }
+
+    const { blogPayload, validation } = payloadData;
+    if (!validation.isValid) {
+      return;
+    }
+
+    const draftPayload = {
+      ...blogPayload,
+      metadata: {
+        ...blogPayload.metadata,
+        status: 'draft'
+      }
+    };
+
+    createBlogPost(draftPayload, {
+      onSuccess: () => {
+        setHasUnsavedChanges(false);
+        exitConfirmationModal.closeModal();
+        router.push('/admin/blog');
+      },
+      onError: (error) => {
+        console.error('Error saving draft:', error);
+      }
+    });
+  }, [metadata, generateBlogPayloadData, createBlogPost, exitConfirmationModal, router]);
+
+  const handleExitWithoutSaving = useCallback(() => {
+    setHasUnsavedChanges(false);
+    exitConfirmationModal.closeModal();
+    router.push('/admin/blog');
+  }, [exitConfirmationModal, router]);
+
   const canSave = metadata.title.trim().length > 0;
 
   const handleAddBlockRef = useCallback((addBlockFn: (type: BlockType) => void) => {
@@ -644,13 +696,24 @@ export default function AddNewBlogWithLayoutBuilder() {
     };
   }, []);
 
+  // Track changes to mark blog as having unsaved changes
+  useEffect(() => {
+    const hasContentChanges = metadata.title.trim().length > 0 || 
+                             currentLayout.blocks.length > 0 ||
+                             metadata.excerpt.trim().length > 0 ||
+                             metadata.categories.length > 0 ||
+                             metadata.tags.length > 0;
+    
+    setHasUnsavedChanges(hasContentChanges);
+  }, [metadata.title, metadata.excerpt, metadata.categories, metadata.tags, currentLayout.blocks]);
+
   return (
     <>
       <div className="fixed inset-0 z-50 bg-gray-50 dark:bg-gray-900">
         <div className="h-16 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between px-6">
           <div className="flex items-center space-x-4">
             <Button
-              onClick={() => router.push('/admin/blog')}
+              onClick={handleBackClick}
               variant="ghost"
               size="sm"
               className='text-brand-400'
@@ -742,6 +805,16 @@ export default function AddNewBlogWithLayoutBuilder() {
         onImageSelect={setFeaturedImageInModal}
         onSetFeaturedImage={setFeaturedImageInModal}
         currentFeaturedImage={tempMetadata.featuredImage}
+      />
+
+      {/* Exit Confirmation Modal */}
+      <BlogExitConfirmationModal
+        isOpen={exitConfirmationModal.isOpen}
+        onClose={exitConfirmationModal.closeModal}
+        onSaveAsDraft={handleSaveAsDraft}
+        onExitWithoutSaving={handleExitWithoutSaving}
+        blogTitle={metadata.title || "Untitled Blog"}
+        isLoading={isCreating}
       />
 
       {/* Title & SEO Modal */}

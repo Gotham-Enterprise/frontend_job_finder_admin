@@ -10,6 +10,7 @@ import CustomDatePicker from "@/components/form/CustomDatePicker";
 import VisualLayoutBuilder from "./VisualLayoutBuilder/VisualLayoutBuilder";
 import FloatingElementsPanel from "./VisualLayoutBuilder/components/FloatingElementsPanel";
 import ImageGalleryModal from "./VisualLayoutBuilder/components/ImageGalleryModal";
+import BlogExitConfirmationModal from "@/components/ui/BlogExitConfirmationModal";
 import BlogDropdown from "./BlogDropdown";
 import { authUtils } from '@/services/utils/authUtils';
 import { 
@@ -102,6 +103,7 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
 
   const titleModal = useModal();
   const imageGalleryModal = useModal();
+  const exitConfirmationModal = useModal();
   const [tempSeoData, setTempSeoData] = useState({
     title: '',
     description: '',
@@ -140,6 +142,7 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
     seo: false,
     settings: false,
   });
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [metadata, setMetadata] = useState<BlogMetadata>({
     title: '',
     permalink: '',
@@ -400,6 +403,16 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
     }));
   }, [metadata.seoTitle, metadata.seoDescription]);
 
+  // Track changes to mark blog as having unsaved changes
+  useEffect(() => {
+    if (!blogData) return; // Don't track changes until initial data is loaded
+    
+    const hasContentChanges = JSON.stringify(metadata) !== JSON.stringify(blogData.metadata) ||
+                             JSON.stringify(currentLayout.blocks) !== JSON.stringify(blogData.blocks);
+    
+    setHasUnsavedChanges(hasContentChanges);
+  }, [metadata, currentLayout.blocks, blogData]);
+
 
   const filteredCategories = useMemo(() => 
     categoryOptions
@@ -509,6 +522,45 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
     updateMetadataField('featuredImage', imageUrl);
   }, [updateMetadataField]);
 
+  const handleBackClick = useCallback(() => {
+    if (hasUnsavedChanges) {
+      exitConfirmationModal.openModal();
+    } else {
+      router.push('/admin/blog');
+    }
+  }, [hasUnsavedChanges, exitConfirmationModal, router]);
+
+  const handleSaveAsDraft = useCallback(async () => {
+    const updatedMetadata = { ...metadata, status: 'draft' as const };
+    setMetadata(updatedMetadata);
+    
+    const payloadData = {
+      ...metadata,
+      status: 'draft',
+      ...currentLayout
+    };
+
+    updateBlogPost({
+      id,
+      data: payloadData
+    }, {
+      onSuccess: () => {
+        setHasUnsavedChanges(false);
+        exitConfirmationModal.closeModal();
+        router.push('/admin/blog');
+      },
+      onError: (error) => {
+        console.error('Error saving draft:', error);
+      }
+    });
+  }, [metadata, currentLayout, id, updateBlogPost, exitConfirmationModal, router]);
+
+  const handleExitWithoutSaving = useCallback(() => {
+    setHasUnsavedChanges(false);
+    exitConfirmationModal.closeModal();
+    router.push('/admin/blog');
+  }, [exitConfirmationModal, router]);
+
   const layoutUpdate = useCallback((newLayout: LayoutBlock[]) => {
     setCurrentLayout(prev => ({
       ...prev,
@@ -609,7 +661,7 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
         <div className="h-16 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between px-6">
           <div className="flex items-center space-x-4">
             <Button
-              onClick={() => router.push('/admin/blog')}
+              onClick={handleBackClick}
               variant="ghost"
               size="sm"
               className='text-brand-400'
@@ -1193,6 +1245,17 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
         onSetFeaturedImage={setFeaturedImageInModal}
         currentFeaturedImage={tempMetadata.featuredImage || ''}
       />
+
+      {/* Exit Confirmation Modal */}
+      <BlogExitConfirmationModal
+        isOpen={exitConfirmationModal.isOpen}
+        onClose={exitConfirmationModal.closeModal}
+        onSaveAsDraft={handleSaveAsDraft}
+        onExitWithoutSaving={handleExitWithoutSaving}
+        blogTitle={metadata.title || "Untitled Blog"}
+        isLoading={isUpdating}
+      />
+
       <FullScreenSpinner 
         isVisible={isUpdating} 
         message="Updating blog post..." 
