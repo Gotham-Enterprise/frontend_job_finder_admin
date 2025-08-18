@@ -75,8 +75,26 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
   const seoModal = useModal();
 
   useEffect(() => {
-    if (editorRef.current && editorRef.current.innerHTML !== value) {
-      editorRef.current.innerHTML = value;
+    if (editorRef.current) {
+      const currentContent = editorRef.current.innerHTML;
+      if (currentContent !== value) {
+        editorRef.current.innerHTML = value;
+      }
+
+      setTimeout(() => {
+        if (editorRef.current) {
+          editorRef.current.focus();
+          if (value) {
+       
+            const range = document.createRange();
+            const selection = window.getSelection();
+            range.selectNodeContents(editorRef.current);
+            range.collapse(false);
+            selection?.removeAllRanges();
+            selection?.addRange(range);
+          }
+        }
+      }, 0);
     }
   }, [value]);
 
@@ -319,7 +337,22 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
 
  
       <div
-        ref={editorRef}
+        ref={(element) => {
+          editorRef.current = element;
+          if (element && value && element.innerHTML !== value) {
+            element.innerHTML = value;
+            // Focus and position cursor immediately
+            setTimeout(() => {
+              element.focus();
+              const range = document.createRange();
+              const selection = window.getSelection();
+              range.selectNodeContents(element);
+              range.collapse(false);
+              selection?.removeAllRanges();
+              selection?.addRange(range);
+            }, 10);
+          }
+        }}
         contentEditable
         className={`w-full bg-transparent border-none outline-none resize-none ${className}`}
         style={{

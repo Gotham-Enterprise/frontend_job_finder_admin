@@ -565,7 +565,10 @@ export const convertLayoutToHtml = (layout: BlogLayout): string => {
     switch (block.type) {
       case 'heading':
         const headingBlock = block as HeadingBlock;
-        return `<h${headingBlock.content.level}${styleAttr}>${headingBlock.content.text}</h${headingBlock.content.level}>`;
+        const headingText = headingBlock.content.text === 'Your Heading Here' 
+          ? 'Your Heading Here' 
+          : headingBlock.content.text;
+        return `<h${headingBlock.content.level}${styleAttr}>${headingText}</h${headingBlock.content.level}>`;
       
       case 'paragraph':
         const paragraphBlock = block as ParagraphBlock;

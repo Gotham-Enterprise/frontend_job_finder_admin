@@ -258,10 +258,10 @@ const ContentControls: React.FC<ContentControlsProps> = memo(({
             <input
               ref={inputRef}
               type="text"
-              value={(block.content as any)?.text || ''}
+              value={(block.content as any)?.text === 'Your Heading Here' ? '' : ((block.content as any)?.text || '')}
               onChange={(e) => onContentUpdate('text', e.target.value)}
               onMouseUp={() => processTextSelection(inputRef)}
-              placeholder="Enter heading title..."
+              placeholder="Your Heading Here"
               className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 placeholder-gray-400 focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-100 transition-all"
             />
           </div>

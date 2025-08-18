@@ -6,7 +6,6 @@ import { Table, TableHeader, TableBody, TableRow, TableCell } from "@/components
 import Pagination from "@/components/tables/Pagination";
 import BulkActionDropdown from "@/components/ui/BulkActionDropdown";
 import { Tag } from "@/services/api/tag";
-import Button from '../../../../ui/button/Button';
 import { PencilIcon, TrashBinIcon } from '@/icons';
 import FullScreenSpinner from '@/components/ui/FullScreenSpinner';
 

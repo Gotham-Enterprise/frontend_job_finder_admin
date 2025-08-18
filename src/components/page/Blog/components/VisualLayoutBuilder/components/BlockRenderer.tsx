@@ -73,7 +73,14 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
   } as React.CSSProperties);
 
   const startEditing = (currentText: string) => {
-    setEditValue(currentText);
+    const isHeadingPlaceholder = currentText === 'Your Heading Here';
+    const isParagraphPlaceholder = currentText === 'Start writing your content here...';
+    
+    if (isHeadingPlaceholder || isParagraphPlaceholder) {
+      setEditValue('');
+    } else {
+      setEditValue(currentText || '');
+    }
     setIsEditing(true);
   };
 
@@ -98,12 +105,13 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
 
   const renderEditableHeading = () => {
     const level = (block.content as any)?.level || 1; 
-    const text = (block.content as any)?.text || 'Sample Heading';
+    const text = (block.content as any)?.text || 'Your Heading Here';
     const url = (block.content as any)?.url;
     const style = createStyle('heading');
     const Tag = HEADING_TAGS[Math.min(Math.max(level - 1, 0), 5)] as HeadingTag;
     
- 
+    const displayText = text === 'Your Heading Here' ? 'Your Heading Here' : text;
+    const isPlaceholder = text === 'Your Heading Here';
     
     const linkColor = block.styles?.linkColor || '#3b82f6';
     const styledText = text.replace(
@@ -124,6 +132,7 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
       return (
         <div>
           <RichTextEditor
+            key={`heading-${block.id || 'default'}-${isEditing}`}
             value={editValue}
             onChange={setEditValue}
             onBlur={saveEdit}
@@ -135,9 +144,29 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
             }}
             className="w-full bg-transparent border-none outline-none"
             isMultiline={false}
-            placeholder="Enter heading text..."
+            placeholder="Your Heading Here"
           />
         </div>
+      );
+    }
+
+    if (isPlaceholder) {
+      return (
+        <Tag 
+          style={{
+            ...style,
+            color: '#9ca3af',
+            fontStyle: 'italic',
+            wordWrap: 'break-word',
+            overflowWrap: 'break-word'
+          }}
+          onClick={(e) => {
+            e.stopPropagation();
+            startEditing(text);
+          }}
+        >
+          {displayText}
+        </Tag>
       );
     }
 
@@ -158,7 +187,7 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
               overflowWrap: 'break-word',
               cursor: 'pointer'
             }}
-            onDoubleClick={(e) => {
+            onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
               startEditing(text);
@@ -183,8 +212,10 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
             overflowWrap: 'break-word'
           }}
           dangerouslySetInnerHTML={{ __html: styledText }}
-          onClick={preventClickPropagation}
-          onDoubleClick={() => startEditing(text)}
+          onClick={(e) => {
+            e.stopPropagation();
+            startEditing(text);
+          }}
         />
       );
     }
@@ -196,9 +227,13 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
           wordWrap: 'break-word',
           overflowWrap: 'break-word'
         }}
-        dangerouslySetInnerHTML={{ __html: styledText }}
-        onDoubleClick={() => startEditing(text)}
-      />
+        onClick={(e) => {
+          e.stopPropagation();
+          startEditing(text);
+        }}
+      >
+        {text}
+      </Tag>
     );
   };
 
@@ -206,13 +241,14 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
     const text = (block.content as any)?.text || 'Start writing your content here...';
     const style = createStyle('paragraph');
     
-    // Treat the default template text as placeholder
+   
     const displayText = text === 'Start writing your content here...' ? 'Start writing your content here...' : text;
     const isPlaceholder = text === 'Start writing your content here...';
 
     if (isEditing) {
       return (
         <RichTextEditor
+          key={`paragraph-${block.id || 'default'}-${isEditing}`}
           value={editValue}
           onChange={setEditValue}
           onBlur={saveEdit}
@@ -230,18 +266,21 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
       );
     }
 
-    // Show placeholder text with lighter styling if it's the default template text
+  
     if (isPlaceholder) {
       return (
         <p 
           style={{
             ...style,
-            color: '#9ca3af', // Gray-400 for placeholder styling
+            color: '#9ca3af',
             fontStyle: 'italic',
             wordWrap: 'break-word',
             overflowWrap: 'break-word'
           }}
-          onDoubleClick={() => startEditing('')} // Start with empty string for editing
+          onClick={(e) => {
+            e.stopPropagation();
+            startEditing(text);
+          }}
         >
           {displayText}
         </p>
@@ -264,8 +303,15 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
             overflowWrap: 'break-word'
           }}
           dangerouslySetInnerHTML={{ __html: linkStyledText }}
-          onClick={preventClickPropagation}
-          onDoubleClick={() => startEditing(text)}
+          onClick={(e) => {
+            
+            if ((e.target as HTMLElement).tagName === 'A') {
+              e.stopPropagation();
+              return; 
+            }
+            e.stopPropagation();
+            startEditing(text);
+          }}
         />
       );
     }
@@ -277,9 +323,13 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
           wordWrap: 'break-word',
           overflowWrap: 'break-word'
         }}
-        dangerouslySetInnerHTML={{ __html: text }}
-        onDoubleClick={() => startEditing(text)}
-      />
+        onClick={(e) => {
+          e.stopPropagation();
+          startEditing(text);
+        }}
+      >
+        {text}
+      </p>
     );
   };
 
@@ -515,7 +565,10 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
     const commonProps = {
       style: buttonStyle,
       className: `btn btn-${variant} btn-${size} hover:opacity-90 transition-opacity`,
-      onDoubleClick: () => startEditing(buttonText),
+      onClick: (e: React.MouseEvent) => {
+        e.stopPropagation();
+        startEditing(buttonText);
+      },
     };
 
     if (buttonUrl && buttonUrl.trim()) {
@@ -567,13 +620,16 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
       return (
         <div 
           className="bg-gray-100 rounded-lg p-6 text-center"
-          onDoubleClick={() => onOpenSettings?.('list', block)}
+          onClick={(e) => {
+            e.stopPropagation();
+            onOpenSettings?.('list', block);
+          }}
         >
           <div className="text-gray-400">
             <svg className="w-8 h-8 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
             </svg>
-            <p className="text-sm">Double-click to add list items</p>
+            <p className="text-sm">Click to add list items</p>
           </div>
         </div>
       );
@@ -589,7 +645,10 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
           margin: '0.5rem 0',
         }}
         className="space-y-1"
-        onDoubleClick={() => onOpenSettings?.('list', block)}
+        onClick={(e) => {
+          e.stopPropagation();
+          onOpenSettings?.('list', block);
+        }}
       >
         {items.map((item: string, index: number) => (
           <li key={index} style={{ margin: '0.25rem 0' }}>
@@ -618,7 +677,7 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
           padding: '1.5rem',
         }}
         className="relative"
-        onDoubleClick={(e) => {
+        onClick={(e) => {
           e.stopPropagation();
           onOpenSettings?.('quote', block);
         }}
@@ -694,8 +753,11 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
   return (
     <div 
       onClick={(e) => {
-        e.stopPropagation();
-        onClick?.();
+        // Only select the block if clicking on the container itself (not on content)
+        if (e.target === e.currentTarget) {
+          e.stopPropagation();
+          onClick?.();
+        }
       }}
       className={`relative group cursor-pointer transition-all duration-200 block clear-both ${
         isSelected ? 'shadow-lg ring-2 ring-purple-200' : 'hover:border-gray-300'
@@ -710,15 +772,18 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
         </span>
       </div>
       
-      <div className={`absolute top-2 right-2 transition-opacity duration-200 ${
+      <div className={`absolute top-2 right-2 transition-opacity duration-200 z-20 ${
         isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
       }`}>
         <button
           onClick={(e) => {
+            e.preventDefault();
             e.stopPropagation();
             onRemove?.();
           }}
-          className="w-6 h-6 flex items-center justify-center bg-red-500 hover:bg-red-600 text-white rounded-full shadow-sm transition-colors"
+          className="w-6 h-6 flex items-center justify-center bg-red-500 hover:bg-red-600 text-white rounded-full shadow-sm transition-colors pointer-events-auto"
+          title="Delete block"
+          style={{ pointerEvents: 'auto' }}
         >
           <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
