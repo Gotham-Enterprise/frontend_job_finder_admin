@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { idApprovalApi, updateIdApprovalStatus } from '../api/idApproval';
-import { IdApprovalFilters, IdApprovalStatusUpdate } from '../types/idApproval';
+import { batchUpdateIdApprovalStatus, idApprovalApi, updateIdApprovalStatus } from '../api/idApproval';
+import { IdApprovalBatchUpdate, IdApprovalFilters, IdApprovalStatusUpdate } from '../types/idApproval';
 
 export const idApprovalQueryKeys = {
   all: ['idApprovals'] as const,
@@ -33,5 +33,11 @@ export const useGetIdApprovals = (filters: IdApprovalFilters) => {
 export const useIdApprovalUpdateStatus = () => {
   return useMutation({
     mutationFn: (data: IdApprovalStatusUpdate) => updateIdApprovalStatus(data),
+  });
+};
+
+export const useIdApprovalBatchUpdateStatus = () => {
+  return useMutation({
+    mutationFn: (data: IdApprovalBatchUpdate) => batchUpdateIdApprovalStatus(data),
   });
 };

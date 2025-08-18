@@ -6,24 +6,33 @@ export interface UseIdApprovalLogic {
   totalCount: number;
   selected: IdApproval | null;
   tableColumns: { key: string; label: string; className?: string }[];
-  metaData: IdApprovals['metaData'];
+  metaData: IdApprovals["metaData"];
   filters: IdApprovalFilters;
   itemsPerPageOptions: { value: string; label: string }[];
   isUpdating: boolean;
   checked: boolean;
-  checkedItems: IdApproval['id'][];
+  checkedItems: IdApproval["id"][];
   isPending: boolean;
+  isSaving: boolean;
+  showModal: boolean;
+  modalData: {
+    title: string;
+    subtitle: string;
+    subtitle2: string;
+  } | null;
   setSelected: Dispatch<SetStateAction<IdApproval | null>>;
   onFilterChange: (key: string, value: string | number) => void;
-  onUpdateStatus: (id: IdApprovalStatusUpdate['id'], status: IdApprovalStatusUpdate['status']) => void;
+  onUpdateStatus: (id: IdApprovalStatusUpdate["id"], status: IdApprovalStatusUpdate["status"]) => void;
   onChangeChecked: (checked: boolean) => void;
-  onChangeCheckedItem: (id: IdApproval['id']) => void;
+  onChangeCheckedItem: (id: IdApproval["id"]) => void;
+  onBatchUpdate: (status: IdApproval["status"]) => void;
+  onToggleModal: () => void;
 }
 
 export interface IdApproval {
   id: string;
   userId: string;
-  status: 'pending' | 'approved' | 'declined';
+  status: "pending" | "approved" | "declined";
   front: string;
   back: string;
   isLocked: boolean;
@@ -55,11 +64,22 @@ export interface IdApprovalFilters {
 
 export interface IdApprovalStatusUpdate {
   id: string;
-  status: 'approved' | 'declined';
+  status: IdApproval["status"];
 }
 
 export interface IdApprovalStatusUpdateResponse {
   success: boolean;
   data: IdApproval;
-  message: string
+  message: string;
+}
+
+export interface IdApprovalBatchUpdate {
+  ids: IdApproval["id"][];
+  status: IdApproval["status"];
+}
+
+export interface IdApprovalBatchUpdateResponse {
+  success: boolean;
+  count: number;
+  message: string;
 }

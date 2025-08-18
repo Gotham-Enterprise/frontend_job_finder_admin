@@ -70,6 +70,7 @@ import StatusPending from "./status-pending.svg";
 import AccountLocked from "./account-locked.svg";
 import AccountUnlocked from "./account-unlocked.svg";
 import IdCardIcon from "./id-card.svg";
+import AccountCheckCircleIcon from "./account-check-circle";
 
 export {
   DownloadIcon,
@@ -129,7 +130,8 @@ export {
   AlignLeftIcon,
   AlignCenterIcon,
   AlignRightIcon,
-  QuoteIcon,  CodeBlockIcon,
+  QuoteIcon,
+  CodeBlockIcon,
   LinkIcon,
   ImageIcon,
   BriefcaseIcon,
@@ -143,4 +145,5 @@ export {
   AccountLocked,
   AccountUnlocked,
   IdCardIcon,
+  AccountCheckCircleIcon,
 };

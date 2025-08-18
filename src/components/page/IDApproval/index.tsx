@@ -1,11 +1,17 @@
-"use client"
+"use client";
 
-import { useIdApprovalLogic } from "@/services/hooks/useIdApprovalLogic"
+import { useIdApprovalLogic } from "@/services/hooks/useIdApprovalLogic";
 
-import { IdApprovalHeader, IdApprovalTable, IdApprovalTablePagination, IdApprovalDetail } from "./components";
+import {
+  IdApprovalHeader,
+  IdApprovalTable,
+  IdApprovalTablePagination,
+  IdApprovalDetail,
+  IdApprovalModal,
+} from "./components";
 
 interface Props {
-  className?: string
+  className?: string;
 }
 
 const IDApproval: React.FC<Props> = ({ className }) => {
@@ -22,20 +28,28 @@ const IDApproval: React.FC<Props> = ({ className }) => {
     checked,
     checkedItems,
     isPending,
+    isSaving,
+    showModal,
+    modalData,
     onFilterChange,
     setSelected,
     onUpdateStatus,
     onChangeChecked,
     onChangeCheckedItem,
+    onBatchUpdate,
+    onToggleModal,
   } = useIdApprovalLogic();
 
   return (
-    <div className={`rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] ${className}`}>
+    <div
+      className={`rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] ${className}`}
+    >
       <IdApprovalHeader
-        totalCount={totalCount}
-        isLoading={isLoading}
         filters={filters}
+        checkedItems={checkedItems}
+        isSaving={isSaving}
         onFilterChange={onFilterChange}
+        onBatchUpdate={onBatchUpdate}
       />
       <IdApprovalTable
         filters={filters}
@@ -57,9 +71,15 @@ const IDApproval: React.FC<Props> = ({ className }) => {
         itemsPerPageOptions={itemsPerPageOptions}
         onFilterChange={onFilterChange}
       />
-      <IdApprovalDetail selected={selected} setSelected={setSelected} isUpdating={isUpdating} onUpdateStatus={onUpdateStatus} />
+      <IdApprovalDetail
+        selected={selected}
+        setSelected={setSelected}
+        isUpdating={isUpdating}
+        onUpdateStatus={onUpdateStatus}
+      />
+      <IdApprovalModal showModal={showModal} modalData={modalData} onToggleModal={onToggleModal} />
     </div>
-  )
-}
+  );
+};
 
-export default IDApproval
+export default IDApproval;

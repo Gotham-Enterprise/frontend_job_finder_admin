@@ -1,6 +1,6 @@
 
 import { apiGet, apiPatch } from './apiUtils';
-import { IdApprovalFilters, IdApprovals, IdApprovalStatusUpdate, IdApprovalStatusUpdateResponse } from '../types/idApproval';
+import { IdApprovalBatchUpdate, IdApprovalBatchUpdateResponse, IdApprovalFilters, IdApprovals, IdApprovalStatusUpdate, IdApprovalStatusUpdateResponse } from '../types/idApproval';
 
 export const idApprovalApi = {
   async getIdApprovals(filters: IdApprovalFilters): Promise<IdApprovals> {
@@ -21,4 +21,10 @@ export const updateIdApprovalStatus = async (data: IdApprovalStatusUpdate): Prom
   const endpoint = `/api/admin/id-verifications/${data.id}/status`;
 
   return apiPatch<IdApprovalStatusUpdateResponse>(endpoint, { status: data.status });
+}
+
+export const batchUpdateIdApprovalStatus = async (data: IdApprovalBatchUpdate): Promise<IdApprovalBatchUpdateResponse> => {
+  const endpoint = `/api/admin/id-verifications/batch-status`;
+
+  return apiPatch<IdApprovalBatchUpdateResponse>(endpoint, data)
 }
