@@ -142,8 +142,33 @@ const StyleControls: React.FC<StyleControlsProps> = ({ block, onFloatingPanelOpe
 
   const getTypographyValue = (key: string, defaultValue: string, unit: string) => {
     const styleValue = (block.styles as any)[key];
-    if (!styleValue) return defaultValue;
-    return styleValue.replace(unit, '') || defaultValue;
+    
+   
+    if (!styleValue && styleValue !== 0) return defaultValue;
+    
+    if (typeof styleValue === 'number') {
+      return styleValue.toString();
+    }
+
+    if (typeof styleValue === 'string') {
+
+      if (styleValue.includes('rem')) {
+        const remValue = parseFloat(styleValue);
+      
+        const pxValue = Math.round(remValue * 16);
+        return pxValue.toString();
+      } else if (styleValue.includes('em')) {
+        const emValue = parseFloat(styleValue);
+    
+        const pxValue = Math.round(emValue * 16);
+        return pxValue.toString();
+      } else {
+        const numericPart = styleValue.match(/\d+/)?.[0] || '';
+        return numericPart || defaultValue;
+      }
+    }
+    
+    return defaultValue;
   };
 
   const renderButton = (isActive: boolean, onClick: () => void, title: string, icon: React.ComponentType<any>) => {
@@ -165,12 +190,15 @@ const StyleControls: React.FC<StyleControlsProps> = ({ block, onFloatingPanelOpe
 
   const renderTypographyControl = (control: typeof TYPOGRAPHY_CONTROLS[0]) => {
     const value = getTypographyValue(control.key, control.defaultValue, control.unit);
-    const numericValue = parseInt(value);
+    const numericValue = parseInt(value) || parseInt(control.defaultValue);
     const [inputValue, setInputValue] = React.useState(numericValue.toString());
 
+    // Update input value when block styles change
     React.useEffect(() => {
-      setInputValue(numericValue.toString());
-    }, [numericValue]);
+      const currentValue = getTypographyValue(control.key, control.defaultValue, control.unit);
+      const currentNumeric = parseInt(currentValue) || parseInt(control.defaultValue);
+      setInputValue(currentNumeric.toString());
+    }, [block.styles, control.key, control.defaultValue, control.unit]);
 
     const incrementValue = () => {
       const newValue = Math.min(numericValue + 1, control.max);
@@ -185,8 +213,9 @@ const StyleControls: React.FC<StyleControlsProps> = ({ block, onFloatingPanelOpe
     const onInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const newValue = e.target.value;
       
+      // Only allow numbers (and empty string for clearing)
       if (newValue !== '' && !/^\d+$/.test(newValue)) {
-        return; 
+        return; // Don't update if non-numeric characters are entered
       }
       
       setInputValue(newValue);
@@ -196,7 +225,12 @@ const StyleControls: React.FC<StyleControlsProps> = ({ block, onFloatingPanelOpe
       const parsedValue = parseInt(newValue);
       if (!isNaN(parsedValue)) {
         const clampedValue = Math.max(control.min, Math.min(parsedValue, control.max));
+        // Immediately update the typography with the clamped value
         updateTypography(control.key, clampedValue.toString(), control.unit);
+        // Update the input to show the clamped value if it was adjusted
+        if (clampedValue !== parsedValue) {
+          setInputValue(clampedValue.toString());
+        }
       }
     };
 
