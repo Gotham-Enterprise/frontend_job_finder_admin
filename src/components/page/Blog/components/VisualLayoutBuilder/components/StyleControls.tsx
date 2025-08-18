@@ -337,22 +337,6 @@ const StyleControls: React.FC<StyleControlsProps> = ({ block, onFloatingPanelOpe
             </div>
           </div>
 
-          <div className="space-y-2">
-            <label className="text-xs font-medium text-gray-600">List Options</label>
-            <div className="flex gap-2">
-              {LIST_OPTIONS.map((option, index) => (
-                <button
-                  key={index}
-                  className="w-8 h-8 flex items-center justify-center rounded transition-all border bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed"
-                  title={option.title}
-                  disabled={option.disabled}
-                >
-                  <option.icon width={16} height={16} />
-                </button>
-              ))}
-            </div>
-          </div>
-
           {TYPOGRAPHY_CONTROLS.map(renderTypographyControl)}
         </div>
       )}
