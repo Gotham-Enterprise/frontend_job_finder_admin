@@ -184,6 +184,11 @@ const StyleControls: React.FC<StyleControlsProps> = ({ block, onFloatingPanelOpe
 
     const onInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const newValue = e.target.value;
+      
+      if (newValue !== '' && !/^\d+$/.test(newValue)) {
+        return; 
+      }
+      
       setInputValue(newValue);
       
       if (newValue === '') return;
@@ -219,19 +224,16 @@ const StyleControls: React.FC<StyleControlsProps> = ({ block, onFloatingPanelOpe
           >
             -
           </button>
-          <div className="flex items-center gap-1 min-w-[80px]">
-            <input
-              type="number"
-              value={inputValue}
-              onChange={onInputChange}
-              onBlur={onInputBlur}
-              min={control.min}
-              max={control.max}
-              className="w-12 px-1 py-1 text-xs text-center bg-gray-50 border border-gray-200 rounded focus:border-purple-400 focus:outline-none focus:ring-1 focus:ring-purple-100 transition-all"
-              title={`Enter ${control.label} (${control.min}-${control.max}${control.unit})`}
-            />
-            <span className="text-xs text-gray-500">{control.unit}</span>
-          </div>
+          <input
+            type="text"
+            value={inputValue}
+            onChange={onInputChange}
+            onBlur={onInputBlur}
+            className="w-12 px-1 py-1 text-xs text-center bg-gray-50 border border-gray-200 rounded focus:border-purple-400 focus:outline-none focus:ring-1 focus:ring-purple-100 transition-all"
+            title={`Enter ${control.label} (${control.min}-${control.max}${control.unit})`}
+            inputMode="numeric"
+            pattern="[0-9]*"
+          />
           <button
             onClick={incrementValue}
             disabled={numericValue >= control.max}

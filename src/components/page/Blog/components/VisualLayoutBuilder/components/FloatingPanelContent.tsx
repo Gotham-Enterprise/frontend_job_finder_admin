@@ -15,24 +15,29 @@ const FloatingPanelContent: React.FC<FloatingPanelContentProps> = ({ panelType, 
     };
 
     return (
-      <div className="space-y-3">
-        <div className="grid grid-cols-3 gap-2 max-w-[120px] mx-auto">
-       
+      <div className="space-y-4">
+        <div className="grid grid-cols-3 gap-3 max-w-[140px] mx-auto">
+          {/* Top input */}
+          <div></div>
           <input
             type="number"
             value={value.top}
             onChange={(e) => updateSpacing('top', parseInt(e.target.value) || 0)}
-            className="w-12 px-2 py-1 text-xs bg-gray-50 border border-gray-200 rounded text-center focus:border-purple-400 focus:outline-none"
+            className="w-14 px-2 py-2 text-xs bg-gray-50 border border-gray-200 rounded text-center focus:border-purple-400 focus:outline-none"
+            min="0"
           />
-       
+          <div></div>
+          
+          {/* Left input, Center indicator, Right input */}
           <input
             type="number"
             value={value.left}
             onChange={(e) => updateSpacing('left', parseInt(e.target.value) || 0)}
-            className="w-12 px-2 py-1 text-xs bg-gray-50 border border-gray-200 rounded text-center focus:border-purple-400 focus:outline-none"
+            className="w-14 px-2 py-2 text-xs bg-gray-50 border border-gray-200 rounded text-center focus:border-purple-400 focus:outline-none"
+            min="0"
           />
-          <div className={`${type === 'margin' ? 'bg-gray-200' : 'bg-purple-100'} rounded flex items-center justify-center h-8`}>
-            <span className={`text-xs ${type === 'margin' ? 'text-gray-600' : 'text-purple-600'}`}>
+          <div className={`${type === 'margin' ? 'bg-gray-200' : 'bg-purple-100'} rounded flex items-center justify-center h-10 w-14`}>
+            <span className={`text-sm font-medium ${type === 'margin' ? 'text-gray-600' : 'text-purple-600'}`}>
               {type === 'margin' ? 'M' : 'P'}
             </span>
           </div>
@@ -40,14 +45,18 @@ const FloatingPanelContent: React.FC<FloatingPanelContentProps> = ({ panelType, 
             type="number"
             value={value.right}
             onChange={(e) => updateSpacing('right', parseInt(e.target.value) || 0)}
-            className="w-12 px-2 py-1 text-xs bg-gray-50 border border-gray-200 rounded text-center focus:border-purple-400 focus:outline-none"
+            className="w-14 px-2 py-2 text-xs bg-gray-50 border border-gray-200 rounded text-center focus:border-purple-400 focus:outline-none"
+            min="0"
           />
+          
+          {/* Bottom input */}
           <div></div>
           <input
             type="number"
             value={value.bottom}
             onChange={(e) => updateSpacing('bottom', parseInt(e.target.value) || 0)}
-            className="w-12 px-2 py-1 text-xs bg-gray-50 border border-gray-200 rounded text-center focus:border-purple-400 focus:outline-none"
+            className="w-14 px-2 py-2 text-xs bg-gray-50 border border-gray-200 rounded text-center focus:border-purple-400 focus:outline-none"
+            min="0"
           />
           <div></div>
         </div>
@@ -62,21 +71,38 @@ const FloatingPanelContent: React.FC<FloatingPanelContentProps> = ({ panelType, 
       <div className="space-y-4">
         <div className="space-y-3">
           <div>
-            <label className="block text-xs text-gray-600 mb-1">Color</label>
-            <div className="flex items-center gap-2">
+            <label className="block text-xs text-gray-600 mb-2">Color</label>
+            <div className="flex items-center gap-3">
               <input
                 type="color"
                 value={backgroundColor}
                 onChange={(e) => onStyleUpdate('backgroundColor', e.target.value)}
-                className="w-8 h-8 rounded border border-gray-200 cursor-pointer"
+                className="w-10 h-10 rounded-lg border border-gray-200 cursor-pointer hover:border-gray-300 transition-colors"
               />
               <input
                 type="text"
                 value={backgroundColor}
                 onChange={(e) => onStyleUpdate('backgroundColor', e.target.value)}
-                className="flex-1 px-2 py-1 text-xs bg-gray-50 border border-gray-200 rounded focus:border-purple-400 focus:outline-none"
+                className="flex-1 px-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-100"
                 placeholder="#ffffff"
               />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <label className="block text-xs text-gray-600">Quick Colors</label>
+            <div className="grid grid-cols-6 gap-2">
+              {['#ffffff', '#f8fafc', '#f1f5f9', '#e2e8f0', '#cbd5e1', '#94a3b8', '#64748b', '#475569', '#334155', '#1e293b', '#0f172a', '#000000'].map(color => (
+                <button
+                  key={color}
+                  onClick={() => onStyleUpdate('backgroundColor', color)}
+                  className="w-8 h-8 rounded-lg border-2 hover:scale-110 transition-all duration-200 shadow-sm hover:shadow-md"
+                  style={{ 
+                    backgroundColor: color,
+                    borderColor: backgroundColor === color ? '#8b5cf6' : '#e2e8f0'
+                  }}
+                  title={color}
+                />
+              ))}
             </div>
           </div>
         </div>
@@ -93,59 +119,127 @@ const FloatingPanelContent: React.FC<FloatingPanelContentProps> = ({ panelType, 
     
     return (
       <div className="space-y-4">
-        <div className="space-y-3">
+        <div className="space-y-4">
           <div>
-            <label className="block text-xs text-gray-600 mb-1">Width</label>
-            <input
-              type="number"
-              value={borderWidth}
-              onChange={(e) => onStyleUpdate('border', { ...border, width: parseInt(e.target.value) || 0 })}
-              className="w-full px-2 py-1 text-xs bg-gray-50 border border-gray-200 rounded focus:border-purple-400 focus:outline-none"
-              min="0"
-              max="20"
-            />
-          </div>
-          <div>
-            <label className="block text-xs text-gray-600 mb-1">Style</label>
-            <select
-              value={borderStyle}
-              onChange={(e) => onStyleUpdate('border', { ...border, style: e.target.value })}
-              className="w-full px-2 py-1 text-xs bg-gray-50 border border-gray-200 rounded focus:border-purple-400 focus:outline-none"
-            >
-              <option value="solid">Solid</option>
-              <option value="dashed">Dashed</option>
-              <option value="dotted">Dotted</option>
-              <option value="double">Double</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-xs text-gray-600 mb-1">Color</label>
+            <label className="block text-xs text-gray-600 mb-2">Width</label>
             <div className="flex items-center gap-2">
+              <button
+                onClick={() => onStyleUpdate('border', { ...border, width: Math.max(0, borderWidth - 1) })}
+                className="w-8 h-8 flex items-center justify-center bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors text-gray-600 hover:text-gray-800"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+                </svg>
+              </button>
+              <input
+                type="number"
+                value={borderWidth}
+                onChange={(e) => onStyleUpdate('border', { ...border, width: Math.max(0, parseInt(e.target.value) || 0) })}
+                className="w-16 px-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg text-center focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-100"
+                min="0"
+                max="20"
+              />
+              <button
+                onClick={() => onStyleUpdate('border', { ...border, width: Math.min(20, borderWidth + 1) })}
+                className="w-8 h-8 flex items-center justify-center bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors text-gray-600 hover:text-gray-800"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+              </button>
+            </div>
+          </div>
+          
+          <div>
+            <label className="block text-xs text-gray-600 mb-2">Style</label>
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                { value: 'solid', label: 'Solid' },
+                { value: 'dashed', label: 'Dashed' },
+                { value: 'dotted', label: 'Dotted' },
+                { value: 'double', label: 'Double' }
+              ].map(style => (
+                <button
+                  key={style.value}
+                  onClick={() => onStyleUpdate('border', { ...border, style: style.value })}
+                  className={`px-3 py-2 text-xs font-medium rounded-lg border transition-all ${
+                    borderStyle === style.value
+                      ? 'border-purple-500 bg-purple-50 text-purple-700'
+                      : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  {style.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          
+          <div>
+            <label className="block text-xs text-gray-600 mb-2">Color</label>
+            <div className="flex items-center gap-3">
               <input
                 type="color"
                 value={borderColor}
                 onChange={(e) => onStyleUpdate('border', { ...border, color: e.target.value })}
-                className="w-8 h-8 rounded border border-gray-200 cursor-pointer"
+                className="w-10 h-10 rounded-lg border border-gray-200 cursor-pointer hover:border-gray-300 transition-colors"
               />
               <input
                 type="text"
                 value={borderColor}
                 onChange={(e) => onStyleUpdate('border', { ...border, color: e.target.value })}
-                className="flex-1 px-2 py-1 text-xs bg-gray-50 border border-gray-200 rounded focus:border-purple-400 focus:outline-none"
+                className="flex-1 px-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-100"
                 placeholder="#000000"
               />
             </div>
           </div>
+          
           <div>
-            <label className="block text-xs text-gray-600 mb-1">Radius</label>
-            <input
-              type="number"
-              value={borderRadius}
-              onChange={(e) => onStyleUpdate('border', { ...border, radius: parseInt(e.target.value) || 0 })}
-              className="w-full px-2 py-1 text-xs bg-gray-50 border border-gray-200 rounded focus:border-purple-400 focus:outline-none"
-              min="0"
-              max="50"
-            />
+            <label className="block text-xs text-gray-600 mb-2">Radius</label>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => onStyleUpdate('border', { ...border, radius: Math.max(0, borderRadius - 1) })}
+                className="w-8 h-8 flex items-center justify-center bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors text-gray-600 hover:text-gray-800"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+                </svg>
+              </button>
+              <input
+                type="number"
+                value={borderRadius}
+                onChange={(e) => onStyleUpdate('border', { ...border, radius: Math.max(0, parseInt(e.target.value) || 0) })}
+                className="w-16 px-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg text-center focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-100"
+                min="0"
+                max="50"
+              />
+              <button
+                onClick={() => onStyleUpdate('border', { ...border, radius: Math.min(50, borderRadius + 1) })}
+                className="w-8 h-8 flex items-center justify-center bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors text-gray-600 hover:text-gray-800"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+              </button>
+            </div>
+          </div>
+          
+          <div className="space-y-2">
+            <label className="block text-xs text-gray-600">Quick Radius</label>
+            <div className="grid grid-cols-4 gap-2">
+              {[0, 4, 8, 12, 16, 20, 24, 50].map(radius => (
+                <button
+                  key={radius}
+                  onClick={() => onStyleUpdate('border', { ...border, radius })}
+                  className={`px-2 py-2 text-xs font-medium rounded-lg border transition-all ${
+                    borderRadius === radius
+                      ? 'border-purple-500 bg-purple-50 text-purple-700'
+                      : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  {radius}px
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -225,34 +319,225 @@ const FloatingPanelContent: React.FC<FloatingPanelContentProps> = ({ panelType, 
       <div className="space-y-4">
         <div className="space-y-3">
           <div>
-            <label className="block text-xs text-gray-600 mb-1">Color</label>
-            <div className="flex items-center gap-2">
+            <label className="block text-xs text-gray-600 mb-2">Color</label>
+            <div className="flex items-center gap-3">
               <input
                 type="color"
                 value={textColor}
                 onChange={(e) => onStyleUpdate('textColor', e.target.value)}
-                className="w-8 h-8 rounded border border-gray-200 cursor-pointer"
+                className="w-10 h-10 rounded-lg border border-gray-200 cursor-pointer hover:border-gray-300 transition-colors"
               />
               <input
                 type="text"
                 value={textColor}
                 onChange={(e) => onStyleUpdate('textColor', e.target.value)}
-                className="flex-1 px-2 py-1 text-xs bg-gray-50 border border-gray-200 rounded focus:border-purple-400 focus:outline-none"
+                className="flex-1 px-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-100"
                 placeholder="#000000"
               />
             </div>
           </div>
           <div className="space-y-2">
             <label className="block text-xs text-gray-600">Quick Colors</label>
-            <div className="grid grid-cols-6 gap-1">
-              {['#000000', '#ffffff', '#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6', '#8b5cf6'].map(color => (
+            <div className="grid grid-cols-6 gap-2">
+              {['#000000', '#374151', '#6b7280', '#9ca3af', '#d1d5db', '#ffffff', '#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6', '#8b5cf6'].map(color => (
                 <button
                   key={color}
                   onClick={() => onStyleUpdate('textColor', color)}
-                  className="w-6 h-6 rounded border border-gray-200 hover:scale-110 transition-transform"
-                  style={{ backgroundColor: color }}
+                  className="w-8 h-8 rounded-lg border-2 hover:scale-110 transition-all duration-200 shadow-sm hover:shadow-md"
+                  style={{ 
+                    backgroundColor: color,
+                    borderColor: textColor === color ? '#8b5cf6' : '#e2e8f0'
+                  }}
                   title={color}
                 />
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderFontSizePanel = () => {
+    const fontSize = Number(block.styles.fontSize) || 16;
+    
+    return (
+      <div className="space-y-4">
+        <div className="space-y-3">
+          <div>
+            <label className="block text-xs text-gray-600 mb-2">Size</label>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => onStyleUpdate('fontSize', Math.max(8, fontSize - 1))}
+                className="w-8 h-8 flex items-center justify-center bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors text-gray-600 hover:text-gray-800"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+                </svg>
+              </button>
+              <input
+                type="number"
+                value={fontSize}
+                onChange={(e) => onStyleUpdate('fontSize', Math.max(8, parseInt(e.target.value) || 16))}
+                className="w-16 px-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg text-center focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-100"
+                min="8"
+                max="72"
+              />
+              <button
+                onClick={() => onStyleUpdate('fontSize', Math.min(72, fontSize + 1))}
+                className="w-8 h-8 flex items-center justify-center bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors text-gray-600 hover:text-gray-800"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+              </button>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <label className="block text-xs text-gray-600">Quick Sizes</label>
+            <div className="grid grid-cols-4 gap-2">
+              {[12, 14, 16, 18, 20, 24, 28, 32].map(size => (
+                <button
+                  key={size}
+                  onClick={() => onStyleUpdate('fontSize', size)}
+                  className={`px-2 py-2 text-xs font-medium rounded-lg border transition-all ${
+                    fontSize === size
+                      ? 'border-purple-500 bg-purple-50 text-purple-700'
+                      : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  {size}px
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderLetterSpacingPanel = () => {
+    const letterSpacing = Number(block.styles.letterSpacing) || 0;
+    
+    return (
+      <div className="space-y-4">
+        <div className="space-y-3">
+          <div>
+            <label className="block text-xs text-gray-600 mb-2">Spacing</label>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => onStyleUpdate('letterSpacing', Math.max(-2, letterSpacing - 0.1))}
+                className="w-8 h-8 flex items-center justify-center bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors text-gray-600 hover:text-gray-800"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+                </svg>
+              </button>
+              <input
+                type="number"
+                value={letterSpacing}
+                onChange={(e) => onStyleUpdate('letterSpacing', Math.max(-2, Math.min(5, parseFloat(e.target.value) || 0)))}
+                className="w-16 px-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg text-center focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-100"
+                min="-2"
+                max="5"
+                step="0.1"
+              />
+              <button
+                onClick={() => onStyleUpdate('letterSpacing', Math.min(5, letterSpacing + 0.1))}
+                className="w-8 h-8 flex items-center justify-center bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors text-gray-600 hover:text-gray-800"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+              </button>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <label className="block text-xs text-gray-600">Presets</label>
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { value: -0.5, label: 'Tight' },
+                { value: 0, label: 'Normal' },
+                { value: 0.5, label: 'Wide' },
+                { value: 1, label: 'Wider' },
+                { value: 2, label: 'Widest' }
+              ].map(preset => (
+                <button
+                  key={preset.value}
+                  onClick={() => onStyleUpdate('letterSpacing', preset.value)}
+                  className={`px-2 py-2 text-xs font-medium rounded-lg border transition-all ${
+                    Math.abs(letterSpacing - preset.value) < 0.05
+                      ? 'border-purple-500 bg-purple-50 text-purple-700'
+                      : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  {preset.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderLineHeightPanel = () => {
+    const lineHeight = Number(block.styles.lineHeight) || 1.5;
+    
+    return (
+      <div className="space-y-4">
+        <div className="space-y-3">
+          <div>
+            <label className="block text-xs text-gray-600 mb-2">Height</label>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => onStyleUpdate('lineHeight', Math.max(0.8, lineHeight - 0.1))}
+                className="w-8 h-8 flex items-center justify-center bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors text-gray-600 hover:text-gray-800"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+                </svg>
+              </button>
+              <input
+                type="number"
+                value={lineHeight}
+                onChange={(e) => onStyleUpdate('lineHeight', Math.max(0.8, Math.min(3, parseFloat(e.target.value) || 1.5)))}
+                className="w-16 px-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg text-center focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-100"
+                min="0.8"
+                max="3"
+                step="0.1"
+              />
+              <button
+                onClick={() => onStyleUpdate('lineHeight', Math.min(3, lineHeight + 0.1))}
+                className="w-8 h-8 flex items-center justify-center bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors text-gray-600 hover:text-gray-800"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+              </button>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <label className="block text-xs text-gray-600">Presets</label>
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { value: 1, label: 'Tight' },
+                { value: 1.25, label: 'Snug' },
+                { value: 1.5, label: 'Normal' },
+                { value: 1.75, label: 'Relaxed' },
+                { value: 2, label: 'Loose' }
+              ].map(preset => (
+                <button
+                  key={preset.value}
+                  onClick={() => onStyleUpdate('lineHeight', preset.value)}
+                  className={`px-2 py-2 text-xs font-medium rounded-lg border transition-all ${
+                    Math.abs(lineHeight - preset.value) < 0.05
+                      ? 'border-purple-500 bg-purple-50 text-purple-700'
+                      : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  {preset.label}
+                </button>
               ))}
             </div>
           </div>
@@ -267,6 +552,9 @@ const FloatingPanelContent: React.FC<FloatingPanelContentProps> = ({ panelType, 
     case 'background': return renderBackgroundPanel();
     case 'border': return renderBorderPanel();
     case 'textColor': return renderTextColorPanel();
+    case 'fontSize': return renderFontSizePanel();
+    case 'letterSpacing': return renderLetterSpacingPanel();
+    case 'lineHeight': return renderLineHeightPanel();
     case 'imageAlign': return renderImageAlignPanel();
     case 'videoAlign': return renderVideoAlignPanel();
     default: return null;
