@@ -17,6 +17,23 @@ const FloatingPanel: React.FC<FloatingPanelProps> = ({
 }) => {
   if (!isVisible || !panelType) return null;
 
+  const getPanelTitle = (type: string) => {
+    const titleMap: { [key: string]: string } = {
+      'textColor': 'Text Color',
+      'backgroundColor': 'Background Color',
+      'border': 'Border',
+      'margin': 'Margin',
+      'padding': 'Padding',
+      'fontSize': 'Font Size',
+      'fontWeight': 'Font Weight',
+      'fontFamily': 'Font Family',
+      'textAlign': 'Text Align',
+      'letterSpacing': 'Letter Spacing',
+      'lineHeight': 'Line Height'
+    };
+    return titleMap[type] || type.charAt(0).toUpperCase() + type.slice(1);
+  };
+
   return (
     <div
       className="fixed bg-white shadow-2xl border border-gray-200 rounded-2xl p-4 z-[50] min-w-[280px] max-w-[350px]"
@@ -29,7 +46,7 @@ const FloatingPanel: React.FC<FloatingPanelProps> = ({
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-          <span className="text-sm font-medium text-gray-700 capitalize">{panelType}</span>
+          <span className="text-sm font-medium text-gray-700">{getPanelTitle(panelType)}</span>
         </div>
         <button
           onClick={onClose}

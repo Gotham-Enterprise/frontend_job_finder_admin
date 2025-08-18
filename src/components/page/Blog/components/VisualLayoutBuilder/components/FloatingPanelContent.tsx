@@ -16,7 +16,6 @@ const FloatingPanelContent: React.FC<FloatingPanelContentProps> = ({ panelType, 
 
     return (
       <div className="space-y-3">
-        <h4 className="font-medium text-gray-700 text-sm capitalize">{type}</h4>
         <div className="grid grid-cols-3 gap-2 max-w-[120px] mx-auto">
        
           <input
@@ -61,7 +60,6 @@ const FloatingPanelContent: React.FC<FloatingPanelContentProps> = ({ panelType, 
     
     return (
       <div className="space-y-4">
-        <h4 className="font-medium text-gray-700 text-sm">Background</h4>
         <div className="space-y-3">
           <div>
             <label className="block text-xs text-gray-600 mb-1">Color</label>
@@ -95,7 +93,6 @@ const FloatingPanelContent: React.FC<FloatingPanelContentProps> = ({ panelType, 
     
     return (
       <div className="space-y-4">
-        <h4 className="font-medium text-gray-700 text-sm">Border</h4>
         <div className="space-y-3">
           <div>
             <label className="block text-xs text-gray-600 mb-1">Width</label>
@@ -166,7 +163,6 @@ const FloatingPanelContent: React.FC<FloatingPanelContentProps> = ({ panelType, 
     
     return (
       <div className="space-y-4">
-        <h4 className="font-medium text-gray-700 text-sm">Align to page</h4>
         <div className="grid grid-cols-3 gap-2">
           {alignmentOptions.map((option) => (
             <button
@@ -200,7 +196,6 @@ const FloatingPanelContent: React.FC<FloatingPanelContentProps> = ({ panelType, 
     
     return (
       <div className="space-y-4">
-        <h4 className="font-medium text-gray-700 text-sm">Align to page</h4>
         <div className="grid grid-cols-3 gap-2">
           {alignmentOptions.map((option) => (
             <button
@@ -228,7 +223,6 @@ const FloatingPanelContent: React.FC<FloatingPanelContentProps> = ({ panelType, 
     
     return (
       <div className="space-y-4">
-        <h4 className="font-medium text-gray-700 text-sm">Text Color</h4>
         <div className="space-y-3">
           <div>
             <label className="block text-xs text-gray-600 mb-1">Color</label>

@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { Modal } from "@/components/ui/modal";
 import { useModal } from "@/hooks/useModal";
 import Button from "@/components/ui/button/Button";
-import CustomDatePicker from "@/components/form/CustomDatePicker";
 import FullScreenSpinner from "@/components/ui/FullScreenSpinner";
 import VisualLayoutBuilder from "./VisualLayoutBuilder/VisualLayoutBuilder";
 import FloatingElementsPanel from "./VisualLayoutBuilder/components/FloatingElementsPanel";
