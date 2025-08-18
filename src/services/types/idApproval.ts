@@ -27,6 +27,7 @@ export interface UseIdApprovalLogic {
   onChangeCheckedItem: (id: IdApproval["id"]) => void;
   onBatchUpdate: (status: IdApproval["status"]) => void;
   onToggleModal: () => void;
+  onViewDetails: (id: IdApproval["id"]) => void;
 }
 
 export interface IdApproval {
@@ -82,4 +83,37 @@ export interface IdApprovalBatchUpdateResponse {
   success: boolean;
   count: number;
   message: string;
+}
+
+export interface IdApprovalDetailResponse {
+  success: boolean;
+  data: {
+    id: IdApproval["id"];
+    status: IdApproval["status"];
+    profile: {
+      isLocked: IdApproval["isLocked"];
+      name: string;
+      email: string;
+      degree: string;
+      picture: string;
+      specialty: string;
+      address: string;
+      licenses: string;
+      phoneNumber: string;
+    };
+    securityQuestions: {
+      question: string;
+      answer: string;
+    }[];
+    activityLogs: any[];
+  };
+}
+
+export interface UseIdApprovalDetailLogic {
+  id: IdApprovalDetailResponse["data"]["id"];
+  isLocked: IdApprovalDetailResponse["data"]["profile"]["isLocked"];
+  status: IdApprovalDetailResponse["data"]["status"];
+  profile: IdApprovalDetailResponse["data"]["profile"];
+  securityQuestions: IdApprovalDetailResponse["data"]["securityQuestions"];
+  activityLogs: IdApprovalDetailResponse["data"]["activityLogs"];
 }

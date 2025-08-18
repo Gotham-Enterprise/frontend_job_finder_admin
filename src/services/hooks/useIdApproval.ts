@@ -1,22 +1,23 @@
-import { useMutation, useQuery } from '@tanstack/react-query';
-import { batchUpdateIdApprovalStatus, idApprovalApi, updateIdApprovalStatus } from '../api/idApproval';
-import { IdApprovalBatchUpdate, IdApprovalFilters, IdApprovalStatusUpdate } from '../types/idApproval';
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { idApprovalApi } from "../api/idApproval";
+import { IdApproval, IdApprovalBatchUpdate, IdApprovalFilters, IdApprovalStatusUpdate } from "../types/idApproval";
 
 export const idApprovalQueryKeys = {
-  all: ['idApprovals'] as const,
-  lists: () => [...idApprovalQueryKeys.all, 'list'] as const,
+  all: ["idApprovals"] as const,
+  lists: () => [...idApprovalQueryKeys.all, "list"] as const,
   list: () => [...idApprovalQueryKeys.lists()] as const,
+  details: () => [...idApprovalQueryKeys.all, "details"] as const,
+  detail: (id: string) => [...idApprovalQueryKeys.details(), id] as const,
 };
 
 const staleTime = 1000 * 60 * 5; // 5 minutes
 const retry = (failureCount: number, error: Error) => {
-  if (error.message.includes('HTTP 401')) {
-    return false; 
+  if (error.message.includes("HTTP 401")) {
+    return false;
   }
-  return failureCount < 3; 
-}
+  return failureCount < 3;
+};
 const retryDelay = (attemptIndex: number) => Math.min(1000 * 2 ** attemptIndex, 30000);
-
 
 export const useGetIdApprovals = (filters: IdApprovalFilters) => {
   return useQuery({
@@ -30,14 +31,26 @@ export const useGetIdApprovals = (filters: IdApprovalFilters) => {
   });
 };
 
+export const useGetIdApprovalDetails = (id: IdApproval["id"]) => {
+  return useQuery({
+    retry,
+    retryDelay,
+    staleTime,
+    queryKey: idApprovalQueryKeys.detail(id),
+    queryFn: () => {
+      return idApprovalApi.getIdApprovalDetails(id);
+    },
+  });
+};
+
 export const useIdApprovalUpdateStatus = () => {
   return useMutation({
-    mutationFn: (data: IdApprovalStatusUpdate) => updateIdApprovalStatus(data),
+    mutationFn: (data: IdApprovalStatusUpdate) => idApprovalApi.updateIdApprovalStatus(data),
   });
 };
 
 export const useIdApprovalBatchUpdateStatus = () => {
   return useMutation({
-    mutationFn: (data: IdApprovalBatchUpdate) => batchUpdateIdApprovalStatus(data),
+    mutationFn: (data: IdApprovalBatchUpdate) => idApprovalApi.batchUpdateIdApprovalStatus(data),
   });
 };

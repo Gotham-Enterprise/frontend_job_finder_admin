@@ -81,7 +81,7 @@ export const useIdApprovalLogic = (): UseIdApprovalLogic => {
     const url = window.location.search;
 
     if (nextUrl !== url) {
-      router.replace(`/admin/unlock-request${nextUrl}`, { scroll: false });
+      router.replace(`/admin/unlock-requests${nextUrl}`, { scroll: false });
 
       refetch();
     }
@@ -166,6 +166,12 @@ export const useIdApprovalLogic = (): UseIdApprovalLogic => {
   const onToggleModal = useCallback(() => {
     setShowModal((prev) => !prev);
   }, []);
+  const onViewDetails = useCallback(
+    (id: IdApproval["id"]) => {
+      router.push(`/admin/unlock-requests/details/${id}`);
+    },
+    [router]
+  );
 
   return {
     data,
@@ -190,5 +196,6 @@ export const useIdApprovalLogic = (): UseIdApprovalLogic => {
     onChangeCheckedItem,
     onBatchUpdate,
     onToggleModal,
+    onViewDetails,
   };
 };

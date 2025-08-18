@@ -1,27 +1,27 @@
-import { FC, useMemo } from 'react';
+import { FC, useMemo } from "react";
 
-import TableHeading from '@/components/tables/tableHeader';
-import Avatar from '@/components/ui/avatar/Avatar';
-import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
-import { UseIdApprovalLogic } from '@/services/types/idApproval';
+import TableHeading from "@/components/tables/tableHeader";
+import Avatar from "@/components/ui/avatar/Avatar";
+import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
+import { UseIdApprovalLogic } from "@/services/types/idApproval";
 
-import Checkbox from '@/components/form/input/Checkbox';
-import Button from '@/components/ui/button/Button';
-import { EyeIcon } from '@/icons';
-import AccountStatus from './AccountStatus';
-import Status from './Status';
+import Checkbox from "@/components/form/input/Checkbox";
+import Button from "@/components/ui/button/Button";
+import { EyeIcon } from "@/icons";
+import AccountStatus from "./AccountStatus";
+import Status from "./Status";
 
 interface Props {
-  data: UseIdApprovalLogic['data'];
-  isLoading: UseIdApprovalLogic['isLoading'];
-  tableColumns: UseIdApprovalLogic['tableColumns'];
-  filters: UseIdApprovalLogic['filters'];
-  checked: UseIdApprovalLogic['checked'];
-  checkedItems: UseIdApprovalLogic['checkedItems'];
-  isPending: UseIdApprovalLogic['isPending']
-  setSelected: UseIdApprovalLogic['setSelected'];
-  onChangeChecked: UseIdApprovalLogic['onChangeChecked'];
-  onChangeCheckedItem: UseIdApprovalLogic['onChangeCheckedItem'];
+  data: UseIdApprovalLogic["data"];
+  isLoading: UseIdApprovalLogic["isLoading"];
+  tableColumns: UseIdApprovalLogic["tableColumns"];
+  filters: UseIdApprovalLogic["filters"];
+  checked: UseIdApprovalLogic["checked"];
+  checkedItems: UseIdApprovalLogic["checkedItems"];
+  isPending: UseIdApprovalLogic["isPending"];
+  onChangeChecked: UseIdApprovalLogic["onChangeChecked"];
+  onChangeCheckedItem: UseIdApprovalLogic["onChangeCheckedItem"];
+  onViewDetails: UseIdApprovalLogic["onViewDetails"];
 }
 
 const IdApprovalTable: FC<Props> = ({
@@ -31,29 +31,23 @@ const IdApprovalTable: FC<Props> = ({
   checked,
   checkedItems,
   isPending,
-  setSelected,
   onChangeChecked,
   onChangeCheckedItem,
+  onViewDetails,
 }) => {
-
-  const columns = useMemo(() => { 
+  const columns = useMemo(() => {
     if (isPending) {
       return [
         {
-          key: 'id',
-          label: (
-            <Checkbox
-              checked={checkedItems.length ? checked : false}
-              onChange={onChangeChecked}
-            />
-          ),
+          key: "id",
+          label: <Checkbox checked={checkedItems.length ? checked : false} onChange={onChangeChecked} />,
         },
         ...tableColumns,
-      ]
+      ];
     }
 
     return tableColumns;
-  }, [checked, isPending, tableColumns, checkedItems, onChangeChecked])
+  }, [checked, isPending, tableColumns, checkedItems, onChangeChecked]);
 
   return (
     <Table>
@@ -76,9 +70,10 @@ const IdApprovalTable: FC<Props> = ({
             </TableCell>
           </TableRow>
         )}
-        {data.length > 0 && !isLoading && (
+        {data.length > 0 &&
+          !isLoading &&
           data.map((row) => {
-            const { id, fullName, email, isLocked, status } = row
+            const { id, fullName, email, isLocked, status } = row;
             const isChecked = checkedItems.includes(id);
 
             return (
@@ -89,23 +84,19 @@ const IdApprovalTable: FC<Props> = ({
                   </TableCell>
                 )}
                 <TableCell className="text-gray-800 py-6 px-4">
-                  <div className='flex items-center gap-2'>
+                  <div className="flex items-center gap-2">
                     <Avatar
                       src={row.profilePicture || undefined}
                       alt={fullName}
                       name={fullName}
                       size="small"
-                      className="rounded-full" 
+                      className="rounded-full"
                     />
-                    <p className="text-sm text-gray-900 dark:text-white">
-                      {fullName}
-                    </p>
+                    <p className="text-sm text-gray-900 dark:text-white">{fullName}</p>
                   </div>
                 </TableCell>
                 <TableCell className="py-6 px-4">
-                  <p className="text-sm text-gray-900 dark:text-white">
-                    {email}
-                  </p>
+                  <p className="text-sm text-gray-900 dark:text-white">{email}</p>
                 </TableCell>
                 <TableCell className="text-gray-800 py-6 px-4">
                   <AccountStatus isLocked={isLocked} />
@@ -114,22 +105,21 @@ const IdApprovalTable: FC<Props> = ({
                   <Status status={status} />
                 </TableCell>
                 <TableCell className="text-gray-900 py-6 px-4 text-right">
-                  <Button 
-                    variant="ghost" 
+                  <Button
+                    variant="ghost"
                     className="inline-flex items-center justify-center font-medium gap-2 transition text-brand-400 h-[45px] w-[100px] rounded-sm px-3 text-xs  "
-                    onClick={() => setSelected(row)}
+                    onClick={() => onViewDetails(row.id)}
                     startIcon={<EyeIcon />}
                   >
                     Manage
                   </Button>
                 </TableCell>
               </TableRow>
-            )
-          })
-        )}
+            );
+          })}
       </TableBody>
     </Table>
-  )
-}
+  );
+};
 
-export default IdApprovalTable
+export default IdApprovalTable;

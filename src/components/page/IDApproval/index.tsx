@@ -2,13 +2,7 @@
 
 import { useIdApprovalLogic } from "@/services/hooks/useIdApprovalLogic";
 
-import {
-  IdApprovalHeader,
-  IdApprovalTable,
-  IdApprovalTablePagination,
-  IdApprovalDetail,
-  IdApprovalModal,
-} from "./components";
+import { IdApprovalHeader, IdApprovalModal, IdApprovalTable, IdApprovalTablePagination } from "./components";
 
 interface Props {
   className?: string;
@@ -18,13 +12,10 @@ const IDApproval: React.FC<Props> = ({ className }) => {
   const {
     data,
     isLoading,
-    totalCount,
     tableColumns,
     metaData,
     filters,
     itemsPerPageOptions,
-    selected,
-    isUpdating,
     checked,
     checkedItems,
     isPending,
@@ -32,12 +23,11 @@ const IDApproval: React.FC<Props> = ({ className }) => {
     showModal,
     modalData,
     onFilterChange,
-    setSelected,
-    onUpdateStatus,
     onChangeChecked,
     onChangeCheckedItem,
     onBatchUpdate,
     onToggleModal,
+    onViewDetails,
   } = useIdApprovalLogic();
 
   return (
@@ -59,9 +49,9 @@ const IDApproval: React.FC<Props> = ({ className }) => {
         checked={checked}
         checkedItems={checkedItems}
         isPending={isPending}
-        setSelected={setSelected}
         onChangeChecked={onChangeChecked}
         onChangeCheckedItem={onChangeCheckedItem}
+        onViewDetails={onViewDetails}
       />
       <IdApprovalTablePagination
         data={data}
@@ -70,12 +60,6 @@ const IDApproval: React.FC<Props> = ({ className }) => {
         filters={filters}
         itemsPerPageOptions={itemsPerPageOptions}
         onFilterChange={onFilterChange}
-      />
-      <IdApprovalDetail
-        selected={selected}
-        setSelected={setSelected}
-        isUpdating={isUpdating}
-        onUpdateStatus={onUpdateStatus}
       />
       <IdApprovalModal showModal={showModal} modalData={modalData} onToggleModal={onToggleModal} />
     </div>
