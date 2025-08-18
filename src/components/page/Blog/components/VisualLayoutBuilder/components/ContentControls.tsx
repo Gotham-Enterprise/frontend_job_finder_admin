@@ -55,20 +55,28 @@ const ContentControls: React.FC<ContentControlsProps> = memo(({
   const isListOrdered = (block.content as any)?.ordered || false;
 
   const addListItem = useCallback(() => {
-    const newItems = [...listItems, ''];
+    const newItems = [...listItems, `Item ${listItems.length + 1}`];
     onContentUpdate('items', newItems);
   }, [listItems, onContentUpdate]);
 
   const removeListItem = useCallback((index: number) => {
     if (listItems.length > 1) {
       const newItems = listItems.filter((_: any, i: number) => i !== index);
-      onContentUpdate('items', newItems);
+      // Re-index the remaining placeholder items to maintain consistent numbering
+      const updatedItems = newItems.map((item: string, i: number) => {
+        if (item.startsWith('Item ') && /^Item \d+$/.test(item)) {
+          return `Item ${i + 1}`;
+        }
+        return item;
+      });
+      onContentUpdate('items', updatedItems);
     }
   }, [listItems, onContentUpdate]);
 
   const updateListItem = useCallback((index: number, value: string) => {
     const newItems = [...listItems];
-    newItems[index] = value;
+    // If the user enters actual content, use it; if empty, revert to placeholder
+    newItems[index] = value.trim() === '' ? `Item ${index + 1}` : value;
     onContentUpdate('items', newItems);
   }, [listItems, onContentUpdate]);
 
@@ -201,10 +209,10 @@ const ContentControls: React.FC<ContentControlsProps> = memo(({
             <label className="block text-sm font-medium text-gray-700 mb-2">Content</label>
             <textarea
               ref={textareaRef}
-              value={(block.content as any)?.text || ''}
+              value={(block.content as any)?.text === 'Start writing your content here...' ? '' : ((block.content as any)?.text || '')}
               onChange={(e) => onContentUpdate('text', e.target.value)}
               onMouseUp={() => processTextSelection(textareaRef)}
-              placeholder="Enter your text..."
+              placeholder="Start writing your content here..."
               className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 placeholder-gray-400 focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-100 resize-none transition-all"
               rows={4}
             />

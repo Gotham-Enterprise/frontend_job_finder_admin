@@ -203,8 +203,12 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
   };
 
   const renderEditableParagraph = () => {
-    const text = (block.content as any)?.text || 'Sample paragraph text. Click to edit this content.';
+    const text = (block.content as any)?.text || 'Start writing your content here...';
     const style = createStyle('paragraph');
+    
+    // Treat the default template text as placeholder
+    const displayText = text === 'Start writing your content here...' ? 'Start writing your content here...' : text;
+    const isPlaceholder = text === 'Start writing your content here...';
 
     if (isEditing) {
       return (
@@ -221,8 +225,26 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
           }}
           className="w-full bg-transparent border-none outline-none resize-none"
           isMultiline={true}
-          placeholder="Enter paragraph text..."
+          placeholder="Start writing your content here..."
         />
+      );
+    }
+
+    // Show placeholder text with lighter styling if it's the default template text
+    if (isPlaceholder) {
+      return (
+        <p 
+          style={{
+            ...style,
+            color: '#9ca3af', // Gray-400 for placeholder styling
+            fontStyle: 'italic',
+            wordWrap: 'break-word',
+            overflowWrap: 'break-word'
+          }}
+          onDoubleClick={() => startEditing('')} // Start with empty string for editing
+        >
+          {displayText}
+        </p>
       );
     }
 

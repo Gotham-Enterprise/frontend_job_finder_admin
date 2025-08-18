@@ -329,7 +329,7 @@ export const BLOCK_TEMPLATES: Record<BlockType, Partial<LayoutBlock>> = {
   list: {
     type: 'list',
     content: {
-      items: ['', '', ''],
+      items: ['Item 1', 'Item 2', 'Item 3'],
       ordered: false,
     },
     styles: {
@@ -569,7 +569,10 @@ export const convertLayoutToHtml = (layout: BlogLayout): string => {
       
       case 'paragraph':
         const paragraphBlock = block as ParagraphBlock;
-        return `<p${styleAttr}>${paragraphBlock.content.text}</p>`;
+        const paragraphText = paragraphBlock.content.text === 'Start writing your content here...' 
+          ? 'Start writing your content here...' 
+          : paragraphBlock.content.text;
+        return `<p${styleAttr}>${paragraphText}</p>`;
       
       case 'image':
         const imageBlock = block as ImageBlock;
@@ -589,7 +592,12 @@ export const convertLayoutToHtml = (layout: BlogLayout): string => {
         const listBlock = block as ListBlock;
         const listTag = listBlock.content.ordered ? 'ol' : 'ul';
         const listItems = listBlock.content.items
-          .map((item, index) => `<li>${item.trim() === '' ? `Item ${index + 1}` : item}</li>`)
+          .map((item, index) => {
+
+            const isPlaceholder = item.trim() === '' || (item.startsWith('Item ') && /^Item \d+$/.test(item));
+            const displayText = isPlaceholder ? `Item ${index + 1}` : item;
+            return `<li>${displayText}</li>`;
+          })
           .join('');
         return `<${listTag}${styleAttr}>${listItems}</${listTag}>`;
       
