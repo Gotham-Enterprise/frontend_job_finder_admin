@@ -44,7 +44,7 @@ const IdApprovalHeader: FC<Props> = ({ filters, checkedItems, onFilterChange, on
           <h3 className="text-xl font-semibold text-gray-800 dark:text-white">Unlock Request</h3>
           <Tabs className="w-full" value={filters.status} onValueChange={onChangeTab}>
             <TabsList className="mb-2">
-              <CustomTabTrigger value="pending">Need to Review</CustomTabTrigger>
+              <CustomTabTrigger value="pending">For Review</CustomTabTrigger>
               <CustomTabTrigger value="declined">Declined</CustomTabTrigger>
               <CustomTabTrigger value="approved">Approved</CustomTabTrigger>
             </TabsList>
