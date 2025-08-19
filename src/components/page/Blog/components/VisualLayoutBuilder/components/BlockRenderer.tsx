@@ -213,8 +213,14 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
           }}
           dangerouslySetInnerHTML={{ __html: styledText }}
           onClick={(e) => {
-            e.stopPropagation();
-            startEditing(text);
+            // Double-click to edit, single click to select block
+            if (e.detail === 2) {
+              e.stopPropagation();
+              startEditing(text);
+            } else {
+              // Allow single click to bubble up for block selection
+              onClick?.();
+            }
           }}
         />
       );
@@ -228,8 +234,14 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
           overflowWrap: 'break-word'
         }}
         onClick={(e) => {
-          e.stopPropagation();
-          startEditing(text);
+          // Double-click to edit, single click to select block
+          if (e.detail === 2) {
+            e.stopPropagation();
+            startEditing(text);
+          } else {
+            // Allow single click to bubble up for block selection
+            onClick?.();
+          }
         }}
       >
         {text}
@@ -278,8 +290,14 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
             overflowWrap: 'break-word'
           }}
           onClick={(e) => {
-            e.stopPropagation();
-            startEditing(text);
+            // Double-click to edit, single click to select block
+            if (e.detail === 2) {
+              e.stopPropagation();
+              startEditing(text);
+            } else {
+              // Allow single click to bubble up for block selection
+              onClick?.();
+            }
           }}
         >
           {displayText}
@@ -287,10 +305,10 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
       );
     }
 
-    if (text.includes('<a ')) {
+    if (text.includes('<') && text.includes('>')) {
     
       const linkColor = block.styles.linkColor || '#3b82f6';
-      const linkStyledText = text.replace(
+      const styledText = text.replace(
         /<a\s+([^>]*)>/g,
         `<a $1 style="color: ${linkColor}; text-decoration: underline;">`
       );
@@ -302,15 +320,19 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
             wordWrap: 'break-word',
             overflowWrap: 'break-word'
           }}
-          dangerouslySetInnerHTML={{ __html: linkStyledText }}
+          dangerouslySetInnerHTML={{ __html: styledText }}
           onClick={(e) => {
             
             if ((e.target as HTMLElement).tagName === 'A') {
               e.stopPropagation();
               return; 
             }
-            e.stopPropagation();
-            startEditing(text);
+            if (e.detail === 2) {
+              e.stopPropagation();
+              startEditing(text);
+            } else {
+              onClick?.();
+            }
           }}
         />
       );
@@ -375,7 +397,7 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
             <svg className="w-12 h-12 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
-            <p className="text-sm">Click to add image</p>
+            <p className="text-sm">Image</p>
           </div>
         </div>
       );
@@ -480,7 +502,7 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
             <svg className="w-12 h-12 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
             </svg>
-            <p className="text-sm">Click to add video</p>
+            <p className="text-sm">Video</p>
           </div>
         </div>
       );
@@ -753,11 +775,9 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
   return (
     <div 
       onClick={(e) => {
-        // Only select the block if clicking on the container itself (not on content)
-        if (e.target === e.currentTarget) {
-          e.stopPropagation();
-          onClick?.();
-        }
+        // Select the block when clicking anywhere on it (container or content)
+        e.stopPropagation();
+        onClick?.();
       }}
       className={`relative group cursor-pointer transition-all duration-200 block clear-both ${
         isSelected ? 'shadow-lg ring-2 ring-purple-200' : 'hover:border-gray-300'

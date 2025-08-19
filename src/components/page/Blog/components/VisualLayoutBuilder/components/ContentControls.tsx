@@ -1,8 +1,10 @@
 import React, { useState, useRef, memo, useCallback, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { LayoutBlock } from '../../../../../../services/types/visualLayoutTypes';
 import ImageUrlInput from '../ImageUrlInput';
 import VideoUrlInput from '../VideoUrlInput';
 import ButtonSettings from './ButtonSettings';
+import RichTextEditor from './RichTextEditor';
 import { LINK_TARGETS, getButtonDefaultStyles, getSizeStyles } from '../utils/buttonUtils';
 import { 
   processTextSelection as processSelection, 
@@ -28,6 +30,7 @@ const ContentControls: React.FC<ContentControlsProps> = memo(({
   currentFeaturedImage 
 }) => {
   const [showLinkModal, setShowLinkModal] = useState(false);
+  const [showFullscreenEditor, setShowFullscreenEditor] = useState(false);
   const [selectedText, setSelectedText] = useState('');
   const [linkUrl, setLinkUrl] = useState('');
   const [linkTarget, setLinkTarget] = useState('_self');
@@ -201,12 +204,97 @@ const ContentControls: React.FC<ContentControlsProps> = memo(({
     </div>
   );
 
+  const renderFullscreenEditor = () => {
+    if (!showFullscreenEditor) return null;
+    
+    return createPortal(
+      <div className="fixed inset-0 bg-white bg-opacity-85 z-[9999] flex items-center justify-center p-4">
+        <div className="bg-white rounded-2xl w-full max-w-4xl h-[80vh] flex flex-col shadow-2xl border border-gray-200">
+          {/* Header */}
+          <div className="flex items-center justify-between p-6 border-b border-gray-200">
+            <h2 className="text-xl font-semibold text-gray-800">Edit Content</h2>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setShowFullscreenEditor(false)}
+                className="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => setShowFullscreenEditor(false)}
+                className="px-4 py-2 text-sm bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-all"
+              >
+                Save & Close
+              </button>
+            </div>
+          </div>
+          
+          {/* Editor Area */}
+          <div className="flex-1 p-6 overflow-auto">
+            <RichTextEditor
+              key={`fullscreen-${showFullscreenEditor}-${Date.now()}`}
+              value={(block.content as any)?.text || ''}
+              onChange={(value) => onContentUpdate('text', value)}
+              placeholder="A blog is your creative space. It's where you can share your brand's story or impart your wisdom using your own words, with your own visual language to match. Fortunately, you don't need to be a professional to be successful blog either. All you need is a genuine passion for your field, lots to say and a stylish canvas on which to say it."
+              className="text-base leading-relaxed min-h-full w-full prose prose-lg max-w-none"
+              style={{ minHeight: '400px', width: '100%' }}
+              isMultiline={true}
+            />
+          </div>
+          
+          {/* Footer with Link Color */}
+          <div className="p-6 border-t border-gray-200 bg-gray-50">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <label className="text-sm font-medium text-gray-700">Link Color:</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    value={block.styles?.linkColor || '#3b82f6'}
+                    onChange={(e) => onStyleUpdate?.('linkColor', e.target.value)}
+                    className="w-8 h-8 rounded border border-gray-200 cursor-pointer"
+                  />
+                  <input
+                    type="text"
+                    value={block.styles?.linkColor || '#3b82f6'}
+                    onChange={(e) => onStyleUpdate?.('linkColor', e.target.value)}
+                    placeholder="#3b82f6"
+                    className="w-24 px-2 py-1 text-sm bg-white border border-gray-200 rounded focus:border-purple-400 focus:outline-none"
+                  />
+                </div>
+              </div>
+              <button
+                onClick={removeAllLinks}
+                className="text-sm text-red-500 hover:text-red-700 underline"
+              >
+                Remove all links
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>,
+      document.body
+    );
+  };
+
   const CONTENT_RENDERERS = {
     paragraph: () => (
       <>
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Content</label>
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-sm font-medium text-gray-700">Content</label>
+              <button
+                onClick={() => setShowFullscreenEditor(true)}
+                className="flex items-center gap-2 px-3 py-1.5 text-xs bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded-lg text-purple-600 transition-all hover:shadow-sm"
+                title="Open fullscreen editor"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                </svg>
+                Fullscreen
+              </button>
+            </div>
             <textarea
               ref={textareaRef}
               value={(block.content as any)?.text === 'Start writing your content here...' ? '' : ((block.content as any)?.text || '')}
@@ -247,6 +335,7 @@ const ContentControls: React.FC<ContentControlsProps> = memo(({
           </div>
         </div>
         {showLinkModal && renderLinkModal()}
+        {renderFullscreenEditor()}
       </>
     ),
 

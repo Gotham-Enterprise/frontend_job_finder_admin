@@ -75,26 +75,11 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
   const seoModal = useModal();
 
   useEffect(() => {
-    if (editorRef.current) {
+    if (editorRef.current && value !== undefined) {
       const currentContent = editorRef.current.innerHTML;
-      if (currentContent !== value) {
-        editorRef.current.innerHTML = value;
+      if (currentContent !== value && !document.activeElement || document.activeElement !== editorRef.current) {
+        editorRef.current.innerHTML = value || '';
       }
-
-      setTimeout(() => {
-        if (editorRef.current) {
-          editorRef.current.focus();
-          if (value) {
-       
-            const range = document.createRange();
-            const selection = window.getSelection();
-            range.selectNodeContents(editorRef.current);
-            range.collapse(false);
-            selection?.removeAllRanges();
-            selection?.addRange(range);
-          }
-        }
-      }, 0);
     }
   }, [value]);
 
@@ -166,7 +151,26 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
 
   const handleInput = useCallback(() => {
     if (editorRef.current) {
+      const selection = window.getSelection();
+      const range = selection?.getRangeAt(0);
+      const cursorOffset = range?.startOffset;
+      const cursorNode = range?.startContainer;
+      
       onChange(editorRef.current.innerHTML);
+      
+      setTimeout(() => {
+        if (editorRef.current && selection && range && cursorNode && cursorOffset !== undefined) {
+          try {
+            const newRange = document.createRange();
+            newRange.setStart(cursorNode, Math.min(cursorOffset, cursorNode.textContent?.length || 0));
+            newRange.setEnd(cursorNode, Math.min(cursorOffset, cursorNode.textContent?.length || 0));
+            selection.removeAllRanges();
+            selection.addRange(newRange);
+          } catch (e) {
+            // Ignore cursor restoration errors
+          }
+        }
+      }, 0);
     }
   }, [onChange]);
 
@@ -338,19 +342,28 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
  
       <div
         ref={(element) => {
-          editorRef.current = element;
-          if (element && value && element.innerHTML !== value) {
-            element.innerHTML = value;
-            // Focus and position cursor immediately
-            setTimeout(() => {
-              element.focus();
-              const range = document.createRange();
-              const selection = window.getSelection();
-              range.selectNodeContents(element);
-              range.collapse(false);
-              selection?.removeAllRanges();
-              selection?.addRange(range);
-            }, 10);
+          if (element) {
+            editorRef.current = element;
+            if (value !== undefined && element.innerHTML !== value) {
+              element.innerHTML = value || '';
+            }
+            if (!element.hasAttribute('data-initialized')) {
+              element.setAttribute('data-initialized', 'true');
+              setTimeout(() => {
+                element.focus();
+                const range = document.createRange();
+                const selection = window.getSelection();
+                if (element.childNodes.length > 0 && element.lastChild) {
+                  range.setStartAfter(element.lastChild);
+                  range.setEndAfter(element.lastChild);
+                } else {
+                  range.setStart(element, 0);
+                  range.setEnd(element, 0);
+                }
+                selection?.removeAllRanges();
+                selection?.addRange(range);
+              }, 150);
+            }
           }
         }}
         contentEditable
