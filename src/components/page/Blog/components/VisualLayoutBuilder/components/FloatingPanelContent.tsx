@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { LayoutBlock } from '../../../../../../services/types/visualLayoutTypes';
 
 interface FloatingPanelContentProps {
@@ -8,6 +8,22 @@ interface FloatingPanelContentProps {
 }
 
 const FloatingPanelContent: React.FC<FloatingPanelContentProps> = ({ panelType, block, onStyleUpdate }) => {
+  const [fontSizeInput, setFontSizeInput] = useState((Number(block.styles.fontSize) || 16).toString());
+  const [letterSpacingInput, setLetterSpacingInput] = useState((Number(block.styles.letterSpacing) || 0).toString());
+  const [lineHeightInput, setLineHeightInput] = useState((Number(block.styles.lineHeight) || 1.5).toString());
+
+  useEffect(() => {
+    setFontSizeInput((Number(block.styles.fontSize) || 16).toString());
+  }, [block.styles.fontSize]);
+
+  useEffect(() => {
+    setLetterSpacingInput((Number(block.styles.letterSpacing) || 0).toString());
+  }, [block.styles.letterSpacing]);
+
+  useEffect(() => {
+    setLineHeightInput((Number(block.styles.lineHeight) || 1.5).toString());
+  }, [block.styles.lineHeight]);
+
   const renderSpacingPanel = (type: 'margin' | 'padding') => {
     const value = block.styles[type] || { top: 0, right: 0, bottom: 0, left: 0 };
     const updateSpacing = (side: string, newValue: number) => {
@@ -360,6 +376,35 @@ const FloatingPanelContent: React.FC<FloatingPanelContentProps> = ({ panelType, 
 
   const renderFontSizePanel = () => {
     const fontSize = Number(block.styles.fontSize) || 16;
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const newValue = e.target.value;
+
+      // Allow empty string and valid numbers during typing
+      if (newValue === '' || /^\d+$/.test(newValue)) {
+        setFontSizeInput(newValue);
+        
+        // Only update the actual font size if the value is valid and within range
+        if (newValue !== '') {
+          const parsedValue = parseInt(newValue);
+          if (!isNaN(parsedValue) && parsedValue >= 8 && parsedValue <= 72) {
+            onStyleUpdate('fontSize', parsedValue);
+          }
+        }
+      }
+    };
+
+    const handleInputBlur = () => {
+      // On blur, ensure we have a valid value within constraints
+      if (fontSizeInput === '' || isNaN(parseInt(fontSizeInput))) {
+        setFontSizeInput(fontSize.toString());
+      } else {
+        const parsedValue = parseInt(fontSizeInput);
+        const clampedValue = Math.max(8, Math.min(72, parsedValue));
+        setFontSizeInput(clampedValue.toString());
+        onStyleUpdate('fontSize', clampedValue);
+      }
+    };
     
     return (
       <div className="space-y-4">
@@ -376,12 +421,15 @@ const FloatingPanelContent: React.FC<FloatingPanelContentProps> = ({ panelType, 
                 </svg>
               </button>
               <input
-                type="number"
-                value={fontSize}
-                onChange={(e) => onStyleUpdate('fontSize', Math.max(8, parseInt(e.target.value) || 16))}
+                type="text"
+                value={fontSizeInput}
+                onChange={handleInputChange}
+                onBlur={handleInputBlur}
                 className="w-16 px-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg text-center focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-100"
-                min="8"
-                max="72"
+                placeholder="16"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                title="Enter font size (8-72px)"
               />
               <button
                 onClick={() => onStyleUpdate('fontSize', Math.min(72, fontSize + 1))}
@@ -418,6 +466,30 @@ const FloatingPanelContent: React.FC<FloatingPanelContentProps> = ({ panelType, 
 
   const renderLetterSpacingPanel = () => {
     const letterSpacing = Number(block.styles.letterSpacing) || 0;
+
+    const handleLetterSpacingChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const newValue = e.target.value;
+      if (newValue === '' || /^-?\d*\.?\d*$/.test(newValue)) {
+        setLetterSpacingInput(newValue);
+        if (newValue !== '') {
+          const parsedValue = parseFloat(newValue);
+          if (!isNaN(parsedValue) && parsedValue >= -2 && parsedValue <= 5) {
+            onStyleUpdate('letterSpacing', parsedValue);
+          }
+        }
+      }
+    };
+
+    const handleLetterSpacingBlur = () => {
+      if (letterSpacingInput === '' || isNaN(parseFloat(letterSpacingInput))) {
+        setLetterSpacingInput(letterSpacing.toString());
+      } else {
+        const parsedValue = parseFloat(letterSpacingInput);
+        const clampedValue = Math.max(-2, Math.min(5, parsedValue));
+        setLetterSpacingInput(clampedValue.toString());
+        onStyleUpdate('letterSpacing', clampedValue);
+      }
+    };
     
     return (
       <div className="space-y-4">
@@ -434,13 +506,12 @@ const FloatingPanelContent: React.FC<FloatingPanelContentProps> = ({ panelType, 
                 </svg>
               </button>
               <input
-                type="number"
-                value={letterSpacing}
-                onChange={(e) => onStyleUpdate('letterSpacing', Math.max(-2, Math.min(5, parseFloat(e.target.value) || 0)))}
+                type="text"
+                value={letterSpacingInput}
+                onChange={handleLetterSpacingChange}
+                onBlur={handleLetterSpacingBlur}
                 className="w-16 px-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg text-center focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-100"
-                min="-2"
-                max="5"
-                step="0.1"
+                inputMode="numeric"
               />
               <button
                 onClick={() => onStyleUpdate('letterSpacing', Math.min(5, letterSpacing + 0.1))}
@@ -483,6 +554,30 @@ const FloatingPanelContent: React.FC<FloatingPanelContentProps> = ({ panelType, 
 
   const renderLineHeightPanel = () => {
     const lineHeight = Number(block.styles.lineHeight) || 1.5;
+
+    const handleLineHeightChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const newValue = e.target.value;
+      if (newValue === '' || /^\d*\.?\d*$/.test(newValue)) {
+        setLineHeightInput(newValue);
+        if (newValue !== '') {
+          const parsedValue = parseFloat(newValue);
+          if (!isNaN(parsedValue) && parsedValue >= 0.8 && parsedValue <= 3) {
+            onStyleUpdate('lineHeight', parsedValue);
+          }
+        }
+      }
+    };
+
+    const handleLineHeightBlur = () => {
+      if (lineHeightInput === '' || isNaN(parseFloat(lineHeightInput))) {
+        setLineHeightInput(lineHeight.toString());
+      } else {
+        const parsedValue = parseFloat(lineHeightInput);
+        const clampedValue = Math.max(0.8, Math.min(3, parsedValue));
+        setLineHeightInput(clampedValue.toString());
+        onStyleUpdate('lineHeight', clampedValue);
+      }
+    };
     
     return (
       <div className="space-y-4">
@@ -499,13 +594,12 @@ const FloatingPanelContent: React.FC<FloatingPanelContentProps> = ({ panelType, 
                 </svg>
               </button>
               <input
-                type="number"
-                value={lineHeight}
-                onChange={(e) => onStyleUpdate('lineHeight', Math.max(0.8, Math.min(3, parseFloat(e.target.value) || 1.5)))}
+                type="text"
+                value={lineHeightInput}
+                onChange={handleLineHeightChange}
+                onBlur={handleLineHeightBlur}
                 className="w-16 px-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg text-center focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-100"
-                min="0.8"
-                max="3"
-                step="0.1"
+                inputMode="numeric"
               />
               <button
                 onClick={() => onStyleUpdate('lineHeight', Math.min(3, lineHeight + 0.1))}

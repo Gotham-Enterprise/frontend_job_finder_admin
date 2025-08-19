@@ -193,7 +193,6 @@ const StyleControls: React.FC<StyleControlsProps> = ({ block, onFloatingPanelOpe
     const numericValue = parseInt(value) || parseInt(control.defaultValue);
     const [inputValue, setInputValue] = React.useState(numericValue.toString());
 
-    // Update input value when block styles change
     React.useEffect(() => {
       const currentValue = getTypographyValue(control.key, control.defaultValue, control.unit);
       const currentNumeric = parseInt(currentValue) || parseInt(control.defaultValue);
@@ -213,23 +212,18 @@ const StyleControls: React.FC<StyleControlsProps> = ({ block, onFloatingPanelOpe
     const onInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const newValue = e.target.value;
       
-      // Only allow numbers (and empty string for clearing)
-      if (newValue !== '' && !/^\d+$/.test(newValue)) {
-        return; // Don't update if non-numeric characters are entered
+    
+      if (newValue !== '' && !/^\d*$/.test(newValue)) {
+        return; 
       }
       
       setInputValue(newValue);
       
-      if (newValue === '') return;
-      
-      const parsedValue = parseInt(newValue);
-      if (!isNaN(parsedValue)) {
-        const clampedValue = Math.max(control.min, Math.min(parsedValue, control.max));
-        // Immediately update the typography with the clamped value
-        updateTypography(control.key, clampedValue.toString(), control.unit);
-        // Update the input to show the clamped value if it was adjusted
-        if (clampedValue !== parsedValue) {
-          setInputValue(clampedValue.toString());
+    
+      if (newValue !== '') {
+        const parsedValue = parseInt(newValue);
+        if (!isNaN(parsedValue) && parsedValue >= control.min && parsedValue <= control.max) {
+          updateTypography(control.key, parsedValue.toString(), control.unit);
         }
       }
     };
