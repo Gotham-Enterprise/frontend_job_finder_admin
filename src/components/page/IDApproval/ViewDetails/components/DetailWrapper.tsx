@@ -18,8 +18,8 @@ const DetailWrapper: FC<Props> = ({ data }) => {
         <Profile profile={profile} />
       </div>
       <div className="col-span-2 space-y-6">
-        <ActivityLogs />
-        <SecurityQuestions />
+        <ActivityLogs activityLogs={activityLogs} />
+        <SecurityQuestions securityQuestions={securityQuestions} />
       </div>
     </div>
   );
