@@ -770,15 +770,19 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
     const defaultMargin = (block.type === 'image' || block.type === 'video') ? { top: 16, right: 0, bottom: 16, left: 0 } : { top: 8, right: 0, bottom: 8, left: 0 };
     const actualMargin = margin || defaultMargin;
     
-  
+   
+    const adjustedPadding = padding || { top: 0, right: 0, bottom: 0, left: 0 };
+    const minTopPadding = Math.max(adjustedPadding.top || 0, 15); 
+    const minRightPadding = Math.max(adjustedPadding.right || 0, 8); 
+    
     const containerBackgroundColor = block.type === 'button' ? 'transparent' : (block.styles.backgroundColor || 'transparent');
     
     return {
       margin: `${actualMargin.top || 0}px ${actualMargin.right || 0}px ${actualMargin.bottom || 0}px ${actualMargin.left || 0}px`,
-      padding: padding ? `${padding.top || 0}px ${padding.right || 0}px ${padding.bottom || 0}px ${padding.left || 0}px` : '0px',
+      padding: `${minTopPadding}px ${minRightPadding}px ${adjustedPadding.bottom || 0}px ${adjustedPadding.left || 0}px`,
       backgroundColor: containerBackgroundColor,
-      minHeight: 'auto',
-      overflow: 'hidden',
+      minHeight: '40px',
+      overflow: 'visible',
       position: 'relative' as const,
       width: '100%',
       border: isSelected 
@@ -794,7 +798,7 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
   return (
     <div 
       onClick={(e) => {
-        // Select the block when clicking anywhere on it (container or content)
+
         e.stopPropagation();
         onClick?.();
       }}
