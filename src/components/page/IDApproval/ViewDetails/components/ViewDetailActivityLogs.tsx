@@ -1,7 +1,7 @@
 import { FC, useMemo } from "react";
 
 import TableHeading from "@/components/tables/tableHeader";
-import { Table, TableCell, TableRow } from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { UseIdApprovalDetailLogic } from "@/services/types/idApproval";
 import { formatDateTime } from "@/services/utils";
 
@@ -35,21 +35,23 @@ const ActivityLogs: FC<Props> = ({ activityLogs }) => {
       <div className="flex flex-col pb-4">
         <Table>
           <TableHeading columns={columns} className="bg-gray-100 dark:bg-gray-700" />
-          {activityLogs.length > 0 ? (
-            activityLogs.map((log) => (
-              <TableRow key={log.timestamp}>
-                <TableCell className="py-4 px-6">{formatDateTime(log.timestamp)}</TableCell>
-                <TableCell className="py-4 px-6">{log.attempts}</TableCell>
-                <TableCell className="py-4 px-6">{log.ipAddress}</TableCell>
+          <TableBody>
+            {activityLogs.length > 0 ? (
+              activityLogs.map((log) => (
+                <TableRow key={log.timestamp}>
+                  <TableCell className="py-4 px-6">{formatDateTime(log.timestamp)}</TableCell>
+                  <TableCell className="py-4 px-6">{log.attempts}</TableCell>
+                  <TableCell className="py-4 px-6">{log.ipAddress}</TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={3} className="py-4 px-6 text-center">
+                  No activity logs available
+                </TableCell>
               </TableRow>
-            ))
-          ) : (
-            <TableRow>
-              <TableCell colSpan={3} className="py-4 px-6 text-center">
-                No activity logs available
-              </TableCell>
-            </TableRow>
-          )}
+            )}
+          </TableBody>
         </Table>
       </div>
     </div>
