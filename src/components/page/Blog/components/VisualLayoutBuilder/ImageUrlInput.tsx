@@ -72,16 +72,6 @@ const ImageUrlInput: React.FC<ImageUrlInputProps> = ({
     return () => clearTimeout(timer);
   }, [localAltText, altText, onAltTextChange]);
 
-  const validateImageUrl = (url: string): boolean => {
-    if (!url) return false;
-    try {
-      new URL(url);
-      return /\.(jpg|jpeg|png|gif|svg|webp)$/i.test(url) || url.includes('data:image/');
-    } catch {
-      return false;
-    }
-  };
-
   const isValidUrl = validateImageUrl(localImageUrl);
   const hasImageUrl = localImageUrl.trim().length > 0;
 
@@ -119,14 +109,14 @@ const ImageUrlInput: React.FC<ImageUrlInputProps> = ({
         />
         {hasImageUrl && !isValidUrl && (
           <div className="text-xs text-red-500 mt-2">
-            <p>Please enter a valid image URL</p>
+            <p>Please enter a valid URL</p>
             <p className="text-gray-500 mt-1">
-              Supported: Direct image links (.jpg, .png, .gif, .svg, .webp) or base64 data URLs
+              Make sure the URL starts with http:// or https://
             </p>
           </div>
         )}
         {isValidUrl && (
-          <p className="text-xs text-green-500 mt-2">Valid image URL ✓</p>
+          <p className="text-xs text-green-500 mt-2">Valid URL ✓</p>
         )}
       </div>
 

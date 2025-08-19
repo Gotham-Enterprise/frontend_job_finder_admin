@@ -4,32 +4,16 @@ export const validateImageUrl = (url: string): boolean => {
   try {
     const urlObj = new URL(url);
     
+  
     if (!['http:', 'https:', 'data:'].includes(urlObj.protocol)) {
       return false;
     }
     
-
     if (urlObj.protocol === 'data:') {
       return url.startsWith('data:image/');
     }
 
-    const pathname = urlObj.pathname.toLowerCase();
-    const hasImageExtension = /\.(jpg|jpeg|png|gif|svg|webp|bmp|tiff|ico)(\?.*)?$/i.test(pathname);
-
-    const imageHostingPatterns = [
-      /unsplash\.com/,
-      /pexels\.com/,
-      /pixabay\.com/,
-      /imgur\.com/,
-      /cloudinary\.com/,
-      /amazonaws\.com/,
-      /googleusercontent\.com/,
-      /githubusercontent\.com/
-    ];
-    
-    const isFromImageHost = imageHostingPatterns.some(pattern => pattern.test(urlObj.hostname));
-    
-    return hasImageExtension || isFromImageHost;
+    return true;
   } catch {
     return false;
   }
