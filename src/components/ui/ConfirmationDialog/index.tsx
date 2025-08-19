@@ -30,6 +30,7 @@ export default function ConfirmationDialog({
       isOpen={isOpen} 
       onClose={onClose}
       isFullscreen={false}
+      showCloseButton={false}
       className="max-w-lg mx-auto mt-20 rounded-lg"
     >
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl">
