@@ -822,6 +822,7 @@ export default function AddNewBlogWithLayoutBuilder() {
         onExitWithoutSaving={handleExitWithoutSaving}
         blogTitle={metadata.title || "Untitled Blog"}
         isLoading={isCreating}
+        disableSaveAsDraft={!isModalFormValid}
       />
 
       {/* Title & SEO Modal */}

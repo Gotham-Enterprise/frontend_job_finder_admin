@@ -445,6 +445,35 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
     [tagOptions, tagsSearchTerm]
   );
 
+  const isFormValid = useMemo(() => {
+    const isValid = (
+      metadata.title.trim().length > 0 && 
+      metadata.author.trim().length > 0 && 
+      metadata.categories.length > 0 && 
+      metadata.subCategories.length > 0 && 
+      metadata.tags.length > 0 && 
+      (metadata.featuredImage?.length || 0) > 0 &&
+      metadata.publishDate.length > 0
+    );
+        
+    return isValid;
+  }, [metadata.title, metadata.author, metadata.categories, metadata.subCategories, metadata.tags, metadata.featuredImage, metadata.publishDate]);
+
+  const isModalFormValid = useMemo(() => {
+    const isValid = (
+      tempMetadata.title.trim().length > 0 && 
+      tempMetadata.author.trim().length > 0 && 
+      tempMetadata.categories.length > 0 && 
+      tempMetadata.subCategories.length > 0 && 
+      tempMetadata.tags.length > 0 && 
+      (tempMetadata.featuredImage?.length || 0) > 0 &&
+      tempMetadata.publishDate.length > 0
+    );
+    
+   
+    return isValid;
+  }, [tempMetadata.title, tempMetadata.author, tempMetadata.categories, tempMetadata.subCategories, tempMetadata.tags, tempMetadata.featuredImage, tempMetadata.publishDate]);
+
   const toggleSection = useCallback((section: keyof typeof expandedSections) => {
     setExpandedSections(prev => ({
       ...prev,
@@ -472,7 +501,13 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
       description: seoData.description,
       keywords: seoData.keywords
     });
-    setTempMetadata(metadata);
+ 
+    setTempMetadata({
+      ...metadata,
+
+      subCategories: [...metadata.subCategories],
+      tags: [...metadata.tags]
+    });
     titleModal.openModal();
   }, [metadata, seoData, titleModal]);
 
@@ -500,7 +535,12 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
   }, [tempMetadata, tempSeoData, updateMetadataField, titleModal]);
 
   const handleTitleCancel = useCallback(() => {
-    setTempMetadata(metadata);
+    // Reset tempMetadata to current metadata state
+    setTempMetadata({
+      ...metadata,
+      // Ensure subCategories are properly reset
+      subCategories: [...metadata.subCategories]
+    });
     setTempSeoData({
       title: seoData.title,
       description: seoData.description,
@@ -703,7 +743,7 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
           <div className="flex items-center space-x-3">
             <Button
               onClick={saveBlog}
-              disabled={isUpdating}
+              disabled={isUpdating || !isFormValid}
               className="bg-brand-500 hover:bg-brand-600 text-white"
             >
               {isUpdating 
@@ -919,7 +959,7 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
               {/* SubCategories */}
               <div className="dropdown-container">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  SubCategories
+                  SubCategories  <span className="text-red-500">*</span>
                 </label>
                 <div className="relative" ref={subCategoriesDropdownRef}>
                   <button
@@ -1236,6 +1276,7 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
             </Button>
             <Button
               onClick={handleTitleSave}
+              disabled={!isModalFormValid}
               className="px-4 py-2"
             >
               Save Changes
@@ -1259,6 +1300,7 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
         onExitWithoutSaving={handleExitWithoutSaving}
         blogTitle={metadata.title || "Untitled Blog"}
         isLoading={isUpdating}
+        disableSaveAsDraft={!isFormValid}
       />
 
       <FullScreenSpinner 

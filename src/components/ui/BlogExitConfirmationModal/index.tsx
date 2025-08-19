@@ -10,6 +10,7 @@ interface BlogExitConfirmationModalProps {
   onExitWithoutSaving: () => void;
   blogTitle?: string;
   isLoading?: boolean;
+  disableSaveAsDraft?: boolean;
 }
 
 const BlogExitConfirmationModal: React.FC<BlogExitConfirmationModalProps> = ({
@@ -19,6 +20,7 @@ const BlogExitConfirmationModal: React.FC<BlogExitConfirmationModalProps> = ({
   onExitWithoutSaving,
   blogTitle = "Untitled Blog",
   isLoading = false,
+  disableSaveAsDraft = false,
 }) => {
   if (!isOpen) return null;
 
@@ -61,7 +63,7 @@ const BlogExitConfirmationModal: React.FC<BlogExitConfirmationModalProps> = ({
           <Button
             variant="default"
             onClick={onSaveAsDraft}
-            disabled={isLoading}
+            disabled={isLoading || disableSaveAsDraft}
             className="w-full justify-center"
           >
             {isLoading ? "Saving..." : "Save as Draft"}
