@@ -82,6 +82,14 @@ const createInitialLayout = (): LayoutType => {
   };
 };
 
+// Natural sort function that handles numbers correctly
+const naturalSort = (a: string, b: string): number => {
+  return a.localeCompare(b, undefined, { 
+    numeric: true, 
+    sensitivity: 'base' 
+  });
+};
+
 
 const statusOptions = [
   { value: 'draft', label: 'Draft', description: 'This job posting will no longer be publicly accessible.' },
@@ -190,7 +198,7 @@ export default function AddNewBlogWithLayoutBuilder() {
               text: category.name,
               selected: false
             }))
-            .sort((a, b) => a.text.localeCompare(b.text)); // Sort alphabetically
+            .sort((a, b) => naturalSort(a.text, b.text)); // Natural sort for proper number ordering 
           
           setCategoryOptions(transformedCategories);
         }
@@ -219,7 +227,7 @@ export default function AddNewBlogWithLayoutBuilder() {
               text: tag.name,
               selected: false
             }))
-            .sort((a, b) => a.text.localeCompare(b.text)); // Sort alphabetically
+            .sort((a, b) => naturalSort(a.text, b.text)); // Natural sort for proper number ordering
           
           setTagOptions(transformedTags);
         }
@@ -255,7 +263,7 @@ export default function AddNewBlogWithLayoutBuilder() {
         const response = await blogApi.getSubCategories(selectedCategory.text);
         
         if (response.success && response.data) {
-          const sortedSubCategories = response.data.sort((a: any, b: any) => a.name.localeCompare(b.name));
+          const sortedSubCategories = response.data.sort((a: any, b: any) => naturalSort(a.name, b.name));
           setSubCategoryOptions(sortedSubCategories);
         } else {
           setSubCategoryOptions([]);
@@ -301,7 +309,7 @@ export default function AddNewBlogWithLayoutBuilder() {
         
         if (response.success && response.data) {
           console.log('Setting subcategory options:', response.data);
-          const sortedSubCategories = response.data.sort((a: any, b: any) => a.name.localeCompare(b.name));
+          const sortedSubCategories = response.data.sort((a: any, b: any) => naturalSort(a.name, b.name));
           setSubCategoryOptions(sortedSubCategories);
         } else {
           console.log('No subcategories found or API error');
@@ -356,7 +364,7 @@ export default function AddNewBlogWithLayoutBuilder() {
       .filter(category =>
         category.text.toLowerCase().includes(categoriesSearchTerm.toLowerCase())
       )
-      .sort((a, b) => a.text.localeCompare(b.text)), // Sort alphabetically
+      .sort((a, b) => naturalSort(a.text, b.text)), // Natural sort for proper number ordering
     [categoryOptions, categoriesSearchTerm]
   );
 
@@ -367,7 +375,7 @@ export default function AddNewBlogWithLayoutBuilder() {
       .filter(subCat =>
         subCat.name.toLowerCase().includes(subCategoriesSearchTerm.toLowerCase())
       )
-      .sort((a, b) => a.name.localeCompare(b.name)); // Sort alphabetically
+      .sort((a, b) => naturalSort(a.name, b.name)); // Natural sort for proper number ordering
   }, [subCategoryOptions, subCategoriesSearchTerm]);
 
   const filteredTags = useMemo(() => 
@@ -375,7 +383,7 @@ export default function AddNewBlogWithLayoutBuilder() {
       .filter(tag =>
         tag.text.toLowerCase().includes(tagsSearchTerm.toLowerCase())
       )
-      .sort((a, b) => a.text.localeCompare(b.text)), // Sort alphabetically
+      .sort((a, b) => naturalSort(a.text, b.text)), // Natural sort for proper number ordering
     [tagOptions, tagsSearchTerm]
   );
 

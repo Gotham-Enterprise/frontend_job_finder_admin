@@ -67,6 +67,13 @@ const createEmptyBlogLayout = (): BlogLayout => ({
   }
 });
 
+const naturalSort = (a: string, b: string): number => {
+  return a.localeCompare(b, undefined, { 
+    numeric: true, 
+    sensitivity: 'base' 
+  });
+};
+
 const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({ 
   blogId: id 
 }) => {
@@ -88,14 +95,12 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
   const [categoriesSearchTerm, setCategoriesSearchTerm] = useState('');
   const [tagsSearchTerm, setTagsSearchTerm] = useState('');
   
-  // Additional state for subcategories
   const [fullCategoriesData, setFullCategoriesData] = useState<CategoryWithSubCategories[]>([]);
   const [subCategoryOptions, setSubCategoryOptions] = useState<{ id: string; name: string }[]>([]);
   const [subCategoriesLoading, setSubCategoriesLoading] = useState(false);
   const [subCategoriesDropdownOpen, setSubCategoriesDropdownOpen] = useState(false);
   const [subCategoriesSearchTerm, setSubCategoriesSearchTerm] = useState('');
   
-  // Refs for click outside handling
   const subCategoriesDropdownRef = useRef<HTMLDivElement>(null);
 
   const [activeTab, setActiveTab] = useState<'general' | 'seo'>('general');
@@ -126,7 +131,7 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
     seoDescription: '',
     allowComments: true,
     allowPings: true,
-    author: '', // Will be set from blog data
+    author: '',
   });
   
   const [seoData, setSeoData] = useState({
@@ -176,9 +181,7 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
         setBlogData(response);
         const blogResponse = response as any;
               
-        console.log('=== Loading blog data ===');
-        console.log('Blog response:', blogResponse);
-        
+    
         setMetadata({
           title: blogResponse.title || '',
           excerpt: blogResponse.excerpt || '',
@@ -289,7 +292,7 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
               value: category.id,
               text: category.name
             }))
-            .sort((a, b) => a.text.localeCompare(b.text)); // Sort alphabetically
+            .sort((a, b) => naturalSort(a.text, b.text));
           setCategoryOptions(transformedCategories);
         }
       } catch (error) {
@@ -313,7 +316,7 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
               value: tag.id,
               text: tag.name
             }))
-            .sort((a, b) => a.text.localeCompare(b.text)); // Sort alphabetically
+            .sort((a, b) => naturalSort(a.text, b.text)); 
           setTagOptions(tagOptions);
         }
       } catch (error) {
@@ -362,7 +365,7 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
         const response = await blogApi.getSubCategories(selectedCategory.text);
         
         if (response.success && response.data) {
-          const sortedSubCategories = response.data.sort((a: any, b: any) => a.name.localeCompare(b.name));
+          const sortedSubCategories = response.data.sort((a: any, b: any) => naturalSort(a.name, b.name));
           setSubCategoryOptions(sortedSubCategories);
         } else {
           setSubCategoryOptions([]);
@@ -403,9 +406,8 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
     }));
   }, [metadata.seoTitle, metadata.seoDescription]);
 
-  // Track changes to mark blog as having unsaved changes
   useEffect(() => {
-    if (!blogData) return; // Don't track changes until initial data is loaded
+    if (!blogData) return; 
     
     const hasContentChanges = JSON.stringify(metadata) !== JSON.stringify(blogData.metadata) ||
                              JSON.stringify(currentLayout.blocks) !== JSON.stringify(blogData.blocks);
@@ -419,7 +421,7 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
       .filter(category =>
         category.text.toLowerCase().includes(categoriesSearchTerm.toLowerCase())
       )
-      .sort((a, b) => a.text.localeCompare(b.text)), 
+      .sort((a, b) => naturalSort(a.text, b.text)), 
     [categoryOptions, categoriesSearchTerm]
   );
 
@@ -433,7 +435,7 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
       .filter(sub =>
         sub.name.toLowerCase().includes(subCategoriesSearchTerm.toLowerCase())
       )
-      .sort((a, b) => a.name.localeCompare(b.name));
+      .sort((a, b) => naturalSort(a.name, b.name));
   }, [fullCategoriesData, tempMetadata.categories, subCategoriesSearchTerm]);
 
   const filteredTags = useMemo(() => 
@@ -441,7 +443,7 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
       .filter(tag =>
         tag.text.toLowerCase().includes(tagsSearchTerm.toLowerCase())
       )
-      .sort((a, b) => a.text.localeCompare(b.text)), 
+      .sort((a, b) => naturalSort(a.text, b.text)), 
     [tagOptions, tagsSearchTerm]
   );
 
@@ -535,10 +537,9 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
   }, [tempMetadata, tempSeoData, updateMetadataField, titleModal]);
 
   const handleTitleCancel = useCallback(() => {
-    // Reset tempMetadata to current metadata state
+
     setTempMetadata({
       ...metadata,
-      // Ensure subCategories are properly reset
       subCategories: [...metadata.subCategories]
     });
     setTempSeoData({
