@@ -208,68 +208,68 @@ const ContentControls: React.FC<ContentControlsProps> = memo(({
     if (!showFullscreenEditor) return null;
     
     return createPortal(
-      <div className="fixed inset-0 bg-white bg-opacity-85 z-[9999] flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl w-full max-w-4xl h-[80vh] flex flex-col shadow-2xl border border-gray-200">
-          {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-800">Edit Content</h2>
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => setShowFullscreenEditor(false)}
-                className="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-all"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => setShowFullscreenEditor(false)}
-                className="px-4 py-2 text-sm bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-all"
-              >
-                Save & Close
-              </button>
-            </div>
+      <div className="fixed inset-0 bg-white z-[9999] flex flex-col">
+        {/* Header */}
+        <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-white">
+          <h2 className="text-xl font-semibold text-gray-800">Edit Content</h2>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowFullscreenEditor(false)}
+              className="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-all"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => setShowFullscreenEditor(false)}
+              className="px-4 py-2 text-sm bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-all"
+            >
+              Save & Close
+            </button>
           </div>
-          
-          {/* Editor Area */}
-          <div className="flex-1 p-6 overflow-auto">
+        </div>
+        
+        {/* Editor Area - Full Height */}
+        <div className="flex-1 p-6 overflow-auto bg-white">
+          <div className="max-w-4xl mx-auto h-full">
             <RichTextEditor
               key={`fullscreen-${showFullscreenEditor}-${Date.now()}`}
               value={(block.content as any)?.text || ''}
               onChange={(value) => onContentUpdate('text', value)}
               placeholder="A blog is your creative space. It's where you can share your brand's story or impart your wisdom using your own words, with your own visual language to match. Fortunately, you don't need to be a professional to be successful blog either. All you need is a genuine passion for your field, lots to say and a stylish canvas on which to say it."
-              className="text-base leading-relaxed min-h-full w-full prose prose-lg max-w-none"
-              style={{ minHeight: '400px', width: '100%' }}
+              className="text-base leading-relaxed w-full prose prose-lg max-w-none"
+              style={{ minHeight: 'calc(100vh - 200px)', width: '100%' }}
               isMultiline={true}
             />
           </div>
-          
-          {/* Footer with Link Color */}
-          <div className="p-6 border-t border-gray-200 bg-gray-50">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <label className="text-sm font-medium text-gray-700">Link Color:</label>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="color"
-                    value={block.styles?.linkColor || '#3b82f6'}
-                    onChange={(e) => onStyleUpdate?.('linkColor', e.target.value)}
-                    className="w-8 h-8 rounded border border-gray-200 cursor-pointer"
-                  />
-                  <input
-                    type="text"
-                    value={block.styles?.linkColor || '#3b82f6'}
-                    onChange={(e) => onStyleUpdate?.('linkColor', e.target.value)}
-                    placeholder="#3b82f6"
-                    className="w-24 px-2 py-1 text-sm bg-white border border-gray-200 rounded focus:border-purple-400 focus:outline-none"
-                  />
-                </div>
+        </div>
+        
+        {/* Footer with Link Color */}
+        <div className="p-6 border-t border-gray-200 bg-gray-50">
+          <div className="flex items-center justify-between max-w-4xl mx-auto">
+            <div className="flex items-center gap-4">
+              <label className="text-sm font-medium text-gray-700">Link Color:</label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={block.styles?.linkColor || '#3b82f6'}
+                  onChange={(e) => onStyleUpdate?.('linkColor', e.target.value)}
+                  className="w-8 h-8 rounded border border-gray-200 cursor-pointer"
+                />
+                <input
+                  type="text"
+                  value={block.styles?.linkColor || '#3b82f6'}
+                  onChange={(e) => onStyleUpdate?.('linkColor', e.target.value)}
+                  placeholder="#3b82f6"
+                  className="w-24 px-2 py-1 text-sm bg-white border border-gray-200 rounded focus:border-purple-400 focus:outline-none"
+                />
               </div>
-              <button
-                onClick={removeAllLinks}
-                className="text-sm text-red-500 hover:text-red-700 underline"
-              >
-                Remove all links
-              </button>
             </div>
+            <button
+              onClick={removeAllLinks}
+              className="text-sm text-red-500 hover:text-red-700 underline"
+            >
+              Remove all links
+            </button>
           </div>
         </div>
       </div>,

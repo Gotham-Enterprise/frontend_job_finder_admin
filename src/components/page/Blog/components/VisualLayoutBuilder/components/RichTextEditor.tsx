@@ -78,7 +78,19 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
     if (editorRef.current && value !== undefined) {
       const currentContent = editorRef.current.innerHTML;
       if (currentContent !== value && !document.activeElement || document.activeElement !== editorRef.current) {
+        // Save scroll position before content update
+        const scrollTop = editorRef.current.scrollTop;
+        const scrollLeft = editorRef.current.scrollLeft;
+        
         editorRef.current.innerHTML = value || '';
+        
+        // Restore scroll position after content update
+        requestAnimationFrame(() => {
+          if (editorRef.current) {
+            editorRef.current.scrollTop = scrollTop;
+            editorRef.current.scrollLeft = scrollLeft;
+          }
+        });
       }
     }
   }, [value]);
@@ -96,29 +108,42 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
 
   const handleSelection = useCallback(() => {
     const selection = window.getSelection();
-    if (!selection || selection.isCollapsed || !editorRef.current) {
+    if (!selection || selection.rangeCount === 0 || !editorRef.current) {
       setIsToolbarVisible(false);
       return;
     }
 
     const range = selection.getRangeAt(0);
+    
+    // Check if the selection is within our editor
+    const isWithinEditor = editorRef.current.contains(range.commonAncestorContainer);
+    if (!isWithinEditor) {
+      setIsToolbarVisible(false);
+      return;
+    }
+
+    // Check if we have actual selected text (not just cursor position)
+    const selectedText = selection.toString().trim();
+    if (selectedText.length === 0 || selection.isCollapsed) {
+      setIsToolbarVisible(false);
+      return;
+    }
+
     const rect = range.getBoundingClientRect();
     const editorRect = editorRef.current.getBoundingClientRect();
 
+    // Ensure we have valid dimensions
     if (rect.width > 0 && rect.height > 0) {
-      const toolbarWidth = 180;
+      const toolbarWidth = 220; // Increased width to accommodate color picker
       const toolbarHeight = 50;
       
- 
       let top = rect.top - editorRect.top - toolbarHeight - 10;
       let left = rect.left - editorRect.left + (rect.width / 2) - (toolbarWidth / 2);
       let isBelow = false;
       
-    
       const viewportWidth = window.innerWidth;
-      const viewportHeight = window.innerHeight;
       
-
+      // Adjust horizontal position to stay within viewport
       if (rect.left + editorRect.left - (toolbarWidth / 2) < 10) {
         left = 10 - editorRect.left;
       }
@@ -127,6 +152,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
         left = viewportWidth - toolbarWidth - 10 - editorRect.left;
       }
       
+      // Adjust vertical position to stay within viewport
       if (rect.top - toolbarHeight - 10 < 10) {
         top = rect.bottom - editorRect.top + 10;
         isBelow = true;
@@ -135,18 +161,44 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
       setToolbarPosition({ top, left, isBelow });
       setIsToolbarVisible(true);
       checkActiveFormats();
+    } else {
+      setIsToolbarVisible(false);
     }
   }, [checkActiveFormats]);
 
   const executeCommand = useCallback((command: string, value?: string) => {
-    document.execCommand(command, false, value);
+   
+    if (!editorRef.current) return;
     
-    if (editorRef.current) {
-      onChange(editorRef.current.innerHTML);
+    editorRef.current.focus();
+    
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0) return;
+    
+    const range = selection.getRangeAt(0);
+    if (!range) return;
+
+    const selectedText = selection.toString();
+    
+    try {
+  
+      const savedRange = range.cloneRange();
+
+      document.execCommand(command, false, value);
+
+      if (selectedText.length > 0) {
+        selection.removeAllRanges();
+        selection.addRange(savedRange);
+      }
+      
+      if (editorRef.current) {
+        onChange(editorRef.current.innerHTML);
+      }
+
+      checkActiveFormats();
+    } catch (error) {
+      console.warn('Command execution failed:', error);
     }
-    
-    editorRef.current?.focus();
-    checkActiveFormats();
   }, [onChange, checkActiveFormats]);
 
   const handleInput = useCallback(() => {
@@ -155,10 +207,14 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
       const range = selection?.getRangeAt(0);
       const cursorOffset = range?.startOffset;
       const cursorNode = range?.startContainer;
+ 
+      const initialScrollTop = editorRef.current.scrollTop;
+      const scrollLeft = editorRef.current.scrollLeft;
       
       onChange(editorRef.current.innerHTML);
       
-      setTimeout(() => {
+
+      requestAnimationFrame(() => {
         if (editorRef.current && selection && range && cursorNode && cursorOffset !== undefined) {
           try {
             const newRange = document.createRange();
@@ -166,11 +222,36 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
             newRange.setEnd(cursorNode, Math.min(cursorOffset, cursorNode.textContent?.length || 0));
             selection.removeAllRanges();
             selection.addRange(newRange);
+            
+        
+            const rect = newRange.getBoundingClientRect();
+            const editorRect = editorRef.current.getBoundingClientRect();
+            
+        
+            const currentScrollTop = editorRef.current.scrollTop;
+            
+          
+            if (currentScrollTop < initialScrollTop - 100) {
+              editorRef.current.scrollTop = initialScrollTop;
+            }
+            
+          
+            if (rect.bottom > editorRect.bottom) {
+              editorRef.current.scrollTop += (rect.bottom - editorRect.bottom + 20);
+            }
+            
+           
+            editorRef.current.scrollLeft = scrollLeft;
+            
           } catch (e) {
-            // Ignore cursor restoration errors
+         
+            if (editorRef.current && editorRef.current.scrollTop < initialScrollTop - 50) {
+              editorRef.current.scrollTop = initialScrollTop;
+              editorRef.current.scrollLeft = scrollLeft;
+            }
           }
         }
-      }, 0);
+      });
     }
   }, [onChange]);
 
@@ -221,12 +302,22 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
 
   // Setup event listeners
   useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+    
     const handleSelectionChange = () => {
-      handleSelection();
+      // Clear any pending calls to prevent rapid firing
+      clearTimeout(timeoutId);
+      // Add a small debounce to prevent flickering during selection
+      timeoutId = setTimeout(() => {
+        handleSelection();
+      }, 50);
     };
 
+    // Only listen for global selection changes, remove mouseup to prevent conflicts
     document.addEventListener('selectionchange', handleSelectionChange);
+
     return () => {
+      clearTimeout(timeoutId);
       document.removeEventListener('selectionchange', handleSelectionChange);
     };
   }, [handleSelection]);
@@ -315,6 +406,18 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
             onClick={() => executeCommand('underline')}
           />
           
+          {/* Text Color Picker */}
+          <div className="relative">
+            <input
+              type="color"
+              onChange={(e) => executeCommand('foreColor', e.target.value)}
+              className="w-8 h-8 rounded border border-gray-200 cursor-pointer bg-transparent"
+              title="Text Color"
+              defaultValue="#000000"
+              onMouseDown={(e) => e.preventDefault()}
+            />
+          </div>
+          
         
           <div className="ml-1 pl-1 relative">
           
@@ -345,7 +448,17 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
           if (element) {
             editorRef.current = element;
             if (value !== undefined && element.innerHTML !== value) {
+              // Save scroll position before content update
+              const scrollTop = element.scrollTop;
+              const scrollLeft = element.scrollLeft;
+              
               element.innerHTML = value || '';
+              
+              // Restore scroll position after content update
+              requestAnimationFrame(() => {
+                element.scrollTop = scrollTop;
+                element.scrollLeft = scrollLeft;
+              });
             }
             if (!element.hasAttribute('data-initialized')) {
               element.setAttribute('data-initialized', 'true');
@@ -371,6 +484,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
         style={{
           ...style,
           minHeight: isMultiline ? '80px' : 'auto',
+          scrollBehavior: 'auto',
         }}
         onInput={handleInput}
         onKeyDown={handleKeyDown}
@@ -389,9 +503,17 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
           }
           [contenteditable] {
             outline: none;
+            scroll-behavior: auto !important;
+            overflow-anchor: none;
+            scroll-padding-bottom: 20px;
           }
           [contenteditable]:focus {
             outline: none;
+            scroll-behavior: auto !important;
+          }
+          /* Ensure smooth natural scrolling */
+          [contenteditable] * {
+            scroll-margin-bottom: 20px;
           }
         `
       }} />
