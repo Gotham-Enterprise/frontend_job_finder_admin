@@ -419,7 +419,7 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
       .filter(category =>
         category.text.toLowerCase().includes(categoriesSearchTerm.toLowerCase())
       )
-      .sort((a, b) => a.text.localeCompare(b.text)), // Sort alphabetically
+      .sort((a, b) => a.text.localeCompare(b.text)), 
     [categoryOptions, categoriesSearchTerm]
   );
 
@@ -433,7 +433,7 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
       .filter(sub =>
         sub.name.toLowerCase().includes(subCategoriesSearchTerm.toLowerCase())
       )
-      .sort((a, b) => a.name.localeCompare(b.name)); // Sort alphabetically
+      .sort((a, b) => a.name.localeCompare(b.name));
   }, [fullCategoriesData, tempMetadata.categories, subCategoriesSearchTerm]);
 
   const filteredTags = useMemo(() => 
@@ -441,7 +441,7 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
       .filter(tag =>
         tag.text.toLowerCase().includes(tagsSearchTerm.toLowerCase())
       )
-      .sort((a, b) => a.text.localeCompare(b.text)), // Sort alphabetically
+      .sort((a, b) => a.text.localeCompare(b.text)), 
     [tagOptions, tagsSearchTerm]
   );
 
@@ -512,7 +512,6 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
   }, [metadata, seoData, titleModal]);
 
   const setFeaturedImageInModal = useCallback((imageUrl: string) => {
-    console.log('Setting featured image in modal:', imageUrl);
     setTempMetadata(prev => ({ ...prev, featuredImage: imageUrl }));
     imageGalleryModal.closeModal();
   }, [imageGalleryModal]);
@@ -531,29 +530,35 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
   }, [hasUnsavedChanges, exitConfirmationModal, router]);
 
   const handleSaveAsDraft = useCallback(async () => {
-    const updatedMetadata = { ...metadata, status: 'draft' as const };
-    setMetadata(updatedMetadata);
-    
-    const payloadData = {
-      ...metadata,
-      status: 'draft',
-      ...currentLayout
-    };
+    try {
+      const draftMetadata = { ...metadata, status: 'draft' as const };
+      
+      const payload = transformBlogDataForAPI(
+        draftMetadata,
+        currentLayout.blocks,
+        categoryOptions,
+        tagOptions,
+        fullCategoriesData
+      );
 
-    updateBlogPost({
-      id,
-      data: payloadData
-    }, {
-      onSuccess: () => {
-        setHasUnsavedChanges(false);
-        exitConfirmationModal.closeModal();
-        router.push('/admin/blog');
-      },
-      onError: (error) => {
-        console.error('Error saving draft:', error);
-      }
-    });
-  }, [metadata, currentLayout, id, updateBlogPost, exitConfirmationModal, router]);
+
+      updateBlogPost({
+        id,
+        data: payload
+      }, {
+        onSuccess: () => {
+          setHasUnsavedChanges(false);
+          exitConfirmationModal.closeModal();
+          router.push('/admin/blog');
+        },
+        onError: (error) => {
+          console.error('Error saving draft:', error);
+        }
+      });
+    } catch (error) {
+      console.error('Error preparing draft data:', error);
+    }
+  }, [metadata, currentLayout, categoryOptions, tagOptions, fullCategoriesData, id, updateBlogPost, exitConfirmationModal, router]);
 
   const handleExitWithoutSaving = useCallback(() => {
     setHasUnsavedChanges(false);

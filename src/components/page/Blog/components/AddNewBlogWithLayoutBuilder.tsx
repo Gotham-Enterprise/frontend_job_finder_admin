@@ -396,17 +396,28 @@ export default function AddNewBlogWithLayoutBuilder() {
     };
   }, []);
 
+
+  const isModalFormValid = useMemo(() => {
+    const isValid = (
+      tempTitle.trim().length > 0 && 
+      tempMetadata.author.trim().length > 0 && 
+      tempMetadata.categories.length > 0 && 
+      tempMetadata.subCategories.length > 0 && 
+      tempMetadata.tags.length > 0 && 
+      tempMetadata.featuredImage.length > 0 &&
+      tempMetadata.publishDate.length > 0
+    );
+    
+ 
+    
+    return isValid;
+  }, [tempTitle, tempMetadata]);
+
   const generateBlogPayloadData = useCallback(() => {
     try {
       const { metadata: blogMetadata } = transformedLayoutData;
 
-      console.log('=== DEBUG: Generating blog payload ===');
-      console.log('Blog metadata:', blogMetadata);
-      console.log('Blog metadata.subCategories:', blogMetadata.subCategories);
-      console.log('Current layout blocks:', currentLayout.blocks);
-      console.log('Category options:', categoryOptions);
-      console.log('Tag options:', tagOptions);
-      console.log('Full categories data:', fullCategoriesData);
+   
 
       const payload = transformBlogDataForAPI(
         blogMetadata,
@@ -456,18 +467,14 @@ export default function AddNewBlogWithLayoutBuilder() {
         }
       };
 
-      console.log('=== DEBUG: Final payload being sent to API ===');
-      console.log('Publish payload:', JSON.stringify(publishPayload, null, 2));
-
+   
       createBlogPost(publishPayload, {
         onSuccess: () => {
-          console.log('=== DEBUG: Blog created successfully ===');
+          
           router.push('/admin/blog');
         },
         onError: (error) => {
-          console.error('=== DEBUG: Error creating blog ===');
-          console.error('Error details:', error);
-          console.error('Error response:', (error as any).response);
+       
           console.error('Error data:', (error as any).response?.data);
         }
       });
@@ -480,7 +487,7 @@ export default function AddNewBlogWithLayoutBuilder() {
     setMetadata(prev => ({
       ...prev,
       [field]: value,
-      // Clear subcategories when category changes
+   
       ...(field === 'categories' ? { subCategories: [] } : {})
     }));
   }, []);
@@ -523,9 +530,9 @@ export default function AddNewBlogWithLayoutBuilder() {
       keywords: seoData.keywords
     });
     setTempMetadata({
-      author: metadata.author,
+      author: metadata.author || authorInfo.name,
       status: metadata.status,
-      publishDate: metadata.publishDate,
+      publishDate: metadata.publishDate || new Date().toISOString(),
       categories: metadata.categories,
       subCategories: metadata.subCategories,
       tags: metadata.tags,
@@ -533,11 +540,10 @@ export default function AddNewBlogWithLayoutBuilder() {
     });
     setActiveTab('general');
     openTitleModalHandler();
-  }, [metadata.title, metadata.author, metadata.status, metadata.publishDate, metadata.categories, metadata.tags, metadata.featuredImage, seoData, openTitleModalHandler]);
+  }, [metadata.title, metadata.author, metadata.status, metadata.publishDate, metadata.categories, metadata.tags, metadata.featuredImage, seoData, openTitleModalHandler, authorInfo.name]);
 
   const saveTitleModal = useCallback(() => {
-    console.log('=== DEBUG: Saving modal data ===');
-    console.log('tempMetadata.subCategories:', tempMetadata.subCategories);
+  
     
     updateTitle(tempTitle);
     setSeoData(tempSeoData);
@@ -603,39 +609,41 @@ export default function AddNewBlogWithLayoutBuilder() {
   }, [hasUnsavedChanges, exitConfirmationModal, router]);
 
   const handleSaveAsDraft = useCallback(async () => {
-    const updatedMetadata = { ...metadata, status: 'draft' as const };
-    setMetadata(updatedMetadata);
+    try {
+      const draftMetadata = { ...metadata, status: 'draft' as const };
+      
+   
+      const payload = transformBlogDataForAPI(
+        draftMetadata,
+        currentLayout.blocks,
+        categoryOptions,
+        tagOptions,
+        fullCategoriesData
+      );
+
     
-    const payloadData = generateBlogPayloadData();
-    if (!payloadData) {
-      console.error('Failed to generate blog payload');
-      return;
+      const draftPayload = {
+        ...payload,
+        metadata: {
+          ...payload.metadata,
+          status: 'draft'
+        }
+      };
+
+      createBlogPost(draftPayload, {
+        onSuccess: () => {
+          setHasUnsavedChanges(false);
+          exitConfirmationModal.closeModal();
+          router.push('/admin/blog');
+        },
+        onError: (error) => {
+          console.error('Error saving draft:', error);
+        }
+      });
+    } catch (error) {
+      console.error('Error preparing draft data:', error);
     }
-
-    const { blogPayload, validation } = payloadData;
-    if (!validation.isValid) {
-      return;
-    }
-
-    const draftPayload = {
-      ...blogPayload,
-      metadata: {
-        ...blogPayload.metadata,
-        status: 'draft'
-      }
-    };
-
-    createBlogPost(draftPayload, {
-      onSuccess: () => {
-        setHasUnsavedChanges(false);
-        exitConfirmationModal.closeModal();
-        router.push('/admin/blog');
-      },
-      onError: (error) => {
-        console.error('Error saving draft:', error);
-      }
-    });
-  }, [metadata, generateBlogPayloadData, createBlogPost, exitConfirmationModal, router]);
+  }, [metadata, currentLayout, categoryOptions, tagOptions, fullCategoriesData, createBlogPost, exitConfirmationModal, router]);
 
   const handleExitWithoutSaving = useCallback(() => {
     setHasUnsavedChanges(false);
@@ -993,7 +1001,7 @@ export default function AddNewBlogWithLayoutBuilder() {
               {/* SubCategories */}
               <div className="dropdown-container">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  SubCategories
+                  SubCategories <span className="text-red-500">*</span>
                 </label>
                 <div className="relative" ref={subCategoriesDropdownRef}>
                   <button
@@ -1305,7 +1313,7 @@ export default function AddNewBlogWithLayoutBuilder() {
             </Button>
             <Button
               onClick={saveTitleModal}
-              disabled={!tempTitle.trim() || !tempMetadata.author.trim() || !tempMetadata.categories || tempMetadata.tags.length === 0 || !tempMetadata.featuredImage}
+              disabled={!isModalFormValid}
               className="px-4 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Save Changes
