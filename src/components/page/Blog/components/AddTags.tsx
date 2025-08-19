@@ -53,6 +53,16 @@ export default function AddTags() {
       return;
     }
 
+    // Check for duplicate tag name (case-insensitive)
+    const isDuplicate = tags.some(tag => 
+      tag.name.toLowerCase().trim() === newTag.name.toLowerCase().trim()
+    );
+    
+    if (isDuplicate) {
+      showToast.error('Validation Error', 'A tag with this name already exists');
+      return;
+    }
+
     try {
       const response = await createTagMutation.mutateAsync(newTag);
       if (response.success) {
@@ -200,6 +210,7 @@ export default function AddTags() {
             onInputChange={initInputChange}
             onAddTag={addTag}
             isCreating={isCreating}
+            existingTags={tags}
           />
         </div>
         

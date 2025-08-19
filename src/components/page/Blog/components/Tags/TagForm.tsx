@@ -11,14 +11,21 @@ interface TagFormProps {
   onInputChange: (field: keyof NewTag, value: string) => void;
   onAddTag: () => void;
   isCreating?: boolean;
+  existingTags?: Array<{ name: string }>;
 }
 
 const TagForm: React.FC<TagFormProps> = ({
   newTag,
   onInputChange,
   onAddTag,
-  isCreating = false
+  isCreating = false,
+  existingTags = []
 }) => {
+  const isDuplicate = existingTags.some(tag => 
+    tag.name.toLowerCase().trim() === newTag.name.toLowerCase().trim()
+  );
+  
+  const isDisabled = !newTag.name.trim() || isDuplicate || isCreating;
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
       <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">Add New Tag</h2>
@@ -31,7 +38,11 @@ const TagForm: React.FC<TagFormProps> = ({
             placeholder="Tag name"
             defaultValue={newTag.name}
             onChange={(e) => onInputChange('name', e.target.value)}
+            className={isDuplicate && newTag.name.trim() ? 'border-red-500 focus:border-red-500' : ''}
           />
+          {isDuplicate && newTag.name.trim() && (
+            <p className="text-red-500 text-sm mt-1">A tag with this name already exists</p>
+          )}
         </div>
 
         <div>
@@ -49,7 +60,7 @@ const TagForm: React.FC<TagFormProps> = ({
             variant="default"
             onClick={onAddTag}
             className="w-full"
-            disabled={!newTag.name.trim() || isCreating}
+            disabled={isDisabled}
           >
             {isCreating ? 'Adding...' : 'Add New Tag'}
           </Button>
