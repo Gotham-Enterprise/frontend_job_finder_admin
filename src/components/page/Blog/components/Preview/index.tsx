@@ -313,18 +313,33 @@ const BlogContentRenderer: React.FC<BlogContentRendererProps> = ({ content }) =>
 
       case 'list':
         const ListTag = blockContent?.ordered ? 'ol' : 'ul';
+        const linkColor = block.styles?.linkColor || '#3b82f6';
+        
         return (
-          <ListTag key={block.id} style={blockStyle} className="space-y-2">
-            {blockContent?.items?.map((item: string, index: number) => (
-              <li 
-                key={index} 
-                className={item.trim() === '' ? "text-gray-400 italic" : "text-gray-800"}
-                dangerouslySetInnerHTML={{ 
-                  __html: item.trim() === '' ? `Item ${index + 1}` : item 
-                }}
-              />
-            ))}
-          </ListTag>
+          <div key={block.id}>
+            <style>
+              {`
+                .list-${block.id} a {
+                  color: ${linkColor} !important;
+                  text-decoration: underline;
+                }
+                .list-${block.id} a:hover {
+                  opacity: 0.8;
+                }
+              `}
+            </style>
+            <ListTag style={blockStyle} className={`space-y-2 list-${block.id}`}>
+              {blockContent?.items?.map((item: string, index: number) => (
+                <li 
+                  key={index} 
+                  className={item.trim() === '' ? "text-gray-400 italic" : "text-gray-800"}
+                  dangerouslySetInnerHTML={{ 
+                    __html: item.trim() === '' ? `Item ${index + 1}` : item 
+                  }}
+                />
+              ))}
+            </ListTag>
+          </div>
         );
 
       case 'quote':

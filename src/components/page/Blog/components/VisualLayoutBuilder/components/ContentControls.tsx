@@ -34,8 +34,11 @@ const ContentControls: React.FC<ContentControlsProps> = memo(({
   const [selectedText, setSelectedText] = useState('');
   const [linkUrl, setLinkUrl] = useState('');
   const [linkTarget, setLinkTarget] = useState('_self');
+  const [selectedListItemIndex, setSelectedListItemIndex] = useState<number | null>(null);
+  const [selectedTextPreview, setSelectedTextPreview] = useState<{[key: number]: string}>({});
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const listItemRefs = useRef<(HTMLInputElement | null)[]>([]);
 
  
   const [localQuoteText, setLocalQuoteText] = useState((block.content as any)?.text || '');
@@ -95,22 +98,45 @@ const ContentControls: React.FC<ContentControlsProps> = memo(({
     }
   }, []);
 
+  const processListItemTextSelection = useCallback((itemIndex: number) => {
+    const ref = { current: listItemRefs.current[itemIndex] };
+    const result = processSelection(ref);
+    if (result) {
+      setSelectedText(result.selectedText);
+      setSelectedListItemIndex(itemIndex);
+      setShowLinkModal(true);
+    }
+  }, []);
+
   const createLink = useCallback(() => {
     if (!selectedText || !linkUrl) return;
     
-    const currentText = (block.content as any)?.text || '';
     const linkHtml = createLinkHtml(selectedText, linkUrl, linkTarget);
-    const newText = replaceTextWithLink(currentText, selectedText, linkHtml);
     
-    onContentUpdate('text', newText);
+    // Check if this is for a list item or regular text/heading
+    if (selectedListItemIndex !== null) {
+      // Handle list item link
+      const newItems = [...listItems];
+      const currentItemText = newItems[selectedListItemIndex];
+      const newItemText = replaceTextWithLink(currentItemText, selectedText, linkHtml);
+      newItems[selectedListItemIndex] = newItemText;
+      onContentUpdate('items', newItems);
+    } else {
+      // Handle text/heading link
+      const currentText = (block.content as any)?.text || '';
+      const newText = replaceTextWithLink(currentText, selectedText, linkHtml);
+      onContentUpdate('text', newText);
+    }
+    
     resetLinkModal();
-  }, [selectedText, linkUrl, linkTarget, block.content, onContentUpdate]);
+  }, [selectedText, linkUrl, linkTarget, block.content, onContentUpdate, selectedListItemIndex, listItems]);
 
   const resetLinkModal = useCallback(() => {
     setShowLinkModal(false);
     setSelectedText('');
     setLinkUrl('');
     setLinkTarget('_self');
+    setSelectedListItemIndex(null);
   }, []);
 
   const handleButtonContentUpdate = useCallback((field: string, value: any) => {
@@ -135,6 +161,14 @@ const ContentControls: React.FC<ContentControlsProps> = memo(({
     const textWithoutLinks = removeAllLinksFromText(currentText);
     onContentUpdate('text', textWithoutLinks);
   }, [block.content, onContentUpdate]);
+
+  const removeLinksFromListItem = useCallback((itemIndex: number) => {
+    const newItems = [...listItems];
+    const currentItemText = newItems[itemIndex];
+    const textWithoutLinks = removeAllLinksFromText(currentItemText);
+    newItems[itemIndex] = textWithoutLinks;
+    onContentUpdate('items', newItems);
+  }, [listItems, onContentUpdate]);
 
   const renderLinkModal = () => (
     <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl p-4 w-80 shadow-xl border border-gray-200 z-[100] max-w-[90vw]">
@@ -481,28 +515,149 @@ const ContentControls: React.FC<ContentControlsProps> = memo(({
               </button>
             </div>
             
+            <div className="mb-3 p-2 bg-blue-50 rounded-lg">
+              <p className="text-xs text-blue-700">
+                💡 <strong>How to add links:</strong> 
+                <br />• <strong>Partial link:</strong> Select specific text (e.g., just "marketing"), then click "Add Link"
+                <br />• <strong>Full item link:</strong> Click "Add Link" without selecting anything to link the entire item
+                <br />• Enter your URL and click "Add Link"
+              </p>
+            </div>
+            
             <div className="space-y-2">
               {listItems.map((item: string, index: number) => (
-                <div key={index} className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    value={item.startsWith('Item ') && /^Item \d+$/.test(item) ? '' : item}
-                    onChange={(e) => updateListItem(index, e.target.value)}
-                    placeholder={`Item ${index + 1}`}
-                    className="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 placeholder-gray-400 focus:border-purple-400 focus:outline-none focus:ring-1 focus:ring-purple-100 transition-all"
-                  />
-                  {listItems.length > 1 && (
+                <div key={index} className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <input
+                      ref={(el) => { listItemRefs.current[index] = el; }}
+                      type="text"
+                      value={item.startsWith('Item ') && /^Item \d+$/.test(item) ? '' : item}
+                      onChange={(e) => updateListItem(index, e.target.value)}
+                      onMouseUp={() => {
+                        // Check if text is selected and update preview
+                        const input = listItemRefs.current[index];
+                        if (input && input.selectionStart !== input.selectionEnd) {
+                          const selectedText = input.value.substring(input.selectionStart || 0, input.selectionEnd || 0);
+                          setSelectedTextPreview(prev => ({
+                            ...prev,
+                            [index]: selectedText
+                          }));
+                          
+                          // Show a subtle hint that they can now add a link
+                          const linkButton = input.parentElement?.nextElementSibling?.querySelector('button');
+                          if (linkButton) {
+                            linkButton.classList.add('ring-2', 'ring-blue-400');
+                            setTimeout(() => {
+                              linkButton.classList.remove('ring-2', 'ring-blue-400');
+                            }, 2000);
+                          }
+                        } else {
+                          // Clear preview if no text selected
+                          setSelectedTextPreview(prev => {
+                            const newPrev = { ...prev };
+                            delete newPrev[index];
+                            return newPrev;
+                          });
+                        }
+                      }}
+                      placeholder={`Item ${index + 1}`}
+                      className="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 placeholder-gray-400 focus:border-purple-400 focus:outline-none focus:ring-1 focus:ring-purple-100 transition-all"
+                    />
+                    {listItems.length > 1 && (
+                      <button
+                        onClick={() => removeListItem(index)}
+                        className="px-2 py-1 text-sm bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors"
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                  {/* Link controls for each list item */}
+                  <div className="flex items-center gap-2 ml-2">
+                    {selectedTextPreview[index] && (
+                      <div className="px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded border">
+                        Selected: "{selectedTextPreview[index]}"
+                      </div>
+                    )}
                     <button
-                      onClick={() => removeListItem(index)}
-                      className="px-2 py-1 text-sm bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors"
+                      onClick={() => {
+                        const input = listItemRefs.current[index];
+                        if (input) {
+                          input.focus();
+                          
+                          setTimeout(() => {
+                            const selection = processSelection({ current: input });
+                            
+                            if (selection && selection.selectedText.length > 0) {
+                              // User has selected specific text - use that
+                              setSelectedText(selection.selectedText);
+                              setSelectedListItemIndex(index);
+                              setShowLinkModal(true);
+                            } else {
+                              // No text selected - use entire item text
+                              const fullText = input.value.trim();
+                              if (fullText && fullText !== `Item ${index + 1}`) {
+                                setSelectedText(fullText);
+                                setSelectedListItemIndex(index);
+                                setShowLinkModal(true);
+                              } else {
+                                alert('Please add some text to this list item first, or select specific text you want to link.');
+                              }
+                            }
+                          }, 100);
+                        }
+                      }}
+                      className={`px-2 py-1 text-xs rounded-lg transition-colors ${
+                        selectedTextPreview[index] 
+                          ? 'bg-green-100 text-green-700 hover:bg-green-200 ring-2 ring-green-300' 
+                          : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                      }`}
+                      title={selectedTextPreview[index] 
+                        ? `Click to add link to "${selectedTextPreview[index]}"` 
+                        : "Select specific text for partial link, or click without selecting to link entire item"
+                      }
                     >
-                      Remove
+                      🔗 {selectedTextPreview[index] ? 'Link Selected Text' : 'Add Link'}
                     </button>
-                  )}
+                    {item.includes('<a ') && (
+                      <button
+                        onClick={() => removeLinksFromListItem(index)}
+                        className="px-2 py-1 text-xs bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200 transition-colors"
+                        title="Remove all links from this item"
+                      >
+                        🚫 Remove Links
+                      </button>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
           </div>
+          
+          {/* Link Color Customization */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Link Color</label>
+            <div className="flex items-center gap-2">
+              <input
+                type="color"
+                value={block.styles?.linkColor || '#3b82f6'}
+                onChange={(e) => onStyleUpdate?.('linkColor', e.target.value)}
+                className="w-10 h-10 rounded-lg border border-gray-200 cursor-pointer"
+              />
+              <input
+                type="text"
+                value={block.styles?.linkColor || '#3b82f6'}
+                onChange={(e) => onStyleUpdate?.('linkColor', e.target.value)}
+                placeholder="#3b82f6"
+                className="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-100"
+              />
+            </div>
+            <p className="text-xs text-gray-500 mt-1">
+              This color will be applied to all links in this list
+            </p>
+          </div>
+          
+          {showLinkModal && renderLinkModal()}
         </div>
       );
     },

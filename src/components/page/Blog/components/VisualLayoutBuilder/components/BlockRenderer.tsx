@@ -658,26 +658,45 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
     }
 
     const ListTag = isOrdered ? 'ol' : 'ul';
+    const linkColor = block.styles?.linkColor || '#3b82f6';
+    
     return (
-      <ListTag 
-        style={{
-          ...style,
-          listStyleType: isOrdered ? 'decimal' : 'disc',
-          paddingLeft: '1.5rem',
-          margin: '0.5rem 0',
-        }}
-        className="space-y-1"
-        onClick={(e) => {
-          e.stopPropagation();
-          onOpenSettings?.('list', block);
-        }}
-      >
-        {items.map((item: string, index: number) => (
-          <li key={index} style={{ margin: '0.25rem 0' }}>
-            {item || `Item ${index + 1}`}
-          </li>
-        ))}
-      </ListTag>
+      <div>
+        <style>
+          {`
+            .list-${block.id} a {
+              color: ${linkColor} !important;
+              text-decoration: underline;
+            }
+            .list-${block.id} a:hover {
+              opacity: 0.8;
+            }
+          `}
+        </style>
+        <ListTag 
+          style={{
+            ...style,
+            listStyleType: isOrdered ? 'decimal' : 'disc',
+            paddingLeft: '1.5rem',
+            margin: '0.5rem 0',
+          }}
+          className={`space-y-1 list-${block.id}`}
+          onClick={(e) => {
+            e.stopPropagation();
+            onOpenSettings?.('list', block);
+          }}
+        >
+          {items.map((item: string, index: number) => (
+            <li 
+              key={index} 
+              style={{ margin: '0.25rem 0' }}
+              dangerouslySetInnerHTML={{ 
+                __html: item || `Item ${index + 1}` 
+              }}
+            />
+          ))}
+        </ListTag>
+      </div>
     );
   };
 
