@@ -105,7 +105,11 @@ export interface IdApprovalDetailResponse {
       question: string;
       answer: string;
     }[];
-    activityLogs: any[];
+    activityLogs: {
+      attempts: number;
+      ipAddress: string;
+      timestamp: string;
+    }[];
   };
 }
 
