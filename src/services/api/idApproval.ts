@@ -1,14 +1,14 @@
-import { apiGet, apiPatch } from "./apiUtils";
 import {
   IdApproval,
   IdApprovalBatchUpdate,
   IdApprovalBatchUpdateResponse,
+  IdApprovalDetailResponse,
   IdApprovalFilters,
   IdApprovals,
   IdApprovalStatusUpdate,
   IdApprovalStatusUpdateResponse,
-  IdApprovalDetailResponse,
 } from "../types/idApproval";
+import { apiGet, apiPatch, apiPost } from "./apiUtils";
 
 export const idApprovalApi = {
   async getIdApprovals(filters: IdApprovalFilters): Promise<IdApprovals> {
@@ -37,5 +37,10 @@ export const idApprovalApi = {
     const endpoint = `/api/admin/id-verifications/batch-status`;
 
     return apiPatch<IdApprovalBatchUpdateResponse>(endpoint, data);
+  },
+  async unlockAccount(id: IdApproval["id"]): Promise<{ success: boolean }> {
+    const endpoint = `/api/admin/id-verifications/${id}/unlock-account`;
+
+    return apiPost<{ success: boolean }>(endpoint);
   },
 };

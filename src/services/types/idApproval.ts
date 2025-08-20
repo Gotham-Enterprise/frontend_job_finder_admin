@@ -100,6 +100,8 @@ export interface IdApprovalDetailResponse {
       address: string;
       licenses: string;
       phoneNumber: string;
+      front: string;
+      back: string;
     };
     securityQuestions: {
       question: string;
@@ -120,4 +122,12 @@ export interface UseIdApprovalDetailLogic {
   profile: IdApprovalDetailResponse["data"]["profile"];
   securityQuestions: IdApprovalDetailResponse["data"]["securityQuestions"];
   activityLogs: IdApprovalDetailResponse["data"]["activityLogs"];
+  isLoading: boolean;
+  isUnlocked: boolean;
+  displayReview: boolean;
+  isPendingStatus: boolean;
+  isStatusUpdated: boolean;
+  onUnlockAccount: () => void;
+  onToggleReview: () => void;
+  onUpdateStatus: (status: IdApproval["status"]) => void;
 }

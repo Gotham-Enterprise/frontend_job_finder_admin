@@ -10,7 +10,20 @@ interface Props {
 }
 
 const DetailWrapper: FC<Props> = ({ data }) => {
-  const { activityLogs, profile, securityQuestions, isLocked } = useIdApprovalDetailLogic(data);
+  const {
+    activityLogs,
+    profile,
+    securityQuestions,
+    isLocked,
+    isLoading,
+    isUnlocked,
+    displayReview,
+    isPendingStatus,
+    isStatusUpdated,
+    onUnlockAccount,
+    onToggleReview,
+    onUpdateStatus,
+  } = useIdApprovalDetailLogic(data);
 
   return (
     <div className="grid grid-cols-1 px-4 pt-6 xl:grid-cols-3 xl:gap-6">
@@ -20,7 +33,18 @@ const DetailWrapper: FC<Props> = ({ data }) => {
       <div className="col-span-2 space-y-6">
         <ActivityLogs activityLogs={activityLogs} />
         <SecurityQuestions securityQuestions={securityQuestions} />
-        <Actions isLocked={isLocked} />
+        <Actions
+          profile={profile}
+          isLocked={isLocked}
+          isLoading={isLoading}
+          isUnlocked={isUnlocked}
+          displayReview={displayReview}
+          isPendingStatus={isPendingStatus}
+          isStatusUpdated={isStatusUpdated}
+          onUnlockAccount={onUnlockAccount}
+          onToggleReview={onToggleReview}
+          onUpdateStatus={onUpdateStatus}
+        />
       </div>
     </div>
   );
