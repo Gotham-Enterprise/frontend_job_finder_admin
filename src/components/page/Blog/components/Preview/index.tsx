@@ -343,14 +343,56 @@ const BlogContentRenderer: React.FC<BlogContentRendererProps> = ({ content }) =>
         );
 
       case 'quote':
+        const quoteText = blockContent?.text || 'Your inspiring quote goes here...';
+        const quoteAuthor = blockContent?.author || '';
+        const quoteCitation = blockContent?.citation || '';
+        const isPlaceholderText = quoteText === 'Your inspiring quote goes here...';
+        const isPlaceholderAuthor = !quoteAuthor || quoteAuthor.trim() === '';
+        
         return (
-          <blockquote 
-            key={block.id} 
-            style={blockStyle}
-            className="border-l-4 border-blue-500 pl-4 italic text-gray-700 bg-gray-50 py-2"
-          >
-            {blockContent?.text || ''}
-          </blockquote>
+          <div key={block.id} style={blockStyle} className="relative">
+            <blockquote 
+              style={{
+                fontStyle: 'italic',
+                backgroundColor: styles?.backgroundColor || '#f8f9fa',
+                padding: '1.5rem',
+                borderRadius: '8px',
+                margin: '1rem 0',
+                position: 'relative' as const,
+                paddingLeft: '2rem',
+              }}
+              className="relative"
+            >
+              <div 
+                style={{
+                  position: 'absolute' as const,
+                  left: '0',
+                  top: '0',
+                  bottom: '0',
+                  width: '4px',
+                  backgroundColor: styles?.accentColor || '#8b5cf6',
+                  borderRadius: '2px 0 0 2px',
+                }}
+              />
+              <div 
+                className="text-lg leading-relaxed mb-3" 
+                style={{ 
+                  color: isPlaceholderText ? '#9ca3af' : '#374151',
+                  fontStyle: 'italic'
+                }}
+              >
+                &ldquo;{quoteText}&rdquo;
+              </div>
+              <footer className="text-sm mt-4 pt-3 border-t border-gray-200" style={{ color: '#6b7280' }}>
+                {quoteAuthor && <cite className="font-medium not-italic">— {quoteAuthor}</cite>}
+                {quoteAuthor && quoteCitation && <span className="mx-2">•</span>}
+                {quoteCitation && <span className="italic">{quoteCitation}</span>}
+                {isPlaceholderAuthor && (
+                  <cite className="font-medium not-italic" style={{ color: '#9ca3af' }}>— Author Name</cite>
+                )}
+              </footer>
+            </blockquote>
+          </div>
         );
 
       case 'button':
@@ -363,7 +405,6 @@ const BlogContentRenderer: React.FC<BlogContentRendererProps> = ({ content }) =>
         const customWidth = blockContent?.customWidth || 200;
         const alignment = blockContent?.alignment || 'left';
         
-        // Define button variant styles
         const getButtonVariantStyles = (variant: string) => {
           switch (variant) {
             case 'primary':
