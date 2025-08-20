@@ -681,9 +681,9 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
             target={buttonTarget}
             rel={buttonTarget === '_blank' ? 'noopener noreferrer' : undefined}
             style={buttonStyle}
-            className={`btn btn-${variant} btn-${size} hover:opacity-90 transition-opacity`}
+            className="hover:opacity-90 transition-opacity"
             onClick={(e) => {
-              // In preview mode, allow normal button functionality
+        
               if (isSelected) {
                 e.preventDefault();
                 e.stopPropagation();
@@ -691,7 +691,7 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
                   onOpenSettings('button' as any, block);
                 }
               } else {
-                // Let the link work normally in preview
+              
                 e.stopPropagation();
               }
             }}
@@ -708,7 +708,7 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
         <button
           type="button"
           style={buttonStyle}
-          className={`btn btn-${variant} btn-${size} hover:opacity-90 transition-opacity`}
+          className="hover:opacity-90 transition-opacity"
           onClick={(e) => {
             e.stopPropagation();
             if (isSelected && onOpenSettings) {

@@ -353,6 +353,132 @@ const BlogContentRenderer: React.FC<BlogContentRendererProps> = ({ content }) =>
           </blockquote>
         );
 
+      case 'button':
+        const buttonText = blockContent?.text || 'Click Me';
+        const buttonUrl = blockContent?.url;
+        const buttonTarget = blockContent?.target || '_self';
+        const variant = blockContent?.variant || 'primary';
+        const size = blockContent?.size || 'medium';
+        const width = blockContent?.width || 'auto';
+        const customWidth = blockContent?.customWidth || 200;
+        const alignment = blockContent?.alignment || 'left';
+        
+        // Define button variant styles
+        const getButtonVariantStyles = (variant: string) => {
+          switch (variant) {
+            case 'primary':
+              return {
+                backgroundColor: '#3b82f6',
+                color: '#ffffff',
+                border: 'none'
+              };
+            case 'secondary':
+              return {
+                backgroundColor: '#6b7280',
+                color: '#ffffff',
+                border: 'none'
+              };
+            case 'outline':
+              return {
+                backgroundColor: 'transparent',
+                color: '#3b82f6',
+                border: '1px solid #3b82f6'
+              };
+            default:
+              return {
+                backgroundColor: '#3b82f6',
+                color: '#ffffff',
+                border: 'none'
+              };
+          }
+        };
+
+        const getButtonSizeStyles = (size: string) => {
+          switch (size) {
+            case 'small':
+              return {
+                fontSize: '0.875rem',
+                padding: '8px 16px'
+              };
+            case 'medium':
+              return {
+                fontSize: '1rem',
+                padding: '12px 24px'
+              };
+            case 'large':
+              return {
+                fontSize: '1.125rem',
+                padding: '16px 32px'
+              };
+            default:
+              return {
+                fontSize: '1rem',
+                padding: '12px 24px'
+              };
+          }
+        };
+
+        const variantStyles = getButtonVariantStyles(variant);
+        const sizeStyles = getButtonSizeStyles(size);
+        
+        const buttonStyle = {
+          ...variantStyles,
+          ...sizeStyles,
+          backgroundColor: styles?.backgroundColor || variantStyles.backgroundColor,
+          color: styles?.textColor || variantStyles.color,
+          fontSize: styles?.fontSize || sizeStyles.fontSize,
+          fontWeight: styles?.fontWeight || '500',
+          textAlign: styles?.textAlign || 'center',
+          fontFamily: styles?.fontFamily || 'inherit',
+          border: styles?.border?.width 
+            ? `${styles.border.width}px ${styles.border.style || 'solid'} ${styles.border.color || 'transparent'}`
+            : variantStyles.border || 'none',
+          borderRadius: styles?.border?.radius ? `${styles.border.radius}px` : '6px',
+          padding: styles?.padding 
+            ? `${styles.padding.top || 12}px ${styles.padding.right || 24}px ${styles.padding.bottom || 12}px ${styles.padding.left || 24}px`
+            : sizeStyles.padding,
+          cursor: 'pointer',
+          display: 'inline-block',
+          textDecoration: 'none',
+          transition: 'all 0.2s ease',
+          width: width === 'full' ? '100%' : width === 'custom' ? `${customWidth}px` : 'auto',
+          ...blockStyle
+        } as React.CSSProperties;
+
+        const containerClass = `flex w-full ${
+          alignment === 'center' ? 'justify-center' : 
+          alignment === 'right' ? 'justify-end' : 
+          'justify-start'
+        }`;
+
+        if (buttonUrl && buttonUrl.trim()) {
+          return (
+            <div key={block.id} className={containerClass} style={{ margin: '16px 0' }}>
+              <a
+                href={buttonUrl}
+                target={buttonTarget}
+                rel={buttonTarget === '_blank' ? 'noopener noreferrer' : undefined}
+                style={buttonStyle}
+                className="hover:opacity-90 transition-opacity"
+              >
+                {buttonText}
+              </a>
+            </div>
+          );
+        }
+
+        return (
+          <div key={block.id} className={containerClass} style={{ margin: '16px 0' }}>
+            <button
+              type="button"
+              style={buttonStyle}
+              className="hover:opacity-90 transition-opacity"
+            >
+              {buttonText}
+            </button>
+          </div>
+        );
+
       case 'code':
         return (
           <pre 
