@@ -13,7 +13,7 @@ export default function SubCategoryDropdown({
   selectedSubCategories,
   availableSubCategories,
   onSelectionChange,
-  placeholder = "Search subcategories...",
+  placeholder = "Search or add subcategories...",
   maxSelections = 10
 }: SubCategoryDropdownProps) {
   const [inputValue, setInputValue] = useState('');
@@ -23,7 +23,7 @@ export default function SubCategoryDropdown({
   const inputRef = useRef<HTMLInputElement>(null);
 
   const filteredSuggestions = useMemo(() => {
-    // First filter out already selected subcategories (by ID or name)
+  
     const unselectedSubCategories = availableSubCategories.filter(subCat => {
       const alreadySelectedById = selectedSubCategories.some(selected => selected.id === subCat.id);
       const alreadySelectedByName = selectedSubCategories.some(selected => 
@@ -33,10 +33,9 @@ export default function SubCategoryDropdown({
       return !alreadySelectedById && !alreadySelectedByName;
     });
 
-    // If no search input, return all unselected subcategories
+
     if (!inputValue.trim()) return unselectedSubCategories;
 
-    // Filter by search input
     const lowerInput = inputValue.toLowerCase();
     return unselectedSubCategories.filter(subCat =>
       subCat.name.toLowerCase().includes(lowerInput)
@@ -44,8 +43,19 @@ export default function SubCategoryDropdown({
   }, [inputValue, availableSubCategories, selectedSubCategories]);
 
   const shouldShowCreateOption = useMemo(() => {
-    // Disable creation of new subcategories - users can only select existing ones
-    return false;
+    if (!inputValue.trim()) return false;
+    
+   
+    const exactMatch = availableSubCategories.some(
+      subCat => subCat.name.toLowerCase() === inputValue.toLowerCase()
+    );
+    
+
+    const isAlreadySelected = selectedSubCategories.some(
+      selected => selected.name.toLowerCase() === inputValue.toLowerCase()
+    );
+
+    return !exactMatch && !isAlreadySelected;
   }, [inputValue, availableSubCategories, selectedSubCategories]);
 
   const allOptions: SubCategoryDropdownItem[] = useMemo(() => {
@@ -81,21 +91,33 @@ export default function SubCategoryDropdown({
   const addSubCategory = (option: SubCategoryDropdownItem) => {
     if (selectedSubCategories.length >= maxSelections) return;
 
-    // Only allow selection of existing subcategories (not new ones)
-    if (option.isNew) return;
+    if (!option.isNew) {
+      const isDuplicateById = selectedSubCategories.some(selected => selected.id === option.id);
+      const isDuplicateByName = selectedSubCategories.some(selected => 
+        selected.name.toLowerCase() === option.name.toLowerCase()
+      );
 
-    // Double-check for duplicates by ID and name
-    const isDuplicateById = selectedSubCategories.some(selected => selected.id === option.id);
-    const isDuplicateByName = selectedSubCategories.some(selected => 
-      selected.name.toLowerCase() === option.name.toLowerCase()
-    );
-
-    if (isDuplicateById || isDuplicateByName) {
-      console.warn('Attempted to add duplicate subcategory:', option.name);
-      return;
+      if (isDuplicateById || isDuplicateByName) {
+        console.warn('Attempted to add duplicate subcategory:', option.name);
+        return;
+      }
     }
 
-    const newSubCategory = { name: option.name, id: option.id };
+    if (option.isNew) {
+      const nameExists = selectedSubCategories.some(selected => 
+        selected.name.toLowerCase() === option.name.toLowerCase()
+      );
+      
+      if (nameExists) {
+        console.warn('Attempted to add subcategory with existing name:', option.name);
+        return;
+      }
+    }
+
+   
+    const newSubCategory = option.isNew 
+      ? { name: option.name } 
+      : { name: option.name, id: option.id };
 
     onSelectionChange([...selectedSubCategories, newSubCategory]);
     setInputValue('');
@@ -225,7 +247,10 @@ export default function SubCategoryDropdown({
       {isDropdownOpen && allOptions.length === 0 && inputValue && (
         <div className="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-md shadow-lg">
           <div className="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">
-          Subcategory already exists
+            {selectedSubCategories.some(selected => selected.name.toLowerCase() === inputValue.toLowerCase()) ||
+             availableSubCategories.some(subCat => subCat.name.toLowerCase() === inputValue.toLowerCase())
+              ? "Subcategory already exists"
+              : "No matching subcategories found"}
           </div>
         </div>
       )}

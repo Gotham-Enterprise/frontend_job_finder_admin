@@ -19,9 +19,8 @@ export default function CategoryEditModal({
   const { subCategories, isLoading: isLoadingSubCategories } = useSubCategories();
 
   const updateSubCategories = (selectedSubCategories: Array<{ name: string; id?: string }>) => {
-    // Since we only allow existing subcategories, all should have valid IDs
-    const subcategoriesWithIds = selectedSubCategories.filter(subCat => subCat.id).map(subCat => ({
-      id: subCat.id!,
+    const subcategoriesWithIds = selectedSubCategories.map(subCat => ({
+      id: subCat.id || `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       name: subCat.name
     }));
     
@@ -59,11 +58,11 @@ export default function CategoryEditModal({
                   selectedSubCategories={editingCategory.subCategories || []}
                   availableSubCategories={subCategories}
                   onSelectionChange={updateSubCategories}
-                  placeholder="Search subcategories..."
+                  placeholder="Search or add subcategories..."
                   maxSelections={10}
                 />
                 <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                  Select from existing subcategories.
+                  Select existing subcategories or type to create new ones.
                 </p>
                 {isLoadingSubCategories && (
                   <p className="mt-1 text-xs text-blue-500 dark:text-blue-400">

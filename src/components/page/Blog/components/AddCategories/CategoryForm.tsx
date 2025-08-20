@@ -45,11 +45,11 @@ export default function CategoryForm({
             selectedSubCategories={currentSubCategories}
             availableSubCategories={subCategories}
             onSelectionChange={onSubCategoriesUpdate}
-            placeholder="Search subcategories..."
+            placeholder="Search or add subcategories..."
             maxSelections={10}
           />
           <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-            Select from existing subcategories.
+            Select existing subcategories or type to create new ones.
           </p>
           {isLoadingSubCategories && (
             <p className="mt-1 text-xs text-blue-500 dark:text-blue-400">
