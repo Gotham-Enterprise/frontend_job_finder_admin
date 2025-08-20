@@ -790,10 +790,13 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
   };
 
   const renderQuote = () => {
-    const text = (block.content as any)?.text || 'Do you have a design in mind for your blog? Whether you prefer a trendy postcard look or you\'re going for a more editorial style blog - there\'s a stunning layout for everyone.';
+    const text = (block.content as any)?.text || 'Your inspiring quote goes here...';
     const author = (block.content as any)?.author || '';
     const citation = (block.content as any)?.citation || '';
     const style = createStyle('paragraph');
+    
+    const isPlaceholderText = text === 'Your inspiring quote goes here...';
+    const isPlaceholderAuthor = !author || author.trim() === '';
     
     return (
       <blockquote 
@@ -813,16 +816,23 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
           onOpenSettings?.('quote', block);
         }}
       >
-        <div className="text-lg leading-relaxed mb-3" style={{ color: style.color || '#374151' }}>
+        <div 
+          className="text-lg leading-relaxed mb-3" 
+          style={{ 
+            color: isPlaceholderText ? '#9ca3af' : (style.color || '#374151'),
+            fontStyle: 'italic'
+          }}
+        >
           &ldquo;{text}&rdquo;
         </div>
-        {(author || citation) && (
-          <footer className="text-sm mt-4 pt-3 border-t border-gray-200" style={{ color: '#6b7280' }}>
-            {author && <cite className="font-medium not-italic">— {author}</cite>}
-            {author && citation && <span className="mx-2">•</span>}
-            {citation && <span className="italic">{citation}</span>}
-          </footer>
-        )}
+        <footer className="text-sm mt-4 pt-3 border-t border-gray-200" style={{ color: '#6b7280' }}>
+          {author && <cite className="font-medium not-italic">— {author}</cite>}
+          {author && citation && <span className="mx-2">•</span>}
+          {citation && <span className="italic">{citation}</span>}
+          {isPlaceholderAuthor && (
+            <cite className="font-medium not-italic" style={{ color: '#9ca3af' }}>— Author Name</cite>
+          )}
+        </footer>
       </blockquote>
     );
   };

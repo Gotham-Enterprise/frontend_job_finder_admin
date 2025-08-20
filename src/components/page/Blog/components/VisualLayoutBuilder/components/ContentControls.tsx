@@ -42,11 +42,15 @@ const ContentControls: React.FC<ContentControlsProps> = memo(({
   const listItemRefs = useRef<(HTMLInputElement | null)[]>([]);
 
  
-  const [localQuoteText, setLocalQuoteText] = useState((block.content as any)?.text || '');
+  const [localQuoteText, setLocalQuoteText] = useState(() => {
+    const currentText = (block.content as any)?.text || '';
+    return currentText === 'Your inspiring quote goes here...' ? '' : currentText;
+  });
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    setLocalQuoteText((block.content as any)?.text || '');
+    const currentText = (block.content as any)?.text || '';
+    setLocalQuoteText(currentText === 'Your inspiring quote goes here...' ? '' : currentText);
   }, [block.content?.text]);
 
   const debouncedUpdateQuoteText = useCallback((value: string) => {
@@ -54,7 +58,9 @@ const ContentControls: React.FC<ContentControlsProps> = memo(({
       clearTimeout(debounceTimeoutRef.current);
     }
     debounceTimeoutRef.current = setTimeout(() => {
-      onContentUpdate('text', value);
+      // If the value is empty, set it to the placeholder text
+      const finalValue = value.trim() === '' ? 'Your inspiring quote goes here...' : value;
+      onContentUpdate('text', finalValue);
     }, 300); 
   }, [onContentUpdate]);
 
@@ -671,7 +677,7 @@ const ContentControls: React.FC<ContentControlsProps> = memo(({
               setLocalQuoteText(e.target.value);
               debouncedUpdateQuoteText(e.target.value);
             }}
-            placeholder="Enter your quote..."
+            placeholder="Your inspiring quote goes here..."
             className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 placeholder-gray-400 focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-100 resize-none transition-all"
             rows={4}
           />
