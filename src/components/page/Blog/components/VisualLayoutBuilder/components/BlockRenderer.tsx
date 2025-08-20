@@ -152,66 +152,94 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
 
     if (isPlaceholder) {
       return (
-        <Tag 
-          style={{
-            ...style,
-            color: '#9ca3af',
-            fontStyle: 'italic',
-            wordWrap: 'break-word',
-            overflowWrap: 'break-word'
-          }}
-          onClick={(e) => {
-            e.stopPropagation();
-            startEditing(text);
-          }}
-        >
-          {displayText}
-        </Tag>
+        <div className="prose prose-sm max-w-none">
+          <Tag 
+            style={{
+              ...style,
+              color: '#9ca3af',
+              fontStyle: 'italic',
+              wordWrap: 'break-word',
+              overflowWrap: 'break-word'
+            }}
+            onClick={(e) => {
+              e.stopPropagation();
+              startEditing(text);
+            }}
+          >
+            {displayText}
+          </Tag>
+        </div>
       );
     }
 
     if (url && url.trim()) {
       return (
-        <a
-          href={url}
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{ textDecoration: 'none' }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <Tag 
-            style={{
-              ...style,
-              color: linkColor,
-              wordWrap: 'break-word',
-              overflowWrap: 'break-word',
-              cursor: 'pointer'
-            }}
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              startEditing(text);
-            }}
+        <div className="prose prose-sm max-w-none">
+          <a
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ textDecoration: 'none' }}
+            onClick={(e) => e.stopPropagation()}
           >
-            {styledText.includes('<a ') ? (
-              <span dangerouslySetInnerHTML={{ __html: styledText }} />
-            ) : (
-              styledText
-            )}
-          </Tag>
-        </a>
+            <Tag 
+              style={{
+                ...style,
+                color: linkColor,
+                wordWrap: 'break-word',
+                overflowWrap: 'break-word',
+                cursor: 'pointer'
+              }}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                startEditing(text);
+              }}
+            >
+              {styledText.includes('<a ') ? (
+                <span dangerouslySetInnerHTML={{ __html: styledText }} />
+              ) : (
+                styledText
+              )}
+            </Tag>
+          </a>
+        </div>
       );
     }
 
     if (styledText.includes('<a ')) {
       return (
+        <div className="prose prose-sm max-w-none">
+          <Tag 
+            style={{
+              ...style,
+              wordWrap: 'break-word',
+              overflowWrap: 'break-word'
+            }}
+            dangerouslySetInnerHTML={{ __html: styledText }}
+            onClick={(e) => {
+              // Double-click to edit, single click to select block
+              if (e.detail === 2) {
+                e.stopPropagation();
+                startEditing(text);
+              } else {
+                // Allow single click to bubble up for block selection
+                onClick?.();
+              }
+            }}
+          />
+        </div>
+      );
+    }
+
+    return (
+      <div className="prose prose-sm max-w-none">
         <Tag 
           style={{
             ...style,
             wordWrap: 'break-word',
             overflowWrap: 'break-word'
           }}
-          dangerouslySetInnerHTML={{ __html: styledText }}
           onClick={(e) => {
             // Double-click to edit, single click to select block
             if (e.detail === 2) {
@@ -222,30 +250,10 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
               onClick?.();
             }
           }}
-        />
-      );
-    }
-
-    return (
-      <Tag 
-        style={{
-          ...style,
-          wordWrap: 'break-word',
-          overflowWrap: 'break-word'
-        }}
-        onClick={(e) => {
-          // Double-click to edit, single click to select block
-          if (e.detail === 2) {
-            e.stopPropagation();
-            startEditing(text);
-          } else {
-            // Allow single click to bubble up for block selection
-            onClick?.();
-          }
-        }}
-      >
-        {text}
-      </Tag>
+        >
+          {text}
+        </Tag>
+      </div>
     );
   };
 
@@ -281,7 +289,8 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
   
     if (isPlaceholder) {
       return (
-        <p 
+        <div 
+          className="prose prose-lg max-w-none"
           style={{
             ...style,
             color: '#9ca3af',
@@ -300,8 +309,8 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
             }
           }}
         >
-          {displayText}
-        </p>
+          <p>{displayText}</p>
+        </div>
       );
     }
 
@@ -314,13 +323,13 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
       );
       
       return (
-        <p 
+        <div 
+          className="prose prose-lg max-w-none"
           style={{
             ...style,
             wordWrap: 'break-word',
             overflowWrap: 'break-word'
           }}
-          dangerouslySetInnerHTML={{ __html: styledText }}
           onClick={(e) => {
             
             if ((e.target as HTMLElement).tagName === 'A') {
@@ -334,12 +343,59 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
               onClick?.();
             }
           }}
-        />
+        >
+          <style>
+            {`
+              .prose p {
+                margin-bottom: 1rem;
+                line-height: 1.75;
+              }
+              .prose strong {
+                font-weight: 600;
+              }
+              .prose em {
+                font-style: italic;
+              }
+              .prose a {
+                color: ${linkColor};
+                text-decoration: underline;
+              }
+              .prose a:hover {
+                opacity: 0.8;
+              }
+              .prose h1, .prose h2, .prose h3 {
+                margin-bottom: 1rem;
+                font-weight: bold;
+              }
+              .prose h1 {
+                font-size: 2rem;
+                line-height: 1.25;
+              }
+              .prose h2 {
+                font-size: 1.5rem;
+                line-height: 1.3;
+              }
+              .prose h3 {
+                font-size: 1.25rem;
+                line-height: 1.4;
+              }
+              .prose ul, .prose ol {
+                margin-bottom: 1rem;
+                padding-left: 1.5rem;
+              }
+              .prose li {
+                margin-bottom: 0.25rem;
+              }
+            `}
+          </style>
+          <div dangerouslySetInnerHTML={{ __html: styledText }} />
+        </div>
       );
     }
 
     return (
-      <p 
+      <div 
+        className="prose prose-lg max-w-none"
         style={{
           ...style,
           wordWrap: 'break-word',
@@ -350,8 +406,22 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
           startEditing(text);
         }}
       >
-        {text}
-      </p>
+        <style>
+          {`
+            .prose p {
+              margin-bottom: 1rem;
+              line-height: 1.75;
+            }
+            .prose strong {
+              font-weight: 600;
+            }
+            .prose em {
+              font-style: italic;
+            }
+          `}
+        </style>
+        <p>{text}</p>
+      </div>
     );
   };
 

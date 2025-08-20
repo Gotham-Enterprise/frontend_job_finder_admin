@@ -5,6 +5,7 @@ import ImageUrlInput from '../ImageUrlInput';
 import VideoUrlInput from '../VideoUrlInput';
 import ButtonSettings from './ButtonSettings';
 import RichTextEditor from './RichTextEditor';
+import SimpleEditor from './SimpleEditor';
 import { LINK_TARGETS, getButtonDefaultStyles, getSizeStyles } from '../utils/buttonUtils';
 import { 
   processTextSelection as processSelection, 
@@ -263,16 +264,14 @@ const ContentControls: React.FC<ContentControlsProps> = memo(({
         </div>
         
         {/* Editor Area - Full Height */}
-        <div className="flex-1 p-6 overflow-auto bg-white">
-          <div className="max-w-4xl mx-auto h-full">
-            <RichTextEditor
-              key={`fullscreen-${showFullscreenEditor}-${Date.now()}`}
-              value={(block.content as any)?.text || ''}
-              onChange={(value) => onContentUpdate('text', value)}
+        <div className="flex-1 overflow-hidden bg-white">
+          <div className="h-full w-full">
+            <SimpleEditor
+              content={(block.content as any)?.text || ''}
+              onChange={(value: string) => onContentUpdate('text', value)}
               placeholder="A blog is your creative space. It's where you can share your brand's story or impart your wisdom using your own words, with your own visual language to match. Fortunately, you don't need to be a professional to be successful blog either. All you need is a genuine passion for your field, lots to say and a stylish canvas on which to say it."
-              className="text-base leading-relaxed w-full prose prose-lg max-w-none"
-              style={{ minHeight: 'calc(100vh - 200px)', width: '100%' }}
-              isMultiline={true}
+              className="text-base leading-relaxed w-full h-full"
+              style={{ width: '100%', height: '100%' }}
             />
           </div>
         </div>
