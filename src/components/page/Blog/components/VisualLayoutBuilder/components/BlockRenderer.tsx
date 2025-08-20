@@ -654,28 +654,45 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
       'justify-start'
     }`;
 
-    const commonProps = {
-      style: buttonStyle,
-      className: `btn btn-${variant} btn-${size} hover:opacity-90 transition-opacity`,
-      onClick: (e: React.MouseEvent) => {
-        e.stopPropagation();
-        startEditing(buttonText);
-      },
-    };
+    // Settings button for when block is selected (editor mode)
+    const SettingsButton = () => (
+      <button
+        type="button"
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (onOpenSettings) {
+            onOpenSettings('button' as any, block);
+          }
+        }}
+        className="absolute -top-8 left-0 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+        style={{ zIndex: 1000 }}
+      >
+        Edit Button
+      </button>
+    );
 
     if (buttonUrl && buttonUrl.trim()) {
       return (
-        <div className={containerClass}>
+        <div className={`${containerClass} relative group`}>
+          {isSelected && <SettingsButton />}
           <a
             href={buttonUrl}
             target={buttonTarget}
             rel={buttonTarget === '_blank' ? 'noopener noreferrer' : undefined}
-            {...commonProps}
+            style={buttonStyle}
+            className={`btn btn-${variant} btn-${size} hover:opacity-90 transition-opacity`}
             onClick={(e) => {
-              e.stopPropagation();
-              if (onOpenSettings) {
+              // In preview mode, allow normal button functionality
+              if (isSelected) {
                 e.preventDefault();
-                onOpenSettings('button' as any, block);
+                e.stopPropagation();
+                if (onOpenSettings) {
+                  onOpenSettings('button' as any, block);
+                }
+              } else {
+                // Let the link work normally in preview
+                e.stopPropagation();
               }
             }}
           >
@@ -686,13 +703,15 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
     }
 
     return (
-      <div className={containerClass}>
+      <div className={`${containerClass} relative group`}>
+        {isSelected && <SettingsButton />}
         <button
           type="button"
-          {...commonProps}
+          style={buttonStyle}
+          className={`btn btn-${variant} btn-${size} hover:opacity-90 transition-opacity`}
           onClick={(e) => {
             e.stopPropagation();
-            if (onOpenSettings) {
+            if (isSelected && onOpenSettings) {
               onOpenSettings('button' as any, block);
             }
           }}
@@ -786,6 +805,7 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
           fontStyle: 'italic',
           backgroundColor: block.styles?.backgroundColor || '#f8f9fa',
           padding: '1.5rem',
+          borderRadius: '8px',
         }}
         className="relative"
         onClick={(e) => {
@@ -793,14 +813,14 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
           onOpenSettings?.('quote', block);
         }}
       >
-        <div className="text-lg leading-relaxed text-gray-700 mb-3">
+        <div className="text-lg leading-relaxed mb-3" style={{ color: style.color || '#374151' }}>
           &ldquo;{text}&rdquo;
         </div>
         {(author || citation) && (
-          <footer className="text-sm text-gray-500">
-            {author && <cite className="font-medium">{author}</cite>}
+          <footer className="text-sm mt-4 pt-3 border-t border-gray-200" style={{ color: '#6b7280' }}>
+            {author && <cite className="font-medium not-italic">— {author}</cite>}
             {author && citation && <span className="mx-2">•</span>}
-            {citation && <span>{citation}</span>}
+            {citation && <span className="italic">{citation}</span>}
           </footer>
         )}
       </blockquote>
