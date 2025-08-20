@@ -285,27 +285,146 @@ const BlogContentRenderer: React.FC<BlogContentRendererProps> = ({ content }) =>
         );
 
       case 'video':
+        const videoUrl = blockContent?.url;
+        const videoTitle = blockContent?.title || 'Video';
+        const videoWidth = styles.width || 100;
+        const videoHeight = styles.height !== undefined ? styles.height : 400;
+        const widthUnit = styles.widthUnit || '%';
+        const heightUnit = styles.heightUnit || 'px';
+        const videoAlign = styles.videoAlign || 'center';
+        const borderRadius = styles.border?.radius || 8;
+        const autoplay = blockContent?.autoplay || false;
+        const controls = blockContent?.controls !== false;
+        const muted = blockContent?.muted || false;
+        
+        const VIDEO_PROVIDERS = {
+          youtube: {
+            patterns: ['youtube.com/watch?v=', 'youtu.be/', 'youtube.com/shorts/'],
+            getVideoId: (url: string) => {
+              if (url.includes('youtube.com/watch?v=')) return url.split('v=')[1]?.split('&')[0];
+              if (url.includes('youtu.be/')) return url.split('youtu.be/')[1]?.split('?')[0];
+              if (url.includes('youtube.com/shorts/')) return url.split('/shorts/')[1]?.split('?')[0];
+              return '';
+            },
+            buildEmbedUrl: (videoId: string) => {
+              const params = new URLSearchParams({
+                rel: '0',
+                ...(autoplay && { autoplay: '1' }),
+                ...(muted && { mute: '1' })
+              });
+              return `https://www.youtube.com/embed/${videoId}?${params}`;
+            }
+          },
+          vimeo: {
+            patterns: ['vimeo.com/'],
+            getVideoId: (url: string) => url.split('vimeo.com/')[1]?.split('?')[0],
+            buildEmbedUrl: (videoId: string) => {
+              const params = new URLSearchParams({
+                portrait: '0',
+                byline: '0',
+                title: '0',
+                ...(autoplay && { autoplay: '1' }),
+                ...(muted && { muted: '1' })
+              });
+              return `https://player.vimeo.com/video/${videoId}?${params}`;
+            }
+          }
+        };
+
+        const ALIGNMENT_CLASSES = {
+          left: 'mr-auto',
+          right: 'ml-auto',
+          center: 'mx-auto'
+        };
+
+        const getAlignmentClass = () => ALIGNMENT_CLASSES[videoAlign as keyof typeof ALIGNMENT_CLASSES] || ALIGNMENT_CLASSES.center;
+
+        const getVideoEmbedUrl = (url: string) => {
+          for (const [, provider] of Object.entries(VIDEO_PROVIDERS)) {
+            if (provider.patterns.some(pattern => url.includes(pattern))) {
+              const videoId = provider.getVideoId(url);
+              return videoId ? provider.buildEmbedUrl(videoId) : url;
+            }
+          }
+          return url;
+        };
+        
+        const videoStyle = {
+          width: `${videoWidth}${widthUnit}`,
+          height: `${videoHeight}${heightUnit}`,
+          borderRadius: `${borderRadius}px`,
+          display: 'block',
+          ...blockStyle
+        };
+
+        if (!videoUrl) {
+          return (
+            <div key={block.id} style={blockStyle} className="my-6">
+              <div 
+                className={`bg-gray-200 rounded flex items-center justify-center ${getAlignmentClass()}`}
+                style={{ 
+                  width: `${videoWidth}${widthUnit}`, 
+                  height: `${videoHeight}${heightUnit}`,
+                  borderRadius: `${borderRadius}px`,
+                  display: 'block'
+                }}
+              >
+                <div className="text-center text-gray-500">
+                  <svg className="w-12 h-12 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                  <p className="text-sm">Video</p>
+                </div>
+              </div>
+            </div>
+          );
+        }
+
+        const embedUrl = getVideoEmbedUrl(videoUrl);
+        const isEmbedUrl = embedUrl.includes('youtube.com/embed') || embedUrl.includes('player.vimeo.com');
+
+        if (isEmbedUrl) {
+          return (
+            <div key={block.id} style={blockStyle} className="my-6">
+              <div className="w-full">
+                <iframe
+                  src={embedUrl}
+                  title={videoTitle}
+                  style={videoStyle}
+                  className={`border border-gray-200 ${getAlignmentClass()}`}
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              </div>
+              {videoTitle && videoTitle !== 'Video' && (
+                <p className="text-sm text-gray-600 mt-2 italic">
+                  {videoTitle}
+                </p>
+              )}
+            </div>
+          );
+        }
+
         return (
           <div key={block.id} style={blockStyle} className="my-6">
-            <video
-              src={blockContent?.url}
-              controls={blockContent?.controls !== false}
-              autoPlay={blockContent?.autoplay || false}
-              muted={blockContent?.muted || false}
-              className="max-w-full h-auto rounded-lg shadow-sm"
-              style={{
-                width: styles.width ? `${styles.width}${styles.widthUnit || 'px'}` : '100%',
-                height: styles.height ? `${styles.height}${styles.heightUnit || 'px'}` : 'auto',
-                borderRadius: styles.border?.radius || 8,
-                aspectRatio: blockContent?.aspectRatio || 'auto',
-              }}
-            >
-              <source src={blockContent?.url} type="video/mp4" />
-              Your browser does not support the video tag.
-            </video>
-            {blockContent?.title && (
+            <div className="w-full">
+              <video
+                src={videoUrl}
+                title={videoTitle}
+                style={videoStyle}
+                className={`border border-gray-200 ${getAlignmentClass()}`}
+                controls={controls}
+                autoPlay={autoplay}
+                muted={muted}
+              >
+                <source src={videoUrl} type="video/mp4" />
+                Your browser does not support the video tag.
+              </video>
+            </div>
+            {videoTitle && videoTitle !== 'Video' && (
               <p className="text-sm text-gray-600 mt-2 italic">
-                {blockContent.title}
+                {videoTitle}
               </p>
             )}
           </div>
