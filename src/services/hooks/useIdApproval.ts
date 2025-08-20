@@ -54,3 +54,9 @@ export const useIdApprovalBatchUpdateStatus = () => {
     mutationFn: (data: IdApprovalBatchUpdate) => idApprovalApi.batchUpdateIdApprovalStatus(data),
   });
 };
+
+export const useUnlockAccount = () => {
+  return useMutation({
+    mutationFn: (id: IdApproval["id"]) => idApprovalApi.unlockAccount(id),
+  });
+};
