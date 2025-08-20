@@ -166,7 +166,7 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
               startEditing(text);
             }}
           >
-            {displayText}
+            <span dangerouslySetInnerHTML={{ __html: displayText }} />
           </Tag>
         </div>
       );
@@ -196,11 +196,7 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
                 startEditing(text);
               }}
             >
-              {styledText.includes('<a ') ? (
-                <span dangerouslySetInnerHTML={{ __html: styledText }} />
-              ) : (
-                styledText
-              )}
+              <span dangerouslySetInnerHTML={{ __html: styledText }} />
             </Tag>
           </a>
         </div>
@@ -309,7 +305,7 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
             }
           }}
         >
-          <p>{displayText}</p>
+          <p dangerouslySetInnerHTML={{ __html: displayText }} />
         </div>
       );
     }
@@ -420,7 +416,7 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
             }
           `}
         </style>
-        <p>{text}</p>
+        <p dangerouslySetInnerHTML={{ __html: text }} />
       </div>
     );
   };
@@ -696,7 +692,7 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
               }
             }}
           >
-            {buttonText}
+            <span dangerouslySetInnerHTML={{ __html: buttonText }} />
           </a>
         </div>
       );
@@ -716,7 +712,7 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
             }
           }}
         >
-          {buttonText}
+          <span dangerouslySetInnerHTML={{ __html: buttonText }} />
         </button>
       </div>
     );
@@ -822,13 +818,24 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
             color: isPlaceholderText ? '#9ca3af' : (style.color || '#374151'),
             fontStyle: 'italic'
           }}
-        >
-          &ldquo;{text}&rdquo;
-        </div>
+          dangerouslySetInnerHTML={{ 
+            __html: `&ldquo;${text}&rdquo;` 
+          }}
+        />
         <footer className="text-sm mt-4 pt-3 border-t border-gray-200" style={{ color: '#6b7280' }}>
-          {author && <cite className="font-medium not-italic">— {author}</cite>}
+          {author && (
+            <cite 
+              className="font-medium not-italic"
+              dangerouslySetInnerHTML={{ __html: `— ${author}` }}
+            />
+          )}
           {author && citation && <span className="mx-2">•</span>}
-          {citation && <span className="italic">{citation}</span>}
+          {citation && (
+            <span 
+              className="italic"
+              dangerouslySetInnerHTML={{ __html: citation }}
+            />
+          )}
           {isPlaceholderAuthor && (
             <cite className="font-medium not-italic" style={{ color: '#9ca3af' }}>— Author Name</cite>
           )}

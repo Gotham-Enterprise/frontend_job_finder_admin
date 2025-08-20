@@ -380,15 +380,18 @@ const FloatingPanelContent: React.FC<FloatingPanelContentProps> = ({ panelType, 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const newValue = e.target.value;
 
-      // Allow empty string and valid numbers during typing
       if (newValue === '' || /^\d+$/.test(newValue)) {
         setFontSizeInput(newValue);
         
-        // Only update the actual font size if the value is valid and within range
+      
         if (newValue !== '') {
           const parsedValue = parseInt(newValue);
           if (!isNaN(parsedValue) && parsedValue >= 8 && parsedValue <= 72) {
             onStyleUpdate('fontSize', parsedValue);
+          } else if (parsedValue > 72) {
+          
+            setFontSizeInput('72');
+            onStyleUpdate('fontSize', 72);
           }
         }
       }
@@ -414,7 +417,12 @@ const FloatingPanelContent: React.FC<FloatingPanelContentProps> = ({ panelType, 
             <div className="flex items-center gap-2">
               <button
                 onClick={() => onStyleUpdate('fontSize', Math.max(8, fontSize - 1))}
-                className="w-8 h-8 flex items-center justify-center bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors text-gray-600 hover:text-gray-800"
+                disabled={fontSize <= 8}
+                className={`w-8 h-8 flex items-center justify-center rounded-lg transition-colors ${
+                  fontSize <= 8
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    : 'bg-gray-100 hover:bg-gray-200 text-gray-600 hover:text-gray-800'
+                }`}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
@@ -433,7 +441,12 @@ const FloatingPanelContent: React.FC<FloatingPanelContentProps> = ({ panelType, 
               />
               <button
                 onClick={() => onStyleUpdate('fontSize', Math.min(72, fontSize + 1))}
-                className="w-8 h-8 flex items-center justify-center bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors text-gray-600 hover:text-gray-800"
+                disabled={fontSize >= 72}
+                className={`w-8 h-8 flex items-center justify-center rounded-lg transition-colors ${
+                  fontSize >= 72
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    : 'bg-gray-100 hover:bg-gray-200 text-gray-600 hover:text-gray-800'
+                }`}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />

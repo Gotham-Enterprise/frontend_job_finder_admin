@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import React, { memo, useCallback, useRef } from 'react';
 import { ButtonBlock } from '@/services/types/visualLayoutTypes';
 import { 
   BUTTON_VARIANTS, 
@@ -7,6 +7,7 @@ import {
   BUTTON_ALIGNMENTS, 
   LINK_TARGETS 
 } from '../utils/buttonUtils';
+import { processHtmlEntities } from '../utils/textUtils';
 
 interface ButtonSettingsProps {
   block: ButtonBlock;
@@ -52,6 +53,29 @@ const ButtonSettings: React.FC<ButtonSettingsProps> = memo(({
   onContentUpdate, 
   onStyleUpdate 
 }) => {
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Handler for button text changes with HTML entity processing
+  const handleButtonTextChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    const cursorPosition = e.target.selectionStart || 0;
+    const { text: processedText, newCursorPosition } = processHtmlEntities(value, cursorPosition);
+    
+    if (processedText !== value) {
+      // HTML entity was processed
+      onContentUpdate('text', processedText);
+      
+      // Set cursor position after state update
+      setTimeout(() => {
+        if (inputRef.current) {
+          inputRef.current.setSelectionRange(newCursorPosition, newCursorPosition);
+        }
+      }, 0);
+    } else {
+      // No entity processing needed, update normally
+      onContentUpdate('text', value);
+    }
+  }, [onContentUpdate]);
   const selectFields = [
     {
       label: 'Variant',
@@ -84,9 +108,10 @@ const ButtonSettings: React.FC<ButtonSettingsProps> = memo(({
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">Button Text</label>
         <input
+          ref={inputRef}
           type="text"
           value={block.content.text}
-          onChange={(e) => onContentUpdate('text', e.target.value)}
+          onChange={handleButtonTextChange}
           placeholder="Enter button text..."
           className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 placeholder-gray-400 focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-100 transition-all"
         />

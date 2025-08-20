@@ -15,6 +15,63 @@ export const processTextSelection = (
   return null;
 };
 
+// HTML entity mappings
+const HTML_ENTITIES: { [key: string]: string } = {
+  '&nbsp;': ' ',
+  '&amp;': '&',
+  '&lt;': '<',
+  '&gt;': '>',
+  '&quot;': '"',
+  '&apos;': "'",
+  '&ldquo;': '"',
+  '&rdquo;': '"',
+  '&lsquo;': '\u2018',
+  '&rsquo;': '\u2019',
+  '&ndash;': '–',
+  '&mdash;': '—',
+  '&hellip;': '…',
+  '&copy;': '©',
+  '&reg;': '®',
+  '&trade;': '™',
+  '&euro;': '€',
+  '&pound;': '£',
+  '&yen;': '¥',
+  '&sect;': '§',
+  '&para;': '¶',
+  '&deg;': '°',
+  '&plusmn;': '±',
+  '&frac12;': '½',
+  '&frac14;': '¼',
+  '&frac34;': '¾'
+};
+
+export const processHtmlEntities = (
+  text: string,
+  cursorPosition: number
+): { text: string; newCursorPosition: number } => {
+  let processedText = text;
+  let newCursorPosition = cursorPosition;
+  
+  // Look for HTML entities and replace them
+  for (const [entity, replacement] of Object.entries(HTML_ENTITIES)) {
+    const entityIndex = processedText.lastIndexOf(entity, cursorPosition);
+    
+    // Check if the entity was just completed (cursor is right after it)
+    if (entityIndex !== -1 && entityIndex + entity.length === cursorPosition) {
+      processedText = 
+        processedText.substring(0, entityIndex) + 
+        replacement + 
+        processedText.substring(entityIndex + entity.length);
+      
+      // Adjust cursor position
+      newCursorPosition = entityIndex + replacement.length;
+      break;
+    }
+  }
+  
+  return { text: processedText, newCursorPosition };
+};
+
 export const createLinkHtml = (
   text: string, 
   url: string, 

@@ -211,19 +211,21 @@ const StyleControls: React.FC<StyleControlsProps> = ({ block, onFloatingPanelOpe
 
     const onInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const newValue = e.target.value;
-      
-    
+
       if (newValue !== '' && !/^\d*$/.test(newValue)) {
         return; 
       }
       
       setInputValue(newValue);
       
-    
       if (newValue !== '') {
         const parsedValue = parseInt(newValue);
         if (!isNaN(parsedValue) && parsedValue >= control.min && parsedValue <= control.max) {
           updateTypography(control.key, parsedValue.toString(), control.unit);
+        } else if (parsedValue > control.max) {
+         
+          setInputValue(control.max.toString());
+          updateTypography(control.key, control.max.toString(), control.unit);
         }
       }
     };

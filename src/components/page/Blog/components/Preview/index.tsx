@@ -251,9 +251,10 @@ const BlogContentRenderer: React.FC<BlogContentRendererProps> = ({ content }) =>
             key={block.id}
             style={blockStyle}
             className="font-bold text-gray-900"
-          >
-            {blockContent?.text || ''}
-          </HeadingComponent>
+            dangerouslySetInnerHTML={{ 
+              __html: blockContent?.text || '' 
+            }}
+          />
         );
 
       case 'paragraph':
@@ -499,13 +500,24 @@ const BlogContentRenderer: React.FC<BlogContentRendererProps> = ({ content }) =>
                   color: isPlaceholderText ? '#9ca3af' : '#374151',
                   fontStyle: 'italic'
                 }}
-              >
-                &ldquo;{quoteText}&rdquo;
-              </div>
+                dangerouslySetInnerHTML={{ 
+                  __html: `&ldquo;${quoteText}&rdquo;` 
+                }}
+              />
               <footer className="text-sm mt-4 pt-3 border-t border-gray-200" style={{ color: '#6b7280' }}>
-                {quoteAuthor && <cite className="font-medium not-italic">— {quoteAuthor}</cite>}
+                {quoteAuthor && (
+                  <cite 
+                    className="font-medium not-italic"
+                    dangerouslySetInnerHTML={{ __html: `— ${quoteAuthor}` }}
+                  />
+                )}
                 {quoteAuthor && quoteCitation && <span className="mx-2">•</span>}
-                {quoteCitation && <span className="italic">{quoteCitation}</span>}
+                {quoteCitation && (
+                  <span 
+                    className="italic"
+                    dangerouslySetInnerHTML={{ __html: quoteCitation }}
+                  />
+                )}
                 {isPlaceholderAuthor && (
                   <cite className="font-medium not-italic" style={{ color: '#9ca3af' }}>— Author Name</cite>
                 )}
@@ -620,9 +632,10 @@ const BlogContentRenderer: React.FC<BlogContentRendererProps> = ({ content }) =>
                 rel={buttonTarget === '_blank' ? 'noopener noreferrer' : undefined}
                 style={buttonStyle}
                 className="hover:opacity-90 transition-opacity"
-              >
-                {buttonText}
-              </a>
+                dangerouslySetInnerHTML={{ 
+                  __html: buttonText 
+                }}
+              />
             </div>
           );
         }
@@ -633,9 +646,10 @@ const BlogContentRenderer: React.FC<BlogContentRendererProps> = ({ content }) =>
               type="button"
               style={buttonStyle}
               className="hover:opacity-90 transition-opacity"
-            >
-              {buttonText}
-            </button>
+              dangerouslySetInnerHTML={{ 
+                __html: buttonText 
+              }}
+            />
           </div>
         );
 

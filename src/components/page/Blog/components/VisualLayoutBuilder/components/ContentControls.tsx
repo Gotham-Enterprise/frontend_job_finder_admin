@@ -11,7 +11,8 @@ import {
   processTextSelection as processSelection, 
   createLinkHtml, 
   removeAllLinksFromText, 
-  replaceTextWithLink 
+  replaceTextWithLink,
+  processHtmlEntities 
 } from '../utils/textUtils';
 
 
@@ -39,6 +40,8 @@ const ContentControls: React.FC<ContentControlsProps> = memo(({
   const [selectedTextPreview, setSelectedTextPreview] = useState<{[key: number]: string}>({});
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const quoteAuthorRef = useRef<HTMLInputElement>(null);
+  const quoteCitationRef = useRef<HTMLInputElement>(null);
   const listItemRefs = useRef<(HTMLInputElement | null)[]>([]);
 
  
@@ -64,8 +67,103 @@ const ContentControls: React.FC<ContentControlsProps> = memo(({
     }, 300); 
   }, [onContentUpdate]);
 
+  // Handler for quote text changes with HTML entity processing
+  const handleQuoteTextChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value;
+    const cursorPosition = e.target.selectionStart || 0;
+    const { text: processedText, newCursorPosition } = processHtmlEntities(value, cursorPosition);
+    
+    if (processedText !== value) {
+      // HTML entity was processed
+      setLocalQuoteText(processedText);
+      debouncedUpdateQuoteText(processedText);
+      
+      // Set cursor position after state update
+      setTimeout(() => {
+        if (e.target) {
+          e.target.setSelectionRange(newCursorPosition, newCursorPosition);
+        }
+      }, 0);
+    } else {
+      // No entity processing needed, update normally
+      setLocalQuoteText(value);
+      debouncedUpdateQuoteText(value);
+    }
+  }, [debouncedUpdateQuoteText]);
+
+  // Handler for quote author changes with HTML entity processing
+  const handleQuoteAuthorChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    const cursorPosition = e.target.selectionStart || 0;
+    const { text: processedText, newCursorPosition } = processHtmlEntities(value, cursorPosition);
+    
+    if (processedText !== value) {
+      // HTML entity was processed
+      onContentUpdate('author', processedText);
+      
+      // Set cursor position after state update
+      setTimeout(() => {
+        if (quoteAuthorRef.current) {
+          quoteAuthorRef.current.setSelectionRange(newCursorPosition, newCursorPosition);
+        }
+      }, 0);
+    } else {
+      // No entity processing needed, update normally
+      onContentUpdate('author', value);
+    }
+  }, [onContentUpdate]);
+
+  // Handler for quote citation changes with HTML entity processing
+  const handleQuoteCitationChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    const cursorPosition = e.target.selectionStart || 0;
+    const { text: processedText, newCursorPosition } = processHtmlEntities(value, cursorPosition);
+    
+    if (processedText !== value) {
+      // HTML entity was processed
+      onContentUpdate('citation', processedText);
+      
+      // Set cursor position after state update
+      setTimeout(() => {
+        if (quoteCitationRef.current) {
+          quoteCitationRef.current.setSelectionRange(newCursorPosition, newCursorPosition);
+        }
+      }, 0);
+    } else {
+      // No entity processing needed, update normally
+      onContentUpdate('citation', value);
+    }
+  }, [onContentUpdate]);
+
   const listItems = (block.content as any)?.items || [];
   const isListOrdered = (block.content as any)?.ordered || false;
+
+  // Handler for text input that processes HTML entities
+  const handleTextChange = useCallback((value: string, inputRef: React.RefObject<HTMLInputElement | HTMLTextAreaElement | null>) => {
+    const cursorPosition = inputRef.current?.selectionStart || 0;
+    const { text: processedText, newCursorPosition } = processHtmlEntities(value, cursorPosition);
+    
+    if (processedText !== value) {
+      // HTML entity was processed, update content and cursor position
+      onContentUpdate('text', processedText);
+      
+      // Set cursor position after state update
+      setTimeout(() => {
+        if (inputRef.current) {
+          inputRef.current.setSelectionRange(newCursorPosition, newCursorPosition);
+        }
+      }, 0);
+    } else {
+      // No entity processing needed, update normally
+      onContentUpdate('text', value);
+    }
+  }, [onContentUpdate]);
+
+  // Handler for paragraph/heading input changes
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, inputRef: React.RefObject<HTMLInputElement | HTMLTextAreaElement | null>) => {
+    const value = e.target.value;
+    handleTextChange(value, inputRef);
+  }, [handleTextChange]);
 
   const addListItem = useCallback(() => {
     const newItems = [...listItems, `Item ${listItems.length + 1}`];
@@ -92,6 +190,29 @@ const ContentControls: React.FC<ContentControlsProps> = memo(({
     newItems[index] = value.trim() === '' ? `Item ${index + 1}` : value;
     onContentUpdate('items', newItems);
   }, [listItems, onContentUpdate]);
+
+  // Handler for list item changes with HTML entity processing
+  const handleListItemChange = useCallback((index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    const cursorPosition = e.target.selectionStart || 0;
+    const { text: processedText, newCursorPosition } = processHtmlEntities(value, cursorPosition);
+    
+    if (processedText !== value) {
+      // HTML entity was processed
+      updateListItem(index, processedText);
+      
+      // Set cursor position after state update
+      setTimeout(() => {
+        const input = listItemRefs.current[index];
+        if (input) {
+          input.setSelectionRange(newCursorPosition, newCursorPosition);
+        }
+      }, 0);
+    } else {
+      // No entity processing needed, update normally
+      updateListItem(index, value);
+    }
+  }, [updateListItem]);
 
   const toggleListType = useCallback((ordered: boolean) => {
     onContentUpdate('ordered', ordered);
@@ -337,7 +458,7 @@ const ContentControls: React.FC<ContentControlsProps> = memo(({
             <textarea
               ref={textareaRef}
               value={(block.content as any)?.text === 'Start writing your content here...' ? '' : ((block.content as any)?.text || '')}
-              onChange={(e) => onContentUpdate('text', e.target.value)}
+              onChange={(e) => handleInputChange(e, textareaRef)}
               onMouseUp={() => processTextSelection(textareaRef)}
               placeholder="Start writing your content here..."
               className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 placeholder-gray-400 focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-100 resize-none transition-all"
@@ -387,7 +508,7 @@ const ContentControls: React.FC<ContentControlsProps> = memo(({
               ref={inputRef}
               type="text"
               value={(block.content as any)?.text === 'Your Heading Here' ? '' : ((block.content as any)?.text || '')}
-              onChange={(e) => onContentUpdate('text', e.target.value)}
+              onChange={(e) => handleInputChange(e, inputRef)}
               onMouseUp={() => processTextSelection(inputRef)}
               placeholder="Your Heading Here"
               className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 placeholder-gray-400 focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-100 transition-all"
@@ -537,7 +658,7 @@ const ContentControls: React.FC<ContentControlsProps> = memo(({
                       ref={(el) => { listItemRefs.current[index] = el; }}
                       type="text"
                       value={item.startsWith('Item ') && /^Item \d+$/.test(item) ? '' : item}
-                      onChange={(e) => updateListItem(index, e.target.value)}
+                      onChange={(e) => handleListItemChange(index, e)}
                       onMouseUp={() => {
                         // Check if text is selected and update preview
                         const input = listItemRefs.current[index];
@@ -673,10 +794,7 @@ const ContentControls: React.FC<ContentControlsProps> = memo(({
           <label className="block text-sm font-medium text-gray-700 mb-2">Quote Text</label>
           <textarea
             value={localQuoteText}
-            onChange={(e) => {
-              setLocalQuoteText(e.target.value);
-              debouncedUpdateQuoteText(e.target.value);
-            }}
+            onChange={handleQuoteTextChange}
             placeholder="Your inspiring quote goes here..."
             className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 placeholder-gray-400 focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-100 resize-none transition-all"
             rows={4}
@@ -686,9 +804,10 @@ const ContentControls: React.FC<ContentControlsProps> = memo(({
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">Author (Optional)</label>
           <input
+            ref={quoteAuthorRef}
             type="text"
             value={(block.content as any)?.author || ''}
-            onChange={(e) => onContentUpdate('author', e.target.value)}
+            onChange={handleQuoteAuthorChange}
             placeholder="Quote author..."
             className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 placeholder-gray-400 focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-100 transition-all"
           />
@@ -697,9 +816,10 @@ const ContentControls: React.FC<ContentControlsProps> = memo(({
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">Citation (Optional)</label>
           <input
+            ref={quoteCitationRef}
             type="text"
             value={(block.content as any)?.citation || ''}
-            onChange={(e) => onContentUpdate('citation', e.target.value)}
+            onChange={handleQuoteCitationChange}
             placeholder="Source or publication..."
             className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 placeholder-gray-400 focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-100 transition-all"
           />
