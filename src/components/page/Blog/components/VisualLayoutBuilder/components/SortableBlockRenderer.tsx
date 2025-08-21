@@ -20,8 +20,6 @@ const DRAG_STATES = {
   over: 'ring-2 ring-blue-400 ring-opacity-50 shadow-lg'
 };
 
-const DRAG_HANDLE_ICON = 'M11 18c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2zm-2-8c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0-6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm6 4c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z';
-
 const SortableBlockRenderer: React.FC<SortableBlockRendererProps> = (props) => {
   const { block } = props;
   
@@ -52,14 +50,22 @@ const SortableBlockRenderer: React.FC<SortableBlockRendererProps> = (props) => {
       className={`relative group ${createDragClasses()}`}
       {...attributes}
     >
+      {/* Drag Handle on the left side */}
       <div
         {...listeners}
-        className="absolute -left-10 top-1/2 -translate-y-1/2 w-8 h-8 bg-white hover:bg-gray-50 rounded-lg border border-gray-300 hover:border-gray-400 cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-all duration-200 flex items-center justify-center z-10 shadow-md hover:shadow-lg"
-        title="Drag to reorder"
+        className="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-8 opacity-0 group-hover:opacity-100 transition-opacity duration-200 cursor-grab active:cursor-grabbing z-10"
       >
-        <svg className="w-4 h-4 text-gray-500 hover:text-gray-700" fill="currentColor" viewBox="0 0 24 24">
-          <path d={DRAG_HANDLE_ICON} />
-        </svg>
+        <div className="bg-gray-400 hover:bg-gray-600 rounded p-1">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            className="text-white"
+          >
+            <path d="M11 18c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2zm-2-8c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0-6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm6 4c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
+          </svg>
+        </div>
       </div>
       
       <BlockRenderer {...props} />

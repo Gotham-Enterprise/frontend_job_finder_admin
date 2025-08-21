@@ -214,14 +214,9 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
             }}
             dangerouslySetInnerHTML={{ __html: styledText }}
             onClick={(e) => {
-              // Double-click to edit, single click to select block
-              if (e.detail === 2) {
-                e.stopPropagation();
-                startEditing(text);
-              } else {
-                // Allow single click to bubble up for block selection
-                onClick?.();
-              }
+              // Single click to edit
+              e.stopPropagation();
+              startEditing(text);
             }}
           />
         </div>
@@ -237,14 +232,9 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
             overflowWrap: 'break-word'
           }}
           onClick={(e) => {
-            // Double-click to edit, single click to select block
-            if (e.detail === 2) {
-              e.stopPropagation();
-              startEditing(text);
-            } else {
-              // Allow single click to bubble up for block selection
-              onClick?.();
-            }
+            // Single click to edit
+            e.stopPropagation();
+            startEditing(text);
           }}
         >
           {text}
@@ -286,26 +276,30 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
     if (isPlaceholder) {
       return (
         <div 
-          className="prose prose-lg max-w-none"
+          className="prose prose-lg max-w-none group relative"
           style={{
             ...style,
-            color: '#9ca3af',
-            fontStyle: 'italic',
             wordWrap: 'break-word',
-            overflowWrap: 'break-word'
+            overflowWrap: 'break-word',
+            minHeight: '3em',
+            border: '2px dashed transparent',
+            padding: '0.5rem',
           }}
           onClick={(e) => {
-            // Double-click to edit, single click to select block
-            if (e.detail === 2) {
-              e.stopPropagation();
-              startEditing(text);
-            } else {
-              // Allow single click to bubble up for block selection
-              onClick?.();
-            }
+            // Single click to edit
+            e.stopPropagation();
+            startEditing(text);
           }}
         >
-          <p dangerouslySetInnerHTML={{ __html: displayText }} />
+          <p 
+            className="opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+            style={{
+              color: '#9ca3af',
+              fontStyle: 'italic',
+              margin: 0,
+            }}
+            dangerouslySetInnerHTML={{ __html: displayText }} 
+          />
         </div>
       );
     }
@@ -332,12 +326,9 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
               e.stopPropagation();
               return; 
             }
-            if (e.detail === 2) {
-              e.stopPropagation();
-              startEditing(text);
-            } else {
-              onClick?.();
-            }
+            // Single click to edit
+            e.stopPropagation();
+            startEditing(text);
           }}
         >
           <style>
@@ -650,28 +641,9 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
       'justify-start'
     }`;
 
-    // Settings button for when block is selected (editor mode)
-    const SettingsButton = () => (
-      <button
-        type="button"
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          if (onOpenSettings) {
-            onOpenSettings('button' as any, block);
-          }
-        }}
-        className="absolute -top-8 left-0 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity"
-        style={{ zIndex: 1000 }}
-      >
-        Edit Button
-      </button>
-    );
-
     if (buttonUrl && buttonUrl.trim()) {
       return (
         <div className={`${containerClass} relative group`}>
-          {isSelected && <SettingsButton />}
           <a
             href={buttonUrl}
             target={buttonTarget}
@@ -700,7 +672,6 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
 
     return (
       <div className={`${containerClass} relative group`}>
-        {isSelected && <SettingsButton />}
         <button
           type="button"
           style={buttonStyle}
@@ -902,6 +873,18 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
     };
   };
 
+  const isBlockEmpty = () => {
+    if (block.type === 'paragraph') {
+      const text = (block.content as any)?.text || 'Start writing your content here...';
+      return text === 'Start writing your content here...';
+    }
+    if (block.type === 'heading') {
+      const text = (block.content as any)?.text || 'Your Heading Here';
+      return text === 'Your Heading Here';
+    }
+    return false;
+  };
+
   return (
     <div 
       onClick={(e) => {
@@ -914,8 +897,8 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
       }`}
       style={createContainerStyle()}
     >
-      <div className={`absolute top-2 left-2 transition-opacity duration-200 ${
-        isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-70'
+      <div className={`absolute -top-6 left-0 transition-opacity duration-200 ${
+        isSelected ? 'opacity-100' : (isBlockEmpty() ? 'opacity-0 group-hover:opacity-70' : 'opacity-0')
       }`}>
         <span className="text-xs font-medium text-gray-500 bg-white px-2 py-1 rounded-full shadow-sm border">
           {block.type}

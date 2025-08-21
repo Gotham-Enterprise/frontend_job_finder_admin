@@ -30,7 +30,7 @@ export default function CategoryForm({
       
       <div className="space-y-4">        
         <div>
-          <Label>Name *</Label>
+          <Label>Name <span className="text-red-500">*</span></Label>
           <Input
             type="text"
             placeholder="Category name"
@@ -40,7 +40,7 @@ export default function CategoryForm({
         </div>        
          
         <div>
-          <Label>Sub Categories</Label>
+          <Label>Sub Categories <span className="text-red-500">*</span></Label>
           <SubCategoryDropdown
             selectedSubCategories={currentSubCategories}
             availableSubCategories={subCategories}

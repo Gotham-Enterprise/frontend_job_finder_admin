@@ -15,7 +15,6 @@ export const processTextSelection = (
   return null;
 };
 
-// HTML entity mappings
 const HTML_ENTITIES: { [key: string]: string } = {
   '&nbsp;': ' ',
   '&amp;': '&',
@@ -52,18 +51,15 @@ export const processHtmlEntities = (
   let processedText = text;
   let newCursorPosition = cursorPosition;
   
-  // Look for HTML entities and replace them
   for (const [entity, replacement] of Object.entries(HTML_ENTITIES)) {
     const entityIndex = processedText.lastIndexOf(entity, cursorPosition);
-    
-    // Check if the entity was just completed (cursor is right after it)
+
     if (entityIndex !== -1 && entityIndex + entity.length === cursorPosition) {
       processedText = 
         processedText.substring(0, entityIndex) + 
         replacement + 
         processedText.substring(entityIndex + entity.length);
-      
-      // Adjust cursor position
+
       newCursorPosition = entityIndex + replacement.length;
       break;
     }

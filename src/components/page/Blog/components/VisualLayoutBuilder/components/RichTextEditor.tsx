@@ -439,22 +439,8 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
               />
             </div>
             
-            {/* Fullscreen Button */}
-            <div className="relative">
-              <FormatButton
-                command="fullscreen"
-                icon={
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
-                  </svg>
-                }
-                title="Fullscreen Editor"
-                isActive={false}
-                onClick={toggleFullscreen}
-              />
-            </div>
+            {/* Removed Fullscreen Button */}
             
-          
             <div className="ml-1 pl-1 relative">
             
               <div 
@@ -522,18 +508,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
         />
 
         {/* Fullscreen Button - Always visible at bottom right */}
-        <div className="absolute bottom-2 right-2">
-          <button
-            type="button"
-            onClick={toggleFullscreen}
-            className="inline-flex items-center justify-center w-8 h-8 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors duration-200 bg-white shadow-sm border border-gray-200"
-            title="Open Fullscreen Editor"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
-            </svg>
-          </button>
-        </div>
+      
       </div>      <style dangerouslySetInnerHTML={{
         __html: `
           [contenteditable]:empty:before {

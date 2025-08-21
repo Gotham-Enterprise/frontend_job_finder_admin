@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { LayoutBlock } from '../../../../../../services/types/visualLayoutTypes';
 import FloatingPanel from './FloatingPanel';
 import StyleControls from './StyleControls';
@@ -38,6 +38,57 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({
 }) => {
   const [activeFloatingPanel, setActiveFloatingPanel] = useState<string | null>(null);
   const [floatingPanelPosition, setFloatingPanelPosition] = useState({ x: 0, y: 0 });
+  
+
+  const prevBlockType = React.useRef(block?.type);
+
+  useEffect(() => {
+    setActiveFloatingPanel(null);
+  }, [block?.id, isVisible]);
+
+  useEffect(() => {
+    if (!isVisible) {
+      setActiveFloatingPanel(null);
+    }
+  }, [isVisible]);
+
+  useEffect(() => {
+    setActiveFloatingPanel(null);
+  }, [activeTab]);
+
+  useEffect(() => {
+    setActiveFloatingPanel(null);
+  }, [block?.type]);
+
+
+  useEffect(() => {
+    if (prevBlockType.current === 'list' && block?.type !== 'list') {
+    
+      setActiveFloatingPanel(null);
+    }
+    prevBlockType.current = block?.type;
+  }, [block?.type]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      
+      const isClickOnPropertyPanel = target.closest('.property-panel');
+      const isClickOnFloatingPanel = target.closest('[class*="fixed"][class*="bg-white"][class*="shadow"]');
+      const isClickOnStyleButton = target.closest('button[title*="Set "]') || target.closest('button[title*="margin"]') || target.closest('button[title*="padding"]');
+      
+      if (!isClickOnPropertyPanel && !isClickOnFloatingPanel && !isClickOnStyleButton && activeFloatingPanel) {
+        setActiveFloatingPanel(null);
+      }
+    };
+
+    if (activeFloatingPanel) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }
+  }, [activeFloatingPanel]);
 
   const updateContent = (field: string, value: any) => {
     if (!block) return;
@@ -77,6 +128,11 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({
     setActiveFloatingPanel(null);
   };
 
+  const handleClose = () => {
+    setActiveFloatingPanel(null);
+    onClose();
+  };
+
   return (
     <>
       <FloatingPanel
@@ -108,7 +164,7 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({
               </h3>
             </div>
             <button
-              onClick={onClose}
+              onClick={handleClose}
               className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-all"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

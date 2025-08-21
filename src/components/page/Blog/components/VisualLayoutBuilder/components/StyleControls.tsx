@@ -125,6 +125,7 @@ const StyleControls: React.FC<StyleControlsProps> = ({ block, onFloatingPanelOpe
   const showTextFormatting = ['heading', 'paragraph'].includes(block.type);
   const showImageControls = block.type === 'image';
   const showVideoControls = block.type === 'video';
+  const showListControls = block.type === 'list';
 
   const toggleTextStyle = (key: string, activeValue: string, inactiveValue: string) => {
     const currentValue = (block.styles as any)[key];

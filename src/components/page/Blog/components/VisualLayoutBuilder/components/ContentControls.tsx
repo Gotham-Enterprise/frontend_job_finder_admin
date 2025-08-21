@@ -97,9 +97,12 @@ const ContentControls: React.FC<ContentControlsProps> = memo(({
     const cursorPosition = e.target.selectionStart || 0;
     const { text: processedText, newCursorPosition } = processHtmlEntities(value, cursorPosition);
     
+    // If the value is empty, set it to the placeholder text; otherwise use the actual value
+    const finalValue = processedText.trim() === '' ? 'Author Name' : processedText;
+    
     if (processedText !== value) {
       // HTML entity was processed
-      onContentUpdate('author', processedText);
+      onContentUpdate('author', finalValue);
       
       // Set cursor position after state update
       setTimeout(() => {
@@ -109,7 +112,7 @@ const ContentControls: React.FC<ContentControlsProps> = memo(({
       }, 0);
     } else {
       // No entity processing needed, update normally
-      onContentUpdate('author', value);
+      onContentUpdate('author', finalValue);
     }
   }, [onContentUpdate]);
 
@@ -806,9 +809,9 @@ const ContentControls: React.FC<ContentControlsProps> = memo(({
           <input
             ref={quoteAuthorRef}
             type="text"
-            value={(block.content as any)?.author || ''}
+            value={(block.content as any)?.author === 'Author Name' ? '' : ((block.content as any)?.author || '')}
             onChange={handleQuoteAuthorChange}
-            placeholder="Quote author..."
+            placeholder="Author Name"
             className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 placeholder-gray-400 focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-100 transition-all"
           />
         </div>

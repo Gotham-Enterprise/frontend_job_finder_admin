@@ -119,6 +119,12 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
     }
   }, [blocks, onLayoutChange]);
 
+  // Close properties panel and all associated floating panels when clicking outside
+  const handleDeselectBlock = useCallback(() => {
+    setSelectedBlockId(null);
+    setShowPropertiesPanel(false);
+  }, []);
+
   const generateBlockId = (): string => {
     return `block_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   };
@@ -233,8 +239,7 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
         className="flex-1 h-full overflow-y-auto"
         onClick={(e) => {
           if (e.target === e.currentTarget) {
-            setSelectedBlockId(null);
-            setShowPropertiesPanel(false);
+            handleDeselectBlock();
           }
         }}
       >
@@ -286,8 +291,7 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
             className="flex-1 p-8 pb-24"
             onClick={(e) => {
               if (e.target === e.currentTarget) {
-                setSelectedBlockId(null);
-                setShowPropertiesPanel(false);
+                handleDeselectBlock();
               }
             }}
           >
@@ -302,8 +306,7 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
                     className="bg-white p-12 min-h-[600px]" 
                     onClick={(e) => {
                       if (e.target === e.currentTarget) {
-                        setSelectedBlockId(null);
-                        setShowPropertiesPanel(false);
+                        handleDeselectBlock();
                       }
                     }}
                   >
@@ -350,7 +353,7 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
         block={selectedBlock}
         isVisible={showPropertiesPanel}
         onClose={() => {
-          setShowPropertiesPanel(false);
+          handleDeselectBlock();
         }}
         onUpdate={updateBlock}
         onStyleUpdate={updateBlockStyle}
