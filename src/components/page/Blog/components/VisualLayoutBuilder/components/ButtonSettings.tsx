@@ -78,7 +78,7 @@ const ButtonSettings: React.FC<ButtonSettingsProps> = memo(({
   }, [onContentUpdate]);
   const selectFields = [
     {
-      label: 'Variant',
+      label: 'Style',
       value: block.content.variant,
       field: 'variant',
       options: BUTTON_VARIANTS,
@@ -96,7 +96,7 @@ const ButtonSettings: React.FC<ButtonSettingsProps> = memo(({
       options: BUTTON_WIDTHS,
     },
     {
-      label: 'Alignment',
+      label: 'Position',
       value: block.content.alignment,
       field: 'alignment',
       options: BUTTON_ALIGNMENTS,
@@ -106,7 +106,7 @@ const ButtonSettings: React.FC<ButtonSettingsProps> = memo(({
   return (
     <div className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">Button Text</label>
+        <label className="block text-sm font-medium text-gray-700 mb-2">What It Says</label>
         <input
           ref={inputRef}
           type="text"
@@ -118,7 +118,7 @@ const ButtonSettings: React.FC<ButtonSettingsProps> = memo(({
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">Link URL</label>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Where It Goes</label>
         <input
           type="url"
           value={block.content.url || ''}

@@ -8,9 +8,9 @@ interface ElementsSidebarProps {
 const sidebarElements = [
   {
     type: 'heading' as BlockType,
-    label: 'Heading',
+    label: 'Title',
     icon: 'H',
-    title: 'Add Heading'
+    title: 'Add Title'
   },
   {
     type: 'paragraph' as BlockType,

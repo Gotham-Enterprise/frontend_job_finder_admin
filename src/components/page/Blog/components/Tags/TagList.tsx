@@ -227,7 +227,7 @@ const TagList: React.FC<TagListProps> = ({
               />
             ) : (
               <div className="text-sm text-gray-500 dark:text-gray-400">
-                Showing {((metaData.page - 1) * metaData.limit) + 1} to {Math.min(metaData.page * metaData.limit, metaData.totalCount)} of {metaData.totalCount} items
+                Showing {((metaData.page - 1) * metaData.limit) + 1} of {Math.min(metaData.page * metaData.limit, metaData.totalCount)} results
               </div>
             )}
           </div>

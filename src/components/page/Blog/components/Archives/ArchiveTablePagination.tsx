@@ -34,9 +34,9 @@ const ArchiveTablePagination: React.FC<ArchiveTablePaginationProps> = ({
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center gap-4">
           <div className="text-sm text-gray-500 dark:text-gray-400">
-            Showing {((data.metaData.page - 1) * (filters.limit || 10)) + 1} to{' '}
-            {Math.min(data.metaData.page * (filters.limit || 10), data.metaData.totalCount)} of{' '}
-            {data.metaData.totalCount} archived results
+            Showing {((data.metaData.page - 1) * (filters.limit || 10)) + 1} of{' '}
+            {Math.min(data.metaData.page * (filters.limit || 10), data.metaData.totalCount)} results
+          
           </div>
         </div>
         

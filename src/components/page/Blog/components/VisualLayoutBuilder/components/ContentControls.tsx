@@ -12,7 +12,8 @@ import {
   createLinkHtml, 
   removeAllLinksFromText, 
   replaceTextWithLink,
-  processHtmlEntities 
+  processHtmlEntities,
+  cleanHtmlEntities 
 } from '../utils/textUtils';
 
 
@@ -31,6 +32,94 @@ const ContentControls: React.FC<ContentControlsProps> = memo(({
   onSetFeaturedImage,
   currentFeaturedImage 
 }) => {
+  // Clean block content immediately when received
+  const cleanedBlock = React.useMemo(() => {
+    const cleaned = { ...block };
+    let hasChanges = false;
+    
+    if (cleaned.content?.text && typeof cleaned.content.text === 'string') {
+      const cleanedText = cleanHtmlEntities(cleaned.content.text);
+      if (cleanedText !== cleaned.content.text) {
+        cleaned.content = { ...cleaned.content, text: cleanedText };
+        hasChanges = true;
+      }
+    }
+    
+    if (cleaned.type === 'quote') {
+      if ((cleaned.content as any)?.author && typeof (cleaned.content as any).author === 'string') {
+        const cleanedAuthor = cleanHtmlEntities((cleaned.content as any).author);
+        if (cleanedAuthor !== (cleaned.content as any).author) {
+          cleaned.content = { ...cleaned.content, author: cleanedAuthor };
+          hasChanges = true;
+        }
+      }
+      
+      if ((cleaned.content as any)?.citation && typeof (cleaned.content as any).citation === 'string') {
+        const cleanedCitation = cleanHtmlEntities((cleaned.content as any).citation);
+        if (cleanedCitation !== (cleaned.content as any).citation) {
+          cleaned.content = { ...cleaned.content, citation: cleanedCitation };
+          hasChanges = true;
+        }
+      }
+    }
+    
+    if (cleaned.type === 'list' && (cleaned.content as any)?.items) {
+      const items = (cleaned.content as any).items;
+      const cleanedItems = items.map((item: string) => cleanHtmlEntities(item));
+      const itemsChanged = cleanedItems.some((cleanedItem: string, index: number) => cleanedItem !== items[index]);
+      if (itemsChanged) {
+        cleaned.content = { ...cleaned.content, items: cleanedItems };
+        hasChanges = true;
+      }
+    }
+    
+    if ((cleaned.content as any)?.url && typeof (cleaned.content as any).url === 'string') {
+      const cleanedUrl = cleanHtmlEntities((cleaned.content as any).url);
+      if (cleanedUrl !== (cleaned.content as any).url) {
+        cleaned.content = { ...cleaned.content, url: cleanedUrl };
+        hasChanges = true;
+      }
+    }
+    
+    // If we found HTML entities, update the actual block content immediately
+    if (hasChanges) {
+      // Use setTimeout to avoid updating during render
+      setTimeout(() => {
+        if (cleaned.content?.text !== block.content?.text) {
+          onContentUpdate('text', cleaned.content.text);
+        }
+        if (cleaned.type === 'quote') {
+          if ((cleaned.content as any)?.author !== (block.content as any)?.author) {
+            onContentUpdate('author', (cleaned.content as any).author);
+          }
+          if ((cleaned.content as any)?.citation !== (block.content as any)?.citation) {
+            onContentUpdate('citation', (cleaned.content as any).citation);
+          }
+        }
+        if (cleaned.type === 'list' && (cleaned.content as any)?.items) {
+          const originalItems = (block.content as any)?.items || [];
+          const cleanedItems = (cleaned.content as any).items;
+          if (JSON.stringify(originalItems) !== JSON.stringify(cleanedItems)) {
+            onContentUpdate('items', cleanedItems);
+          }
+        }
+        if ((cleaned.content as any)?.url !== (block.content as any)?.url) {
+          onContentUpdate('url', (cleaned.content as any).url);
+        }
+      }, 0);
+    }
+    
+    return cleaned;
+  }, [block, onContentUpdate]);
+  
+  // Use cleaned block for the rest of the component
+  const workingBlock = cleanedBlock;
+
+  // Helper function to clean content for display
+  const getCleanedContent = (content: string | undefined, fallback: string = ''): string => {
+    if (!content) return fallback;
+    return cleanHtmlEntities(content);
+  };
   const [showLinkModal, setShowLinkModal] = useState(false);
   const [showFullscreenEditor, setShowFullscreenEditor] = useState(false);
   const [selectedText, setSelectedText] = useState('');
@@ -46,15 +135,62 @@ const ContentControls: React.FC<ContentControlsProps> = memo(({
 
  
   const [localQuoteText, setLocalQuoteText] = useState(() => {
-    const currentText = (block.content as any)?.text || '';
+    const currentText = getCleanedContent((workingBlock.content as any)?.text);
     return currentText === 'Your inspiring quote goes here...' ? '' : currentText;
   });
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    const currentText = (block.content as any)?.text || '';
+    const currentText = getCleanedContent((workingBlock.content as any)?.text);
     setLocalQuoteText(currentText === 'Your inspiring quote goes here...' ? '' : currentText);
-  }, [block.content?.text]);
+  }, [workingBlock.content?.text]);
+
+  // Clean existing content of HTML entities on mount and block changes
+  useEffect(() => {
+    const cleanContentField = (field: string, value: any) => {
+      if (typeof value === 'string') {
+        const cleanedValue = cleanHtmlEntities(value);
+        if (cleanedValue !== value) {
+          onContentUpdate(field, cleanedValue);
+        }
+      }
+    };
+
+    // Clean text content
+    if (workingBlock.content?.text) {
+      cleanContentField('text', workingBlock.content.text);
+    }
+
+    // Clean author content for quotes
+    if (workingBlock.type === 'quote' && (workingBlock.content as any)?.author) {
+      cleanContentField('author', (workingBlock.content as any).author);
+    }
+
+    // Clean citation content for quotes
+    if (workingBlock.type === 'quote' && (workingBlock.content as any)?.citation) {
+      cleanContentField('citation', (workingBlock.content as any).citation);
+    }
+
+    // Clean list items
+    if (workingBlock.type === 'list' && (workingBlock.content as any)?.items) {
+      const items = (workingBlock.content as any).items;
+      const cleanedItems = items.map((item: string) => cleanHtmlEntities(item));
+      const hasChanges = cleanedItems.some((cleanedItem: string, index: number) => cleanedItem !== items[index]);
+      if (hasChanges) {
+        onContentUpdate('items', cleanedItems);
+      }
+    }
+
+    // Clean button text
+    if (workingBlock.type === 'button' && (workingBlock.content as any)?.text) {
+      cleanContentField('text', (workingBlock.content as any).text);
+    }
+
+    // Clean URL fields
+    if ((workingBlock.content as any)?.url) {
+      cleanContentField('url', (workingBlock.content as any).url);
+    }
+  }, [workingBlock.content, onContentUpdate]);
 
   const debouncedUpdateQuoteText = useCallback((value: string) => {
     if (debounceTimeoutRef.current) {
@@ -96,76 +232,70 @@ const ContentControls: React.FC<ContentControlsProps> = memo(({
     const value = e.target.value;
     const cursorPosition = e.target.selectionStart || 0;
     const { text: processedText, newCursorPosition } = processHtmlEntities(value, cursorPosition);
-    
-    // If the value is empty, set it to the placeholder text; otherwise use the actual value
+   
     const finalValue = processedText.trim() === '' ? 'Author Name' : processedText;
     
     if (processedText !== value) {
-      // HTML entity was processed
+   
       onContentUpdate('author', finalValue);
       
-      // Set cursor position after state update
+
       setTimeout(() => {
         if (quoteAuthorRef.current) {
           quoteAuthorRef.current.setSelectionRange(newCursorPosition, newCursorPosition);
         }
       }, 0);
     } else {
-      // No entity processing needed, update normally
+   
       onContentUpdate('author', finalValue);
     }
   }, [onContentUpdate]);
 
-  // Handler for quote citation changes with HTML entity processing
   const handleQuoteCitationChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     const cursorPosition = e.target.selectionStart || 0;
     const { text: processedText, newCursorPosition } = processHtmlEntities(value, cursorPosition);
     
     if (processedText !== value) {
-      // HTML entity was processed
+ 
       onContentUpdate('citation', processedText);
       
-      // Set cursor position after state update
       setTimeout(() => {
         if (quoteCitationRef.current) {
           quoteCitationRef.current.setSelectionRange(newCursorPosition, newCursorPosition);
         }
       }, 0);
     } else {
-      // No entity processing needed, update normally
       onContentUpdate('citation', value);
     }
   }, [onContentUpdate]);
 
-  const listItems = (block.content as any)?.items || [];
-  const isListOrdered = (block.content as any)?.ordered || false;
+  const listItems = (workingBlock.content as any)?.items || [];
+  const isListOrdered = (workingBlock.content as any)?.ordered || false;
 
-  // Handler for text input that processes HTML entities
-  const handleTextChange = useCallback((value: string, inputRef: React.RefObject<HTMLInputElement | HTMLTextAreaElement | null>) => {
-    const cursorPosition = inputRef.current?.selectionStart || 0;
+  const handleTextChange = useCallback((value: string, inputRef: React.RefObject<HTMLInputElement | HTMLTextAreaElement | null>, cursorPos?: number) => {
+    const cursorPosition = cursorPos ?? inputRef.current?.selectionStart ?? 0;
     const { text: processedText, newCursorPosition } = processHtmlEntities(value, cursorPosition);
     
     if (processedText !== value) {
-      // HTML entity was processed, update content and cursor position
+
       onContentUpdate('text', processedText);
-      
-      // Set cursor position after state update
+
       setTimeout(() => {
         if (inputRef.current) {
           inputRef.current.setSelectionRange(newCursorPosition, newCursorPosition);
         }
       }, 0);
     } else {
-      // No entity processing needed, update normally
+
       onContentUpdate('text', value);
     }
   }, [onContentUpdate]);
 
-  // Handler for paragraph/heading input changes
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, inputRef: React.RefObject<HTMLInputElement | HTMLTextAreaElement | null>) => {
     const value = e.target.value;
-    handleTextChange(value, inputRef);
+    const cursorPosition = e.target.selectionStart || 0;
+    handleTextChange(value, inputRef, cursorPosition);
   }, [handleTextChange]);
 
   const addListItem = useCallback(() => {
@@ -176,7 +306,7 @@ const ContentControls: React.FC<ContentControlsProps> = memo(({
   const removeListItem = useCallback((index: number) => {
     if (listItems.length > 1) {
       const newItems = listItems.filter((_: any, i: number) => i !== index);
-      // Re-index the remaining placeholder items to maintain consistent numbering
+  
       const updatedItems = newItems.map((item: string, i: number) => {
         if (item.startsWith('Item ') && /^Item \d+$/.test(item)) {
           return `Item ${i + 1}`;
@@ -189,22 +319,21 @@ const ContentControls: React.FC<ContentControlsProps> = memo(({
 
   const updateListItem = useCallback((index: number, value: string) => {
     const newItems = [...listItems];
-    // If the user enters actual content, use it; if empty, revert to placeholder
+
     newItems[index] = value.trim() === '' ? `Item ${index + 1}` : value;
     onContentUpdate('items', newItems);
   }, [listItems, onContentUpdate]);
 
-  // Handler for list item changes with HTML entity processing
+  
   const handleListItemChange = useCallback((index: number, e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     const cursorPosition = e.target.selectionStart || 0;
     const { text: processedText, newCursorPosition } = processHtmlEntities(value, cursorPosition);
     
     if (processedText !== value) {
-      // HTML entity was processed
+
       updateListItem(index, processedText);
       
-      // Set cursor position after state update
       setTimeout(() => {
         const input = listItemRefs.current[index];
         if (input) {
@@ -212,7 +341,6 @@ const ContentControls: React.FC<ContentControlsProps> = memo(({
         }
       }, 0);
     } else {
-      // No entity processing needed, update normally
       updateListItem(index, value);
     }
   }, [updateListItem]);
@@ -254,13 +382,13 @@ const ContentControls: React.FC<ContentControlsProps> = memo(({
       onContentUpdate('items', newItems);
     } else {
       // Handle text/heading link
-      const currentText = (block.content as any)?.text || '';
+      const currentText = (workingBlock.content as any)?.text || '';
       const newText = replaceTextWithLink(currentText, selectedText, linkHtml);
       onContentUpdate('text', newText);
     }
     
     resetLinkModal();
-  }, [selectedText, linkUrl, linkTarget, block.content, onContentUpdate, selectedListItemIndex, listItems]);
+  }, [selectedText, linkUrl, linkTarget, workingBlock.content, onContentUpdate, selectedListItemIndex, listItems]);
 
   const resetLinkModal = useCallback(() => {
     setShowLinkModal(false);
@@ -288,10 +416,10 @@ const ContentControls: React.FC<ContentControlsProps> = memo(({
   }, [onContentUpdate, onStyleUpdate]);
 
   const removeAllLinks = useCallback(() => {
-    const currentText = (block.content as any)?.text || '';
+    const currentText = (workingBlock.content as any)?.text || '';
     const textWithoutLinks = removeAllLinksFromText(currentText);
     onContentUpdate('text', textWithoutLinks);
-  }, [block.content, onContentUpdate]);
+  }, [workingBlock.content, onContentUpdate]);
 
   const removeLinksFromListItem = useCallback((itemIndex: number) => {
     const newItems = [...listItems];
@@ -455,12 +583,12 @@ const ContentControls: React.FC<ContentControlsProps> = memo(({
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
                 </svg>
-                Fullscreen
+                Full Editor
               </button>
             </div>
             <textarea
               ref={textareaRef}
-              value={(block.content as any)?.text === 'Start writing your content here...' ? '' : ((block.content as any)?.text || '')}
+              value={getCleanedContent((workingBlock.content as any)?.text) === 'Start writing your content here...' ? '' : getCleanedContent((workingBlock.content as any)?.text)}
               onChange={(e) => handleInputChange(e, textareaRef)}
               onMouseUp={() => processTextSelection(textareaRef)}
               placeholder="Start writing your content here..."
@@ -479,7 +607,7 @@ const ContentControls: React.FC<ContentControlsProps> = memo(({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Link Color</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Link Colors</label>
             <div className="flex items-center space-x-2">
               <input
                 type="color"
@@ -510,7 +638,7 @@ const ContentControls: React.FC<ContentControlsProps> = memo(({
             <input
               ref={inputRef}
               type="text"
-              value={(block.content as any)?.text === 'Your Heading Here' ? '' : ((block.content as any)?.text || '')}
+              value={getCleanedContent((workingBlock.content as any)?.text) === 'Your Heading Here' ? '' : getCleanedContent((workingBlock.content as any)?.text)}
               onChange={(e) => handleInputChange(e, inputRef)}
               onMouseUp={() => processTextSelection(inputRef)}
               placeholder="Your Heading Here"
@@ -527,11 +655,26 @@ const ContentControls: React.FC<ContentControlsProps> = memo(({
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">URL (Optional)</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Web Address (Optional)</label>
             <input
               type="url"
               value={(block.content as any)?.url || ''}
-              onChange={(e) => onContentUpdate('url', e.target.value)}
+              onChange={(e) => {
+                const value = e.target.value;
+                const cursorPosition = e.target.selectionStart || 0;
+                const { text: processedText, newCursorPosition } = processHtmlEntities(value, cursorPosition);
+                
+                if (processedText !== value) {
+                  onContentUpdate('url', processedText);
+                  setTimeout(() => {
+                    if (e.target) {
+                      e.target.setSelectionRange(newCursorPosition, newCursorPosition);
+                    }
+                  }, 0);
+                } else {
+                  onContentUpdate('url', value);
+                }
+              }}
               placeholder="https://example.com"
               className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 placeholder-gray-400 focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-100 transition-all"
             />
@@ -647,9 +790,9 @@ const ContentControls: React.FC<ContentControlsProps> = memo(({
             <div className="mb-3 p-2 bg-blue-50 rounded-lg">
               <p className="text-xs text-blue-700">
                 💡 <strong>How to add links:</strong> 
-                <br />• <strong>Partial link:</strong> Select specific text (e.g., just "marketing"), then click "Add Link"
-                <br />• <strong>Full item link:</strong> Click "Add Link" without selecting anything to link the entire item
-                <br />• Enter your URL and click "Add Link"
+                <br />• <strong>Part of text:</strong> Select specific words (e.g., just "marketing"), then click "Add Link"
+                <br />• <strong>Whole item:</strong> Click "Add Link" without selecting anything to link the entire item
+                <br />• Enter your web address and click "Add Link"
               </p>
             </div>
             
@@ -660,7 +803,7 @@ const ContentControls: React.FC<ContentControlsProps> = memo(({
                     <input
                       ref={(el) => { listItemRefs.current[index] = el; }}
                       type="text"
-                      value={item.startsWith('Item ') && /^Item \d+$/.test(item) ? '' : item}
+                      value={getCleanedContent(item).startsWith('Item ') && /^Item \d+$/.test(getCleanedContent(item)) ? '' : getCleanedContent(item)}
                       onChange={(e) => handleListItemChange(index, e)}
                       onMouseUp={() => {
                         // Check if text is selected and update preview
@@ -743,7 +886,7 @@ const ContentControls: React.FC<ContentControlsProps> = memo(({
                       }`}
                       title={selectedTextPreview[index] 
                         ? `Click to add link to "${selectedTextPreview[index]}"` 
-                        : "Select specific text for partial link, or click without selecting to link entire item"
+                        : "Select specific text for part of item, or click without selecting to link entire item"
                       }
                     >
                       🔗 {selectedTextPreview[index] ? 'Link Selected Text' : 'Add Link'}
@@ -794,7 +937,7 @@ const ContentControls: React.FC<ContentControlsProps> = memo(({
     quote: () => (
       <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Quote Text</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">What You Want to Say</label>
           <textarea
             value={localQuoteText}
             onChange={handleQuoteTextChange}
@@ -804,20 +947,18 @@ const ContentControls: React.FC<ContentControlsProps> = memo(({
           />
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Author (Optional)</label>
-          <input
-            ref={quoteAuthorRef}
-            type="text"
-            value={(block.content as any)?.author === 'Author Name' ? '' : ((block.content as any)?.author || '')}
-            onChange={handleQuoteAuthorChange}
-            placeholder="Author Name"
-            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 placeholder-gray-400 focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-100 transition-all"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Citation (Optional)</label>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Who Said It (Optional)</label>
+            <input
+              ref={quoteAuthorRef}
+              type="text"
+              value={getCleanedContent((workingBlock.content as any)?.author) === 'Author Name' ? '' : getCleanedContent((workingBlock.content as any)?.author)}
+              onChange={handleQuoteAuthorChange}
+              placeholder="Author Name"
+              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 placeholder-gray-400 focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-100 transition-all"
+            />
+          </div>        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Where It's From (Optional)</label>
           <input
             ref={quoteCitationRef}
             type="text"
@@ -871,7 +1012,7 @@ const ContentControls: React.FC<ContentControlsProps> = memo(({
     default: () => null
   };
 
-  const renderer = CONTENT_RENDERERS[block.type as keyof typeof CONTENT_RENDERERS] || CONTENT_RENDERERS.default;
+  const renderer = CONTENT_RENDERERS[workingBlock.type as keyof typeof CONTENT_RENDERERS] || CONTENT_RENDERERS.default;
   
   return renderer();
 }, (prevProps, nextProps) => (

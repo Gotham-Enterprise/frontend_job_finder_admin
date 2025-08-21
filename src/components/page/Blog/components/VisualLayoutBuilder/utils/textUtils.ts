@@ -15,34 +15,35 @@ export const processTextSelection = (
   return null;
 };
 
-const HTML_ENTITIES: { [key: string]: string } = {
-  '&nbsp;': ' ',
-  '&amp;': '&',
-  '&lt;': '<',
-  '&gt;': '>',
-  '&quot;': '"',
-  '&apos;': "'",
-  '&ldquo;': '"',
-  '&rdquo;': '"',
-  '&lsquo;': '\u2018',
-  '&rsquo;': '\u2019',
-  '&ndash;': '–',
-  '&mdash;': '—',
-  '&hellip;': '…',
-  '&copy;': '©',
-  '&reg;': '®',
-  '&trade;': '™',
-  '&euro;': '€',
-  '&pound;': '£',
-  '&yen;': '¥',
-  '&sect;': '§',
-  '&para;': '¶',
-  '&deg;': '°',
-  '&plusmn;': '±',
-  '&frac12;': '½',
-  '&frac14;': '¼',
-  '&frac34;': '¾'
-};
+// HTML entities that should be removed from content
+const HTML_ENTITIES_TO_REMOVE = [
+  '&nbsp;',
+  '&amp;',
+  '&lt;',
+  '&gt;',
+  '&quot;',
+  '&apos;',
+  '&ldquo;',
+  '&rdquo;',
+  '&lsquo;',
+  '&rsquo;',
+  '&ndash;',
+  '&mdash;',
+  '&hellip;',
+  '&copy;',
+  '&reg;',
+  '&trade;',
+  '&euro;',
+  '&pound;',
+  '&yen;',
+  '&sect;',
+  '&para;',
+  '&deg;',
+  '&plusmn;',
+  '&frac12;',
+  '&frac14;',
+  '&frac34;'
+];
 
 export const processHtmlEntities = (
   text: string,
@@ -51,21 +52,50 @@ export const processHtmlEntities = (
   let processedText = text;
   let newCursorPosition = cursorPosition;
   
-  for (const [entity, replacement] of Object.entries(HTML_ENTITIES)) {
+  // Check if any HTML entity ends exactly at the cursor position
+  for (const entity of HTML_ENTITIES_TO_REMOVE) {
     const entityIndex = processedText.lastIndexOf(entity, cursorPosition);
 
     if (entityIndex !== -1 && entityIndex + entity.length === cursorPosition) {
+      // Remove the entity (replace with empty string)
       processedText = 
         processedText.substring(0, entityIndex) + 
-        replacement + 
         processedText.substring(entityIndex + entity.length);
 
-      newCursorPosition = entityIndex + replacement.length;
+      newCursorPosition = entityIndex;
       break;
     }
   }
   
+  // Also check for entities anywhere in the text and remove them
+  if (processedText === text) {
+    for (const entity of HTML_ENTITIES_TO_REMOVE) {
+      if (processedText.includes(entity)) {
+        const beforeEntity = processedText.substring(0, processedText.indexOf(entity));
+        processedText = processedText.replace(entity, '');
+        
+        // Adjust cursor position if it was after the entity
+        if (cursorPosition > beforeEntity.length + entity.length) {
+          newCursorPosition = cursorPosition - entity.length;
+        } else if (cursorPosition > beforeEntity.length) {
+          newCursorPosition = beforeEntity.length;
+        }
+        break;
+      }
+    }
+  }
+  
   return { text: processedText, newCursorPosition };
+};
+
+export const cleanHtmlEntities = (text: string): string => {
+  let cleanedText = text;
+
+  for (const entity of HTML_ENTITIES_TO_REMOVE) {
+    cleanedText = cleanedText.replace(new RegExp(entity.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), '');
+  }
+  
+  return cleanedText;
 };
 
 export const createLinkHtml = (
