@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import SearchableSelect from '../../../ui/SearchableSelect';
 import StatusToggleFilter from '../../../ui/StatusToggleFilter';
 import Label from '../../../form/Label';
+import Input from '../../../ui/input/Input';
 import { JobSeekersFiltersProps } from '@/services/types/JobSeekersTypes';
 
 const JobSeekersFilters: React.FC<JobSeekersFiltersProps> = ({
@@ -15,6 +16,21 @@ const JobSeekersFilters: React.FC<JobSeekersFiltersProps> = ({
   hasActiveFilters,
   clearIndividualFilter,
 }) => {
+  const [cityInput, setCityInput] = useState(filters.city || '');
+
+  // Debounce city input
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      onFilterChange('city', cityInput);
+    }, 500); // 500ms delay
+
+    return () => clearTimeout(timeoutId);
+  }, [cityInput, onFilterChange]);
+
+  // Sync local state when filters.city changes from external source (like clear)
+  useEffect(() => {
+    setCityInput(filters.city || '');
+  }, [filters.city]);
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 gap-6">
@@ -38,6 +54,27 @@ const JobSeekersFilters: React.FC<JobSeekersFiltersProps> = ({
             options={occupationOptions}
             placeholder="Select occupation..."
             searchPlaceholder="Search occupations..."
+            className="w-full"
+          />
+        </div>
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              City
+            </Label>
+            {filters.city && (
+              <button
+                onClick={() => clearIndividualFilter('city')}
+                className="text-xs text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100 font-medium cursor-pointer hover:underline"
+              >
+                Clear
+              </button>
+            )}
+          </div>
+          <Input
+            value={cityInput}
+            onChange={(e) => setCityInput(e.target.value)}
+            placeholder="Enter city..."
             className="w-full"
           />
         </div>

@@ -37,6 +37,7 @@ export interface JobSeekerFilters {
   page?: number;
   limit?: number;
   search?: string;
+  city?: string;
   location?: string;  
   specialty?: string;
   occupationId?: number;
