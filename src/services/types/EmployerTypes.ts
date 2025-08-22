@@ -42,6 +42,7 @@ export interface EmployerTableProps {
   onViewSubscription: (employerId: string) => void;
   selectedEmployerId: string | null;
   onEmployerSelect: (employerId: string, isSelected: boolean) => void;
+  onRefresh?: () => void;
 }
 
 export interface EmployerTablePaginationProps {

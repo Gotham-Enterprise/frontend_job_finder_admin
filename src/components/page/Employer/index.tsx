@@ -107,6 +107,7 @@ const Employers: React.FC<EmployersProps> = ({ className = "" }) => {
         onViewSubscription={viewSubscription}
         selectedEmployerId={selectedEmployerId}
         onEmployerSelect={employerSelect}
+        onRefresh={refetch}
       />     
       
        <EmployerTablePagination
