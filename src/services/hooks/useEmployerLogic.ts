@@ -88,9 +88,6 @@ export const useEmployerLogic = () => {
   const [isPending, startTransition] = useTransition();
   const [selectedEmployerId, setSelectedEmployerId] = useState<string | null>(null);
   const [isCreatingJob, setIsCreatingJob] = useState(false);
-  const [selectedStatuses, setSelectedStatuses] = useState<string[]>(
-    initialFilters.status ? [initialFilters.status] : []
-  );
   const [isInitialized, setIsInitialized] = useState(false);
   const [hasRestoredFromState, setHasRestoredFromState] = useState(false);
 
@@ -199,10 +196,9 @@ export const useEmployerLogic = () => {
   ], []);
 
   const statusOptions = useMemo(() => [
-    { value: '', label: 'All Statuses' },
+    { value: '', label: 'All' },
     { value: 'active', label: 'Active' },
-    { value: 'inactive', label: 'Inactive' },
-    { value: 'suspended', label: 'Suspended' },
+    { value: 'pending', label: 'Pending' },
   ], []);
   const stateOptions = useMemo(() => {
     const baseOptions = [{ value: '', label: 'All States' }];
@@ -232,14 +228,6 @@ export const useEmployerLogic = () => {
         [key]: value === '' ? undefined : value,
         page: 1
       }));
-    });
-  }, []);
-
-  const statusToggle = useCallback((statuses: string[]) => {
-    setSelectedStatuses(statuses);
-    startTransition(() => {
-      const status = statuses.length > 0 ? statuses[0] : undefined;
-      setFilters(prev => ({ ...prev, status, page: 1 }));
     });
   }, []);
 
@@ -292,7 +280,6 @@ export const useEmployerLogic = () => {
     setFilters(newFilters);
     setSearchInput('');
     setSelectedEmployerId(null);
-    setSelectedStatuses([]);
     if (typeof window !== 'undefined') {
       localStorage.removeItem('employer-scroll-position');
       localStorage.removeItem('employer-search-state');
@@ -305,7 +292,6 @@ export const useEmployerLogic = () => {
         filterChange('location', '');
         break;
       case 'status':
-        setSelectedStatuses([]);
         filterChange('status', undefined);
         break;
       default:
@@ -318,10 +304,9 @@ export const useEmployerLogic = () => {
       searchInput ||
       filters.location ||
       filters.status ||
-      selectedEmployerId ||
-      selectedStatuses.length > 0
+      selectedEmployerId
     );
-  }, [searchInput, filters.location, filters.status, selectedEmployerId, selectedStatuses]);
+  }, [searchInput, filters.location, filters.status, selectedEmployerId]);
 
   useEffect(() => {
     if (data && !isLoading) {
@@ -399,7 +384,6 @@ export const useEmployerLogic = () => {
     stateOptions,
     itemsPerPageOptions,    
     filterChange,
-    statusToggle,
     initPageChange,
     getStatusVariant,
     viewEmployer,
@@ -411,7 +395,6 @@ export const useEmployerLogic = () => {
     clearAllFilters,
     clearIndividualFilter,
     hasActiveFilters,
-    selectedStatuses,
     saveScrollPosition,
     restoreScrollPosition,
     saveSearchState,
