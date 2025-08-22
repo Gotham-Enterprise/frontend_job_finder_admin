@@ -350,14 +350,14 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
                     >
                      <EyeIcon />  View
                     </button>
-                   
+{/*                    
                     <button 
                        className="flex gap-2 text-brand-400"
                       onClick={() => openEditModal(jobSeeker.id)}
                    
                     >
                       <PencilIcon /> Edit
-                    </button>
+                    </button> */}
                   </div>
                 </TableCell>
               </TableRow>
