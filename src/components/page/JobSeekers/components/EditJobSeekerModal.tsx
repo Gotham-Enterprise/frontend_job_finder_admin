@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Modal } from '@/components/ui/modal';
 import Button from '@/components/ui/button/Button';
 import Input from '@/components/ui/input/Input';
+import Select from '@/components/form/Select';
 import { jobSeekerApi } from '@/services/api/jobSeeker';
+import { useStates } from '@/services/hooks/useStates';
 import { JobSeekerUpdateData, JobSeekerDetails } from '@/services/types/jobSeeker';
 
 interface EditJobSeekerModalProps {
@@ -31,6 +33,29 @@ export const EditJobSeekerModal: React.FC<EditJobSeekerModalProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const { data: statesData, isLoading: isStatesLoading } = useStates();
+
+  const stateOptions = React.useMemo(() => {
+    if (statesData?.success && statesData.data) {
+      return statesData.data.states.map(state => ({
+        value: state.abbreviation,
+        label: state.name
+      }));
+    }
+    return [];
+  }, [statesData]);
+
+  const countryOptions = React.useMemo(() => [
+    { value: 'US', label: 'United States' },
+    { value: 'CA', label: 'Canada' },
+    { value: 'GB', label: 'United Kingdom' },
+    { value: 'AU', label: 'Australia' },
+    { value: 'DE', label: 'Germany' },
+    { value: 'FR', label: 'France' },
+    { value: 'MX', label: 'Mexico' },
+    { value: 'OTHER', label: 'Other' },
+  ], []);
 
   useEffect(() => {
     if (isOpen && jobSeekerId) {
@@ -171,11 +196,12 @@ export const EditJobSeekerModal: React.FC<EditJobSeekerModalProps> = ({
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   State
                 </label>
-                <Input
-                  type="text"
+                <Select
+                  options={stateOptions}
                   value={formData.state}
-                  onChange={(e) => updateField('state', e.target.value)}
-                  placeholder="Enter state"
+                  onChange={(value) => updateField('state', value)}
+                  placeholder="Select state"
+                  disabled={isStatesLoading}
                 />
               </div>
             </div>
@@ -185,11 +211,12 @@ export const EditJobSeekerModal: React.FC<EditJobSeekerModalProps> = ({
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Country
                 </label>
-                <Input
-                  type="text"
+                <Select
+                  options={countryOptions}
                   value={formData.country}
-                  onChange={(e) => updateField('country', e.target.value)}
-                  placeholder="Enter country"
+                  onChange={(value) => updateField('country', value)}
+                  placeholder="Select country"
+                  disabled={true}
                 />
               </div>
               <div>

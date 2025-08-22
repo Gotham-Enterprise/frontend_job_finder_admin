@@ -331,25 +331,23 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
                   </Badge>
                 </TableCell>
                 <TableCell className="py-4 px-6 text-right">
-                  <div className="flex items-center justify-end gap-2">
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="text-brand-400"
+                  <div className="flex items-center gap-4">
+                    <button 
+                   
+                      className="flex gap-2 text-brand-400"
                       onClick={() => onViewJobSeeker(jobSeeker.id)}
-                      startIcon={<EyeIcon />}
+                    
                     >
-                      View
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="text-gray-600 dark:text-gray-400 hover:text-brand-400"
+                     <EyeIcon />  View
+                    </button>
+                   
+                    <button 
+                       className="flex gap-2 text-brand-400"
                       onClick={() => openEditModal(jobSeeker.id)}
-                      startIcon={<PencilIcon />}
+                   
                     >
-                      Edit
-                    </Button>
+                      <PencilIcon /> Edit
+                    </button>
                   </div>
                 </TableCell>
               </TableRow>
