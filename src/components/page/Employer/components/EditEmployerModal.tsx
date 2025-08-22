@@ -59,6 +59,13 @@ export const EditEmployerModal: React.FC<EditEmployerModalProps> = ({
     }
   }, [isOpen, employerId]);
 
+  const stripHtmlTags = (html: string) => {
+    if (!html) return '';
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = html;
+    return tempDiv.textContent || tempDiv.innerText || '';
+  };
+
   const loadEmployerData = async () => {
     setIsLoading(true);
     setError(null);
@@ -68,7 +75,7 @@ export const EditEmployerModal: React.FC<EditEmployerModalProps> = ({
         const employer = response.data;
         setFormData({
           name: employer.companyName || '',
-          overview: employer.overview || '',
+          overview: stripHtmlTags(employer.overview || ''),
           address: employer.address || '',
           city: employer.city || '',
           state: employer.state || '',
@@ -116,18 +123,21 @@ export const EditEmployerModal: React.FC<EditEmployerModalProps> = ({
       isOpen={isOpen}
       onClose={onClose}
       isFullscreen={false}
-      className="max-w-2xl mx-auto mt-20 rounded-lg shadow-xl"
+      className="max-w-2xl mx-auto mt-8 mb-8 rounded-lg shadow-xl max-h-[90vh] overflow-hidden"
     >
-      <div className="p-6">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">
-          Edit Employer
-        </h2>
+      <div className="flex flex-col max-h-[90vh]">
+        <div className="p-6 pb-4 border-b border-gray-200 dark:border-gray-700">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            Edit Employer
+          </h2>
+        </div>
 
-        {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
-            <p className="text-sm text-red-600">{error}</p>
-          </div>
-        )}
+        <div className="flex-1 overflow-y-auto p-6">
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+              <p className="text-sm text-red-600">{error}</p>
+            </div>
+          )}
 
         {isLoading ? (
           <div className="flex items-center justify-center py-8">
@@ -158,6 +168,7 @@ export const EditEmployerModal: React.FC<EditEmployerModalProps> = ({
                 onChange={(value) => updateField('overview', value)}
                 placeholder="Enter company overview"
                 rows={4}
+                className="text-gray-900 dark:text-white"
               />
             </div>
 
@@ -207,8 +218,9 @@ export const EditEmployerModal: React.FC<EditEmployerModalProps> = ({
                 <Select
                   options={countryOptions}
                   value={formData.country}
+                  defaultValue="US"
                   onChange={(value: string) => updateField('country', value)}
-                  placeholder="Select country"
+                  placeholder="United States"
                   disabled={true}
                 />
               </div>
@@ -238,8 +250,9 @@ export const EditEmployerModal: React.FC<EditEmployerModalProps> = ({
             </div>
           </div>
         )}
+        </div>
 
-        <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+        <div className="flex justify-end gap-3 p-6 pt-4 border-t border-gray-200 dark:border-gray-700">
           <Button
             variant="ghost"
             onClick={onClose}
