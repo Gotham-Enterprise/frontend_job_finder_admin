@@ -38,6 +38,7 @@ export interface JobSeekerFilters {
   limit?: number;
   search?: string;
   city?: string;
+  radius?: number;
   location?: string;  
   specialty?: string;
   occupationId?: number;

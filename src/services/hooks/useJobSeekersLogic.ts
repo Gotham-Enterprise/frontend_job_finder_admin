@@ -22,6 +22,7 @@ export const useJobSeekersLogic = () => {
       const urlPage = searchParams.get('page');
       const urlLocation = searchParams.get('location');
       const urlCity = searchParams.get('city');
+      const urlRadius = searchParams.get('radius');
       const urlOccupationId = searchParams.get('occupationId');
       
       const urlFilters = {
@@ -29,6 +30,7 @@ export const useJobSeekersLogic = () => {
         limit: parseInt(searchParams.get('limit') || '100', 10),
         search: decodedSearch,
         city: urlCity || '',
+        radius: urlRadius ? parseInt(urlRadius, 10) : undefined,
         location: urlLocation || '',
         occupationId: urlOccupationId ? parseInt(urlOccupationId, 10) : undefined,
         status: validStatus,
@@ -37,6 +39,7 @@ export const useJobSeekersLogic = () => {
         (!urlPage || urlPage === '1') &&
         !decodedSearch &&
         !urlCity &&
+        !urlRadius &&
         !urlLocation &&
         !urlOccupationId &&
         !validStatus;
@@ -64,6 +67,7 @@ export const useJobSeekersLogic = () => {
               limit: parsed.limit || 100,
               search: parsed.search || '',
               city: parsed.city || '',
+              radius: parsed.radius || undefined,
               location: parsed.location || '',
               occupationId: parsed.occupationId || undefined,
               status: parsed.status || undefined,
@@ -84,6 +88,7 @@ export const useJobSeekersLogic = () => {
       limit: 100,
       search: '',
       city: '',
+      radius: undefined,
       location: '',
       occupationId: undefined,
       status: undefined,
@@ -123,6 +128,7 @@ export const useJobSeekersLogic = () => {
     if (filters.limit && filters.limit !== 100) params.set('limit', filters.limit.toString());
     if (filters.search) params.set('search', encodeURIComponent(filters.search));
     if (filters.city) params.set('city', filters.city);
+    if (filters.radius) params.set('radius', filters.radius.toString());
     if (filters.location) params.set('location', filters.location);
     if (filters.occupationId) params.set('occupationId', filters.occupationId.toString());
     if (filters.status) params.set('status', filters.status);
@@ -202,6 +208,7 @@ export const useJobSeekersLogic = () => {
         limit: filters.limit,
         search: filters.search,
         city: filters.city,
+        radius: filters.radius,
         location: filters.location,
         occupationId: filters.occupationId,
         status: filters.status,
@@ -339,6 +346,7 @@ export const useJobSeekersLogic = () => {
       limit: 100,
       search: '',
       city: '',
+      radius: undefined,
       location: '',
       occupationId: undefined,
       status: undefined,
@@ -360,6 +368,9 @@ export const useJobSeekersLogic = () => {
       case 'city':
         filterChange('city', '');
         break;
+      case 'radius':
+        filterChange('radius', undefined);
+        break;
       case 'location':
         filterChange('location', '');
         break;
@@ -376,11 +387,12 @@ export const useJobSeekersLogic = () => {
     return !!(
       searchInput ||
       filters.city ||
+      filters.radius ||
       filters.location ||
       filters.occupationId ||
       selectedStatuses.length > 0
     );
-  }, [searchInput, filters.city, filters.location, filters.occupationId, selectedStatuses.length]);
+  }, [searchInput, filters.city, filters.radius, filters.location, filters.occupationId, selectedStatuses.length]);
 
   useEffect(() => {
     if (!isInitialized) return;
@@ -430,6 +442,7 @@ export const useJobSeekersLogic = () => {
       filters.page === 1 &&
       !filters.search &&
       !filters.city &&
+      !filters.radius &&
       !filters.location &&
       !filters.occupationId &&
       !filters.status;
@@ -439,7 +452,7 @@ export const useJobSeekersLogic = () => {
         localStorage.removeItem('jobseeker-search-state');
         localStorage.removeItem('jobseeker-scroll-position');
       }
-    } else if (filters.search || filters.city || filters.location || filters.occupationId || filters.status || (filters.page && filters.page > 1)) {
+    } else if (filters.search || filters.city || filters.radius || filters.location || filters.occupationId || filters.status || (filters.page && filters.page > 1)) {
       saveSearchState();
     }
   }, [filters, saveSearchState]);

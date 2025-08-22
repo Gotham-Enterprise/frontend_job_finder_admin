@@ -18,16 +18,28 @@ const JobSeekersFilters: React.FC<JobSeekersFiltersProps> = ({
 }) => {
   const [cityInput, setCityInput] = useState(filters.city || '');
 
+  // Radius options
+  const radiusOptions = [
+    { value: '', label: 'Any Distance' },
+    { value: '1', label: '1 mile' },
+    { value: '3', label: '3 miles' },
+    { value: '5', label: '5 miles' },
+    { value: '10', label: '10 miles' },
+    { value: '25', label: '25 miles' },
+    { value: '50', label: '50 miles' },
+    { value: '100', label: '100 miles' },
+  ];
+
   // Debounce city input
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       onFilterChange('city', cityInput);
-    }, 500); // 500ms delay
+    }, 500); 
 
     return () => clearTimeout(timeoutId);
   }, [cityInput, onFilterChange]);
 
-  // Sync local state when filters.city changes from external source (like clear)
+  // Sync local state when filters change from external source (like clear)
   useEffect(() => {
     setCityInput(filters.city || '');
   }, [filters.city]);
@@ -78,6 +90,7 @@ const JobSeekersFilters: React.FC<JobSeekersFiltersProps> = ({
             className="w-full"
           />
         </div>
+     
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -98,6 +111,32 @@ const JobSeekersFilters: React.FC<JobSeekersFiltersProps> = ({
             options={stateOptions}
             placeholder="Select state..."
             searchPlaceholder="Search states..."
+            className="w-full"
+          />
+        </div>
+           <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              Radius
+            </Label>
+            {filters.radius && (
+              <button
+                onClick={() => clearIndividualFilter('radius')}
+                className="text-xs text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100 font-medium cursor-pointer hover:underline"
+              >
+                Clear
+              </button>
+            )}
+          </div>
+          <SearchableSelect
+            value={filters.radius?.toString() || ''}
+            onChange={(value: string) => {
+              const numericValue = value === '' ? undefined : parseInt(value, 10);
+              onFilterChange('radius', numericValue);
+            }}
+            options={radiusOptions}
+            placeholder="Select radius..."
+            searchPlaceholder="Search radius..."
             className="w-full"
           />
         </div>
