@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Modal } from '@/components/ui/modal';
 import Button from '@/components/ui/button/Button';
 import Input from '@/components/ui/input/Input';
@@ -53,12 +53,6 @@ export const EditEmployerModal: React.FC<EditEmployerModalProps> = ({
     { value: 'MX', label: 'Mexico' },
   ];
 
-  useEffect(() => {
-    if (isOpen && employerId) {
-      loadEmployerData();
-    }
-  }, [isOpen, employerId]);
-
   const stripHtmlTags = (html: string) => {
     if (!html) return '';
     const tempDiv = document.createElement('div');
@@ -66,7 +60,7 @@ export const EditEmployerModal: React.FC<EditEmployerModalProps> = ({
     return tempDiv.textContent || tempDiv.innerText || '';
   };
 
-  const loadEmployerData = async () => {
+  const loadEmployerData = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
@@ -90,7 +84,13 @@ export const EditEmployerModal: React.FC<EditEmployerModalProps> = ({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [employerId]);
+
+  useEffect(() => {
+    if (isOpen && employerId) {
+      loadEmployerData();
+    }
+  }, [isOpen, employerId, loadEmployerData]);
 
   const updateField = (field: keyof EmployerUpdateData, value: string) => {
     setFormData(prev => ({

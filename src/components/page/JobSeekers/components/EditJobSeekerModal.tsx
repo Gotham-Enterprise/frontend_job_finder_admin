@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Modal } from '@/components/ui/modal';
 import Button from '@/components/ui/button/Button';
 import Input from '@/components/ui/input/Input';
@@ -57,13 +57,7 @@ export const EditJobSeekerModal: React.FC<EditJobSeekerModalProps> = ({
     { value: 'OTHER', label: 'Other' },
   ], []);
 
-  useEffect(() => {
-    if (isOpen && jobSeekerId) {
-      loadJobSeekerData();
-    }
-  }, [isOpen, jobSeekerId]);
-
-  const loadJobSeekerData = async () => {
+  const loadJobSeekerData = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
@@ -88,7 +82,13 @@ export const EditJobSeekerModal: React.FC<EditJobSeekerModalProps> = ({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [jobSeekerId]);
+
+  useEffect(() => {
+    if (isOpen && jobSeekerId) {
+      loadJobSeekerData();
+    }
+  }, [isOpen, jobSeekerId, loadJobSeekerData]);
 
   const updateField = (field: keyof JobSeekerUpdateData, value: string) => {
     setFormData(prev => ({
