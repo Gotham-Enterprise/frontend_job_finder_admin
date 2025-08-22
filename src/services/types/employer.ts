@@ -1,3 +1,14 @@
+export interface EmployerUpdateData {
+  name: string;
+  overview: string;
+  address: string;
+  city: string;
+  state: string;
+  country: string;
+  zipCode: string;
+  phoneNumber: string;
+}
+
 export interface Employer {
   id: string;
   companyName: string;

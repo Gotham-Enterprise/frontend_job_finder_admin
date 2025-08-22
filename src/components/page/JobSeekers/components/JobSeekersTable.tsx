@@ -10,9 +10,10 @@ import {
 import Badge from '../../../ui/badge/Badge';
 import Button from '../../../ui/button/Button';
 import TableHeading from '../../../tables/tableHeader';
-import { EyeIcon, TimeIcon, FileIcon, DownloadIcon } from '@/icons';
+import { EyeIcon, TimeIcon, FileIcon, DownloadIcon, PencilIcon } from '@/icons';
 import { JobSeekersTableProps } from '@/services/types/JobSeekersTypes';
 import Avatar from '../../../ui/avatar/Avatar';
+import { EditJobSeekerModal } from './EditJobSeekerModal';
 
 
 interface SpecialtyDisplayProps {
@@ -71,9 +72,30 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
   onViewJobSeeker,
   onViewResume,
   isViewingResume,
+  onRefresh,
 }) => {
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const [loadingResumeId, setLoadingResumeId] = useState<string | null>(null);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [selectedJobSeekerId, setSelectedJobSeekerId] = useState<string | null>(null);
+
+  const openEditModal = (jobSeekerId: string) => {
+    setSelectedJobSeekerId(jobSeekerId);
+    setEditModalOpen(true);
+  };
+
+  const closeEditModal = () => {
+    setEditModalOpen(false);
+    setSelectedJobSeekerId(null);
+  };
+
+  const refreshData = () => {
+    if (onRefresh) {
+      onRefresh();
+    } else if (typeof window !== 'undefined') {
+      window.location.reload();
+    }
+  };
 
   const toggleExpanded = (jobSeekerId: string) => {
     const newExpandedRows = new Set(expandedRows);
@@ -194,8 +216,18 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
             </TableRow>
           ) : !data?.data?.length ? (
             <TableRow>
-              <TableCell className="text-center py-8 px-6" colSpan={9}>
-                <p className="text-gray-500 dark:text-gray-400">No job seekers found</p>
+              <TableCell className="text-center py-12 px-6" colSpan={9}>
+                <div className="flex flex-col items-center justify-center space-y-3">
+                  <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
+                    <FileIcon className="w-8 h-8 text-gray-400 dark:text-gray-500" />
+                  </div>
+                  <div className="text-center">
+                    <p className="text-lg font-medium text-gray-900 dark:text-white mb-1">No job seekers found</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      Try adjusting your search criteria or filters
+                    </p>
+                  </div>
+                </div>
               </TableCell>
             </TableRow>
           ) : (
@@ -309,22 +341,39 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
                   </Badge>
                 </TableCell>
                 <TableCell className="py-4 px-6 text-right">
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="text-brand-400"
+                  <div className="flex items-center gap-4">
+                    <button 
+                   
+                      className="flex gap-2 text-brand-400"
                       onClick={() => onViewJobSeeker(jobSeeker.id)}
-                      startIcon={<EyeIcon />}
+                    
                     >
-                      View
-                    </Button>
-                 
+                     <EyeIcon />  View
+                    </button>
+{/*                    
+                    <button 
+                       className="flex gap-2 text-brand-400"
+                      onClick={() => openEditModal(jobSeeker.id)}
+                   
+                    >
+                      <PencilIcon /> Edit
+                    </button> */}
+                  </div>
                 </TableCell>
               </TableRow>
             ))
           )}
         </TableBody>
       </Table>
+
+      {selectedJobSeekerId && (
+        <EditJobSeekerModal
+          isOpen={editModalOpen}
+          onClose={closeEditModal}
+          jobSeekerId={selectedJobSeekerId}
+          onUpdate={refreshData}
+        />
+      )}
     </div>
   );
 };

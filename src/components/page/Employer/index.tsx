@@ -39,8 +39,6 @@ const Employers: React.FC<EmployersProps> = ({ className = "" }) => {
     stateOptions,
     itemsPerPageOptions,
     filterChange,
-    statusToggle,
-    selectedStatuses,
     initPageChange,
     getStatusVariant,
     viewEmployer,
@@ -72,8 +70,6 @@ const Employers: React.FC<EmployersProps> = ({ className = "" }) => {
       onFilterChange={filterChange}
       stateOptions={stateOptions}
       statusOptions={statusOptions}
-      selectedStatuses={selectedStatuses}
-      onStatusToggle={statusToggle}
       hasActiveFilters={hasActiveFilters}
       clearIndividualFilter={clearIndividualFilter}
     />
@@ -107,6 +103,7 @@ const Employers: React.FC<EmployersProps> = ({ className = "" }) => {
         onViewSubscription={viewSubscription}
         selectedEmployerId={selectedEmployerId}
         onEmployerSelect={employerSelect}
+        onRefresh={refetch}
       />     
       
        <EmployerTablePagination
