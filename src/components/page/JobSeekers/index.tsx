@@ -99,6 +99,7 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
         onViewJobSeeker={viewJobSeeker}
         onViewResume={initViewResume}
         isViewingResume={isViewingResume}
+        onRefresh={refetch}
       />
 
       <JobSeekersTablePagination

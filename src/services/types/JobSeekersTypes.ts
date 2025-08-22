@@ -37,6 +37,7 @@ export interface JobSeekersTableProps {
   onViewJobSeeker: (jobSeekerId: string) => void;
   onViewResume: (objectKey: string | null) => void;
   isViewingResume: boolean;
+  onRefresh?: () => void;
 }
 
 export interface JobSeekersTablePaginationProps {

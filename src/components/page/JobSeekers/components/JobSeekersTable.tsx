@@ -10,9 +10,10 @@ import {
 import Badge from '../../../ui/badge/Badge';
 import Button from '../../../ui/button/Button';
 import TableHeading from '../../../tables/tableHeader';
-import { EyeIcon, TimeIcon, FileIcon, DownloadIcon } from '@/icons';
+import { EyeIcon, TimeIcon, FileIcon, DownloadIcon, PencilIcon } from '@/icons';
 import { JobSeekersTableProps } from '@/services/types/JobSeekersTypes';
 import Avatar from '../../../ui/avatar/Avatar';
+import { EditJobSeekerModal } from './EditJobSeekerModal';
 
 
 interface SpecialtyDisplayProps {
@@ -71,9 +72,30 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
   onViewJobSeeker,
   onViewResume,
   isViewingResume,
+  onRefresh,
 }) => {
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const [loadingResumeId, setLoadingResumeId] = useState<string | null>(null);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [selectedJobSeekerId, setSelectedJobSeekerId] = useState<string | null>(null);
+
+  const openEditModal = (jobSeekerId: string) => {
+    setSelectedJobSeekerId(jobSeekerId);
+    setEditModalOpen(true);
+  };
+
+  const closeEditModal = () => {
+    setEditModalOpen(false);
+    setSelectedJobSeekerId(null);
+  };
+
+  const refreshData = () => {
+    if (onRefresh) {
+      onRefresh();
+    } else if (typeof window !== 'undefined') {
+      window.location.reload();
+    }
+  };
 
   const toggleExpanded = (jobSeekerId: string) => {
     const newExpandedRows = new Set(expandedRows);
@@ -309,6 +331,7 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
                   </Badge>
                 </TableCell>
                 <TableCell className="py-4 px-6 text-right">
+                  <div className="flex items-center justify-end gap-2">
                     <Button 
                       variant="ghost" 
                       size="sm" 
@@ -318,13 +341,31 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
                     >
                       View
                     </Button>
-                 
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="text-gray-600 dark:text-gray-400 hover:text-brand-400"
+                      onClick={() => openEditModal(jobSeeker.id)}
+                      startIcon={<PencilIcon />}
+                    >
+                      Edit
+                    </Button>
+                  </div>
                 </TableCell>
               </TableRow>
             ))
           )}
         </TableBody>
       </Table>
+
+      {selectedJobSeekerId && (
+        <EditJobSeekerModal
+          isOpen={editModalOpen}
+          onClose={closeEditModal}
+          jobSeekerId={selectedJobSeekerId}
+          onUpdate={refreshData}
+        />
+      )}
     </div>
   );
 };

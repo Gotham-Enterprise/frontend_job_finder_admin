@@ -1,3 +1,14 @@
+export interface JobSeekerUpdateData {
+  firstName: string;
+  lastName: string;
+  address: string;
+  city: string;
+  state: string;
+  country: string;
+  zipCode: string;
+  phoneNumber: string;
+}
+
 export interface JobSeeker {
   id: string;
   name: string;
