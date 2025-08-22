@@ -23,8 +23,6 @@ export interface JobSeekersFiltersProps {
   occupationOptions: Array<{ value: string; label: string }>;
   stateOptions: Array<{ value: string; label: string }>;
   statusOptions: Array<{ value: string; label: string }>;
-  selectedStatuses: string[];
-  onStatusToggleChange: (statuses: string[]) => void;
   hasActiveFilters: boolean;
   clearIndividualFilter: (filterType: string) => void;
 }

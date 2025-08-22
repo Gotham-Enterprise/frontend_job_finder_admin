@@ -104,9 +104,6 @@ export const useJobSeekersLogic = () => {
     const initial = initialFilters.search || '';
     return initial;
   });
-  const [selectedStatuses, setSelectedStatuses] = useState<string[]>(
-    initialFilters.status ? [initialFilters.status] : []
-  );
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [scrollPosition, setScrollPosition] = useState(0);
@@ -232,9 +229,8 @@ export const useJobSeekersLogic = () => {
     { key: 'actions', label: '', className: 'text-right' },
   ], []);
   const statusOptions = useMemo(() => [
-    { value: '', label: 'All Statuses' },
+    { value: '', label: 'All' },
     { value: 'active', label: 'Active' },
-    { value: 'inactive', label: 'Inactive' },
     { value: 'pending', label: 'Pending' },
   ], []);
 
@@ -275,26 +271,13 @@ export const useJobSeekersLogic = () => {
 
   const filterChange = useCallback((key: keyof JobSeekerFilters, value: any) => {
     startTransition(() => {
-      setFilters(prev => ({ 
+      setFilters(prev => ({
         ...prev, 
         [key]: value === '' ? undefined : value,
         page: 1
       }));
     });
-  }, []);
-
-  const statusToggleChange = useCallback((statuses: string[]) => {
-    setSelectedStatuses(statuses);
-    startTransition(() => {
-      setFilters(prev => ({ 
-        ...prev, 
-        status: statuses.length > 0 ? statuses[0] as any : undefined,
-        page: 1
-      }));
-    });
-  }, []);
-
-  const initPageChange = useCallback((newPage: number) => {
+  }, []);  const initPageChange = useCallback((newPage: number) => {
     setFilters(prev => ({ ...prev, page: newPage }));
   }, []);
   const getStatusVariant = useMemo(() => (status: string): 'light' | 'solid' => {
@@ -353,7 +336,6 @@ export const useJobSeekersLogic = () => {
     };
     setFilters(newFilters);
     setSearchInput('');
-    setSelectedStatuses([]);
     if (typeof window !== 'undefined') {
       localStorage.removeItem('jobseeker-scroll-position');
       localStorage.removeItem('jobseeker-search-state');
@@ -375,7 +357,6 @@ export const useJobSeekersLogic = () => {
         filterChange('location', '');
         break;
       case 'status':
-        setSelectedStatuses([]);
         filterChange('status', undefined);
         break;
       default:
@@ -390,9 +371,9 @@ export const useJobSeekersLogic = () => {
       filters.radius ||
       filters.location ||
       filters.occupationId ||
-      selectedStatuses.length > 0
+      filters.status
     );
-  }, [searchInput, filters.city, filters.radius, filters.location, filters.occupationId, selectedStatuses.length]);
+  }, [searchInput, filters.city, filters.radius, filters.location, filters.occupationId, filters.status]);
 
   useEffect(() => {
     if (!isInitialized) return;
@@ -461,8 +442,6 @@ export const useJobSeekersLogic = () => {
     filters,
     searchInput,
     setSearchInput,
-    selectedStatuses,
-    setSelectedStatuses,
     isFilterOpen,
     setIsFilterOpen,
     isPending,
@@ -484,7 +463,6 @@ export const useJobSeekersLogic = () => {
     itemsPerPageOptions,
 
     filterChange,
-    statusToggleChange,
     initPageChange,
     getStatusVariant,
     initViewResume,

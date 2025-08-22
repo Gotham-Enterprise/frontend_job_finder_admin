@@ -83,8 +83,6 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
             occupationOptions={occupationOptions}
             stateOptions={stateOptions}
             statusOptions={statusOptions}
-            selectedStatuses={selectedStatuses}
-            onStatusToggleChange={statusToggleChange}
             hasActiveFilters={hasActiveFilters}
             clearIndividualFilter={clearIndividualFilter}
           />
