@@ -216,8 +216,18 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
             </TableRow>
           ) : !data?.data?.length ? (
             <TableRow>
-              <TableCell className="text-center py-8 px-6" colSpan={9}>
-                <p className="text-gray-500 dark:text-gray-400">No job seekers found</p>
+              <TableCell className="text-center py-12 px-6" colSpan={9}>
+                <div className="flex flex-col items-center justify-center space-y-3">
+                  <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
+                    <FileIcon className="w-8 h-8 text-gray-400 dark:text-gray-500" />
+                  </div>
+                  <div className="text-center">
+                    <p className="text-lg font-medium text-gray-900 dark:text-white mb-1">No job seekers found</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      Try adjusting your search criteria or filters
+                    </p>
+                  </div>
+                </div>
               </TableCell>
             </TableRow>
           ) : (
