@@ -200,13 +200,13 @@ const EmployerTable: React.FC<EmployerTableProps> = ({
                                        <EyeIcon />  View
                                       </button>
                                      
-                                      {/* <button 
+                                      <button 
                                          className="flex gap-2 text-brand-400"
                                        onClick={() => openEditModal(employer.id)}
                                      
                                       >
                                         <PencilIcon /> Edit
-                                      </button> */}
+                                      </button>
                                     </div>
              
                 </TableCell>
