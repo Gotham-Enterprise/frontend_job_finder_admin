@@ -18,8 +18,6 @@ const Careers: React.FC<CareersProps> = ({ className = "" }) => {
     refetch,
     createJob,
     viewJobDetails,
-    editJob,
-    deleteJob,
     viewApplicants,
   } = useCareersLogic();
 

@@ -1,103 +1,84 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { JobData } from '@/services/types/CareersTypes';
+import { useCareers, useDeleteCareer, useCreateCareer } from './useCareers';
+import type { Career, CareerTableData } from '@/services/types/CareersTypes';
 
 export const useCareersLogic = () => {
   const router = useRouter();
-  const [activeJobs, setActiveJobs] = useState<JobData[]>([]);
-  const [closedJobs, setClosedJobs] = useState<JobData[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+  
+  const { data: careersResponse, isLoading, error, refetch } = useCareers({
+    limit: 100, // Check if we really need this limit as static
+    page: 1,
+  });
 
-  // Just a simulation For now
-  const fetchJobs = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-    
-    try {
-      // Just a simulation For now
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock data for now
-      const mockActiveJobs: JobData[] = [
-        {
-          id: '1',
-          title: 'Customer Service Support Representative',
-          pay: '20',
-          payPeriod: 'Hour',
-          type: 'Full time',
-          location: 'Riverside, California',
-          applicantCount: 20,
-          postedDate: 'few hours ago',
-          status: 'active'
-        }
-      ];
+  // Mutation hooks, DELETE and CREATE
+  const deleteCareerMutation = useDeleteCareer();
+  const createCareerMutation = useCreateCareer();
 
-      const mockClosedJobs: JobData[] = [
-        {
-          id: '2',
-          title: 'Customer Service Support Representative',
-          pay: '20',
-          payPeriod: 'Hour',
-          type: 'Full time',
-          location: 'Riverside, California',
-          applicantCount: 20,
-          postedDate: 'few hours ago',
-          status: 'closed'
-        }
-      ];
-      
-      //TODO: API call
-      setActiveJobs(mockActiveJobs);
-      setClosedJobs(mockClosedJobs);
-    } catch (err) {
-      setError(err as Error);
-    } finally {
-      setIsLoading(false);
+  const { activeJobs, closedJobs } = useMemo(() => {
+    if (!careersResponse?.data) {
+      return { activeJobs: [], closedJobs: [] };
     }
-  }, []);
+    
+    // Since Backend returns grouped structure: { active: [...], inactive: [...] }
+    const groupedCareers = careersResponse.data as any;
+    
+    const transformCareer = (career: any): CareerTableData => ({
+      id: career.id,
+      title: career.jobTitle,
+      pay: 'Not specified', // TODO: Check if we really want this that the API is not returning pay
+      payPeriod: 'Hour',
+      type: career.jobType,
+      location: `${career.city}, ${career.state}`,
+      applicantCount: career.applicantsCount,
+      postedDate: formatPostedDate(career.createdAt),
+      status: career.isActive ? 'active' : 'closed' as 'active' | 'closed' | 'draft',
+    });
 
-  useEffect(() => {
-    fetchJobs();
-  }, [fetchJobs]);
+    // Handle grouped response structure: { active: [...], inactive: [...] }
+    const active = (groupedCareers.active || []).map(transformCareer);
+    const closed = (groupedCareers.inactive || []).map(transformCareer);
 
-  const refetch = useCallback(() => {
-    fetchJobs();
-  }, [fetchJobs]);
+    return { activeJobs: active, closedJobs: closed };
+  }, [careersResponse]);
 
+
+  // TODO: The design is a modal.....
   const createJob = useCallback(() => {
-    router.push('/admin/jobs/create');
+    router.push('/admin/careers/create');
   }, [router]);
 
   const viewJobDetails = useCallback((jobId: string) => {
-    router.push(`/admin/jobs/${jobId}`);
+    router.push(`/admin/careers/${jobId}`);
   }, [router]);
 
   const editJob = useCallback((jobId: string) => {
-    router.push(`/admin/jobs/${jobId}/edit`);
+    router.push(`/admin/careers/${jobId}/edit`);
   }, [router]);
 
-
-  //TODO: Deleting a job post
   const deleteJob = useCallback(async (jobId: string) => {
     if (confirm('Are you sure you want to delete this job?')) {
       try {
-        console.log('Deleting job:', jobId);
-        await fetchJobs();
+        await deleteCareerMutation.mutateAsync(jobId);
+        //TODO: after deleting make 
+        // Call to invalidate cached data...
       } catch (err) {
-        setError(err as Error);
+        console.error('Failed to delete job:', err);
+        // Error handling is done in the mutation hook
       }
     }
-  }, [fetchJobs]);
+  }, [deleteCareerMutation]);
 
   const viewApplicants = useCallback((jobId: string) => {
-    router.push(`/admin/jobs/${jobId}/applicants`);
+    router.push(`/admin/careers/${jobId}/applicants`);
   }, [router]);
+
+  const isLoadingState = isLoading || deleteCareerMutation.isPending || createCareerMutation.isPending;
 
   return {
     activeJobs,
     closedJobs,
-    isLoading,
+    isLoading: isLoadingState,
     error,
     refetch,
     createJob,
@@ -105,5 +86,29 @@ export const useCareersLogic = () => {
     editJob,
     deleteJob,
     viewApplicants,
+    // Additional state for UI feedback
+    isDeleting: deleteCareerMutation.isPending,
+    isCreating: createCareerMutation.isPending,
+    // Expose metadata for pagination if needed
+    metaData: careersResponse?.metaData,
   };
 };
+
+// Helper function to format posted date
+function formatPostedDate(dateString: string): string {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffInMs = now.getTime() - date.getTime();
+  const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
+  const diffInDays = Math.floor(diffInHours / 24);
+
+  if (diffInHours < 1) {
+    return 'few minutes ago';
+  } else if (diffInHours < 24) {
+    return `${diffInHours} hour${diffInHours > 1 ? 's' : ''} ago`;
+  } else if (diffInDays < 7) {
+    return `${diffInDays} day${diffInDays > 1 ? 's' : ''} ago`;
+  } else {
+    return date.toLocaleDateString();
+  }
+}

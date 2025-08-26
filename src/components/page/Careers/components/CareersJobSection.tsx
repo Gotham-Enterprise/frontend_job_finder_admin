@@ -1,23 +1,11 @@
 import React from 'react';
 import { Table, TableHeader, TableBody, TableRow, TableCell } from '@/components/ui/table';
 import Badge from '@/components/ui/badge/Badge';
-import Button from '@/components/ui/button/Button';
-
-interface JobData {
-  id: string;
-  title: string;
-  pay: string;
-  payPeriod: string;
-  type: string;
-  location: string;
-  applicantCount: number;
-  postedDate: string;
-  status: 'active' | 'closed';
-}
+import { CareerTableData } from '@/services/types/CareersTypes';
 
 interface CareersJobSectionProps {
   title: string;
-  jobs: JobData[];
+  jobs: CareerTableData[];
   isLoading: boolean;
   onViewJobDetails: (jobId: string) => void;
   onViewApplicants: (jobId: string) => void;
