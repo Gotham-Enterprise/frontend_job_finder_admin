@@ -101,9 +101,15 @@ export const careersApi = {
     return apiGet<CareerResponse>(endpoint);
   },
 
-  // GET /api/admin/careers/:id - Get career by ID
-  async getCareerById(id: string): Promise<CareerDetailsResponse> {
-    return apiGet<CareerDetailsResponse>(`/api/admin/careers/${id}`);
+  // GET /api/admin/careers/:id - Get career by ID (includes applicants)
+  async getCareerById(id: string, page: number = 1, limit: number = 10, keywords: string = ''): Promise<CareerDetailsResponse> {
+    const params = new URLSearchParams();
+    if (page > 1) params.append('page', page.toString());
+    if (limit !== 10) params.append('limit', limit.toString());
+    if (keywords) params.append('keywords', keywords);
+    
+    const query = params.toString() ? `?${params.toString()}` : '';
+    return apiGet<CareerDetailsResponse>(`/api/admin/careers/${id}${query}`);
   },
 
   // POST /api/admin/careers - Create new career

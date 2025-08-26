@@ -48,28 +48,12 @@ export const useCareers = (filters: CareerFilters = {}) => {
   });
 };
 
-export const useCareerDetails = (id: string) => {
+export const useCareerDetails = (id: string, page: number = 1, limit: number = 10, keywords: string = '') => {
   return useQuery({
     queryKey: careersQueryKeys.detail(id),
-    queryFn: () => careersApi.getCareerById(id),
+    queryFn: () => careersApi.getCareerById(id, page, limit, keywords),
     enabled: !!id,
     staleTime: 1000 * 60 * 5, // 5 minutes
-    retry: (failureCount, error: Error) => {
-      if (error.message.includes('HTTP 401')) {
-        return false;
-      }
-      return failureCount < 3;
-    },
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-  });
-};
-
-export const useCareerApplicants = (id: string) => {
-  return useQuery({
-    queryKey: careersQueryKeys.applicants(id),
-    queryFn: () => careersApi.getCareerApplicants(id),
-    enabled: !!id,
-    staleTime: 1000 * 60 * 2, // 2 minutes
     retry: (failureCount, error: Error) => {
       if (error.message.includes('HTTP 401')) {
         return false;
