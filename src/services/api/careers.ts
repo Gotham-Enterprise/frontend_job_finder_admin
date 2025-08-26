@@ -142,19 +142,19 @@ export const careersApi = {
   },
 
   // Get dropdown options (if needed)
-  async getDepartments(): Promise<{ success: boolean; data: Array<{ id: string; name: string }> }> {
-    return apiGet<{ success: boolean; data: Array<{ id: string; name: string }> }>('/api/admin/careers/departments');
+  async getDepartments(): Promise<{ success: boolean; data: Array<{ id: string; name: string; units?: Array<{ id: string; name: string }> }> }> {
+    return apiGet<{ success: boolean; data: Array<{ id: string; name: string; units?: Array<{ id: string; name: string }> }> }>('/api/careers/department');
   },
 
   async getLocations(): Promise<{ success: boolean; data: Array<{ id: string; name: string }> }> {
-    return apiGet<{ success: boolean; data: Array<{ id: string; name: string }> }>('/api/admin/careers/locations');
+    return apiGet<{ success: boolean; data: Array<{ id: string; name: string }> }>('/api/careers/location');
   },
 
   async getJobTypes(): Promise<{ success: boolean; data: Array<{ id: string; name: string }> }> {
-    return apiGet<{ success: boolean; data: Array<{ id: string; name: string }> }>('/api/admin/careers/job-types');
+    return apiGet<{ success: boolean; data: Array<{ id: string; name: string }> }>('/api/careers/jobType');
   },
 
   async getWorkPlaceTypes(): Promise<{ success: boolean; data: Array<{ id: string; name: string }> }> {
-    return apiGet<{ success: boolean; data: Array<{ id: string; name: string }> }>('/api/admin/careers/workplace-types');
+    return apiGet<{ success: boolean; data: Array<{ id: string; name: string }> }>('/api/careers/workPlaceType');
   },
 };
