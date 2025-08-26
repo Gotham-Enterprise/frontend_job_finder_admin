@@ -783,29 +783,62 @@ const BlogPreview: React.FC<BlogPreviewProps> = ({ blogId, blogSlug }) => {
   };
 
   const getSEOTitle = (blogPost: BlogPost | null): string => {
-    if (!blogPost) return 'Blog Post | Gotham Enterprises';
+    if (!blogPost) return 'Blog Post';
     
     const seoTitle = (blogPost as any)?.seo?.title;
     if (seoTitle && seoTitle.trim()) {
-      return `${seoTitle} | Gotham Enterprises`;
+      return `${seoTitle}`;
     }
     
-    return `${blogPost.title} | Gotham Enterprises`;
+    return `${blogPost.title}`;
   };
 
   const getSEODescription = (blogPost: BlogPost | null): string => {
-    if (!blogPost) return 'Read our latest blog post on Gotham Enterprises.';
+    if (!blogPost) return '';
     
+    // First try to extract from content blocks (most accurate)
+    if (blogPost.content && typeof blogPost.content === 'object' && 'blocks' in blogPost.content) {
+      const blocks = (blogPost.content as any).blocks;
+      if (Array.isArray(blocks)) {
+        // Find the first paragraph block with meaningful text
+        const firstParagraph = blocks.find((block: any) => 
+          block.type === 'paragraph' && 
+          block.content?.text && 
+          block.content.text.trim().length > 0
+        );
+        
+        if (firstParagraph?.content?.text) {
+          const plainText = firstParagraph.content.text
+            .replace(/<[^>]*>/g, '')
+            .replace(/&nbsp;/g, ' ')
+            .replace(/&amp;/g, '&') 
+            .replace(/&lt;/g, '<')
+            .replace(/&gt;/g, '>')
+            .replace(/&quot;/g, '"')
+            .trim();
+          
+          if (plainText.length > 0) {
+            return plainText.length > 155 
+              ? plainText.substring(0, 155).trim() + '...'
+              : plainText;
+          }
+        }
+      }
+    }
+    
+
     const seoDescription = (blogPost as any)?.seo?.description;
     if (seoDescription && seoDescription.trim()) {
       return seoDescription;
     }
     
+
     if (blogPost.excerpt && blogPost.excerpt.trim()) {
       return blogPost.excerpt;
     }
     
-    return `Read about ${blogPost.title} on Gotham Enterprises blog.`;
+
+    return `${blogPost.title} `;
   };
 
   const getSEOKeywords = (blogPost: BlogPost | null): string => {
@@ -823,11 +856,11 @@ const BlogPreview: React.FC<BlogPreviewProps> = ({ blogId, blogSlug }) => {
       ).filter(Boolean);
       
       if (tagNames.length > 0) {
-        return `${tagNames.join(', ')}, blog, gotham enterprises`;
+        return `${tagNames.join(', ')}`;
       }
     }
     
-    return `${blogPost.title}, blog, gotham enterprises`;
+    return `${blogPost.title}`;
   };
 
 
