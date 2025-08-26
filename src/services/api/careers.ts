@@ -49,16 +49,19 @@ export interface CareerDetailsResponse {
 }
 
 export interface CreateCareerPayload {
-  title: string;
-  department: string;
-  location: string;
+  jobTitle: string;
   jobType: string;
-  workPlaceType: string;
-  salaryRange?: string;
-  description: string;
-  requirements?: string[];
-  benefits?: string[];
-  status?: 'active' | 'draft';
+  address?: string;
+  city: string;
+  state: string;
+  zipCode?: string;
+  country?: string;
+  departmentId?: string;
+  unitId?: string;
+  timezone: string;
+  salaryRangeStart?: number;
+  salaryRangeEnd: number;
+  jobDescription: string;
 }
 
 export interface UpdateCareerPayload extends Partial<CreateCareerPayload> {

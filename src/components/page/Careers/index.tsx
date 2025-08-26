@@ -7,6 +7,7 @@ import { CareersProps } from '@/services/types/CareersTypes';
 import {
   CareersHeader,
   CareersJobSection,
+  CreateJobModal,
 } from './components';
 
 const Careers: React.FC<CareersProps> = ({ className = "" }) => {
@@ -17,6 +18,8 @@ const Careers: React.FC<CareersProps> = ({ className = "" }) => {
     error,
     refetch,
     createJob,
+    isCreateModalOpen,
+    closeCreateModal,
     viewJobDetails,
     viewApplicants,
   } = useCareersLogic();
@@ -52,6 +55,11 @@ const Careers: React.FC<CareersProps> = ({ className = "" }) => {
         isLoading={isLoading}
         onViewJobDetails={viewJobDetails}
         onViewApplicants={viewApplicants}
+      />
+
+      <CreateJobModal
+        isOpen={isCreateModalOpen}
+        onClose={closeCreateModal}
       />
     </div>
   );

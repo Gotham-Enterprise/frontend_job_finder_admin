@@ -1,10 +1,11 @@
-import { useMemo, useCallback } from 'react';
+import { useMemo, useCallback, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCareers, useDeleteCareer, useCreateCareer } from './useCareers';
 import type { Career, CareerTableData } from '@/services/types/CareersTypes';
 
 export const useCareersLogic = () => {
   const router = useRouter();
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   
   const { data: careersResponse, isLoading, error, refetch } = useCareers({
     limit: 100, // Check if we really need this limit as static
@@ -43,10 +44,14 @@ export const useCareersLogic = () => {
   }, [careersResponse]);
 
 
-  // TODO: The design is a modal.....
+  // Open modal instead of navigating to a new page
   const createJob = useCallback(() => {
-    router.push('/admin/careers/create');
-  }, [router]);
+    setIsCreateModalOpen(true);
+  }, []);
+
+  const closeCreateModal = useCallback(() => {
+    setIsCreateModalOpen(false);
+  }, []);
 
   const viewJobDetails = useCallback((jobId: string) => {
     router.push(`/admin/careers/${jobId}`);
@@ -82,6 +87,8 @@ export const useCareersLogic = () => {
     error,
     refetch,
     createJob,
+    isCreateModalOpen,
+    closeCreateModal,
     viewJobDetails,
     editJob,
     deleteJob,
