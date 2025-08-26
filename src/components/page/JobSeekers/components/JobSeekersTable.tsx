@@ -14,6 +14,7 @@ import { EyeIcon, TimeIcon, FileIcon, DownloadIcon, PencilIcon } from '@/icons';
 import { JobSeekersTableProps } from '@/services/types/JobSeekersTypes';
 import Avatar from '../../../ui/avatar/Avatar';
 import { EditJobSeekerModal } from './EditJobSeekerModal';
+import { useToast } from '@/context/ToastContext';
 
 
 interface SpecialtyDisplayProps {
@@ -78,6 +79,7 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
   const [loadingResumeId, setLoadingResumeId] = useState<string | null>(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedJobSeekerId, setSelectedJobSeekerId] = useState<string | null>(null);
+  const { addToast } = useToast();
 
   const openEditModal = (jobSeekerId: string) => {
     setSelectedJobSeekerId(jobSeekerId);
@@ -89,7 +91,16 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
     setSelectedJobSeekerId(null);
   };
 
-  const refreshData = () => {
+  const refreshData = (showSuccessToast = false) => {
+    if (showSuccessToast) {
+      addToast({
+        variant: 'success',
+        title: 'Success',
+        message: 'Job seeker has been updated successfully',
+        duration: 5000,
+      });
+    }
+    
     if (onRefresh) {
       onRefresh();
     } else if (typeof window !== 'undefined') {
@@ -371,7 +382,7 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
           isOpen={editModalOpen}
           onClose={closeEditModal}
           jobSeekerId={selectedJobSeekerId}
-          onUpdate={refreshData}
+          onUpdate={() => refreshData(true)}
         />
       )}
     </div>

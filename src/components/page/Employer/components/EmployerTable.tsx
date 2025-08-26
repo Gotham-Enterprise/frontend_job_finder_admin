@@ -14,6 +14,7 @@ import { EyeIcon, TimeIcon, PencilIcon } from '@/icons';
 import { EmployerTableProps } from '@/services/types/EmployerTypes';
 import Avatar from '../../../ui/avatar/Avatar';
 import { EditEmployerModal } from './EditEmployerModal';
+import { useToast } from '@/context/ToastContext';
 
 const EmployerTable: React.FC<EmployerTableProps> = ({
   data,
@@ -28,6 +29,7 @@ const EmployerTable: React.FC<EmployerTableProps> = ({
 }) => {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedEmployerIdForEdit, setSelectedEmployerIdForEdit] = useState<string | null>(null);
+  const { addToast } = useToast();
 
   const openEditModal = (employerId: string) => {
     setSelectedEmployerIdForEdit(employerId);
@@ -39,7 +41,16 @@ const EmployerTable: React.FC<EmployerTableProps> = ({
     setSelectedEmployerIdForEdit(null);
   };
 
-  const refreshData = () => {
+  const refreshData = (showSuccessToast = false) => {
+    if (showSuccessToast) {
+      addToast({
+        variant: 'success',
+        title: 'Success',
+        message: 'Employer has been updated successfully',
+        duration: 5000,
+      });
+    }
+    
     if (onRefresh) {
       onRefresh();
     } else if (typeof window !== 'undefined') {
@@ -221,7 +232,7 @@ const EmployerTable: React.FC<EmployerTableProps> = ({
           isOpen={editModalOpen}
           onClose={closeEditModal}
           employerId={selectedEmployerIdForEdit}
-          onUpdate={refreshData}
+          onUpdate={() => refreshData(true)}
         />
       )}
     </div>
