@@ -883,6 +883,23 @@ const BlogPreview: React.FC<BlogPreviewProps> = ({ blogId, blogSlug }) => {
     return SITE_CONFIG.DEFAULT_SHARE_IMAGE;
   };
 
+  const getCanonicalUrl = (blogPost: BlogPost | null): string => {
+    if (!blogPost) return '';
+    
+
+    const seoCanonicalUrl = (blogPost as any)?.seo?.canonicalUrl;
+    if (seoCanonicalUrl && seoCanonicalUrl.trim()) {
+      return seoCanonicalUrl;
+    }
+
+    if (typeof window !== 'undefined') {
+      return window.location.href;
+    }
+    
+    const slug = processSlug(blogPost.slug || blogPost.title);
+    return generateBlogUrl(slug);
+  };
+
   const getCurrentBlogUrl = (blogPost: BlogPost | null): string => {
     if (!blogPost) return '';
     
@@ -1095,12 +1112,8 @@ const BlogPreview: React.FC<BlogPreviewProps> = ({ blogId, blogSlug }) => {
         <meta name="author" content={getAuthorName(blogPost)} />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-        {(() => {
-          const ogData = getOpenGraphData();
-          if (!ogData) return null;
-          
-          return <link rel="canonical" href={ogData.url} />;
-        })()}
+        <link rel="canonical" href={getCanonicalUrl(blogPost)} />
+        
         {(() => {
           const ogData = getOpenGraphData();
           if (!ogData) return null;
