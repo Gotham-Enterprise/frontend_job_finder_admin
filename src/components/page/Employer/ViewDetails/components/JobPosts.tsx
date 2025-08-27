@@ -40,10 +40,10 @@ export default function JobPosts({ jobPosts, formatDate }: JobPostsProps) {
 
     const itemsPerPageOptions = [
         { value: '5', label: '5 per page' },
-        { value: '8', label: '8 per page' },
-        { value: '10', label: '10 per page' },
+       { value: '10', label: '10 per page' },
         { value: '20', label: '20 per page' },
         { value: '50', label: '50 per page' },
+        { value: '100', label: '100 per page' },
     ];
 
     const tableColumns = useMemo(() => [
@@ -176,15 +176,12 @@ export default function JobPosts({ jobPosts, formatDate }: JobPostsProps) {
                                             </div>
                                         </TableCell>
                                         <TableCell className="py-4 px-6 text-right">
-                                            <Button
+                                            <button
                                                 onClick={() => router.push(`/admin/employers/jobs/details/${job.id}`)}
-                                                variant="ghost"
-                                                size="sm"
-                                                className="text-brand-400"
-                                                startIcon={<EyeIcon className="w-4 h-4" />}
+                                                className="flex gap-1  items-center text-brand-400"
                                             >
-                                                View
-                                            </Button>
+                                              <EyeIcon />  View
+                                            </button>
                                         </TableCell>
                                     </TableRow>
                                 ))}
@@ -207,13 +204,11 @@ export default function JobPosts({ jobPosts, formatDate }: JobPostsProps) {
                                         className="w-auto min-w-[120px]"
                                     />
                                 </div>
-                                {totalPages > 1 && (
-                                    <Pagination
-                                        currentPage={currentPage}
-                                        totalPages={totalPages}
-                                        onPageChange={initPageChange}
-                                    />
-                                )}
+                                <Pagination
+                                    currentPage={currentPage}
+                                    totalPages={totalPages}
+                                    onPageChange={initPageChange}
+                                />
                             </div>
                         </div>
                     )}
