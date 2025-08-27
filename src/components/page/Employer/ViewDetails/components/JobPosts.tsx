@@ -7,6 +7,7 @@ import Button from "@/components/ui/button/Button";
 import { getJobStatusVariant, getEmploymentTypeVariant } from "@/services/utils/statusVariants";
 import NotFoundState from "@/components/common/NotFoundState";
 import Pagination from "@/components/tables/Pagination";
+import Select from "@/components/form/Select";
 import { LocationIcon, DollarIcon, ExperienceIcon, EyeIcon } from "@/components/ui/icons";
 import {
   Table,
@@ -36,6 +37,14 @@ export default function JobPosts({ jobPosts, formatDate }: JobPostsProps) {
         setItemsPerPage(newItemsPerPage);
         setCurrentPage(1); 
     };
+
+    const itemsPerPageOptions = [
+        { value: '5', label: '5 per page' },
+        { value: '8', label: '8 per page' },
+        { value: '10', label: '10 per page' },
+        { value: '20', label: '20 per page' },
+        { value: '50', label: '50 per page' },
+    ];
 
     const tableColumns = useMemo(() => [
         { key: 'title', label: 'Job Title' },
@@ -190,21 +199,13 @@ export default function JobPosts({ jobPosts, formatDate }: JobPostsProps) {
                             </div>
                             <div className="flex items-center gap-4">
                                 <div className="flex items-center gap-2">
-                                    <label htmlFor="itemsPerPage" className="text-sm text-gray-500 dark:text-gray-400">
-                                        Items per page:
-                                    </label>
-                                    <select
-                                        id="itemsPerPage"
-                                        value={itemsPerPage}
-                                        onChange={(e) => handleItemsPerPageChange(Number(e.target.value))}
-                                        className="px-3 py-1 text-sm border border-gray-300 rounded-md bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500"
-                                    >
-                                        <option value={5}>5 per page</option>
-                                        <option value={8}>8 per page</option>
-                                        <option value={10}>10 per page</option>
-                                        <option value={20}>20 per page</option>
-                                        <option value={50}>50 per page</option>
-                                    </select>
+                                    <span className="text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">Items per page:</span>
+                                    <Select
+                                        value={itemsPerPage.toString()}
+                                        onChange={(value: string) => handleItemsPerPageChange(Number(value))}
+                                        options={itemsPerPageOptions}
+                                        className="w-auto min-w-[120px]"
+                                    />
                                 </div>
                                 {totalPages > 1 && (
                                     <Pagination
