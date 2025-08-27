@@ -544,123 +544,344 @@ export const updateBlockStyles = (block: LayoutBlock, styles: Partial<BlockStyle
 };
 
 export const convertLayoutToHtml = (layout: BlogLayout): string => {
-  return layout.blocks.map(block => {
-    const baseStyles = block.styles ? {
-      padding: block.styles.padding ? `${block.styles.padding.top}px ${block.styles.padding.right}px ${block.styles.padding.bottom}px ${block.styles.padding.left}px` : '',
-      margin: block.styles.margin ? `${block.styles.margin.top}px ${block.styles.margin.right}px ${block.styles.margin.bottom}px ${block.styles.margin.left}px` : '',
-      backgroundColor: block.styles.backgroundColor || '',
-      color: block.styles.textColor || '',
-      fontSize: block.styles.fontSize || '',
-      fontWeight: block.styles.fontWeight || '',
-      textAlign: block.styles.textAlign || '',
-    } : {};
+  
+  // Helper function to create comprehensive inline styles from block styles with !important declarations
+  const createInlineStyles = (styles: any, blockType: string) => {
+    if (!styles) return '';
+    
+    const cssProperties: string[] = [];
+    
+    // Margin with !important
+    if (styles.margin) {
+      cssProperties.push(`margin: ${styles.margin.top}px ${styles.margin.right}px ${styles.margin.bottom}px ${styles.margin.left}px !important`);
+    }
+    
+    // Padding with !important
+    if (styles.padding) {
+      cssProperties.push(`padding: ${styles.padding.top}px ${styles.padding.right}px ${styles.padding.bottom}px ${styles.padding.left}px !important`);
+    }
+    
+    // Typography with !important
+    if (styles.fontSize) cssProperties.push(`font-size: ${styles.fontSize} !important`);
+    if (styles.fontWeight) cssProperties.push(`font-weight: ${styles.fontWeight} !important`);
+    if (styles.fontStyle) cssProperties.push(`font-style: ${styles.fontStyle} !important`);
+    if (styles.lineHeight) cssProperties.push(`line-height: ${styles.lineHeight} !important`);
+    if (styles.letterSpacing) cssProperties.push(`letter-spacing: ${styles.letterSpacing} !important`);
+    if (styles.textDecoration) cssProperties.push(`text-decoration: ${styles.textDecoration} !important`);
+    
+    // Colors with !important
+    if (styles.textColor) cssProperties.push(`color: ${styles.textColor} !important`);
+    if (styles.backgroundColor) cssProperties.push(`background-color: ${styles.backgroundColor} !important`);
+    if (styles.accentColor) cssProperties.push(`accent-color: ${styles.accentColor} !important`);
+    
+    // Alignment - handle special alignment properties for different block types with !important
+    if (blockType === 'image' && styles.imageAlign) {
+      cssProperties.push(`text-align: ${styles.imageAlign} !important`);
+      if (styles.imageAlign === 'center') {
+        cssProperties.push(`display: block !important`);
+        cssProperties.push(`margin-left: auto !important`);
+        cssProperties.push(`margin-right: auto !important`);
+      }
+    } else if (blockType === 'video' && styles.videoAlign) {
+      cssProperties.push(`text-align: ${styles.videoAlign} !important`);
+      if (styles.videoAlign === 'center') {
+        cssProperties.push(`display: block !important`);
+        cssProperties.push(`margin-left: auto !important`);
+        cssProperties.push(`margin-right: auto !important`);
+      }
+    } else if (styles.textAlign) {
+      cssProperties.push(`text-align: ${styles.textAlign} !important`);
+    }
+    
+    // Dimensions with !important
+    if (styles.width && styles.widthUnit) {
+      cssProperties.push(`width: ${styles.width}${styles.widthUnit} !important`);
+    }
+    if (styles.height && styles.heightUnit) {
+      cssProperties.push(`height: ${styles.height}${styles.heightUnit} !important`);
+    }
+    
+    // Border with !important
+    if (styles.border) {
+      const border = styles.border;
+      if (border.width && border.width > 0) {
+        cssProperties.push(`border: ${border.width}px ${border.style || 'solid'} ${border.color || '#e5e7eb'} !important`);
+      }
+      if (border.radius) {
+        cssProperties.push(`border-radius: ${border.radius}px !important`);
+      }
+    }
+    
+    // Box shadow with !important
+    if (styles.boxShadow) {
+      const shadow = styles.boxShadow;
+      cssProperties.push(`box-shadow: ${shadow.x}px ${shadow.y}px ${shadow.blur}px ${shadow.spread}px ${shadow.color} !important`);
+    }
+    
+    // Opacity with !important
+    if (styles.opacity !== undefined) {
+      cssProperties.push(`opacity: ${styles.opacity} !important`);
+    }
+    
+    // Transform with !important
+    if (styles.transform) {
+      const transform = styles.transform;
+      const transformProps = [];
+      if (transform.scale !== undefined) transformProps.push(`scale(${transform.scale})`);
+      if (transform.rotate !== undefined) transformProps.push(`rotate(${transform.rotate}deg)`);
+      if (transformProps.length > 0) {
+        cssProperties.push(`transform: ${transformProps.join(' ')} !important`);
+      }
+    }
+    
+    return cssProperties.length > 0 ? ` style="${cssProperties.join('; ')}"` : '';
+  };
 
-    const styleString = Object.entries(baseStyles)
-      .filter(([_, value]) => value)
-      .map(([key, value]) => `${key.replace(/([A-Z])/g, '-$1').toLowerCase()}: ${value}`)
-      .join('; ');
+  // Helper function to create unique CSS classes for complex styling (similar to EditorJS renderer)
+  const createUniqueCss = (styles: any, blockType: string, index: number) => {
+    if (!styles) return { cssClass: '', cssStyle: '' };
+    
+    const uniqueId = `${blockType}-${index}-${Date.now()}`;
+    const cssProperties: string[] = [];
+    
+    // Add all styles with !important
+    if (styles.fontSize) cssProperties.push(`font-size: ${styles.fontSize} !important`);
+    if (styles.fontWeight) cssProperties.push(`font-weight: ${styles.fontWeight} !important`);
+    if (styles.fontStyle) cssProperties.push(`font-style: ${styles.fontStyle} !important`);
+    if (styles.textAlign) cssProperties.push(`text-align: ${styles.textAlign} !important`);
+    if (styles.textColor) cssProperties.push(`color: ${styles.textColor} !important`);
+    if (styles.backgroundColor) cssProperties.push(`background-color: ${styles.backgroundColor} !important`);
+    if (styles.textDecoration) cssProperties.push(`text-decoration: ${styles.textDecoration} !important`);
+    if (styles.lineHeight) cssProperties.push(`line-height: ${styles.lineHeight} !important`);
+    if (styles.letterSpacing) cssProperties.push(`letter-spacing: ${styles.letterSpacing} !important`);
+    
+    // Margin and padding
+    if (styles.margin) {
+      cssProperties.push(`margin: ${styles.margin.top}px ${styles.margin.right}px ${styles.margin.bottom}px ${styles.margin.left}px !important`);
+    }
+    if (styles.padding) {
+      cssProperties.push(`padding: ${styles.padding.top}px ${styles.padding.right}px ${styles.padding.bottom}px ${styles.padding.left}px !important`);
+    }
+    
+    // Dimensions
+    if (styles.width && styles.widthUnit) {
+      cssProperties.push(`width: ${styles.width}${styles.widthUnit} !important`);
+    }
+    if (styles.height && styles.heightUnit) {
+      cssProperties.push(`height: ${styles.height}${styles.heightUnit} !important`);
+    }
+    
+    // Border
+    if (styles.border) {
+      const border = styles.border;
+      if (border.width && border.width > 0) {
+        cssProperties.push(`border: ${border.width}px ${border.style || 'solid'} ${border.color || '#e5e7eb'} !important`);
+      }
+      if (border.radius) {
+        cssProperties.push(`border-radius: ${border.radius}px !important`);
+      }
+    }
+    
+    // Special alignment handling
+    if (blockType === 'image' && styles.imageAlign === 'center') {
+      cssProperties.push(`display: block !important`);
+      cssProperties.push(`margin-left: auto !important`);
+      cssProperties.push(`margin-right: auto !important`);
+    }
+    if (blockType === 'video' && styles.videoAlign === 'center') {
+      cssProperties.push(`display: block !important`);
+      cssProperties.push(`margin-left: auto !important`);
+      cssProperties.push(`margin-right: auto !important`);
+    }
+    
+    const cssStyle = cssProperties.length > 0 ? 
+      `<style>.${uniqueId} { ${cssProperties.join('; ')} }</style>` : '';
+    
+    return { cssClass: uniqueId, cssStyle };
+  };
 
-    const styleAttr = styleString ? ` style="${styleString}"` : '';
-
+  return layout.blocks.map((block, index) => {
     switch (block.type) {
       case 'heading':
         const headingBlock = block as HeadingBlock;
         const headingText = headingBlock.content.text === 'Your Heading Here' 
           ? 'Your Heading Here' 
           : headingBlock.content.text;
-        return `<h${headingBlock.content.level}${styleAttr}>${headingText}</h${headingBlock.content.level}>`;
+        const { cssClass: headingClass, cssStyle: headingStyle } = createUniqueCss(block.styles, 'heading', index);
+        return `${headingStyle}<h${headingBlock.content.level} class="${headingClass}">${headingText}</h${headingBlock.content.level}>`;
       
       case 'paragraph':
         const paragraphBlock = block as ParagraphBlock;
         const paragraphText = paragraphBlock.content.text === 'Start writing your content here...' 
           ? 'Start writing your content here...' 
           : paragraphBlock.content.text;
-        return `<p${styleAttr}>${paragraphText}</p>`;
+        const { cssClass: paragraphClass, cssStyle: paragraphStyle } = createUniqueCss(block.styles, 'paragraph', index);
+        return `${paragraphStyle}<p class="${paragraphClass}">${paragraphText}</p>`;
       
       case 'image':
         const imageBlock = block as ImageBlock;
-        return `<figure${styleAttr}>
-          <img src="${imageBlock.content.url}" alt="${imageBlock.content.alt}" />
-          ${imageBlock.content.caption ? `<figcaption>${imageBlock.content.caption}</figcaption>` : ''}
+        const { cssClass: imageClass, cssStyle: imageStyle } = createUniqueCss(block.styles, 'image', index);
+        const { cssClass: imgClass, cssStyle: imgStyle } = createUniqueCss({
+          ...block.styles,
+          display: 'block',
+          maxWidth: '100%'
+        }, 'img', index + 1000);
+        
+        const imageContainerAlign = block.styles?.imageAlign === 'center' ? 'text-center' : 
+                              block.styles?.imageAlign === 'right' ? 'text-right' : 'text-left';
+          
+        return `${imageStyle}${imgStyle}<figure class="${imageClass} ${imageContainerAlign}">
+          <img src="${imageBlock.content.url}" alt="${imageBlock.content.alt}" class="${imgClass}" />
+          ${imageBlock.content.caption ? `<figcaption style="text-align: center !important; font-size: 0.875rem !important; color: #6b7280 !important; margin-top: 12px !important; font-style: italic !important;">${imageBlock.content.caption}</figcaption>` : ''}
         </figure>`;
       
       case 'quote':
         const quoteBlock = block as QuoteBlock;
-        return `<blockquote${styleAttr}>
-          <p>${quoteBlock.content.text}</p>
-          ${quoteBlock.content.author ? `<cite>— ${quoteBlock.content.author}${quoteBlock.content.source ? `, ${quoteBlock.content.source}` : ''}</cite>` : ''}
+        const { cssClass: quoteClass, cssStyle: quoteStyle } = createUniqueCss({
+          ...block.styles,
+          borderLeft: '4px solid ' + (block.styles?.accentColor || '#3b82f6')
+        }, 'quote', index);
+        return `${quoteStyle}<blockquote class="${quoteClass}">
+          <p style="margin-bottom: 8px !important;">${quoteBlock.content.text}</p>
+          ${quoteBlock.content.author ? `<cite style="font-size: 0.875rem !important; font-style: normal !important; font-weight: 500 !important; opacity: 0.8 !important;">— ${quoteBlock.content.author}${quoteBlock.content.source ? `, ${quoteBlock.content.source}` : ''}</cite>` : ''}
         </blockquote>`;
       
       case 'list':
         const listBlock = block as ListBlock;
         const listTag = listBlock.content.ordered ? 'ol' : 'ul';
+        const { cssClass: listClass, cssStyle: listStyle } = createUniqueCss(block.styles, 'list', index);
         const listItems = listBlock.content.items
-          .map((item, index) => {
-
+          .map((item, itemIndex) => {
             const isPlaceholder = item.trim() === '' || (item.startsWith('Item ') && /^Item \d+$/.test(item));
-            const displayText = isPlaceholder ? `Item ${index + 1}` : item;
-            return `<li>${displayText}</li>`;
+            const displayText = isPlaceholder ? `Item ${itemIndex + 1}` : item;
+            return `<li style="margin-bottom: 8px !important;">${displayText}</li>`;
           })
           .join('');
-        return `<${listTag}${styleAttr}>${listItems}</${listTag}>`;
+        const listTypeStyle = listBlock.content.ordered ? 
+          'list-style-type: decimal !important; padding-left: 24px !important;' : 
+          'list-style-type: disc !important; padding-left: 24px !important;';
+        return `${listStyle}<${listTag} class="${listClass}" style="${listTypeStyle}">${listItems}</${listTag}>`;
       
       case 'code':
         const codeBlock = block as CodeBlock;
-        return `<pre${styleAttr}><code class="language-${codeBlock.content.language}">${codeBlock.content.code}</code></pre>`;
+        const { cssClass: codeClass, cssStyle: codeStyle } = createUniqueCss({
+          ...block.styles,
+          fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace',
+          whiteSpace: 'pre',
+          overflowX: 'auto'
+        }, 'code', index);
+        return `${codeStyle}<pre class="${codeClass}"><code>${codeBlock.content.code}</code></pre>`;
       
       case 'spacer':
-        return `<div${styleAttr} class="spacer"></div>`;
+        const { cssClass: spacerClass, cssStyle: spacerStyle } = createUniqueCss(block.styles, 'spacer', index);
+        return `${spacerStyle}<div class="${spacerClass} spacer"></div>`;
       
       case 'hero':
         const heroBlock = block as HeroBlock;
-        return `<section${styleAttr} class="hero-section" ${heroBlock.content.backgroundUrl ? `style="background-image: url(${heroBlock.content.backgroundUrl}); background-size: cover; background-position: center;"` : ''}>
-          ${heroBlock.content.overlay ? `<div class="hero-overlay" style="background-color: ${heroBlock.content.overlay.color}; opacity: ${heroBlock.content.overlay.opacity};"></div>` : ''}
-          <div class="hero-content">
-            <h1>${heroBlock.content.title}</h1>
-            ${heroBlock.content.subtitle ? `<p class="hero-subtitle">${heroBlock.content.subtitle}</p>` : ''}
-            ${heroBlock.content.ctaButton ? `<a href="${heroBlock.content.ctaButton.url}" class="btn btn-${heroBlock.content.ctaButton.style}">${heroBlock.content.ctaButton.text}</a>` : ''}
+        const { cssClass: heroClass, cssStyle: heroStyle } = createUniqueCss(block.styles, 'hero', index);
+        const backgroundStyle = heroBlock.content.backgroundUrl 
+          ? ` style="background-image: url(${heroBlock.content.backgroundUrl}) !important; background-size: cover !important; background-position: center !important;"` 
+          : '';
+        return `${heroStyle}<section class="${heroClass} hero-section"${backgroundStyle}>
+          ${heroBlock.content.overlay ? `<div style="position: absolute !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; background-color: ${heroBlock.content.overlay.color} !important; opacity: ${heroBlock.content.overlay.opacity} !important;"></div>` : ''}
+          <div style="position: relative !important; z-index: 1 !important;">
+            <h1 style="font-size: 2.5rem !important; font-weight: bold !important; margin-bottom: 16px !important;">${heroBlock.content.title}</h1>
+            ${heroBlock.content.subtitle ? `<p style="font-size: 1.25rem !important; margin-bottom: 24px !important;">${heroBlock.content.subtitle}</p>` : ''}
+            ${heroBlock.content.ctaButton ? `<a href="${heroBlock.content.ctaButton.url}" style="display: inline-block !important; padding: 12px 24px !important; background-color: #3b82f6 !important; color: white !important; text-decoration: none !important; border-radius: 6px !important; font-weight: 500 !important;">${heroBlock.content.ctaButton.text}</a>` : ''}
           </div>
         </section>`;
       
       case 'gallery':
         const galleryBlock = block as GalleryBlock;
-        const galleryImages = galleryBlock.content.images.map(img => 
-          `<figure class="gallery-item">
-            <img src="${img.url}" alt="${img.alt}" />
-            ${img.caption ? `<figcaption>${img.caption}</figcaption>` : ''}
+        const { cssClass: galleryClass, cssStyle: galleryStyle } = createUniqueCss(block.styles, 'gallery', index);
+        const galleryImages = galleryBlock.content.images.map((img, imgIndex) => 
+          `<figure style="margin: 8px !important;">
+            <img src="${img.url}" alt="${img.alt}" style="width: 100% !important; height: auto !important; border-radius: 4px !important;" />
+            ${img.caption ? `<figcaption style="text-align: center !important; font-size: 0.875rem !important; color: #6b7280 !important; margin-top: 8px !important;">${img.caption}</figcaption>` : ''}
           </figure>`
         ).join('');
-        return `<div${styleAttr} class="gallery gallery-${galleryBlock.content.layout}" data-columns="${galleryBlock.content.columns}">
+        const gridStyles = `display: grid !important; grid-template-columns: repeat(${galleryBlock.content.columns}, 1fr) !important; gap: 16px !important;`;
+        return `${galleryStyle}<div class="${galleryClass}" style="${gridStyles}">
           ${galleryImages}
         </div>`;
       
       case 'embed':
         const embedBlock = block as EmbedBlock;
-        return `<div${styleAttr} class="embed-container" data-provider="${embedBlock.content.provider}">
+        const { cssClass: embedClass, cssStyle: embedStyle } = createUniqueCss(block.styles, 'embed', index);
+        return `${embedStyle}<div class="${embedClass}" style="margin-bottom: 24px !important;">
           ${embedBlock.content.embedCode}
         </div>`;
       
       case 'button':
         const buttonBlock = block as ButtonBlock;
-        const buttonStyleAttr = block.styles ? ` style="${styleString}"` : '';
         const alignment = buttonBlock.content.alignment || 'left';
         const width = buttonBlock.content.width || 'auto';
         const customWidth = buttonBlock.content.customWidth || 200;
         
-        const containerStyle = `text-align: ${alignment};`;
-        const buttonStyle = width === 'full' ? 'width: 100%;' : 
-                           width === 'custom' ? `width: ${customWidth}px;` : 
-                           'width: auto;';
+        const { cssClass: buttonClass, cssStyle: buttonStyle } = createUniqueCss({
+          ...block.styles,
+          display: width === 'full' ? 'block' : 'inline-block',
+          width: width === 'full' ? '100%' : width === 'custom' ? `${customWidth}px` : 'auto',
+          textDecoration: 'none',
+          cursor: 'pointer',
+          transition: 'all 0.2s ease'
+        }, 'button', index);
         
-        const fullButtonStyle = buttonStyleAttr ? 
-          buttonStyleAttr.replace('style="', `style="${buttonStyle}`) : 
-          ` style="${buttonStyle}"`;
+        const containerStyle = `text-align: ${alignment} !important; margin-bottom: 16px !important;`;
         
         const buttonElement = buttonBlock.content.url ? 
-          `<a href="${buttonBlock.content.url}" target="${buttonBlock.content.target || '_self'}"${buttonBlock.content.target === '_blank' ? ' rel="noopener noreferrer"' : ''} class="btn btn-${buttonBlock.content.variant} btn-${buttonBlock.content.size}"${fullButtonStyle}>${buttonBlock.content.text}</a>` :
-          `<button class="btn btn-${buttonBlock.content.variant} btn-${buttonBlock.content.size}"${fullButtonStyle}>${buttonBlock.content.text}</button>`;
+          `<a href="${buttonBlock.content.url}" target="${buttonBlock.content.target || '_self'}"${buttonBlock.content.target === '_blank' ? ' rel="noopener noreferrer"' : ''} class="${buttonClass}">${buttonBlock.content.text}</a>` :
+          `<button class="${buttonClass}">${buttonBlock.content.text}</button>`;
         
-        return `<div style="${containerStyle}">${buttonElement}</div>`;
+        return `${buttonStyle}<div style="${containerStyle}">${buttonElement}</div>`;
+      
+      case 'video':
+        const videoBlock = block as VideoBlock;
+        const { cssClass: videoClass, cssStyle: videoStyle } = createUniqueCss(block.styles, 'video', index);
+        
+        // Check if it's a YouTube URL and convert to embed
+        const videoUrl = videoBlock.content.url;
+        let embedHtml = '';
+        
+        const videoContainerAlign = block.styles?.videoAlign === 'center' ? 'text-center' : 
+                              block.styles?.videoAlign === 'right' ? 'text-right' : 'text-left';
+        
+        // Video/iframe specific styles with !important
+        const mediaStyles = `width: 100% !important; aspect-ratio: 16/9 !important; border-radius: 8px !important; ${
+          block.styles?.videoAlign === 'center' ? 'margin-left: auto !important; margin-right: auto !important; display: block !important;' : ''
+        }`;
+        
+        if (videoUrl.includes('youtube.com/watch') || videoUrl.includes('youtu.be/')) {
+          // Extract video ID and create YouTube embed
+          const videoId = videoUrl.includes('youtube.com/watch') 
+            ? videoUrl.split('v=')[1]?.split('&')[0]
+            : videoUrl.split('youtu.be/')[1]?.split('?')[0];
+            
+          if (videoId) {
+            embedHtml = `<iframe src="https://www.youtube.com/embed/${videoId}" 
+              title="${videoBlock.content.title || 'Video'}" 
+              frameborder="0" 
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+              allowfullscreen 
+              style="${mediaStyles}">
+            </iframe>`;
+          }
+        } else if (videoUrl.startsWith('http')) {
+          // For direct video URLs
+          embedHtml = `<video 
+            ${videoBlock.content.controls ? 'controls' : ''} 
+            ${videoBlock.content.autoplay ? 'autoplay' : ''} 
+            ${videoBlock.content.muted ? 'muted' : ''} 
+            style="${mediaStyles}">
+            <source src="${videoUrl}" type="video/mp4">
+            Your browser does not support the video tag.
+          </video>`;
+        }
+        
+        return `${videoStyle}<figure class="${videoClass} ${videoContainerAlign}">
+          ${embedHtml}
+          ${videoBlock.content.title ? `<figcaption style="text-align: center !important; font-size: 0.875rem !important; color: #6b7280 !important; margin-top: 12px !important; font-style: italic !important;">${videoBlock.content.title}</figcaption>` : ''}
+        </figure>`;
       
       default:
         return `<!-- Unsupported block type: ${block.type} -->`;

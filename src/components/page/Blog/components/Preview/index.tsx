@@ -199,6 +199,40 @@ const isBlockContent = (content: any): content is BlockContent => {
   return content && typeof content === 'object' && 'blocks' in content && Array.isArray(content.blocks);
 };
 
+    // Function to create unique CSS with !important declarations
+    const createImportantCSS = (blockStyles: any, uniqueId: string, blockType: string = '') => {
+      let css = `.${uniqueId} {\n`;
+      
+      if (blockStyles.fontSize) css += `  font-size: ${blockStyles.fontSize} !important;\n`;
+      if (blockStyles.fontWeight) css += `  font-weight: ${blockStyles.fontWeight} !important;\n`;
+      if (blockStyles.fontStyle) css += `  font-style: ${blockStyles.fontStyle} !important;\n`;
+      if (blockStyles.textAlign) css += `  text-align: ${blockStyles.textAlign} !important;\n`;
+      if (blockStyles.textColor) css += `  color: ${blockStyles.textColor} !important;\n`;
+      if (blockStyles.backgroundColor) css += `  background-color: ${blockStyles.backgroundColor} !important;\n`;
+      if (blockStyles.lineHeight) css += `  line-height: ${blockStyles.lineHeight} !important;\n`;
+      if (blockStyles.letterSpacing) css += `  letter-spacing: ${blockStyles.letterSpacing} !important;\n`;
+      if (blockStyles.textDecoration) css += `  text-decoration: ${blockStyles.textDecoration} !important;\n`;
+      
+      if (blockStyles.margin) {
+        css += `  margin-top: ${blockStyles.margin.top || 0}px !important;\n`;
+        css += `  margin-bottom: ${blockStyles.margin.bottom || (blockType === 'paragraph' ? 24 : 0)}px !important;\n`;
+        css += `  margin-left: ${blockStyles.margin.left || 0}px !important;\n`;
+        css += `  margin-right: ${blockStyles.margin.right || 0}px !important;\n`;
+      } else if (blockType === 'paragraph') {
+        css += `  margin-bottom: 24px !important;\n`;
+      }
+      
+      if (blockStyles.padding) {
+        css += `  padding-top: ${blockStyles.padding.top || 0}px !important;\n`;
+        css += `  padding-bottom: ${blockStyles.padding.bottom || 0}px !important;\n`;
+        css += `  padding-left: ${blockStyles.padding.left || 0}px !important;\n`;
+        css += `  padding-right: ${blockStyles.padding.right || 0}px !important;\n`;
+      }
+      
+      css += `}\n`;
+      return css;
+    };
+
 const BlogContentRenderer: React.FC<BlogContentRendererProps> = ({ content }) => {
   const renderBlock = (block: any) => {
     const { type, content: blockContent, styles = {} } = block;
@@ -257,33 +291,71 @@ const BlogContentRenderer: React.FC<BlogContentRendererProps> = ({ content }) =>
           />
         );
 
-      case 'paragraph':
+        case 'paragraph':
+        const paragraphId = `paragraph-${block.id || Date.now()}`;
+        const paragraphCSS = createImportantCSS(styles, paragraphId, 'paragraph');
+        
         return (
-          <div 
-            key={block.id} 
-            style={blockStyle}
-            className="text-gray-800 leading-relaxed"
-            dangerouslySetInnerHTML={{ 
-              __html: blockContent?.text || '' 
-            }}
-          />
-        );
-
-      case 'image':
-        return (
-          <div key={block.id} style={blockStyle} className="my-6">
-            <img
-              src={blockContent?.url}
-              alt={blockContent?.alt || 'Blog image'}
-              className="max-w-full h-auto rounded-lg shadow-sm"
-              style={{
-                width: styles.width ? `${styles.width}${styles.widthUnit || 'px'}` : 'auto',
-                height: styles.height ? `${styles.height}${styles.heightUnit || 'px'}` : 'auto',
-                borderRadius: styles.border?.radius || 8,
+          <React.Fragment key={block.id}>
+            <style dangerouslySetInnerHTML={{ __html: paragraphCSS }} />
+            <p 
+              className={paragraphId}
+              dangerouslySetInnerHTML={{ 
+                __html: blockContent?.text || '' 
               }}
             />
-          </div>
+          </React.Fragment>
         );
+
+   case 'image':
+        const imageId = `image-${block.id || Date.now()}`;
+        const imageAlign = styles.imageAlign || 'center';
+        const imageWidth = styles.width || 100;
+        const imageHeight = styles.height || 400;
+        const imageWidthUnit = styles.widthUnit || '%';
+        const imageHeightUnit = styles.heightUnit || 'px';
+        const imageBorderRadius = styles.border?.radius || 8;
+        const imageBorderWidth = styles.border?.width || 0;
+        const imageBorderColor = styles.border?.color || '#e5e7eb';
+        
+        const imageCSS = `
+          .container-${imageId} {
+            margin-bottom: 32px !important;
+            text-align: ${imageAlign} !important;
+          }
+          .${imageId} {
+            width: ${imageWidthUnit === '%' ? `${imageWidth}%` : `${imageWidth}px`} !important;
+            height: ${imageHeightUnit === 'px' ? `${imageHeight}px` : 'auto'} !important;
+            max-width: 100% !important;
+            border-radius: ${imageBorderRadius}px !important;
+            border: ${imageBorderWidth > 0 ? `${imageBorderWidth}px solid ${imageBorderColor}` : 'none'} !important;
+            margin: ${imageAlign === 'center' ? '0 auto' : imageAlign === 'right' ? '0 0 0 auto' : '0 auto 0 0'} !important;
+            object-fit: cover !important;
+            display: block !important;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+          }
+        `;
+        
+        return (
+          <React.Fragment key={block.id}>
+            <style dangerouslySetInnerHTML={{ __html: imageCSS }} />
+            <div className={`container-${imageId}`}>
+              <figure style={{width: '100%'}}>
+                <img
+                  src={blockContent?.url}
+                  alt={blockContent?.alt || blockContent?.caption || 'Blog image'}
+                  className={imageId}
+                />
+                {blockContent?.caption && (
+                  <figcaption style={{textAlign: 'center', fontSize: '0.875rem', color: '#6b7280', marginTop: '12px', fontStyle: 'italic'}}>
+                    {blockContent.caption}
+                  </figcaption>
+                )}
+              </figure>
+            </div>
+          </React.Fragment>
+        );
+
 
       case 'video':
         const videoUrl = blockContent?.url;
