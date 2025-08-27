@@ -24,12 +24,17 @@ interface JobPostsProps {
 export default function JobPosts({ jobPosts, formatDate }: JobPostsProps) {
     const router = useRouter();
     const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 8;
+    const [itemsPerPage, setItemsPerPage] = useState(8);
     const totalPages = Math.ceil(jobPosts.length / itemsPerPage);
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
     const currentJobs = jobPosts.slice(startIndex, endIndex);    const initPageChange = (page: number) => {
         setCurrentPage(page);
+    };
+
+    const handleItemsPerPageChange = (newItemsPerPage: number) => {
+        setItemsPerPage(newItemsPerPage);
+        setCurrentPage(1); 
     };
 
     const tableColumns = useMemo(() => [
@@ -80,7 +85,7 @@ export default function JobPosts({ jobPosts, formatDate }: JobPostsProps) {
     return (
         <div className="rounded-xl bg-white shadow-lg border border-gray-100 dark:bg-gray-800 dark:border-gray-700">
             <div className="flex items-center p-6">
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white">Job Posts ({jobPosts?.length || 0})</h3>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white">Job Posts</h3>
             </div>
             
             {jobPosts && jobPosts.length > 0 ? (
@@ -93,7 +98,7 @@ export default function JobPosts({ jobPosts, formatDate }: JobPostsProps) {
                                     <TableRow key={job.id} className="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/50">
                                         <TableCell className="py-4 px-6">
                                             <div className="flex flex-col">
-                                                <h4 className="font-semibold text-gray-900 dark:text-white mb-1">{job.title}</h4>
+                                                <span className="font-semibold text-sm text-gray-900 dark:text-white mb-1">{job.title}</span>
                                                 {job.description && (
                                                     <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2">
                                                         {job.description}
@@ -178,16 +183,37 @@ export default function JobPosts({ jobPosts, formatDate }: JobPostsProps) {
                         </Table>
                     </div>
 
-                    {totalPages > 1 && (
+                    {jobPosts.length > 0 && (
                         <div className="flex items-center justify-between mt-6 p-6 pt-6">
-                            <div className="text-sm text-gray-500 dark:text-gray-400">
-                                Showing {startIndex + 1} to {Math.min(endIndex, jobPosts.length)} of {jobPosts.length} job posts
+                            <div className="flex items-center gap-4">
+                                <div className="text-sm text-gray-500 dark:text-gray-400">
+                                    Showing {startIndex + 1} of {Math.min(endIndex, jobPosts.length)} items
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <label htmlFor="itemsPerPage" className="text-sm text-gray-500 dark:text-gray-400">
+                                        Items per page:
+                                    </label>
+                                    <select
+                                        id="itemsPerPage"
+                                        value={itemsPerPage}
+                                        onChange={(e) => handleItemsPerPageChange(Number(e.target.value))}
+                                        className="px-3 py-1 text-sm border border-gray-300 rounded-md bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500"
+                                    >
+                                        <option value={5}>5 per page</option>
+                                        <option value={8}>8 per page</option>
+                                        <option value={10}>10 per page</option>
+                                        <option value={20}>20 per page</option>
+                                        <option value={50}>50 per page</option>
+                                    </select>
+                                </div>
                             </div>
-                            <Pagination
-                                currentPage={currentPage}
-                                totalPages={totalPages}
-                                onPageChange={initPageChange}
-                            />
+                            {totalPages > 1 && (
+                                <Pagination
+                                    currentPage={currentPage}
+                                    totalPages={totalPages}
+                                    onPageChange={initPageChange}
+                                />
+                            )}
                         </div>
                     )}
                 </>
