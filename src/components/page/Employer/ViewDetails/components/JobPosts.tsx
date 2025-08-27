@@ -92,11 +92,7 @@ export default function JobPosts({ jobPosts, formatDate }: JobPostsProps) {
     };   
     
     return (
-        <div className="rounded-xl bg-white shadow-lg border border-gray-100 dark:bg-gray-800 dark:border-gray-700">
-            <div className="flex items-center p-6">
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white">Job Posts</h3>
-            </div>
-            
+        <>            
             {jobPosts && jobPosts.length > 0 ? (
                 <>                    
                 <div className="overflow-x-auto">
@@ -222,6 +218,6 @@ export default function JobPosts({ jobPosts, formatDate }: JobPostsProps) {
                     message="This employer hasn't posted any jobs yet"
                 />
             )}
-        </div>
+        </>
     );
 }

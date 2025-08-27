@@ -8,7 +8,7 @@ import ErrorState from "../../../common/ErrorState";
 import FullScreenSpinner from "../../../ui/FullScreenSpinner";
 import {
     CompanyProfile,
-    JobPosts
+    JobPostsAndTeamTabs
 } from "./components";
 import BackToListButton from '@/components/ui/BackToListButton';
 
@@ -53,7 +53,9 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
                 </div>
             </div>
         );
-    }    const employer = data.data;
+    }
+
+    const employer = data.data;
 
     const contactInfo = [
         {
@@ -75,7 +77,8 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
             label: 'Email',
             value: employer.email,
             className: 'text-gray-900 dark:text-white break-all'
-        },        {
+        },
+        {
             label: 'Phone',
             value: employer.phoneNumber || 'Not specified',
             className: 'text-gray-900 dark:text-white'
@@ -105,25 +108,28 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
 
     return (
         <>
-        <div className="px-4 pt-4 pb-2">
-        <BackToListButton href="/admin/employers" className="mb-6" preserveState={true}>
-                Back to Employers
+            <div className="px-4 pt-4 pb-2">
+                <BackToListButton href="/admin/employers" className="mb-6" preserveState={true}>
+                    Back to Employers
                 </BackToListButton>
-        </div>        <div className="p-4 grid grid-cols-1 xl:grid-cols-3 gap-6">
-            <div className="col-span-full xl:col-auto">
-                <CompanyProfile 
-                    employer={employer} 
-                    contactInfo={contactInfo} 
-                    onSeeReviews={seeReviews}
-                    overview={employer.overview}
-                />
-            </div><div className="col-span-2 space-y-6">
-                <JobPosts 
-                    jobPosts={employer.jobPost || []}
-                    formatDate={formatDate}
-                />
             </div>
-        </div>
+            <div className="p-4 grid grid-cols-1 xl:grid-cols-3 gap-6">
+                <div className="col-span-full xl:col-auto">
+                    <CompanyProfile 
+                        employer={employer} 
+                        contactInfo={contactInfo} 
+                        onSeeReviews={seeReviews}
+                        overview={employer.overview}
+                    />
+                </div>
+                <div className="col-span-2 space-y-6">
+                    <JobPostsAndTeamTabs 
+                        jobPosts={employer.jobPost || []}
+                        employerId={id}
+                        formatDate={formatDate}
+                    />
+                </div>
+            </div>
         </>
     )
 }
