@@ -62,7 +62,8 @@ export default function JobPostsAndTeamTabs({ jobPosts, employerId, formatDate }
                         ) : (
                             <Team 
                                 teamMembers={teamData?.data?.items || []} 
-                                formatDate={formatDate} 
+                                formatDate={formatDate}
+                                employerId={employerId}
                             />
                         )}
                     </>

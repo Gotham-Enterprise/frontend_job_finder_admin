@@ -15,16 +15,19 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import TableHeading from "@/components/tables/tableHeader";
+import AddTeamMemberModal from "@/components/admin/team/AddTeamMemberModal";
 
 interface TeamProps {
     teamMembers?: TeamMember[];
     formatDate: (date: string | undefined) => string;
+    employerId: string;
 }
 
-export default function Team({ teamMembers = [], formatDate }: TeamProps) {
+export default function Team({ teamMembers = [], formatDate, employerId }: TeamProps) {
     const router = useRouter();
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(8);
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     
     // Ensure teamMembers is always an array
     const safeTeamMembers = Array.isArray(teamMembers) ? teamMembers : [];
@@ -75,7 +78,17 @@ export default function Team({ teamMembers = [], formatDate }: TeamProps) {
     };
 
     return (
-        <>            
+        <>
+            {/* Add Team Member Button */}
+            <div className="flex justify-end mb-6 px-6 pt-6">
+                <Button
+                    onClick={() => setIsAddModalOpen(true)}
+                    className="bg-green-600 hover:bg-green-700 text-white"
+                >
+                    Add Team Member
+                </Button>
+            </div>
+
             {safeTeamMembers && safeTeamMembers.length > 0 ? (
                 <>                    
                     <div className="overflow-x-auto">
@@ -175,11 +188,20 @@ export default function Team({ teamMembers = [], formatDate }: TeamProps) {
                     )}
                 </>
             ) : (
-                <NotFoundState 
-                    title="No team members found"
-                    message="This employer hasn't added any team members yet"
-                />
+                <div className="p-6">
+                    <NotFoundState 
+                        title="No team members found"
+                        message="This employer hasn't added any team members yet"
+                    />
+                </div>
             )}
+
+            {/* Add Team Member Modal */}
+            <AddTeamMemberModal
+                isOpen={isAddModalOpen}
+                onClose={() => setIsAddModalOpen(false)}
+                employerId={employerId}
+            />
         </>
     );
 }

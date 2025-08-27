@@ -6,6 +6,7 @@ interface InputProps {
   name?: string;
   placeholder?: string;
   defaultValue?: string | number;
+  value?: string | number;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
   className?: string;
@@ -24,6 +25,7 @@ const Input: FC<InputProps> = ({
   name,
   placeholder,
   defaultValue,
+  value,
   onChange,
   onKeyDown,
   className = "",
@@ -55,6 +57,7 @@ const Input: FC<InputProps> = ({
         name={name}
         placeholder={placeholder}
         defaultValue={defaultValue}
+        value={value}
         onChange={onChange}
         onKeyDown={onKeyDown}
         min={min}

@@ -9,6 +9,7 @@ interface ButtonProps {
   onClick?: () => void;
   disabled?: boolean;
   className?: string;
+  type?: "button" | "submit" | "reset";
 }
 
 const Button: React.FC<ButtonProps> = ({
@@ -20,6 +21,7 @@ const Button: React.FC<ButtonProps> = ({
   onClick,
   className = "",
   disabled = false,
+  type = "button",
 }) => {  const buttonStyles = {
     variants: {      
       variant: {
@@ -52,7 +54,7 @@ const Button: React.FC<ButtonProps> = ({
 
   return (
     <button
-     type="submit"
+     type={type}
       className={`inline-flex items-center justify-center font-medium gap-2 transition ${className} ${
         buttonStyles.variants.size[size]
       } ${buttonStyles.variants.variant[disabled ? "disabled" : variant]} ${
