@@ -185,10 +185,10 @@ export default function JobPosts({ jobPosts, formatDate }: JobPostsProps) {
 
                     {jobPosts.length > 0 && (
                         <div className="flex items-center justify-between mt-6 p-6 pt-6">
+                            <div className="text-sm text-gray-500 dark:text-gray-400">
+                                Showing {startIndex + 1} of {Math.min(endIndex, jobPosts.length)} results
+                            </div>
                             <div className="flex items-center gap-4">
-                                <div className="text-sm text-gray-500 dark:text-gray-400">
-                                    Showing {startIndex + 1} of {Math.min(endIndex, jobPosts.length)} items
-                                </div>
                                 <div className="flex items-center gap-2">
                                     <label htmlFor="itemsPerPage" className="text-sm text-gray-500 dark:text-gray-400">
                                         Items per page:
@@ -206,14 +206,14 @@ export default function JobPosts({ jobPosts, formatDate }: JobPostsProps) {
                                         <option value={50}>50 per page</option>
                                     </select>
                                 </div>
+                                {totalPages > 1 && (
+                                    <Pagination
+                                        currentPage={currentPage}
+                                        totalPages={totalPages}
+                                        onPageChange={initPageChange}
+                                    />
+                                )}
                             </div>
-                            {totalPages > 1 && (
-                                <Pagination
-                                    currentPage={currentPage}
-                                    totalPages={totalPages}
-                                    onPageChange={initPageChange}
-                                />
-                            )}
                         </div>
                     )}
                 </>
