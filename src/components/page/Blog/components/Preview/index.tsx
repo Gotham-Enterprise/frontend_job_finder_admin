@@ -470,11 +470,6 @@ const BlogContentRenderer: React.FC<BlogContentRendererProps> = ({ content }) =>
                   allowFullScreen
                 />
               </div>
-              {videoTitle && videoTitle !== 'Video' && (
-                <p className="text-sm text-gray-600 mt-2 italic">
-                  {videoTitle}
-                </p>
-              )}
             </div>
           );
         }
@@ -495,11 +490,6 @@ const BlogContentRenderer: React.FC<BlogContentRendererProps> = ({ content }) =>
                 Your browser does not support the video tag.
               </video>
             </div>
-            {videoTitle && videoTitle !== 'Video' && (
-              <p className="text-sm text-gray-600 mt-2 italic">
-                {videoTitle}
-              </p>
-            )}
           </div>
         );
 
