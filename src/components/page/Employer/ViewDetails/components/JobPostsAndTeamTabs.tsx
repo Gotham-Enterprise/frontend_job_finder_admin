@@ -19,13 +19,11 @@ export default function JobPostsAndTeamTabs({ jobPosts, employerId, formatDate }
     const tabs = [
         {
             id: 'jobPosts' as const,
-            label: 'Job Posts',
-            count: jobPosts.length
+            label: 'Job Posts'
         },
         {
             id: 'team' as const,
-            label: 'Team',
-            count: teamData?.data?.length || 0
+            label: 'Team'
         }
     ];
 
@@ -44,13 +42,6 @@ export default function JobPostsAndTeamTabs({ jobPosts, employerId, formatDate }
                             }`}
                         >
                             {tab.label}
-                            <span className={`ml-2 py-0.5 px-2 rounded-full text-xs font-medium ${
-                                activeTab === tab.id
-                                    ? 'bg-brand-100 text-brand-600 dark:bg-brand-900/20 dark:text-brand-400'
-                                    : 'bg-gray-100 text-gray-900 dark:bg-gray-700 dark:text-gray-300'
-                            }`}>
-                                {tab.count}
-                            </span>
                         </button>
                     ))}
                 </nav>
@@ -70,7 +61,7 @@ export default function JobPostsAndTeamTabs({ jobPosts, employerId, formatDate }
                             </div>
                         ) : (
                             <Team 
-                                teamMembers={teamData?.data || []} 
+                                teamMembers={teamData?.data?.items || []} 
                                 formatDate={formatDate} 
                             />
                         )}

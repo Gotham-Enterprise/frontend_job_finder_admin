@@ -17,18 +17,22 @@ import {
 import TableHeading from "@/components/tables/tableHeader";
 
 interface TeamProps {
-    teamMembers: TeamMember[];
+    teamMembers?: TeamMember[];
     formatDate: (date: string | undefined) => string;
 }
 
-export default function Team({ teamMembers, formatDate }: TeamProps) {
+export default function Team({ teamMembers = [], formatDate }: TeamProps) {
     const router = useRouter();
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(8);
-    const totalPages = Math.ceil(teamMembers.length / itemsPerPage);
+    
+    // Ensure teamMembers is always an array
+    const safeTeamMembers = Array.isArray(teamMembers) ? teamMembers : [];
+    
+    const totalPages = Math.ceil(safeTeamMembers.length / itemsPerPage);
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
-    const currentMembers = teamMembers.slice(startIndex, endIndex);
+    const currentMembers = safeTeamMembers.slice(startIndex, endIndex);
 
     const initPageChange = (page: number) => {
         setCurrentPage(page);
@@ -72,20 +76,20 @@ export default function Team({ teamMembers, formatDate }: TeamProps) {
 
     return (
         <>            
-            {teamMembers && teamMembers.length > 0 ? (
+            {safeTeamMembers && safeTeamMembers.length > 0 ? (
                 <>                    
                     <div className="overflow-x-auto">
                         <Table className="border-collapse">
                             <TableHeading columns={tableColumns} />
                             <TableBody>
                                 {currentMembers.map((member) => (
-                                    <TableRow key={member.id} className="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                                    <TableRow key={member.userId || member.id} className="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/50">
                                         <TableCell className="py-4 px-6">
                                             <div className="flex items-center gap-3">
-                                                {member.profilePicture ? (
+                                                {member.avatarUrl || member.profilePicture ? (
                                                     <img 
-                                                        src={member.profilePicture} 
-                                                        alt={`${member.firstName} ${member.lastName}`}
+                                                        src={member.avatarUrl || member.profilePicture} 
+                                                        alt={member.name || `${member.firstName} ${member.lastName}`}
                                                         className="w-8 h-8 rounded-full object-cover"
                                                     />
                                                 ) : (
@@ -97,7 +101,7 @@ export default function Team({ teamMembers, formatDate }: TeamProps) {
                                                 )}
                                                 <div>
                                                     <span className="font-semibold text-sm text-gray-900 dark:text-white">
-                                                        {member.firstName} {member.lastName}
+                                                        {member.name || `${member.firstName} ${member.lastName}`}
                                                     </span>
                                                 </div>
                                             </div>
@@ -112,13 +116,16 @@ export default function Team({ teamMembers, formatDate }: TeamProps) {
                                             <div className="flex items-center gap-2">
                                                 <LocationIcon className="w-4 h-4 text-gray-400" />
                                                 <span className="text-sm text-gray-900 dark:text-white">
-                                                    {member.city}, {member.state}
+                                                    {member.city && member.state 
+                                                        ? `${member.city}, ${member.state}` 
+                                                        : member.state || member.city || 'N/A'
+                                                    }
                                                 </span>
                                             </div>
                                         </TableCell>
                                         <TableCell className="py-4 px-6">
                                             <span className="text-sm text-gray-900 dark:text-white">
-                                                {formatDate(member.dateJoined)}
+                                                {member.dateJoined ? formatDate(member.dateJoined) : 'N/A'}
                                             </span>
                                         </TableCell>
                                         <TableCell className="py-4 px-6">
@@ -128,7 +135,7 @@ export default function Team({ teamMembers, formatDate }: TeamProps) {
                                         </TableCell>
                                         <TableCell className="py-4 px-6 text-right">
                                             <Button
-                                                onClick={() => router.push(`/admin/team/details/${member.id}`)}
+                                                onClick={() => router.push(`/admin/team/details/${member.userId || member.id}`)}
                                                 variant="ghost"
                                                 size="sm"
                                                 className="text-brand-400"
@@ -143,10 +150,10 @@ export default function Team({ teamMembers, formatDate }: TeamProps) {
                         </Table>
                     </div>
 
-                    {teamMembers.length > 0 && (
+                    {safeTeamMembers.length > 0 && (
                         <div className="flex items-center justify-between mt-6 p-6 pt-6">
                             <div className="text-sm text-gray-500 dark:text-gray-400">
-                                Showing {startIndex + 1} to {Math.min(endIndex, teamMembers.length)} of {teamMembers.length} items
+                                Showing {startIndex + 1} to {Math.min(endIndex, safeTeamMembers.length)} of {safeTeamMembers.length} items
                             </div>
                             <div className="flex items-center gap-4">
                                 <div className="flex items-center gap-2">
