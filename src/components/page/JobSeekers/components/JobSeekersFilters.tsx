@@ -15,7 +15,6 @@ const JobSeekersFilters: React.FC<JobSeekersFiltersProps> = ({
 }) => {
   const [cityInput, setCityInput] = useState(filters.city || '');
 
-  // Radius options
   const radiusOptions = [
     { value: '', label: 'Any Distance' },
     { value: '1', label: '1 mile' },
@@ -27,7 +26,6 @@ const JobSeekersFilters: React.FC<JobSeekersFiltersProps> = ({
     { value: '100', label: '100 miles' },
   ];
 
-  // Debounce city input
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       onFilterChange('city', cityInput);
@@ -36,10 +34,20 @@ const JobSeekersFilters: React.FC<JobSeekersFiltersProps> = ({
     return () => clearTimeout(timeoutId);
   }, [cityInput, onFilterChange]);
 
-  // Sync local state when filters change from external source (like clear)
   useEffect(() => {
     setCityInput(filters.city || '');
   }, [filters.city]);
+
+  
+  const isRadiusDisabled = !filters.city || !filters.location;
+
+
+  useEffect(() => {
+    if (isRadiusDisabled && filters.radius) {
+      onFilterChange('radius', undefined);
+    }
+  }, [isRadiusDisabled, filters.radius, onFilterChange]);
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 gap-6">
@@ -132,9 +140,10 @@ const JobSeekersFilters: React.FC<JobSeekersFiltersProps> = ({
               onFilterChange('radius', numericValue);
             }}
             options={radiusOptions}
-            placeholder="Select radius..."
+            placeholder={isRadiusDisabled ? "Select city and state first..." : "Select radius..."}
             searchPlaceholder="Search radius..."
             className="w-full"
+            disabled={isRadiusDisabled}
           />
         </div>
         <div className="space-y-2">
