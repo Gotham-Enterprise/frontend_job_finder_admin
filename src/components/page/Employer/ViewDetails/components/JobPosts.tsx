@@ -176,12 +176,15 @@ export default function JobPosts({ jobPosts, formatDate }: JobPostsProps) {
                                             </div>
                                         </TableCell>
                                         <TableCell className="py-4 px-6 text-right">
-                                            <button
+                                            <Button
                                                 onClick={() => router.push(`/admin/employers/jobs/details/${job.id}`)}
-                                                className="flex gap-1  items-center text-brand-400"
+                                                variant="ghost"
+                                                size="sm"
+                                                className="text-brand-400"
+                                                startIcon={<EyeIcon className="w-4 h-4" />}
                                             >
-                                              <EyeIcon />  View
-                                            </button>
+                                                View
+                                            </Button>
                                         </TableCell>
                                     </TableRow>
                                 ))}
