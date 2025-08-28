@@ -16,7 +16,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import TableHeading from "@/components/tables/tableHeader";
-import { AddTeamMemberModal } from "@/components/page/Employer/components";
+import AddTeamMemberModal from "./AddTeamMemberModal";
 import { teamQueryKeys } from "@/services/hooks/useTeam";
 
 interface TeamProps {
