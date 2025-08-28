@@ -6,8 +6,8 @@ export const teamApi = {
     return apiGet<TeamMembersResponse>(`/api/admin/employer/users/${employerId}`);
   },
 
-  async addTeamMember(formData: FormData): Promise<any> {
-    return apiPost(`/api/admin/employer/users/`, formData);
+  async addTeamMember(employerId: string, formData: FormData): Promise<any> {
+    return apiPost(`/api/admin/employer/users/${employerId}`, formData);
   },
 
   async updateTeamMember(id: string, employerUserId: string, formData: FormData): Promise<any> {

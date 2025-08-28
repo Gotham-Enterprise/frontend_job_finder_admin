@@ -9,6 +9,7 @@ import Label from '@/components/form/Label';
 import { teamApi } from '@/services/api/team';
 import { useQueryClient } from '@tanstack/react-query';
 import { teamQueryKeys } from '@/services/hooks/useTeam';
+import { useStates } from '@/services/hooks/useStates';
 
 interface AddTeamMemberModalProps {
   isOpen: boolean;
@@ -42,64 +43,25 @@ const initialFormData: FormData = {
   zipCode: '',
 };
 
+const countryOptions = [
+  { value: 'USA', label: 'United States' },
+];
+
 const accessRoleOptions = [
   { value: '1', label: 'Super Admin' },
   { value: '2', label: 'Admin' },
-  { value: '3', label: 'Manager' },
-  { value: '4', label: 'Employee' },
+  { value: '3', label: 'Billing Manager' },
+  { value: '4', label: 'Recruiter' },
 ];
 
-const stateOptions = [
-  { value: 'AL', label: 'Alabama' },
-  { value: 'AK', label: 'Alaska' },
-  { value: 'AZ', label: 'Arizona' },
-  { value: 'AR', label: 'Arkansas' },
-  { value: 'CA', label: 'California' },
-  { value: 'CO', label: 'Colorado' },
-  { value: 'CT', label: 'Connecticut' },
-  { value: 'DE', label: 'Delaware' },
-  { value: 'FL', label: 'Florida' },
-  { value: 'GA', label: 'Georgia' },
-  { value: 'HI', label: 'Hawaii' },
-  { value: 'ID', label: 'Idaho' },
-  { value: 'IL', label: 'Illinois' },
-  { value: 'IN', label: 'Indiana' },
-  { value: 'IA', label: 'Iowa' },
-  { value: 'KS', label: 'Kansas' },
-  { value: 'KY', label: 'Kentucky' },
-  { value: 'LA', label: 'Louisiana' },
-  { value: 'ME', label: 'Maine' },
-  { value: 'MD', label: 'Maryland' },
-  { value: 'MA', label: 'Massachusetts' },
-  { value: 'MI', label: 'Michigan' },
-  { value: 'MN', label: 'Minnesota' },
-  { value: 'MS', label: 'Mississippi' },
-  { value: 'MO', label: 'Missouri' },
-  { value: 'MT', label: 'Montana' },
-  { value: 'NE', label: 'Nebraska' },
-  { value: 'NV', label: 'Nevada' },
-  { value: 'NH', label: 'New Hampshire' },
-  { value: 'NJ', label: 'New Jersey' },
-  { value: 'NM', label: 'New Mexico' },
-  { value: 'NY', label: 'New York' },
-  { value: 'NC', label: 'North Carolina' },
-  { value: 'ND', label: 'North Dakota' },
-  { value: 'OH', label: 'Ohio' },
-  { value: 'OK', label: 'Oklahoma' },
-  { value: 'OR', label: 'Oregon' },
-  { value: 'PA', label: 'Pennsylvania' },
-  { value: 'RI', label: 'Rhode Island' },
-  { value: 'SC', label: 'South Carolina' },
-  { value: 'SD', label: 'South Dakota' },
-  { value: 'TN', label: 'Tennessee' },
-  { value: 'TX', label: 'Texas' },
-  { value: 'UT', label: 'Utah' },
-  { value: 'VT', label: 'Vermont' },
-  { value: 'VA', label: 'Virginia' },
-  { value: 'WA', label: 'Washington' },
-  { value: 'WV', label: 'West Virginia' },
-  { value: 'WI', label: 'Wisconsin' },
-  { value: 'WY', label: 'Wyoming' },
+const companyRoleOptions = [
+  { value: 'Administrator', label: 'Administrator' },
+  { value: 'Director', label: 'Director' },
+  { value: 'HR Manager', label: 'HR Manager' },
+  { value: 'Office Manager', label: 'Office Manager' },
+  { value: 'Owner', label: 'Owner' },
+  { value: 'President', label: 'President' },
+  { value: 'Recruiter', label: 'Recruiter' },
 ];
 
 export default function AddTeamMemberModal({ isOpen, onClose, employerId }: AddTeamMemberModalProps) {
@@ -111,6 +73,16 @@ export default function AddTeamMemberModal({ isOpen, onClose, employerId }: AddT
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   
   const queryClient = useQueryClient();
+  const { data: statesData, isLoading: isStatesLoading } = useStates();
+
+  // Create state options from API data
+  const stateOptions = React.useMemo(() => {
+    if (!statesData?.data?.states) return [];
+    return statesData.data.states.map(state => ({
+      value: state.abbreviation,
+      label: state.name
+    }));
+  }, [statesData]);
 
   const handleInputChange = (field: keyof FormData) => (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({
@@ -177,7 +149,6 @@ export default function AddTeamMemberModal({ isOpen, onClose, employerId }: AddT
     if (!formData.address.trim()) newErrors.address = 'Address is required';
     if (!formData.city.trim()) newErrors.city = 'City is required';
     if (!formData.state) newErrors.state = 'State is required';
-    if (!formData.country.trim()) newErrors.country = 'Country is required';
     if (!formData.zipCode.trim()) newErrors.zipCode = 'Zip code is required';
 
     // Email validation
@@ -206,12 +177,25 @@ export default function AddTeamMemberModal({ isOpen, onClose, employerId }: AddT
         submitFormData.append('uploadProfileUser', profileFile);
       }
       
-      // Add all form fields
+      // Add all form fields with proper formatting
       Object.entries(formData).forEach(([key, value]) => {
-        submitFormData.append(key, value);
+        if (key === 'accessRoleId') {
+          // Convert accessRoleId to number for backend
+          submitFormData.append('accessRoleId', value.toString());
+        } else {
+          submitFormData.append(key, value);
+        }
       });
 
-      await teamApi.addTeamMember(submitFormData);
+      // Debug: Log all FormData entries
+      console.log('FormData entries:');
+      for (let [key, value] of submitFormData.entries()) {
+        console.log(`${key}:`, value);
+      }
+
+      console.log('Submitting to employer ID:', employerId);
+
+      await teamApi.addTeamMember(employerId, submitFormData);
       
       // Invalidate and refetch team members
       queryClient.invalidateQueries({ queryKey: teamQueryKeys.list(employerId) });
@@ -229,8 +213,27 @@ export default function AddTeamMemberModal({ isOpen, onClose, employerId }: AddT
       }
       onClose();
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error adding team member:', error);
+      
+      // Log detailed error information
+      if (error.response) {
+        console.error('Response status:', error.response.status);
+        console.error('Response data:', error.response.data);
+        console.error('Response headers:', error.response.headers);
+      } else if (error.request) {
+        console.error('Request made but no response:', error.request);
+      } else {
+        console.error('Error message:', error.message);
+      }
+      
+      // Log the form data for debugging
+      console.log('Form data sent:', {
+        employerId,
+        formData,
+        hasProfileFile: !!profileFile
+      });
+      
       // Handle error (you might want to show a toast notification)
     } finally {
       setIsSubmitting(false);
@@ -339,15 +342,16 @@ export default function AddTeamMemberModal({ isOpen, onClose, employerId }: AddT
           {/* Company Role */}
           <div>
             <Label htmlFor="companyRole">Company Role*</Label>
-            <Input
-              id="companyRole"
-              type="text"
+            <Select
+              options={companyRoleOptions}
               placeholder="Enter your company role"
               value={formData.companyRole}
-              onChange={handleInputChange('companyRole')}
-              error={!!errors.companyRole}
-              hint={errors.companyRole}
+              onChange={handleSelectChange('companyRole')}
+              className={errors.companyRole ? 'border-error-500' : ''}
             />
+            {errors.companyRole && (
+              <p className="mt-1.5 text-xs text-error-500">{errors.companyRole}</p>
+            )}
           </div>
 
           {/* Access Role */}
@@ -397,10 +401,11 @@ export default function AddTeamMemberModal({ isOpen, onClose, employerId }: AddT
               <Label htmlFor="state">State*</Label>
               <Select
                 options={stateOptions}
-                placeholder="State"
+                placeholder={isStatesLoading ? "Loading states..." : "State"}
                 value={formData.state}
                 onChange={handleSelectChange('state')}
                 className={errors.state ? 'border-error-500' : ''}
+                disabled={isStatesLoading}
               />
               {errors.state && (
                 <p className="mt-1.5 text-xs text-error-500">{errors.state}</p>
@@ -412,15 +417,17 @@ export default function AddTeamMemberModal({ isOpen, onClose, employerId }: AddT
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="country">Country*</Label>
-              <Input
-                id="country"
-                type="text"
-                placeholder="United States"
+              <Select
+                options={countryOptions}
+                placeholder="Country"
                 value={formData.country}
-                onChange={handleInputChange('country')}
-                error={!!errors.country}
-                hint={errors.country}
+                onChange={handleSelectChange('country')}
+                className={errors.country ? 'border-error-500' : ''}
+                disabled={true}
               />
+              {errors.country && (
+                <p className="mt-1.5 text-xs text-error-500">{errors.country}</p>
+              )}
             </div>
             <div>
               <Label htmlFor="zipCode">Zip Code*</Label>

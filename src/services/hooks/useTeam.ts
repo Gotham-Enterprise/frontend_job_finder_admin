@@ -24,9 +24,9 @@ export const useAddTeamMember = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (formData: FormData) => teamApi.addTeamMember(formData),
+    mutationFn: ({ employerId, formData }: { employerId: string; formData: FormData }) => 
+      teamApi.addTeamMember(employerId, formData),
     onSuccess: () => {
-      // Invalidate all team queries to refetch data
       queryClient.invalidateQueries({ queryKey: teamQueryKeys.all });
     },
   });
@@ -39,7 +39,7 @@ export const useUpdateTeamMember = () => {
     mutationFn: ({ id, employerUserId, formData }: { id: string; employerUserId: string; formData: FormData }) => 
       teamApi.updateTeamMember(id, employerUserId, formData),
     onSuccess: () => {
-      // Invalidate all team queries to refetch data
+
       queryClient.invalidateQueries({ queryKey: teamQueryKeys.all });
     },
   });
