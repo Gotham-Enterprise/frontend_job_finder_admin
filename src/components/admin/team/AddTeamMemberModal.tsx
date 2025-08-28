@@ -499,20 +499,23 @@ export default function AddTeamMemberModal({ isOpen, onClose, employerId }: AddT
 
           {/* Form Actions */}
           <div className="flex justify-end gap-4 pt-6">
-            <button
+            <Button
               type="button"
+              variant="outline"
               onClick={handleClose}
               disabled={isSubmitting}
+              className="px-6"
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
+              variant="default"
               disabled={isSubmitting}
-              className="bg-gray-400 hover:bg-gray-500"
+              className="px-6"
             >
               {isSubmitting ? 'Adding...' : 'Submit'}
-            </button>
+            </Button>
           </div>
         </form>
       </div>
