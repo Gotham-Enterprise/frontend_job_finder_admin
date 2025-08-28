@@ -8,6 +8,7 @@ export { default as DollarIcon } from './DollarIcon';
 export { default as ExperienceIcon } from './ExperienceIcon';
 export { default as JobIcon } from './JobIcon';
 export { default as EyeIcon } from './EyeIcon';
+export { default as PencilIcon } from './PencilIcon';
 export { default as BriefcaseIcon } from './BriefcaseIcon';
 export { default as CareerLadderIcon } from './CareerLadderIcon';
 export { default as TicketIcon } from './TicketIcon';

@@ -8,7 +8,7 @@ import Button from "@/components/ui/button/Button";
 import NotFoundState from "@/components/common/NotFoundState";
 import Pagination from "@/components/tables/Pagination";
 import Select from "@/components/form/Select";
-import { LocationIcon, EyeIcon } from "@/components/ui/icons";
+import { LocationIcon, PencilIcon } from "@/components/ui/icons";
 import {
   Table,
   TableBody,
@@ -16,7 +16,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import TableHeading from "@/components/tables/tableHeader";
-import { AddTeamMemberModal } from "@/components/page/Employer/components";
+import { AddTeamMemberModal, EditTeamMemberModal } from "@/components/page/Employer/components";
 import { teamQueryKeys } from "@/services/hooks/useTeam";
 
 interface TeamProps {
@@ -31,6 +31,8 @@ export default function Team({ teamMembers = [], formatDate, employerId }: TeamP
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(8);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [selectedTeamMember, setSelectedTeamMember] = useState<TeamMember | null>(null);
     
     // Ensure teamMembers is always an array
     const safeTeamMembers = Array.isArray(teamMembers) ? teamMembers : [];
@@ -53,6 +55,18 @@ export default function Team({ teamMembers = [], formatDate, employerId }: TeamP
         setIsAddModalOpen(false);
         // Invalidate team members query to refetch updated data
         queryClient.invalidateQueries({ queryKey: teamQueryKeys.list(employerId) });
+    };
+
+    const handleEditModalClose = () => {
+        setIsEditModalOpen(false);
+        setSelectedTeamMember(null);
+        // Invalidate team members query to refetch updated data
+        queryClient.invalidateQueries({ queryKey: teamQueryKeys.list(employerId) });
+    };
+
+    const handleEditTeamMember = (member: TeamMember) => {
+        setSelectedTeamMember(member);
+        setIsEditModalOpen(true);
     };
 
     const itemsPerPageOptions = [
@@ -157,13 +171,13 @@ export default function Team({ teamMembers = [], formatDate, employerId }: TeamP
                                         </TableCell>
                                         <TableCell className="py-4 px-6 text-right">
                                             <Button
-                                                onClick={() => router.push(`/admin/team/details/${member.userId || member.id}`)}
+                                                onClick={() => handleEditTeamMember(member)}
                                                 variant="ghost"
                                                 size="sm"
                                                 className="text-brand-400"
-                                                startIcon={<EyeIcon className="w-4 h-4" />}
+                                                startIcon={<PencilIcon className="w-4 h-4" />}
                                             >
-                                                View
+                                                Edit
                                             </Button>
                                         </TableCell>
                                     </TableRow>
@@ -210,6 +224,14 @@ export default function Team({ teamMembers = [], formatDate, employerId }: TeamP
                 isOpen={isAddModalOpen}
                 onClose={handleModalClose}
                 employerId={employerId}
+            />
+
+            {/* Edit Team Member Modal */}
+            <EditTeamMemberModal
+                isOpen={isEditModalOpen}
+                onClose={handleEditModalClose}
+                employerId={employerId}
+                teamMember={selectedTeamMember}
             />
         </>
     );

@@ -10,7 +10,7 @@ export const teamApi = {
     return apiPost(`/api/admin/employer/users/${employerId}`, formData);
   },
 
-  async updateTeamMember(id: string, employerUserId: string, formData: FormData): Promise<any> {
-    return apiPatch(`/api/admin/employer/users/${id}/user/${employerUserId}`, formData);
+  async updateTeamMember(employerId: string, teamMemberId: string, formData: FormData): Promise<any> {
+    return apiPatch(`/api/admin/employer/users/${teamMemberId}/user/${employerId}`, formData);
   },
 };
