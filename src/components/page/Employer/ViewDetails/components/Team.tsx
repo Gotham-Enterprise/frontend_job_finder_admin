@@ -3,6 +3,7 @@
 import { TeamMember } from "@/services/types/team";
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import Button from "@/components/ui/button/Button";
 import NotFoundState from "@/components/common/NotFoundState";
 import Pagination from "@/components/tables/Pagination";
@@ -16,6 +17,7 @@ import {
 } from "@/components/ui/table";
 import TableHeading from "@/components/tables/tableHeader";
 import AddTeamMemberModal from "@/components/admin/team/AddTeamMemberModal";
+import { teamQueryKeys } from "@/services/hooks/useTeam";
 
 interface TeamProps {
     teamMembers?: TeamMember[];
@@ -25,6 +27,7 @@ interface TeamProps {
 
 export default function Team({ teamMembers = [], formatDate, employerId }: TeamProps) {
     const router = useRouter();
+    const queryClient = useQueryClient();
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(8);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -44,6 +47,12 @@ export default function Team({ teamMembers = [], formatDate, employerId }: TeamP
     const updateItemsPerPage = (newItemsPerPage: number) => {
         setItemsPerPage(newItemsPerPage);
         setCurrentPage(1);
+    };
+
+    const handleModalClose = () => {
+        setIsAddModalOpen(false);
+        // Invalidate team members query to refetch updated data
+        queryClient.invalidateQueries({ queryKey: teamQueryKeys.list(employerId) });
     };
 
     const itemsPerPageOptions = [
@@ -199,7 +208,7 @@ export default function Team({ teamMembers = [], formatDate, employerId }: TeamP
             {/* Add Team Member Modal */}
             <AddTeamMemberModal
                 isOpen={isAddModalOpen}
-                onClose={() => setIsAddModalOpen(false)}
+                onClose={handleModalClose}
                 employerId={employerId}
             />
         </>

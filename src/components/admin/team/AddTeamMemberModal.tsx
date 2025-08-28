@@ -10,6 +10,7 @@ import { teamApi } from '@/services/api/team';
 import { useQueryClient } from '@tanstack/react-query';
 import { teamQueryKeys } from '@/services/hooks/useTeam';
 import { useStates } from '@/services/hooks/useStates';
+import { showToast } from '@/services/utils/toast';
 
 interface AddTeamMemberModalProps {
   isOpen: boolean;
@@ -79,7 +80,7 @@ export default function AddTeamMemberModal({ isOpen, onClose, employerId }: AddT
   const stateOptions = React.useMemo(() => {
     if (!statesData?.data?.states) return [];
     return statesData.data.states.map(state => ({
-      value: state.abbreviation,
+      value: state.name, // Use state name instead of abbreviation for consistency
       label: state.name
     }));
   }, [statesData]);
@@ -141,19 +142,53 @@ export default function AddTeamMemberModal({ isOpen, onClose, employerId }: AddT
   const validateForm = (): boolean => {
     const newErrors: Partial<FormData> = {};
 
-    if (!formData.firstName.trim()) newErrors.firstName = 'First name is required';
-    if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required';
-    if (!formData.email.trim()) newErrors.email = 'Email is required';
-    if (!formData.companyRole.trim()) newErrors.companyRole = 'Company role is required';
-    if (!formData.accessRoleId) newErrors.accessRoleId = 'Access role is required';
-    if (!formData.address.trim()) newErrors.address = 'Address is required';
-    if (!formData.city.trim()) newErrors.city = 'City is required';
-    if (!formData.state) newErrors.state = 'State is required';
-    if (!formData.zipCode.trim()) newErrors.zipCode = 'Zip code is required';
-
-    // Email validation
-    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+    // Required field validations
+    if (!formData.firstName.trim()) {
+      newErrors.firstName = 'First name is required';
+    } else if (formData.firstName.trim().length < 2) {
+      newErrors.firstName = 'First name must be at least 2 characters';
+    }
+    
+    if (!formData.lastName.trim()) {
+      newErrors.lastName = 'Last name is required';
+    } else if (formData.lastName.trim().length < 2) {
+      newErrors.lastName = 'Last name must be at least 2 characters';
+    }
+    
+    if (!formData.email.trim()) {
+      newErrors.email = 'Email is required';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = 'Please enter a valid email address';
+    }
+    
+    if (!formData.companyRole.trim()) {
+      newErrors.companyRole = 'Company role is required';
+    }
+    
+    if (!formData.accessRoleId) {
+      newErrors.accessRoleId = 'Access role is required';
+    }
+    
+    if (!formData.address.trim()) {
+      newErrors.address = 'Address is required';
+    } else if (formData.address.trim().length < 5) {
+      newErrors.address = 'Address must be at least 5 characters';
+    }
+    
+    if (!formData.city.trim()) {
+      newErrors.city = 'City is required';
+    } else if (formData.city.trim().length < 2) {
+      newErrors.city = 'City name must be at least 2 characters';
+    }
+    
+    if (!formData.state) {
+      newErrors.state = 'State is required';
+    }
+    
+    if (!formData.zipCode.trim()) {
+      newErrors.zipCode = 'Zip code is required';
+    } else if (!/^\d{5}(-\d{4})?$/.test(formData.zipCode.trim())) {
+      newErrors.zipCode = 'Please enter a valid zip code (e.g., 12345 or 12345-6789)';
     }
 
     setErrors(newErrors);
@@ -182,8 +217,11 @@ export default function AddTeamMemberModal({ isOpen, onClose, employerId }: AddT
         if (key === 'accessRoleId') {
           // Convert accessRoleId to number for backend
           submitFormData.append('accessRoleId', value.toString());
+        } else if (key === 'country') {
+          // Make sure country is set correctly
+          submitFormData.append('country', value || 'United States');
         } else {
-          submitFormData.append(key, value);
+          submitFormData.append(key, value.toString());
         }
       });
 
@@ -194,11 +232,15 @@ export default function AddTeamMemberModal({ isOpen, onClose, employerId }: AddT
       }
 
       console.log('Submitting to employer ID:', employerId);
+      console.log('API endpoint:', `/api/admin/employer/users/${employerId}`);
 
       await teamApi.addTeamMember(employerId, submitFormData);
       
       // Invalidate and refetch team members
       queryClient.invalidateQueries({ queryKey: teamQueryKeys.list(employerId) });
+      
+      // Show success message
+      showToast.success('Team Member Added', 'Team member has been successfully added to the organization.');
       
       // Reset form and close modal
       setFormData(initialFormData);
@@ -216,16 +258,29 @@ export default function AddTeamMemberModal({ isOpen, onClose, employerId }: AddT
     } catch (error: any) {
       console.error('Error adding team member:', error);
       
-      // Log detailed error information
+      // Show error message to user
+      let errorMessage = 'Failed to add team member. Please try again.';
+      
       if (error.response) {
         console.error('Response status:', error.response.status);
         console.error('Response data:', error.response.data);
         console.error('Response headers:', error.response.headers);
+        
+        // Extract specific error message from response
+        if (error.response.data?.message) {
+          errorMessage = error.response.data.message;
+        } else if (error.response.data?.error) {
+          errorMessage = error.response.data.error;
+        }
       } else if (error.request) {
         console.error('Request made but no response:', error.request);
+        errorMessage = 'Network error. Please check your connection and try again.';
       } else {
         console.error('Error message:', error.message);
+        errorMessage = error.message || errorMessage;
       }
+      
+      showToast.error('Failed to Add Team Member', errorMessage);
       
       // Log the form data for debugging
       console.log('Form data sent:', {
@@ -234,7 +289,6 @@ export default function AddTeamMemberModal({ isOpen, onClose, employerId }: AddT
         hasProfileFile: !!profileFile
       });
       
-      // Handle error (you might want to show a toast notification)
     } finally {
       setIsSubmitting(false);
     }
@@ -445,21 +499,20 @@ export default function AddTeamMemberModal({ isOpen, onClose, employerId }: AddT
 
           {/* Form Actions */}
           <div className="flex justify-end gap-4 pt-6">
-            <Button
+            <button
               type="button"
-              variant="ghost"
               onClick={handleClose}
               disabled={isSubmitting}
             >
               Cancel
-            </Button>
-            <Button
+            </button>
+            <button
               type="submit"
               disabled={isSubmitting}
               className="bg-gray-400 hover:bg-gray-500"
             >
               {isSubmitting ? 'Adding...' : 'Submit'}
-            </Button>
+            </button>
           </div>
         </form>
       </div>
