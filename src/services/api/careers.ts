@@ -3,13 +3,24 @@ import { apiGet, apiPost, apiPut, apiPatch, apiDelete } from './apiUtils';
 // Career interfaces based on backend structure
 export interface Career {
   id: string;
-  title: string;
+  jobTitle: string;
   department: string;
   location: string;
+  address?: string;
+  city: string;
+  state: string;
+  zipCode?: string;
+  country?: string;
+  departmentId?: string;
+  unitId?: string;
+  timezone?: string;
   jobType: string;
   workPlaceType: string;
   salaryRange?: string;
-  description: string;
+  salaryRangeStart?: number;
+  salaryRangeEnd?: number;
+  jobDescription?: string; // preferred
+  description?: string; // legacy
   requirements?: string[];
   benefits?: string[];
   status: 'active' | 'closed' | 'draft';
@@ -17,6 +28,18 @@ export interface Career {
   applicantCount: number;
   createdAt: string;
   updatedAt: string;
+  applicants?: {
+    items: Array<{
+      id: string;
+      name: string;
+      email: string;
+      phone?: string;
+      appliedDate: string;
+      status: string;
+      resumeUrl?: string;
+    }>;
+    totalCount: number;
+  };
 }
 
 export interface CareerFilters {
@@ -64,9 +87,7 @@ export interface CreateCareerPayload {
   jobDescription: string;
 }
 
-export interface UpdateCareerPayload extends Partial<CreateCareerPayload> {
-  id: string;
-}
+export interface UpdateCareerPayload extends Partial<CreateCareerPayload> {}
 
 export interface CareerApplicantResponse {
   success: boolean;

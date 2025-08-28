@@ -54,7 +54,7 @@ export const useCareersLogic = () => {
   }, []);
 
   const viewJobDetails = useCallback((jobId: string) => {
-    router.push(`/admin/careers/${jobId}`);
+    router.push(`/admin/careers/job-details/${jobId}`);
   }, [router]);
 
   const editJob = useCallback((jobId: string) => {
@@ -75,7 +75,7 @@ export const useCareersLogic = () => {
   }, [deleteCareerMutation]);
 
   const viewApplicants = useCallback((jobId: string) => {
-    router.push(`/admin/careers/job-details?jobId=${jobId}`);
+    router.push(`/admin/careers/job-details/${jobId}`);
   }, [router]);
 
   const isLoadingState = isLoading || deleteCareerMutation.isPending || createCareerMutation.isPending;

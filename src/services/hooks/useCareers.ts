@@ -113,7 +113,7 @@ export const useCreateCareer = () => {
       
       showToast.success(
         'Career Created!',
-        `Career "${data.data.title}" has been created successfully.`
+        `Career "${data.data.jobTitle}" has been created successfully.`
       );
     },
     onError: (error: any) => {
@@ -145,7 +145,7 @@ export const useUpdateCareer = () => {
       
       showToast.success(
         'Career Updated!',
-        `Career "${data.data.title}" has been updated successfully.`
+        `Career "${data.data.jobTitle}" has been updated successfully.`
       );
     },
     onError: (error: any) => {
@@ -235,7 +235,7 @@ export const useDuplicateCareer = () => {
       
       showToast.success(
         'Career Duplicated!',
-        `Career "${data.data.title}" has been duplicated successfully.`
+        `Career "${data.data.jobTitle}" has been duplicated successfully.`
       );
     },
     onError: (error: any) => {
