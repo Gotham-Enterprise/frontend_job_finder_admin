@@ -232,56 +232,40 @@ export default function EditTeamMemberModal({ isOpen, onClose, employerId, teamM
 
     try {
       const submitFormData = new FormData();
-      
-      // Add profile picture if selected
+    
       if (profileFile) {
         submitFormData.append('uploadProfileUser', profileFile);
       }
       
-      // Add all form fields with proper formatting
+
       Object.entries(formData).forEach(([key, value]) => {
         if (key === 'accessRoleId') {
-          // Convert accessRoleId to number for backend
+       
           submitFormData.append('accessRoleId', value.toString());
-        } else if (key === 'country') {
-          // Make sure country is set correctly
+     
           submitFormData.append('country', value || 'United States');
         } else {
           submitFormData.append(key, value.toString());
         }
       });
 
-      // Debug: Log all FormData entries
-      console.log('FormData entries for update:');
-      for (let [key, value] of submitFormData.entries()) {
-        console.log(`${key}:`, value);
-      }
+   
 
-      console.log('Updating team member:', teamMember.userId || teamMember.id);
-      console.log('Employer ID:', employerId);
-      
-      // Debug: Log current user info
-      const currentUser = authUtils.getUser();
-      console.log('Current user:', currentUser);
-      console.log('Current user role:', currentUser?.role);
-      console.log('Auth headers:', authUtils.getAuthHeaders());
 
       const teamMemberId = teamMember.userId || teamMember.id;
       if (!teamMemberId) {
         throw new Error('Team member ID is required for update');
       }
 
-      console.log('API endpoint will be:', `/api/admin/employer/users/${teamMemberId}/user/${employerId}`);
-
+   
       await teamApi.updateTeamMember(employerId, teamMemberId, submitFormData);
       
-      // Invalidate and refetch team members
       queryClient.invalidateQueries({ queryKey: teamQueryKeys.list(employerId) });
       
-      // Show success message
+ 
       showToast.success('Team Member Updated', 'Team member details have been successfully updated.');
       
-      // Reset form and close modal
+
       handleClose();
       
     } catch (error: any) {
@@ -291,11 +275,7 @@ export default function EditTeamMemberModal({ isOpen, onClose, employerId, teamM
       let errorMessage = 'Failed to update team member. Please try again.';
       
       if (error.response) {
-        console.error('Response status:', error.response.status);
-        console.error('Response data:', error.response.data);
-        console.error('Response headers:', error.response.headers);
-        
-        // Extract specific error message from response
+     
         if (error.response.data?.message) {
           errorMessage = error.response.data.message;
         } else if (error.response.data?.error) {
@@ -311,13 +291,7 @@ export default function EditTeamMemberModal({ isOpen, onClose, employerId, teamM
       
       showToast.error('Failed to Update Team Member', errorMessage);
       
-      // Log the form data for debugging
-      console.log('Form data sent:', {
-        employerId,
-        teamMemberId: teamMember.userId || teamMember.id,
-        formData,
-        hasProfileFile: !!profileFile
-      });
+    
       
     } finally {
       setIsSubmitting(false);
@@ -498,6 +472,7 @@ export default function EditTeamMemberModal({ isOpen, onClose, employerId, teamM
                 options={countryOptions}
                 placeholder="Select Country"
                 value={formData.country}
+                disabled
                 onChange={handleSelectChange('country')}
               />
             </div>
