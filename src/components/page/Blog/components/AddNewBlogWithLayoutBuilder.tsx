@@ -885,6 +885,7 @@ export default function AddNewBlogWithLayoutBuilder() {
                   onChange={(e) => setTempTitle(e.target.value)}
                   placeholder="Enter your blog title..."
                   className="w-full px-3 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 transition-colors"
+                  spellCheck="true"
                   autoFocus
                 />
               </div>
@@ -901,6 +902,7 @@ export default function AddNewBlogWithLayoutBuilder() {
                   onChange={(e) => setTempMetadata(prev => ({ ...prev, author: e.target.value }))}
                   placeholder="Enter author name..."
                   className="w-full px-3 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 transition-colors"
+                  spellCheck="true"
                 />
               </div>
 
@@ -1248,6 +1250,7 @@ export default function AddNewBlogWithLayoutBuilder() {
                   onChange={(e) => setTempSeoData(prev => ({ ...prev, title: e.target.value }))}
                   placeholder="Enter Meta title (recommended: 50-60 characters)"
                   className="w-full px-3 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 transition-colors"
+                  spellCheck="true"
                   maxLength={60}
                 />
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
@@ -1267,6 +1270,7 @@ export default function AddNewBlogWithLayoutBuilder() {
                   placeholder="Enter Meta description (recommended: 150-160 characters)"
                   rows={3}
                   className="w-full px-3 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 transition-colors resize-none"
+                  spellCheck="true"
                   maxLength={160}
                 />
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">

@@ -66,6 +66,7 @@ const SimpleEditor: React.FC<SimpleEditorProps> = ({
         class: `prose prose-lg max-w-none focus:outline-none ${className}`,
         style: style ? Object.entries(style).map(([key, value]) => `${key}: ${value}`).join('; ') : '',
         'data-placeholder': placeholder,
+        spellcheck: 'true',
       },
     },
   });
