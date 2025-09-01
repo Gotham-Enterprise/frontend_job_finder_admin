@@ -7,6 +7,8 @@ export interface JobSeekerUpdateData {
   country: string;
   zipCode: string;
   phoneNumber: string;
+  occupationId: number;
+  specialtyId?: number;
 }
 
 export interface JobSeeker {
@@ -91,6 +93,8 @@ export interface JobSeekerDetails {
   licenses?: License[];
   skills?: Skill[];
   languages?: Language[];
+  occupationId?: number;
+  specialtyId?: number;
 }
 
 export interface Document {

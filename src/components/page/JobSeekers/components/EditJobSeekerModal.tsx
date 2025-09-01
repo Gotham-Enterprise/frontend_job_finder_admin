@@ -1,11 +1,13 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Modal } from '@/components/ui/modal';
 import Button from '@/components/ui/button/Button';
 import Input from '@/components/ui/input/Input';
 import Select from '@/components/form/Select';
 import { jobSeekerApi } from '@/services/api/jobSeeker';
 import { useStates } from '@/services/hooks/useStates';
+import { useJobsAdminOccupations } from '@/services/hooks/useJobsAdmin';
 import { JobSeekerUpdateData, JobSeekerDetails } from '@/services/types/jobSeeker';
+import { Specialty } from '@/services/types/jobsAdmin';
 
 interface EditJobSeekerModalProps {
   isOpen: boolean;
@@ -29,12 +31,16 @@ export const EditJobSeekerModal: React.FC<EditJobSeekerModalProps> = ({
     country: 'US',
     zipCode: '',
     phoneNumber: '',
+    occupationId: 0,
+    specialtyId: undefined,
   });
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedOccupationId, setSelectedOccupationId] = useState<number | undefined>(undefined);
 
   const { data: statesData, isLoading: isStatesLoading } = useStates();
+  const { data: occupationsData, isLoading: isOccupationsLoading } = useJobsAdminOccupations();
 
   const stateOptions = React.useMemo(() => {
     if (statesData?.success && statesData.data) {
@@ -45,6 +51,40 @@ export const EditJobSeekerModal: React.FC<EditJobSeekerModalProps> = ({
     }
     return [];
   }, [statesData]);
+
+  const occupationOptions = useMemo(() => {
+    const baseOptions = [{ value: '', label: 'Select Occupation' }];
+    
+    if (occupationsData?.success && occupationsData.data) {
+      const dynamicOptions = occupationsData.data.map(occupation => ({
+        value: occupation.id.toString(),
+        label: occupation.name
+      }));
+      return [...baseOptions, ...dynamicOptions];
+    }
+    
+    return baseOptions;
+  }, [occupationsData]);
+
+  const specialtyOptions = useMemo(() => {
+    const baseOptions = [{ value: '', label: 'Select Specialty' }];
+    
+    if (selectedOccupationId && occupationsData?.success && occupationsData.data) {
+      const selectedOccupation = occupationsData.data.find(
+        occupation => occupation.id === selectedOccupationId
+      );
+      
+      if (selectedOccupation?.specialty) {
+        const dynamicOptions = selectedOccupation.specialty.map((specialty: Specialty) => ({
+          value: specialty.id.toString(),
+          label: specialty.name
+        }));
+        return [...baseOptions, ...dynamicOptions];
+      }
+    }
+    
+    return baseOptions;
+  }, [selectedOccupationId, occupationsData]);
 
   const countryOptions = React.useMemo(() => [
     { value: 'US', label: 'United States' },
@@ -74,7 +114,10 @@ export const EditJobSeekerModal: React.FC<EditJobSeekerModalProps> = ({
           country: 'US',
           zipCode: jobSeeker.zipCode || '',
           phoneNumber: jobSeeker.phoneNumber || '',
+          occupationId: jobSeeker.occupationId || 0,
+          specialtyId: jobSeeker.specialtyId,
         });
+        setSelectedOccupationId(jobSeeker.occupationId);
       }
     } catch (err) {
       setError('Failed to load job seeker data');
@@ -95,6 +138,25 @@ export const EditJobSeekerModal: React.FC<EditJobSeekerModalProps> = ({
       ...prev,
       [field]: value
     }));
+
+    // Handle occupation change to reset specialty
+    if (field === 'occupationId') {
+      const occupationId = value ? parseInt(value) : 0;
+      setSelectedOccupationId(occupationId);
+      setFormData(prev => ({
+        ...prev,
+        occupationId,
+        specialtyId: undefined // Reset specialty when occupation changes
+      }));
+    }
+
+    // Handle specialty change
+    if (field === 'specialtyId') {
+      setFormData(prev => ({
+        ...prev,
+        specialtyId: value ? parseInt(value) : undefined
+      }));
+    }
   };
 
   const saveChanges = async () => {
@@ -113,7 +175,7 @@ export const EditJobSeekerModal: React.FC<EditJobSeekerModalProps> = ({
   };
 
   const isFormValid = () => {
-    return formData.firstName.trim() && formData.lastName.trim();
+    return formData.firstName.trim() && formData.lastName.trim() && formData.occupationId > 0;
   };
 
   return (
@@ -167,6 +229,33 @@ export const EditJobSeekerModal: React.FC<EditJobSeekerModalProps> = ({
                   onChange={(e) => updateField('lastName', e.target.value)}
                   placeholder="Enter last name"
                   required
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Occupation *
+                </label>
+                <Select
+                  options={occupationOptions}
+                  value={formData.occupationId > 0 ? formData.occupationId.toString() : ''}
+                  onChange={(value) => updateField('occupationId', value)}
+                  placeholder="Select occupation"
+                  disabled={isOccupationsLoading}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Specialty
+                </label>
+                <Select
+                  options={specialtyOptions}
+                  value={formData.specialtyId ? formData.specialtyId.toString() : ''}
+                  onChange={(value) => updateField('specialtyId', value)}
+                  placeholder="Select specialty"
+                  disabled={!selectedOccupationId || selectedOccupationId === 0 || isOccupationsLoading}
                 />
               </div>
             </div>
