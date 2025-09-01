@@ -71,10 +71,10 @@ export default function Team({ teamMembers = [], formatDate, employerId }: TeamP
 
     const itemsPerPageOptions = [
         { value: '5', label: '5 per page' },
-        { value: '8', label: '8 per page' },
         { value: '10', label: '10 per page' },
         { value: '20', label: '20 per page' },
         { value: '50', label: '50 per page' },
+        { value: '100', label: '100 per page' },
     ];
 
     const tableColumns = useMemo(() => [
@@ -150,8 +150,8 @@ export default function Team({ teamMembers = [], formatDate, employerId }: TeamP
                                         </TableCell>
                                         <TableCell className="py-4 px-6">
                                             <div className="flex items-center gap-2">
-                                                <LocationIcon className="w-4 h-4 text-gray-400" />
-                                                <span className="text-sm text-gray-900 dark:text-white">
+                                              
+                                                <span className="text-sm capitalize text-gray-900 dark:text-white">
                                                     {member.city && member.state 
                                                         ? `${member.city}, ${member.state}` 
                                                         : member.state || member.city || 'N/A'
@@ -189,7 +189,7 @@ export default function Team({ teamMembers = [], formatDate, employerId }: TeamP
                     {safeTeamMembers.length > 0 && (
                         <div className="flex items-center justify-between mt-6 p-6 pt-6">
                             <div className="text-sm text-gray-500 dark:text-gray-400">
-                                Showing {startIndex + 1} to {Math.min(endIndex, safeTeamMembers.length)} of {safeTeamMembers.length} items
+                                Showing {startIndex + 1} of {Math.min(endIndex, safeTeamMembers.length)} results
                             </div>
                             <div className="flex items-center gap-4">
                                 <div className="flex items-center gap-2">

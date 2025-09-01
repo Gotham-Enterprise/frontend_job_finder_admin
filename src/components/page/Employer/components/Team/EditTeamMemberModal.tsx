@@ -7,6 +7,7 @@ import { teamApi } from '@/services/api/team';
 import { TeamMember } from '@/services/types/team';
 import { teamQueryKeys } from '@/services/hooks/useTeam';
 import { showToast } from '@/services/utils/toast';
+import { validateTeamMemberForm, TeamMemberFormData } from '@/validation/teamMemberValidation';
 import { Modal } from '@/components/ui/modal';
 import Input from '@/components/form/input/InputField';
 import Select from '@/components/form/Select';
@@ -20,18 +21,8 @@ interface EditTeamMemberModalProps {
   teamMember: TeamMember | null;
 }
 
-interface FormData {
-  firstName: string;
-  lastName: string;
-  email: string;
-  companyRole: string;
-  accessRoleId: string;
-  address: string;
-  city: string;
-  state: string;
-  country: string;
-  zipCode: string;
-}
+// Use the type from our validation file
+type FormData = TeamMemberFormData;
 
 const initialFormData: FormData = {
   firstName: '',
@@ -72,7 +63,7 @@ export default function EditTeamMemberModal({ isOpen, onClose, employerId, teamM
   const [profileFile, setProfileFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errors, setErrors] = useState<Partial<FormData>>({});
+  const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   
   const queryClient = useQueryClient();
@@ -115,7 +106,7 @@ export default function EditTeamMemberModal({ isOpen, onClose, employerId, teamM
   const updateField = (field: keyof FormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     
-
+    // Clear error when user updates field
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: undefined }));
     }
@@ -141,7 +132,7 @@ export default function EditTeamMemberModal({ isOpen, onClose, employerId, teamM
     fileInputRef.current?.click();
   };
 
- 
+
   useEffect(() => {
     return () => {
       if (previewUrl && previewUrl.startsWith('blob:')) {
@@ -150,59 +141,17 @@ export default function EditTeamMemberModal({ isOpen, onClose, employerId, teamM
     };
   }, [previewUrl]);
 
+
   const validateForm = (): boolean => {
-    const newErrors: Partial<FormData> = {};
-
-    if (!formData.firstName.trim()) {
-      newErrors.firstName = 'First name is required';
-    } else if (formData.firstName.trim().length < 2) {
-      newErrors.firstName = 'First name must be at least 2 characters';
-    }
+    const result = validateTeamMemberForm(formData);
     
-    if (!formData.lastName.trim()) {
-      newErrors.lastName = 'Last name is required';
-    } else if (formData.lastName.trim().length < 2) {
-      newErrors.lastName = 'Last name must be at least 2 characters';
+    if (result.success) {
+      setErrors({});
+      return true;
+    } else {
+      setErrors(result.errors);
+      return false;
     }
-    
-    if (!formData.email.trim()) {
-      newErrors.email = 'Email is required';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Please enter a valid email address';
-    }
-    
-    if (!formData.companyRole.trim()) {
-      newErrors.companyRole = 'Company role is required';
-    }
-    
-    if (!formData.accessRoleId) {
-      newErrors.accessRoleId = 'Access role is required';
-    }
-    
-    if (!formData.address.trim()) {
-      newErrors.address = 'Address is required';
-    } else if (formData.address.trim().length < 5) {
-      newErrors.address = 'Address must be at least 5 characters';
-    }
-    
-    if (!formData.city.trim()) {
-      newErrors.city = 'City is required';
-    } else if (formData.city.trim().length < 2) {
-      newErrors.city = 'City name must be at least 2 characters';
-    }
-    
-    if (!formData.state) {
-      newErrors.state = 'State is required';
-    }
-    
-    if (!formData.zipCode.trim()) {
-      newErrors.zipCode = 'Zip code is required';
-    } else if (!/^\d{5}(-\d{4})?$/.test(formData.zipCode.trim())) {
-      newErrors.zipCode = 'Please enter a valid zip code (e.g., 12345 or 12345-6789)';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
   };
 
   const submitForm = async (e: React.FormEvent) => {
@@ -225,7 +174,7 @@ export default function EditTeamMemberModal({ isOpen, onClose, employerId, teamM
         if (key === 'accessRoleId') {
           submitFormData.append('accessRoleId', value.toString());
         } else if (key === 'country') {
-          // Set default country to USA if not provided
+
           submitFormData.append('country', value || 'USA');
         } else {
           submitFormData.append(key, value.toString());
