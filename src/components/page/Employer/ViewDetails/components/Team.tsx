@@ -7,6 +7,8 @@ import Button from "@/components/ui/button/Button";
 import NotFoundState from "@/components/common/NotFoundState";
 import Pagination from "@/components/tables/Pagination";
 import Select from "@/components/form/Select";
+import ToggleSwitch from "@/components/ui/ToggleSwitch";
+import ConfirmationModal from "@/components/ui/ConfirmationModal";
 import { PencilIcon } from "@/components/ui/icons";
 import {
   Table,
@@ -16,7 +18,7 @@ import {
 } from "@/components/ui/table";
 import TableHeading from "@/components/tables/tableHeader";
 import { AddTeamMemberModal, EditTeamMemberModal } from "@/components/page/Employer/components";
-import { teamQueryKeys } from "@/services/hooks/useTeam";
+import { teamQueryKeys, useUpdateTeamMemberStatus } from "@/services/hooks/useTeam";
 
 interface TeamProps {
     teamMembers?: TeamMember[];
@@ -31,6 +33,10 @@ export default function Team({ teamMembers = [], formatDate, employerId }: TeamP
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [selectedTeamMember, setSelectedTeamMember] = useState<TeamMember | null>(null);
+    const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+    const [memberToToggle, setMemberToToggle] = useState<{ member: TeamMember; newStatus: 'active' | 'inactive' } | null>(null);
+    
+    const updateStatusMutation = useUpdateTeamMemberStatus();
     
     const { totalPages, startIndex, endIndex, currentMembers } = useMemo(() => {
         const total = Math.ceil(teamMembers.length / itemsPerPage);
@@ -73,6 +79,36 @@ export default function Team({ teamMembers = [], formatDate, employerId }: TeamP
     const editTeamMember = (member: TeamMember) => {
         setSelectedTeamMember(member);
         setIsEditModalOpen(true);
+    };
+
+    const toggleMemberStatus = (member: TeamMember, newStatus: 'active' | 'inactive') => {
+        if (newStatus === 'inactive') {
+            setMemberToToggle({ member, newStatus });
+            setIsConfirmModalOpen(true);
+        } else {
+            updateStatusMutation.mutate({
+                employerId,
+                teamMemberId: member.id || member.userId || '',
+                status: newStatus
+            });
+        }
+    };
+
+    const confirmStatusToggle = () => {
+        if (memberToToggle) {
+            updateStatusMutation.mutate({
+                employerId,
+                teamMemberId: memberToToggle.member.id || memberToToggle.member.userId || '',
+                status: memberToToggle.newStatus
+            });
+        }
+        setIsConfirmModalOpen(false);
+        setMemberToToggle(null);
+    };
+
+    const cancelStatusToggle = () => {
+        setIsConfirmModalOpen(false);
+        setMemberToToggle(null);
     };
 
     const tableColumns = useMemo(() => [
@@ -178,9 +214,16 @@ export default function Team({ teamMembers = [], formatDate, employerId }: TeamP
                                             </span>
                                         </TableCell>
                                         <TableCell className="py-4 px-6">
-                                            <span className={`inline-flex items-center px-3 py-1 text-xs font-medium rounded-full ${getStatusVariant(member.status)}`}>
-                                                {member.status}
-                                            </span>
+                                            <ToggleSwitch
+                                                id={`status-${member.userId || member.id}`}
+                                                checked={member.status === 'active'}
+                                                onChange={(checked) => 
+                                                    toggleMemberStatus(member, checked ? 'active' : 'inactive')
+                                                }
+                                                label=""
+                                                disabled={updateStatusMutation.isPending}
+                                                size="sm"
+                                            />
                                         </TableCell>
                                         <TableCell className="py-4 px-6 text-right">
                                             <Button
@@ -242,6 +285,20 @@ export default function Team({ teamMembers = [], formatDate, employerId }: TeamP
                 onClose={closeEditModal}
                 employerId={employerId}
                 teamMember={selectedTeamMember}
+            />
+
+            <ConfirmationModal
+                isOpen={isConfirmModalOpen}
+                onClose={cancelStatusToggle}
+                onConfirm={confirmStatusToggle}
+                title="Deactivate Account"
+                message={`Are you sure you want to deactivate ${memberToToggle ? 
+                    memberToToggle.member.name || `${memberToToggle.member.firstName} ${memberToToggle.member.lastName}` 
+                    : ''
+                }?`}
+                confirmText="Confirm"
+                cancelText="Cancel"
+                isLoading={updateStatusMutation.isPending}
             />
         </>
     );

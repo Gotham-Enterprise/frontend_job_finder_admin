@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { teamApi } from '../api/team';
+import { showToast } from '../utils/toast';
 
 export const teamQueryKeys = {
   all: ['team'] as const,
@@ -41,6 +42,29 @@ export const useUpdateTeamMember = () => {
     onSuccess: () => {
 
       queryClient.invalidateQueries({ queryKey: teamQueryKeys.all });
+    },
+  });
+};
+
+export const useUpdateTeamMemberStatus = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ employerId, teamMemberId, status }: { 
+      employerId: string; 
+      teamMemberId: string; 
+      status: 'active' | 'inactive'; 
+    }) => {
+      return teamApi.updateTeamMemberStatus(employerId, teamMemberId, { status });
+    },
+    onSuccess: (_, { status }) => {
+      queryClient.invalidateQueries({ queryKey: teamQueryKeys.all });
+      const action = status === 'active' ? 'activated' : 'deactivated';
+      showToast.success('Status Updated', `Team member has been ${action} successfully.`);
+    },
+    onError: (error: any) => {
+      const message = error?.response?.data?.message || error?.message || 'Failed to update team member status';
+      showToast.error('Update Failed', message);
     },
   });
 };

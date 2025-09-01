@@ -1,5 +1,5 @@
 import { TeamMembersResponse } from '../types/team';
-import { apiGet, apiPost, apiPut } from './apiUtils';
+import { apiGet, apiPost, apiPut, apiPatch } from './apiUtils';
 
 export const teamApi = {
   async getTeamMembers(employerId: string): Promise<TeamMembersResponse> {
@@ -12,5 +12,9 @@ export const teamApi = {
 
   async updateTeamMember(employerId: string, teamMemberId: string, formData: FormData): Promise<any> {
     return apiPut(`/api/admin/employer/users/${employerId}/user/${teamMemberId}`, formData);
+  },
+
+   async updateTeamMemberStatus(employerId: string, teamMemberId: string, data: { status: string }): Promise<any> {
+    return apiPatch(`/api/admin/employer/users/${employerId}/user/${teamMemberId}`, data);
   },
 };
