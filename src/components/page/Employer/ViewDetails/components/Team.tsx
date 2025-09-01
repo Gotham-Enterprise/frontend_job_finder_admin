@@ -4,6 +4,7 @@ import { TeamMember } from "@/services/types/team";
 import { useState, useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import Button from "@/components/ui/button/Button";
+import Badge from "@/components/ui/badge/Badge";
 import NotFoundState from "@/components/common/NotFoundState";
 import Pagination from "@/components/tables/Pagination";
 import Select from "@/components/form/Select";
@@ -118,7 +119,7 @@ export default function Team({ teamMembers = [], formatDate, employerId }: TeamP
         { key: 'location', label: 'Location' },
         { key: 'joined', label: 'Joined' },
         { key: 'status', label: 'Status' },
-        { key: 'actions', label: '', className: 'text-right' },
+        { key: 'actions', label: 'Actions', className: 'text-right' },
     ], []);
 
     const itemsPerPageOptions = useMemo(() => [
@@ -214,27 +215,34 @@ export default function Team({ teamMembers = [], formatDate, employerId }: TeamP
                                             </span>
                                         </TableCell>
                                         <TableCell className="py-4 px-6">
-                                            <ToggleSwitch
-                                                id={`status-${member.userId || member.id}`}
-                                                checked={member.status === 'active'}
-                                                onChange={(checked) => 
-                                                    toggleMemberStatus(member, checked ? 'active' : 'inactive')
-                                                }
-                                                label=""
-                                                disabled={updateStatusMutation.isPending}
-                                                size="sm"
-                                            />
+                                            <Badge className={getStatusVariant(member.status || 'inactive')}>
+                                                <span className="capitalize">
+                                                    {member.status || 'inactive'}
+                                                </span>
+                                            </Badge>
                                         </TableCell>
                                         <TableCell className="py-4 px-6 text-right">
-                                            <Button
-                                                onClick={() => editTeamMember(member)}
-                                                variant="ghost"
-                                                size="sm"
-                                                className="text-brand-400"
-                                                startIcon={<PencilIcon className="w-4 h-4" />}
-                                            >
-                                                Edit
-                                            </Button>
+                                            <div className="flex items-center justify-end gap-2">
+                                                <ToggleSwitch
+                                                    id={`status-${member.userId || member.id}`}
+                                                    checked={member.status === 'active'}
+                                                    onChange={(checked) => 
+                                                        toggleMemberStatus(member, checked ? 'active' : 'inactive')
+                                                    }
+                                                    label=""
+                                                    disabled={updateStatusMutation.isPending}
+                                                    size="sm"
+                                                />
+                                                <Button
+                                                    onClick={() => editTeamMember(member)}
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="text-brand-400"
+                                                    startIcon={<PencilIcon className="w-4 h-4" />}
+                                                >
+                                                    Edit
+                                                </Button>
+                                            </div>
                                         </TableCell>
                                     </TableRow>
                                 ))}
