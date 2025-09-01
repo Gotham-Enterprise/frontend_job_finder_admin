@@ -25,10 +25,10 @@ const JobDetailsView: React.FC<JobDetailsViewProps> = ({ jobId }) => {
   const { data: jobData, isLoading, isError, refetch } = useCareerDetails(jobId || '');
 
   const statusCounts = useMemo(() => {
-    const counts: { [key: string]: number } = { All: 0, Pending: 0, Qualified: 0, 'Not Qualified': 0 };
-    if (jobData?.data?.applicants?.items) {
-      counts.All = jobData.data.applicants.items.length;
-      jobData.data.applicants.items.forEach(applicant => {
+    const counts: { [key: string]: number } = { All: 0, PENDING: 0, QUALIFIED: 0, NOT_QUALIFIED: 0 };
+    if (jobData?.data?.applicants && Array.isArray(jobData.data.applicants)) {
+      counts.All = jobData.data.applicants.length;
+      jobData.data.applicants.forEach((applicant: any) => {
         if (counts[applicant.status] !== undefined) {
           counts[applicant.status]++;
         }
@@ -38,13 +38,13 @@ const JobDetailsView: React.FC<JobDetailsViewProps> = ({ jobId }) => {
   }, [jobData]);
 
   const filteredApplicants = useMemo(() => {
-    if (!jobData?.data?.applicants?.items) return [];
-    return jobData.data.applicants.items.filter(applicant => {
+    if (!jobData?.data?.applicants || !Array.isArray(jobData.data.applicants)) return [];
+    return jobData.data.applicants.filter((applicant: any) => {
       const matchesTab = activeTab === 'All' || applicant.status === activeTab;
       const matchesSearch = searchTerm === '' || 
-        applicant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        applicant.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         applicant.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (applicant.phone && applicant.phone.includes(searchTerm));
+        (applicant.phoneNumber && applicant.phoneNumber.includes(searchTerm));
       return matchesTab && matchesSearch;
     });
   }, [jobData, activeTab, searchTerm]);
@@ -168,19 +168,54 @@ const JobDetailsView: React.FC<JobDetailsViewProps> = ({ jobId }) => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredApplicants.map(applicant => (
-              <TableRow key={applicant.id}>
-                <TableCell>{applicant.name}</TableCell>
-                <TableCell>{applicant.email}</TableCell>
-                <TableCell>{applicant.phone || 'N/A'}</TableCell>
-                <TableCell>{new Date(applicant.appliedDate).toLocaleDateString()}</TableCell>
-                <TableCell><Badge>{applicant.status}</Badge></TableCell>
-                <TableCell>
-                  <Button variant="ghost" size="sm"><Eye className="w-4 h-4" /></Button>
-                  <Button variant="ghost" size="sm"><MoreVertical className="w-4 h-4" /></Button>
+            {filteredApplicants.length > 0 ? (
+              filteredApplicants.map((applicant: any) => (
+                <TableRow key={applicant.id}>
+                  <TableCell>{applicant.fullName}</TableCell>
+                  <TableCell>{applicant.email}</TableCell>
+                  <TableCell>{applicant.phoneNumber || 'N/A'}</TableCell>
+                  <TableCell>{new Date(applicant.applicationDate).toLocaleDateString()}</TableCell>
+                  <TableCell>
+                    <Badge 
+                      variant="light"
+                      color={
+                        applicant.status === 'PENDING' ? 'warning' : 
+                        applicant.status === 'QUALIFIED' ? 'success' : 
+                        'error'
+                      }
+                    >
+                      {applicant.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-1">
+                      <Button variant="ghost" size="sm">
+                        <Eye className="w-4 h-4" />
+                      </Button>
+                      <Button variant="ghost" size="sm">
+                        <MoreVertical className="w-4 h-4" />
+                      </Button>
+                      {applicant.resumeUrl && (
+                        <Button variant="ghost" size="sm" onClick={() => window.open(applicant.resumeUrl, '_blank')}>
+                          📄
+                        </Button>
+                      )}
+                      {applicant.coverLetterUrl && (
+                        <Button variant="ghost" size="sm" onClick={() => window.open(applicant.coverLetterUrl, '_blank')}>
+                          📝
+                        </Button>
+                      )}
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                  {searchTerm ? 'No applicants found matching your search.' : 'No applicants have applied for this position yet.'}
                 </TableCell>
               </TableRow>
-            ))}
+            )}
           </TableBody>
         </Table>
         {/* Pagination would go here */}
