@@ -7,7 +7,6 @@ import { teamApi } from '@/services/api/team';
 import { TeamMember } from '@/services/types/team';
 import { teamQueryKeys } from '@/services/hooks/useTeam';
 import { showToast } from '@/services/utils/toast';
-import { authUtils } from '@/services/utils/authUtils';
 import { Modal } from '@/components/ui/modal';
 import Input from '@/components/form/input/InputField';
 import Select from '@/components/form/Select';
@@ -77,9 +76,8 @@ export default function EditTeamMemberModal({ isOpen, onClose, employerId, teamM
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   
   const queryClient = useQueryClient();
-  const { data: statesData, isLoading: isStatesLoading } = useStates();
+  const { data: statesData } = useStates();
 
-  // Populate form with team member data when modal opens
   useEffect(() => {
     if (teamMember && isOpen) {
       setFormData({
@@ -94,15 +92,18 @@ export default function EditTeamMemberModal({ isOpen, onClose, employerId, teamM
         country: teamMember.country || 'USA',
         zipCode: teamMember.zipCode || '',
       });
-      
-      // Set preview URL if team member has profile picture
+
       if (teamMember.profilePicture || teamMember.avatarUrl) {
         setPreviewUrl(teamMember.profilePicture || teamMember.avatarUrl || null);
       }
+    } else if (isOpen) {
+      setFormData({
+        ...initialFormData,
+        country: 'USA'
+      });
     }
   }, [teamMember, isOpen]);
 
-  // Create state options from API data
   const stateOptions = React.useMemo(() => {
     if (!statesData?.data?.states) return [];
     return statesData.data.states.map(state => ({
@@ -111,52 +112,36 @@ export default function EditTeamMemberModal({ isOpen, onClose, employerId, teamM
     }));
   }, [statesData]);
 
-  const handleInputChange = (field: keyof FormData) => (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: e.target.value
-    }));
+  const updateField = (field: keyof FormData, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
     
-    // Clear error when user starts typing
+
     if (errors[field]) {
-      setErrors(prev => ({
-        ...prev,
-        [field]: undefined
-      }));
+      setErrors(prev => ({ ...prev, [field]: undefined }));
     }
   };
 
-  const handleSelectChange = (field: keyof FormData) => (value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-    
-    // Clear error when user makes selection
-    if (errors[field]) {
-      setErrors(prev => ({
-        ...prev,
-        [field]: undefined
-      }));
-    }
+  const onInputChange = (field: keyof FormData) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    updateField(field, e.target.value);
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const onSelectChange = (field: keyof FormData) => (value: string) => {
+    updateField(field, value);
+  };
+
+  const onFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setProfileFile(file);
-      
-      // Create preview URL
-      const url = URL.createObjectURL(file);
-      setPreviewUrl(url);
+      setPreviewUrl(URL.createObjectURL(file));
     }
   };
 
-  const handleCameraClick = () => {
+  const openFileDialog = () => {
     fileInputRef.current?.click();
   };
 
-  // Cleanup preview URL when component unmounts or URL changes
+ 
   useEffect(() => {
     return () => {
       if (previewUrl && previewUrl.startsWith('blob:')) {
@@ -168,7 +153,6 @@ export default function EditTeamMemberModal({ isOpen, onClose, employerId, teamM
   const validateForm = (): boolean => {
     const newErrors: Partial<FormData> = {};
 
-    // Required field validations
     if (!formData.firstName.trim()) {
       newErrors.firstName = 'First name is required';
     } else if (formData.firstName.trim().length < 2) {
@@ -221,7 +205,7 @@ export default function EditTeamMemberModal({ isOpen, onClose, employerId, teamM
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const submitForm = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!validateForm() || !teamMember) {
@@ -237,71 +221,56 @@ export default function EditTeamMemberModal({ isOpen, onClose, employerId, teamM
         submitFormData.append('uploadProfileUser', profileFile);
       }
       
-
       Object.entries(formData).forEach(([key, value]) => {
         if (key === 'accessRoleId') {
-       
           submitFormData.append('accessRoleId', value.toString());
-     
-          submitFormData.append('country', value || 'United States');
+        } else if (key === 'country') {
+          // Set default country to USA if not provided
+          submitFormData.append('country', value || 'USA');
         } else {
           submitFormData.append(key, value.toString());
         }
       });
-
-   
-
 
       const teamMemberId = teamMember.userId || teamMember.id;
       if (!teamMemberId) {
         throw new Error('Team member ID is required for update');
       }
 
-   
       await teamApi.updateTeamMember(employerId, teamMemberId, submitFormData);
       
       queryClient.invalidateQueries({ queryKey: teamQueryKeys.list(employerId) });
       
- 
       showToast.success('Team Member Updated', 'Team member details have been successfully updated.');
       
-
-      handleClose();
+      closeModal();
       
     } catch (error: any) {
       console.error('Error updating team member:', error);
       
-      // Show error message to user
       let errorMessage = 'Failed to update team member. Please try again.';
       
-      if (error.response) {
-     
-        if (error.response.data?.message) {
-          errorMessage = error.response.data.message;
-        } else if (error.response.data?.error) {
-          errorMessage = error.response.data.error;
-        }
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.response?.data?.error) {
+        errorMessage = error.response.data.error;
       } else if (error.request) {
-        console.error('Request made but no response:', error.request);
         errorMessage = 'Network error. Please check your connection and try again.';
-      } else {
-        console.error('Error message:', error.message);
-        errorMessage = error.message || errorMessage;
+      } else if (error.message) {
+        errorMessage = error.message;
       }
       
       showToast.error('Failed to Update Team Member', errorMessage);
-      
-    
       
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleClose = () => {
+  const closeModal = () => {
     setFormData(initialFormData);
     setProfileFile(null);
-    if (previewUrl && previewUrl.startsWith('blob:')) {
+    if (previewUrl?.startsWith('blob:')) {
       URL.revokeObjectURL(previewUrl);
     }
     setPreviewUrl(null);
@@ -313,16 +282,16 @@ export default function EditTeamMemberModal({ isOpen, onClose, employerId, teamM
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} isFullscreen={false} className="max-w-2xl mx-4 my-8 rounded-xl max-h-[90vh] overflow-y-auto">
+    <Modal isOpen={isOpen} onClose={closeModal} isFullscreen={false} className="max-w-2xl mx-4 my-8 rounded-xl max-h-[90vh] overflow-y-auto">
       <div className="p-6">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">Edit Team Member</h2>
         
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={submitForm} className="space-y-4">
           {/* Profile Picture Upload */}
           <div className="flex items-center gap-4 mb-6">
             <div 
               className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center cursor-pointer hover:bg-green-600 transition-colors overflow-hidden relative"
-              onClick={handleCameraClick}
+              onClick={openFileDialog}
               title="Click to upload profile picture"
             >
               {previewUrl ? (
@@ -343,7 +312,7 @@ export default function EditTeamMemberModal({ isOpen, onClose, employerId, teamM
                 ref={fileInputRef}
                 type="file"
                 accept="image/*"
-                onChange={handleFileChange}
+                onChange={onFileSelect}
                 className="hidden"
               />
             </div>
@@ -358,7 +327,7 @@ export default function EditTeamMemberModal({ isOpen, onClose, employerId, teamM
                 type="text"
                 placeholder="First Name"
                 value={formData.firstName}
-                onChange={handleInputChange('firstName')}
+                onChange={onInputChange('firstName')}
                 error={!!errors.firstName}
                 hint={errors.firstName}
               />
@@ -370,7 +339,7 @@ export default function EditTeamMemberModal({ isOpen, onClose, employerId, teamM
                 type="text"
                 placeholder="Last Name"
                 value={formData.lastName}
-                onChange={handleInputChange('lastName')}
+                onChange={onInputChange('lastName')}
                 error={!!errors.lastName}
                 hint={errors.lastName}
               />
@@ -385,7 +354,7 @@ export default function EditTeamMemberModal({ isOpen, onClose, employerId, teamM
               type="email"
               placeholder="Email Address"
               value={formData.email}
-              onChange={handleInputChange('email')}
+              onChange={onInputChange('email')}
               error={!!errors.email}
               hint={errors.email}
             />
@@ -398,7 +367,7 @@ export default function EditTeamMemberModal({ isOpen, onClose, employerId, teamM
               options={companyRoleOptions}
               placeholder="Enter your company role"
               value={formData.companyRole}
-              onChange={handleSelectChange('companyRole')}
+              onChange={onSelectChange('companyRole')}
               className={errors.companyRole ? 'border-error-500' : ''}
             />
             {errors.companyRole && (
@@ -413,7 +382,7 @@ export default function EditTeamMemberModal({ isOpen, onClose, employerId, teamM
               options={accessRoleOptions}
               placeholder="Enter your access role"
               value={formData.accessRoleId}
-              onChange={handleSelectChange('accessRoleId')}
+              onChange={onSelectChange('accessRoleId')}
               className={errors.accessRoleId ? 'border-error-500' : ''}
             />
             {errors.accessRoleId && (
@@ -429,7 +398,7 @@ export default function EditTeamMemberModal({ isOpen, onClose, employerId, teamM
               type="text"
               placeholder="Address"
               value={formData.address}
-              onChange={handleInputChange('address')}
+              onChange={onInputChange('address')}
               error={!!errors.address}
               hint={errors.address}
             />
@@ -444,7 +413,7 @@ export default function EditTeamMemberModal({ isOpen, onClose, employerId, teamM
                 type="text"
                 placeholder="City"
                 value={formData.city}
-                onChange={handleInputChange('city')}
+                onChange={onInputChange('city')}
                 error={!!errors.city}
                 hint={errors.city}
               />
@@ -455,7 +424,7 @@ export default function EditTeamMemberModal({ isOpen, onClose, employerId, teamM
                 options={stateOptions}
                 placeholder="Select State"
                 value={formData.state}
-                onChange={handleSelectChange('state')}
+                onChange={onSelectChange('state')}
                 className={errors.state ? 'border-error-500' : ''}
               />
               {errors.state && (
@@ -470,10 +439,10 @@ export default function EditTeamMemberModal({ isOpen, onClose, employerId, teamM
               <Label htmlFor="country">Country*</Label>
               <Select
                 options={countryOptions}
-                placeholder="Select Country"
-                value={formData.country}
+                placeholder="United States"
+                value={formData.country || 'USA'}
                 disabled
-                onChange={handleSelectChange('country')}
+                onChange={onSelectChange('country')}
               />
             </div>
             <div>
@@ -483,7 +452,7 @@ export default function EditTeamMemberModal({ isOpen, onClose, employerId, teamM
                 type="text"
                 placeholder="Zip Code"
                 value={formData.zipCode}
-                onChange={handleInputChange('zipCode')}
+                onChange={onInputChange('zipCode')}
                 error={!!errors.zipCode}
                 hint={errors.zipCode}
               />
@@ -495,7 +464,7 @@ export default function EditTeamMemberModal({ isOpen, onClose, employerId, teamM
             <Button
               type="button"
               variant="outline"
-              onClick={handleClose}
+              onClick={closeModal}
               disabled={isSubmitting}
             >
               Cancel
