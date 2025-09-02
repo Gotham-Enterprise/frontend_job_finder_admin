@@ -12,7 +12,9 @@ interface Applicant {
   applicationDate: string;
   status: 'PENDING' | 'QUALIFIED' | 'NOT_QUALIFIED';
   resumeUrl?: string;
+  resumeFileName?: string;
   coverLetterUrl?: string;
+  coverLetterFileName?: string;
   address?: string;
   city?: string;
   state?: string;
@@ -65,6 +67,30 @@ const ViewApplicantModal: React.FC<ViewApplicantModalProps> = ({
 
   const handleViewDocument = (url: string) => {
     window.open(url, '_blank');
+  };
+
+  const getDocumentType = (url: string, filename?: string) => {
+    // Use filename if available, otherwise fall back to URL
+    const sourceToCheck = filename || url;
+    const extension = sourceToCheck.split('.').pop()?.toLowerCase();
+    switch (extension) {
+      case 'pdf':
+        return 'PDF Document';
+      case 'doc':
+      case 'docx':
+        return 'Word Document';
+      default:
+        return 'Document';
+    }
+  };
+
+  const getFileName = (url: string, filename?: string) => {
+    // Return the filename if available, otherwise extract from URL
+    if (filename) {
+      return filename;
+    }
+    // Extract filename from URL
+    return url.split('/').pop() || 'Document';
   };
 
   return (
@@ -229,7 +255,7 @@ const ViewApplicantModal: React.FC<ViewApplicantModalProps> = ({
                               Resume
                             </p>
                             <p className="text-sm text-gray-500 dark:text-gray-400">
-                              PDF Document
+                              {getFileName(applicant.resumeUrl, applicant.resumeFileName)}
                             </p>
                           </div>
                         </div>
@@ -256,7 +282,7 @@ const ViewApplicantModal: React.FC<ViewApplicantModalProps> = ({
                               Cover Letter
                             </p>
                             <p className="text-sm text-gray-500 dark:text-gray-400">
-                              PDF Document
+                              {getFileName(applicant.coverLetterUrl, applicant.coverLetterFileName)}
                             </p>
                           </div>
                         </div>
