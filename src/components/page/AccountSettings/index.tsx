@@ -22,6 +22,11 @@ interface PersonalInformationFormData {
   lastName: string;
   email: string;
   username: string;
+  phoneNumber: string;
+  address: string;
+  state: string;
+  city: string;
+  zipCode: string;
 }
 
 const AccountSettings: React.FC = () => {
@@ -48,7 +53,7 @@ const AccountSettings: React.FC = () => {
   const resetPasswordMutation = useResetPassword();
   
   // Use API user data or fallback to cached user, avoid hardcoded test data
-  const currentUser = (apiUser as any)?.user || apiUser || authUtils.getUser();
+  const currentUser = (apiUser as any)?.data || (apiUser as any)?.user || apiUser || authUtils.getUser();
   const displayName = authUtils.getUserDisplayName();
   const userInitials = authUtils.getUserInitials();
 
@@ -58,7 +63,9 @@ const AccountSettings: React.FC = () => {
     currentUser,
     isLoadingUser,
     userError,
-    isAuthenticated: authUtils.isAuthenticated()
+    isAuthenticated: authUtils.isAuthenticated(),
+    apiUserData: (apiUser as any)?.data,
+    apiUserUser: (apiUser as any)?.user
   });
 
   const executePasswordChange = useCallback(async (passwordData: PasswordFormData): Promise<void> => {

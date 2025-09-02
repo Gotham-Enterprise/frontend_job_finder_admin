@@ -13,6 +13,11 @@ interface PersonalInformationFormData {
   lastName: string;
   email: string;
   username: string;
+  phoneNumber: string;
+  address: string;
+  state: string;
+  city: string;
+  zipCode: string;
 }
 
 interface PasswordFormData {
@@ -44,6 +49,8 @@ const AccountInfo: React.FC<AccountInfoProps> = ({
   isUpdatingAvatar = false,
   isUpdatingPersonalInfo = false
 }) => {
+  console.log('AccountInfo - Props received:', { user, userInitials, displayName });
+  
   const [mounted, setMounted] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedAvatar, setSelectedAvatar] = useState<File | null>(null);
@@ -58,12 +65,37 @@ const AccountInfo: React.FC<AccountInfoProps> = ({
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Update form data when user changes
+  useEffect(() => {
+    console.log('AccountInfo - User prop changed:', user);
+    if (user) {
+      const newFormData = {
+        firstName: user.firstName || '',
+        lastName: user.lastName || '',
+        email: user.email || '',
+        username: user.username || '',
+        phoneNumber: user.profile?.phoneNumber || '',
+        address: user.profile?.address || '',
+        state: user.profile?.state || '',
+        city: user.profile?.city || '',
+        zipCode: user.profile?.zipCode || ''
+      };
+      console.log('AccountInfo - Setting form data:', newFormData);
+      setEditFormData(newFormData);
+    }
+  }, [user]);
   
   const [editFormData, setEditFormData] = useState<PersonalInformationFormData>({
     firstName: user?.firstName || '',
     lastName: user?.lastName || '',
     email: user?.email || '',
-    username: user?.username || ''
+    username: user?.username || '',
+    phoneNumber: user?.profile?.phoneNumber || '',
+    address: user?.profile?.address || '',
+    state: user?.profile?.state || '',
+    city: user?.profile?.city || '',
+    zipCode: user?.profile?.zipCode || ''
   });
   
   const [passwordFormData, setPasswordFormData] = useState<PasswordFormData>({
@@ -226,6 +258,12 @@ const AccountInfo: React.FC<AccountInfoProps> = ({
                       alt="Avatar preview"
                       className="w-16 h-16 rounded-full object-cover"
                     />
+                  ) : user?.profile?.avatarUrl ? (
+                    <img 
+                      src={user.profile.avatarUrl} 
+                      alt="Current avatar"
+                      className="w-16 h-16 rounded-full object-cover"
+                    />
                   ) : (
                     <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center">
                       <span className="text-lg font-semibold text-white">
@@ -321,6 +359,98 @@ const AccountInfo: React.FC<AccountInfoProps> = ({
                   disabled={true}
                   className="mt-1 bg-gray-100 dark:bg-gray-600 text-gray-500 dark:text-gray-400 border-gray-300 dark:border-gray-600 cursor-not-allowed"
                 />
+              </div>
+
+              <div>
+                <Label htmlFor="phoneNumber" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Phone Number
+                </Label>
+                <Input
+                  id="phoneNumber"
+                  type="tel"
+                  value={editFormData.phoneNumber}
+                  onChange={(e) => updateEditFormData({ phoneNumber: e.target.value })}
+                  className="mt-1 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="address" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Address
+                </Label>
+                <Input
+                  id="address"
+                  type="text"
+                  value={editFormData.address}
+                  onChange={(e) => updateEditFormData({ address: e.target.value })}
+                  className="mt-1 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <Label htmlFor="city" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    City
+                  </Label>
+                  <Input
+                    id="city"
+                    type="text"
+                    value={editFormData.city}
+                    onChange={(e) => updateEditFormData({ city: e.target.value })}
+                    className="mt-1 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="state" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    State
+                  </Label>
+                  <Input
+                    id="state"
+                    type="text"
+                    value={editFormData.state}
+                    onChange={(e) => updateEditFormData({ state: e.target.value })}
+                    className="mt-1 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="zipCode" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Zip Code
+                  </Label>
+                  <Input
+                    id="zipCode"
+                    type="text"
+                    value={editFormData.zipCode}
+                    onChange={(e) => updateEditFormData({ zipCode: e.target.value })}
+                    className="mt-1 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="userType" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    User Type
+                  </Label>
+                  <Input
+                    id="userType"
+                    type="text"
+                    value={user?.userType || ''}
+                    disabled={true}
+                    className="mt-1 bg-gray-100 dark:bg-gray-600 text-gray-500 dark:text-gray-400 border-gray-300 dark:border-gray-600 cursor-not-allowed"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="status" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Status
+                  </Label>
+                  <Input
+                    id="status"
+                    type="text"
+                    value={user?.status || ''}
+                    disabled={true}
+                    className="mt-1 bg-gray-100 dark:bg-gray-600 text-gray-500 dark:text-gray-400 border-gray-300 dark:border-gray-600 cursor-not-allowed"
+                  />
+                </div>
               </div>
 
             </div>
