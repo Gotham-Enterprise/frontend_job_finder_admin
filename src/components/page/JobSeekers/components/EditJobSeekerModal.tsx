@@ -167,7 +167,11 @@ export const EditJobSeekerModal: React.FC<EditJobSeekerModalProps> = ({
       onUpdate();
       onClose();
     } catch (err) {
-      setError('Failed to update job seeker');
+      const errorMessage =
+        typeof err === 'object' && err !== null && 'message' in err
+          ? (err as { message?: string }).message
+          : undefined;
+      setError(errorMessage || 'Failed to update job seeker');
       console.error('Error updating job seeker:', err);
     } finally {
       setIsSaving(false);
