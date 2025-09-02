@@ -131,7 +131,7 @@ const UserTable: React.FC = () => {
               />
               <button
                 onClick={navigateToCreateUser}
-                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary hover:bg-primary/90 rounded-lg transition-colors duration-200"
+                className="inline-flex items-center justify-center font-medium gap-2 transition px-4 py-2 w-[140px] bg-green-600 hover:bg-green-700 text-white h-[45px] w-[100px] rounded-sm px-3 text-xs bg-primary text-white hover:bg-primary/90 "
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
