@@ -11,8 +11,8 @@ import { triggerAuthUpdate, useAuthStorage } from '@/hooks/useAuthStorage';
 import Button from '@/components/ui/button/Button';
 import Input from '@/components/ui/input/Input';
 import Label from '@/components/form/Label';
-import Select from '@/components/form/Select';
-import { PencilIcon, LockIcon, EyeIcon, EyeCloseIcon } from '@/icons';
+import FullScreenSpinner from '@/components/ui/FullScreenSpinner';
+import { EyeIcon, EyeCloseIcon } from '@/icons';
 
 interface PersonalInformationFormData {
   firstName: string;
@@ -58,6 +58,7 @@ const AccountInfo: React.FC<AccountInfoProps> = ({
   refetchUser
 }) => {
   const [mounted, setMounted] = useState(false);
+  const [isSavingPersonalInfo, setIsSavingPersonalInfo] = useState(false);
   const queryClient = useQueryClient();
   const authStorageData = useAuthStorage();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -173,6 +174,7 @@ const AccountInfo: React.FC<AccountInfoProps> = ({
   }, []);
 
   const savePersonalInfo = useCallback(async () => {
+    setIsSavingPersonalInfo(true);
     try {
       let response;
       
@@ -238,9 +240,11 @@ const AccountInfo: React.FC<AccountInfoProps> = ({
     } catch (error: any) {
       console.error('Failed to save personal information:', error);
       showToast.error('Error', error?.message || 'Failed to update personal information');
-      throw error; // Re-throw to let parent component handle the error display if needed
+      throw error;
+    } finally {
+      setIsSavingPersonalInfo(false);
     }
-  }, [editFormData, selectedAvatar, user?.profile, refetchUser]);
+  }, [editFormData, selectedAvatar, user?.profile, refetchUser, queryClient]);
 
   const avatarClick = useCallback(() => {
     fileInputRef.current?.click();
@@ -408,9 +412,9 @@ const AccountInfo: React.FC<AccountInfoProps> = ({
             <div className="flex justify-end pt-6">
               <Button 
                 onClick={savePersonalInfo}
-                disabled={isUpdatingPersonalInfo}
+                disabled={isSavingPersonalInfo || isUpdatingPersonalInfo}
               >
-                {isUpdatingPersonalInfo ? 'Saving...' : 'Save'}
+                {(isSavingPersonalInfo || isUpdatingPersonalInfo) ? 'Saving...' : 'Save'}
               </Button>
             </div>
           </div>
@@ -519,6 +523,12 @@ const AccountInfo: React.FC<AccountInfoProps> = ({
           </div>
         </div>
       </div>
+      
+      {/* Full screen spinner for saving personal info */}
+      <FullScreenSpinner 
+        isVisible={isSavingPersonalInfo} 
+        message="Saving your information..." 
+      />
     </div>
   );
 };
