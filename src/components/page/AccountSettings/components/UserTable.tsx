@@ -8,6 +8,7 @@ import { getUserInitials, formatUserRole, getUserStatusVariant, getRoleColor } f
 import ConfirmationDialog from '@/components/ui/ConfirmationDialog';
 import FullScreenSpinner from '@/components/ui/FullScreenSpinner';
 import BulkActionDropdown from '@/components/ui/BulkActionDropdown';
+import Checkbox from '@/components/form/input/Checkbox';
 
 const UserTable: React.FC = () => {
   const router = useRouter();
@@ -28,11 +29,11 @@ const UserTable: React.FC = () => {
 
   const memoizedUsers = useMemo(() => users, [users]);
 
-  const toggleAllUsers = () => {
-    if (isAllSelected) {
-      setSelectedUsers([]);
-    } else {
+  const toggleAllUsers = (checked: boolean) => {
+    if (checked) {
       setSelectedUsers(users.map(user => user.userId));
+    } else {
+      setSelectedUsers([]);
     }
   };
 
@@ -147,14 +148,9 @@ const UserTable: React.FC = () => {
             <thead className="bg-gray-50 dark:bg-gray-900/50">
               <tr>
                 <th className="w-12 px-6 py-3">
-                  <input
-                    type="checkbox"
-                    checked={isAllSelected}
-                    ref={(input) => {
-                      if (input) input.indeterminate = isIndeterminate;
-                    }}
+                  <Checkbox
+                    checked={isAllSelected || isIndeterminate}
                     onChange={toggleAllUsers}
-                    className="rounded border-gray-300 text-primary focus:ring-primary"
                   />
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
@@ -182,11 +178,15 @@ const UserTable: React.FC = () => {
                     className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-200"
                   >
                     <td className="px-6 py-4">
-                      <input
-                        type="checkbox"
+                      <Checkbox
                         checked={selectedUsers.includes(user.userId)}
-                        onChange={() => toggleUserSelection(user.userId)}
-                        className="rounded border-gray-300 text-primary focus:ring-primary"
+                        onChange={(checked) => {
+                          if (checked) {
+                            setSelectedUsers(prev => [...prev, user.userId]);
+                          } else {
+                            setSelectedUsers(prev => prev.filter(id => id !== user.userId));
+                          }
+                        }}
                       />
                     </td>
                     <td className="px-6 py-4">
