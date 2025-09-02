@@ -53,6 +53,20 @@ export const authUtils = {
     return authState?.user || null;
   },
 
+  updateUser(updatedUser: Partial<User>): void {
+    const authState = this.getAuthState();
+    if (authState && authState.user) {
+      const newAuthState = {
+        ...authState,
+        user: {
+          ...authState.user,
+          ...updatedUser
+        }
+      };
+      this.saveAuthState(newAuthState);
+    }
+  },
+
   getToken(): string | null {
     const authState = this.getAuthState();
     return authState?.token || null;

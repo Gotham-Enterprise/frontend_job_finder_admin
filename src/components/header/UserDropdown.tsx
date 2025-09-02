@@ -1,28 +1,16 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Dropdown } from "../ui/dropdown/Dropdown";
 import { DropdownItem } from "../ui/dropdown/DropdownItem";
 import { useLogout } from "@/services/hooks/useAuth";
+import { useAuthStorage } from "@/hooks/useAuthStorage";
 import LogoutIcon from "../ui/icons/Logout";
 import { profileDropdownItems } from "./helper";
-import { authUtils } from "@/services/utils/authUtils";
 
 export default function UserDropdown() {
   const [isOpen, setIsOpen] = useState(false);
-  const [user, setUser] = useState<any>(null);
-  const [userDisplayName, setUserDisplayName] = useState("Guest");
-  const [userInitials, setUserInitials] = useState("G");
   const { mutate: logout, isPending } = useLogout();
-
-useEffect(() => {
-    const userData = authUtils.getUser();
-    const displayName = authUtils.getUserDisplayName();
-    const initials = authUtils.getUserInitials();
-    
-    setUser(userData);
-    setUserDisplayName(displayName);
-    setUserInitials(initials);
-  }, []);
+  const authData = useAuthStorage();
 
   function toggleDropdown(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
     e.stopPropagation();
@@ -40,11 +28,11 @@ useEffect(() => {
       >
         <span className="mr-3 overflow-hidden rounded-full h-11 w-11 bg-brand-100 dark:bg-brand-800 flex items-center justify-center">
           <span className="text-brand-600 dark:text-brand-300 font-medium text-sm">
-            {userInitials}
+            {authData.userInitials}
           </span>
         </span>
 
-        <span className="block mr-1 font-medium text-theme-sm">{userDisplayName}</span>
+        <span className="block mr-1 font-medium text-theme-sm">{authData.displayName}</span>
 
         <svg
           className={`stroke-gray-500 dark:stroke-gray-400 transition-transform duration-200 ${
@@ -72,10 +60,10 @@ useEffect(() => {
         className="absolute right-0 mt-[17px] flex w-[260px] flex-col rounded-2xl border border-gray-200 bg-white p-3 shadow-theme-lg dark:border-gray-800 dark:bg-gray-dark"
       >        <div>
           <span className="block font-medium text-gray-700 text-theme-sm dark:text-gray-400">
-            {userDisplayName}
+            {authData.displayName}
           </span>
           <span className="mt-0.5 block text-theme-xs text-gray-500 dark:text-gray-400">
-            {user?.email}
+            {authData.user?.email}
           </span>
         </div>
 

@@ -49,6 +49,12 @@ export interface UpdateAdminUserRequest {
   avatarUpload?: string;
 }
 
+export interface UpdatePersonalInfoRequest {
+  firstName: string;
+  lastName: string;
+  avatarUpload?: string;
+}
+
 export interface Role {
   id: number;
   roleName: string;
@@ -111,6 +117,10 @@ export const adminUsersApi = {
 
   async updateUser(userId: string, userData: UpdateAdminUserRequest): Promise<AdminUserResponse> {
     return apiPut<AdminUserResponse>(`/api/admin/users/${userId}`, userData);
+  },
+
+  async updatePersonalInfo(userData: UpdatePersonalInfoRequest | FormData): Promise<AdminUserResponse> {
+    return apiPut<AdminUserResponse>('/api/admin/users/', userData);
   },
 
   async deleteUsers(userIds: string[]): Promise<DeleteUsersResponse> {

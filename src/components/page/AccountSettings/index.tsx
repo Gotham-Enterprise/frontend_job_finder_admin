@@ -2,12 +2,12 @@
 
 import React, { useState, useCallback, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { User } from '@/services/types/auth';
 import { authUtils } from '@/services/utils/authUtils';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import FullScreenSpinner from '@/components/ui/FullScreenSpinner';
 import { showToast } from '@/services/utils/toast';
 import { useResetPassword, useCurrentUser } from '@/services/hooks/useAuth';
+import { useAuthStorage } from '@/hooks/useAuthStorage';
 import UserTable from './components/UserTable';
 import AccountInfo from './components/AccountInfo';
 
@@ -37,13 +37,14 @@ const AccountSettings: React.FC = () => {
   const [isUpdatingAvatar, setIsUpdatingAvatar] = useState(false);
   const [isUpdatingPersonalInfo, setIsUpdatingPersonalInfo] = useState(false);
 
-  // Fetch current user from API
   const { data: apiUser, isLoading: isLoadingUser, error: userError, refetch: refetchUser } = useCurrentUser();
+  
+  const authStorageData = useAuthStorage();
 
   useEffect(() => {
     setMounted(true);
     
-    // Check URL parameters for tab
+ 
     const tab = searchParams.get('tab');
     if (tab && (tab === 'account' || tab === 'users')) {
       setActiveTab(tab);
@@ -52,21 +53,16 @@ const AccountSettings: React.FC = () => {
 
   const resetPasswordMutation = useResetPassword();
   
-  // Use API user data or fallback to cached user, avoid hardcoded test data
-  const currentUser = (apiUser as any)?.data || (apiUser as any)?.user || apiUser || authUtils.getUser();
-  const displayName = authUtils.getUserDisplayName();
-  const userInitials = authUtils.getUserInitials();
 
-  // Debug logging
-  console.log('AccountSettings Debug:', {
-    apiUser,
-    currentUser,
-    isLoadingUser,
-    userError,
-    isAuthenticated: authUtils.isAuthenticated(),
-    apiUserData: (apiUser as any)?.data,
-    apiUserUser: (apiUser as any)?.user
-  });
+  const currentUser = (apiUser as any)?.data || (apiUser as any)?.user || apiUser || authStorageData.user;
+  const [displayName, setDisplayName] = useState(authStorageData.displayName);
+  const [userInitials, setUserInitials] = useState(authStorageData.userInitials);
+
+  useEffect(() => {
+    setDisplayName(authStorageData.displayName);
+    setUserInitials(authStorageData.userInitials);
+  }, [authStorageData]);
+
 
   const executePasswordChange = useCallback(async (passwordData: PasswordFormData): Promise<void> => {
     setIsChangingPassword(true);
@@ -116,12 +112,12 @@ const AccountSettings: React.FC = () => {
     setIsUpdatingPersonalInfo(true);
     
     try {
-      // Simulate API call for personal info update
+
       await new Promise(resolve => setTimeout(resolve, 1500));
       
       showToast.success('Success', 'Personal information updated successfully!');
       
-      // Refetch user data to get updated information
+   
       await refetchUser();
       
     } catch (error: any) {
@@ -133,7 +129,7 @@ const AccountSettings: React.FC = () => {
     }
   }, [refetchUser]);
 
-  // Prevent hydration mismatch and show loading state
+
   if (!mounted || isLoadingUser) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
@@ -204,6 +200,7 @@ const AccountSettings: React.FC = () => {
               isChangingPassword={isChangingPassword}
               isUpdatingAvatar={isUpdatingAvatar}
               isUpdatingPersonalInfo={isUpdatingPersonalInfo}
+              refetchUser={refetchUser}
             />
           </TabsContent>
 

@@ -1,8 +1,13 @@
 'use client';
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { User } from '@/services/types/auth';
 import { useStates } from '@/services/hooks/useStates';
+import { adminUsersApi } from '@/services/api/adminUsers';
+import { authUtils } from '@/services/utils/authUtils';
+import { showToast } from '@/services/utils/toast';
+import { triggerAuthUpdate } from '@/hooks/useAuthStorage';
 import Button from '@/components/ui/button/Button';
 import Input from '@/components/ui/input/Input';
 import Label from '@/components/form/Label';
@@ -37,6 +42,7 @@ interface AccountInfoProps {
   isChangingPassword: boolean;
   isUpdatingAvatar?: boolean;
   isUpdatingPersonalInfo?: boolean;
+  refetchUser?: () => Promise<any>;
 }
 
 const AccountInfo: React.FC<AccountInfoProps> = ({
@@ -48,9 +54,11 @@ const AccountInfo: React.FC<AccountInfoProps> = ({
   onPersonalInfoChange,
   isChangingPassword,
   isUpdatingAvatar = false,
-  isUpdatingPersonalInfo = false
+  isUpdatingPersonalInfo = false,
+  refetchUser
 }) => {
   const [mounted, setMounted] = useState(false);
+  const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedAvatar, setSelectedAvatar] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
@@ -83,6 +91,19 @@ const AccountInfo: React.FC<AccountInfoProps> = ({
       setEditFormData(newFormData);
     }
   }, [user]);
+
+  // Also listen for changes to displayName and userInitials which come from authUtils
+  useEffect(() => {
+    // Force re-render when localStorage user data changes
+    const handleStorageChange = () => {
+      // This will trigger a re-render and update the displayed data
+      setMounted(false);
+      setTimeout(() => setMounted(true), 0);
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
   
   const [editFormData, setEditFormData] = useState<PersonalInformationFormData>({
     firstName: user?.firstName || '',
@@ -152,11 +173,67 @@ const AccountInfo: React.FC<AccountInfoProps> = ({
 
   const savePersonalInfo = useCallback(async () => {
     try {
-      await onPersonalInfoChange(editFormData);
-    } catch (error) {
+      let response;
+      
+
+      if (selectedAvatar) {
+        const formData = new FormData();
+        formData.append('firstName', editFormData.firstName);
+        formData.append('lastName', editFormData.lastName);
+        formData.append('avatarUpload', selectedAvatar);
+        
+        response = await adminUsersApi.updatePersonalInfo(formData);
+        showToast.success('Success', 'Personal information and avatar updated successfully!');
+      } else {
+
+        const personalInfoData = {
+          firstName: editFormData.firstName,
+          lastName: editFormData.lastName
+        };
+        
+        response = await adminUsersApi.updatePersonalInfo(personalInfoData);
+        showToast.success('Success', 'Personal information updated successfully!');
+      }
+
+
+      const updatedUserData: Partial<User> = {
+        firstName: editFormData.firstName,
+        lastName: editFormData.lastName
+      };
+      
+      if (response?.data?.avatarUrl) {
+        updatedUserData.profile = {
+          ...user?.profile,
+          avatarUrl: response.data.avatarUrl,
+          phoneNumber: user?.profile?.phoneNumber || null,
+          address: user?.profile?.address || null,
+          state: user?.profile?.state || null,
+          city: user?.profile?.city || null,
+          zipCode: user?.profile?.zipCode || null
+        };
+      }
+      
+      authUtils.updateUser(updatedUserData);
+
+      triggerAuthUpdate();
+
+      queryClient.invalidateQueries({ queryKey: ['currentUser'] });
+
+      if (refetchUser) {
+        await refetchUser();
+      }
+
+      setSelectedAvatar(null);
+      setAvatarPreview(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    } catch (error: any) {
       console.error('Failed to save personal information:', error);
+      showToast.error('Error', error?.message || 'Failed to update personal information');
+      throw error; // Re-throw to let parent component handle the error display if needed
     }
-  }, [editFormData, onPersonalInfoChange]);
+  }, [editFormData, selectedAvatar, user?.profile, refetchUser]);
 
   const avatarClick = useCallback(() => {
     fileInputRef.current?.click();
@@ -166,12 +243,12 @@ const AccountInfo: React.FC<AccountInfoProps> = ({
     const file = event.target.files?.[0];
     if (file) {
       if (!file.type.startsWith('image/')) {
-        alert('Please select an image file');
+        showToast.error('Error', 'Please select an image file');
         return;
       }
       
       if (file.size > 1048576) {
-        alert('File size must be less than 1MB');
+        showToast.error('Error', 'File size must be less than 1MB');
         return;
       }
 
@@ -184,25 +261,6 @@ const AccountInfo: React.FC<AccountInfoProps> = ({
       reader.readAsDataURL(file);
     }
   }, []);
-
-  const uploadAvatar = useCallback(async () => {
-    if (!selectedAvatar) return;
-    
-    const formData = new FormData();
-    formData.append('avatar', selectedAvatar);
-    
-    try {
-      await onAvatarChange(formData);
-      setSelectedAvatar(null);
-      setAvatarPreview(null);
-      
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
-    } catch (error) {
-      console.error('Failed to upload avatar:', error);
-    }
-  }, [selectedAvatar, onAvatarChange]);
 
   const validation = validatePasswordForm();
 
@@ -267,16 +325,6 @@ const AccountInfo: React.FC<AccountInfoProps> = ({
                   >
                     Change avatar
                   </span>
-                  {selectedAvatar && (
-                    <Button 
-                      size="sm"
-                      onClick={uploadAvatar}
-                      disabled={isUpdatingAvatar}
-                      className="px-3 py-1 text-xs"
-                    >
-                      {isUpdatingAvatar ? 'Uploading...' : 'Upload'}
-                    </Button>
-                  )}
                 </div>
                 <p className="text-xs text-gray-500 dark:text-gray-400">
                   JPG, GIF or PNG. 1MB max.
