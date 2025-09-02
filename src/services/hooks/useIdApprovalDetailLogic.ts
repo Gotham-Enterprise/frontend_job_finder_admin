@@ -16,13 +16,6 @@ export const useIdApprovalDetailLogic = (data: IdApprovalDetailResponse): UseIdA
   const isLoading = isPending || isUpdating;
   const isPendingStatus = status === "pending";
 
-  const onUnlockAccount = useCallback(() => {
-    unlock(id, {
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: idApprovalQueryKeys.detail(id) });
-      },
-    });
-  }, [id, unlock, queryClient]);
   const onToggleReview = useCallback(() => {
     setDisplayReview((prev) => !prev);
   }, []);
@@ -40,6 +33,17 @@ export const useIdApprovalDetailLogic = (data: IdApprovalDetailResponse): UseIdA
     },
     [id, updateStatus, onToggleReview, queryClient]
   );
+  const onUnlockAccount = useCallback(() => {
+    unlock(id, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: idApprovalQueryKeys.detail(id) });
+
+        if (displayReview) {
+          onToggleReview();
+        }
+      },
+    });
+  }, [id, unlock, queryClient, displayReview, onToggleReview]);
 
   return {
     id: data.data.id,

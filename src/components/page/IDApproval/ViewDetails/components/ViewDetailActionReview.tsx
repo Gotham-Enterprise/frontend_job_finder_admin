@@ -64,8 +64,10 @@ const ViewDetailActionReview: FC<Props> = ({
   isLoading,
   isPendingStatus,
   isStatusUpdated,
+  isLocked,
   onToggleReview,
   onUpdateStatus,
+  onUnlockAccount,
 }) => {
   const { isOpen, openModal, closeModal } = useModal(false);
   const [status, setStatus] = useState<IdApproval["status"]>("pending");
@@ -109,7 +111,7 @@ const ViewDetailActionReview: FC<Props> = ({
                 <p className="text-sm text-gray-900">{profile.email}</p>
               </div>
             </div>
-            {/*isLocked && (
+            {isLocked && (
               <Button
                 variant="outline"
                 className="border-1 border-green-800 text-green-800"
@@ -118,7 +120,7 @@ const ViewDetailActionReview: FC<Props> = ({
               >
                 Unlock Account
               </Button>
-            )*/}
+            )}
           </div>
           <div className="flex flex-col gap-2">
             <h3 className="text-gray-900 text-xl font-semibold">Identification</h3>

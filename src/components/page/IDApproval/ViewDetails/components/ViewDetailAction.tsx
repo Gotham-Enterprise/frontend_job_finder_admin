@@ -44,12 +44,12 @@ const ViewDetailAction: FC<Props> = ({
           onUnlockAccount={onUnlockAccount}
           onUpdateStatus={onUpdateStatus}
         />
-        {/*<ViewDetailActionUnlock
+        <ViewDetailActionUnlock
           isLocked={isLocked}
           isLoading={isLoading}
           isUnlocked={isUnlocked}
           onUnlockAccount={onUnlockAccount}
-        />*/}
+        />
       </div>
     </>
   );
