@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useCallback, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { User } from '@/services/types/auth';
 import { authUtils } from '@/services/utils/authUtils';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -24,6 +25,7 @@ interface PersonalInformationFormData {
 }
 
 const AccountSettings: React.FC = () => {
+  const searchParams = useSearchParams();
   const [mounted, setMounted] = useState(false);
   const [activeTab, setActiveTab] = useState('account');
   const [isChangingPassword, setIsChangingPassword] = useState(false);
@@ -35,12 +37,18 @@ const AccountSettings: React.FC = () => {
 
   useEffect(() => {
     setMounted(true);
-  }, []);
+    
+    // Check URL parameters for tab
+    const tab = searchParams.get('tab');
+    if (tab && (tab === 'account' || tab === 'users')) {
+      setActiveTab(tab);
+    }
+  }, [searchParams]);
 
   const resetPasswordMutation = useResetPassword();
   
   // Use API user data or fallback to cached user, avoid hardcoded test data
-  const currentUser = apiUser?.user || apiUser || authUtils.getUser();
+  const currentUser = (apiUser as any)?.user || apiUser || authUtils.getUser();
   const displayName = authUtils.getUserDisplayName();
   const userInitials = authUtils.getUserInitials();
 
@@ -186,7 +194,6 @@ const AccountSettings: React.FC = () => {
               onPasswordChange={executePasswordChange}
               onAvatarChange={executeAvatarChange}
               onPersonalInfoChange={executePersonalInfoChange}
-              onUserDataRefresh={refetchUser}
               isChangingPassword={isChangingPassword}
               isUpdatingAvatar={isUpdatingAvatar}
               isUpdatingPersonalInfo={isUpdatingPersonalInfo}

@@ -1,29 +1,23 @@
 'use client';
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { useAdminUsers, useDeleteAdminUsers, useUpdateAdminUser, useCreateAdminUser, useAdminRoles } from '@/services/hooks/useAdminUsers';
-import { AdminUser, CreateAdminUserRequest, UpdateAdminUserRequest } from '@/services/api/adminUsers';
-import { getUserInitials, formatUserRole, getUserStatusVariant, getRoleColor, transformApiUserToFormData } from '@/services/utils/userUtils';
-import UserForm from './UserForm';
-import Drawer from '@/components/ui/drawer/Drawer';
+import { useRouter } from 'next/navigation';
+import { useAdminUsers, useDeleteAdminUsers, useAdminRoles } from '@/services/hooks/useAdminUsers';
+import { AdminUser } from '@/services/api/adminUsers';
+import { getUserInitials, formatUserRole, getUserStatusVariant, getRoleColor } from '@/services/utils/userUtils';
 import ConfirmationDialog from '@/components/ui/ConfirmationDialog';
 import LoadingSkeleton from '@/components/ui/LoadingSkeleton/LoadingSkeleton';
 import BulkActionDropdown from '@/components/ui/BulkActionDropdown';
-import { CreateUserFormData } from '@/types/permissions';
 
 const UserTable: React.FC = () => {
+  const router = useRouter();
   const [mounted, setMounted] = useState(false);
-  const [isCreateDrawerOpen, setIsCreateDrawerOpen] = useState(false);
-  const [isEditDrawerOpen, setIsEditDrawerOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   const { data: users = [], isLoading, error, refetch } = useAdminUsers();
   const { data: apiRoles = [] } = useAdminRoles();
   const deleteUsersMutation = useDeleteAdminUsers();
-  const updateUserMutation = useUpdateAdminUser();
-  const createUserMutation = useCreateAdminUser();
 
   // Debug logging
   console.log('UserTable Debug:', { users, isLoading, error });
@@ -54,132 +48,14 @@ const UserTable: React.FC = () => {
     );
   };
 
-  const openEditDrawer = (user: AdminUser) => {
-    setSelectedUser(user);
-    setIsEditDrawerOpen(true);
+  const openEditPage = (user: AdminUser) => {
+    router.push(`/admin/users/edit?id=${user.userId}`);
   };
 
-  const closeEditDrawer = () => {
-    setSelectedUser(null);
-    setIsEditDrawerOpen(false);
-  };
-
-  // Map role names to role IDs dynamically
-  const getRoleId = useCallback((roleName: string): number => {
-    // First try to find by exact role name
-    const exactMatch = apiRoles.find(role => role.roleName === roleName);
-    if (exactMatch) return exactMatch.id;
-    
-    // Then try to find by converted form value
-    const formValueMatch = apiRoles.find(role => 
-      role.roleName.toLowerCase().replace(/\s+/g, '-') === roleName
-    );
-    if (formValueMatch) return formValueMatch.id;
-    
-    // Default to first role if available, otherwise 1
-    return apiRoles.length > 0 ? apiRoles[0].id : 1;
-  }, [apiRoles]);
-
-  // Handle user creation
-  const handleCreateUser = useCallback(async (userData: CreateUserFormData) => {
-    try {
-      // Transform form data to API format dynamically
-      const access: any = {};
-      
-      // Map form permission keys to API module names
-      const keyToApiNameMap: { [key: string]: string } = {
-        'tickets': 'Tickets',
-        'jobSeekers': 'Job Seekers',
-        'employers': 'Employers',
-        'applications': 'Applications',
-        'coupons': 'Coupons',
-        'blog': 'Blog',
-        'careers': 'Careers',
-        'jobs': 'Jobs',
-      };
-      
-      // Process each permission module dynamically
-      Object.keys(userData.permissions).forEach(permissionKey => {
-        const apiModuleName = keyToApiNameMap[permissionKey] || permissionKey;
-        const permissions = userData.permissions[permissionKey];
-        
-        access[apiModuleName] = {
-          add: permissions?.add || false,
-          edit: permissions?.edit || false,
-          view: permissions?.view || false,
-          delete: permissions?.delete || false,
-        };
-      });
-
-      const apiData: CreateAdminUserRequest = {
-        firstName: userData.firstName,
-        lastName: userData.lastName,
-        email: userData.email,
-        password: userData.password,
-        roleId: getRoleId(userData.role), // Use the correct role ID mapping
-        access,
-      };
-
-      await createUserMutation.mutateAsync(apiData);
-      setIsCreateDrawerOpen(false);
-    } catch (error) {
-      console.error('Create user error:', error);
-    }
-  }, [createUserMutation]);
-
-  // Handle user update
-  const handleUpdateUser = useCallback(async (userData: CreateUserFormData) => {
-    if (!selectedUser) return;
-
-    try {
-      console.log('Update user - incoming userData:', userData);
-      
-      // Transform form data to API format dynamically
-      const access: any = {};
-      
-      // Map form permission keys to API module names
-      const keyToApiNameMap: { [key: string]: string } = {
-        'tickets': 'Tickets',
-        'jobSeekers': 'Job Seekers',
-        'employers': 'Employers',
-        'applications': 'Applications',
-        'coupons': 'Coupons',
-        'blog': 'Blog',
-        'careers': 'Careers',
-        'jobs': 'Jobs',
-      };
-      
-      // Process each permission module dynamically
-      Object.keys(userData.permissions).forEach(permissionKey => {
-        const apiModuleName = keyToApiNameMap[permissionKey] || permissionKey;
-        const permissions = userData.permissions[permissionKey];
-        
-        console.log(`Processing permission: ${permissionKey} -> ${apiModuleName}`, permissions);
-        
-        access[apiModuleName] = {
-          add: permissions?.add || false,
-          edit: permissions?.edit || false,
-          view: permissions?.view || false,
-          delete: permissions?.delete || false,
-        };
-      });
-
-      console.log('Final API access object for update:', access);
-
-      const apiData: UpdateAdminUserRequest = {
-        firstName: userData.firstName,
-        lastName: userData.lastName,
-        email: userData.email,
-        roleId: getRoleId(userData.role), // Use the correct role ID mapping
-        access,
-      };
-
-      await updateUserMutation.mutateAsync({ userId: selectedUser.userId, userData: apiData });
-      closeEditDrawer();
-    } catch (error) {
-      console.error('Update user error:', error);
-    }
-  }, [selectedUser, updateUserMutation]);
+  // Navigate to create user page
+  const navigateToCreateUser = useCallback(() => {
+    router.push('/admin/users/create');
+  }, [router]);
 
   const handleBulkAction = (action: string) => {
     if (action === 'delete' && selectedUsers.length > 0) {
@@ -269,7 +145,7 @@ const UserTable: React.FC = () => {
                 isDeleting={deleteUsersMutation.isPending}
               />
               <button
-                onClick={() => setIsCreateDrawerOpen(true)}
+                onClick={navigateToCreateUser}
                 className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary hover:bg-primary/90 rounded-lg transition-colors duration-200"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -366,7 +242,7 @@ const UserTable: React.FC = () => {
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
                         <button
-                          onClick={() => openEditDrawer(user)}
+                          onClick={() => openEditPage(user)}
                           className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-md hover:bg-blue-100 transition-colors duration-200"
                         >
                           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -404,35 +280,6 @@ const UserTable: React.FC = () => {
           </div>
         )}
       </div>
-
-      <Drawer
-        isOpen={isCreateDrawerOpen}
-        onClose={() => setIsCreateDrawerOpen(false)}
-        title="Add New User"
-      >
-        <UserForm
-          onSubmit={handleCreateUser}
-          onCancel={() => setIsCreateDrawerOpen(false)}
-          isLoading={createUserMutation.isPending}
-        />
-      </Drawer>
-
-      <Drawer
-        isOpen={isEditDrawerOpen}
-        onClose={closeEditDrawer}
-        title="Edit User"
-      >
-        {selectedUser && (
-          <UserForm
-            onSubmit={handleUpdateUser}
-            onCancel={closeEditDrawer}
-            isLoading={updateUserMutation.isPending}
-            isEditMode={true}
-            userId={selectedUser.userId}
-            userData={selectedUser}
-          />
-        )}
-      </Drawer>
 
       <ConfirmationDialog
         isOpen={isDeleteModalOpen}
