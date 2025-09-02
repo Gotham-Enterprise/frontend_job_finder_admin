@@ -7,7 +7,7 @@ import { useStates } from '@/services/hooks/useStates';
 import { adminUsersApi } from '@/services/api/adminUsers';
 import { authUtils } from '@/services/utils/authUtils';
 import { showToast } from '@/services/utils/toast';
-import { triggerAuthUpdate } from '@/hooks/useAuthStorage';
+import { triggerAuthUpdate, useAuthStorage } from '@/hooks/useAuthStorage';
 import Button from '@/components/ui/button/Button';
 import Input from '@/components/ui/input/Input';
 import Label from '@/components/form/Label';
@@ -59,6 +59,7 @@ const AccountInfo: React.FC<AccountInfoProps> = ({
 }) => {
   const [mounted, setMounted] = useState(false);
   const queryClient = useQueryClient();
+  const authStorageData = useAuthStorage();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedAvatar, setSelectedAvatar] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
@@ -183,6 +184,7 @@ const AccountInfo: React.FC<AccountInfoProps> = ({
         formData.append('avatarUpload', selectedAvatar);
         
         response = await adminUsersApi.updatePersonalInfo(formData);
+        console.log('Avatar update response:', response);
         showToast.success('Success', 'Personal information and avatar updated successfully!');
       } else {
 
@@ -192,6 +194,7 @@ const AccountInfo: React.FC<AccountInfoProps> = ({
         };
         
         response = await adminUsersApi.updatePersonalInfo(personalInfoData);
+        console.log('Personal info update response:', response);
         showToast.success('Success', 'Personal information updated successfully!');
       }
 
@@ -201,7 +204,7 @@ const AccountInfo: React.FC<AccountInfoProps> = ({
         lastName: editFormData.lastName
       };
       
-      if (response?.data?.avatarUrl) {
+      if (selectedAvatar && response?.data?.avatarUrl) {
         updatedUserData.profile = {
           ...user?.profile,
           avatarUrl: response.data.avatarUrl,
@@ -228,6 +231,10 @@ const AccountInfo: React.FC<AccountInfoProps> = ({
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
+
+      setTimeout(() => {
+        triggerAuthUpdate();
+      }, 100);
     } catch (error: any) {
       console.error('Failed to save personal information:', error);
       showToast.error('Error', error?.message || 'Failed to update personal information');
@@ -302,16 +309,16 @@ const AccountInfo: React.FC<AccountInfoProps> = ({
                       alt="Avatar preview"
                       className="w-16 h-16 rounded-full object-cover"
                     />
-                  ) : user?.profile?.avatarUrl ? (
+                  ) : (authStorageData.user?.profile?.avatarUrl || user?.profile?.avatarUrl) ? (
                     <img 
-                      src={user.profile.avatarUrl} 
+                      src={(authStorageData.user?.profile?.avatarUrl || user?.profile?.avatarUrl) || ''} 
                       alt="Current avatar"
                       className="w-16 h-16 rounded-full object-cover"
                     />
                   ) : (
                     <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center">
                       <span className="text-lg font-semibold text-white">
-                        {mounted ? (userInitials || '?') : '?'}
+                        {mounted ? (authStorageData.userInitials || userInitials || '?') : '?'}
                       </span>
                     </div>
                   )}
@@ -323,7 +330,7 @@ const AccountInfo: React.FC<AccountInfoProps> = ({
                     onClick={avatarClick}
                     className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 cursor-pointer"
                   >
-                    Change avatar
+                    Upload photo
                   </span>
                 </div>
                 <p className="text-xs text-gray-500 dark:text-gray-400">

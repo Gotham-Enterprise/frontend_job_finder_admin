@@ -27,9 +27,17 @@ export default function UserDropdown() {
         className="flex items-center text-gray-700 dark:text-gray-400 dropdown-toggle"
       >
         <span className="mr-3 overflow-hidden rounded-full h-11 w-11 bg-brand-100 dark:bg-brand-800 flex items-center justify-center">
-          <span className="text-brand-600 dark:text-brand-300 font-medium text-sm">
-            {authData.userInitials}
-          </span>
+          {authData.user?.profile?.avatarUrl ? (
+            <img 
+              src={authData.user.profile.avatarUrl} 
+              alt="User avatar"
+              className="w-full h-full object-cover rounded-full"
+            />
+          ) : (
+            <span className="text-brand-600 dark:text-brand-300 font-medium text-sm">
+              {authData.userInitials}
+            </span>
+          )}
         </span>
 
         <span className="block mr-1 font-medium text-theme-sm">{authData.displayName}</span>
