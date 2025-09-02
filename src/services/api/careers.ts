@@ -168,6 +168,11 @@ export const careersApi = {
     return apiPatch<{ success: boolean; data: Career; message?: string }>(`/api/admin/careers/${id}/status`, { status });
   },
 
+  // PATCH /api/admin/careers/:applicantId/status - Update applicant status
+  async updateApplicantStatus(applicantId: string, status: 'PENDING' | 'QUALIFIED' | 'NOT_QUALIFIED'): Promise<{ success: boolean; data: any; message?: string }> {
+    return apiPatch<{ success: boolean; data: any; message?: string }>(`/api/admin/careers/${applicantId}/status`, { status });
+  },
+
   // Get dropdown options (if needed)
   async getDepartments(): Promise<{ success: boolean; data: Array<{ id: string; name: string; units?: Array<{ id: string; name: string }> }> }> {
     return apiGet<{ success: boolean; data: Array<{ id: string; name: string; units?: Array<{ id: string; name: string }> }> }>('/api/careers/department');

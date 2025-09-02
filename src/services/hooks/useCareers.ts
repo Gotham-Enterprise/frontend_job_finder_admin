@@ -281,3 +281,33 @@ export const useUpdateCareerStatus = () => {
     },
   });
 };
+
+export const useUpdateApplicantStatus = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ applicantId, status }: { applicantId: string; status: 'PENDING' | 'QUALIFIED' | 'NOT_QUALIFIED' }) => 
+      careersApi.updateApplicantStatus(applicantId, status),
+    onSuccess: (data, variables) => {
+      // Invalidate all career details to refresh applicant data
+      queryClient.invalidateQueries({ queryKey: careersQueryKeys.details() });
+      
+      const statusText = variables.status.toLowerCase().replace('_', ' ');
+      showToast.success(
+        'Applicant Status Updated!',
+        `Applicant status has been changed to ${statusText}.`
+      );
+    },
+    onError: (error: any) => {
+      let errorMessage = 'Failed to update applicant status. Please try again.';
+      
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      showToast.error('Status Update Failed', errorMessage);
+    },
+  });
+};
