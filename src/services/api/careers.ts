@@ -24,6 +24,7 @@ export interface Career {
   requirements?: string[];
   benefits?: string[];
   status: 'active' | 'closed' | 'draft';
+  isActive: boolean;
   postedDate: string;
   applicantCount: number;
   createdAt: string;

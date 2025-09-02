@@ -2,12 +2,12 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useCareerDetails, useUpdateApplicantStatus, useDuplicateCareer } from '@/services/hooks/useCareers';
+import { useCareerDetails, useUpdateApplicantStatus, useDuplicateCareer, useToggleCareer } from '@/services/hooks/useCareers';
 import Button from '@/components/ui/button/Button';
 import Input from '@/components/ui/input/Input';
 import Badge from '@/components/ui/badge/Badge';
 import { Table, TableBody, TableCell, TableHeader, TableRow } from '@/components/ui/table';
-import { Briefcase, MapPin, DollarSign, Building, Users, Calendar, Search, Filter, Edit, Copy, Trash2, Eye, MoreVertical, FileText } from 'lucide-react';
+import { Briefcase, MapPin, DollarSign, Building, Users, Calendar, Search, Filter, Edit, Copy, Trash2, Eye, MoreVertical, FileText, XCircle, CheckCircle } from 'lucide-react';
 import EditJobPostModal from './components/EditJobPostModal';
 import ViewApplicantModal from './components/ViewApplicantModal';
 import { Dropdown } from '@/components/ui/dropdown/Dropdown';
@@ -28,6 +28,7 @@ const JobDetailsView: React.FC<JobDetailsViewProps> = ({ jobId }) => {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [updatingApplicantId, setUpdatingApplicantId] = useState<string | null>(null);
   const [isDuplicating, setIsDuplicating] = useState(false);
+  const [isToggling, setIsToggling] = useState(false);
 
   // Function to format status for display
   const formatStatusDisplay = (status: string) => {
@@ -46,6 +47,7 @@ const JobDetailsView: React.FC<JobDetailsViewProps> = ({ jobId }) => {
   const { data: jobData, isLoading, isError, refetch } = useCareerDetails(jobId || '');
   const updateApplicantStatusMutation = useUpdateApplicantStatus();
   const duplicateCareerMutation = useDuplicateCareer();
+  const toggleCareerMutation = useToggleCareer();
 
   const statusCounts = useMemo(() => {
     const counts: { [key: string]: number } = { All: 0, PENDING: 0, QUALIFIED: 0, NOT_QUALIFIED: 0 };
@@ -98,6 +100,19 @@ const JobDetailsView: React.FC<JobDetailsViewProps> = ({ jobId }) => {
     }
   };
 
+  const handleToggleJob = async () => {
+    try {
+      setIsToggling(true);
+      await toggleCareerMutation.mutateAsync(jobId);
+      // Redirect to careers list after successful toggle
+      router.push('/admin/careers');
+    } catch (error) {
+      console.error('Error toggling job status:', error);
+    } finally {
+      setIsToggling(false);
+    }
+  };
+
   const handleDropdownToggle = (applicantId: string) => {
     setOpenDropdown(openDropdown === applicantId ? null : applicantId);
   };
@@ -143,6 +158,12 @@ const JobDetailsView: React.FC<JobDetailsViewProps> = ({ jobId }) => {
 
   const { data: job } = jobData;
 
+  // Determine if job is active or not
+  const isJobActive = job?.isActive;
+  const toggleButtonText = isJobActive ? 'Close Job Post' : 'Reopen Job Post';
+  const toggleButtonVariant = isJobActive ? 'destructive' : 'default';
+  const toggleButtonIcon = isJobActive ? XCircle : CheckCircle;
+
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
       <header className="flex items-center justify-between mb-6">
@@ -164,12 +185,28 @@ const JobDetailsView: React.FC<JobDetailsViewProps> = ({ jobId }) => {
             <Copy className="w-4 h-4 mr-2" /> 
             {isDuplicating ? 'Duplicating...' : 'Duplicate'}
           </Button>
-          <Button variant="destructive"><Trash2 className="w-4 h-4 mr-2" /> Close Job Post</Button>
+          <Button 
+            variant={toggleButtonVariant} 
+            onClick={handleToggleJob}
+            disabled={isToggling}
+          >
+            {React.createElement(toggleButtonIcon, { className: "w-4 h-4 mr-2" })}
+            {isToggling ? 'Processing...' : toggleButtonText}
+          </Button>
         </div>
       </header>
 
       <div className="bg-white p-6 rounded-lg shadow-sm mb-6 border">
-        <h2 className="text-xl font-semibold mb-4">Job Information</h2>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold">Job Information</h2>
+          <Badge 
+            variant="light"
+            color={job.isActive ? 'success' : 'error'}
+            className="text-sm px-3 py-1"
+          >
+            {job.isActive ? 'ACTIVE' : 'INACTIVE'}
+          </Badge>
+        </div>
         
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 text-sm">
           <div className="flex items-center gap-2"><Briefcase className="w-4 h-4 text-gray-500" /><h2 className='font-semibold'>{job.jobTitle}</h2></div>
