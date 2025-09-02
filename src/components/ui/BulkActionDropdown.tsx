@@ -123,9 +123,14 @@ const BulkActionDropdown: React.FC<BulkActionDropdownProps> = ({
               className="flex w-full items-start px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/20 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-left"
             >
               <div className="flex-1">
-                <div className="font-medium text-gray-900 dark:text-white">Archive</div>
+                <div className="font-medium text-gray-900 dark:text-white">
+                  {itemType === 'users' ? 'Inactive Users' : 'Archive'}
+                </div>
                 <div className="text-xs text-gray-500 dark:text-gray-400">
-                Move to archive selected {itemType}
+                  {itemType === 'users' 
+                    ? 'Move to inactive users' 
+                    : `Move to archive selected ${itemType}`
+                  }
                 </div>
               </div>
             </button>

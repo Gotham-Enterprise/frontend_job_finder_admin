@@ -6,7 +6,6 @@ import { useUpdateAdminUser, useAdminRoles, useAdminUsers } from '@/services/hoo
 import { UpdateAdminUserRequest, AdminUser } from '@/services/api/adminUsers';
 import { CreateUserFormData } from '@/types/permissions';
 import { showToast } from '@/services/utils/toast';
-import { transformApiUserToFormData } from '@/services/utils/userUtils';
 import EditUserForm from '@/components/page/EditUser';
 import FullScreenSpinner from '@/components/ui/FullScreenSpinner';
 
@@ -18,7 +17,8 @@ export default function EditUserPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
   
-  const { data: users = [] } = useAdminUsers();
+  const { data: response } = useAdminUsers(1, 100);
+  const users = response?.data || [];
   const { data: apiRoles = [] } = useAdminRoles();
   const updateUserMutation = useUpdateAdminUser();
 

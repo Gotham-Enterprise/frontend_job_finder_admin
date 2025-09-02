@@ -92,13 +92,13 @@ const UserTable: React.FC = () => {
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
-    setSelectedUsers([]); // Clear selections when changing pages
+    setSelectedUsers([]);
   };
 
   const handleItemsPerPageChange = (newItemsPerPage: number) => {
     setItemsPerPage(newItemsPerPage);
-    setCurrentPage(1); // Reset to first page when changing items per page
-    setSelectedUsers([]); // Clear selections
+    setCurrentPage(1); 
+    setSelectedUsers([]); 
   };
 
 
