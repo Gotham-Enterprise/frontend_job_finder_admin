@@ -9,15 +9,21 @@ import ConfirmationDialog from '@/components/ui/ConfirmationDialog';
 import FullScreenSpinner from '@/components/ui/FullScreenSpinner';
 import BulkActionDropdown from '@/components/ui/BulkActionDropdown';
 import Checkbox from '@/components/form/input/Checkbox';
+import Pagination from '@/components/tables/Pagination';
 
 const UserTable: React.FC = () => {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  const { data: users = [], isLoading, error, refetch } = useAdminUsers();
+  const { data: response, isLoading, error, refetch } = useAdminUsers(currentPage, itemsPerPage);
   const deleteUsersMutation = useDeleteAdminUsers();
+
+  const users = response?.data || [];
+  const metaData = response?.metaData;
 
 
   useEffect(() => {
@@ -82,6 +88,17 @@ const UserTable: React.FC = () => {
   const refreshData = () => {
     refetch();
     setSelectedUsers([]);
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    setSelectedUsers([]); // Clear selections when changing pages
+  };
+
+  const handleItemsPerPageChange = (newItemsPerPage: number) => {
+    setItemsPerPage(newItemsPerPage);
+    setCurrentPage(1); // Reset to first page when changing items per page
+    setSelectedUsers([]); // Clear selections
   };
 
 
@@ -265,6 +282,40 @@ const UserTable: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Pagination */}
+      {metaData && (
+        <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="text-sm text-gray-500 dark:text-gray-400">
+                Showing {((currentPage - 1) * itemsPerPage) + 1} of {Math.min(currentPage * itemsPerPage, metaData.totalCount)} results
+              </div>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-500 dark:text-gray-400">Items per page:</span>
+                <select
+                  value={itemsPerPage}
+                  onChange={(e) => handleItemsPerPageChange(Number(e.target.value))}
+                  className="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+                >
+                  <option value={5}>5 per page</option>
+                  <option value={10}>10 per page</option>
+                  <option value={20}>20 per page</option>
+                  <option value={50}>50 per page</option>
+                  <option value={100}>100 per page</option>
+                </select>
+              </div>
+              <Pagination
+                currentPage={currentPage}
+                totalPages={metaData.totalPages}
+                onPageChange={handlePageChange}
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       <ConfirmationDialog
         isOpen={isDeleteModalOpen}

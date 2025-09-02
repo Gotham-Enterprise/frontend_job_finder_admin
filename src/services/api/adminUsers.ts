@@ -81,6 +81,15 @@ export interface CreateRoleResponse {
 export interface AdminUsersResponse {
   success: boolean;
   data: AdminUser[];
+  metaData?: {
+    page: number;
+    limit: number;
+    totalPages: number;
+    totalCount: number;
+    currentPageTotalItems: number;
+    hasNextPage: boolean;
+    hasPreviousPage: boolean;
+  };
 }
 
 export interface AdminUserResponse {
@@ -99,8 +108,8 @@ export interface DeleteUsersResponse {
 }
 
 export const adminUsersApi = {
-  async getUsers(): Promise<AdminUsersResponse> {
-    return apiGet<AdminUsersResponse>('/api/admin/users/');
+  async getUsers(page: number = 1, limit: number = 10): Promise<AdminUsersResponse> {
+    return apiGet<AdminUsersResponse>(`/api/admin/users/?page=${page}&limit=${limit}`);
   },
 
   async getRoles(): Promise<RolesResponse> {

@@ -2,89 +2,22 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { adminUsersApi, CreateAdminUserRequest, UpdateAdminUserRequest, DeleteUsersRequest, CreateRoleRequest } from '@/services/api/adminUsers';
 import { showToast } from '@/services/utils/toast';
 
-export const useAdminUsers = () => {
+export const useAdminUsers = (page: number = 1, limit: number = 10) => {
   return useQuery({
-    queryKey: ['adminUsers'],
+    queryKey: ['adminUsers', page, limit],
     queryFn: async () => {
       try {
-        console.log('Attempting to fetch from API...');
-        const response = await adminUsersApi.getUsers();
-        console.log('API Response:', response);
+        const response = await adminUsersApi.getUsers(page, limit);
         return response;
       } catch (error: any) {
-        console.error('API Error:', error);
-        
-        // If it's a 500 error or network error, use mock data
-        if (error?.status === 500 || error?.code === 'NETWORK_ERROR' || !error?.response) {
-          console.warn('Backend API unavailable (500 error or network issue), using mock data');
-          
-          // Return mock data with same structure as API
-          return {
-            success: true,
-            data: [
-              {
-                userId: '1',
-                email: 'john.doe@company.com',
-                name: 'John Doe',
-                role: 'admin',
-                status: 'active' as const,
-                avatarUrl: undefined,
-                access: {
-                  'Tickets': { add: true, edit: true, view: true, delete: true },
-                  'Job Seekers': { add: true, edit: true, view: true, delete: true },
-                  'Employers': { add: true, edit: true, view: true, delete: true },
-                  'Applications': { add: true, edit: true, view: true, delete: true },
-                  'Coupons': { add: true, edit: true, view: true, delete: true },
-                  'Blog': { add: true, edit: true, view: true, delete: true },
-                  'Careers': { add: true, edit: true, view: true, delete: true }
-                }
-              },
-              {
-                userId: '2',
-                email: 'jane.smith@company.com',
-                name: 'Jane Smith',
-                role: 'manager',
-                status: 'active' as const,
-                avatarUrl: undefined,
-                access: {
-                  'Tickets': { add: true, edit: true, view: true, delete: false },
-                  'Job Seekers': { add: true, edit: true, view: true, delete: false },
-                  'Employers': { add: true, edit: true, view: true, delete: false },
-                  'Applications': { add: true, edit: true, view: true, delete: false },
-                  'Coupons': { add: false, edit: false, view: true, delete: false },
-                  'Blog': { add: true, edit: true, view: true, delete: false },
-                  'Careers': { add: true, edit: true, view: true, delete: false }
-                }
-              },
-              {
-                userId: '3',
-                email: 'bob.wilson@company.com',
-                name: 'Bob Wilson',
-                role: 'user',
-                status: 'inactive' as const,
-                avatarUrl: undefined,
-                access: {
-                  'Tickets': { add: false, edit: false, view: true, delete: false },
-                  'Job Seekers': { add: false, edit: false, view: true, delete: false },
-                  'Employers': { add: false, edit: false, view: true, delete: false },
-                  'Applications': { add: false, edit: false, view: true, delete: false },
-                  'Coupons': { add: false, edit: false, view: false, delete: false },
-                  'Blog': { add: false, edit: false, view: true, delete: false },
-                  'Careers': { add: false, edit: false, view: true, delete: false }
-                }
-              }
-            ]
-          };
-        }
-        
-        // Re-throw other errors
+       
         throw error;
       }
     },
-    select: (data) => data.data,
+    select: (data) => data,
     staleTime: 5 * 60 * 1000,
     retry: (failureCount, error: any) => {
-      // Don't retry on 500 errors - use mock data instead
+
       if (error?.status === 500) {
         return false;
       }
