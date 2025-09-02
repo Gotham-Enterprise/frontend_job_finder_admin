@@ -10,6 +10,15 @@ import FullScreenSpinner from '@/components/ui/FullScreenSpinner';
 import BulkActionDropdown from '@/components/ui/BulkActionDropdown';
 import Checkbox from '@/components/form/input/Checkbox';
 import Pagination from '@/components/tables/Pagination';
+import Select from '@/components/form/Select';
+
+const itemsPerPageOptions = [
+  { value: '5', label: '5 per page' },
+  { value: '10', label: '10 per page' },
+  { value: '20', label: '20 per page' },
+  { value: '50', label: '50 per page' },
+  { value: '100', label: '100 per page' },
+];
 
 const UserTable: React.FC = () => {
   const router = useRouter();
@@ -268,6 +277,34 @@ const UserTable: React.FC = () => {
               })}
             </tbody>
           </table>
+           {/* Pagination */}
+      {metaData && (
+        <div className="px-5 py-4 border-t border-gray-200 dark:border-gray-700">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="text-sm ml-2 text-gray-500 dark:text-gray-400">
+                Showing {((currentPage - 1) * itemsPerPage) + 1} of {Math.min(currentPage * itemsPerPage, metaData.totalCount)} results
+              </div>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">Items per page:</span>
+                <Select
+                  value={itemsPerPage.toString()}
+                  onChange={(value: string) => handleItemsPerPageChange(parseInt(value))}
+                  options={itemsPerPageOptions}
+                  className="w-auto min-w-[120px]"
+                />
+              </div>
+              <Pagination
+                currentPage={currentPage}
+                totalPages={metaData.totalPages}
+                onPageChange={handlePageChange}
+              />
+            </div>
+          </div>
+        </div>
+      )}
         </div>
 
         {users.length === 0 && (
@@ -283,39 +320,7 @@ const UserTable: React.FC = () => {
         )}
       </div>
 
-      {/* Pagination */}
-      {metaData && (
-        <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="text-sm text-gray-500 dark:text-gray-400">
-                Showing {((currentPage - 1) * itemsPerPage) + 1} of {Math.min(currentPage * itemsPerPage, metaData.totalCount)} results
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-500 dark:text-gray-400">Items per page:</span>
-                <select
-                  value={itemsPerPage}
-                  onChange={(e) => handleItemsPerPageChange(Number(e.target.value))}
-                  className="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
-                >
-                  <option value={5}>5 per page</option>
-                  <option value={10}>10 per page</option>
-                  <option value={20}>20 per page</option>
-                  <option value={50}>50 per page</option>
-                  <option value={100}>100 per page</option>
-                </select>
-              </div>
-              <Pagination
-                currentPage={currentPage}
-                totalPages={metaData.totalPages}
-                onPageChange={handlePageChange}
-              />
-            </div>
-          </div>
-        </div>
-      )}
+     
 
       <ConfirmationDialog
         isOpen={isDeleteModalOpen}
