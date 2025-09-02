@@ -1,6 +1,5 @@
 import React from 'react';
 import SearchableSelect from '../../../ui/SearchableSelect';
-import StatusToggleFilter from '../../../ui/StatusToggleFilter';
 import Label from '../../../form/Label';
 import { EmployerFiltersProps } from '@/services/types/EmployerTypes';
 
@@ -10,8 +9,6 @@ const EmployerFilters: React.FC<EmployerFiltersProps> = ({
   onFilterChange,
   stateOptions,
   statusOptions,
-  selectedStatuses,
-  onStatusToggle,
   hasActiveFilters,
   clearIndividualFilter,
 }) => {
@@ -48,7 +45,7 @@ const EmployerFilters: React.FC<EmployerFiltersProps> = ({
             <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
               Status
             </Label>
-            {selectedStatuses.length > 0 && (
+            {filters.status && (
               <button
                 onClick={() => clearIndividualFilter('status')}
                 className="text-xs text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100 font-medium cursor-pointer hover:underline"
@@ -57,13 +54,13 @@ const EmployerFilters: React.FC<EmployerFiltersProps> = ({
               </button>
             )}
           </div>
-          <StatusToggleFilter
-            selectedStatuses={selectedStatuses}
-            onChange={onStatusToggle}
-            options={statusOptions.map(option => ({
-              value: option.value,
-              label: option.label
-            }))}
+          <SearchableSelect
+            value={filters.status || ''}
+            onChange={(value: string) => onFilterChange('status', value)}
+            options={statusOptions}
+            placeholder="Select status..."
+            searchPlaceholder="Search status..."
+            className="w-full"
           />
         </div>
       </div>

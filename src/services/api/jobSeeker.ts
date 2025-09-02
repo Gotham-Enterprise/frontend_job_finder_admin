@@ -1,5 +1,5 @@
-import { JobSeekerFilters, JobSeekersResponse, JobSeekerDetailsResponse } from '../types/jobSeeker';
-import { apiGet } from './apiUtils';
+import { JobSeekerFilters, JobSeekersResponse, JobSeekerDetailsResponse, JobSeekerUpdateData } from '../types/jobSeeker';
+import { apiGet, apiPut } from './apiUtils';
 
 export const jobSeekerApi = {
   async getJobSeekers(filters: JobSeekerFilters = {}): Promise<JobSeekersResponse> {
@@ -8,6 +8,8 @@ export const jobSeekerApi = {
     if (filters.page) queryParams.append('page', filters.page.toString());
     if (filters.limit) queryParams.append('limit', filters.limit.toString());
     if (filters.search) queryParams.append('name', filters.search);
+    if (filters.city) queryParams.append('city', filters.city);
+    if (filters.radius) queryParams.append('radius', filters.radius.toString());
     if (filters.location) queryParams.append('location', filters.location);
     if (filters.specialty) queryParams.append('specialty', filters.specialty);
     if (filters.occupationId) queryParams.append('occupationId', filters.occupationId.toString());
@@ -24,5 +26,9 @@ export const jobSeekerApi = {
 
   async getJobSeekerById(id: string): Promise<JobSeekerDetailsResponse> {
     return apiGet<JobSeekerDetailsResponse>(`/api/admin/jobseekers/${id}`);
+  },
+
+  async updateJobSeeker(id: string, data: JobSeekerUpdateData): Promise<any> {
+    return apiPut<any>(`/api/admin/jobseekers/${id}`, data);
   },
 };

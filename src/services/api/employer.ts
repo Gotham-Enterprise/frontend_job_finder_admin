@@ -2,9 +2,10 @@ import { EmployerFilters,
   EmployersResponse,
    EmployerStatesResponse,
    EmployerDetailsResponse,
-    CompanyReviewsResponse } from '../types/employer';
+    CompanyReviewsResponse,
+    EmployerUpdateData } from '../types/employer';
 import { ApplicantDetailsResponse } from '../types/applicant';
-import { apiGet } from './apiUtils';
+import { apiGet, apiPut } from './apiUtils';
 import { showToast } from '../utils/toast';
 
 export const employerApi = {
@@ -38,5 +39,9 @@ export const employerApi = {
 
   async getCompanyReviews(id: string): Promise<CompanyReviewsResponse> {
     return apiGet<CompanyReviewsResponse>(`/api/admin/employers/reviews/${id}`);
+  },
+
+  async updateEmployer(id: string, data: EmployerUpdateData): Promise<any> {
+    return apiPut<any>(`/api/admin/employers/${id}`, data);
   },
 };

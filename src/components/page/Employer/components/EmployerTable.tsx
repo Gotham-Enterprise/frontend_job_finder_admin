@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { formatDate, formatDateTimeEST } from '@/services/utils/dateUtils';
 import {
   Table,
@@ -10,9 +10,11 @@ import Badge from '../../../ui/badge/Badge';
 import Button from '../../../ui/button/Button';
 import TableHeading from '../../../tables/tableHeader';
 import Checkbox from '../../../form/input/Checkbox';
-import { EyeIcon, TimeIcon } from '@/icons';
+import { EyeIcon, TimeIcon, PencilIcon } from '@/icons';
 import { EmployerTableProps } from '@/services/types/EmployerTypes';
 import Avatar from '../../../ui/avatar/Avatar';
+import { EditEmployerModal } from './EditEmployerModal';
+import { useToast } from '@/context/ToastContext';
 
 const EmployerTable: React.FC<EmployerTableProps> = ({
   data,
@@ -23,7 +25,38 @@ const EmployerTable: React.FC<EmployerTableProps> = ({
   onViewSubscription,
   selectedEmployerId,
   onEmployerSelect,
-}) => {  return (
+  onRefresh,
+}) => {
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [selectedEmployerIdForEdit, setSelectedEmployerIdForEdit] = useState<string | null>(null);
+  const { addToast } = useToast();
+
+  const openEditModal = (employerId: string) => {
+    setSelectedEmployerIdForEdit(employerId);
+    setEditModalOpen(true);
+  };
+
+  const closeEditModal = () => {
+    setEditModalOpen(false);
+    setSelectedEmployerIdForEdit(null);
+  };
+
+  const refreshData = (showSuccessToast = false) => {
+    if (showSuccessToast) {
+      addToast({
+        variant: 'success',
+        title: 'Success',
+        message: 'Employer has been updated successfully',
+        duration: 5000,
+      });
+    }
+    
+    if (onRefresh) {
+      onRefresh();
+    } else if (typeof window !== 'undefined') {
+      window.location.reload();
+    }
+  };  return (
     <div className="overflow-x-auto">
       <Table>
         <TableHeading columns={tableColumns} />
@@ -57,15 +90,15 @@ const EmployerTable: React.FC<EmployerTableProps> = ({
                     onChange={(checked) => onEmployerSelect(employer.id, checked)}
                   />
                 </TableCell>
-                <TableCell className="py-4 px-6 text-sm">
+                <TableCell className="py-4 px-6 text-sm max-w-xs">
                   <div className="flex items-center gap-3">
                     <Avatar
                       name={employer.companyName}
                       size="medium"
                       className="flex-shrink-0"
                     />
-                    <div>
-                      <p className="font-medium text-gray-900 dark:text-white">
+                    <div className="min-w-0 flex-1 max-w-48">
+                      <p className="font-medium text-gray-900 dark:text-white truncate" title={employer.companyName}>
                         {employer.companyName}
                       </p>
                       <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -167,23 +200,41 @@ const EmployerTable: React.FC<EmployerTableProps> = ({
                   </span>
                 </TableCell>
                 <TableCell className="py-4 px-6 text-right">
-                  <div className="flex items-center gap-2">
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="text-brand-400"
-                      onClick={() => onViewEmployer(employer.id)}
-                      startIcon={<EyeIcon />}
-                    >
-                      View
-                    </Button>
-                  </div>
+
+                  <div className="flex items-center gap-4">
+                                      <button 
+                                     
+                                        className="flex gap-2 text-brand-400"
+                                        onClick={() => onViewEmployer(employer.id)}
+                                      
+                                      >
+                                       <EyeIcon />  View
+                                      </button>
+                                     
+                                      <button 
+                                         className="flex gap-2 text-brand-400"
+                                       onClick={() => openEditModal(employer.id)}
+                                     
+                                      >
+                                        <PencilIcon /> Edit
+                                      </button>
+                                    </div>
+             
                 </TableCell>
               </TableRow>
             ))
           )}
         </TableBody>
       </Table>
+
+      {selectedEmployerIdForEdit && (
+        <EditEmployerModal
+          isOpen={editModalOpen}
+          onClose={closeEditModal}
+          employerId={selectedEmployerIdForEdit}
+          onUpdate={() => refreshData(true)}
+        />
+      )}
     </div>
   );
 };
