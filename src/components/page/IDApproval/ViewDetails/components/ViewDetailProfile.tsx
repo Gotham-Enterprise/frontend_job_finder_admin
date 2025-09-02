@@ -2,6 +2,7 @@ import { FC } from "react";
 
 import Avatar from "@/components/ui/avatar/Avatar";
 import { UseIdApprovalDetailLogic } from "@/services/types/idApproval";
+import { formatPhoneNumber, formatUSPhoneNumber } from "@/services/utils";
 
 import AccountStatus from "../../components/AccountStatus";
 
@@ -35,7 +36,7 @@ const Profile: FC<Props> = ({ profile }) => {
               <p className="text-lg text-gray-400">Phone number</p>
             </div>
             <div className="w-2/3">
-              <p className="text-lg text-gray-900">{profile.phoneNumber}</p>
+              <p className="text-lg text-gray-900">{formatUSPhoneNumber(profile.phoneNumber)}</p>
             </div>
           </div>
           <div className="flex flex-row">
