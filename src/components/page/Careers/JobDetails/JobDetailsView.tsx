@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useCareerDetails, useUpdateApplicantStatus } from '@/services/hooks/useCareers';
+import { useCareerDetails, useUpdateApplicantStatus, useDuplicateCareer } from '@/services/hooks/useCareers';
 import Button from '@/components/ui/button/Button';
 import Input from '@/components/ui/input/Input';
 import Badge from '@/components/ui/badge/Badge';
@@ -27,6 +27,7 @@ const JobDetailsView: React.FC<JobDetailsViewProps> = ({ jobId }) => {
   const [selectedApplicant, setSelectedApplicant] = useState<any>(null);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [updatingApplicantId, setUpdatingApplicantId] = useState<string | null>(null);
+  const [isDuplicating, setIsDuplicating] = useState(false);
 
   // Function to format status for display
   const formatStatusDisplay = (status: string) => {
@@ -44,6 +45,7 @@ const JobDetailsView: React.FC<JobDetailsViewProps> = ({ jobId }) => {
 
   const { data: jobData, isLoading, isError, refetch } = useCareerDetails(jobId || '');
   const updateApplicantStatusMutation = useUpdateApplicantStatus();
+  const duplicateCareerMutation = useDuplicateCareer();
 
   const statusCounts = useMemo(() => {
     const counts: { [key: string]: number } = { All: 0, PENDING: 0, QUALIFIED: 0, NOT_QUALIFIED: 0 };
@@ -81,6 +83,19 @@ const JobDetailsView: React.FC<JobDetailsViewProps> = ({ jobId }) => {
 
   const closeEditModal = () => {
     setEditModalOpen(false);
+  };
+
+  const handleDuplicateJob = async () => {
+    try {
+      setIsDuplicating(true);
+      await duplicateCareerMutation.mutateAsync(jobId);
+      
+      router.push('/admin/careers');
+    } catch (error) {
+      console.error('Error duplicating job:', error);
+    } finally {
+      setIsDuplicating(false);
+    }
   };
 
   const handleDropdownToggle = (applicantId: string) => {
@@ -141,7 +156,14 @@ const JobDetailsView: React.FC<JobDetailsViewProps> = ({ jobId }) => {
             <Edit className="w-4 h-4 mr-2" />
             Edit Job Post
           </Button>
-          <Button variant="outline"><Copy className="w-4 h-4 mr-2" /> Duplicate</Button>
+          <Button 
+            variant="outline" 
+            onClick={handleDuplicateJob}
+            disabled={isDuplicating}
+          >
+            <Copy className="w-4 h-4 mr-2" /> 
+            {isDuplicating ? 'Duplicating...' : 'Duplicate'}
+          </Button>
           <Button variant="destructive"><Trash2 className="w-4 h-4 mr-2" /> Close Job Post</Button>
         </div>
       </header>
