@@ -6,7 +6,7 @@ import { useAdminUsers, useDeleteAdminUsers, useAdminRoles } from '@/services/ho
 import { AdminUser } from '@/services/api/adminUsers';
 import { getUserInitials, formatUserRole, getUserStatusVariant, getRoleColor } from '@/services/utils/userUtils';
 import ConfirmationDialog from '@/components/ui/ConfirmationDialog';
-import LoadingSkeleton from '@/components/ui/LoadingSkeleton/LoadingSkeleton';
+import FullScreenSpinner from '@/components/ui/FullScreenSpinner';
 import BulkActionDropdown from '@/components/ui/BulkActionDropdown';
 
 const UserTable: React.FC = () => {
@@ -16,13 +16,9 @@ const UserTable: React.FC = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   const { data: users = [], isLoading, error, refetch } = useAdminUsers();
-  const { data: apiRoles = [] } = useAdminRoles();
   const deleteUsersMutation = useDeleteAdminUsers();
 
-  // Debug logging
-  console.log('UserTable Debug:', { users, isLoading, error });
 
-  // Prevent hydration mismatch
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -52,7 +48,6 @@ const UserTable: React.FC = () => {
     router.push(`/admin/users/edit?id=${user.userId}`);
   };
 
-  // Navigate to create user page
   const navigateToCreateUser = useCallback(() => {
     router.push('/admin/users/create');
   }, [router]);
@@ -88,23 +83,13 @@ const UserTable: React.FC = () => {
     setSelectedUsers([]);
   };
 
-  // Prevent hydration mismatch
+
   if (!mounted) {
-    return (
-      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-        <div className="p-8">
-          <LoadingSkeleton variant="card" />
-        </div>
-      </div>
-    );
+    return <FullScreenSpinner isVisible={true} message="Initializing..." />;
   }
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <LoadingSkeleton variant="card" />
-      </div>
-    );
+    return <FullScreenSpinner isVisible={true} message="Loading users..." />;
   }
 
   if (error) {
