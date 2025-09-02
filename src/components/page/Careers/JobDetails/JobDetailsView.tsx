@@ -9,6 +9,7 @@ import Badge from '@/components/ui/badge/Badge';
 import { Table, TableBody, TableCell, TableHeader, TableRow } from '@/components/ui/table';
 import { Briefcase, MapPin, DollarSign, Building, Users, Calendar, Search, Filter, Edit, Copy, Trash2, Eye, MoreVertical, FileText } from 'lucide-react';
 import EditJobPostModal from './components/EditJobPostModal';
+import ViewApplicantModal from './components/ViewApplicantModal';
 import { Dropdown } from '@/components/ui/dropdown/Dropdown';
 import { DropdownItem } from '@/components/ui/dropdown/DropdownItem';
 
@@ -22,6 +23,8 @@ const JobDetailsView: React.FC<JobDetailsViewProps> = ({ jobId }) => {
   const [activeTab, setActiveTab] = useState('All');
   const [searchTerm, setSearchTerm] = useState('');
   const [isEditModalOpen, setEditModalOpen] = useState(false);
+  const [isViewApplicantModalOpen, setViewApplicantModalOpen] = useState(false);
+  const [selectedApplicant, setSelectedApplicant] = useState<any>(null);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [updatingApplicantId, setUpdatingApplicantId] = useState<string | null>(null);
 
@@ -85,8 +88,8 @@ const JobDetailsView: React.FC<JobDetailsViewProps> = ({ jobId }) => {
   };
 
   const handleViewApplicant = (applicant: any) => {
-    // TODO: Implement view applicant details
-    console.log('View applicant:', applicant);
+    setSelectedApplicant(applicant);
+    setViewApplicantModalOpen(true);
     setOpenDropdown(null);
   };
 
@@ -98,11 +101,8 @@ const JobDetailsView: React.FC<JobDetailsViewProps> = ({ jobId }) => {
         status: newStatus as 'PENDING' | 'QUALIFIED' | 'NOT_QUALIFIED'
       });
       
-      // Close dropdown and refresh data
       setOpenDropdown(null);
-      // The mutation will automatically invalidate queries and refresh the data
     } catch (error) {
-      // Error handling is done in the mutation hook
       console.error('Error updating applicant status:', error);
     } finally {
       setUpdatingApplicantId(null);
@@ -114,7 +114,6 @@ const JobDetailsView: React.FC<JobDetailsViewProps> = ({ jobId }) => {
     setOpenDropdown(null);
   };
 
-  // Handle conditional rendering after all hooks are called
   if (!jobId) {
     return <div>No job ID provided in URL.</div>;
   }
@@ -196,7 +195,7 @@ const JobDetailsView: React.FC<JobDetailsViewProps> = ({ jobId }) => {
                   onClick={() => setActiveTab(status)}
                   className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-xs ${
                     activeTab === status
-                      ? 'border-indigo-500 text-indigo-600'
+                      ? 'border-green-700 text-green-700'
                       : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                   }`}
                 >
@@ -345,6 +344,11 @@ const JobDetailsView: React.FC<JobDetailsViewProps> = ({ jobId }) => {
         onClose={closeEditModal}
         job={job}
         onUpdate={handleUpdate}
+      />
+      <ViewApplicantModal
+        isOpen={isViewApplicantModalOpen}
+        onClose={() => setViewApplicantModalOpen(false)}
+        applicant={selectedApplicant}
       />
     </div>
   );
