@@ -2,6 +2,7 @@
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { User } from '@/services/types/auth';
+import { useStates } from '@/services/hooks/useStates';
 import Button from '@/components/ui/button/Button';
 import Input from '@/components/ui/input/Input';
 import Label from '@/components/form/Label';
@@ -49,8 +50,6 @@ const AccountInfo: React.FC<AccountInfoProps> = ({
   isUpdatingAvatar = false,
   isUpdatingPersonalInfo = false
 }) => {
-  console.log('AccountInfo - Props received:', { user, userInitials, displayName });
-  
   const [mounted, setMounted] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedAvatar, setSelectedAvatar] = useState<File | null>(null);
@@ -61,14 +60,14 @@ const AccountInfo: React.FC<AccountInfoProps> = ({
     confirm: false
   });
 
-  // Prevent hydration mismatch by only rendering after mount
+  const { data: statesResponse, isLoading: isLoadingStates } = useStates();
+  const states = statesResponse?.data?.states || [];
+
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Update form data when user changes
   useEffect(() => {
-    console.log('AccountInfo - User prop changed:', user);
     if (user) {
       const newFormData = {
         firstName: user.firstName || '',
@@ -81,7 +80,6 @@ const AccountInfo: React.FC<AccountInfoProps> = ({
         city: user.profile?.city || '',
         zipCode: user.profile?.zipCode || ''
       };
-      console.log('AccountInfo - Setting form data:', newFormData);
       setEditFormData(newFormData);
     }
   }, [user]);
@@ -141,7 +139,6 @@ const AccountInfo: React.FC<AccountInfoProps> = ({
         confirmPassword: ''
       });
     } catch (error) {
-      // Error handling is done in parent component
     }
   }, [passwordFormData, validatePasswordForm, onPasswordChange]);
 
@@ -156,26 +153,23 @@ const AccountInfo: React.FC<AccountInfoProps> = ({
   const savePersonalInfo = useCallback(async () => {
     try {
       await onPersonalInfoChange(editFormData);
-      console.log('Personal information saved successfully');
     } catch (error) {
       console.error('Failed to save personal information:', error);
     }
   }, [editFormData, onPersonalInfoChange]);
 
-  const handleAvatarClick = useCallback(() => {
+  const avatarClick = useCallback(() => {
     fileInputRef.current?.click();
   }, []);
 
-  const handleAvatarChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+  const avatarChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      // Validate file type
       if (!file.type.startsWith('image/')) {
         alert('Please select an image file');
         return;
       }
       
-      // Validate file size (1MB = 1048576 bytes)
       if (file.size > 1048576) {
         alert('File size must be less than 1MB');
         return;
@@ -183,7 +177,6 @@ const AccountInfo: React.FC<AccountInfoProps> = ({
 
       setSelectedAvatar(file);
       
-      // Create preview
       const reader = new FileReader();
       reader.onload = (e) => {
         setAvatarPreview(e.target?.result as string);
@@ -198,17 +191,11 @@ const AccountInfo: React.FC<AccountInfoProps> = ({
     const formData = new FormData();
     formData.append('avatar', selectedAvatar);
     
-    // Optional: Add additional form data if needed
-    // formData.append('userId', user?.id || '');
-    // formData.append('timestamp', new Date().toISOString());
-    
     try {
       await onAvatarChange(formData);
       setSelectedAvatar(null);
       setAvatarPreview(null);
-      console.log('Avatar uploaded successfully');
       
-      // Reset file input
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
@@ -219,7 +206,6 @@ const AccountInfo: React.FC<AccountInfoProps> = ({
 
   const validation = validatePasswordForm();
 
-  // Prevent hydration mismatch
   if (!mounted) {
     return (
       <div className="space-y-8">
@@ -276,7 +262,7 @@ const AccountInfo: React.FC<AccountInfoProps> = ({
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
                   <span 
-                    onClick={handleAvatarClick}
+                    onClick={avatarClick}
                     className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 cursor-pointer"
                   >
                     Change avatar
@@ -299,7 +285,7 @@ const AccountInfo: React.FC<AccountInfoProps> = ({
                   ref={fileInputRef}
                   type="file"
                   accept="image/*"
-                  onChange={handleAvatarChange}
+                  onChange={avatarChange}
                   className="hidden"
                 />
               </div>
@@ -404,12 +390,16 @@ const AccountInfo: React.FC<AccountInfoProps> = ({
                   <Label htmlFor="state" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                     State
                   </Label>
-                  <Input
-                    id="state"
-                    type="text"
+                  <Select
+                    options={states.map(state => ({
+                      value: state.abbreviation,
+                      label: state.name
+                    }))}
+                    placeholder="Select State"
                     value={editFormData.state}
-                    onChange={(e) => updateEditFormData({ state: e.target.value })}
-                    className="mt-1 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600"
+                    onChange={(value) => updateEditFormData({ state: value })}
+                    disabled={isLoadingStates}
+                    className="mt-1"
                   />
                 </div>
                 <div>
