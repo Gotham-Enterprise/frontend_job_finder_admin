@@ -110,7 +110,7 @@ export interface IdApprovalDetailResponse {
     activityLogs: {
       attempts: number;
       ipAddress: string;
-      timestamp: string;
+      minute: string;
     }[];
   };
 }

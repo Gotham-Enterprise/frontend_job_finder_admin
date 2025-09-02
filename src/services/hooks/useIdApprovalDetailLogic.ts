@@ -33,11 +33,12 @@ export const useIdApprovalDetailLogic = (data: IdApprovalDetailResponse): UseIdA
         {
           onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: idApprovalQueryKeys.detail(id) });
+            onToggleReview();
           },
         }
       );
     },
-    [id, updateStatus, queryClient]
+    [id, updateStatus, onToggleReview, queryClient]
   );
 
   return {
