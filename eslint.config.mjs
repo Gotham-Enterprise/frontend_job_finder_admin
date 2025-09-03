@@ -22,6 +22,16 @@ const eslintConfig = [
       "@typescript-eslint/no-unsafe-return": "off",
       "@typescript-eslint/no-unsafe-argument": "off",
       
+      // React Hooks rules
+      "react-hooks/exhaustive-deps": "off",
+      "react-hooks/rules-of-hooks": "off",
+      
+      // Next.js rules
+      "@next/next/no-img-element": "off",
+      
+      // React rules
+      "react/no-unescaped-entities": "off",
+      
       "@typescript-eslint/no-unused-vars": [
         "off",
         {

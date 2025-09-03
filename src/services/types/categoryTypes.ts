@@ -3,10 +3,14 @@ import React from 'react';
 export interface Category {
   id: string;
   name: string;
-  slug: string;
   description: string;
-  parent: string;
-  count: number;
+  blogCount: number;
+  subCategories: Array<{ 
+    id: string; 
+    name: string; 
+  }>;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface NewCategory {
@@ -14,6 +18,7 @@ export interface NewCategory {
   slug: string;
   description: string;
   parent: string;
+  subCategories?: Array<{ name: string; id?: string }>;
 }
 
 export interface CategoryOption {
@@ -25,7 +30,8 @@ export interface CategoryFormProps {
   newCategory: NewCategory;
   onInputChange: (field: keyof NewCategory, value: string) => void;
   onAddCategory: () => void;
-  parentOptions: CategoryOption[];
+  onSubCategoryChange?: (subCategories: Array<{ name: string; id?: string }>) => void;
+  isLoading?: boolean;
 }
 
 export interface CategoryListProps {
@@ -33,8 +39,31 @@ export interface CategoryListProps {
   searchTerm: string;
   onSearchChange: (value: string) => void;
   onEditCategory: (category: Category) => void;
-  onDeleteCategory: (categoryId: string) => void;
+  onDeleteCategory: (categoryIds: string[]) => void;
   getParentCategoryName: (parentId: string) => string;
+  isLoading?: boolean;
+  error?: string | null;
+  deletingCategoryIds?: string[];
+  currentPage?: number;
+  totalPages?: number;
+  onPageChange?: (page: number) => void;
+  itemsPerPage?: number;
+  onItemsPerPageChange?: (itemsPerPage: number) => void;
+  selectedCategories?: string[];
+  onSelectCategory?: (categoryId: string, selected: boolean) => void;
+  onSelectAll?: (selected: boolean) => void;
+  onBulkDelete?: () => void;
+  onClearSelection?: () => void;
+  isDeleting?: boolean;
+  metaData?: {
+    page: number;
+    limit: number;
+    totalPages: number;
+    totalCount: number;
+    currentPageTotalItems: number;
+    hasNextPage: boolean;
+    hasPreviousPage: boolean;
+  };
 }
 
 export interface CategoryEditModalProps {
@@ -43,5 +72,5 @@ export interface CategoryEditModalProps {
   editingCategory: Category | null;
   setEditingCategory: React.Dispatch<React.SetStateAction<Category | null>>;
   onUpdateCategory: () => void;
-  parentOptions: CategoryOption[];
+  isUpdating?: boolean;
 }

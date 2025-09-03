@@ -1,0 +1,100 @@
+import React from 'react';
+import { BlockType } from '../../../../../../services/types/visualLayoutTypes';
+
+interface ElementsSidebarProps {
+  onAddBlock: (type: BlockType) => void;
+}
+
+const sidebarElements = [
+  {
+    type: 'heading' as BlockType,
+    label: 'Title',
+    icon: 'H',
+    title: 'Add Title'
+  },
+  {
+    type: 'paragraph' as BlockType,
+    label: 'Text',
+    icon: (
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
+      </svg>
+    ),
+    title: 'Add Text'
+  },
+  {
+    type: 'image' as BlockType,
+    label: 'Image',
+    icon: (
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+      </svg>
+    ),
+    title: 'Add Image'
+  },
+  {
+    type: 'video' as BlockType,
+    label: 'Video',
+    icon: (
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+      </svg>
+    ),
+    title: 'Add Video'
+  },
+  {
+    type: 'list' as BlockType,
+    label: 'List',
+    icon: (
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+      </svg>
+    ),
+    title: 'Add List'
+  },
+  {
+    type: 'quote' as BlockType,
+    label: 'Quote',
+    icon: (
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+      </svg>
+    ),
+    title: 'Add Quote'
+  },
+  {
+    type: 'button' as BlockType,
+    label: 'Button',
+    icon: (
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
+      </svg>
+    ),
+    title: 'Add Button'
+  }
+];
+
+const ElementsSidebar: React.FC<ElementsSidebarProps> = ({ onAddBlock }) => (
+  <div className="fixed left-[255px] top-16 w-18 h-[calc(100vh-4rem)] bg-white border-r border-gray-300 flex flex-col items-center py-6 z-40">
+    <div className="flex flex-col gap-6">
+      {sidebarElements.map((element) => (
+        <div key={element.type} className="flex flex-col items-center">
+          <button
+            onClick={() => onAddBlock(element.type)}
+            className="flex items-center justify-center w-10 h-10 text-gray-600 hover:text-gray-800 hover:bg-gray-200 rounded-md transition-all mb-1"
+            title={element.title}
+          >
+            {typeof element.icon === 'string' ? (
+              <span className="font-bold text-sm">{element.icon}</span>
+            ) : (
+              element.icon
+            )}
+          </button>
+          <span className="text-xs text-gray-600 text-center font-medium">{element.label}</span>
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+export default ElementsSidebar;

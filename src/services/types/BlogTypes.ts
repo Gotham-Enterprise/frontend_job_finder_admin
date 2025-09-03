@@ -13,17 +13,27 @@ export interface BlogHeaderProps {
   isFilterOpen: boolean;
   setIsFilterOpen: (value: boolean) => void;
   onRefetch: () => void;
+  onClearFilters: () => void;
+  hasActiveFilters: boolean;
+  filterDropdownContent?: React.ReactNode;
+  selectedPosts: string[];
+  onBulkDelete: () => void;
+  onBulkPublish?: () => void;
+  onBulkDraft?: () => void;
+  onClearSelection: () => void;
+  isBulkDeleting: boolean;
+  isUpdatingStatus?: boolean;
 }
 
 export interface BlogFiltersProps {
-  isOpen: boolean;
   filters: BlogFilters;
   onFilterChange: (key: keyof BlogFilters, value: any) => void;
   categoryOptions: Array<{ value: string; label: string }>;
   tagOptions: Array<{ value: string; label: string }>;
   statusOptions: Array<{ value: string; label: string }>;
   sortOptions: Array<{ value: string; label: string }>;
-  itemsPerPageOptions: Array<{ value: string; label: string }>;
+  hasActiveFilters?: boolean;
+  clearIndividualFilter?: (filterKey: string) => void;
 }
 
 export interface BlogTableProps {
@@ -31,9 +41,9 @@ export interface BlogTableProps {
   isLoading: boolean;
   tableColumns: Array<{ key: string; label: string; className?: string }>;
   getStatusVariant: (status: string) => 'light' | 'solid';
-  onViewPost: (postId: string) => void;
   onEditPost: (postId: string) => void;
   onDeletePost: (postId: string) => void;
+  onPreviewPost?: (postId: string) => void;
   selectedPosts: string[];
   onSelectPost: (postId: string, selected: boolean) => void;
   onSelectAll: (selected: boolean) => void;
@@ -43,4 +53,6 @@ export interface BlogTablePaginationProps {
   data: any;
   filters: BlogFilters;
   onPageChange: (page: number) => void;
+  itemsPerPageOptions?: Array<{ value: string; label: string }>;
+  onFilterChange?: (key: keyof BlogFilters, value: any) => void;
 }

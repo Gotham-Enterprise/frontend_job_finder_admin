@@ -1,92 +1,95 @@
 import React from 'react';
-import Select from '../../../form/Select';
+import SearchableSelect from '../../../ui/SearchableSelect';
+import Label from '../../../form/Label';
 import { BlogFiltersProps } from '@/services/types/BlogTypes';
 
 const BlogFilters: React.FC<BlogFiltersProps> = ({
-  isOpen,
   filters,
   onFilterChange,
   categoryOptions,
   tagOptions,
   statusOptions,
   sortOptions,
-  itemsPerPageOptions,
+  hasActiveFilters,
+  clearIndividualFilter,
 }) => {
-  if (!isOpen) return null;
-
   return (
-    <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/20">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Status
-          </label>          <Select
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 gap-6">
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              Status
+            </Label>
+            {filters.status && clearIndividualFilter && (
+              <button
+                type="button"
+                onClick={() => clearIndividualFilter('status')}
+                className="text-xs text-gray-500 hover:text-red-600 transition-colors"
+              >
+                Clear
+              </button>
+            )}
+          </div>
+          <SearchableSelect
+            value={filters.status || ''}
+            onChange={(value: string) => onFilterChange('status', value)}
             options={statusOptions}
-            defaultValue={filters.status || ''}
-            onChange={(value:any) => onFilterChange('status', value)}
-            placeholder="All Statuses"
+            placeholder="Select status..."
+            searchPlaceholder="Search status..."
+            className="w-full"
           />
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Category
-          </label>          <Select
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              Category
+            </Label>
+            {filters.category && clearIndividualFilter && (
+              <button
+                type="button"
+                onClick={() => clearIndividualFilter('category')}
+                className="text-xs text-gray-500 hover:text-red-600 transition-colors"
+              >
+                Clear
+              </button>
+            )}
+          </div>
+          <SearchableSelect
+            value={filters.category || ''}
+            onChange={(value: string) => onFilterChange('category', value)}
             options={categoryOptions}
-            defaultValue={filters.category || ''}
-            onChange={(value:any) => onFilterChange('category', value)}
-            placeholder="All Categories"
+            placeholder="Select category..."
+            searchPlaceholder="Search categories..."
+            className="w-full"
           />
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Tag
-          </label>          <Select
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              Tag
+            </Label>
+            {filters.tag && clearIndividualFilter && (
+              <button
+                type="button"
+                onClick={() => clearIndividualFilter('tag')}
+                className="text-xs text-gray-500 hover:text-red-600 transition-colors"
+              >
+                Clear
+              </button>
+            )}
+          </div>
+          <SearchableSelect
+            value={filters.tag || ''}
+            onChange={(value: string) => onFilterChange('tag', value)}
             options={tagOptions}
-            defaultValue={filters.tag || ''}
-            onChange={(value) => onFilterChange('tag', value)}
-            placeholder="All Tags"
+            placeholder="Select tag..."
+            searchPlaceholder="Search tags..."
+            className="w-full"
           />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Sort By
-          </label>          <Select
-            options={sortOptions}
-            defaultValue={`${filters.sortBy || 'createdAt'}-${filters.sortOrder || 'desc'}`}
-            onChange={(value) => onFilterChange('sortBy', value)}
-            placeholder="Sort Posts"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Items per page
-          </label>          <Select
-            options={itemsPerPageOptions}
-            defaultValue={filters.limit?.toString() || '10'}
-            onChange={(value) => onFilterChange('limit', parseInt(value))}
-            placeholder="Items per page"
-          />
-        </div>
-
-        <div className="flex items-end">
-          <button
-            type="button"
-            onClick={() => {
-              onFilterChange('status', '');
-              onFilterChange('category', '');
-              onFilterChange('tag', '');
-              onFilterChange('sortBy', 'createdAt-desc');
-              onFilterChange('limit', 10);
-            }}
-            className="w-full px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500"
-          >
-            Clear Filters
-          </button>
-        </div>
+        </div>      
       </div>
     </div>
   );

@@ -1,8 +1,8 @@
 import React from 'react';
-import AddNewBlog from '@/components/page/Blog/components/AddNewBlog';
+import { AddNewBlogWithLayoutBuilder } from '@/components/page/Blog/components';
 
 export default function AddNewPost() {
   return (
-  <AddNewBlog />
+    <AddNewBlogWithLayoutBuilder />
   );
 }

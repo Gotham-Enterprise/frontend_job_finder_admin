@@ -63,7 +63,7 @@ export const authUtils = {
       return {};
     }
     const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
     };
     
     return headers;

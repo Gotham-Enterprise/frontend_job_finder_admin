@@ -1,7 +1,12 @@
-import { useState, useMemo, useTransition, useEffect } from 'react';
+import { useState, useMemo, useTransition, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { useBlogPosts, useDeleteBlogPost, useBulkDeleteBlogPosts } from '@/services/hooks/useBlog';
+import { useBlogPosts, useDeleteBlogPost, useBulkDeleteBlogPosts, useBulkUpdateBlogStatus } from '@/services/hooks/useBlog';
+import { useCategoriesForDropdown } from '@/services/hooks/useCategories';
+import { useTagsForDropdown } from '@/services/hooks/useTags';
 import { BlogFilters } from '@/services/types/blog';
+import { useConfirmation } from '@/hooks/useConfirmation';
+import { showToast } from '@/services/utils/toast';
+import { processSlug } from '@/services/utils/slugUtils';
 
 export const useBlogLogic = () => {
   const router = useRouter();
@@ -22,26 +27,28 @@ export const useBlogLogic = () => {
   const [selectedPosts, setSelectedPosts] = useState<string[]>([]);
 
   const { data, isLoading, error, refetch } = useBlogPosts(filters);
+  const { data: categoriesData, isLoading: isCategoriesLoading } = useCategoriesForDropdown();
+  const { data: tagsData, isLoading: isTagsLoading } = useTagsForDropdown();
   const { mutate: deleteBlogPost, isPending: isDeleting } = useDeleteBlogPost();
   const { mutate: bulkDeleteBlogPosts, isPending: isBulkDeleting } = useBulkDeleteBlogPosts();
+  const { mutate: bulkUpdateStatus, isPending: isUpdatingStatus } = useBulkUpdateBlogStatus();
+  const confirmation = useConfirmation();
 
   const tableColumns = useMemo(() => [
     { key: 'select', label: '', className: 'w-12' },
     { key: 'title', label: 'Title' },
+    { key: 'category', label: 'Category' },
+    { key: 'tags', label: 'Tags' },
     { key: 'author', label: 'Author' },
-    { key: 'categories', label: 'Categories' },
     { key: 'status', label: 'Status' },
-    { key: 'publishedDate', label: 'Published' },
-    { key: 'comments', label: 'Comments', className: 'text-center' },
-    { key: 'views', label: 'Views', className: 'text-center' },
+    { key: 'createdAt', label: 'Created At' },
     { key: 'actions', label: '', className: 'text-right' },
   ], []);
 
   const statusOptions = useMemo(() => [
-    { value: '', label: 'All Statuses' },
+    { value: '', label: 'All Status' },
     { value: 'published', label: 'Published' },
     { value: 'draft', label: 'Draft' },
-    { value: 'archived', label: 'Archived' },
   ], []);
 
   const sortOptions = useMemo(() => [
@@ -49,30 +56,35 @@ export const useBlogLogic = () => {
     { value: 'createdAt-asc', label: 'Oldest First' },
     { value: 'title-asc', label: 'Title A-Z' },
     { value: 'title-desc', label: 'Title Z-A' },
-    { value: 'publishedDate-desc', label: 'Published Date (Newest)' },
-    { value: 'publishedDate-asc', label: 'Published Date (Oldest)' },
-    { value: 'viewCount-desc', label: 'Most Views' },
-    { value: 'viewCount-asc', label: 'Least Views' },
   ], []);
 
+  const categoryOptions = useMemo(() => {
+    if (isCategoriesLoading || !categoriesData) {
+      return [{ value: '', label: 'All Categories' }];
+    }
+    
+    const allOption = { value: '', label: 'All Categories' };
+    const dynamicCategories = categoriesData.map((category: any) => ({
+      value: category.name,  
+      label: category.name,
+    }));
+    
+    return [allOption, ...dynamicCategories];
+  }, [categoriesData, isCategoriesLoading]);
 
-  const categoryOptions = useMemo(() => [
-    { value: '', label: 'All Categories' },
-    { value: 'technology', label: 'Technology' },
-    { value: 'business', label: 'Business' },
-    { value: 'lifestyle', label: 'Lifestyle' },
-    { value: 'travel', label: 'Travel' },
-    { value: 'food', label: 'Food' },
-  ], []);
-
-  const tagOptions = useMemo(() => [
-    { value: '', label: 'All Tags' },
-    { value: 'react', label: 'React' },
-    { value: 'nextjs', label: 'Next.js' },
-    { value: 'javascript', label: 'JavaScript' },
-    { value: 'typescript', label: 'TypeScript' },
-    { value: 'programming', label: 'Programming' },
-  ], []);
+  const tagOptions = useMemo(() => {
+    if (isTagsLoading || !tagsData) {
+      return [{ value: '', label: 'All Tags' }];
+    }
+    
+    const allOption = { value: '', label: 'All Tags' };
+    const dynamicTags = tagsData.map((tag: any) => ({
+      value: tag.name, 
+      label: tag.name,
+    }));
+    
+    return [allOption, ...dynamicTags];
+  }, [tagsData, isTagsLoading]);
 
   const itemsPerPageOptions = useMemo(() => [
     { value: '5', label: '5 per page' },
@@ -80,6 +92,65 @@ export const useBlogLogic = () => {
     { value: '20', label: '20 per page' },
     { value: '50', label: '50 per page' },
   ], []);
+
+  const clearIndividualFilter = useCallback((filterKey: string) => {
+    startTransition(() => {
+      switch (filterKey) {
+        case 'status':
+          setFilters(prev => ({ ...prev, status: undefined, page: 1 }));
+          break;
+        case 'category':
+          setFilters(prev => ({ ...prev, category: '', page: 1 }));
+          break;
+        case 'tag':
+          setFilters(prev => ({ ...prev, tag: '', page: 1 }));
+          break;
+        case 'sortBy':
+          setFilters(prev => ({ 
+            ...prev, 
+            sortBy: 'createdAt', 
+            sortOrder: 'desc', 
+            page: 1 
+          }));
+          break;
+        case 'limit':
+          setFilters(prev => ({ ...prev, limit: 10, page: 1 }));
+          break;
+        default:
+          break;
+      }
+    });
+  }, []);
+
+  const clearAllFilters = useCallback(() => {
+    startTransition(() => {
+      setFilters({
+        page: 1,
+        limit: 10,
+        search: '',
+        status: undefined,
+        category: '',
+        tag: '',
+        author: '',
+        sortBy: 'createdAt',
+        sortOrder: 'desc',
+      });
+      setSearchInput('');
+    });
+  }, []);
+
+  const hasActiveFilters = useMemo(() => {
+    return !!(
+      searchInput ||
+      filters.status ||
+      filters.category ||
+      filters.tag ||
+      filters.author ||
+      (filters.sortBy && filters.sortBy !== 'createdAt') ||
+      (filters.sortOrder && filters.sortOrder !== 'desc') ||
+      (filters.limit && filters.limit !== 10)
+    );
+  }, [searchInput, filters]);
 
   const filterChange = useMemo(() => (key: keyof BlogFilters, value: any) => {
     startTransition(() => {
@@ -133,26 +204,42 @@ export const useBlogLogic = () => {
     }
   };
 
-  const viewPost = (postId: string) => {
-    router.push(`/admin/blog/view/${postId}`);
-  };
-
   const editPost = (postId: string) => {
     router.push(`/admin/blog/edit/${postId}`);
   };
 
-  const deletePost = (postId: string) => {
-    if (window.confirm('Are you sure you want to delete this blog post?')) {
+  const previewPost = (postId: string) => {
+    const post = data?.data?.find((p: any) => p.id === postId);
+    if (post && post.slug) {
+          const cleanedSlug = processSlug(post.slug);
+      window.open(`/blog/${cleanedSlug}`, '_blank');
+    } else {
+      window.open(`/blog/${postId}`, '_blank');
+    }
+  };
+
+  const deletePost = async (postId: string) => {
+    const confirmed = await confirmation.confirm({
+      title: 'Delete Blog Post',
+      message: 'Are you sure you want to delete this blog post?',
+      confirmText: 'Delete',
+      cancelText: 'Cancel'
+    });
+
+    if (confirmed) {
       deleteBlogPost(postId, {
         onSuccess: () => {
-        
+          console.log('Blog post deleted successfully');
           setSelectedPosts(prev => prev.filter(id => id !== postId));
+        },
+        onError: (error) => {
+          console.error('Error deleting blog post:', error);
         }
       });
     }
   };
 
-  const bulkDeletePosts = () => {
+  const bulkDeletePosts = async () => {
     if (selectedPosts.length === 0) return;
     
     const count = selectedPosts.length;
@@ -160,10 +247,83 @@ export const useBlogLogic = () => {
       ? 'Are you sure you want to delete this blog post?' 
       : `Are you sure you want to delete ${count} blog posts?`;
     
-    if (window.confirm(message)) {
+    const confirmed = await confirmation.confirm({
+      title: `Delete ${count === 1 ? 'Blog Post' : 'Blog Posts'}`,
+      message,
+      confirmText: 'Delete',
+      cancelText: 'Cancel'
+    });
+
+    if (confirmed) {
       bulkDeleteBlogPosts(selectedPosts, {
         onSuccess: () => {
+          console.log('Blog posts deleted successfully');
           setSelectedPosts([]);
+          showToast.success('Success', `${count} blog ${count === 1 ? 'post' : 'posts'} deleted successfully`);
+        },
+        onError: (error) => {
+          console.error('Error deleting blog posts:', error);
+          showToast.error('Error', 'Failed to delete blog posts. Please try again.');
+        }
+      });
+    }
+  };
+
+  const bulkPublishPosts = async () => {
+    if (selectedPosts.length === 0) return;
+    
+    const count = selectedPosts.length;
+    const message = count === 1 
+      ? 'Are you sure you want to publish this blog post?' 
+      : `Are you sure you want to publish ${count} blog posts?`;
+    
+    const confirmed = await confirmation.confirm({
+      title: `Publish ${count === 1 ? 'Blog Post' : 'Blog Posts'}`,
+      message,
+      confirmText: 'Publish',
+      cancelText: 'Cancel'
+    });
+
+    if (confirmed) {
+      bulkUpdateStatus({ blogIds: selectedPosts, status: 'published' }, {
+        onSuccess: () => {
+          console.log('Blog posts published successfully');
+          setSelectedPosts([]);
+          showToast.success('Success', `${count} blog ${count === 1 ? 'post' : 'posts'} published successfully`);
+        },
+        onError: (error) => {
+          console.error('Error publishing blog posts:', error);
+          showToast.error('Error', 'Failed to publish blog posts. Please try again.');
+        }
+      });
+    }
+  };
+
+  const bulkDraftPosts = async () => {
+    if (selectedPosts.length === 0) return;
+    
+    const count = selectedPosts.length;
+    const message = count === 1 
+      ? 'Are you sure you want to set this blog post as draft?' 
+      : `Are you sure you want to set ${count} blog posts as draft?`;
+    
+    const confirmed = await confirmation.confirm({
+      title: `Set as Draft ${count === 1 ? 'Blog Post' : 'Blog Posts'}`,
+      message,
+      confirmText: 'Set as Draft',
+      cancelText: 'Cancel'
+    });
+
+    if (confirmed) {
+      bulkUpdateStatus({ blogIds: selectedPosts, status: 'draft' }, {
+        onSuccess: () => {
+          console.log('Blog posts set as draft successfully');
+          setSelectedPosts([]);
+          showToast.success('Success', `${count} blog ${count === 1 ? 'post' : 'posts'} set as draft successfully`);
+        },
+        onError: (error) => {
+          console.error('Error setting blog posts as draft:', error);
+          showToast.error('Error', 'Failed to set blog posts as draft. Please try again.');
         }
       });
     }
@@ -171,6 +331,10 @@ export const useBlogLogic = () => {
 
   const addNewPost = () => {
     router.push('/admin/blog/add-new');
+  };
+
+  const clearSelectedPosts = () => {
+    setSelectedPosts([]);
   };
 
   useEffect(() => {
@@ -198,6 +362,7 @@ export const useBlogLogic = () => {
     refetch,
     isDeleting,
     isBulkDeleting,
+    isUpdatingStatus,
     
     tableColumns,
     statusOptions,
@@ -211,10 +376,17 @@ export const useBlogLogic = () => {
     getStatusVariant,
     selectPost,
     selectAll,
-    viewPost,
     editPost,
+    previewPost,
     deletePost,
     bulkDeletePosts,
+    bulkPublishPosts,
+    bulkDraftPosts,
+    clearSelectedPosts,
     addNewPost,
+    hasActiveFilters,
+    clearIndividualFilter,
+    clearAllFilters,
+    confirmation,
   };
 };
