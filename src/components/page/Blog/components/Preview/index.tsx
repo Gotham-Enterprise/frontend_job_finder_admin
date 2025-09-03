@@ -234,6 +234,25 @@ const isBlockContent = (content: any): content is BlockContent => {
     };
 
 const BlogContentRenderer: React.FC<BlogContentRendererProps> = ({ content }) => {
+  // Helper function to render text that might contain HTML
+  const renderTextContent = (text: string) => {
+    if (!text) return ''
+
+    // Check if text contains HTML tags or HTML entities
+    const hasHTMLTags = /<[^>]*>/g.test(text)
+    const hasHTMLEntities = /&[a-zA-Z][a-zA-Z0-9]*;|&#[0-9]+;|&#x[0-9a-fA-F]+;/g.test(text)
+
+    if (hasHTMLTags || hasHTMLEntities) {
+      return (
+        <span
+          dangerouslySetInnerHTML={{ __html: text }}
+        />
+      )
+    }
+
+    return text
+  }
+
   const renderBlock = (block: any) => {
     const { type, content: blockContent, styles = {} } = block;
     
@@ -256,8 +275,13 @@ const BlogContentRenderer: React.FC<BlogContentRendererProps> = ({ content }) =>
       
       if (blockStyles.fontSize) style.fontSize = blockStyles.fontSize;
       if (blockStyles.fontWeight) style.fontWeight = blockStyles.fontWeight;
+      if (blockStyles.fontStyle) style.fontStyle = blockStyles.fontStyle;
       if (blockStyles.textAlign) style.textAlign = blockStyles.textAlign as any;
-      if (blockStyles.color) style.color = blockStyles.color;
+      if (blockStyles.textColor) style.color = blockStyles.textColor;
+      if (blockStyles.backgroundColor) style.backgroundColor = blockStyles.backgroundColor;
+      if (blockStyles.lineHeight) style.lineHeight = blockStyles.lineHeight;
+      if (blockStyles.letterSpacing) style.letterSpacing = blockStyles.letterSpacing;
+      if (blockStyles.textDecoration) style.textDecoration = blockStyles.textDecoration;
       
       return style;
     };
@@ -280,15 +304,24 @@ const BlogContentRenderer: React.FC<BlogContentRendererProps> = ({ content }) =>
         
         const HeadingComponent = headingElements[headingLevel as keyof typeof headingElements];
         
+        // Create enhanced styles for heading with proper defaults
+        const headingStyle = {
+          ...blockStyle,
+          fontWeight: styles.fontWeight || 'bold',
+          color: styles.textColor || '#1f2937',
+          fontSize: styles.fontSize || (headingLevel === 1 ? '1.875rem' : headingLevel === 2 ? '1.5rem' : headingLevel === 3 ? '1.25rem' : headingLevel === 4 ? '1.125rem' : headingLevel === 5 ? '1rem' : '0.875rem'),
+          lineHeight: styles.lineHeight || '1.25',
+          marginTop: styles.margin?.top || (headingLevel === 1 ? 24 : headingLevel === 2 ? 20 : headingLevel === 3 ? 16 : headingLevel === 4 ? 12 : 8),
+          marginBottom: styles.margin?.bottom || (headingLevel === 1 ? 24 : headingLevel === 2 ? 20 : headingLevel === 3 ? 16 : headingLevel === 4 ? 12 : 8),
+        };
+        
         return (
           <HeadingComponent
             key={block.id}
-            style={blockStyle}
-            className="font-bold text-gray-900"
-            dangerouslySetInnerHTML={{ 
-              __html: blockContent?.text || '' 
-            }}
-          />
+            style={headingStyle}
+          >
+            {renderTextContent(blockContent?.text || '')}
+          </HeadingComponent>
         );
 
         case 'paragraph':
@@ -298,12 +331,9 @@ const BlogContentRenderer: React.FC<BlogContentRendererProps> = ({ content }) =>
         return (
           <React.Fragment key={block.id}>
             <style dangerouslySetInnerHTML={{ __html: paragraphCSS }} />
-            <p 
-              className={paragraphId}
-              dangerouslySetInnerHTML={{ 
-                __html: blockContent?.text || '' 
-              }}
-            />
+            <p className={paragraphId}>
+              {renderTextContent(blockContent?.text || '')}
+            </p>
           </React.Fragment>
         );
 
@@ -495,30 +525,48 @@ const BlogContentRenderer: React.FC<BlogContentRendererProps> = ({ content }) =>
 
       case 'list':
         const ListTag = blockContent?.ordered ? 'ol' : 'ul';
-        const linkColor = block.styles?.linkColor || '#3b82f6';
+        const listId = `list-${block.id || Date.now()}`;
+        const linkColor = styles?.linkColor || '#3b82f6';
+        
+        // Create enhanced list styles similar to editorjs-renderer
+        const listStyle: React.CSSProperties = {
+          marginTop: styles?.margin?.top || 0,
+          marginBottom: styles?.margin?.bottom || 16,
+          marginLeft: styles?.margin?.left || 0,
+          marginRight: styles?.margin?.right || 0,
+          paddingTop: styles?.padding?.top || 8,
+          paddingBottom: styles?.padding?.bottom || 8,
+          paddingLeft: styles?.padding?.left || 24,
+          paddingRight: styles?.padding?.right || 0,
+          fontSize: styles?.fontSize || '1rem',
+          color: styles?.textColor || '#1f2937',
+          backgroundColor: styles?.backgroundColor || 'transparent',
+          listStyleType: blockContent?.ordered ? 'decimal' : 'disc',
+          listStylePosition: 'outside',
+        };
         
         return (
           <div key={block.id}>
             <style>
               {`
-                .list-${block.id} a {
+                .${listId} a {
                   color: ${linkColor} !important;
                   text-decoration: underline;
                 }
-                .list-${block.id} a:hover {
+                .${listId} a:hover {
                   opacity: 0.8;
+                }
+                .${listId} li {
+                  margin-bottom: 8px;
+                  line-height: 1.6;
                 }
               `}
             </style>
-            <ListTag style={blockStyle} className={`space-y-2 list-${block.id}`}>
+            <ListTag style={listStyle} className={`${listId}`}>
               {blockContent?.items?.map((item: string, index: number) => (
-                <li 
-                  key={index} 
-                  className={item.trim() === '' ? "text-gray-400 italic" : "text-gray-800"}
-                  dangerouslySetInnerHTML={{ 
-                    __html: item.trim() === '' ? `Item ${index + 1}` : item 
-                  }}
-                />
+                <li key={index}>
+                  {renderTextContent(item || `Item ${index + 1}`)}
+                </li>
               ))}
             </ListTag>
           </div>
@@ -559,14 +607,16 @@ const BlogContentRenderer: React.FC<BlogContentRendererProps> = ({ content }) =>
               <div 
                 className="text-lg leading-relaxed mb-3" 
                 style={{ 
-                  color: isPlaceholderText ? '#9ca3af' : '#374151',
-                  fontStyle: 'italic'
+                  color: styles?.textColor || (isPlaceholderText ? '#9ca3af' : '#374151'),
+                  fontStyle: 'italic',
+                  fontSize: styles?.fontSize || '1.125rem',
+                  fontWeight: styles?.fontWeight || 'normal',
                 }}
                 dangerouslySetInnerHTML={{ 
                   __html: `&ldquo;${quoteText}&rdquo;` 
                 }}
               />
-              <footer className="text-sm mt-4 pt-3 border-t border-gray-200" style={{ color: '#6b7280' }}>
+              <footer className="text-sm mt-4 pt-3 border-t border-gray-200" style={{ color: styles?.textColor || '#6b7280' }}>
                 {quoteAuthor && (
                   <cite 
                     className="font-medium not-italic"
@@ -727,12 +777,18 @@ const BlogContentRenderer: React.FC<BlogContentRendererProps> = ({ content }) =>
         );
 
       default:
+        // For unknown block types, render with proper styling
+        const defaultStyle = {
+          ...blockStyle,
+          color: styles?.textColor || '#1f2937',
+          fontSize: styles?.fontSize || '1rem',
+          margin: '16px 0',
+        };
 
         return (
           <div 
             key={block.id} 
-            style={blockStyle}
-            className="text-gray-800"
+            style={defaultStyle}
           >
             {blockContent?.text || JSON.stringify(blockContent)}
           </div>
