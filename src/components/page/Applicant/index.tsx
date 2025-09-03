@@ -84,16 +84,19 @@ export default function ApplicantDetails({ id }: ApplicantDetailsProps) {
         } : undefined
     };
 
-    const initViewDocument = async (url: string, fileObjectKey?: string) => {
+    const initViewDocument = async (url: string, fileObjectKey?: string, fileName?: string) => {
         if (fileObjectKey) {
             setIsViewingResume(true);
             try {
                 const response = await jobApplicationApi.viewResume(fileObjectKey);
                 if (response?.success && response?.data?.fileUrl) {
-                    window.open(response.data.fileUrl, '_blank', 'noopener,noreferrer');
+                    // Import the reliable file opening utility function
+                    const { openInFullTab } = await import('../../../services/utils/fileUtils');
+                    openInFullTab(response.data.fileUrl, fileName);
                 } else {
                     if (url) {
-                        window.open(url, '_blank', 'noopener,noreferrer');
+                        const { openInFullTab } = await import('../../../services/utils/fileUtils');
+                        openInFullTab(url, fileName);
                     }
                 }
             } catch (error) {

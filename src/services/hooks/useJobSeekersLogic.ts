@@ -290,7 +290,7 @@ export const useJobSeekersLogic = () => {
     }
   }, []);
 
-  const initViewResume = useCallback(async (objectKey: string | null) => {
+  const initViewResume = useCallback(async (objectKey: string | null, fileName?: string) => {
     if (!objectKey) {
       console.error('No object key provided');
       return;
@@ -300,7 +300,9 @@ export const useJobSeekersLogic = () => {
     try {
       const response = await jobApplicationApi.viewResume(objectKey);
       if (response.success && response.data?.fileUrl) {
-        window.open(response.data.fileUrl, '_blank', 'noopener,noreferrer');
+        // Import the reliable file opening utility function
+        const { openInFullTab } = await import('../utils/fileUtils');
+        openInFullTab(response.data.fileUrl, fileName);
       } else {
         console.error('No file URL found in response');
       }

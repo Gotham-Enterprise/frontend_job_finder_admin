@@ -277,7 +277,7 @@ export const useJobApplicationsLogic = () => {
     }
   }, []);
 
-  const initViewResume = async (resumeObjectKey: string) => {
+  const initViewResume = async (resumeObjectKey: string, fileName?: string) => {
     if (!resumeObjectKey) {
       console.error('No resume object key provided');
       return;
@@ -285,13 +285,16 @@ export const useJobApplicationsLogic = () => {
     
     viewResume(resumeObjectKey, {
       onSuccess: (data: any) => {
-        if (data?.success && data?.data?.fileUrl) {
-          window.open(data.data.fileUrl, '_blank', 'noopener,noreferrer');
-        } else if (data?.fileUrl) {
-          window.open(data.fileUrl, '_blank', 'noopener,noreferrer');
-        } else {
-          console.error('No file URL found in response', data);
-        }
+        // Import the reliable file opening utility function
+        import('../utils/fileUtils').then(({ openInFullTab }) => {
+          if (data?.success && data?.data?.fileUrl) {
+            openInFullTab(data.data.fileUrl, fileName);
+          } else if (data?.fileUrl) {
+            openInFullTab(data.fileUrl, fileName);
+          } else {
+            console.error('No file URL found in response', data);
+          }
+        });
       },
       onError: (error) => {
         console.error('Error viewing resume:', error);
