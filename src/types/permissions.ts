@@ -29,7 +29,6 @@ export interface CreateUserFormData {
   firstName: string;
   lastName: string;
   email: string;
-  password: string;
   role: string;
   permissions: FlexiblePermissions;
 }

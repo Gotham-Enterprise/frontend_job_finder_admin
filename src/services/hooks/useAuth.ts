@@ -79,10 +79,18 @@ export const useTokenResetPassword = () => {
 export const useCurrentUser = () => {
   return useQuery({
     queryKey: ['currentUser'],
-    queryFn: () => authApi.getCurrentUser(),
+    queryFn: async () => {
+      const response = await authApi.getCurrentUser();
+      // Update the stored auth state with fresh user data
+      const userData = response?.data || response?.user || response;
+      if (userData) {
+        authUtils.updateUser(userData);
+      }
+      return response;
+    },
     enabled: authUtils.isAuthenticated(), // Only fetch if user is authenticated
     staleTime: 5 * 60 * 1000, // 5 minutes
-    cacheTime: 10 * 60 * 1000, // 10 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
     retry: (failureCount, error: any) => {
       // Don't retry if it's an auth error
       if (error?.response?.status === 401 || error?.response?.status === 403) {
@@ -90,12 +98,14 @@ export const useCurrentUser = () => {
       }
       return failureCount < 2;
     },
-    onError: (error: any) => {
+    throwOnError: (error: any) => {
       console.error('Failed to fetch current user:', error);
       // If token is invalid, clear auth state
       if (error?.response?.status === 401) {
         authUtils.clearAuthState();
+        return false; // Don't throw, just clear auth
       }
+      return false; // Don't throw errors
     },
   });
 };

@@ -64,6 +64,11 @@ export const authUtils = {
         }
       };
       this.saveAuthState(newAuthState);
+      
+      // Trigger auth update event to refresh components
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('authUpdate'));
+      }
     }
   },
 

@@ -69,6 +69,8 @@ export interface User {
   };
   adminProfile?: {
     id: string;
+    avatarUrl: string | null;
+    accessRoleId: number;
   };
   missingCandidateDetails?: any[];
 }

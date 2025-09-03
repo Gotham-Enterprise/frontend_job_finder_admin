@@ -9,6 +9,7 @@ import Backdrop from "@/layout/Backdrop";
 import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { authUtils } from "@/services/utils/authUtils";
+import { useCurrentUser } from "@/services/hooks/useAuth";
 
 export default function AdminLayout({
   children,
@@ -23,6 +24,10 @@ export default function AdminLayout({
     : "lg:ml-[90px]";
 
   const router = useRouter();
+  
+  // Fetch current user data to keep auth state fresh
+  useCurrentUser();
+  
   useEffect(() => {
     if (typeof window !== "undefined" && !authUtils.isAuthenticated()) {
       router.replace("/login");

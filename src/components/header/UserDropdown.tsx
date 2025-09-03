@@ -27,9 +27,9 @@ export default function UserDropdown() {
         className="flex items-center text-gray-700 dark:text-gray-400 dropdown-toggle"
       >
         <span className="mr-3 overflow-hidden rounded-full h-11 w-11 bg-brand-100 dark:bg-brand-800 flex items-center justify-center">
-          {authData.user?.profile?.avatarUrl ? (
+          {authData.user?.adminProfile?.avatarUrl ? (
             <img 
-              src={authData.user.profile.avatarUrl} 
+              src={authData.user.adminProfile.avatarUrl} 
               alt="User avatar"
               className="w-full h-full object-cover rounded-full"
             />

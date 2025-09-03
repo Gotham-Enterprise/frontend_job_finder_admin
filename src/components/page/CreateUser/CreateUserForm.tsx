@@ -31,7 +31,6 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({
     firstName: '',
     lastName: '',
     email: '',
-    password: '',
     role: '',
     permissions: DEFAULT_PERMISSIONS,
   });
@@ -128,11 +127,6 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({
       newErrors.email = 'Invalid email format';
     }
 
-    if (!formData.password.trim()) {
-      newErrors.password = 'Password is required';
-    } else if (formData.password.length < 8) {
-      newErrors.password = 'Password must be at least 8 characters';
-    }
 
     if (!formData.role) {
       newErrors.role = 'Role is required';
@@ -274,28 +268,14 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({
               />
             </div>
 
-            <div className="transform transition-all duration-200 hover:scale-[1.02]">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="Enter password"
-                value={formData.password}
-                onChange={(e) => updateFormField('password', e.target.value)}
-                error={!!errors.password}
-                hint={errors.password}
-                disabled={isLoading || createRoleMutation.isPending}
-              />
-            </div>
-
-            <div className="transform transition-all duration-200 hover:scale-[1.02]">
+            <div className="transform transition-all duration-200">
               <div className="flex items-center justify-between mb-2">
                 <Label htmlFor="role">Role</Label>
                 <button
                   type="button"
                   onClick={() => setIsRoleModalOpen(true)}
                   disabled={isLoading || createRoleMutation.isPending}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-primary bg-primary/10 border border-primary/20 rounded-md hover:bg-primary/20 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-white bg-primary rounded-md hover:bg-primary disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
