@@ -139,24 +139,26 @@ const ViewApplicantModal: React.FC<ViewApplicantModalProps> = ({
                       <User className="w-6 h-6 text-green-700" />
                     </div>
                     <div>
+                      {/* <p className="text-sm text-gray-500 dark:text-gray-400">
+                        Full Name
+                      </p> */}
                       <p className="font-medium text-gray-900 dark:text-white text-lg">
                         {applicant.fullName}
                       </p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
-                        Full Name
-                      </p>
+                      
                     </div>
                   </div>
 
                   <div className="flex items-center gap-3">
                     <Mail className="w-5 h-5 text-gray-400" />
                     <div>
-                      <p className="font-medium text-gray-900 dark:text-white">
-                        {applicant.email}
-                      </p>
                       <p className="text-sm text-gray-500 dark:text-gray-400">
                         Email Address
                       </p>
+                      <p className="font-medium text-gray-900 dark:text-white">
+                        {applicant.email}
+                      </p>
+                      
                     </div>
                   </div>
 
@@ -164,12 +166,13 @@ const ViewApplicantModal: React.FC<ViewApplicantModalProps> = ({
                     <div className="flex items-center gap-3">
                       <Phone className="w-5 h-5 text-gray-400" />
                       <div>
-                        <p className="font-medium text-gray-900 dark:text-white">
-                          {applicant.phoneNumber}
-                        </p>
                         <p className="text-sm text-gray-500 dark:text-gray-400">
                           Phone Number
                         </p>
+                        <p className="font-medium text-gray-900 dark:text-white">
+                          {applicant.phoneNumber}
+                        </p>
+                        
                       </div>
                     </div>
                   )}
@@ -177,6 +180,9 @@ const ViewApplicantModal: React.FC<ViewApplicantModalProps> = ({
                   <div className="flex items-center gap-3">
                     <Calendar className="w-5 h-5 text-gray-400" />
                     <div>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        Application Date
+                      </p>
                       <p className="font-medium text-gray-900 dark:text-white">
                         {new Date(applicant.applicationDate).toLocaleDateString('en-US', {
                           year: 'numeric',
@@ -186,9 +192,7 @@ const ViewApplicantModal: React.FC<ViewApplicantModalProps> = ({
                           minute: '2-digit'
                         })}
                       </p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
-                        Application Date
-                      </p>
+                      
                     </div>
                   </div>
 
@@ -196,14 +200,15 @@ const ViewApplicantModal: React.FC<ViewApplicantModalProps> = ({
                     <div className="flex items-start gap-3">
                       <MapPin className="w-5 h-5 text-gray-400 mt-0.5" />
                       <div>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                          Location
+                        </p>
                         <p className="font-medium text-gray-900 dark:text-white">
                           {[applicant.address, applicant.city, applicant.state]
                             .filter(Boolean)
                             .join(', ')}
                         </p>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                          Location
-                        </p>
+                        
                       </div>
                     </div>
                   )}

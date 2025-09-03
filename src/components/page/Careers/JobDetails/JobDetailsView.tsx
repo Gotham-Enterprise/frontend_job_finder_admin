@@ -7,7 +7,8 @@ import Button from '@/components/ui/button/Button';
 import Input from '@/components/ui/input/Input';
 import Badge from '@/components/ui/badge/Badge';
 import { Table, TableBody, TableCell, TableHeader, TableRow } from '@/components/ui/table';
-import { Briefcase, MapPin, DollarSign, Building, Users, Calendar, Search, Filter, Edit, Copy, Trash2, Eye, MoreVertical, FileText, XCircle, CheckCircle } from 'lucide-react';
+import { Briefcase, MapPin, DollarSign, Building, Users, Calendar as CalendarIcon, Search, Edit, Copy, Trash2, Eye, MoreVertical, FileText, XCircle, CheckCircle } from 'lucide-react';
+import DateRangePicker, { DateRange } from '@/components/ui/date-range/DateRangePicker';
 import EditJobPostModal from './components/EditJobPostModal';
 import ViewApplicantModal from './components/ViewApplicantModal';
 import { Dropdown } from '@/components/ui/dropdown/Dropdown';
@@ -29,6 +30,9 @@ const JobDetailsView: React.FC<JobDetailsViewProps> = ({ jobId }) => {
   const [updatingApplicantId, setUpdatingApplicantId] = useState<string | null>(null);
   const [isDuplicating, setIsDuplicating] = useState(false);
   const [isToggling, setIsToggling] = useState(false);
+  const [dateRange, setDateRange] = useState<DateRange | undefined>();
+  const startDate = dateRange?.from ? dateRange.from.toISOString().slice(0,10) : '';
+  const endDate = dateRange?.to ? dateRange.to.toISOString().slice(0,10) : '';
 
   // Function to format status for display
   const formatStatusDisplay = (status: string) => {
@@ -71,9 +75,22 @@ const JobDetailsView: React.FC<JobDetailsViewProps> = ({ jobId }) => {
         applicant.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         applicant.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (applicant.phoneNumber && applicant.phoneNumber.includes(searchTerm));
-      return matchesTab && matchesSearch;
+      let matchesDate = true;
+      if (startDate || endDate) {
+        const applied = new Date(applicant.applicationDate);
+        if (startDate) {
+          const start = new Date(startDate + 'T00:00:00');
+          if (applied < start) matchesDate = false;
+        }
+        if (endDate) {
+          // Include the whole end date day
+            const end = new Date(endDate + 'T23:59:59.999');
+          if (applied > end) matchesDate = false;
+        }
+      }
+      return matchesTab && matchesSearch && matchesDate;
     });
-  }, [jobData, activeTab, searchTerm]);
+  }, [jobData, activeTab, searchTerm, startDate, endDate]);
 
   const handleUpdate = () => {
     refetch();
@@ -242,7 +259,7 @@ const JobDetailsView: React.FC<JobDetailsViewProps> = ({ jobId }) => {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
-              <Button variant="outline"><Filter className="w-4 h-4 mr-2" /> Filter</Button>
+              <DateRangePicker value={dateRange} onChange={setDateRange} />
             </div>
           </div>
 
@@ -301,7 +318,7 @@ const JobDetailsView: React.FC<JobDetailsViewProps> = ({ jobId }) => {
                           {formatStatusDisplay(applicant.status)}
                         </Badge>
                         {updatingApplicantId === applicant.id && (
-                          <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600"></div>
+                          <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-primary"></div>
                         )}
                       </div>
                     </TableCell>

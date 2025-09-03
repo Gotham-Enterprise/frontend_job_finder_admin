@@ -88,7 +88,8 @@ export interface CreateCareerPayload {
   jobDescription: string;
 }
 
-export interface UpdateCareerPayload extends Partial<CreateCareerPayload> {}
+// Using a type alias instead of an empty interface extension to satisfy eslint no-empty-object-type
+export type UpdateCareerPayload = Partial<CreateCareerPayload>;
 
 export interface CareerApplicantResponse {
   success: boolean;
