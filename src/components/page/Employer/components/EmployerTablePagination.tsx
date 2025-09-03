@@ -18,9 +18,8 @@ const EmployerTablePagination: React.FC<EmployerTablePaginationProps> = ({
     <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-800">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="text-sm text-gray-500 dark:text-gray-400">
-          Showing {((data.metaData.page - 1) * (filters.limit || 50)) + 1} to{' '}
-          {Math.min(data.metaData.page * (filters.limit || 50), data.metaData.totalCount)} of{' '}
-          {data.metaData.totalCount} results
+          Showing {((data.metaData.page - 1) * (filters.limit || 50)) + 1} of&nbsp; 
+          {Math.min(data.metaData.page * (filters.limit || 50), data.metaData.totalCount)}  results
         </div>
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">

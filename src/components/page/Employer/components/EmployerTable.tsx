@@ -7,7 +7,6 @@ import {
   TableRow,
 } from '../../../ui/table';
 import Badge from '../../../ui/badge/Badge';
-import Button from '../../../ui/button/Button';
 import TableHeading from '../../../tables/tableHeader';
 import Checkbox from '../../../form/input/Checkbox';
 import { EyeIcon, TimeIcon, PencilIcon } from '@/icons';

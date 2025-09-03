@@ -33,7 +33,8 @@ export async function apiRequest<T = any>(
     Object.assign(requestHeaders, authUtils.getAuthHeaders());
   }
 
-  if (body && !requestHeaders['Content-Type']) {
+  // Don't set Content-Type for FormData, let the browser set it with the boundary
+  if (body && !(body instanceof FormData) && !requestHeaders['Content-Type']) {
     requestHeaders['Content-Type'] = 'application/json';
   }
 
@@ -44,7 +45,11 @@ export async function apiRequest<T = any>(
   };
 
   if (body) {
-    requestConfig.body = typeof body === 'string' ? body : JSON.stringify(body);
+    if (body instanceof FormData) {
+      requestConfig.body = body;
+    } else {
+      requestConfig.body = typeof body === 'string' ? body : JSON.stringify(body);
+    }
   }
 
   try {
