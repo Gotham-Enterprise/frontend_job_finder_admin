@@ -15,6 +15,8 @@ interface Applicant {
   resumeFileName?: string;
   coverLetterUrl?: string;
   coverLetterFileName?: string;
+  avatarUrl?: string;
+  avatarFileName?: string;
   address?: string;
   city?: string;
   state?: string;
@@ -135,8 +137,24 @@ const ViewApplicantModal: React.FC<ViewApplicantModalProps> = ({
                 
                 <div className="space-y-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center">
-                      <User className="w-6 h-6 text-green-700" />
+                    <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center overflow-hidden">
+                      {applicant.avatarUrl ? (
+                        <img 
+                          src={applicant.avatarUrl} 
+                          alt={`${applicant.fullName}'s avatar`}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            // Fallback to User icon if image fails to load
+                            e.currentTarget.style.display = 'none';
+                            e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                          }}
+                        />
+                      ) : (
+                        <User className="w-6 h-6 text-green-700" />
+                      )}
+                      {applicant.avatarUrl && (
+                        <User className="w-6 h-6 text-green-700 hidden" />
+                      )}
                     </div>
                     <div>
                       {/* <p className="text-sm text-gray-500 dark:text-gray-400">
