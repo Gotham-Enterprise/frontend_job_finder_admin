@@ -330,7 +330,10 @@ export const useJobSeekersLogic = () => {
       if (response.success) {
         // Refresh the data to show updated status
         refetch();
-        return { success: true, message: response.message || 'Account unlocked successfully' };
+        return { 
+          success: true, 
+          message: response.message || 'Account unlocked successfully. The user has been notified via email.' 
+        };
       } else {
         return { success: false, message: 'Failed to unlock account' };
       }
