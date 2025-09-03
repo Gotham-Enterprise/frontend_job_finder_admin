@@ -12,9 +12,9 @@ export const getFileExtension = (fileName: string | undefined | null): string =>
 
 export const shouldOpenInNewTab = (fileName: string | undefined | null): boolean => {
   const extension = getFileExtension(fileName);
-  
-  const viewableTypes = ['PDF', 'DOC', 'DOCX', 'JPEG', 'JPG', 'PNG', 'GIF', 'TXT'];
-  
+
+  const viewableTypes = ['pdf', 'doc', 'docx', 'jpeg', 'jpg', 'png', 'gif', 'txt'];
+
   return viewableTypes.includes(extension);
 };
 
@@ -27,97 +27,17 @@ export const openFileInNewTab = (fileUrl: string, fileName?: string): void => {
   try {
     const extension = getFileExtension(fileName || fileUrl);
     
-
-    if (['DOC', 'DOCX'].includes(extension)) {
-      openDocFileInViewer(fileUrl, fileName);
+    if (['DOC', 'DOCX', 'doc', 'docx'].includes(extension)) {
+      const googleViewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(fileUrl)}`;
+      window.open(googleViewerUrl, '_blank', 'width=1200,height=800,toolbar=yes,location=yes,status=yes,menubar=yes,scrollbars=yes,resizable=yes');
       return;
     }
     
+    window.open(fileUrl, '_blank', 'width=1200,height=800,toolbar=yes,location=yes,status=yes,menubar=yes,scrollbars=yes,resizable=yes');
     
-    const newWindow = window.open('', '_blank', 'width=1200,height=800,toolbar=yes,location=yes,status=yes,menubar=yes,scrollbars=yes,resizable=yes');
-    
-    if (newWindow) {
-      newWindow.location.href = fileUrl;
-      newWindow.focus();
-    } else {
-      console.warn('Popup blocked, attempting alternative method');
-      const link = document.createElement('a');
-      link.href = fileUrl;
-      link.target = '_blank';
-      link.rel = 'noopener noreferrer';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
   } catch (error) {
     console.error('Error opening file:', error);
-  
-    window.open(fileUrl, '_blank', 'width=1200,height=800,toolbar=yes,scrollbars=yes,resizable=yes');
-  }
-};
-
-export const openDocFileInViewer = (fileUrl: string, fileName?: string): void => {
-  if (!fileUrl) {
-    console.error('No file URL provided');
-    return;
-  }
-
-  const newWindow = window.open('', '_blank', 'width=1200,height=800,toolbar=yes,location=yes,status=yes,menubar=yes,scrollbars=yes,resizable=yes');
-  
-  if (newWindow) {
- 
-    newWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>${fileName || 'Document Viewer'}</title>
-          <style>
-            body { margin: 0; padding: 0; overflow: hidden; }
-            iframe { width: 100%; height: 100vh; border: none; }
-            .fallback { padding: 20px; text-align: center; font-family: Arial, sans-serif; }
-            .viewer-btn { 
-              background: #007bff; 
-              color: white; 
-              padding: 10px 20px; 
-              border: none; 
-              border-radius: 4px; 
-              cursor: pointer; 
-              margin: 10px;
-              text-decoration: none;
-              display: inline-block;
-            }
-          </style>
-        </head>
-        <body>
-          <div class="fallback">
-            <h3>Document Viewer</h3>
-            <p>Opening document: ${fileName || 'Document'}</p>
-            <div>
-              <a href="${fileUrl}" target="_blank" class="viewer-btn">Open Document Directly</a>
-              <a href="https://docs.google.com/viewer?url=${encodeURIComponent(fileUrl)}" target="_blank" class="viewer-btn">Open in Google Viewer</a>
-            </div>
-            <script>
-              // Try to load the document directly first
-              setTimeout(() => {
-                window.location.href = "${fileUrl}";
-              }, 1000);
-            </script>
-          </div>
-        </body>
-      </html>
-    `);
-    newWindow.document.close();
-    newWindow.focus();
-  } else {
- 
-    try {
-   
-      const googleViewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(fileUrl)}`;
-      window.open(googleViewerUrl, '_blank', 'width=1200,height=800,toolbar=yes,scrollbars=yes,resizable=yes');
-    } catch (error) {
-      // Final fallback - direct file URL
-      window.open(fileUrl, '_blank');
-    }
+    window.open(fileUrl, '_blank');
   }
 };
 
