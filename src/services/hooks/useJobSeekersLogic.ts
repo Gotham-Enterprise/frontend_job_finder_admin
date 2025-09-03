@@ -300,9 +300,8 @@ export const useJobSeekersLogic = () => {
     try {
       const response = await jobApplicationApi.viewResume(objectKey);
       if (response.success && response.data?.fileUrl) {
-        // Import the reliable file opening utility function
-        const { openInFullTab } = await import('../utils/fileUtils');
-        openInFullTab(response.data.fileUrl, fileName);
+        const { openFileInNewTab } = await import('../utils/fileUtils');
+        openFileInNewTab(response.data.fileUrl, fileName);
       } else {
         console.error('No file URL found in response');
       }

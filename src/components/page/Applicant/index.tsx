@@ -90,13 +90,13 @@ export default function ApplicantDetails({ id }: ApplicantDetailsProps) {
             try {
                 const response = await jobApplicationApi.viewResume(fileObjectKey);
                 if (response?.success && response?.data?.fileUrl) {
-                    // Import the reliable file opening utility function
-                    const { openInFullTab } = await import('../../../services/utils/fileUtils');
-                    openInFullTab(response.data.fileUrl, fileName);
+                    // Import the file opening utility function that handles DOC files with Google Docs viewer
+                    const { openFileInNewTab } = await import('../../../services/utils/fileUtils');
+                    openFileInNewTab(response.data.fileUrl, fileName);
                 } else {
                     if (url) {
-                        const { openInFullTab } = await import('../../../services/utils/fileUtils');
-                        openInFullTab(url, fileName);
+                        const { openFileInNewTab } = await import('../../../services/utils/fileUtils');
+                        openFileInNewTab(url, fileName);
                     }
                 }
             } catch (error) {

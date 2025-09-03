@@ -12,9 +12,9 @@ export const getFileExtension = (fileName: string | undefined | null): string =>
 
 export const shouldOpenInNewTab = (fileName: string | undefined | null): boolean => {
   const extension = getFileExtension(fileName);
-
-  const viewableTypes = ['pdf', 'doc', 'docx', 'jpeg', 'jpg', 'png', 'gif', 'txt'];
-
+  
+  const viewableTypes = ['PDF', 'DOC', 'DOCX', 'JPEG', 'JPG', 'PNG', 'GIF', 'TXT'];
+  
   return viewableTypes.includes(extension);
 };
 
@@ -27,8 +27,9 @@ export const openFileInNewTab = (fileUrl: string, fileName?: string): void => {
   try {
     const extension = getFileExtension(fileName || fileUrl);
     
-    if (['DOC', 'DOCX', 'doc', 'docx'].includes(extension)) {
+    if (['DOC', 'DOCX'].includes(extension)) {
       const googleViewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(fileUrl)}`;
+      console.log('Opening DOC/DOCX file with Google Viewer:', googleViewerUrl);
       window.open(googleViewerUrl, '_blank', 'width=1200,height=800,toolbar=yes,location=yes,status=yes,menubar=yes,scrollbars=yes,resizable=yes');
       return;
     }
@@ -37,6 +38,7 @@ export const openFileInNewTab = (fileUrl: string, fileName?: string): void => {
     
   } catch (error) {
     console.error('Error opening file:', error);
+    // Fallback to regular window.open
     window.open(fileUrl, '_blank');
   }
 };

@@ -2,6 +2,7 @@ import { useState, useMemo, useTransition, useEffect, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useJobApplications, useViewApplicationResume } from '@/services/hooks/useJobApplications';
 import { useStates } from '@/services/hooks/useStates';
+import { openFileInNewTab } from '@/services/utils/fileUtils';
 import { JobApplicationFilters } from '@/services/types/jobApplication';
 
 export const useJobApplicationsLogic = () => {
@@ -285,16 +286,13 @@ export const useJobApplicationsLogic = () => {
     
     viewResume(resumeObjectKey, {
       onSuccess: (data: any) => {
-        // Import the reliable file opening utility function
-        import('../utils/fileUtils').then(({ openInFullTab }) => {
-          if (data?.success && data?.data?.fileUrl) {
-            openInFullTab(data.data.fileUrl, fileName);
-          } else if (data?.fileUrl) {
-            openInFullTab(data.fileUrl, fileName);
-          } else {
-            console.error('No file URL found in response', data);
-          }
-        });
+        if (data?.success && data?.data?.fileUrl) {
+          openFileInNewTab(data.data.fileUrl, fileName);
+        } else if (data?.fileUrl) {
+          openFileInNewTab(data.fileUrl, fileName);
+        } else {
+          console.error('No file URL found in response', data);
+        }
       },
       onError: (error) => {
         console.error('Error viewing resume:', error);
