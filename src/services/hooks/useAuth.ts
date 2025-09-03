@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { authApi } from '../api/auth';
 import { authUtils } from '../utils/authUtils';
@@ -6,6 +6,7 @@ import { LoginCredentials, AuthResponse, ForgotPasswordRequest, ResetPasswordReq
 
 export const useLogin = () => {
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (credentials: LoginCredentials) => authApi.login(credentials),
@@ -17,6 +18,16 @@ export const useLogin = () => {
         refreshToken: data.refreshToken,
       });
       
+      queryClient.invalidateQueries({ queryKey: ['currentUser'] });
+      
+      setTimeout(() => {
+        queryClient.prefetchQuery({
+          queryKey: ['currentUser'],
+          queryFn: () => authApi.getCurrentUser(),
+          staleTime: 0, 
+        });
+      }, 100);
+      
       router.push('/admin');
     }
   });
@@ -24,15 +35,18 @@ export const useLogin = () => {
 
 export const useLogout = () => {
   const router = useRouter();
+  const queryClient = useQueryClient();
   
   return useMutation({
     mutationFn: () => authApi.logout(),
     onSuccess: () => {
       authUtils.forceAuthClear();
+      queryClient.clear();
       router.push('/login');
     },
     onError: () => {
       authUtils.forceAuthClear();
+      queryClient.clear();
       router.push('/login');
     }
   });
@@ -77,19 +91,21 @@ export const useTokenResetPassword = () => {
 };
 
 export const useCurrentUser = () => {
+  // Use a more reactive approach for enabled
+  const isAuthenticated = authUtils.isAuthenticated();
+  
   return useQuery({
     queryKey: ['currentUser'],
     queryFn: async () => {
       const response = await authApi.getCurrentUser();
-      // Update the stored auth state with fresh user data
       const userData = response?.data || response?.user || response;
       if (userData) {
         authUtils.updateUser(userData);
       }
       return response;
     },
-    enabled: authUtils.isAuthenticated(), // Only fetch if user is authenticated
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    enabled: isAuthenticated,
+    staleTime: 1 * 60 * 1000, // Reduce stale time to 1 minute for more frequent updates
     gcTime: 10 * 60 * 1000, // 10 minutes
     retry: (failureCount, error: any) => {
       // Don't retry if it's an auth error

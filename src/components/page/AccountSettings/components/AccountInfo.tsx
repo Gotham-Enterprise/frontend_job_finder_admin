@@ -313,9 +313,9 @@ const AccountInfo: React.FC<AccountInfoProps> = ({
                       alt="Avatar preview"
                       className="w-16 h-16 rounded-full object-cover"
                     />
-                  ) : (authStorageData.user?.profile?.avatarUrl || user?.profile?.avatarUrl) ? (
+                  ) : (authStorageData.user?.adminProfile?.avatarUrl || user?.adminProfile?.avatarUrl) ? (
                     <img 
-                      src={(authStorageData.user?.profile?.avatarUrl || user?.profile?.avatarUrl) || ''} 
+                      src={(authStorageData.user?.adminProfile?.avatarUrl || user?.adminProfile?.avatarUrl) || ''} 
                       alt="Current avatar"
                       className="w-16 h-16 rounded-full object-cover"
                     />
