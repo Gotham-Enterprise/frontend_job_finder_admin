@@ -233,7 +233,7 @@ const BlogTable: React.FC<BlogTableProps> = ({
                     </div>
                   </TableCell>
                   <TableCell className="py-4 px-6">
-                    <div className="flex flex-wrap gap-1">
+                    <div className="flex items-center flex-wrap gap-1">
                       {post.tags?.length > 0 ? (
                         post.tags.slice(0, 2).map((tag: any) => (
                           <span
