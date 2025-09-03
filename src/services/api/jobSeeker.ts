@@ -1,5 +1,5 @@
 import { JobSeekerFilters, JobSeekersResponse, JobSeekerDetailsResponse, JobSeekerUpdateData } from '../types/jobSeeker';
-import { apiGet, apiPut } from './apiUtils';
+import { apiGet, apiPut, apiPost } from './apiUtils';
 
 export const jobSeekerApi = {
   async getJobSeekers(filters: JobSeekerFilters = {}): Promise<JobSeekersResponse> {
@@ -30,5 +30,9 @@ export const jobSeekerApi = {
 
   async updateJobSeeker(id: string, data: JobSeekerUpdateData): Promise<any> {
     return apiPut<any>(`/api/admin/jobseekers/${id}`, data);
+  },
+
+  async unlockJobSeekerAccount(id: string): Promise<any> {
+    return apiPost<any>(`/api/admin/jobseekers/${id}/unlock`, {});
   },
 };

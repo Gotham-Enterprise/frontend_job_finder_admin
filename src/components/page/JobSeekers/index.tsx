@@ -44,6 +44,7 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
     getStatusVariant,
     initViewResume,
     viewJobSeeker,
+    unlockJobSeekerAccount,
     clearAllFilters,
     clearIndividualFilter,
     hasActiveFilters,
@@ -95,6 +96,7 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
         onViewResume={initViewResume}
         isViewingResume={isViewingResume}
         onRefresh={refetch}
+        onUnlockAccount={unlockJobSeekerAccount}
       />
 
       <JobSeekersTablePagination

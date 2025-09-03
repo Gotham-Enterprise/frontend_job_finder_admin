@@ -4,6 +4,7 @@ import { useJobSeekers } from '@/services/hooks/useJobSeekers';
 import { useOccupations } from '@/services/hooks/useOccupations';
 import { useStates } from '@/services/hooks/useStates';
 import { jobApplicationApi } from '@/services/api/jobApplication';
+import { jobSeekerApi } from '@/services/api/jobSeeker';
 import { JobSeekerFilters } from '@/services/types/jobSeeker';
 
 export const useJobSeekersLogic = () => {
@@ -323,6 +324,25 @@ export const useJobSeekersLogic = () => {
     router.push(`/admin/job-seekers/details/${jobSeekerId}`);
   }, [router, saveScrollPosition, saveSearchState]);
 
+  const unlockJobSeekerAccount = useCallback(async (jobSeekerId: string) => {
+    try {
+      const response = await jobSeekerApi.unlockJobSeekerAccount(jobSeekerId);
+      if (response.success) {
+        // Refresh the data to show updated status
+        refetch();
+        return { success: true, message: response.message || 'Account unlocked successfully' };
+      } else {
+        return { success: false, message: 'Failed to unlock account' };
+      }
+    } catch (error: any) {
+      console.error('Error unlocking job seeker account:', error);
+      return { 
+        success: false, 
+        message: error?.message || 'An error occurred while unlocking the account' 
+      };
+    }
+  }, [refetch]);
+
   const clearAllFilters = useCallback(() => {
     const newFilters = {
       page: 1,
@@ -467,6 +487,7 @@ export const useJobSeekersLogic = () => {
     getStatusVariant,
     initViewResume,
     viewJobSeeker,
+    unlockJobSeekerAccount,
     clearAllFilters,
     clearIndividualFilter,
     hasActiveFilters,

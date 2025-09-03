@@ -10,11 +10,13 @@ import {
 import Badge from '../../../ui/badge/Badge';
 import Button from '../../../ui/button/Button';
 import TableHeading from '../../../tables/tableHeader';
-import { EyeIcon, TimeIcon, FileIcon, DownloadIcon, PencilIcon } from '@/icons';
+import { EyeIcon, TimeIcon, FileIcon, DownloadIcon, PencilIcon, MoreDotIcon, LockIcon } from '@/icons';
 import { JobSeekersTableProps } from '@/services/types/JobSeekersTypes';
 import Avatar from '../../../ui/avatar/Avatar';
 import { EditJobSeekerModal } from './EditJobSeekerModal';
 import { useToast } from '@/context/ToastContext';
+import { Dropdown } from '../../../ui/dropdown/Dropdown';
+import { DropdownItem } from '../../../ui/dropdown/DropdownItem';
 
 
 interface SpecialtyDisplayProps {
@@ -74,11 +76,14 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
   onViewResume,
   isViewingResume,
   onRefresh,
+  onUnlockAccount,
 }) => {
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const [loadingResumeId, setLoadingResumeId] = useState<string | null>(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedJobSeekerId, setSelectedJobSeekerId] = useState<string | null>(null);
+  const [dropdownOpen, setDropdownOpen] = useState<string | null>(null);
+  const [unlockingAccountId, setUnlockingAccountId] = useState<string | null>(null);
   const { addToast } = useToast();
 
   const openEditModal = (jobSeekerId: string) => {
@@ -89,6 +94,50 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
   const closeEditModal = () => {
     setEditModalOpen(false);
     setSelectedJobSeekerId(null);
+  };
+
+  const toggleDropdown = (jobSeekerId: string) => {
+    setDropdownOpen(dropdownOpen === jobSeekerId ? null : jobSeekerId);
+  };
+
+  const closeDropdown = () => {
+    setDropdownOpen(null);
+  };
+
+  const handleUnlockAccount = async (jobSeekerId: string) => {
+    if (!onUnlockAccount) return;
+    
+    setUnlockingAccountId(jobSeekerId);
+    closeDropdown();
+    
+    try {
+      const result = await onUnlockAccount(jobSeekerId);
+      if (result.success) {
+        addToast({
+          variant: 'success',
+          title: 'Success',
+          message: result.message,
+          duration: 5000,
+        });
+        refreshData();
+      } else {
+        addToast({
+          variant: 'error',
+          title: 'Error',
+          message: result.message,
+          duration: 5000,
+        });
+      }
+    } catch (error: any) {
+      addToast({
+        variant: 'error',
+        title: 'Error',
+        message: error?.message || 'Failed to unlock account',
+        duration: 5000,
+      });
+    } finally {
+      setUnlockingAccountId(null);
+    }
   };
 
   const refreshData = (showSuccessToast = false) => {
@@ -347,28 +396,74 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
                   )}
                 </TableCell>
                 <TableCell className="py-4 px-6">
-                  <Badge variant={getStatusVariant(jobSeeker.status)}>
-                    {jobSeeker.status}
-                  </Badge>
+                  <div className="space-y-2 ">
+                    <Badge variant={getStatusVariant(jobSeeker.status)}>
+                      {jobSeeker.status}
+                    </Badge>
+                    {(jobSeeker.accountLocked) && (
+                      <Badge variant="solid" className="bg-red-800 text-red-800 dark:bg-red-900 dark:text-red-200  ">
+                        Locked
+                      </Badge>
+                    )}
+                  </div>
                 </TableCell>
                 <TableCell className="py-4 px-6 text-right">
-                  <div className="flex items-center gap-4">
+                  <div className="relative">
                     <button 
-                   
-                      className="flex gap-2 text-brand-400"
-                      onClick={() => onViewJobSeeker(jobSeeker.id)}
+                      className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors dropdown-toggle"
+                      onClick={() => toggleDropdown(jobSeeker.id)}
+                    >
+                      <MoreDotIcon className="w-5 h-5" />
+                    </button>
                     
+                    <Dropdown
+                      isOpen={dropdownOpen === jobSeeker.id}
+                      onClose={closeDropdown}
+                      className="w-48"
                     >
-                     <EyeIcon />  View
-                    </button>
-                   
-                    <button 
-                       className="flex gap-2 text-brand-400"
-                      onClick={() => openEditModal(jobSeeker.id)}
-                   
-                    >
-                      <PencilIcon /> Edit
-                    </button>
+                      <DropdownItem
+                        onClick={() => {
+                          onViewJobSeeker(jobSeeker.id);
+                          closeDropdown();
+                        }}
+                        className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer"
+                      >
+                        <EyeIcon className="w-5 h-5" />
+                        View Details
+                      </DropdownItem>
+                      
+                      <DropdownItem
+                        onClick={() => {
+                          openEditModal(jobSeeker.id);
+                          closeDropdown();
+                        }}
+                        className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer"
+                      >
+                        <PencilIcon className="w-5 h-5" />
+                        Edit
+                      </DropdownItem>
+                      
+                      {(jobSeeker.accountLocked || jobSeeker.failedLoginAttempts > 0) && (
+                        <DropdownItem
+                          onClick={() => {
+                            handleUnlockAccount(jobSeeker.id);
+                          }}
+                          className="flex items-center gap-2 px-4 py-2 text-sm text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 cursor-pointer"
+                        >
+                          {unlockingAccountId === jobSeeker.id ? (
+                            <>
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-emerald-600"></div>
+                              Unlocking...
+                            </>
+                          ) : (
+                            <>
+                              <LockIcon className="w-5 h-5" />
+                              Unlock Account
+                            </>
+                          )}
+                        </DropdownItem>
+                      )}
+                    </Dropdown>
                   </div>
                 </TableCell>
               </TableRow>

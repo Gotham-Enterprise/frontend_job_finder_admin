@@ -36,6 +36,7 @@ export interface JobSeekersTableProps {
   onViewResume: (objectKey: string | null) => void;
   isViewingResume: boolean;
   onRefresh?: () => void;
+  onUnlockAccount?: (jobSeekerId: string) => Promise<{success: boolean; message: string}>;
 }
 
 export interface JobSeekersTablePaginationProps {

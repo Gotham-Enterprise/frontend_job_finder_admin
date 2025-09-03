@@ -33,6 +33,9 @@ export interface JobSeeker {
   };
   hasResume?: boolean;
   resumeObjectKey?: string;
+  failedLoginAttempts?: number;
+  accountLocked?: boolean;
+  lockedUntil?: string | null;
 }
 
 export interface JobSeekerFilters {
@@ -95,6 +98,9 @@ export interface JobSeekerDetails {
   languages?: Language[];
   occupationId?: number;
   specialtyId?: number;
+  failedLoginAttempts?: number;
+  accountLocked?: boolean;
+  lockedUntil?: string | null;
 }
 
 export interface Document {
