@@ -27,8 +27,14 @@ export const openFileInNewTab = (fileUrl: string, fileName?: string): void => {
   try {
     const extension = getFileExtension(fileName || fileUrl);
     
-   
-    const newWindow = window.open('', '_blank', 'width=1200,height=800,toolbar=yes,location=yes,directories=no,status=yes,menubar=yes,scrollbars=yes,copyhistory=no,resizable=yes');
+
+    if (['DOC', 'DOCX'].includes(extension)) {
+      openDocFileInViewer(fileUrl, fileName);
+      return;
+    }
+    
+    
+    const newWindow = window.open('', '_blank', 'width=1200,height=800,toolbar=yes,location=yes,status=yes,menubar=yes,scrollbars=yes,resizable=yes');
     
     if (newWindow) {
       newWindow.location.href = fileUrl;
@@ -39,18 +45,79 @@ export const openFileInNewTab = (fileUrl: string, fileName?: string): void => {
       link.href = fileUrl;
       link.target = '_blank';
       link.rel = 'noopener noreferrer';
-      // Add download attribute for DOC files to ensure they open properly
-      if (['DOC', 'DOCX'].includes(extension)) {
-        link.setAttribute('data-file-type', 'document');
-      }
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
     }
   } catch (error) {
     console.error('Error opening file:', error);
-    // Final fallback - use window.open with full window specifications
+  
     window.open(fileUrl, '_blank', 'width=1200,height=800,toolbar=yes,scrollbars=yes,resizable=yes');
+  }
+};
+
+export const openDocFileInViewer = (fileUrl: string, fileName?: string): void => {
+  if (!fileUrl) {
+    console.error('No file URL provided');
+    return;
+  }
+
+  const newWindow = window.open('', '_blank', 'width=1200,height=800,toolbar=yes,location=yes,status=yes,menubar=yes,scrollbars=yes,resizable=yes');
+  
+  if (newWindow) {
+ 
+    newWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>${fileName || 'Document Viewer'}</title>
+          <style>
+            body { margin: 0; padding: 0; overflow: hidden; }
+            iframe { width: 100%; height: 100vh; border: none; }
+            .fallback { padding: 20px; text-align: center; font-family: Arial, sans-serif; }
+            .viewer-btn { 
+              background: #007bff; 
+              color: white; 
+              padding: 10px 20px; 
+              border: none; 
+              border-radius: 4px; 
+              cursor: pointer; 
+              margin: 10px;
+              text-decoration: none;
+              display: inline-block;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="fallback">
+            <h3>Document Viewer</h3>
+            <p>Opening document: ${fileName || 'Document'}</p>
+            <div>
+              <a href="${fileUrl}" target="_blank" class="viewer-btn">Open Document Directly</a>
+              <a href="https://docs.google.com/viewer?url=${encodeURIComponent(fileUrl)}" target="_blank" class="viewer-btn">Open in Google Viewer</a>
+            </div>
+            <script>
+              // Try to load the document directly first
+              setTimeout(() => {
+                window.location.href = "${fileUrl}";
+              }, 1000);
+            </script>
+          </div>
+        </body>
+      </html>
+    `);
+    newWindow.document.close();
+    newWindow.focus();
+  } else {
+ 
+    try {
+   
+      const googleViewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(fileUrl)}`;
+      window.open(googleViewerUrl, '_blank', 'width=1200,height=800,toolbar=yes,scrollbars=yes,resizable=yes');
+    } catch (error) {
+      // Final fallback - direct file URL
+      window.open(fileUrl, '_blank');
+    }
   }
 };
 
