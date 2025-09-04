@@ -175,7 +175,7 @@ export const openFileInNewTab = (fileUrl: string, fileName?: string): void => {
       // Try multiple approaches for DOC/DOCX files
       const tryOpenWithGoogleViewer = () => {
         try {
-          const googleViewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(fileUrl)}&embedded=true`;
+          const googleViewerUrl = `https://docs.google.com/viewer?url=${fileUrl}&embedded=true`;
           console.log('Opening DOC/DOCX file with Google Viewer:', googleViewerUrl);
           
           const newWindow = window.open(googleViewerUrl, '_blank', 'width=1200,height=800,toolbar=yes,location=yes,status=yes,menubar=yes,scrollbars=yes,resizable=yes');
