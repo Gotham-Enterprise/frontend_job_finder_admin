@@ -3,27 +3,22 @@ export const getFileExtension = (fileName: string | undefined | null): string =>
   if (!fileName || typeof fileName !== 'string') return '';
   
   try {
-    // Handle URLs by extracting just the filename part
     let fileNameOnly = fileName;
     
-    // If it's a URL, extract the pathname
     if (fileName.includes('://')) {
       try {
         const url = new URL(fileName);
         fileNameOnly = url.pathname.split('/').pop() || '';
       } catch {
-        // If URL parsing fails, try simple string manipulation
+       
         fileNameOnly = fileName.split('/').pop() || '';
       }
     } else if (fileName.includes('/')) {
-      // Simple path handling
       fileNameOnly = fileName.split('/').pop() || '';
     }
 
-    // Remove query parameters and fragments
     fileNameOnly = fileNameOnly.split('?')[0].split('#')[0];
     
-    // Extract extension
     const parts = fileNameOnly.split('.');
     if (parts.length < 2) return '';
     
@@ -44,7 +39,6 @@ export const shouldOpenInNewTab = (fileName: string | undefined | null): boolean
   return viewableTypes.includes(extension);
 };
 
-// Helper function to check if URL is accessible
 export const isValidUrl = (url: string): boolean => {
   try {
     new URL(url);
@@ -54,7 +48,6 @@ export const isValidUrl = (url: string): boolean => {
   }
 };
 
-// Helper function to check if file is a document type that might need special handling
 export const isDocumentType = (fileName?: string): boolean => {
   const extension = getFileExtension(fileName);
   return ['DOC', 'DOCX', 'PDF'].includes(extension);
@@ -68,7 +61,6 @@ export const getViewerUrl = (fileUrl: string, fileName?: string): string => {
     return `https://docs.google.com/viewer?url=${encodeURIComponent(fileUrl)}&embedded=true`;
   }
   
-// For PDFs and other files, return the original URL
   return fileUrl;
 };
 
@@ -129,8 +121,6 @@ export const openFileWithRetry = async (
       console.warn(`Attempt ${attempt + 1} failed:`, error);
       
       if (attempt === maxRetries) {
-        // Last attempt - try fallback methods
-        console.log('Trying fallback method');
         try {
           const link = document.createElement('a');
           link.href = fileUrl;
@@ -172,11 +162,11 @@ export const openFileInNewTab = (fileUrl: string, fileName?: string): void => {
     const extension = getFileExtension(fileName || fileUrl);
     
     if (['DOC', 'DOCX'].includes(extension)) {
-      // Try multiple approaches for DOC/DOCX files
+
       const tryOpenWithGoogleViewer = () => {
         try {
           const googleViewerUrl = `https://docs.google.com/viewer?url=${fileUrl}&embedded=true`;
-          console.log('Opening DOC/DOCX file with Google Viewer:', googleViewerUrl);
+
           
           const newWindow = window.open(googleViewerUrl, '_blank', 'width=1200,height=800,toolbar=yes,location=yes,status=yes,menubar=yes,scrollbars=yes,resizable=yes');
           
@@ -184,19 +174,7 @@ export const openFileInNewTab = (fileUrl: string, fileName?: string): void => {
             throw new Error('Popup blocked or failed to open');
           }
           
-          // Check if the window loaded successfully after a delay
-          setTimeout(() => {
-            try {
-              if (newWindow.closed) {
-                console.warn('Google Viewer window was closed, trying direct download');
-                openDirectDownload(fileUrl, fileName);
-              }
-            } catch (e) {
-              // Cross-origin access might be blocked, which is normal
-              console.log('Cannot check window status (cross-origin), assuming it opened successfully');
-            }
-          }, 3000);
-          
+        
           return true;
         } catch (error) {
           console.warn('Google Viewer failed:', error);
@@ -205,7 +183,7 @@ export const openFileInNewTab = (fileUrl: string, fileName?: string): void => {
       };
 
       const openDirectDownload = (url: string, name?: string) => {
-        console.log('Opening file directly for download:', url);
+     
         const link = document.createElement('a');
         link.href = url;
         link.download = name || 'document';
@@ -216,8 +194,6 @@ export const openFileInNewTab = (fileUrl: string, fileName?: string): void => {
         link.click();
         document.body.removeChild(link);
       };
-
-      // Try Google Viewer first, fallback to direct download
       if (!tryOpenWithGoogleViewer()) {
         openDirectDownload(fileUrl, fileName);
       }
@@ -225,12 +201,11 @@ export const openFileInNewTab = (fileUrl: string, fileName?: string): void => {
       return;
     }
     
-    // For other file types, open directly
+
     const newWindow = window.open(fileUrl, '_blank', 'width=1200,height=800,toolbar=yes,location=yes,status=yes,menubar=yes,scrollbars=yes,resizable=yes');
     
     if (!newWindow) {
-      console.warn('Popup blocked, trying alternative method');
-      // Alternative method if popup is blocked
+ 
       const link = document.createElement('a');
       link.href = fileUrl;
       link.target = '_blank';
@@ -247,7 +222,6 @@ export const openFileInNewTab = (fileUrl: string, fileName?: string): void => {
       window.open(fileUrl, '_blank');
     } catch (fallbackError) {
       console.error('Fallback also failed:', fallbackError);
-      // Try creating a download link as last resort
       const link = document.createElement('a');
       link.href = fileUrl;
       link.target = '_blank';
@@ -271,7 +245,7 @@ export const openFileWithEnhancedHandling = async (
       try {
         const response = await apiCallback();
         if (response.success && response.data?.fileUrl) {
-          console.log('Using fresh URL from API:', response.data.fileUrl);
+      
           openFileInNewTab(response.data.fileUrl, fileName);
           return;
         } else {
@@ -285,10 +259,9 @@ export const openFileWithEnhancedHandling = async (
 
     // Fallback to provided URL
     if (fileUrl) {
-      console.log('Using provided URL as fallback:', fileUrl);
       openFileInNewTab(fileUrl, fileName);
     } else {
-      console.error('No file URL available');
+    
       throw new Error('No file URL available');
     }
   } catch (error) {
@@ -359,15 +332,12 @@ export const openInFullTab = (fileUrl: string, fileName?: string): void => {
       }
     };
 
-    // Try direct window opening first
     if (!openFullWindow()) {
-      console.warn('Direct window opening failed, trying form method');
+
       
-      // Try form-based method
       if (!openWithForm()) {
-        console.warn('Form method failed, trying simple link approach');
-        
-        // Fallback to simple link approach
+     
+      
         const link = document.createElement('a');
         link.href = fileUrl;
         link.target = '_blank';
