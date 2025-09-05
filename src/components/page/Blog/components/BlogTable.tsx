@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import { formatDate } from '@/services/utils/dateUtils';
-import { processSlug } from '@/services/utils/slugUtils';
 import { generateBlogUrl } from '@/config/constants';
 import {
   Table,
@@ -58,8 +57,10 @@ const BlogTable: React.FC<BlogTableProps> = ({
   };
 
   const generateShareUrl = (post: any): string => {
-    const slug = processSlug(post.slug || post.title);
-    return generateBlogUrl(slug);
+    const category = post.category?.name || 'general';
+    const blogId = post.id;
+    const title = post.title || 'untitled';
+    return generateBlogUrl(category, blogId, title);
   };
 
   const getAuthorName = (post: any): string => {
@@ -297,7 +298,7 @@ const BlogTable: React.FC<BlogTableProps> = ({
         url={shareModal.post ? generateShareUrl(shareModal.post) : ''}
         title={shareModal.post?.title || ''}
         description={shareModal.post?.excerpt || shareModal.post?.description || ''}
-        image={shareModal.post ? getBlogImage(shareModal.post) : ''}
+        image={shareModal.post?.featuredImage || ''}
         ogType="article"
         ogSiteName="Gotham Enterprises"
         author={shareModal.post ? getAuthorName(shareModal.post) : ''}

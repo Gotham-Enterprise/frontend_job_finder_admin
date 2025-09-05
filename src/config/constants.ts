@@ -25,7 +25,15 @@ export const getShareBaseUrl = (): string => {
   return SITE_CONFIG.PRODUCTION_URL;
 };
 
-export const generateBlogUrl = (slug: string): string => {
-  const baseUrl = getShareBaseUrl();
-  return `${baseUrl}/blog/${slug}`;
+export const generateBlogUrl = (category: string, blogId: string | number, title: string): string => {
+  const baseUrl = 'https://gothamenterprisesltd.com';
+  // Clean and format the parameters
+  const cleanCategory = category?.toLowerCase().replace(/\s+/g, '-') || 'general';
+  const cleanTitle = title?.toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '') || 'untitled';
+  
+  return `${baseUrl}/blog/${cleanCategory}/${blogId}/${cleanTitle}`;
 };

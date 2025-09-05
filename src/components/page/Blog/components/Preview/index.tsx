@@ -5,7 +5,6 @@ import Head from 'next/head';
 import { blogApi } from '@/services/api/blog';
 import { BlogPost } from '@/services/types/blog';
 import { formatDate } from '@/services/utils/dateUtils';
-import { processSlug } from '@/services/utils/slugUtils';
 import { ArrowRightIcon, CalenderIcon, UserIcon, GothamLogo } from '@/icons';
 import FullScreenSpinner from '@/components/ui/FullScreenSpinner';
 import { SITE_CONFIG, generateBlogUrl } from '@/config/constants';
@@ -819,7 +818,12 @@ const BlogPreview: React.FC<BlogPreviewProps> = ({ blogId, blogSlug }) => {
     
     const ogData = extractBlogOpenGraphData(blogPost);
 
-    ogData.url = typeof window !== 'undefined' ? window.location.href : generateBlogUrl(processSlug(blogPost.slug || blogPost.title));
+    ogData.url = (() => {
+      const category = getCategoryName(blogPost);
+      const blogId = (blogPost as any).id;
+      const title = blogPost.title || 'untitled';
+      return generateBlogUrl(category, blogId, title);
+    })();
     
     return ogData;
   };
@@ -1010,23 +1014,21 @@ const BlogPreview: React.FC<BlogPreviewProps> = ({ blogId, blogSlug }) => {
       return seoCanonicalUrl;
     }
 
-    if (typeof window !== 'undefined') {
-      return window.location.href;
-    }
-    
-    const slug = processSlug(blogPost.slug || blogPost.title);
-    return generateBlogUrl(slug);
+    // Always use production URL for canonical links
+    const category = getCategoryName(blogPost);
+    const blogId = (blogPost as any).id;
+    const title = blogPost.title || 'untitled';
+    return generateBlogUrl(category, blogId, title);
   };
 
   const getCurrentBlogUrl = (blogPost: BlogPost | null): string => {
     if (!blogPost) return '';
     
-    if (typeof window !== 'undefined') {
-      return window.location.href;
-    }
-    
-    const slug = processSlug(blogPost.slug || blogPost.title);
-    return generateBlogUrl(slug);
+    // Always use production URL for sharing
+    const category = getCategoryName(blogPost);
+    const blogId = (blogPost as any).id;
+    const title = blogPost.title || 'untitled';
+    return generateBlogUrl(category, blogId, title);
   };
 
   const getImageDimensions = (blogPost: BlogPost | null): { width: string; height: string } => {
@@ -1248,9 +1250,9 @@ const BlogPreview: React.FC<BlogPreviewProps> = ({ blogId, blogSlug }) => {
         })()}
       </Head>
       
-      {blogPost && typeof window !== 'undefined' && (
+      {blogPost && (
         <SocialShare 
-          url={`${window.location.origin}${window.location.pathname}`}
+          url={getCurrentBlogUrl(blogPost)}
           title={blogPost.title}
           description={getSEODescription(blogPost)}
         />
