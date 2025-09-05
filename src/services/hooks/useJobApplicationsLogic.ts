@@ -2,6 +2,7 @@ import { useState, useMemo, useTransition, useEffect, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useJobApplications, useViewApplicationResume } from '@/services/hooks/useJobApplications';
 import { useStates } from '@/services/hooks/useStates';
+import { openFileInNewTab } from '@/services/utils/fileUtils';
 import { JobApplicationFilters } from '@/services/types/jobApplication';
 
 export const useJobApplicationsLogic = () => {
@@ -277,7 +278,7 @@ export const useJobApplicationsLogic = () => {
     }
   }, []);
 
-  const initViewResume = async (resumeObjectKey: string) => {
+  const initViewResume = async (resumeObjectKey: string, fileName?: string) => {
     if (!resumeObjectKey) {
       console.error('No resume object key provided');
       return;
@@ -286,9 +287,9 @@ export const useJobApplicationsLogic = () => {
     viewResume(resumeObjectKey, {
       onSuccess: (data: any) => {
         if (data?.success && data?.data?.fileUrl) {
-          window.open(data.data.fileUrl, '_blank', 'noopener,noreferrer');
+          openFileInNewTab(data.data.fileUrl, fileName);
         } else if (data?.fileUrl) {
-          window.open(data.fileUrl, '_blank', 'noopener,noreferrer');
+          openFileInNewTab(data.fileUrl, fileName);
         } else {
           console.error('No file URL found in response', data);
         }

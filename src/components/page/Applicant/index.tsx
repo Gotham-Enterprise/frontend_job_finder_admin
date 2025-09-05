@@ -84,16 +84,19 @@ export default function ApplicantDetails({ id }: ApplicantDetailsProps) {
         } : undefined
     };
 
-    const initViewDocument = async (url: string, fileObjectKey?: string) => {
+    const initViewDocument = async (url: string, fileObjectKey?: string, fileName?: string) => {
         if (fileObjectKey) {
             setIsViewingResume(true);
             try {
                 const response = await jobApplicationApi.viewResume(fileObjectKey);
                 if (response?.success && response?.data?.fileUrl) {
-                    window.open(response.data.fileUrl, '_blank', 'noopener,noreferrer');
+                    // Import the file opening utility function that handles DOC files with Google Docs viewer
+                    const { openFileInNewTab } = await import('../../../services/utils/fileUtils');
+                    openFileInNewTab(response.data.fileUrl, fileName);
                 } else {
                     if (url) {
-                        window.open(url, '_blank', 'noopener,noreferrer');
+                        const { openFileInNewTab } = await import('../../../services/utils/fileUtils');
+                        openFileInNewTab(url, fileName);
                     }
                 }
             } catch (error) {

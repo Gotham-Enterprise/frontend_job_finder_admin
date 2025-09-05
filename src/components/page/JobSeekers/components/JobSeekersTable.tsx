@@ -118,10 +118,10 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
     setExpandedRows(newExpandedRows);
   };
 
-  const viewResume = async (jobSeekerId: string, objectKey: string) => {
+  const viewResume = async (jobSeekerId: string, objectKey: string, fileName?: string) => {
     setLoadingResumeId(jobSeekerId);
     try {
-      await onViewResume(objectKey);
+      await onViewResume(objectKey, fileName);
     } finally {
       setLoadingResumeId(null);
     }
@@ -136,7 +136,7 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
           variant="default"
           size="sm"
           className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 text-xs font-medium rounded-md shadow-sm hover:shadow-md transition-all duration-200 flex items-center gap-1.5"
-          onClick={() => viewResume(jobSeeker.id, jobSeeker.resumeFileObjectKey)}
+          onClick={() => viewResume(jobSeeker.id, jobSeeker.resumeFileObjectKey, jobSeeker.resumeFileName)}
           disabled={isLoadingThisResume}
           startIcon={isLoadingThisResume ? null : <FileIcon  />}
         >
@@ -158,7 +158,7 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
           variant="default"
           size="sm"
           className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 text-xs font-medium rounded-md shadow-sm hover:shadow-md transition-all duration-200 flex items-center gap-1.5"
-          onClick={() => viewResume(jobSeeker.id, jobSeeker.resumeFileObjectKey)}
+          onClick={() => viewResume(jobSeeker.id, jobSeeker.resumeFileObjectKey, jobSeeker.resumeFileName)}
           disabled={isLoadingThisResume}
           startIcon={isLoadingThisResume ? null : <FileIcon  />}
         >
@@ -186,7 +186,7 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
             variant="default"
             size="sm"
             className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 text-xs font-medium rounded-md shadow-sm hover:shadow-md transition-all duration-200 flex items-center gap-1.5"
-            onClick={() => viewResume(jobSeeker.id, resumeDoc.objectKey)}
+            onClick={() => viewResume(jobSeeker.id, resumeDoc.objectKey, resumeDoc.fileName)}
             disabled={isLoadingThisResume}
             startIcon={isLoadingThisResume ? null : <FileIcon />}
           >

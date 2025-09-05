@@ -33,7 +33,7 @@ export interface JobSeekersTableProps {
   tableColumns: Array<{ key: string; label: string; className?: string }>;
   getStatusVariant: (status: string) => 'light' | 'solid';
   onViewJobSeeker: (jobSeekerId: string) => void;
-  onViewResume: (objectKey: string | null) => void;
+  onViewResume: (objectKey: string | null, fileName?: string) => void;
   isViewingResume: boolean;
   onRefresh?: () => void;
 }
