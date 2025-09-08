@@ -33,7 +33,7 @@ const Profile: FC<Props> = ({ profile }) => {
         <div className="flex flex-col gap-2">
           <div className="flex flex-row">
             <div className="w-1/3">
-              <p className="text-lg text-gray-400">Phone number</p>
+              <p className="text-lg text-gray-400">Phone number:</p>
             </div>
             <div className="w-2/3">
               <p className="text-lg text-gray-900">{formatUSPhoneNumber(profile.phoneNumber)}</p>
@@ -41,7 +41,7 @@ const Profile: FC<Props> = ({ profile }) => {
           </div>
           <div className="flex flex-row">
             <div className="w-1/3">
-              <p className="text-lg text-gray-400">Email address</p>
+              <p className="text-lg text-gray-400">Email address:</p>
             </div>
             <div className="w-2/3">
               <p className="text-lg text-gray-900">{profile.email}</p>
@@ -49,7 +49,7 @@ const Profile: FC<Props> = ({ profile }) => {
           </div>
           <div className="flex flex-row">
             <div className="w-1/3">
-              <p className="text-lg text-gray-400">Address</p>
+              <p className="text-lg text-gray-400">Address:</p>
             </div>
             <div className="w-2/3">
               <p className="text-lg text-gray-900">{profile.address}</p>
@@ -57,7 +57,7 @@ const Profile: FC<Props> = ({ profile }) => {
           </div>
           <div className="flex flex-row">
             <div className="w-1/3">
-              <p className="text-lg text-gray-400">Specialties</p>
+              <p className="text-lg text-gray-400">Specialties:</p>
             </div>
             <div className="w-2/3">
               <p className="text-lg text-gray-900">{profile.specialty}</p>
@@ -65,7 +65,7 @@ const Profile: FC<Props> = ({ profile }) => {
           </div>
           <div className="flex flex-row">
             <div className="w-1/3">
-              <p className="text-lg text-gray-400">Degrees</p>
+              <p className="text-lg text-gray-400">Degrees:</p>
             </div>
             <div className="w-2/3">
               <p className="text-lg text-gray-900">{profile.degree}</p>
@@ -73,7 +73,7 @@ const Profile: FC<Props> = ({ profile }) => {
           </div>
           <div className="flex flex-row">
             <div className="w-1/3">
-              <p className="text-lg text-gray-400">State Licenses</p>
+              <p className="text-lg text-gray-400">State Licenses:</p>
             </div>
             <div className="w-2/3">
               <p className="text-lg text-gray-900">{profile.licenses}</p>
