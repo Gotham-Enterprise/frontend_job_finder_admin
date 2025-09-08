@@ -14,7 +14,7 @@ export const useIdApprovalLogic = (): UseIdApprovalLogic => {
     const search = searchParams.get("search") || "";
     const limit = parseInt(searchParams.get("limit") || "50", 10);
     const page = parseInt(searchParams.get("page") || "1", 10);
-    const status = searchParams.get("status") || "pending";
+    const status = searchParams.get("status") || sessionStorage.getItem("id-approval-status-filter") || "pending";
 
     return { search, limit, page, status };
   };
@@ -95,6 +95,10 @@ export const useIdApprovalLogic = (): UseIdApprovalLogic => {
   /** callbacks */
   const onFilterChange = useCallback((key: string, value: string | number) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
+
+    if (key === "status") {
+      sessionStorage.setItem("id-approval-status-filter", value.toString());
+    }
   }, []);
   const onUpdateStatus = useCallback(
     (id: IdApprovalStatusUpdate["id"], status: IdApprovalStatusUpdate["status"]) => {
