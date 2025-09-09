@@ -66,28 +66,45 @@ export const transformApiUserToFormData = (user: AdminUser, apiRoles: { id: numb
   const permissions: any = {};
   
   if (user.access) {
-    Object.keys(user.access).forEach(moduleKey => {
-      // Map API module names to our form structure
-      const keyMap: { [key: string]: string } = {
-        'Job Seekers': 'jobSeekers',
-        'Tickets': 'tickets',
-        'Employers': 'employers',
-        'Applications': 'applications',
-        'Coupons': 'coupons',
-        'Blog': 'blog',
-        'Careers': 'careers',
-        'Jobs': 'jobs',
-      };
+    // Check if user has "all" permissions (admin/super admin case)
+    if (user.access.all && typeof user.access.all === 'object') {
+      const allPerms = user.access.all;
+      const standardModules = ['tickets', 'jobSeekers', 'employers', 'applications', 'coupons', 'blog', 'careers'];
       
-      const mappedKey = keyMap[moduleKey] || moduleKey.toLowerCase().replace(/\s+/g, '');
-      
-      permissions[mappedKey] = {
-        view: user.access?.[moduleKey]?.view || false,
-        add: user.access?.[moduleKey]?.add || false,
-        edit: user.access?.[moduleKey]?.edit || false,
-        delete: user.access?.[moduleKey]?.delete || false,
-      };
-    });
+      // Apply "all" permissions to all standard modules
+      standardModules.forEach(module => {
+        permissions[module] = {
+          view: allPerms.view || false,
+          add: allPerms.add || false,
+          edit: allPerms.edit || false,
+          delete: allPerms.delete || false,
+        };
+      });
+    } else {
+      // Handle specific module permissions
+      Object.keys(user.access).forEach(moduleKey => {
+        // Map API module names to our form structure
+        const keyMap: { [key: string]: string } = {
+          'Job Seekers': 'jobSeekers',
+          'Tickets': 'tickets',
+          'Employers': 'employers',
+          'Applications': 'applications',
+          'Coupons': 'coupons',
+          'Blog': 'blog',
+          'Careers': 'careers',
+          'Jobs': 'jobs',
+        };
+        
+        const mappedKey = keyMap[moduleKey] || moduleKey.toLowerCase().replace(/\s+/g, '');
+        
+        permissions[mappedKey] = {
+          view: user.access?.[moduleKey]?.view || false,
+          add: user.access?.[moduleKey]?.add || false,
+          edit: user.access?.[moduleKey]?.edit || false,
+          delete: user.access?.[moduleKey]?.delete || false,
+        };
+      });
+    }
   }
   
   return {

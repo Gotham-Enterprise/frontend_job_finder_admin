@@ -48,12 +48,16 @@ export const PERMISSION_MODULES: PermissionModule[] = [
   { key: 'careers', label: 'Careers' },
 ];
 
-export const DEFAULT_PERMISSIONS: FlexiblePermissions = {};
+export const DEFAULT_PERMISSIONS: FlexiblePermissions = {
+  tickets: { view: false, add: false, edit: false, delete: false },
+  jobSeekers: { view: false, add: false, edit: false, delete: false },
+  employers: { view: false, add: false, edit: false, delete: false },
+  applications: { view: false, add: false, edit: false, delete: false },
+  coupons: { view: false, add: false, edit: false, delete: false },
+  blog: { view: false, add: false, edit: false, delete: false },
+  careers: { view: false, add: false, edit: false, delete: false },
+};
 
 export const ROLE_OPTIONS = [
-  { value: 'admin', label: 'Admin' },
-  { value: 'manager', label: 'Manager' },
-  { value: 'user', label: 'User' },
-  { value: 'content-manager', label: 'Content Manager' },
-  { value: 'viewer', label: 'Viewer' },
+  { value: 'super-admin', label: 'Super Admin' },
 ];

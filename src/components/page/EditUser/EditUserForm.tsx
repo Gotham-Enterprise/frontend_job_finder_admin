@@ -89,24 +89,59 @@ const EditUserForm: React.FC<EditUserFormProps> = ({
     }
   }, [userData, apiRoles]);
 
+  const isAdminRole = useCallback((role: string) => {
+    const roleLabel = availableRoles.find(r => r.value === role)?.label;
+    const isAdmin = role === 'admin' || 
+           role === 'super-admin' || 
+           roleLabel?.toLowerCase().includes('admin') || 
+           roleLabel?.toLowerCase() === 'super admin';
+    
+    console.log('Checking admin role in EditUserForm:', { role, roleLabel, isAdmin });
+    return isAdmin;
+  }, [availableRoles]);
+
   const updateRolePermissions = useCallback((role: string) => {
     if (role) {
-      const rolePermissions = getPermissionsForRole(role);
-      const flexiblePermissions: FlexiblePermissions = {};
-      Object.entries(rolePermissions).forEach(([key, perm]) => {
-        flexiblePermissions[key] = {
-          view: perm.view,
-          add: perm.create,
-          edit: perm.update,
-          delete: perm.delete,
-        };
-      });
-      setFormData(prev => ({
-        ...prev,
-        permissions: flexiblePermissions,
-      }));
+      // Check if role is admin or super admin - give full permissions
+      if (isAdminRole(role)) {
+        // Give full permissions to all modules for admin roles
+        const adminPermissions: FlexiblePermissions = {};
+        const standardModules = ['tickets', 'jobSeekers', 'employers', 'applications', 'coupons', 'blog', 'careers'];
+        
+        standardModules.forEach(module => {
+          adminPermissions[module] = {
+            view: true,
+            add: true,
+            edit: true,
+            delete: true,
+          };
+        });
+        
+        console.log('Setting admin permissions in EditUserForm:', adminPermissions);
+        
+        setFormData(prev => ({
+          ...prev,
+          permissions: adminPermissions,
+        }));
+      } else {
+        // Apply role-based permissions for non-admin roles
+        const rolePermissions = getPermissionsForRole(role);
+        const flexiblePermissions: FlexiblePermissions = {};
+        Object.entries(rolePermissions).forEach(([key, perm]) => {
+          flexiblePermissions[key] = {
+            view: perm.view,
+            add: perm.create,
+            edit: perm.update,
+            delete: perm.delete,
+          };
+        });
+        setFormData(prev => ({
+          ...prev,
+          permissions: flexiblePermissions,
+        }));
+      }
     }
-  }, []);
+  }, [isAdminRole]);
 
   const updateFormField = useCallback(<K extends keyof CreateUserFormData>(
     field: K,
@@ -381,6 +416,11 @@ const EditUserForm: React.FC<EditUserFormProps> = ({
                     <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                     <span className="text-xs text-gray-600 dark:text-gray-400">
                       Role: <span className="font-medium text-blue-600">{formData.role}</span> permissions applied
+                      {isAdminRole(formData.role) && (
+                        <span className="ml-2 px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 text-xs rounded-full">
+                          Admin Access - Full Permissions
+                        </span>
+                      )}
                     </span>
                   </div>
                 )}
