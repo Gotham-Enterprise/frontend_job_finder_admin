@@ -70,7 +70,7 @@ const JobSeekersHeader: React.FC<JobSeekersHeaderWithDropdownProps> = ({
           </div>
           <Input
             type="text"
-            placeholder="Search by email..."
+            placeholder="Search by name or email..."
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             className={`w-full pl-10 ${searchInput ? 'pr-10' : ''}`}
