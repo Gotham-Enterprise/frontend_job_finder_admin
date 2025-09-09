@@ -21,7 +21,6 @@ export interface CreateAdminUserRequest {
   firstName: string;
   lastName: string;
   email: string;
-  password: string;
   roleId: number;
   access: {
     [key: string]: {
