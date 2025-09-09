@@ -10,6 +10,7 @@ import { useResetPassword, useCurrentUser } from '@/services/hooks/useAuth';
 import { useAuthStorage } from '@/hooks/useAuthStorage';
 import UserTable from './components/UserTable';
 import AccountInfo from './components/AccountInfo';
+import AccountSettingsSkeleton from './components/AccountSettingsSkeleton';
 
 interface PasswordFormData {
   currentPassword: string;
@@ -131,17 +132,7 @@ const AccountSettings: React.FC = () => {
 
 
   if (!mounted || isLoadingUser) {
-    return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
-        <div className="max-w-8xl mx-auto">
-          <div className="animate-pulse">
-            <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/4 mb-4"></div>
-            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2 mb-8"></div>
-            <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded w-1/3"></div>
-          </div>
-        </div>
-      </div>
-    );
+    return <AccountSettingsSkeleton />;
   }
 
   // Show error state if user fetch failed
