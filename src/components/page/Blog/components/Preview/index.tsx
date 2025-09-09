@@ -954,7 +954,6 @@ const BlogPreview: React.FC<BlogPreviewProps> = ({ blogId, blogSlug }) => {
       return seoDescription;
     }
     
-
     if (blogPost.excerpt && blogPost.excerpt.trim()) {
       return blogPost.excerpt;
     }

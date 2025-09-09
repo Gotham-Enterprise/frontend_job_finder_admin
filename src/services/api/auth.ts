@@ -146,5 +146,15 @@ export const authApi = {
     } catch (error: any) {
       throw error;
     }
+  },
+
+  async getCurrentUser(): Promise<any> {
+    try {
+      const response = await apiGet<any>('/api/auth/me', { includeAuth: true });
+      return response;
+    } catch (error: any) {
+      console.error('Failed to fetch current user:', error);
+      throw error;
+    }
   }
 };

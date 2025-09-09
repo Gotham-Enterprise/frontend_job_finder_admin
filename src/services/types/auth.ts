@@ -32,13 +32,16 @@ export interface User {
   id: string;
   email: string;
   username: string;
+  password?: string;
   firstName: string;
   lastName: string;
+  fullName: string | null;
   suffix: string | null;
   salutation: string | null;
   role: string;
   status: string;
   sendNewsLetter: boolean;
+  legacyIsSubscribeToNewsLetter: boolean | null;
   failedLoginAttempts: number;
   accountLocked: boolean;
   lockedUntil: string | null;
@@ -49,10 +52,27 @@ export interface User {
   recommendationFrequency: string;
   agreeToTermsAndConditions: boolean;
   createdAt: string;
+  emailVerifiedAt: string | null;
   updatedAt: string;
   lastEmailSentAt: string | null;
   userType: string;
   forceChangePassword: boolean;
+  candidateProfile: any | null;
+  companyUser: any | null;
+  profile?: {
+    avatarUrl: string | null;
+    phoneNumber: string | null;
+    address: string | null;
+    state: string | null;
+    city: string | null;
+    zipCode: string | null;
+  };
+  adminProfile?: {
+    id: string;
+    avatarUrl: string | null;
+    accessRoleId: number;
+  };
+  missingCandidateDetails?: any[];
 }
 
 export interface AuthResponse {
