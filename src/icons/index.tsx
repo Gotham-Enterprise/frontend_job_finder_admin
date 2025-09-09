@@ -64,6 +64,13 @@ import CodeBlockIcon from "./code-block";
 import LinkIcon from "./link";
 import ImageIcon from "./image";
 import GothamLogo from "./GothamLogo";
+import StatusApproved from "./status-approved.svg";
+import StatusDeclined from "./status-declined.svg";
+import StatusPending from "./status-pending.svg";
+import AccountLocked from "./account-locked.svg";
+import AccountUnlocked from "./account-unlocked.svg";
+import IdCardIcon from "./id-card.svg";
+import AccountCheckCircleIcon from "./account-check-circle";
 
 export {
   DownloadIcon,
@@ -123,7 +130,8 @@ export {
   AlignLeftIcon,
   AlignCenterIcon,
   AlignRightIcon,
-  QuoteIcon,  CodeBlockIcon,
+  QuoteIcon,
+  CodeBlockIcon,
   LinkIcon,
   ImageIcon,
   BriefcaseIcon,
@@ -131,4 +139,11 @@ export {
   TicketIcon,
   BlogIcon,
   GothamLogo,
+  StatusApproved,
+  StatusDeclined,
+  StatusPending,
+  AccountLocked,
+  AccountUnlocked,
+  IdCardIcon,
+  AccountCheckCircleIcon,
 };
