@@ -38,8 +38,8 @@ const ActivityLogs: FC<Props> = ({ activityLogs }) => {
           <TableBody>
             {activityLogs.length > 0 ? (
               activityLogs.map((log) => (
-                <TableRow key={log.timestamp}>
-                  <TableCell className="py-4 px-6">{formatDateTime(log.timestamp)}</TableCell>
+                <TableRow key={log.minute}>
+                  <TableCell className="py-4 px-6">{formatDateTime(log.minute)}</TableCell>
                   <TableCell className="py-4 px-6">{log.attempts}</TableCell>
                   <TableCell className="py-4 px-6">{log.ipAddress}</TableCell>
                 </TableRow>

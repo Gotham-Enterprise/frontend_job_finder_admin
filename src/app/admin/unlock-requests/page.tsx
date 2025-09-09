@@ -1,11 +1,14 @@
-import React from 'react'
+import React, { Suspense } from "react";
 
-import IDApproval from '@/components/page/IDApproval';
+import IDApproval from "@/components/page/IDApproval";
+import FullScreenSpinner from "@/components/ui/FullScreenSpinner";
 
 const IDApprovalPage = () => {
   return (
-    <IDApproval />
-  )
-}
+    <Suspense fallback={<FullScreenSpinner isVisible={true} message="Loading unlock requests..." />}>
+      <IDApproval />
+    </Suspense>
+  );
+};
 
-export default IDApprovalPage
+export default IDApprovalPage;
