@@ -4,8 +4,9 @@ import Input from "@/components/form/input/InputField";
 import TextArea from "@/components/form/input/TextArea";
 import Button from "@/components/ui/button/Button";
 import Label from "@/components/form/Label";
-import Select from "@/components/form/Select";
+import SubCategoryDropdown from "@/components/form/SubCategoryDropdown";
 import { Category, CategoryEditModalProps } from "@/services/types/categoryTypes";
+import { useSubCategories } from "@/services/hooks/useSubCategories";
 
 export default function CategoryEditModal({
   isOpen,
@@ -13,8 +14,21 @@ export default function CategoryEditModal({
   editingCategory,
   setEditingCategory,
   onUpdateCategory,
-  parentOptions
+  isUpdating = false
 }: CategoryEditModalProps) {
+  const { subCategories, isLoading: isLoadingSubCategories } = useSubCategories();
+
+  const updateSubCategories = (selectedSubCategories: Array<{ name: string; id?: string }>) => {
+    const subcategoriesWithIds = selectedSubCategories.map(subCat => ({
+      id: subCat.id || `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      name: subCat.name
+    }));
+    
+    setEditingCategory((prev: Category | null) => 
+      prev ? { ...prev, subCategories: subcategoriesWithIds } : null
+    );
+  };
+
   return (
     <Modal
       isOpen={isOpen}
@@ -38,27 +52,23 @@ export default function CategoryEditModal({
                   className="mt-1"
                 />
               </div>
-
               <div>
-                <Label htmlFor="editCategorySlug">Slug</Label>
-                <Input
-                  id="editCategorySlug"
-                  type="text"
-                  placeholder="category-slug"
-                  defaultValue={editingCategory.slug}
-                  onChange={(e) => setEditingCategory((prev: Category | null) => prev ? { ...prev, slug: e.target.value } : null)}
-                  className="mt-1"
+                <Label>Sub Categories</Label>
+                <SubCategoryDropdown
+                  selectedSubCategories={editingCategory.subCategories || []}
+                  availableSubCategories={subCategories}
+                  onSelectionChange={updateSubCategories}
+                  placeholder="Search or add subcategories..."
+                  maxSelections={10}
                 />
-              </div>
-
-              <div>
-                <Label htmlFor="editCategoryParent">Parent Category</Label>
-                <Select
-                  options={parentOptions}
-                  placeholder="None"
-                  defaultValue={editingCategory.parent}
-                  onChange={(value: string) => setEditingCategory((prev: Category | null) => prev ? { ...prev, parent: value } : null)}
-                />
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  Select existing subcategories or type to create new ones.
+                </p>
+                {isLoadingSubCategories && (
+                  <p className="mt-1 text-xs text-blue-500 dark:text-blue-400">
+                    Loading subcategories...
+                  </p>
+                )}
               </div>
 
               <div>
@@ -76,11 +86,15 @@ export default function CategoryEditModal({
                   variant="ghost"
                   onClick={onClose}
                   className="dark:text-white"
+                  disabled={isUpdating}
                 >
                   Cancel
                 </Button>
-                <Button onClick={onUpdateCategory}>
-                  Update Category
+                <Button 
+                  onClick={onUpdateCategory}
+                  disabled={isUpdating}
+                >
+                  {isUpdating ? "Updating..." : "Update Category"}
                 </Button>
               </div>
             </>

@@ -4,21 +4,28 @@ import Input from "@/components/form/input/InputField";
 import TextArea from "@/components/form/input/TextArea";
 import Button from "@/components/ui/button/Button";
 import Label from "@/components/form/Label";
-import { NewTag } from "@/services/types/tagTypes";
+import { NewTag } from "@/services/api/tag";
 
 interface TagFormProps {
   newTag: NewTag;
   onInputChange: (field: keyof NewTag, value: string) => void;
   onAddTag: () => void;
-  onBulkModalOpen: () => void;
+  isCreating?: boolean;
+  existingTags?: Array<{ name: string }>;
 }
 
 const TagForm: React.FC<TagFormProps> = ({
   newTag,
   onInputChange,
   onAddTag,
-  onBulkModalOpen
+  isCreating = false,
+  existingTags = []
 }) => {
+  const isDuplicate = existingTags.some(tag => 
+    tag.name.toLowerCase().trim() === newTag.name.toLowerCase().trim()
+  );
+  
+  const isDisabled = !newTag.name.trim() || isDuplicate || isCreating;
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
       <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">Add New Tag</h2>
@@ -31,19 +38,11 @@ const TagForm: React.FC<TagFormProps> = ({
             placeholder="Tag name"
             defaultValue={newTag.name}
             onChange={(e) => onInputChange('name', e.target.value)}
+            className={isDuplicate && newTag.name.trim() ? 'border-red-500 focus:border-red-500' : ''}
           />
-        </div>        <div>
-          <Label>Slug</Label>
-          <Input
-            key={newTag.slug} 
-            type="text"
-            placeholder="tag-slug"
-            defaultValue={newTag.slug}
-            onChange={(e) => onInputChange('slug', e.target.value)}
-          />
-          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-            The &quot;slug&quot; is the URL-friendly version of the name.
-          </p>
+          {isDuplicate && newTag.name.trim() && (
+            <p className="text-red-500 text-sm mt-1">A tag with this name already exists</p>
+          )}
         </div>
 
         <div>
@@ -56,22 +55,14 @@ const TagForm: React.FC<TagFormProps> = ({
           />
         </div>
 
-        <div className="space-y-2">
+        <div>
           <Button
             variant="default"
             onClick={onAddTag}
             className="w-full"
-            disabled={!newTag.name.trim()}
+            disabled={isDisabled}
           >
-            Add New Tag
-          </Button>
-          
-          <Button
-            variant="outline"
-            onClick={onBulkModalOpen}
-            className="w-full dark:text-white"
-          >
-            Bulk Add Tags
+            {isCreating ? 'Adding...' : 'Add New Tag'}
           </Button>
         </div>
       </div>

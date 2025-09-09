@@ -79,16 +79,17 @@ const navItems: NavItem[] = [
      //subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
   },
 
-  // {
-  //   icon: <BlogIcon />,
-  //   name: "Blog",
-  //   path: "/admin/blog",
-  //    subItems: [{ name: "All Posts", path: "/admin/blog", pro: false },
-  //     { name: "Add New", path: "/admin/blog/add-new", pro: false },
-  //     { name: "Categories", path: "/admin/blog/categories", pro: false },
-  //     { name: "Tags", path: "/admin/blog/tags", pro: false }
-  //    ],
-  // },
+  {
+    icon: <BlogIcon />,
+    name: "Blog",
+    path: "/admin/blog",
+     subItems: [{ name: "All Posts", path: "/admin/blog", pro: false },
+      { name: "Add New", path: "/admin/blog/add-new", pro: false },
+      { name: "Categories", path: "/admin/blog/categories", pro: false },
+      { name: "Tags", path: "/admin/blog/tags", pro: false },
+      { name: "Archives", path: "/admin/blog/archives", pro: false },
+     ],
+  },
 
 ];
 

@@ -21,12 +21,16 @@ export const useJobSeekersLogic = () => {
         : undefined;
       const urlPage = searchParams.get('page');
       const urlLocation = searchParams.get('location');
+      const urlCity = searchParams.get('city');
+      const urlRadius = searchParams.get('radius');
       const urlOccupationId = searchParams.get('occupationId');
       
       const urlFilters = {
         page: Math.max(1, parseInt(urlPage || '1', 10)),
         limit: parseInt(searchParams.get('limit') || '100', 10),
         search: decodedSearch,
+        city: urlCity || '',
+        radius: urlRadius ? parseInt(urlRadius, 10) : undefined,
         location: urlLocation || '',
         occupationId: urlOccupationId ? parseInt(urlOccupationId, 10) : undefined,
         status: validStatus,
@@ -34,6 +38,8 @@ export const useJobSeekersLogic = () => {
       const isSimpleNavigation = 
         (!urlPage || urlPage === '1') &&
         !decodedSearch &&
+        !urlCity &&
+        !urlRadius &&
         !urlLocation &&
         !urlOccupationId &&
         !validStatus;
@@ -60,6 +66,8 @@ export const useJobSeekersLogic = () => {
               page: Math.max(1, parsed.page || 1),
               limit: parsed.limit || 100,
               search: parsed.search || '',
+              city: parsed.city || '',
+              radius: parsed.radius || undefined,
               location: parsed.location || '',
               occupationId: parsed.occupationId || undefined,
               status: parsed.status || undefined,
@@ -79,6 +87,8 @@ export const useJobSeekersLogic = () => {
       page: 1,
       limit: 100,
       search: '',
+      city: '',
+      radius: undefined,
       location: '',
       occupationId: undefined,
       status: undefined,
@@ -94,9 +104,6 @@ export const useJobSeekersLogic = () => {
     const initial = initialFilters.search || '';
     return initial;
   });
-  const [selectedStatuses, setSelectedStatuses] = useState<string[]>(
-    initialFilters.status ? [initialFilters.status] : []
-  );
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [scrollPosition, setScrollPosition] = useState(0);
@@ -117,6 +124,8 @@ export const useJobSeekersLogic = () => {
     if (filters.page && filters.page > 1) params.set('page', filters.page.toString());
     if (filters.limit && filters.limit !== 100) params.set('limit', filters.limit.toString());
     if (filters.search) params.set('search', encodeURIComponent(filters.search));
+    if (filters.city) params.set('city', filters.city);
+    if (filters.radius) params.set('radius', filters.radius.toString());
     if (filters.location) params.set('location', filters.location);
     if (filters.occupationId) params.set('occupationId', filters.occupationId.toString());
     if (filters.status) params.set('status', filters.status);
@@ -195,6 +204,8 @@ export const useJobSeekersLogic = () => {
         page: filters.page,
         limit: filters.limit,
         search: filters.search,
+        city: filters.city,
+        radius: filters.radius,
         location: filters.location,
         occupationId: filters.occupationId,
         status: filters.status,
@@ -218,9 +229,8 @@ export const useJobSeekersLogic = () => {
     { key: 'actions', label: '', className: 'text-right' },
   ], []);
   const statusOptions = useMemo(() => [
-    { value: '', label: 'All Statuses' },
+    { value: '', label: 'All' },
     { value: 'active', label: 'Active' },
-    { value: 'inactive', label: 'Inactive' },
     { value: 'pending', label: 'Pending' },
   ], []);
 
@@ -261,26 +271,13 @@ export const useJobSeekersLogic = () => {
 
   const filterChange = useCallback((key: keyof JobSeekerFilters, value: any) => {
     startTransition(() => {
-      setFilters(prev => ({ 
+      setFilters(prev => ({
         ...prev, 
         [key]: value === '' ? undefined : value,
         page: 1
       }));
     });
-  }, []);
-
-  const statusToggleChange = useCallback((statuses: string[]) => {
-    setSelectedStatuses(statuses);
-    startTransition(() => {
-      setFilters(prev => ({ 
-        ...prev, 
-        status: statuses.length > 0 ? statuses[0] as any : undefined,
-        page: 1
-      }));
-    });
-  }, []);
-
-  const initPageChange = useCallback((newPage: number) => {
+  }, []);  const initPageChange = useCallback((newPage: number) => {
     setFilters(prev => ({ ...prev, page: newPage }));
   }, []);
   const getStatusVariant = useMemo(() => (status: string): 'light' | 'solid' => {
@@ -293,7 +290,7 @@ export const useJobSeekersLogic = () => {
     }
   }, []);
 
-  const initViewResume = useCallback(async (objectKey: string | null) => {
+  const initViewResume = useCallback(async (objectKey: string | null, fileName?: string) => {
     if (!objectKey) {
       console.error('No object key provided');
       return;
@@ -303,7 +300,8 @@ export const useJobSeekersLogic = () => {
     try {
       const response = await jobApplicationApi.viewResume(objectKey);
       if (response.success && response.data?.fileUrl) {
-        window.open(response.data.fileUrl, '_blank', 'noopener,noreferrer');
+        const { openFileInNewTab } = await import('../utils/fileUtils');
+        openFileInNewTab(response.data.fileUrl, fileName);
       } else {
         console.error('No file URL found in response');
       }
@@ -331,13 +329,14 @@ export const useJobSeekersLogic = () => {
       page: 1,
       limit: 100,
       search: '',
+      city: '',
+      radius: undefined,
       location: '',
       occupationId: undefined,
       status: undefined,
     };
     setFilters(newFilters);
     setSearchInput('');
-    setSelectedStatuses([]);
     if (typeof window !== 'undefined') {
       localStorage.removeItem('jobseeker-scroll-position');
       localStorage.removeItem('jobseeker-search-state');
@@ -349,11 +348,16 @@ export const useJobSeekersLogic = () => {
       case 'occupationId':
         filterChange('occupationId', undefined);
         break;
+      case 'city':
+        filterChange('city', '');
+        break;
+      case 'radius':
+        filterChange('radius', undefined);
+        break;
       case 'location':
         filterChange('location', '');
         break;
       case 'status':
-        setSelectedStatuses([]);
         filterChange('status', undefined);
         break;
       default:
@@ -364,11 +368,13 @@ export const useJobSeekersLogic = () => {
   const hasActiveFilters = useMemo(() => {
     return !!(
       searchInput ||
+      filters.city ||
+      filters.radius ||
       filters.location ||
       filters.occupationId ||
-      selectedStatuses.length > 0
+      filters.status
     );
-  }, [searchInput, filters.location, filters.occupationId, selectedStatuses.length]);
+  }, [searchInput, filters.city, filters.radius, filters.location, filters.occupationId, filters.status]);
 
   useEffect(() => {
     if (!isInitialized) return;
@@ -417,6 +423,8 @@ export const useJobSeekersLogic = () => {
     const isOnPageOneWithNoFilters = 
       filters.page === 1 &&
       !filters.search &&
+      !filters.city &&
+      !filters.radius &&
       !filters.location &&
       !filters.occupationId &&
       !filters.status;
@@ -426,7 +434,7 @@ export const useJobSeekersLogic = () => {
         localStorage.removeItem('jobseeker-search-state');
         localStorage.removeItem('jobseeker-scroll-position');
       }
-    } else if (filters.search || filters.location || filters.occupationId || filters.status || (filters.page && filters.page > 1)) {
+    } else if (filters.search || filters.city || filters.radius || filters.location || filters.occupationId || filters.status || (filters.page && filters.page > 1)) {
       saveSearchState();
     }
   }, [filters, saveSearchState]);
@@ -435,8 +443,6 @@ export const useJobSeekersLogic = () => {
     filters,
     searchInput,
     setSearchInput,
-    selectedStatuses,
-    setSelectedStatuses,
     isFilterOpen,
     setIsFilterOpen,
     isPending,
@@ -458,7 +464,6 @@ export const useJobSeekersLogic = () => {
     itemsPerPageOptions,
 
     filterChange,
-    statusToggleChange,
     initPageChange,
     getStatusVariant,
     initViewResume,

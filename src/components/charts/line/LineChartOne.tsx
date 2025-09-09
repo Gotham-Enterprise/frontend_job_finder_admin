@@ -83,24 +83,24 @@ export default function LineChartOne() {
         "Dec",
       ],
       axisBorder: {
-        show: false, // Hide x-axis border
+        show: false, 
       },
       axisTicks: {
-        show: false, // Hide x-axis ticks
+        show: false, 
       },
       tooltip: {
-        enabled: false, // Disable tooltip for x-axis points
+        enabled: false,
       },
     },
     yaxis: {
       labels: {
         style: {
-          fontSize: "12px", // Adjust font size for y-axis labels
-          colors: ["#6B7280"], // Color of the labels
+          fontSize: "12px",
+          colors: ["#6B7280"], 
         },
       },
       title: {
-        text: "", // Remove y-axis title
+        text: "", 
         style: {
           fontSize: "0px",
         },

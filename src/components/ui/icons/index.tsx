@@ -14,5 +14,24 @@ export { default as TicketIcon } from './TicketIcon';
 export { default as BlogIcon } from './BlogIcon';
 export { default as PlusIcon } from './PlusIcon';
 export { default as CouponIcon } from './CouponIcon';
+
+export { default as BoldIcon } from './BoldIcon';
+export { default as ItalicIcon } from './ItalicIcon';
+export { default as UnderlineIcon } from './UnderlineIcon';
+
+export { default as AlignLeftIcon } from './AlignLeftIcon';
+export { default as AlignCenterIcon } from './AlignCenterIcon';
+export { default as AlignRightIcon } from './AlignRightIcon';
+
+export { default as BulletListIcon } from './BulletListIcon';
+export { default as OrderedListIcon } from './OrderedListIcon';
+export { default as SpacingIcon } from './SpacingIcon';
+export { default as AppearanceIcon } from './AppearanceIcon';
+export { default as MarginIcon } from './MarginIcon';
+export { default as PaddingIcon } from './PaddingIcon';
+export { default as BackgroundIcon } from './BackgroundIcon';
+export { default as BorderIcon } from './BorderIcon';
+export { default as TextColorIcon } from './TextColorIcon';
+
 export { default as FilterIcon } from './FilterIcon';
 export type { IconProps } from './Close';

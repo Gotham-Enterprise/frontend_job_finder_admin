@@ -1,3 +1,16 @@
+export interface JobSeekerUpdateData {
+  firstName: string;
+  lastName: string;
+  address: string;
+  city: string;
+  state: string;
+  country: string;
+  zipCode: string;
+  phoneNumber: string;
+  occupationId: number;
+  specialtyId?: number;
+}
+
 export interface JobSeeker {
   id: string;
   name: string;
@@ -26,6 +39,8 @@ export interface JobSeekerFilters {
   page?: number;
   limit?: number;
   search?: string;
+  city?: string;
+  radius?: number;
   location?: string;  
   specialty?: string;
   occupationId?: number;
@@ -78,6 +93,8 @@ export interface JobSeekerDetails {
   licenses?: License[];
   skills?: Skill[];
   languages?: Language[];
+  occupationId?: number;
+  specialtyId?: number;
 }
 
 export interface Document {

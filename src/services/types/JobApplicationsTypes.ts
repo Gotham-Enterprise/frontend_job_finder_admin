@@ -36,7 +36,7 @@ export interface JobApplicationsTableProps {
   tableColumns: Array<{ key: string; label: string; className?: string }>;
   getStatusVariant: (status: string) => 'light' | 'solid';
   onViewJobApplication: (jobApplicationId: string) => void;
-  onViewResume: (resumeObjectKey: string) => void;
+  onViewResume: (resumeObjectKey: string, fileName?: string) => void;
   isViewingResume: boolean;
 }
 

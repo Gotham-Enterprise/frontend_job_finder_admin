@@ -5,6 +5,7 @@ import { useState } from "react";
 import { ProfileCardProps, ContactInfo, Document, ProfileData } from "@/services/types/ProfileCard";
 import { getStatusIndicatorVariant, getProfileStatusBadgeVariant } from "@/services/utils/statusVariants";
 import { jobApplicationApi } from "@/services/api/jobApplication";
+import { openFileInNewTab } from "@/services/utils/fileUtils";
 import Button from "../button/Button";
 import FullScreenSpinner from "../FullScreenSpinner";
 
@@ -84,14 +85,14 @@ export default function ProfileCard({
         return "space-y-2";
     };
 
-    const handleViewResume = async (objectKey: string) => {
+    const handleViewResume = async (objectKey: string, fileName?: string) => {
         if (!objectKey || viewingResumeObjectKey) return;
         
         setViewingResumeObjectKey(objectKey);
         try {
             const response = await jobApplicationApi.viewResume(objectKey);
             if (response.success && response.data?.fileUrl) {
-                window.open(response.data.fileUrl, '_blank');
+                openFileInNewTab(response.data.fileUrl, fileName);
             }
         } catch (error) {
             console.error('Error viewing resume:', error);
@@ -221,7 +222,7 @@ export default function ProfileCard({
                                 <div 
                                     key={`resume-${document.id || 'doc'}-${index}`} 
                                     className="flex items-center p-3 rounded-lg border bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:border-blue-300 dark:hover:border-blue-600 transition-all duration-200 cursor-pointer group shadow-sm hover:shadow-md"
-                                    onClick={() => document.objectKey && handleViewResume(document.objectKey)}
+                                    onClick={() => document.objectKey && handleViewResume(document.objectKey, document.fileName)}
                                 >
                                     <div className="w-7 h-7 rounded-sm flex items-center justify-center mr-3 bg-primary  transition-all duration-200 shadow-sm">
                                         <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">

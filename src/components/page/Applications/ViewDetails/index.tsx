@@ -3,6 +3,7 @@ import React from 'react';
 import { useParams } from 'next/navigation';
 import { useJobApplicationDetails } from '@/services/hooks/useJobApplications';
 import { formatDateTimeEST } from '@/services/utils/dateUtils';
+import { openFileInNewTab } from '@/services/utils/fileUtils';
 import FullScreenSpinner from '@/components/ui/FullScreenSpinner';
 import ErrorState from '@/components/common/ErrorState';
 import BackToListButton from '@/components/ui/BackToListButton';
@@ -50,6 +51,12 @@ export default function JobApplicationDetails({ id }: ViewDetailsProps) {
   }
   
   const application = data.data;
+
+  const handleViewResume = () => {
+    if (application.resumeUrl) {
+      openFileInNewTab(application.resumeUrl, application.resumeFilename);
+    }
+  };
 
   const contactInfo = [
     {
@@ -142,7 +149,7 @@ export default function JobApplicationDetails({ id }: ViewDetailsProps) {
                       {application.resumeFilename}
                     </span>
                     <button
-                      onClick={() => window.open(application.resumeUrl, '_blank', 'noopener,noreferrer')}
+                      onClick={handleViewResume}
                       className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
                     >
                       View Resume

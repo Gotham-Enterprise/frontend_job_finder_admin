@@ -53,6 +53,7 @@ export const useDeleteBlogPost = () => {
     mutationFn: (postId: string) => blogApi.deleteBlogPost(postId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: blogQueryKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: [...blogQueryKeys.all, 'archived'] });
     },
     onError: (error) => {
       console.error('Failed to delete blog post:', error);
@@ -67,9 +68,89 @@ export const useBulkDeleteBlogPosts = () => {
     mutationFn: (postIds: string[]) => blogApi.deleteBlogPosts(postIds),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: blogQueryKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: [...blogQueryKeys.all, 'archived'] });
     },
     onError: (error) => {
       console.error('Failed to bulk delete blog posts:', error);
+    },
+  });
+};
+
+export const useUpdateBlogPost = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) => blogApi.updateBlogPost(id, data),
+    onSuccess: (response, variables) => {
+      queryClient.invalidateQueries({ queryKey: blogQueryKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: blogQueryKeys.details() });
+      queryClient.invalidateQueries({ queryKey: blogQueryKeys.detail(variables.id) });
+     
+    },
+    onError: (error) => {
+      console.error('Failed to update blog post:', error);
+    },
+  });
+};
+
+export const useCreateBlogPost = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (data: any) => blogApi.createBlog(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: blogQueryKeys.lists() });
+    },
+    onError: (error) => {
+      console.error('Failed to create blog post:', error);
+    },
+  });
+};
+
+export const useBulkUpdateBlogStatus = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: ({ blogIds, status }: { blogIds: string[]; status: 'published' | 'draft' }) => 
+      blogApi.updateBlogStatus(blogIds, status),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: blogQueryKeys.lists() });
+    },
+    onError: (error) => {
+      console.error('Failed to update blog status:', error);
+    },
+  });
+};
+
+export const useArchivedBlogPosts = (filters: BlogFilters = {}) => {
+  return useQuery({
+    queryKey: [...blogQueryKeys.all, 'archived', filters],
+    queryFn: () => {
+      return blogApi.getArchivedBlogPosts(filters);
+    },
+    staleTime: 1000 * 60 * 5, 
+    retry: (failureCount, error: Error) => {
+      if (error.message.includes('HTTP 401')) {
+        return false;
+      }
+      console.error('Error fetching archived blog posts:', error);
+      return failureCount < 3;
+    },
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+  });
+};
+
+export const useRestoreBlogPosts = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (blogIds: string[]) => blogApi.restoreBlogPosts(blogIds),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [...blogQueryKeys.all, 'archived'] });
+      queryClient.invalidateQueries({ queryKey: blogQueryKeys.lists() });
+    },
+    onError: (error) => {
+      console.error('Failed to restore blog posts:', error);
     },
   });
 };

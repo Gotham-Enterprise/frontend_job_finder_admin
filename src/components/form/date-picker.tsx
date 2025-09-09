@@ -26,12 +26,42 @@ export default function DatePicker({
   useEffect(() => {
     const flatPickr = flatpickr(`#${id}`, {
       mode: mode || "single",
-      static: true,
+      static: false,
+      position: "auto right",
       monthSelectorType: "static",
       dateFormat: "Y-m-d",
       defaultDate,
       onChange,
+      onOpen: function() {
+      
+        const calendar = document.querySelector('.flatpickr-calendar') as HTMLElement;
+        if (calendar) {
+          calendar.style.zIndex = '999999';
+          calendar.style.position = 'fixed';
+          
+         
+          const input = document.getElementById(id);
+          if (input) {
+            const rect = input.getBoundingClientRect();
+            const calendarWidth = 280;
+            const viewportWidth = window.innerWidth;
+            
+         
+            if (rect.right + calendarWidth > viewportWidth) {
+              calendar.style.left = `${Math.max(10, rect.left - calendarWidth + rect.width)}px`;
+            } else {
+              calendar.style.left = `${rect.left + 124}px`; 
+            }
+            
+            calendar.style.top = `${rect.bottom + 5}px`;
+          }
+        }
+      }
     });
+
+    if (defaultDate && flatPickr && !Array.isArray(flatPickr)) {
+      flatPickr.setDate(defaultDate, false);
+    }
 
     return () => {
       if (!Array.isArray(flatPickr)) {
@@ -55,6 +85,75 @@ export default function DatePicker({
           <CalenderIcon className="size-6" />
         </span>
       </div>
+      
+      <style jsx global>{`
+        .flatpickr-calendar {
+          background-color: #1f2937 !important;
+          border: 1px solid #4b5563 !important;
+          box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5) !important;
+          border-radius: 8px !important;
+        }
+        .flatpickr-calendar .flatpickr-months {
+          background-color: #1f2937 !important;
+        }
+        .flatpickr-calendar .flatpickr-month {
+          background-color: #1f2937 !important;
+          color: #f3f4f6 !important;
+        }
+        .flatpickr-calendar .flatpickr-weekdays {
+          background-color: #374151 !important;
+        }
+        .flatpickr-calendar .flatpickr-weekday {
+          color: #d1d5db !important;
+        }
+        .flatpickr-calendar .flatpickr-days {
+          background-color: #1f2937 !important;
+        }
+        .flatpickr-calendar .flatpickr-day {
+          color: #f3f4f6 !important;
+          border: none !important;
+        }
+        .flatpickr-calendar .flatpickr-day:hover {
+          background-color: #374151 !important;
+          border-color: #374151 !important;
+        }
+        .flatpickr-calendar .flatpickr-day.selected {
+          background-color: #3b82f6 !important;
+          border-color: #3b82f6 !important;
+        }
+        .flatpickr-calendar .flatpickr-day.today {
+          border-color: #3b82f6 !important;
+          color: #3b82f6 !important;
+        }
+        .flatpickr-prev-month,
+        .flatpickr-next-month {
+          color: #f3f4f6 !important;
+          fill: #f3f4f6 !important;
+        }
+        .flatpickr-prev-month:hover,
+        .flatpickr-next-month:hover {
+          color: #3b82f6 !important;
+          fill: #3b82f6 !important;
+        }
+        .flatpickr-current-month .flatpickr-monthDropdown-months {
+          background-color: #1f2937 !important;
+          color: #f3f4f6 !important;
+          border: 1px solid #4b5563 !important;
+        }
+        .flatpickr-current-month input.cur-year {
+          background-color: #1f2937 !important;
+          color: #f3f4f6 !important;
+          border: 1px solid #4b5563 !important;
+        }
+        .flatpickr-current-month .numInputWrapper span {
+          border-color: #4b5563 !important;
+          background: #374151 !important;
+          color: #f3f4f6 !important;
+        }
+        .flatpickr-current-month .numInputWrapper span:hover {
+          background: #4b5563 !important;
+        }
+      `}</style>
     </div>
   );
 }

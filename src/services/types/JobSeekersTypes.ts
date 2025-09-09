@@ -23,8 +23,6 @@ export interface JobSeekersFiltersProps {
   occupationOptions: Array<{ value: string; label: string }>;
   stateOptions: Array<{ value: string; label: string }>;
   statusOptions: Array<{ value: string; label: string }>;
-  selectedStatuses: string[];
-  onStatusToggleChange: (statuses: string[]) => void;
   hasActiveFilters: boolean;
   clearIndividualFilter: (filterType: string) => void;
 }
@@ -35,8 +33,9 @@ export interface JobSeekersTableProps {
   tableColumns: Array<{ key: string; label: string; className?: string }>;
   getStatusVariant: (status: string) => 'light' | 'solid';
   onViewJobSeeker: (jobSeekerId: string) => void;
-  onViewResume: (objectKey: string | null) => void;
+  onViewResume: (objectKey: string | null, fileName?: string) => void;
   isViewingResume: boolean;
+  onRefresh?: () => void;
 }
 
 export interface JobSeekersTablePaginationProps {

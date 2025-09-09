@@ -28,24 +28,24 @@ interface ToastItemProps {
 
 const ToastItem: React.FC<ToastItemProps> = ({ toast, onRemove }) => {  const variantClasses = {
     success: {
-      container: 'border-green-500 bg-green-50 dark:border-green-600 dark:bg-gray-800',
-      icon: 'text-green-500 dark:text-green-400',
-      closeButton: 'text-green-500 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300',
+      container: 'bg-green-500 text-white',
+      icon: 'text-white',
+      closeButton: 'text-white hover:text-green-100',
     },
     error: {
-      container: 'border-red-500 bg-red-50 dark:border-red-600 dark:bg-gray-800',
-      icon: 'text-red-500 dark:text-red-400',
-      closeButton: 'text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300',
+      container: 'bg-red-500 text-white',
+      icon: 'text-white',
+      closeButton: 'text-white hover:text-red-100',
     },
     warning: {
-      container: 'border-yellow-500 bg-yellow-50 dark:border-yellow-600 dark:bg-gray-800',
-      icon: 'text-yellow-500 dark:text-yellow-400',
-      closeButton: 'text-yellow-500 hover:text-yellow-700 dark:text-yellow-400 dark:hover:text-yellow-300',
+      container: 'bg-yellow-500 text-white',
+      icon: 'text-white',
+      closeButton: 'text-white hover:text-yellow-100',
     },
     info: {
-      container: 'border-blue-500 bg-blue-50 dark:border-blue-600 dark:bg-gray-800',
-      icon: 'text-blue-500 dark:text-blue-400',
-      closeButton: 'text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300',
+      container: 'bg-blue-500 text-white',
+      icon: 'text-white',
+      closeButton: 'text-white hover:text-blue-100',
     },
   };
 
@@ -72,16 +72,16 @@ const ToastItem: React.FC<ToastItemProps> = ({ toast, onRemove }) => {  const va
     ),
   };
   return (
-    <div className={`rounded-lg border p-4 shadow-lg backdrop-blur-sm bg-opacity-95 dark:bg-opacity-100 animate-in slide-in-from-right duration-300 ${variantClasses[toast.variant].container}`}>
+    <div className={`rounded-lg p-4 shadow-lg backdrop-blur-sm animate-in slide-in-from-right duration-300 ${variantClasses[toast.variant].container}`}>
       <div className="flex items-start gap-3">
         <div className={`flex-shrink-0 ${variantClasses[toast.variant].icon}`}>
           {icons[toast.variant]}
         </div>
           <div className="flex-1 min-w-0">
-          <h4 className="text-sm font-semibold text-gray-800 dark:text-white">
+          <h4 className="text-sm font-semibold text-white">
             {toast.title}
           </h4>
-          <p className="mt-1 text-sm text-gray-600 dark:text-gray-200">
+          <p className="mt-1 text-sm text-white opacity-90">
             {toast.message}
           </p>
         </div>

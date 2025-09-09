@@ -4,6 +4,7 @@ import FilterDropdown from '../../../ui/FilterDropdown';
 import { SearchIcon, FilterIcon } from '../../../ui/icons';
 import { CouponsHeaderProps } from '@/services/types/CouponsTypes';
 
+
 const CouponsHeader: React.FC<CouponsHeaderProps> = ({
   totalCount,
   isPending,

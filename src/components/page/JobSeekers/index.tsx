@@ -24,8 +24,6 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
     filters,
     searchInput,
     setSearchInput,
-    selectedStatuses,
-    setSelectedStatuses,
     isFilterOpen,
     setIsFilterOpen,
     isPending,
@@ -42,7 +40,6 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
     stateOptions,
     itemsPerPageOptions,
     filterChange,
-    statusToggleChange,
     initPageChange,
     getStatusVariant,
     initViewResume,
@@ -83,8 +80,6 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
             occupationOptions={occupationOptions}
             stateOptions={stateOptions}
             statusOptions={statusOptions}
-            selectedStatuses={selectedStatuses}
-            onStatusToggleChange={statusToggleChange}
             hasActiveFilters={hasActiveFilters}
             clearIndividualFilter={clearIndividualFilter}
           />
@@ -99,6 +94,7 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
         onViewJobSeeker={viewJobSeeker}
         onViewResume={initViewResume}
         isViewingResume={isViewingResume}
+        onRefresh={refetch}
       />
 
       <JobSeekersTablePagination
