@@ -28,9 +28,10 @@ interface ToastItemProps {
 
 const ToastItem: React.FC<ToastItemProps> = ({ toast, onRemove }) => {  const variantClasses = {
     success: {
-      container: 'bg-green-500 text-white',
+      // Use brand primary green (from --primary) instead of generic green-500
+      container: 'bg-primary text-white',
       icon: 'text-white',
-      closeButton: 'text-white hover:text-green-100',
+      closeButton: 'text-white hover:opacity-80',
     },
     error: {
       container: 'bg-red-500 text-white',

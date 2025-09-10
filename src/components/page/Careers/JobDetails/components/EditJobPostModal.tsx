@@ -77,6 +77,9 @@ const EditJobPostModal: React.FC<EditJobPostModalProps> = ({
   useEffect(() => {
     // Reset form when modal opens or job changes
   if (isOpen && job) {
+      console.log('EditJobPostModal - Job data received:', job);
+      console.log('EditJobPostModal - Address field:', job.address);
+      console.log('EditJobPostModal - ZipCode field:', job.zipCode);
 
       // Parse salary range more robustly
       let salaryStart = '';
@@ -115,6 +118,7 @@ const EditJobPostModal: React.FC<EditJobPostModalProps> = ({
         jobDescription: job.jobDescription || job.description || '',
       };
       
+      console.log('EditJobPostModal - Form data being set:', newFormData);
       setFormData(newFormData);
       setError(null); // Clear any previous errors
     }

@@ -131,6 +131,12 @@ export const CreateJobModal: React.FC<CreateJobModalProps> = ({
     if (!formData.country?.trim()) {
       newErrors.country = 'Country is required';
     }
+    if (!formData.address?.trim()) {
+      newErrors.address = 'Address is required';
+    }
+    if (!formData.zipCode?.trim()) {
+      newErrors.zipCode = 'Zip code is required';
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -250,13 +256,15 @@ export const CreateJobModal: React.FC<CreateJobModalProps> = ({
                 {/* Address */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Address
+                    Address *
                   </label>
                   <Input
                     type="text"
                     placeholder="Street address"
                     value={formData.address || ''}
                     onChange={handleInputChange('address')}
+                    error={!!errors.address}
+                    hint={errors.address}
                   />
                 </div>
 
@@ -292,13 +300,15 @@ export const CreateJobModal: React.FC<CreateJobModalProps> = ({
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Zip Code
+                      Zip Code *
                     </label>
                     <Input
                       type="text"
                       placeholder="Zip Code"
                       value={formData.zipCode || ''}
                       onChange={handleInputChange('zipCode')}
+                      error={!!errors.zipCode}
+                      hint={errors.zipCode}
                     />
                   </div>
                 </div>

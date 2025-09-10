@@ -204,10 +204,18 @@ export const useToggleCareer = () => {
       // Invalidate career lists and specific career detail
       queryClient.invalidateQueries({ queryKey: careersQueryKeys.all });
       queryClient.invalidateQueries({ queryKey: careersQueryKeys.detail(id) });
-      
+      // Derive a readable status (backend might not return `status` for toggle endpoint)
+      const derivedStatus =
+        data?.data?.status ??
+        (typeof data?.data?.isActive === 'boolean'
+          ? data.data.isActive
+            ? 'active'
+            : 'closed'
+          : 'updated');
+
       showToast.success(
         'Career Status Updated!',
-        `Career status has been changed to ${data.data.status}.`
+        `Career status has been changed to ${derivedStatus}.`
       );
     },
     onError: (error: any) => {
@@ -262,10 +270,12 @@ export const useUpdateCareerStatus = () => {
       // Invalidate career lists and specific career detail
       queryClient.invalidateQueries({ queryKey: careersQueryKeys.all });
       queryClient.invalidateQueries({ queryKey: careersQueryKeys.detail(variables.id) });
-      
+      // Prefer backend returned status; fallback to requested status variable
+      const newStatus = data?.data?.status ?? variables.status ?? 'updated';
+
       showToast.success(
         'Career Status Updated!',
-        `Career status has been changed to ${data.data.status}.`
+        `Career status has been changed to ${newStatus}.`
       );
     },
     onError: (error: any) => {
