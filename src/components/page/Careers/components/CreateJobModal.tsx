@@ -109,6 +109,7 @@ export const CreateJobModal: React.FC<CreateJobModalProps> = ({
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
+  const ADDRESS_REGEX = /^[a-zA-Z0-9 .,#\-'/]+$/; // mirror backend
 
     if (!formData.jobTitle.trim()) {
       newErrors.jobTitle = 'Job title is required';
@@ -133,6 +134,8 @@ export const CreateJobModal: React.FC<CreateJobModalProps> = ({
     }
     if (!formData.address?.trim()) {
       newErrors.address = 'Address is required';
+    } else if (!ADDRESS_REGEX.test(formData.address.trim())) {
+      newErrors.address = 'Address contains invalid characters';
     }
     if (!formData.zipCode?.trim()) {
       newErrors.zipCode = 'Zip code is required';
