@@ -48,6 +48,26 @@ const JobDetailsView: React.FC<JobDetailsViewProps> = ({ jobId }) => {
     }
   };
 
+  // Contextual empty state messaging for applicants table
+  const getEmptyStateMessage = () => {
+    const hasFilters = !!searchTerm || !!startDate || !!endDate;
+    if (hasFilters) {
+      return 'No applicants match your current search or filters.';
+    }
+    switch (activeTab) {
+      case 'All':
+        return 'No applicants have applied for this position yet.';
+      case 'PENDING':
+        return statusCounts.All > 0 ? 'No pending applicants.' : 'No applicants have applied for this position yet.';
+      case 'QUALIFIED':
+        return statusCounts.All > 0 ? 'No qualified applicants yet.' : 'No applicants have applied for this position yet.';
+      case 'NOT_QUALIFIED':
+        return statusCounts.All > 0 ? 'No not-qualified applicants.' : 'No applicants have applied for this position yet.';
+      default:
+        return 'No applicants found.';
+    }
+  };
+
   const { data: jobData, isLoading, isError, refetch } = useCareerDetails(jobId || '');
   const updateApplicantStatusMutation = useUpdateApplicantStatus();
   const duplicateCareerMutation = useDuplicateCareer();
@@ -406,7 +426,7 @@ const JobDetailsView: React.FC<JobDetailsViewProps> = ({ jobId }) => {
               ) : (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center py-8 text-gray-500">
-                    {searchTerm ? 'No applicants found matching your search.' : 'No applicants have applied for this position yet.'}
+                    {getEmptyStateMessage()}
                   </TableCell>
                 </TableRow>
               )}
