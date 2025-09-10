@@ -118,7 +118,6 @@ const EditJobPostModal: React.FC<EditJobPostModalProps> = ({
         jobDescription: job.jobDescription || job.description || '',
       };
       
-      console.log('EditJobPostModal - Form data being set:', newFormData);
       setFormData(newFormData);
       setError(null); // Clear any previous errors
     }
