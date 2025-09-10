@@ -70,6 +70,14 @@ export const CreateJobModal: React.FC<CreateJobModalProps> = ({
     }));
   }, []);
 
+  const TIMEZONE_OPTIONS = useMemo(() => [
+    { value: 'America/New_York', label: 'Eastern Time (ET)' },
+    { value: 'America/Chicago', label: 'Central Time (CT)' },
+    { value: 'America/Denver', label: 'Mountain Time (MT)' },
+    { value: 'America/Los_Angeles', label: 'Pacific Time (PT)' },
+    { value: 'UTC', label: 'UTC' }
+  ], []);
+
   const handleInputChange = (field: keyof CreateCareerPayload) => (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
@@ -303,18 +311,12 @@ export const CreateJobModal: React.FC<CreateJobModalProps> = ({
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Timezone *
                     </label>
-                    <select
+                    <Select
+                      options={TIMEZONE_OPTIONS}
                       value={formData.timezone}
-                      onChange={handleInputChange('timezone')}
-                      className="h-11 w-full rounded-lg border bg-transparent text-gray-800 border-gray-300 focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-800 px-4 py-2.5 text-sm shadow-theme-xs focus:outline-hidden appearance-none"
-                    >
-                      <option value="">Timezone</option>
-                      <option value="America/New_York">Eastern Time (ET)</option>
-                      <option value="America/Chicago">Central Time (CT)</option>
-                      <option value="America/Denver">Mountain Time (MT)</option>
-                      <option value="America/Los_Angeles">Pacific Time (PT)</option>
-                      <option value="UTC">UTC</option>
-                    </select>
+                      onChange={handleSelectChange('timezone')}
+                      placeholder="Select timezone"
+                    />
                     {errors.timezone && (
                       <p className="mt-1.5 text-xs text-error-500">{errors.timezone}</p>
                     )}

@@ -157,7 +157,12 @@ const EditJobPostModal: React.FC<EditJobPostModalProps> = ({
   };
 
   const isFormValid = () => {
-    return formData.jobTitle?.trim() && formData.jobDescription?.trim() && formData.city?.trim();
+    return (
+      formData.jobTitle?.trim() &&
+      formData.jobDescription?.trim() &&
+      formData.city?.trim() &&
+      formData.timezone?.trim()
+    );
   };
 
   return (
@@ -276,6 +281,23 @@ const EditJobPostModal: React.FC<EditJobPostModalProps> = ({
               {/* Department removed */}
 
               <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Timezone *
+                  </label>
+                  <select
+                    value={formData.timezone}
+                    onChange={(e) => updateField('timezone', e.target.value)}
+                    className="h-11 w-full rounded-lg border bg-transparent text-gray-800 border-gray-300 focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-800 px-4 py-2.5 text-sm shadow-theme-xs focus:outline-hidden appearance-none"
+                  >
+                    <option value="">Select timezone</option>
+                    <option value="America/New_York">Eastern Time (ET)</option>
+                    <option value="America/Chicago">Central Time (CT)</option>
+                    <option value="America/Denver">Mountain Time (MT)</option>
+                    <option value="America/Los_Angeles">Pacific Time (PT)</option>
+                    <option value="UTC">UTC</option>
+                  </select>
+                </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Salary Range Start ($)
