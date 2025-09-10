@@ -47,8 +47,11 @@ export default function EditUserPage() {
     setIsLoading(true);
     
     try {
+      console.log('Form data received:', JSON.stringify(userData, null, 2));
+      
       const access: any = {};
       
+      // Map frontend permission keys to API permission names
       const keyToApiNameMap: { [key: string]: string } = {
         'tickets': 'Tickets',
         'jobSeekers': 'Job Seekers',
@@ -64,6 +67,9 @@ export default function EditUserPage() {
         const apiModuleName = keyToApiNameMap[permissionKey] || permissionKey;
         const permissions = userData.permissions[permissionKey];
         
+        console.log(`Processing permission: ${permissionKey} -> ${apiModuleName}`, permissions);
+        
+        // Backend expects permission NAMES as keys
         access[apiModuleName] = {
           add: permissions?.add || false,
           edit: permissions?.edit || false,
@@ -79,6 +85,8 @@ export default function EditUserPage() {
         roleId: getRoleId(userData.role),
         access,
       };
+
+      console.log('Final API data being sent:', JSON.stringify(apiData, null, 2));
 
       await updateUserMutation.mutateAsync({ userId: selectedUser.userId, userData: apiData });
       

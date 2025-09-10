@@ -43,7 +43,6 @@ const UserForm: React.FC<UserFormProps> = ({
       firstName: '',
       lastName: '',
       email: '',
-      password: '',
       role: '',
       permissions: DEFAULT_PERMISSIONS,
     }

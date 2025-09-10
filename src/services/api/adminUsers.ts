@@ -54,6 +54,16 @@ export interface UpdatePersonalInfoRequest {
   avatarUpload?: string;
 }
 
+export interface Permission {
+  id: number;
+  permissionName: string;
+}
+
+export interface PermissionsResponse {
+  success: boolean;
+  data: Permission[];
+}
+
 export interface Role {
   id: number;
   roleName: string;
@@ -113,6 +123,20 @@ export const adminUsersApi = {
 
   async getRoles(): Promise<RolesResponse> {
     return apiGet<RolesResponse>('/api/admin/users/roles');
+  },
+
+  async getPermissions(): Promise<PermissionsResponse> {
+    return apiGet<PermissionsResponse>('/api/admin/permissions');
+  },
+
+  async getPermissionsList(): Promise<PermissionsResponse> {
+    // Fallback endpoint to get permissions list
+    try {
+      return apiGet<PermissionsResponse>('/api/admin/users/permissions');
+    } catch (error) {
+      // If endpoint doesn't exist, return empty array
+      return { success: true, data: [] };
+    }
   },
 
   async createRole(roleData: CreateRoleRequest): Promise<CreateRoleResponse> {

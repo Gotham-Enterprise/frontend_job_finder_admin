@@ -112,6 +112,34 @@ export const useAdminRoles = () => {
   });
 };
 
+export const useAdminPermissions = () => {
+  return useQuery({
+    queryKey: ['adminPermissions'],
+    queryFn: async () => {
+      try {
+        return await adminUsersApi.getPermissions();
+      } catch (error) {
+        console.warn('Permissions API not available, using fallback mapping:', error);
+        // Fallback permission mapping based on common patterns
+        return {
+          success: true,
+          data: [
+            { id: 1, permissionName: 'Tickets' },
+            { id: 2, permissionName: 'Job Seekers' },
+            { id: 3, permissionName: 'Employers' },
+            { id: 4, permissionName: 'Applications' },
+            { id: 5, permissionName: 'Coupons' },
+            { id: 6, permissionName: 'Blog' },
+            { id: 7, permissionName: 'Careers' }
+          ]
+        };
+      }
+    },
+    select: (data) => data.data,
+    staleTime: 10 * 60 * 1000,
+  });
+};
+
 export const useCreateRole = () => {
   const queryClient = useQueryClient();
 
