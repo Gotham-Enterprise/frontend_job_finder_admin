@@ -12,6 +12,7 @@ import {
   Certifications,
   Languages,
   Skills,
+  PermanentDeletion,
 } from "./components";
 import BackToListButton from "@/components/ui/BackToListButton";
 
@@ -142,6 +143,13 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
           <Skills skills={jobSeeker.skills} />
 
           <Languages languages={jobSeeker.languages} getProficiencyLabel={getProficiencyLabel} />
+
+          <PermanentDeletion
+            jobSeekerId={id}
+            jobSeekerName={jobSeeker.name}
+            jobSeekerEmail={jobSeeker.email}
+            isAlreadyDeleted={jobSeeker.status === "deleted" || jobSeeker.isPermanentlyDeleted}
+          />
         </div>
       </div>
     </>
