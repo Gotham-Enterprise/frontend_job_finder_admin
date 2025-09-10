@@ -5,7 +5,6 @@ import Input from '@/components/ui/input/Input';
 import RichTextEditor from '@/components/form/input/RichTextEditor';
 import Select from '@/components/form/Select';
 import { useUpdateCareer } from '@/services/hooks/useCareers';
-import { useDepartments } from '@/services/hooks/useCareers';
 import { useStates } from '@/services/hooks/useStates';
 import { Career, UpdateCareerPayload } from '@/services/api/careers';
 
@@ -24,8 +23,6 @@ interface FormData {
   state: string;
   zipCode: string;
   country: string;
-  departmentId: string;
-  unitId: string;
   timezone: string;
   salaryRangeStart: string;
   salaryRangeEnd: string;
@@ -45,9 +42,7 @@ const EditJobPostModal: React.FC<EditJobPostModalProps> = ({
     city: '',
     state: '',
     zipCode: '',
-    country: 'United States',
-    departmentId: '',
-    unitId: '',
+  country: 'United States',
     timezone: '',
     salaryRangeStart: '',
     salaryRangeEnd: '',
@@ -56,14 +51,10 @@ const EditJobPostModal: React.FC<EditJobPostModalProps> = ({
   const [error, setError] = useState<string | null>(null);
 
   const updateCareerMutation = useUpdateCareer();
-  const { data: departmentsData } = useDepartments();
   const { data: statesData } = useStates();
 
   // Create options for selects
-  const departmentOptions = departmentsData?.data?.map(dept => ({
-    value: dept.id,
-    label: dept.name,
-  })) || [];
+  // Department removed
 
   const stateOptions = statesData?.data?.states?.map(state => ({
     value: state.abbreviation,
@@ -85,13 +76,7 @@ const EditJobPostModal: React.FC<EditJobPostModalProps> = ({
 
   useEffect(() => {
     // Reset form when modal opens or job changes
-    if (isOpen && job && departmentsData) {
-      // Find the department ID by matching the department name or using existing departmentId
-      const matchedDepartment = departmentsData.data?.find(dept => 
-        dept.name === job.department || 
-        dept.id === job.department ||
-        dept.id === job.departmentId
-      );
+  if (isOpen && job) {
 
       // Parse salary range more robustly
       let salaryStart = '';
@@ -116,7 +101,7 @@ const EditJobPostModal: React.FC<EditJobPostModalProps> = ({
         }
       }
 
-      const newFormData = {
+  const newFormData = {
         jobTitle: job.jobTitle || '',
         jobType: job.jobType || '',
         address: job.address || '',
@@ -124,8 +109,6 @@ const EditJobPostModal: React.FC<EditJobPostModalProps> = ({
         state: job.state || '',
         zipCode: job.zipCode || '',
         country: job.country || 'United States',
-        departmentId: matchedDepartment?.id || job.departmentId || '',
-        unitId: job.unitId || '',
         timezone: job.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
         salaryRangeStart: salaryStart,
         salaryRangeEnd: salaryEnd,
@@ -135,7 +118,7 @@ const EditJobPostModal: React.FC<EditJobPostModalProps> = ({
       setFormData(newFormData);
       setError(null); // Clear any previous errors
     }
-  }, [job, departmentsData, isOpen]);
+  }, [job, isOpen]);
 
   const updateField = (field: keyof FormData, value: string) => {
     setFormData(prev => ({
@@ -155,8 +138,6 @@ const EditJobPostModal: React.FC<EditJobPostModalProps> = ({
       state: formData.state,
       zipCode: formData.zipCode,
       country: formData.country,
-      departmentId: formData.departmentId,
-      unitId: formData.unitId,
       timezone: formData.timezone,
       salaryRangeStart: formData.salaryRangeStart ? parseFloat(formData.salaryRangeStart) : undefined,
       salaryRangeEnd: formData.salaryRangeEnd ? parseFloat(formData.salaryRangeEnd) : 0,
@@ -292,17 +273,7 @@ const EditJobPostModal: React.FC<EditJobPostModalProps> = ({
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Department
-                </label>
-                <Select
-                  options={departmentOptions}
-                  value={formData.departmentId}
-                  onChange={(value) => updateField('departmentId', value)}
-                  placeholder="Select department"
-                />
-              </div>
+              {/* Department removed */}
 
               <div className="grid grid-cols-2 gap-4">
                 <div>

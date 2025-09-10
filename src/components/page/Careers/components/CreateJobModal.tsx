@@ -5,7 +5,8 @@ import Input from '@/components/ui/input/Input';
 import Button from '@/components/ui/button/Button';
 import Select from '@/components/form/Select';
 import RichTextEditor from '@/components/form/input/RichTextEditor';
-import { useCreateCareer, useDepartments } from '@/services/hooks/useCareers';
+import { useCreateCareer } from '@/services/hooks/useCareers';
+import { useStates } from '@/services/hooks/useStates';
 import type { CreateCareerPayload } from '@/services/api/careers';
 
 // Countries list
@@ -40,7 +41,7 @@ export const CreateJobModal: React.FC<CreateJobModalProps> = ({
   onClose,
 }) => {
   const createCareerMutation = useCreateCareer();
-  const { data: departmentsData, isLoading: departmentsLoading } = useDepartments();
+  const { data: statesData, isLoading: statesLoading } = useStates();
   
   const [formData, setFormData] = useState<CreateCareerPayload>({
     jobTitle: '',
@@ -50,8 +51,7 @@ export const CreateJobModal: React.FC<CreateJobModalProps> = ({
     state: '',
     zipCode: '',
     country: 'United States',
-    departmentId: '',
-    unitId: '',
+  // departmentId & unitId removed
     timezone: '',
     salaryRangeStart: undefined,
     salaryRangeEnd: 0,
@@ -60,48 +60,7 @@ export const CreateJobModal: React.FC<CreateJobModalProps> = ({
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Prepare department options
-  const departmentOptions = useMemo(() => {
-    if (departmentsLoading) {
-      return [{ value: '', label: 'Loading departments...' }];
-    }
-    
-    if (!departmentsData?.success || !departmentsData.data) {
-      return [{ value: '', label: 'Select Department' }];
-    }
-
-    return [
-      { value: '', label: 'Select Department' },
-      ...departmentsData.data.map(dept => ({
-        value: dept.id,
-        label: dept.name
-      }))
-    ];
-  }, [departmentsData, departmentsLoading]);
-
-  // Prepare unit options based on selected department
-  const unitOptions = useMemo(() => {
-    if (!formData.departmentId || departmentsLoading) {
-      return [{ value: '', label: 'Select Department First' }];
-    }
-
-    if (!departmentsData?.success || !departmentsData.data) {
-      return [{ value: '', label: 'No units available' }];
-    }
-
-    const selectedDepartment = departmentsData.data.find(dept => dept.id === formData.departmentId);
-    if (!selectedDepartment || !(selectedDepartment as any).units || (selectedDepartment as any).units.length === 0) {
-      return [{ value: '', label: 'No units available' }];
-    }
-
-    return [
-      { value: '', label: 'Select Unit (Optional)' },
-      ...(selectedDepartment as any).units.map((unit: any) => ({
-        value: unit.id,
-        label: unit.name
-      }))
-    ];
-  }, [formData.departmentId, departmentsData, departmentsLoading]);
+  // Department & unit selection removed
 
   // Prepare country options
   const countryOptions = useMemo(() => {
@@ -137,10 +96,7 @@ export const CreateJobModal: React.FC<CreateJobModalProps> = ({
       setErrors(prev => ({ ...prev, [field]: '' }));
     }
     
-    // Clear unit selection when department changes
-    if (field === 'departmentId') {
-      setFormData(prev => ({ ...prev, unitId: '' }));
-    }
+  // department/unit reset removed
   };
 
   const validateForm = (): boolean => {
@@ -195,8 +151,7 @@ export const CreateJobModal: React.FC<CreateJobModalProps> = ({
         state: '',
         zipCode: '',
         country: 'United States',
-        departmentId: '',
-        unitId: '',
+  // departmentId & unitId removed
         timezone: '',
         salaryRangeStart: undefined,
         salaryRangeEnd: 0,
@@ -297,7 +252,7 @@ export const CreateJobModal: React.FC<CreateJobModalProps> = ({
                   />
                 </div>
 
-                {/* City, State, Zip Code Row */}
+                {/* City, State, Zip Code Row (State now a dropdown) */}
                 <div className="grid grid-cols-3 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -316,14 +271,16 @@ export const CreateJobModal: React.FC<CreateJobModalProps> = ({
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       State *
                     </label>
-                    <Input
-                      type="text"
-                      placeholder="State"
+                    <Select
+                      options={(statesData?.data?.states || []).map((s: any) => ({ value: s.abbreviation, label: s.name }))}
                       value={formData.state}
-                      onChange={handleInputChange('state')}
-                      error={!!errors.state}
-                      hint={errors.state}
+                      onChange={handleSelectChange('state')}
+                      placeholder={statesLoading ? 'Loading states...' : 'Select State'}
+                      disabled={statesLoading}
                     />
+                    {errors.state && (
+                      <p className="mt-1.5 text-xs text-error-500">{errors.state}</p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -338,33 +295,7 @@ export const CreateJobModal: React.FC<CreateJobModalProps> = ({
                   </div>
                 </div>
 
-                {/* Department and Unit Row */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Department
-                    </label>
-                    <Select
-                      options={departmentOptions}
-                      value={formData.departmentId || ''}
-                      onChange={handleSelectChange('departmentId')}
-                      placeholder="Select Department"
-                      disabled={departmentsLoading}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Unit
-                    </label>
-                    <Select
-                      options={unitOptions}
-                      value={formData.unitId || ''}
-                      onChange={handleSelectChange('unitId')}
-                      placeholder="Select Unit"
-                      disabled={!formData.departmentId}
-                    />
-                  </div>
-                </div>
+                {/* Department & Unit inputs removed */}
 
                 {/* Timezone and Salary Range Row */}
                 <div className="grid grid-cols-2 gap-4">

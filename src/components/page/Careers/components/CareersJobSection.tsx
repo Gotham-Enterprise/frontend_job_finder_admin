@@ -68,7 +68,29 @@ const CareersJobSection: React.FC<CareersJobSectionProps> = ({
                       {job.title}
                     </div>
                     <div className="text-sm text-gray-500 dark:text-gray-400">
-                      ${job.pay}/{job.payPeriod}
+                      {(() => {
+                        // Prefer explicit pay if meaningful (not empty/'Not specified')
+                        const hasExplicit = job.pay && job.pay !== 'Not specified' && job.payPeriod;
+                        if (hasExplicit) {
+                          return `$${job.pay}/${job.payPeriod}`;
+                        }
+                        // Fall back to salary range
+                        const start = job.salaryRangeStart;
+                        const end = job.salaryRangeEnd;
+                        if (start && end) {
+                          const fmt = (v: number) => v.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+                          return `$${fmt(start)} - $${fmt(end)}`;
+                        }
+                        if (start && !end) {
+                          const fmt = (v: number) => v.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+                          return `$${fmt(start)}`;
+                        }
+                        if (!start && end) {
+                          const fmt = (v: number) => v.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+                          return `$${fmt(end)}`;
+                        }
+                        return 'Not specified';
+                      })()}
                     </div>
                     <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">
                       Posted {job.postedDate}

@@ -39,6 +39,12 @@ export interface CareerTableData {
   applicantCount: number;
   postedDate: string;
   status: 'active' | 'closed' | 'draft';
+  // Optional salary range fields (added for displaying when pay/payPeriod not set)
+  salaryRangeStart?: number;
+  salaryRangeEnd?: number;
+  salaryRange?: string; // combined string from backend if present
+  createdAtISO?: string; // raw ISO date for sorting
+  createdAtTs?: number;  // timestamp for efficient sorting
 }
 
 export type CareerFormData = CreateCareerPayload & {

@@ -24,21 +24,36 @@ export const useCareersLogic = () => {
     // Since Backend returns grouped structure: { active: [...], inactive: [...] }
     const groupedCareers = careersResponse.data as any;
     
-    const transformCareer = (career: any): CareerTableData => ({
-      id: career.id,
-      title: career.jobTitle,
-      pay: 'Not specified', // TODO: Check if we really want this that the API is not returning pay
-      payPeriod: 'Hour',
-      type: career.jobType,
-      location: `${career.city}, ${career.state}`,
-      applicantCount: career.applicantsCount,
-      postedDate: formatPostedDate(career.createdAt),
-      status: career.isActive ? 'active' : 'closed' as 'active' | 'closed' | 'draft',
-    });
+    const transformCareer = (career: any): CareerTableData => {
+      const rawStart = Number(career.salaryRangeStart) || 0;
+      const rawEnd = Number(career.salaryRangeEnd) || 0;
+      const hasRange = rawStart > 0 && rawEnd > 0;
+      return {
+        id: career.id,
+        title: career.jobTitle,
+        // Always leave pay empty so UI chooses best salary presentation
+        pay: '',
+        payPeriod: '',
+        type: career.jobType,
+        location: `${career.city}, ${career.state}`,
+        applicantCount: career.applicantsCount,
+        postedDate: formatPostedDate(career.createdAt),
+        status: career.isActive ? 'active' : 'closed' as 'active' | 'closed' | 'draft',
+        salaryRangeStart: rawStart > 0 ? rawStart : undefined,
+        salaryRangeEnd: rawEnd > 0 ? rawEnd : undefined,
+        salaryRange: hasRange ? (career.salaryRange || `${rawStart}-${rawEnd}`) : undefined,
+  createdAtISO: career.createdAt,
+  createdAtTs: Date.parse(career.createdAt),
+      };
+    };
 
     // Handle grouped response structure: { active: [...], inactive: [...] }
-    const active = (groupedCareers.active || []).map(transformCareer);
-    const closed = (groupedCareers.inactive || []).map(transformCareer);
+    const active = (groupedCareers.active || [])
+      .map(transformCareer)
+      .sort((a: CareerTableData, b: CareerTableData) => (b.createdAtTs || 0) - (a.createdAtTs || 0));
+    const closed = (groupedCareers.inactive || [])
+      .map(transformCareer)
+      .sort((a: CareerTableData, b: CareerTableData) => (b.createdAtTs || 0) - (a.createdAtTs || 0));
 
     return { activeJobs: active, closedJobs: closed };
   }, [careersResponse]);
