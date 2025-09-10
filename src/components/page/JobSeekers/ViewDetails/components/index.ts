@@ -1,8 +1,9 @@
-export { default as ProfileCard } from './ProfileCard';
-export { default as WorkExperience } from './WorkExperience';
-export { default as PersonalSummary } from './PersonalSummary';
-export { default as EducationBackground } from './EducationBackground';
-export { default as Certifications } from './Certifications';
-export { default as Languages } from './Languages';
-export { default as Skills } from './Skills';
-export { default as QuickActions } from './QuickActions';
+export { default as ProfileCard } from "./ProfileCard";
+export { default as WorkExperience } from "./WorkExperience";
+export { default as PersonalSummary } from "./PersonalSummary";
+export { default as EducationBackground } from "./EducationBackground";
+export { default as Certifications } from "./Certifications";
+export { default as Languages } from "./Languages";
+export { default as Skills } from "./Skills";
+export { default as QuickActions } from "./QuickActions";
+export { default as PermanentDeletion } from "./PermanentDeletion";
