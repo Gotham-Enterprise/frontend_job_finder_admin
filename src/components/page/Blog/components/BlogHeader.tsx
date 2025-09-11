@@ -6,6 +6,7 @@ import FilterDropdown from '../../../ui/FilterDropdown';
 import BulkActionDropdown from '../../../ui/BulkActionDropdown';
 import { SearchIcon } from '../../../ui/icons';
 import { BlogHeaderProps } from '@/services/types/BlogTypes';
+import { Permission } from '@/services/types/permissions';
 
 const BlogHeader: React.FC<BlogHeaderProps> = ({
   totalCount,
@@ -26,6 +27,7 @@ const BlogHeader: React.FC<BlogHeaderProps> = ({
   onClearSelection,
   isBulkDeleting,
   isUpdatingStatus,
+  blogPermissions,
 }) => {
   const filterButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -69,15 +71,17 @@ const BlogHeader: React.FC<BlogHeaderProps> = ({
             )}
           </button>
            
-          <button
-              onClick={() => window.location.href = '/admin/blog/add-new'}
-            className="flex items-center gap-2 px-4 py-3 text-sm font-medium rounded-sm border bg-white border-gray-200 text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-            </svg>
-            <span className="whitespace-nowrap">Add new</span>
-          </button>
+          {blogPermissions?.create && (
+            <button
+                onClick={() => window.location.href = '/admin/blog/add-new'}
+              className="flex items-center gap-2 px-4 py-3 text-sm font-medium rounded-sm border bg-white border-gray-200 text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              <span className="whitespace-nowrap">Add new</span>
+            </button>
+          )}
           <BulkActionDropdown
             selectedItems={selectedPosts}
             itemType="posts"

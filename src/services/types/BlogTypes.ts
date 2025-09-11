@@ -1,4 +1,5 @@
 import { BlogFilters } from '@/services/types/blog';
+import { Permission } from '@/services/types/permissions';
 
 export interface AllBlogPostsProps {
   className?: string;
@@ -23,6 +24,7 @@ export interface BlogHeaderProps {
   onClearSelection: () => void;
   isBulkDeleting: boolean;
   isUpdatingStatus?: boolean;
+  blogPermissions?: Permission;
 }
 
 export interface BlogFiltersProps {

@@ -9,6 +9,7 @@ export interface UserPermissions {
   tickets: Permission;
   jobSeekers: Permission;
   employers: Permission;
+  jobs: Permission;
   applications: Permission;
   coupons: Permission;
   blog: Permission;
@@ -33,6 +34,7 @@ export const PERMISSION_MODULES: PermissionModule[] = [
   { key: 'tickets', label: 'Tickets' },
   { key: 'jobSeekers', label: 'Job Seekers' },
   { key: 'employers', label: 'Employers' },
+  { key: 'jobs', label: 'Jobs' },
   { key: 'applications', label: 'Applications' },
   { key: 'coupons', label: 'Coupons' },
   { key: 'blog', label: 'Blog' },
@@ -43,6 +45,7 @@ export const DEFAULT_PERMISSIONS: UserPermissions = {
   tickets: { view: true, create: false, update: false, delete: false },
   jobSeekers: { view: true, create: false, update: false, delete: false },
   employers: { view: true, create: false, update: false, delete: false },
+  jobs: { view: true, create: false, update: false, delete: false },
   applications: { view: true, create: false, update: false, delete: false },
   coupons: { view: true, create: false, update: false, delete: false },
   blog: { view: true, create: false, update: false, delete: false },
