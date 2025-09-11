@@ -91,7 +91,7 @@ export const EditJobSeekerModal: React.FC<EditJobSeekerModalProps> = ({
           }
         });
         
-        return Array.from(uniqueSpecialties.values());
+        return Array.from(uniqueSpecialties.values()).sort((a, b) => a.label.localeCompare(b.label));
       }
     }
     
