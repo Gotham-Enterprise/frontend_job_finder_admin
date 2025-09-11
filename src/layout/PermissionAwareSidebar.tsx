@@ -1,10 +1,9 @@
 "use client";
-import React, { useEffect, useRef, useState, useCallback } from "react";
+import React, { useEffect, useRef, useState,useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useSidebar } from "../context/SidebarContext";
-import { authUtils } from "@/services/utils/authUtils";
 import {
   ChevronDownIcon,
   GridIcon,
@@ -22,86 +21,84 @@ import {
   CouponIcon,
 } from "../components/ui/icons/index";
 
+
 type NavItem = {
   name: string;
   icon: React.ReactNode;
   path?: string;
-  permission?: string;
-  subItems?: { 
-    name: string; 
-    path: string; 
-    pro?: boolean; 
-    new?: boolean;
-    permission?: string;
-    action?: 'view' | 'add' | 'edit' | 'delete';
-  }[];
+  subItems?: { name: string; path: string; pro?: boolean; new?: boolean }[];
+  isAccessible?: boolean; // New property to determine if the item should be shown
 };
 
 const navItems: NavItem[] = [
   {
     icon: <GridIcon />,
     name: "Dashboard",
-    path: "/admin/dashboard",
+    path: "/",
+   
+    //subItems: [{ name: "Ecommerce", path: "/", pro: false }],
   },
   {
     icon: <GroupIcon />,
-    name: "Job Seekers", 
+    name: "Job Seekers",
     path: "/admin/job-seekers",
-    permission: "Job Seekers",
+    isAccessible: true,
   },
   {
     icon: <UserCircleIcon />,
     name: "Employers",
-    path: "/admin/employers", 
-    permission: "Employers",
-  },
-  {
+    path: "/admin/employers",
+     isAccessible: true,
+  },  {
     icon: <BriefcaseIcon />,
     name: "Jobs",
-    path: "/admin/jobs-admin",
-    permission: "Jobs",
-    subItems: [
-      { name: "All Jobs", path: "/admin/jobs-admin", permission: "Jobs" },
-      { name: "Add New", path: "/admin/jobs-admin/create-job/", permission: "Jobs", action: "add" }
-    ],
+    path: "/admin/jobs",
+     subItems: [
+      { name: "All Jobs", path: "/admin/jobs", pro: false },
+      { name: "Add New", path: "/admin/jobs/create-job/", pro: false }],
   },
   {
     icon: <TaskIcon />,
     name: "Applications",
     path: "/admin/applications",
-    permission: "Applications",
+     isAccessible: true,
+     //subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
   },
   {
     icon: <CareerLadderIcon />,
     name: "Careers",
-    path: "/admin/careers",
-    permission: "Careers",
+    path: "/admin/careers", // /admin/careers
+     isAccessible: true,
+     //subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
   },
+  
   {
     icon: <TicketIcon />,
     name: "Tickets",
-    path: "/admin/comming-soon", // Will be /admin/tickets when ready
-    permission: "Tickets",
+    path: "/admin/comming-soon", // /admin/tickets
+     isAccessible: true,
+     //subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
   },
   {
     icon: <CouponIcon />,
     name: "Coupons",
-    path: "/admin/coupons",
-    permission: "Coupons",
+    path: "/admin/coupons", 
+     //subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
   },
+
   {
     icon: <BlogIcon />,
     name: "Blog",
     path: "/admin/blog",
-    permission: "Blog",
-    subItems: [
-      { name: "All Posts", path: "/admin/blog" }, // No specific permission needed beyond parent
-      { name: "Add New", path: "/admin/blog/add-new", permission: "Blog", action: "add" },
+     isAccessible: true,
+     subItems: [{ name: "All Posts", path: "/admin/blog"},
+      { name: "Add New", path: "/admin/blog/add-new"},
       { name: "Categories", path: "/admin/blog/categories" },
-      { name: "Tags", path: "/admin/blog/tags" },
+      { name: "Tags", path: "/admin/blog/tags"},
       { name: "Archives", path: "/admin/blog/archives" },
-    ],
+     ],
   },
+
 ];
 
 const othersItems: NavItem[] = [
@@ -113,91 +110,12 @@ const othersItems: NavItem[] = [
       { name: "Bar Chart", path: "/bar-chart", pro: false },
     ],
   },
+ 
 ];
 
-const PermissionAwareSidebar: React.FC = () => {
+const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
   const pathname = usePathname();
-  
-  // Helper function to check permission from user data
-  const hasPermission = useCallback((permissionName: string, action: 'view' | 'add' | 'edit' | 'delete' = 'view'): boolean => {
-    try {
-      console.log('Checking permission for:', permissionName, 'action:', action);
-      
-      // Get user data inside the callback to avoid dependency issues
-      const user = authUtils.getUser();
-      
-      if (!user || !user.adminRoleAccess || !user.adminRoleAccess.rolePermissions) {
-        console.log('No user or role permissions found');
-        return false;
-      }
-
-      const rolePermissions = user.adminRoleAccess.rolePermissions;
-      console.log('Available permissions:', rolePermissions.map((p: any) => p.permission.name));
-      
-      // Direct match first (case sensitive)
-      let permission = rolePermissions.find((p: any) => 
-        p.permission.name === permissionName
-      );
-      
-      // If no direct match, try case-insensitive match
-      if (!permission) {
-        permission = rolePermissions.find((p: any) => 
-          p.permission.name.toLowerCase() === permissionName.toLowerCase()
-        );
-      }
-
-      console.log('Found permission for', permissionName, ':', permission);
-
-      if (!permission) return false;
-
-      const hasAccess = permission[action];
-      console.log('Has', action, 'access:', hasAccess);
-      
-      return hasAccess;
-    } catch (error) {
-      console.error('Error checking permission:', error);
-      return false;
-    }
-  }, []); // Empty dependency array since we get user data inside the function
-
-  const filterItemsByPermission = useCallback((items: NavItem[]): NavItem[] => {
-    console.log('Filtering nav items. Total items:', items.length);
-    
-    return items.filter(item => {
-      console.log('Checking item:', item.name, 'permission:', item.permission);
-      
-      // If no permission is specified, show the item (like Dashboard, Charts)
-      if (!item.permission) {
-        console.log('No permission required for', item.name, '- showing');
-        return true;
-      }
-      
-      // Check if user has view permission for this module
-      const hasAccess = hasPermission(item.permission, 'view');
-      console.log('Item', item.name, 'has access:', hasAccess);
-      
-      if (!hasAccess) return false;
-      
-      // If item has subitems, filter them too
-      if (item.subItems) {
-        item.subItems = item.subItems.filter(subItem => {
-          // If no permission specified for subitem, show it (like "All Posts")
-          if (!subItem.permission) return true;
-          
-          // Check specific action if specified, otherwise default to 'view'
-          const requiredAction = subItem.action || 'view';
-          return hasPermission(subItem.permission, requiredAction);
-        });
-      }
-      
-      return true;
-    });
-  }, [hasPermission]);
-
-  // Get filtered navigation items based on permissions
-  const filteredNavItems = filterItemsByPermission(navItems);
-  const filteredOthersItems = filterItemsByPermission(othersItems);
 
   const renderMenuItems = (
     navItems: NavItem[],
@@ -333,12 +251,12 @@ const PermissionAwareSidebar: React.FC = () => {
     {}
   );
   const subMenuRefs = useRef<Record<string, HTMLDivElement | null>>({});
-  const isActive = useCallback((path: string) => path === pathname, [pathname]);
+   const isActive = useCallback((path: string) => path === pathname, [pathname]);
 
   useEffect(() => {
     let submenuMatched = false;
     ["main", "others"].forEach((menuType) => {
-      const items = menuType === "main" ? filteredNavItems : filteredOthersItems;
+      const items = menuType === "main" ? navItems : othersItems;
       items.forEach((nav, index) => {
         if (nav.subItems) {
           nav.subItems.forEach((subItem) => {
@@ -357,7 +275,7 @@ const PermissionAwareSidebar: React.FC = () => {
     if (!submenuMatched) {
       setOpenSubmenu(null);
     }
-  }, [pathname, isActive, filteredNavItems, filteredOthersItems]);
+  }, [pathname,isActive]);
 
   useEffect(() => {
     if (openSubmenu !== null) {
@@ -449,13 +367,14 @@ const PermissionAwareSidebar: React.FC = () => {
                   <HorizontaLDots />
                 )}
               </h2>
-              {renderMenuItems(filteredNavItems, "main")}
+              {renderMenuItems(navItems, "main")}
             </div>
           </div>
         </nav>
+     
       </div>
     </aside>
   );
 };
 
-export default PermissionAwareSidebar;
+export default AppSidebar;
