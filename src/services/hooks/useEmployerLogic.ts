@@ -3,10 +3,12 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useEmployers } from '@/services/hooks/useEmployers';
 import { useEmployerStates } from '@/services/hooks/useEmployerStates';
 import { EmployerFilters } from '@/services/types/employer';
+import { usePermissions } from '@/hooks/usePermissions';
 
 export const useEmployerLogic = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { hasPermission } = usePermissions();
 
   const getInitialFilters = (): EmployerFilters => {
     const hasUrlParams = Array.from(searchParams.keys()).length > 0;
@@ -182,18 +184,28 @@ export const useEmployerLogic = () => {
   }, [filters]);
 
   const { data, isLoading, error, refetch } = useEmployers(filters);
-  const { data: statesData, isLoading: isStatesLoading } = useEmployerStates();  const tableColumns = useMemo(() => [
-    { key: 'select', label: '', className: 'w-16' },
-    { key: 'companyName', label: 'Company' },
-    { key: 'email', label: 'Email' },
-    { key: 'state', label: 'Location' },
-    { key: 'jobPostCount', label: 'Job Posts' },
-    { key: 'dateJoined', label: 'Registration date' },
-    { key: 'lastActivity', label: 'Last Activity' },
-    { key: 'status', label: 'Status' },
-    { key: 'subscription', label: 'Subscription' },
-    { key: 'actions', label: '', className: 'text-right' },
-  ], []);
+  const { data: statesData, isLoading: isStatesLoading } = useEmployerStates();  const tableColumns = useMemo(() => {
+    const columns = [];
+    
+    // Only include select column if user has permission to add jobs
+    if (hasPermission('employers', 'add')) {
+      columns.push({ key: 'select', label: '', className: 'w-16' });
+    }
+    
+    columns.push(
+      { key: 'companyName', label: 'Company' },
+      { key: 'email', label: 'Email' },
+      { key: 'state', label: 'Location' },
+      { key: 'jobPostCount', label: 'Job Posts' },
+      { key: 'dateJoined', label: 'Registration date' },
+      { key: 'lastActivity', label: 'Last Activity' },
+      { key: 'status', label: 'Status' },
+      { key: 'subscription', label: 'Subscription' },
+      { key: 'actions', label: '', className: 'text-right' }
+    );
+    
+    return columns;
+  }, [hasPermission]);
 
   const statusOptions = useMemo(() => [
     { value: '', label: 'All' },

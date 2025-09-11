@@ -16,6 +16,7 @@ import Avatar from '../../../ui/avatar/Avatar';
 import { EditEmployerModal } from './EditEmployerModal';
 import { useToast } from '@/context/ToastContext';
 import PermissionWrapper from '@/components/common/PermissionWrapper';
+import { usePermissions } from '@/hooks/usePermissions';
 
 const EmployerTable: React.FC<EmployerTableProps> = ({
   data,
@@ -31,6 +32,10 @@ const EmployerTable: React.FC<EmployerTableProps> = ({
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedEmployerIdForEdit, setSelectedEmployerIdForEdit] = useState<string | null>(null);
   const { addToast } = useToast();
+  const { hasPermission } = usePermissions();
+
+  // Check if user has permission to add jobs (needed for checkbox selection)
+  const canCreateJobs = hasPermission('employers', 'add');
 
   const openEditModal = (employerId: string) => {
     setSelectedEmployerIdForEdit(employerId);
@@ -64,7 +69,7 @@ const EmployerTable: React.FC<EmployerTableProps> = ({
         <TableBody>
           {isLoading ? (
             <TableRow>
-              <TableCell className="text-center py-8 px-6" colSpan={10}>
+              <TableCell className="text-center py-8 px-6" colSpan={canCreateJobs ? 10 : 9}>
                 <div className="flex items-center justify-center gap-3">
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-brand-500"></div>
                   <p className="text-gray-500 dark:text-gray-400">Loading...</p>
@@ -73,7 +78,7 @@ const EmployerTable: React.FC<EmployerTableProps> = ({
             </TableRow>
           ) : !data?.success || !data?.data?.length ? (
             <TableRow>
-              <TableCell className="text-center py-8 px-6" colSpan={10}>
+              <TableCell className="text-center py-8 px-6" colSpan={canCreateJobs ? 10 : 9}>
                 <p className="text-gray-500 dark:text-gray-400">No employers found</p>
               </TableCell>
             </TableRow>
@@ -86,10 +91,14 @@ const EmployerTable: React.FC<EmployerTableProps> = ({
                 className="border-b border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50"
               >
                 <TableCell className="py-4 px-6 text-center">
-                  <Checkbox
-                    checked={selectedEmployerId === employer.id}
-                    onChange={(checked) => onEmployerSelect(employer.id, checked)}
-                  />
+                  {canCreateJobs ? (
+                    <Checkbox
+                      checked={selectedEmployerId === employer.id}
+                      onChange={(checked) => onEmployerSelect(employer.id, checked)}
+                    />
+                  ) : (
+                    <div className="w-4 h-4"></div> // Empty space to maintain column alignment
+                  )}
                 </TableCell>
                 <TableCell className="py-4 px-6 text-sm max-w-xs">
                   <div className="flex items-center gap-3">
