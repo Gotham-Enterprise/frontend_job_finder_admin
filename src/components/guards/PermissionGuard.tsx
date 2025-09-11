@@ -27,11 +27,34 @@ const hasLegacyPermission = (permissionName: string, action: 'view' | 'add' | 'e
     }
 
     const rolePermissions = user.adminRoleAccess.rolePermissions;
-    const permission = rolePermissions.find((p: any) => 
-      p.permission.name.toLowerCase().replace(/\s+/g, '') === permissionName.toLowerCase().replace(/\s+/g, '')
-    );
+    
+    // Create a mapping for different permission name formats
+    const permissionNameMappings: Record<string, string[]> = {
+      'jobseekers': ['Job Seekers', 'jobseekers', 'job-seekers'],
+      'employers': ['Employers', 'employers'],
+      'jobs': ['Jobs', 'jobs'],
+      'applications': ['Applications', 'applications'],
+      'blog': ['Blog', 'blog'],
+      'careers': ['Careers', 'careers'],
+      'tickets': ['Tickets', 'tickets'],
+      'coupons': ['Coupons', 'coupons']
+    };
+    
+    const possibleNames = permissionNameMappings[permissionName.toLowerCase()] || [permissionName];
+    
+    const permission = rolePermissions.find((p: any) => {
+      const apiPermissionName = p.permission.name;
+      return possibleNames.some(name => 
+        apiPermissionName.toLowerCase().replace(/\s+/g, '') === name.toLowerCase().replace(/\s+/g, '')
+      );
+    });
 
-    if (!permission) return false;
+    if (!permission) {
+      console.warn(`Permission not found: ${permissionName}. Available permissions:`, rolePermissions.map(p => p.permission.name));
+      return false;
+    }
+
+    console.log(`Checking permission: ${permissionName} (${permission.permission.name}) - ${action}:`, permission[action]);
 
     switch (action) {
       case 'view': return permission.view;
@@ -172,8 +195,18 @@ const PermissionGuard: React.FC<PermissionGuardProps> = ({
   const pathname = usePathname();
   const { permissions, loading, error } = useAuthPermissions();
   
+  console.log('PermissionGuard check:', {
+    pathname,
+    loading,
+    hasPermissions: !!permissions,
+    requiredPermission,
+    module,
+    action: action || requiredAction
+  });
+  
   // Show loading state
   if (loading) {
+    console.log('PermissionGuard: Showing loading state');
     return (
       <div className="flex items-center justify-center py-8">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-500"></div>
@@ -183,6 +216,7 @@ const PermissionGuard: React.FC<PermissionGuardProps> = ({
 
   // Show error state
   if (error) {
+    console.log('PermissionGuard: Showing error state:', error);
     return (
       <div className="min-h-screen flex items-center justify-center">
         <NotFoundState 
@@ -234,8 +268,15 @@ const PermissionGuard: React.FC<PermissionGuardProps> = ({
   // Otherwise, check based on the current route
   const pathPermission = getPermissionForPath(pathname);
   
+  console.log('PermissionGuard: Path permission check:', {
+    pathname,
+    pathPermission,
+    hasPermissions: !!permissions
+  });
+  
   // If no specific permission is required for this path, allow access
   if (!pathPermission) {
+    console.log('PermissionGuard: No permission required for path, allowing access');
     return <>{children}</>;
   }
   
@@ -243,7 +284,15 @@ const PermissionGuard: React.FC<PermissionGuardProps> = ({
   if (permissions && pathPermission.module && pathPermission.moduleAction) {
     const hasRequiredPermission = hasPermission(permissions, pathPermission.module, pathPermission.moduleAction);
     
+    console.log('PermissionGuard: New system check:', {
+      module: pathPermission.module,
+      action: pathPermission.moduleAction,
+      hasRequiredPermission,
+      userPermissions: permissions[pathPermission.module]
+    });
+    
     if (!hasRequiredPermission) {
+      console.log('PermissionGuard: Access denied - insufficient permissions');
       const fallbackContent = fallback || (
         <div className="min-h-screen flex items-center justify-center">
           <NotFoundState 
@@ -256,11 +305,20 @@ const PermissionGuard: React.FC<PermissionGuardProps> = ({
       return showFallback ? <>{fallbackContent}</> : null;
     }
     
+    console.log('PermissionGuard: Access granted via new system');
     return <>{children}</>;
   }
   
   // Fallback to legacy permission system
-  if (!hasLegacyPermission(pathPermission.permission, pathPermission.action)) {
+  const hasLegacyAccess = hasLegacyPermission(pathPermission.permission, pathPermission.action);
+  console.log('PermissionGuard: Legacy system check:', {
+    permission: pathPermission.permission,
+    action: pathPermission.action,
+    hasLegacyAccess
+  });
+  
+  if (!hasLegacyAccess) {
+    console.log('PermissionGuard: Access denied via legacy system');
     const fallbackContent = fallback || (
       <div className="min-h-screen flex items-center justify-center">
         <NotFoundState 
@@ -273,6 +331,7 @@ const PermissionGuard: React.FC<PermissionGuardProps> = ({
     return showFallback ? <>{fallbackContent}</> : null;
   }
   
+  console.log('PermissionGuard: Access granted via legacy system');
   return <>{children}</>;
 };
 

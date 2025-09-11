@@ -7,6 +7,7 @@ import AppHeader from "@/layout/AppHeader";
 import PermissionAwareSidebar from "@/layout/PermissionAwareSidebar";
 import Backdrop from "@/layout/Backdrop";
 import AuthInitializer from "@/components/auth/AuthInitializer";
+import PermissionGuard from "@/components/guards/PermissionGuard";
 import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { authUtils } from "@/services/utils/authUtils";
@@ -50,7 +51,9 @@ export default function AdminLayout({
               warningThreshold={0.25}
             />
             <div className="p-4 mx-auto md:p-6">
-              {children}
+              <PermissionGuard showFallback={true}>
+                {children}
+              </PermissionGuard>
             </div>
           </div>
         </div>
