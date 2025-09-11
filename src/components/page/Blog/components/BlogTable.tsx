@@ -16,6 +16,7 @@ import { PencilIcon, TrashBinIcon, EyeIcon, HorizontaLDots } from '@/icons';
 import { BlogTableProps } from '@/services/types/BlogTypes';
 import OptionsDropdown, { DropdownOption } from '../../../ui/OptionsDropdown/index';
 import SocialShareModal from '../../../ui/SocialShareModal/index';
+import { usePermissions } from '@/hooks/usePermissions';
 
 const BlogTable: React.FC<BlogTableProps> = ({
   data,
@@ -29,6 +30,7 @@ const BlogTable: React.FC<BlogTableProps> = ({
   onSelectPost,
   onSelectAll,
 }) => {
+  const { hasPermission } = usePermissions();
   const allSelected = data?.data?.length > 0 && selectedPosts.length === data.data.length;
   const someSelected = selectedPosts.length > 0 && !allSelected;
 
@@ -102,24 +104,33 @@ const BlogTable: React.FC<BlogTableProps> = ({
     return ''; 
   };
 
-  const getDropdownOptions = (post: any): DropdownOption[] => [
-    {
-      id: 'view',
-      label: 'View',
-      icon: <EyeIcon />,
-      onClick: () => {
-        if (onPreviewPost) {
-          onPreviewPost(post.id);
-        }
-      },
-    },
-    {
-      id: 'edit',
-      label: 'Edit',
-      icon: <PencilIcon />,
-      onClick: () => onEditPost(post.id),
-    },
-    {
+  const getDropdownOptions = (post: any): DropdownOption[] => {
+    const options: DropdownOption[] = [];
+
+    if (hasPermission('blog', 'view')) {
+      options.push({
+        id: 'view',
+        label: 'View',
+        icon: <EyeIcon />,
+        onClick: () => {
+          if (onPreviewPost) {
+            onPreviewPost(post.id);
+          }
+        },
+      });
+    }
+
+    if (hasPermission('blog', 'edit')) {
+      options.push({
+        id: 'edit',
+        label: 'Edit',
+        icon: <PencilIcon />,
+        onClick: () => onEditPost(post.id),
+      });
+    }
+
+    // Always show share option
+    options.push({
       id: 'share',
       label: 'Share',
       icon: (
@@ -128,15 +139,20 @@ const BlogTable: React.FC<BlogTableProps> = ({
         </svg>
       ),
       onClick: () => handleShare(post),
-    },
-    {
-      id: 'delete',
-      label: 'Archive',
-      icon: <TrashBinIcon />,
-      onClick: () => onDeletePost(post.id),
-      variant: 'danger' as const,
-    },
-  ];
+    });
+
+    if (hasPermission('blog', 'delete')) {
+      options.push({
+        id: 'delete',
+        label: 'Archive',
+        icon: <TrashBinIcon />,
+        onClick: () => onDeletePost(post.id),
+        variant: 'danger' as const,
+      });
+    }
+
+    return options;
+  };
 
   return (
     <>

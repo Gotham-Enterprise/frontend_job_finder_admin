@@ -15,6 +15,7 @@ import { JobSeekersTableProps } from '@/services/types/JobSeekersTypes';
 import Avatar from '../../../ui/avatar/Avatar';
 import { EditJobSeekerModal } from './EditJobSeekerModal';
 import { useToast } from '@/context/ToastContext';
+import PermissionWrapper from '@/components/common/PermissionWrapper';
 
 
 interface SpecialtyDisplayProps {
@@ -353,22 +354,22 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
                 </TableCell>
                 <TableCell className="py-4 px-6 text-right">
                   <div className="flex items-center gap-4">
-                    <button 
-                   
-                      className="flex gap-2 text-brand-400"
-                      onClick={() => onViewJobSeeker(jobSeeker.id)}
-                    
-                    >
-                     <EyeIcon />  View
-                    </button>
-                   
-                    <button 
-                       className="flex gap-2 text-brand-400"
-                      onClick={() => openEditModal(jobSeeker.id)}
-                   
-                    >
-                      <PencilIcon /> Edit
-                    </button>
+                    <PermissionWrapper module="jobseekers" action="view">
+                      <button 
+                        className="flex gap-2 text-brand-400"
+                        onClick={() => onViewJobSeeker(jobSeeker.id)}
+                      >
+                        <EyeIcon />  View
+                      </button>
+                    </PermissionWrapper>
+                    <PermissionWrapper module="jobseekers" action="edit">
+                      <button 
+                        className="flex gap-2 text-brand-400"
+                        onClick={() => openEditModal(jobSeeker.id)}
+                      >
+                        <PencilIcon /> Edit
+                      </button>
+                    </PermissionWrapper>
                   </div>
                 </TableCell>
               </TableRow>

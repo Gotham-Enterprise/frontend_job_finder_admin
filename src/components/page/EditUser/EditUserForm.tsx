@@ -36,7 +36,6 @@ const EditUserForm: React.FC<EditUserFormProps> = ({
     firstName: '',
     lastName: '',
     email: '',
-    password: '',
     role: '',
     permissions: DEFAULT_PERMISSIONS,
   });

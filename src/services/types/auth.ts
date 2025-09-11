@@ -73,6 +73,26 @@ export interface User {
     accessRoleId: number;
   };
   missingCandidateDetails?: any[];
+  adminRoleAccess?: {
+    id: number;
+    roleName: string;
+    rolePermissions: RolePermission[];
+  };
+}
+
+export interface RolePermission {
+  id: string;
+  roleId: number;
+  permissionId: string;
+  add: boolean;
+  view: boolean;
+  edit: boolean;
+  delete: boolean;
+  permission: {
+    id: string;
+    name: string;
+    description: string;
+  };
 }
 
 export interface AuthResponse {

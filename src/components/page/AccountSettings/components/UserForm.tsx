@@ -179,15 +179,6 @@ const UserForm: React.FC<UserFormProps> = ({
       newErrors.email = 'Invalid email format';
     }
 
-    // Password validation only for create mode
-    if (!isEditMode) {
-      if (!formData.password.trim()) {
-        newErrors.password = 'Password is required';
-      } else if (formData.password.length < 8) {
-        newErrors.password = 'Password must be at least 8 characters';
-      }
-    }
-
     if (!formData.role) {
       newErrors.role = 'Role is required';
     }
@@ -366,22 +357,6 @@ const UserForm: React.FC<UserFormProps> = ({
             </div>
 
             {/* Password field - only show in create mode */}
-            {!isEditMode && (
-              <div className="transform transition-all duration-200 hover:scale-[1.02]">
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="Enter password"
-                  value={formData.password}
-                  onChange={(e) => updateFormField('password', e.target.value)}
-                  error={!!errors.password}
-                  hint={errors.password}
-                  disabled={isLoading || createRoleMutation.isPending}
-                />
-              </div>
-            )}
-
             <div className="transform transition-all duration-200 hover:scale-[1.02]">
               <div className="flex items-center justify-between mb-2">
                 <Label htmlFor="role">Role</Label>

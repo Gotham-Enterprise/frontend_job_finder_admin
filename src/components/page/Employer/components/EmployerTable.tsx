@@ -15,6 +15,7 @@ import { EmployerTableProps } from '@/services/types/EmployerTypes';
 import Avatar from '../../../ui/avatar/Avatar';
 import { EditEmployerModal } from './EditEmployerModal';
 import { useToast } from '@/context/ToastContext';
+import PermissionWrapper from '@/components/common/PermissionWrapper';
 
 const EmployerTable: React.FC<EmployerTableProps> = ({
   data,
@@ -202,23 +203,23 @@ const EmployerTable: React.FC<EmployerTableProps> = ({
                 <TableCell className="py-4 px-6 text-right">
 
                   <div className="flex items-center gap-4">
-                                      <button 
-                                     
-                                        className="flex gap-2 text-brand-400"
-                                        onClick={() => onViewEmployer(employer.id)}
-                                      
-                                      >
-                                       <EyeIcon />  View
-                                      </button>
-                                     
-                                      <button 
-                                         className="flex gap-2 text-brand-400"
-                                       onClick={() => openEditModal(employer.id)}
-                                     
-                                      >
-                                        <PencilIcon /> Edit
-                                      </button>
-                                    </div>
+                    <PermissionWrapper module="employers" action="view">
+                      <button 
+                        className="flex gap-2 text-brand-400"
+                        onClick={() => onViewEmployer(employer.id)}
+                      >
+                        <EyeIcon />  View
+                      </button>
+                    </PermissionWrapper>
+                    <PermissionWrapper module="employers" action="edit">
+                      <button 
+                        className="flex gap-2 text-brand-400"
+                        onClick={() => openEditModal(employer.id)}
+                      >
+                        <PencilIcon /> Edit
+                      </button>
+                    </PermissionWrapper>
+                  </div>
              
                 </TableCell>
               </TableRow>
