@@ -58,15 +58,19 @@ export const EditJobSeekerModal: React.FC<EditJobSeekerModalProps> = ({
       const uniqueOccupations = new Map();
       
       occupationsData.data.forEach(occupation => {
-        if (!uniqueOccupations.has(occupation.name)) {
-          uniqueOccupations.set(occupation.name, {
+        // Filter out any placeholder-like entries and empty names
+        const name = occupation.name?.trim();
+        if (name && 
+            !name.toLowerCase().includes('select') && 
+            !uniqueOccupations.has(name)) {
+          uniqueOccupations.set(name, {
             value: occupation.id.toString(),
-            label: occupation.name
+            label: name
           });
         }
       });
       
-      return Array.from(uniqueOccupations.values());
+      return Array.from(uniqueOccupations.values()).sort((a, b) => a.label.localeCompare(b.label));
     }
     
     return [];

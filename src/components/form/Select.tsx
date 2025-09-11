@@ -18,7 +18,7 @@ interface SelectProps {
 
 const Select: React.FC<SelectProps> = ({
   options,
-  placeholder = "Select an option",
+  placeholder = "",
   onChange,
   className = "",
   defaultValue = "",
@@ -53,6 +53,7 @@ const Select: React.FC<SelectProps> = ({
       onChange={initChange}
     >
         <option
+        disabled
         value=""
         className="text-gray-700 dark:bg-gray-900 dark:text-gray-400"
       >
