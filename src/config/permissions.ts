@@ -126,26 +126,26 @@ export const getPermissionsForRole = (role: string): UserPermissions => {
 };
 
 export const getModuleConfig = (moduleKey: keyof UserPermissions): ModuleConfig | undefined => {
-  return GLOBAL_PERMISSION_CONFIG.modules.find(module => module.key === moduleKey);
+  return GLOBAL_PERMISSION_CONFIG.modules.find(moduleConfig => moduleConfig.key === moduleKey);
 };
 
 export const getAllowedModules = (permissions: UserPermissions): ModuleConfig[] => {
-  return GLOBAL_PERMISSION_CONFIG.modules.filter(module => 
-    permissions[module.key].view
+  return GLOBAL_PERMISSION_CONFIG.modules.filter(moduleConfig => 
+    permissions[moduleConfig.key].view
   );
 };
 
 export const canAccessPath = (permissions: UserPermissions, path: string): boolean => {
-  for (const module of GLOBAL_PERMISSION_CONFIG.modules) {
-    if (path.startsWith(module.path)) {
-      return permissions[module.key].view;
+  for (const moduleConfig of GLOBAL_PERMISSION_CONFIG.modules) {
+    if (path.startsWith(moduleConfig.path)) {
+      return permissions[moduleConfig.key].view;
     }
     
-    if (module.subItems) {
-      for (const subItem of module.subItems) {
+    if (moduleConfig.subItems) {
+      for (const subItem of moduleConfig.subItems) {
         if (path === subItem.path) {
           const requiredPermission = subItem.requiredPermission || 'view';
-          return permissions[module.key][requiredPermission];
+          return permissions[moduleConfig.key][requiredPermission];
         }
       }
     }
