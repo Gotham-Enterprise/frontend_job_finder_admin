@@ -58,7 +58,7 @@ export const getViewerUrl = (fileUrl: string, fileName?: string): string => {
   const extension = getFileExtension(fileName || fileUrl);
   
   if (['DOC', 'DOCX'].includes(extension)) {
-    return `https://docs.google.com/viewer?url=${encodeURIComponent(fileUrl)}&embedded=true`;
+    return `https://docs.google.com/viewer?url=${encodeURIComponent(fileUrl)}`;
   }
   
   return fileUrl;
@@ -165,7 +165,7 @@ export const openFileInNewTab = (fileUrl: string, fileName?: string): void => {
 
       const tryOpenWithGoogleViewer = () => {
         try {
-          const googleViewerUrl = `https://docs.google.com/viewer?url=${fileUrl}&embedded=true`;
+          const googleViewerUrl = `https://docs.google.com/viewer?url=${fileUrl}`;
 
           
           const newWindow = window.open(googleViewerUrl, '_blank', 'width=1200,height=800,toolbar=yes,location=yes,status=yes,menubar=yes,scrollbars=yes,resizable=yes');
