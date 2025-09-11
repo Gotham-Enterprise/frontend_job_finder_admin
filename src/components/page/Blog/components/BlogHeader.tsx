@@ -91,6 +91,7 @@ const BlogHeader: React.FC<BlogHeaderProps> = ({
             onClearSelection={onClearSelection}
             isDeleting={isBulkDeleting}
             isUpdatingStatus={isUpdatingStatus}
+            permissions={blogPermissions}
           />
         
         </div>

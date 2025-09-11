@@ -56,18 +56,6 @@ const BulkActionDropdown: React.FC<BulkActionDropdownProps> = ({
     (!!onBulkDelete) // Temporarily remove permission check for delete too
   );
 
-  // Debug logging
-  console.log('BulkActionDropdown Debug:', {
-    hasSelectedItems,
-    selectedItemsCount: selectedItems.length,
-    itemType,
-    permissions,
-    onBulkPublish: !!onBulkPublish,
-    onBulkDraft: !!onBulkDraft,
-    onBulkDelete: !!onBulkDelete,
-    hasAvailableActions,
-    buttonDisabled
-  });
 
   // Only show the dropdown if there are selected items and at least some actions are available
   if (!hasSelectedItems) {

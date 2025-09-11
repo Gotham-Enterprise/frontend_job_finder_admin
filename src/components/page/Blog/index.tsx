@@ -18,6 +18,7 @@ interface AllBlogPostsProps {
 }
 
 const AllBlogPosts: React.FC<AllBlogPostsProps> = ({ className = "" }) => {
+  const { permissions } = useAuthPermissions();
   const {
     filters,
     searchInput,
@@ -115,6 +116,7 @@ const AllBlogPosts: React.FC<AllBlogPostsProps> = ({ className = "" }) => {
         onClearSelection={clearSelectedPosts}
         isBulkDeleting={isBulkDeleting}
         isUpdatingStatus={isUpdatingStatus}
+        blogPermissions={permissions?.blog}
         filterDropdownContent={
           <BlogFilters
             filters={filters}
