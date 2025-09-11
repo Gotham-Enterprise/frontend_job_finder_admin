@@ -247,10 +247,19 @@ export const useJobsAdminLogic = () => {
     const baseOptions = [{ value: '', label: 'All Occupations' }];
     
     if (occupationsData?.success && occupationsData.data) {
-      const dynamicOptions = occupationsData.data.map(occupation => ({
-        value: occupation.id.toString(),
-        label: occupation.name
-      }));
+      // Create a Map to deduplicate by name (keep first occurrence)
+      const uniqueOccupations = new Map();
+      
+      occupationsData.data.forEach(occupation => {
+        if (!uniqueOccupations.has(occupation.name)) {
+          uniqueOccupations.set(occupation.name, {
+            value: occupation.id.toString(),
+            label: occupation.name
+          });
+        }
+      });
+      
+      const dynamicOptions = Array.from(uniqueOccupations.values());
       return [...baseOptions, ...dynamicOptions];
     }
     
@@ -266,10 +275,19 @@ export const useJobsAdminLogic = () => {
       );
       
       if (selectedOccupation?.specialty) {
-        const dynamicOptions = selectedOccupation.specialty.map((specialty: Specialty) => ({
-          value: specialty.id.toString(),
-          label: specialty.name
-        }));
+        // Create a Map to deduplicate by name (keep first occurrence)
+        const uniqueSpecialties = new Map();
+        
+        selectedOccupation.specialty.forEach((specialty: Specialty) => {
+          if (!uniqueSpecialties.has(specialty.name)) {
+            uniqueSpecialties.set(specialty.name, {
+              value: specialty.id.toString(),
+              label: specialty.name
+            });
+          }
+        });
+        
+        const dynamicOptions = Array.from(uniqueSpecialties.values());
         return [...baseOptions, ...dynamicOptions];
       }
     }

@@ -238,10 +238,19 @@ export const useJobSeekersLogic = () => {
     const baseOptions = [{ value: '', label: 'All Occupations' }];
     
     if (occupationsData?.success && occupationsData.data) {
-      const dynamicOptions = occupationsData.data.map(occupation => ({
-        value: occupation.id.toString(),
-        label: occupation.name
-      }));
+      // Create a Map to deduplicate by name (keep first occurrence)
+      const uniqueOccupations = new Map();
+      
+      occupationsData.data.forEach(occupation => {
+        if (!uniqueOccupations.has(occupation.name)) {
+          uniqueOccupations.set(occupation.name, {
+            value: occupation.id.toString(),
+            label: occupation.name
+          });
+        }
+      });
+      
+      const dynamicOptions = Array.from(uniqueOccupations.values());
       return [...baseOptions, ...dynamicOptions];
     }
     

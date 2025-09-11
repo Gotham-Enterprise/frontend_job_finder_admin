@@ -66,7 +66,7 @@ const JobsAdminFilters: React.FC<JobsAdminFiltersProps> = ({
             value={filters.occupationId?.toString() || ''}
             onChange={(value: string) => onFilterChange('occupationId', value === '' ? undefined : parseInt(value))}
             options={occupationOptions}
-            placeholder="Select occupation..."
+            placeholder="Select Occupation..."
             searchPlaceholder="Search occupations..."
             className="w-full"
           />
@@ -92,7 +92,7 @@ const JobsAdminFilters: React.FC<JobsAdminFiltersProps> = ({
             onChange={(value: string) => onFilterChange('specialtyId', value === '' ? undefined : parseInt(value))}
             options={specialtyOptions}
             disabled={!selectedOccupationId}
-            placeholder="Select specialty..."
+            placeholder="Select Specialty..."
             searchPlaceholder="Search specialties..."
             className="w-full"
           />
