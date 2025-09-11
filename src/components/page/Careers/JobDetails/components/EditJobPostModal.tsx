@@ -6,6 +6,8 @@ import RichTextEditor from '@/components/form/input/RichTextEditor';
 import Select from '@/components/form/Select';
 import { useUpdateCareer } from '@/services/hooks/useCareers';
 import { useStates } from '@/services/hooks/useStates';
+import { useStatesCities, useCitiesByState } from '@/lib/useStatesCities';
+import { Search, X } from 'lucide-react';
 import { Career, UpdateCareerPayload } from '@/services/api/careers';
 
 interface EditJobPostModalProps {
@@ -50,8 +52,13 @@ const EditJobPostModal: React.FC<EditJobPostModalProps> = ({
   });
   const [error, setError] = useState<string | null>(null);
 
+  // City search state
+  const [citySearch, setCitySearch] = useState('')
+  const [isCityDropdownOpen, setIsCityDropdownOpen] = useState(false)
+
   const updateCareerMutation = useUpdateCareer();
   const { data: statesData } = useStates();
+  const { data: statesCities, isLoading: isLoadingStates } = useStatesCities();
 
   // Create options for selects
   // Department removed
@@ -73,6 +80,41 @@ const EditJobPostModal: React.FC<EditJobPostModalProps> = ({
     { value: 'United States', label: 'United States' },
     { value: 'Canada', label: 'Canada' },
   ];
+
+  // Extract state abbreviation from formatted state string "State Name (AB)" -> "AB"
+  const getStateAbbreviation = (formattedState: string) => {
+    const match = formattedState.match(/\(([^)]+)\)$/);
+    return match ? match[1] : formattedState;
+  };
+  
+  const stateAbbr = formData.state ? getStateAbbreviation(formData.state) : '';
+  const { data: cities, isLoading: isLoadingCities } = useCitiesByState(stateAbbr)
+  
+  // Filter cities based on search
+  const filteredCities = cities?.filter(city => 
+    city.toLowerCase().includes(citySearch.toLowerCase())
+  ) || []
+
+  // Convert state name to formatted state for display
+  const getFormattedState = (stateName: string) => {
+    if (!stateName) return '';
+    
+    // If already formatted, return as is
+    if (stateName.includes('(') && stateName.includes(')')) {
+      return stateName;
+    }
+    
+    // Find the state in statesCities and format it
+    if (statesCities) {
+      for (const [abbr, stateData] of Object.entries(statesCities)) {
+        if (stateData.name === stateName) {
+          return `${stateName} (${abbr})`;
+        }
+      }
+    }
+    
+    return stateName;
+  };
 
   useEffect(() => {
     // Reset form when modal opens or job changes
@@ -109,7 +151,7 @@ const EditJobPostModal: React.FC<EditJobPostModalProps> = ({
         jobType: job.jobType || '',
         address: job.address || '',
         city: job.city || '',
-        state: job.state || '',
+        state: getFormattedState(job.state || ''),
         zipCode: job.zipCode || '',
         country: job.country || 'United States',
         timezone: job.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
@@ -120,8 +162,11 @@ const EditJobPostModal: React.FC<EditJobPostModalProps> = ({
       
       setFormData(newFormData);
       setError(null); // Clear any previous errors
+      // Reset city search state when job changes
+      setCitySearch('');
+      setIsCityDropdownOpen(false);
     }
-  }, [job, isOpen]);
+  }, [job, isOpen, statesCities]);
 
   const updateField = (field: keyof FormData, value: string) => {
     setFormData(prev => ({
@@ -130,15 +175,52 @@ const EditJobPostModal: React.FC<EditJobPostModalProps> = ({
     }));
   };
 
+  const handleSelectState = (val: string) => {
+    setFormData(prev => ({
+      ...prev,
+      state: val, // val is already formatted as "State Name (AB)"
+      city: '' // Reset city when state changes
+    }));
+    setCitySearch(''); // Reset city search
+    setIsCityDropdownOpen(false); // Close city dropdown
+  };
+
+  const handleSelectCity = (val: string) => {
+    setFormData(prev => ({
+      ...prev,
+      city: val
+    }));
+    setCitySearch(''); // Clear search after selection
+    setIsCityDropdownOpen(false); // Close dropdown after selection
+  };
+
+  const handleCitySearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setCitySearch(e.target.value);
+    if (!isCityDropdownOpen && e.target.value) {
+      setIsCityDropdownOpen(true);
+    }
+  };
+
+  const clearCitySearch = () => {
+    setCitySearch('');
+    setIsCityDropdownOpen(false);
+  };
+
   const saveChanges = async () => {
     if (!job) return;
+
+    // Extract state name from formatted string "State Name (AB)" -> "State Name"
+    const getStateName = (formattedState: string) => {
+      const match = formattedState.match(/^(.+)\s\([^)]+\)$/);
+      return match ? match[1] : formattedState;
+    };
 
     const payload: UpdateCareerPayload = {
       jobTitle: formData.jobTitle,
       jobType: formData.jobType,
       address: formData.address,
       city: formData.city,
-      state: formData.state,
+      state: formData.state ? getStateName(formData.state) : '',
       zipCode: formData.zipCode,
       country: formData.country,
       timezone: formData.timezone,
@@ -233,26 +315,99 @@ const EditJobPostModal: React.FC<EditJobPostModalProps> = ({
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    City *
+                    State
                   </label>
-                  <Input
-                    type="text"
-                    value={formData.city}
-                    onChange={(e) => updateField('city', e.target.value)}
-                    placeholder="Enter city"
-                    required
+                  <Select
+                    options={(statesCities ? Object.entries(statesCities).map(([key, value]) => ({
+                      value: `${value.name} (${key})`,
+                      label: value.name
+                    })) : []).sort((a, b) => a.label.localeCompare(b.label))}
+                    value={formData.state}
+                    onChange={handleSelectState}
+                    placeholder={isLoadingStates ? 'Loading states...' : 'Select State'}
+                    disabled={isLoadingStates}
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    State
+                    City *
                   </label>
-                  <Select
-                    options={stateOptions}
-                    value={formData.state}
-                    onChange={(value) => updateField('state', value)}
-                    placeholder="Select state"
-                  />
+                  <div className="relative">
+                    {/* Select Trigger */}
+                    <button
+                      type="button"
+                      onClick={() => stateAbbr && !isLoadingCities && setIsCityDropdownOpen(!isCityDropdownOpen)}
+                      disabled={!stateAbbr || isLoadingCities}
+                      className={`w-full h-11 rounded-lg border bg-transparent text-gray-800 border-gray-300 focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 px-4 py-2.5 text-sm shadow-theme-xs focus:outline-hidden text-left flex items-center justify-between disabled:bg-gray-50 disabled:text-gray-500 ${formData.city ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-500'}`}
+                    >
+                      <span>
+                        {formData.city || (!stateAbbr ? 'Select a state first' : isLoadingCities ? 'Loading cities...' : 'Select city')}
+                      </span>
+                      <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+
+                    {/* Dropdown */}
+                    {isCityDropdownOpen && stateAbbr && !isLoadingCities && (
+                      <div className="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg">
+                        {/* Search Input Inside Dropdown */}
+                        <div className="p-2 border-b border-gray-200 dark:border-gray-600">
+                          <div className="relative">
+                            <input
+                              type="text"
+                              placeholder="Search cities..."
+                              value={citySearch}
+                              onChange={handleCitySearchChange}
+                              className="w-full p-2 pl-8 text-sm border border-gray-300 dark:border-gray-600 rounded-md focus:ring-1 focus:ring-brand-300 focus:border-brand-300 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                              autoFocus
+                            />
+                            <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400 dark:text-gray-500" />
+                            {citySearch && (
+                              <X 
+                                className="absolute right-2 top-2.5 h-4 w-4 text-gray-400 dark:text-gray-500 cursor-pointer hover:text-gray-600 dark:hover:text-gray-300" 
+                                onClick={clearCitySearch}
+                              />
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Cities List */}
+                        <div className="max-h-48 overflow-y-auto">
+                          {filteredCities.length > 0 ? (
+                            <>
+                              {filteredCities.slice(0, 100).map((city) => (
+                                <div
+                                  key={city}
+                                  className="px-3 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 text-sm text-gray-900 dark:text-white"
+                                  onClick={() => handleSelectCity(city)}
+                                >
+                                  {city}
+                                </div>
+                              ))}
+                              {filteredCities.length > 100 && (
+                                <div className="px-3 py-2 text-xs text-gray-500 dark:text-gray-400 border-t bg-gray-50 dark:bg-gray-700">
+                                  Showing first 100 results. Keep typing to narrow down...
+                                </div>
+                              )}
+                            </>
+                          ) : (
+                            <div className="px-3 py-4 text-sm text-gray-500 dark:text-gray-400 text-center">
+                              {citySearch ? 'No cities found matching your search' : 'Start typing to search cities'}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Click outside to close */}
+                    {isCityDropdownOpen && (
+                      <div 
+                        className="fixed inset-0 z-40" 
+                        onClick={() => setIsCityDropdownOpen(false)}
+                      />
+                    )}
+                  </div>
                 </div>
               </div>
 

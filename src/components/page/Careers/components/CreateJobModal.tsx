@@ -7,6 +7,8 @@ import Select from '@/components/form/Select';
 import RichTextEditor from '@/components/form/input/RichTextEditor';
 import { useCreateCareer } from '@/services/hooks/useCareers';
 import { useStates } from '@/services/hooks/useStates';
+import { useStatesCities, useCitiesByState } from '@/lib/useStatesCities';
+import { Search, X } from 'lucide-react';
 import type { CreateCareerPayload } from '@/services/api/careers';
 
 // Countries list
@@ -42,6 +44,11 @@ export const CreateJobModal: React.FC<CreateJobModalProps> = ({
 }) => {
   const createCareerMutation = useCreateCareer();
   const { data: statesData, isLoading: statesLoading } = useStates();
+  const { data: statesCities, isLoading: isLoadingStates } = useStatesCities();
+  
+  // City search state
+  const [citySearch, setCitySearch] = useState('')
+  const [isCityDropdownOpen, setIsCityDropdownOpen] = useState(false)
   
   const [formData, setFormData] = useState<CreateCareerPayload>({
     jobTitle: '',
@@ -59,6 +66,20 @@ export const CreateJobModal: React.FC<CreateJobModalProps> = ({
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Extract state abbreviation from formatted state string "State Name (AB)" -> "AB"
+  const getStateAbbreviation = (formattedState: string) => {
+    const match = formattedState.match(/\(([^)]+)\)$/);
+    return match ? match[1] : formattedState;
+  };
+  
+  const stateAbbr = formData.state ? getStateAbbreviation(formData.state) : '';
+  const { data: cities, isLoading: isLoadingCities } = useCitiesByState(stateAbbr)
+  
+  // Filter cities based on search
+  const filteredCities = cities?.filter(city => 
+    city.toLowerCase().includes(citySearch.toLowerCase())
+  ) || []
 
   // Department & unit selection removed
 
@@ -107,6 +128,37 @@ export const CreateJobModal: React.FC<CreateJobModalProps> = ({
   // department/unit reset removed
   };
 
+  const handleSelectState = (val: string) => {
+    setFormData(prev => ({
+      ...prev,
+      state: val, // val is already formatted as "State Name (AB)"
+      city: '' // Reset city when state changes
+    }));
+    setCitySearch(''); // Reset city search
+    setIsCityDropdownOpen(false); // Close city dropdown
+  };
+
+  const handleSelectCity = (val: string) => {
+    setFormData(prev => ({
+      ...prev,
+      city: val
+    }));
+    setCitySearch(''); // Clear search after selection
+    setIsCityDropdownOpen(false); // Close dropdown after selection
+  };
+
+  const handleCitySearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setCitySearch(e.target.value);
+    if (!isCityDropdownOpen && e.target.value) {
+      setIsCityDropdownOpen(true);
+    }
+  };
+
+  const clearCitySearch = () => {
+    setCitySearch('');
+    setIsCityDropdownOpen(false);
+  };
+
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
   const ADDRESS_REGEX = /^[a-zA-Z0-9 .,#\-'/]+$/; // mirror backend
@@ -153,8 +205,15 @@ export const CreateJobModal: React.FC<CreateJobModalProps> = ({
     }
 
     try {
+      // Extract state name from formatted string "State Name (AB)" -> "State Name"
+      const getStateName = (formattedState: string) => {
+        const match = formattedState.match(/^(.+)\s\([^)]+\)$/);
+        return match ? match[1] : formattedState;
+      };
+
       const payload: CreateCareerPayload = {
         ...formData,
+        state: formData.state ? getStateName(formData.state) : '',
       };
 
       await createCareerMutation.mutateAsync(payload);
@@ -174,6 +233,9 @@ export const CreateJobModal: React.FC<CreateJobModalProps> = ({
         salaryRangeEnd: 0,
         jobDescription: '',
       });
+      // Reset city search state
+      setCitySearch('');
+      setIsCityDropdownOpen(false);
     } catch (error) {
       console.error('Failed to create job:', error);
     }
@@ -182,6 +244,9 @@ export const CreateJobModal: React.FC<CreateJobModalProps> = ({
   const handleCancel = () => {
     onClose();
     setErrors({});
+    // Reset city search state
+    setCitySearch('');
+    setIsCityDropdownOpen(false);
   };
 
   return (
@@ -271,34 +336,108 @@ export const CreateJobModal: React.FC<CreateJobModalProps> = ({
                   />
                 </div>
 
-                {/* City, State, Zip Code Row (State now a dropdown) */}
+                {/* City, State, Zip Code Row (Enhanced with search functionality) */}
                 <div className="grid grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      City *
-                    </label>
-                    <Input
-                      type="text"
-                      placeholder="City"
-                      value={formData.city}
-                      onChange={handleInputChange('city')}
-                      error={!!errors.city}
-                      hint={errors.city}
-                    />
-                  </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       State *
                     </label>
                     <Select
-                      options={(statesData?.data?.states || []).map((s: any) => ({ value: s.abbreviation, label: s.name }))}
+                      options={(statesCities ? Object.entries(statesCities).map(([key, value]) => ({
+                        value: `${value.name} (${key})`,
+                        label: value.name
+                      })) : []).sort((a, b) => a.label.localeCompare(b.label))}
                       value={formData.state}
-                      onChange={handleSelectChange('state')}
-                      placeholder={statesLoading ? 'Loading states...' : 'Select State'}
-                      disabled={statesLoading}
+                      onChange={handleSelectState}
+                      placeholder={isLoadingStates ? 'Loading states...' : 'Select State'}
+                      disabled={isLoadingStates}
                     />
                     {errors.state && (
                       <p className="mt-1.5 text-xs text-error-500">{errors.state}</p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      City *
+                    </label>
+                    <div className="relative">
+                      {/* Select Trigger */}
+                      <button
+                        type="button"
+                        onClick={() => stateAbbr && !isLoadingCities && setIsCityDropdownOpen(!isCityDropdownOpen)}
+                        disabled={!stateAbbr || isLoadingCities}
+                        className={`w-full h-11 rounded-lg border bg-transparent text-gray-800 border-gray-300 focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 px-4 py-2.5 text-sm shadow-theme-xs focus:outline-hidden text-left flex items-center justify-between disabled:bg-gray-50 disabled:text-gray-500 ${formData.city ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-500'}`}
+                      >
+                        <span>
+                          {formData.city || (!stateAbbr ? 'Select a state first' : isLoadingCities ? 'Loading cities...' : 'Select city')}
+                        </span>
+                        <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </button>
+
+                      {/* Dropdown */}
+                      {isCityDropdownOpen && stateAbbr && !isLoadingCities && (
+                        <div className="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg">
+                          {/* Search Input Inside Dropdown */}
+                          <div className="p-2 border-b border-gray-200 dark:border-gray-600">
+                            <div className="relative">
+                              <input
+                                type="text"
+                                placeholder="Search cities..."
+                                value={citySearch}
+                                onChange={handleCitySearchChange}
+                                className="w-full p-2 pl-8 text-sm border border-gray-300 dark:border-gray-600 rounded-md focus:ring-1 focus:ring-brand-300 focus:border-brand-300 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                autoFocus
+                              />
+                              <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400 dark:text-gray-500" />
+                              {citySearch && (
+                                <X 
+                                  className="absolute right-2 top-2.5 h-4 w-4 text-gray-400 dark:text-gray-500 cursor-pointer hover:text-gray-600 dark:hover:text-gray-300" 
+                                  onClick={clearCitySearch}
+                                />
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Cities List */}
+                          <div className="max-h-48 overflow-y-auto">
+                            {filteredCities.length > 0 ? (
+                              <>
+                                {filteredCities.slice(0, 100).map((city) => (
+                                  <div
+                                    key={city}
+                                    className="px-3 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 text-sm text-gray-900 dark:text-white"
+                                    onClick={() => handleSelectCity(city)}
+                                  >
+                                    {city}
+                                  </div>
+                                ))}
+                                {filteredCities.length > 100 && (
+                                  <div className="px-3 py-2 text-xs text-gray-500 dark:text-gray-400 border-t bg-gray-50 dark:bg-gray-700">
+                                    Showing first 100 results. Keep typing to narrow down...
+                                  </div>
+                                )}
+                              </>
+                            ) : (
+                              <div className="px-3 py-4 text-sm text-gray-500 dark:text-gray-400 text-center">
+                                {citySearch ? 'No cities found matching your search' : 'Start typing to search cities'}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Click outside to close */}
+                      {isCityDropdownOpen && (
+                        <div 
+                          className="fixed inset-0 z-40" 
+                          onClick={() => setIsCityDropdownOpen(false)}
+                        />
+                      )}
+                    </div>
+                    {errors.city && (
+                      <p className="mt-1.5 text-xs text-error-500">{errors.city}</p>
                     )}
                   </div>
                   <div>
