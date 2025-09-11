@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useSidebar } from "../context/SidebarContext";
 import { useAuthPermissions } from "../hooks/useAuthPermissions";
 import { hasAnyModulePermission, hasPermission } from "../utils/permissionUtils";
+import { authUtils } from "../services/utils/authUtils";
 import SidebarSkeleton from "../components/common/SidebarSkeleton";
 import {
   ChevronDownIcon,
@@ -125,6 +126,21 @@ const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
   const { permissions, loading } = useAuthPermissions();
   const pathname = usePathname();
+  const [isInitialMount, setIsInitialMount] = useState(true);
+
+  // Check if user is authenticated to show sidebar immediately
+  const isAuthenticated = typeof window !== "undefined" ? authUtils.isAuthenticated() : false;
+  const hasUserData = typeof window !== "undefined" ? !!authUtils.getUser() : false;
+
+  // Handle initial mount timing
+  useEffect(() => {
+    if (permissions && isInitialMount) {
+      // Small delay to ensure everything is properly initialized
+      setTimeout(() => {
+        setIsInitialMount(false);
+      }, 100);
+    }
+  }, [permissions, isInitialMount]);
 
   // Check if item is accessible based on permissions
   const isItemAccessible = (item: NavItem): boolean => {
@@ -136,7 +152,18 @@ const AppSidebar: React.FC = () => {
     // If item has permissionKey, check permissions
     if (item.permissionKey && permissions) {
       const hasPermission = hasAnyModulePermission(permissions, item.permissionKey);
-         return hasPermission;
+      return hasPermission;
+    }
+    
+    // If we're authenticated and have user data but still loading permissions, 
+    // show items to prevent empty sidebar during development refresh
+    if (isAuthenticated && hasUserData && loading) {
+      return true;
+    }
+    
+    // If we're authenticated but no permissions yet, show items
+    if (isAuthenticated && hasUserData && !permissions) {
+      return true;
     }
     
     // Default to accessible if no permission key or during loading
@@ -150,7 +177,8 @@ const AppSidebar: React.FC = () => {
     <ul className="flex flex-col gap-4">
       {allNavItems.map((nav, index) => {
         // Skip rendering if not accessible
-        if (!isItemAccessible(nav)) {
+        const accessible = isItemAccessible(nav);
+        if (!accessible) {
           return null;
         }
         
@@ -240,8 +268,15 @@ const AppSidebar: React.FC = () => {
                           'delete': 'delete'
                         };
                         const mappedAction = actionMap[subItem.requiredAction];
-                        return hasPermission(permissions, nav.permissionKey, mappedAction);
+                        const hasRequiredPermission = hasPermission(permissions, nav.permissionKey, mappedAction);
+                        return hasRequiredPermission;
                       }
+                      
+                      // If we're authenticated but permissions are still loading, show submenu items
+                      if (isAuthenticated && hasUserData && (loading || !permissions)) {
+                        return true;
+                      }
+                      
                       return true; // Show if no permission requirement
                     })
                     .map((subItem) => (
@@ -353,8 +388,10 @@ const AppSidebar: React.FC = () => {
     });
   };
 
-  // Don't render menu items until permissions are loaded (prevents flickering)
-  if (loading) {
+
+  // Only show skeleton if we're loading and don't have any permissions yet
+  // AND either not authenticated or no user data, OR if it's the initial mount and we're still loading
+  if ((loading && !permissions && (!isAuthenticated || !hasUserData)) || (isInitialMount && loading && isAuthenticated)) {
     return (
       <aside
         className={`fixed lex flex-col lg:mt-0 top-0 px-5 left-0 bg-white dark:bg-gray-900 dark:border-gray-800 text-gray-900 h-screen transition-all duration-300 ease-in-out z-50 border-r border-gray-200 

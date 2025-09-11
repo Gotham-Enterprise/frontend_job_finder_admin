@@ -11,6 +11,11 @@ export const useLogin = () => {
   return useMutation({
     mutationFn: (credentials: LoginCredentials) => authApi.login(credentials),
     onSuccess: (data: AuthResponse) => {
+      console.log('Login successful, saving auth state:', {
+        hasUser: !!data.data,
+        hasPermissions: !!(data.data?.adminRoleAccess?.rolePermissions?.length)
+      });
+      
       authUtils.saveAuthState({
         isAuthenticated: data.isAuthenticated,
         user: data.data,
@@ -18,17 +23,31 @@ export const useLogin = () => {
         refreshToken: data.refreshToken,
       });
       
+      // Trigger immediate auth update
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('authUpdate'));
+      }
+      
       queryClient.invalidateQueries({ queryKey: ['currentUser'] });
       
+      // Navigate to admin with a slight delay to ensure auth state is fully processed
       setTimeout(() => {
         queryClient.prefetchQuery({
           queryKey: ['currentUser'],
           queryFn: () => authApi.getCurrentUser(),
           staleTime: 0, 
         });
-      }, 100);
-      
-      router.push('/admin');
+        
+        router.push('/admin');
+        
+        // Auto-reload after login to ensure permissions are fully loaded
+        // This prevents the sidebar timing issues on first login
+        setTimeout(() => {
+       
+          window.location.reload();
+        }, 800);
+        
+      }, 200); // Slightly longer delay to ensure everything is processed
     }
   });
 };

@@ -59,12 +59,10 @@ const BulkActionDropdown: React.FC<BulkActionDropdownProps> = ({
 
   // Only show the dropdown if there are selected items and at least some actions are available
   if (!hasSelectedItems) {
-    console.log('BulkActionDropdown: No selected items, hiding dropdown');
     return null;
   }
 
   if (!hasAvailableActions) {
-    console.log('BulkActionDropdown: No available actions, hiding dropdown');
     return null;
   }
 
@@ -134,7 +132,7 @@ const BulkActionDropdown: React.FC<BulkActionDropdownProps> = ({
             )}
             
             {/* Add separator if status options are shown */}
-            {itemType === 'posts' && (onBulkPublish || onBulkDraft) && onBulkDelete && (
+            {itemType === 'posts' && (onBulkPublish || onBulkDraft) &&  (
               <div className="border-t border-gray-100 dark:border-gray-700 mx-2"></div>
             )}
             

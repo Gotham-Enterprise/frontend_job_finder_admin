@@ -33,15 +33,55 @@ interface UseAuthPermissionsReturn {
 }
 
 export const useAuthPermissions = (): UseAuthPermissionsReturn => {
-  const [permissions, setPermissions] = useState<UserPermissions | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [permissions, setPermissions] = useState<UserPermissions | null>(() => {
+    // Try to initialize permissions immediately from localStorage if available
+    if (typeof window !== 'undefined') {
+      const user = authUtils.getUser();
+      if (user && user.adminRoleAccess && user.adminRoleAccess.rolePermissions) {
+        try {
+         
+          return convertApiPermissionsToUserPermissions(user as any);
+        } catch (error) {
+          console.error('Error converting initial permissions:', error);
+        }
+      }
+    }
+    return null;
+  });
+  
+  const [loading, setLoading] = useState(() => {
+    // Don't start in loading state if we already have permissions from localStorage
+    if (typeof window !== 'undefined') {
+      const user = authUtils.getUser();
+      const hasPermissions = !!(user && user.adminRoleAccess && user.adminRoleAccess.rolePermissions);
+   
+      return !hasPermissions;
+    }
+    return true;
+  });
+  
   const [error, setError] = useState<string | null>(null);
-  const [userRole, setUserRole] = useState<{ id: number; name: string } | null>(null);
+  const [userRole, setUserRole] = useState<{ id: number; name: string } | null>(() => {
+    // Try to initialize user role immediately from localStorage
+    if (typeof window !== 'undefined') {
+      const user = authUtils.getUser();
+      if (user && user.adminRoleAccess) {
+        return {
+          id: user.adminRoleAccess.id,
+          name: user.adminRoleAccess.roleName,
+        };
+      }
+    }
+    return null;
+  });
+  
+  const [initialLoad, setInitialLoad] = useState(true);
 
   const processUserData = (userData: any) => {
     if (userData && userData.adminRoleAccess && userData.adminRoleAccess.rolePermissions) {
       // Convert API permissions to our format
       const userPermissions = convertApiPermissionsToUserPermissions(userData);
+      
       setPermissions(userPermissions);
       
       // Set user role information
@@ -57,16 +97,30 @@ export const useAuthPermissions = (): UseAuthPermissionsReturn => {
 
   const fetchPermissions = async () => {
     try {
-      setLoading(true);
+      // Only show loading state if we don't already have permissions
+      if (initialLoad && !permissions) {
+        setLoading(true);
+      }
       setError(null);
       
       // First, try to get user data from localStorage
       const user = authUtils.getUser();
       if (user && processUserData(user)) {
-        setLoading(false);
+    
+        if (loading) setLoading(false);
+        if (initialLoad) setInitialLoad(false);
         return;
       }
       
+      // Only make API call if we're authenticated and don't have permissions
+      if (!authUtils.isAuthenticated()) {
+    
+        if (loading) setLoading(false);
+        if (initialLoad) setInitialLoad(false);
+        return;
+      }
+      
+  
       // If no user in localStorage or missing permission data, fetch from API
       const response = await fetch('/api/auth/me', {
         method: 'GET',
@@ -93,6 +147,8 @@ export const useAuthPermissions = (): UseAuthPermissionsReturn => {
         throw new Error('Invalid user data format');
       }
 
+   
+
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch permissions';
       setError(errorMessage);
@@ -100,9 +156,8 @@ export const useAuthPermissions = (): UseAuthPermissionsReturn => {
       
       // If there's an error and we have some user data, set minimal permissions
       const user = authUtils.getUser();
-      if (user) {
-        console.log('Falling back to default permissions for authenticated user');
-        // Set basic permissions for authenticated users
+      if (user && authUtils.isAuthenticated()) {
+      
         setPermissions({
           tickets: { view: true, create: false, update: false, delete: false },
           jobSeekers: { view: true, create: false, update: false, delete: false },
@@ -113,10 +168,11 @@ export const useAuthPermissions = (): UseAuthPermissionsReturn => {
           blog: { view: true, create: false, update: false, delete: false },
           careers: { view: true, create: false, update: false, delete: false },
         });
-        setError(null); // Clear error if we can fallback
+        setError(null); 
       }
     } finally {
       setLoading(false);
+      if (initialLoad) setInitialLoad(false);
     }
   };
 

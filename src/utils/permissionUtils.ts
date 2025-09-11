@@ -23,12 +23,10 @@ interface ApiUserData {
   };
 }
 
-/**
- * Convert API permission response to UserPermissions format
- */
 export function convertApiPermissionsToUserPermissions(userData: ApiUserData): UserPermissions {
   const rolePermissions = userData.adminRoleAccess.rolePermissions;
   
+
   // Initialize with default false permissions
   const userPermissions: UserPermissions = {
     tickets: { view: false, create: false, update: false, delete: false },
@@ -41,8 +39,16 @@ export function convertApiPermissionsToUserPermissions(userData: ApiUserData): U
     careers: { view: false, create: false, update: false, delete: false },
   };
 
-  // Map API permission names to our module keys
   const permissionMapping: Record<string, keyof UserPermissions> = {
+    'Job Seekers Management': 'jobSeekers',
+    'Employers Management': 'employers',
+    'Jobs Management': 'jobs',
+    'Applications Management': 'applications',
+    'Blog Management': 'blog',
+    'Careers Management': 'careers',
+    'Tickets Management': 'tickets',
+    'Coupons Management': 'coupons',
+    // Also support the old format for backward compatibility
     'Job Seekers': 'jobSeekers',
     'Employers': 'employers',
     'Jobs': 'jobs',
@@ -64,23 +70,22 @@ export function convertApiPermissionsToUserPermissions(userData: ApiUserData): U
         update: apiPermission.edit,
         delete: apiPermission.delete,
       };
+    } else {
+      console.warn('Unknown permission name:', apiPermission.permission.name, 'Available mappings:', Object.keys(permissionMapping));
     }
   });
 
+  console.log('Final converted permissions:', userPermissions);
   return userPermissions;
 }
 
-/**
- * Check if user has any permission for a module (view, create, update, or delete)
- */
+
 export function hasAnyModulePermission(permissions: UserPermissions, module: keyof UserPermissions): boolean {
   const modulePermissions = permissions[module];
   return Object.values(modulePermissions).some(permission => permission);
 }
 
-/**
- * Check if user has specific permission for a module
- */
+
 export function hasPermission(
   permissions: UserPermissions, 
   module: keyof UserPermissions, 
@@ -89,9 +94,7 @@ export function hasPermission(
   return permissions[module][action];
 }
 
-/**
- * Get user role information
- */
+
 export function getUserRole(userData: ApiUserData): { id: number; name: string } {
   return {
     id: userData.adminRoleAccess.id,
