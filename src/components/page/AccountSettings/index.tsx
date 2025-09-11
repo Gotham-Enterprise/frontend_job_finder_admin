@@ -8,6 +8,7 @@ import FullScreenSpinner from '@/components/ui/FullScreenSpinner';
 import { showToast } from '@/services/utils/toast';
 import { useResetPassword, useCurrentUser } from '@/services/hooks/useAuth';
 import { useAuthStorage } from '@/hooks/useAuthStorage';
+import { canAccessUsersTab } from '@/utils/roleUtils';
 import UserTable from './components/UserTable';
 import AccountInfo from './components/AccountInfo';
 import AccountSettingsSkeleton from './components/AccountSettingsSkeleton';
@@ -42,22 +43,30 @@ const AccountSettings: React.FC = () => {
   
   const authStorageData = useAuthStorage();
 
-  useEffect(() => {
-    setMounted(true);
-    
- 
-    const tab = searchParams.get('tab');
-    if (tab && (tab === 'account' || tab === 'users')) {
-      setActiveTab(tab);
-    }
-  }, [searchParams]);
-
-  const resetPasswordMutation = useResetPassword();
-  
-
   const currentUser = (apiUser as any)?.data || (apiUser as any)?.user || apiUser || authStorageData.user;
   const [displayName, setDisplayName] = useState(authStorageData.displayName);
   const [userInitials, setUserInitials] = useState(authStorageData.userInitials);
+
+  // Check if current user has admin access for Users tab
+  const hasUsersTabAccess = canAccessUsersTab(currentUser);
+  
+
+  useEffect(() => {
+    setMounted(true);
+    
+    const tab = searchParams.get('tab');
+    if (tab && tab === 'account') {
+      setActiveTab('account');
+    } else if (tab && tab === 'users' && hasUsersTabAccess) {
+      // Only allow users tab if user has admin access
+      setActiveTab('users');
+    } else {
+      // Default to account tab
+      setActiveTab('account');
+    }
+  }, [searchParams, hasUsersTabAccess]);
+
+  const resetPasswordMutation = useResetPassword();
 
   useEffect(() => {
     setDisplayName(authStorageData.displayName);
@@ -177,7 +186,7 @@ const AccountSettings: React.FC = () => {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="mb-8">
             <TabsTrigger value="account">Account</TabsTrigger>
-            <TabsTrigger value="users">Users</TabsTrigger>
+            {hasUsersTabAccess && <TabsTrigger value="users">Users</TabsTrigger>}
           </TabsList>
 
           <TabsContent value="account">
@@ -195,9 +204,11 @@ const AccountSettings: React.FC = () => {
             />
           </TabsContent>
 
-          <TabsContent value="users">
-            <UserTable />
-          </TabsContent>
+          {hasUsersTabAccess && (
+            <TabsContent value="users">
+              <UserTable />
+            </TabsContent>
+          )}
         </Tabs>
       </div>
 

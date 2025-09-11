@@ -8,6 +8,7 @@ const MOCK_CURRENT_USER_PERMISSIONS = {
   tickets: { view: true, create: true, update: true, delete: true },
   jobSeekers: { view: true, create: true, update: true, delete: false },
   employers: { view: true, create: true, update: true, delete: false },
+  jobs: { view: true, create: true, update: true, delete: true },
   applications: { view: true, create: false, update: true, delete: false },
   coupons: { view: true, create: true, update: true, delete: true },
   blog: { view: true, create: true, update: true, delete: false },
