@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useSidebar } from "../context/SidebarContext";
 import { useAuthPermissions } from "../hooks/useAuthPermissions";
 import { hasAnyModulePermission, hasPermission } from "../utils/permissionUtils";
+import SidebarSkeleton from "../components/common/SidebarSkeleton";
 import {
   ChevronDownIcon,
   GridIcon,
@@ -135,9 +136,7 @@ const AppSidebar: React.FC = () => {
     // If item has permissionKey, check permissions
     if (item.permissionKey && permissions) {
       const hasPermission = hasAnyModulePermission(permissions, item.permissionKey);
-      // Debug logging - remove in production
-      console.log(`Permission check for ${item.name} (${item.permissionKey}):`, hasPermission, permissions[item.permissionKey]);
-      return hasPermission;
+         return hasPermission;
     }
     
     // Default to accessible if no permission key or during loading
@@ -405,25 +404,11 @@ const AppSidebar: React.FC = () => {
           </Link>
         </div>
         <div className="flex flex-col overflow-y-auto duration-300 ease-linear no-scrollbar">
-          <nav className="mb-6">
-            <div className="flex flex-col gap-4">
-              <div>
-                <h2
-                  className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${
-                    !isExpanded && !isHovered
-                      ? "lg:justify-center"
-                      : "justify-start"
-                  }`}
-                >
-                  {isExpanded || isHovered || isMobileOpen ? (
-                    "Loading..."
-                  ) : (
-                    <HorizontaLDots />
-                  )}
-                </h2>
-              </div>
-            </div>
-          </nav>
+          <SidebarSkeleton 
+            isExpanded={isExpanded || isMobileOpen}
+            isMobileOpen={isMobileOpen}
+            isHovered={isHovered}
+          />
         </div>
       </aside>
     );

@@ -67,10 +67,24 @@ const PermissionAwareTable = <T extends Record<string, any>>({
       <div className="bg-white dark:bg-gray-900 rounded-lg shadow">
         <div className="p-6">
           <div className="animate-pulse space-y-4">
-            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4"></div>
+            {/* Header skeleton */}
+            <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/3"></div>
+            
+            {/* Table header skeleton */}
+            <div className="mt-6 grid grid-cols-4 gap-4">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="h-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
+              ))}
+            </div>
+            
+            {/* Table rows skeleton */}
             <div className="space-y-3">
               {[...Array(5)].map((_, i) => (
-                <div key={i} className="h-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                <div key={i} className="grid grid-cols-4 gap-4">
+                  {[...Array(4)].map((_, j) => (
+                    <div key={j} className="h-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                  ))}
+                </div>
               ))}
             </div>
           </div>
