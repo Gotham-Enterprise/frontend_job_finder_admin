@@ -48,7 +48,7 @@ const RestoreAccountModal: React.FC<RestoreAccountModalProps> = ({
   if (!deletedAccount) return null;
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} className="max-w-md mx-auto">
+    <Modal isOpen={isOpen} onClose={handleClose} className="max-w-md mx-auto max-h-[90vh] overflow-y-auto rounded-md border shadow-lg">
       <div className="p-6">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
@@ -148,7 +148,7 @@ const RestoreAccountModal: React.FC<RestoreAccountModalProps> = ({
                 className="pl-10"
                 required
               />
-              <LockIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <LockIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
             </div>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
               Your admin password is required to confirm this restoration

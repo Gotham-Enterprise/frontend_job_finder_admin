@@ -1,5 +1,5 @@
 import React from 'react';
-import { EyeIcon, ArrowUpIcon, CheckCircleIcon } from '@/icons';
+import { EyeIcon, ArrowUpIcon } from '@/icons';
 import {
   Table,
   TableBody,
@@ -33,7 +33,6 @@ const DeletedJobSeekersTable: React.FC<DeletedJobSeekersTableProps> = ({
     if (account.isRestored) {
       return (
         <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-          <CheckCircleIcon className="w-3 h-3 mr-1" />
           Restored
         </span>
       );
