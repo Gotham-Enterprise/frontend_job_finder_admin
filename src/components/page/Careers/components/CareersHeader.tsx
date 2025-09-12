@@ -3,21 +3,47 @@ import Button from '@/components/ui/button/Button';
 
 interface CareersHeaderProps {
   onCreateJob: () => void;
+  onSearch?: (query: string) => void;
 }
 
-const CareersHeader: React.FC<CareersHeaderProps> = ({ onCreateJob }) => {
+const CareersHeader: React.FC<CareersHeaderProps> = ({ onCreateJob, onSearch }) => {
+  const [searchQuery, setSearchQuery] = React.useState('');
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const query = e.target.value;
+    setSearchQuery(query);
+    onSearch?.(query);
+  };
+
   return (
-    <div className="flex items-center justify-between">
+    <div className="flex items-center justify-between gap-4">
       <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
         Jobs
       </h1>
-      <Button 
-        onClick={onCreateJob}
-        variant="default"
-        className="bg-blue-500 hover:bg-blue-600"
-      >
-        Create Jobs
-      </Button>
+      <div className="flex-1 max-w-xl flex gap-2">
+        <input
+          type="text"
+          placeholder="Search jobs..."
+          value={searchQuery}
+          onChange={handleSearchChange}
+          className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:border-green-900 focus:outline-none dark:text-gray-100"
+        />
+        <Button
+          onClick={() => onSearch?.(searchQuery)}
+          variant="default"
+          className="bg-green-500 hover:bg-green-600"
+        >
+          Search
+        </Button>
+        <Button 
+          onClick={onCreateJob}
+          variant="default"
+          className="bg-green-500 hover:bg-green-600"
+        >
+          Create Jobs
+        </Button>
+      </div>
+      
     </div>
   );
 };
