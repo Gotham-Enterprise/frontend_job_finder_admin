@@ -49,6 +49,7 @@ export interface CareerFilters {
   keywords?: string;
   department?: string;
   status?: 'active' | 'closed' | 'draft';
+  isActive?: boolean; // backend expects boolean flag
 }
 
 export interface CareerResponse {
@@ -118,6 +119,7 @@ export const careersApi = {
     if (filters.keywords) queryParams.append('keywords', filters.keywords);
     if (filters.department) queryParams.append('department', filters.department);
     if (filters.status) queryParams.append('status', filters.status);
+  if (typeof filters.isActive === 'boolean') queryParams.append('isActive', String(filters.isActive));
 
     const endpoint = `/api/admin/careers?${queryParams.toString()}`;
     

@@ -1,29 +1,36 @@
 import { useMemo, useCallback, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCareers, useDeleteCareer, useCreateCareer } from './useCareers';
-import type { Career, CareerTableData } from '@/services/types/CareersTypes';
+import type { Career, CareerTableData, CareerFilters } from '@/services/types/CareersTypes';
 
 export const useCareersLogic = () => {
   const router = useRouter();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   
-  const { data: careersResponse, isLoading, error, refetch } = useCareers({
-    limit: 100, // Check if we really need this limit as static
+  const [activeFilters, setActiveFilters] = useState<CareerFilters>({
+  limit: 5,
     page: 1,
+    keywords: '',
+    isActive: true,
   });
+  const [closedFilters, setClosedFilters] = useState<CareerFilters>({
+  limit: 5,
+    page: 1,
+    keywords: '',
+    isActive: false,
+  });
+
+  const { data: activeResponse, isLoading: loadingActive, error: errorActive, refetch: refetchActive } = useCareers(activeFilters);
+  const { data: closedResponse, isLoading: loadingClosed, error: errorClosed, refetch: refetchClosed } = useCareers(closedFilters);
 
   // Mutation hooks, DELETE and CREATE
   const deleteCareerMutation = useDeleteCareer();
   const createCareerMutation = useCreateCareer();
 
   const { activeJobs, closedJobs } = useMemo(() => {
-    if (!careersResponse?.data) {
-      return { activeJobs: [], closedJobs: [] };
-    }
-    
-    // Since Backend returns grouped structure: { active: [...], inactive: [...] }
-    const groupedCareers = careersResponse.data as any;
-    
+    const activeList = Array.isArray(activeResponse?.data) ? (activeResponse!.data as any[]) : [];
+    const closedList = Array.isArray(closedResponse?.data) ? (closedResponse!.data as any[]) : [];
+
     const transformCareer = (career: any): CareerTableData => {
       const rawStart = Number(career.salaryRangeStart) || 0;
       const rawEnd = Number(career.salaryRangeEnd) || 0;
@@ -36,7 +43,7 @@ export const useCareersLogic = () => {
         payPeriod: '',
         type: career.jobType,
         location: `${career.city}, ${career.state}`,
-        applicantCount: career.applicantsCount,
+        applicantCount: career.applicantsCount ?? (career.applicants ? career.applicants.length : 0),
         postedDate: formatPostedDate(career.createdAt),
         status: career.isActive ? 'active' : 'closed' as 'active' | 'closed' | 'draft',
         salaryRangeStart: rawStart > 0 ? rawStart : undefined,
@@ -47,16 +54,13 @@ export const useCareersLogic = () => {
       };
     };
 
-    // Handle grouped response structure: { active: [...], inactive: [...] }
-    const active = (groupedCareers.active || [])
-      .map(transformCareer)
+    const active = activeList.map(transformCareer)
       .sort((a: CareerTableData, b: CareerTableData) => (b.createdAtTs || 0) - (a.createdAtTs || 0));
-    const closed = (groupedCareers.inactive || [])
-      .map(transformCareer)
+    const closed = closedList.map(transformCareer)
       .sort((a: CareerTableData, b: CareerTableData) => (b.createdAtTs || 0) - (a.createdAtTs || 0));
 
     return { activeJobs: active, closedJobs: closed };
-  }, [careersResponse]);
+  }, [activeResponse, closedResponse]);
 
 
   // Open modal instead of navigating to a new page
@@ -93,14 +97,48 @@ export const useCareersLogic = () => {
     router.push(`/admin/careers/job-details/${jobId}`);
   }, [router]);
 
-  const isLoadingState = isLoading || deleteCareerMutation.isPending || createCareerMutation.isPending;
+  const isLoadingState = loadingActive || loadingClosed || deleteCareerMutation.isPending || createCareerMutation.isPending;
+
+  const onSearch = useCallback((q: string) => {
+    setActiveFilters((prev) => ({ ...prev, keywords: q, page: 1 }));
+    setClosedFilters((prev) => ({ ...prev, keywords: q, page: 1 }));
+  }, []);
+
+  const onPageSizeChange = useCallback((size: number) => {
+    // clamp
+    const next = Math.max(1, Math.min(100, size));
+    setActiveFilters((prev) => ({ ...prev, limit: next, page: 1 }));
+    setClosedFilters((prev) => ({ ...prev, limit: next, page: 1 }));
+  }, []);
+
+  const nextActivePage = useCallback(() => {
+    if (activeResponse?.metaData?.hasNextPage) {
+      setActiveFilters((p) => ({ ...p, page: (p.page || 1) + 1 }));
+    }
+  }, [activeResponse]);
+  const prevActivePage = useCallback(() => {
+    if (activeResponse?.metaData?.hasPreviousPage) {
+      setActiveFilters((p) => ({ ...p, page: Math.max(1, (p.page || 1) - 1) }));
+    }
+  }, [activeResponse]);
+
+  const nextClosedPage = useCallback(() => {
+    if (closedResponse?.metaData?.hasNextPage) {
+      setClosedFilters((p) => ({ ...p, page: (p.page || 1) + 1 }));
+    }
+  }, [closedResponse]);
+  const prevClosedPage = useCallback(() => {
+    if (closedResponse?.metaData?.hasPreviousPage) {
+      setClosedFilters((p) => ({ ...p, page: Math.max(1, (p.page || 1) - 1) }));
+    }
+  }, [closedResponse]);
 
   return {
     activeJobs,
     closedJobs,
     isLoading: isLoadingState,
-    error,
-    refetch,
+  error: errorActive || errorClosed,
+  refetch: () => { refetchActive(); refetchClosed(); },
     createJob,
     isCreateModalOpen,
     closeCreateModal,
@@ -108,11 +146,20 @@ export const useCareersLogic = () => {
     editJob,
     deleteJob,
     viewApplicants,
+    onSearch,
+  onPageSizeChange,
+  // pagination controls and meta
+  activeMeta: activeResponse?.metaData,
+  closedMeta: closedResponse?.metaData,
+  nextActivePage,
+  prevActivePage,
+  nextClosedPage,
+  prevClosedPage,
     // Additional state for UI feedback
     isDeleting: deleteCareerMutation.isPending,
     isCreating: createCareerMutation.isPending,
     // Expose metadata for pagination if needed
-    metaData: careersResponse?.metaData,
+  metaData: undefined,
   };
 };
 

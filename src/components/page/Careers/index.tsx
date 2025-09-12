@@ -22,6 +22,14 @@ const Careers: React.FC<CareersProps> = ({ className = "" }) => {
     closeCreateModal,
     viewJobDetails,
     viewApplicants,
+  onSearch,
+  activeMeta,
+  closedMeta,
+  nextActivePage,
+  prevActivePage,
+  nextClosedPage,
+  prevClosedPage,
+  onPageSizeChange,
   } = useCareersLogic();
 
   if (error && !isLoading) {
@@ -39,6 +47,7 @@ const Careers: React.FC<CareersProps> = ({ className = "" }) => {
     <div className={`space-y-6 ${className}`}>
       <CareersHeader
         onCreateJob={createJob}
+    onSearch={onSearch}
       />
       
       <CareersJobSection
@@ -47,6 +56,10 @@ const Careers: React.FC<CareersProps> = ({ className = "" }) => {
         isLoading={isLoading}
         onViewJobDetails={viewJobDetails}
         onViewApplicants={viewApplicants}
+  meta={activeMeta}
+  onPrevPage={prevActivePage}
+  onNextPage={nextActivePage}
+  onPageSizeChange={onPageSizeChange}
       />
       
       <CareersJobSection
@@ -55,6 +68,10 @@ const Careers: React.FC<CareersProps> = ({ className = "" }) => {
         isLoading={isLoading}
         onViewJobDetails={viewJobDetails}
         onViewApplicants={viewApplicants}
+  meta={closedMeta}
+  onPrevPage={prevClosedPage}
+  onNextPage={nextClosedPage}
+  onPageSizeChange={onPageSizeChange}
       />
 
       <CreateJobModal

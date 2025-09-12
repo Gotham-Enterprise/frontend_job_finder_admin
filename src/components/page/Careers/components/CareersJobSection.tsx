@@ -9,6 +9,18 @@ interface CareersJobSectionProps {
   isLoading: boolean;
   onViewJobDetails: (jobId: string) => void;
   onViewApplicants: (jobId: string) => void;
+  meta?: {
+    page: number;
+    totalPages: number;
+    totalCount: number;
+    hasNextPage: boolean;
+    hasPreviousPage: boolean;
+    limit?: number;
+  };
+  onPrevPage?: () => void;
+  onNextPage?: () => void;
+  onPageSizeChange?: (size: number) => void;
+  pageSizeOptions?: number[];
 }
 
 const CareersJobSection: React.FC<CareersJobSectionProps> = ({
@@ -17,6 +29,11 @@ const CareersJobSection: React.FC<CareersJobSectionProps> = ({
   isLoading,
   onViewJobDetails,
   onViewApplicants,
+  meta,
+  onPrevPage,
+  onNextPage,
+  onPageSizeChange,
+  pageSizeOptions = [5, 10, 25, 50, 100],
 }) => {
   if (isLoading) {
     return (
@@ -39,7 +56,7 @@ const CareersJobSection: React.FC<CareersJobSectionProps> = ({
         <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
           {title}
         </h2>
-      </div>
+  </div>
       
       <div className="overflow-x-auto">
         <Table className="w-full">
@@ -129,7 +146,43 @@ const CareersJobSection: React.FC<CareersJobSectionProps> = ({
             ))}
           </TableBody>
         </Table>
-        
+        {meta && (
+          <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200 dark:border-gray-800 text-sm text-gray-600 dark:text-gray-300">
+            <div className="flex items-center gap-3">
+              <span>Page {meta.page} of {meta.totalPages} • {meta.totalCount} total</span>
+              <div className="flex items-center gap-2">
+                <label htmlFor={`${title}-page-size`} className="whitespace-nowrap">Rows per page</label>
+                <select
+                  id={`${title}-page-size`}
+                  value={meta.limit || 5}
+                  onChange={(e) => onPageSizeChange?.(parseInt(e.target.value, 10))}
+                  className="px-2 py-1 border border-gray-300 rounded-md bg-white dark:bg-transparent dark:border-gray-700"
+                >
+                  {pageSizeOptions.map((opt) => (
+                    <option key={opt} value={opt}>{opt}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <button
+                disabled={!meta.hasPreviousPage}
+                onClick={onPrevPage}
+                className={`px-3 py-1 rounded border ${meta.hasPreviousPage ? 'text-gray-700 dark:text-gray-200 border-gray-300 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800' : 'text-gray-400 border-gray-200 dark:border-gray-800 cursor-not-allowed'}`}
+              >
+                Prev
+              </button>
+              <button
+                disabled={!meta.hasNextPage}
+                onClick={onNextPage}
+                className={`px-3 py-1 rounded border ${meta.hasNextPage ? 'text-gray-700 dark:text-gray-200 border-gray-300 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800' : 'text-gray-400 border-gray-200 dark:border-gray-800 cursor-not-allowed'}`}
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
+
         {jobs.length === 0 && (
           <div className="text-center py-12">
             <div className="text-gray-500 dark:text-gray-400">
