@@ -94,7 +94,7 @@ const PermanentDeletionModal: React.FC<PermanentDeletionModalProps> = ({
                 id="confirmText"
                 value={confirmText}
                 onChange={(e) => setConfirmText(e.target.value)}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 p-2"
                 placeholder={confirmationText}
                 disabled={isLoading}
               />
@@ -109,7 +109,7 @@ const PermanentDeletionModal: React.FC<PermanentDeletionModalProps> = ({
                 id="adminPassword"
                 value={adminPassword}
                 onChange={(e) => setAdminPassword(e.target.value)}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 p-2"
                 placeholder="Your admin password"
                 disabled={isLoading}
               />
