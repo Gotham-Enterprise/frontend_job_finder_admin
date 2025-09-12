@@ -92,11 +92,11 @@ export const CreateJobModal: React.FC<CreateJobModalProps> = ({
   }, []);
 
   const TIMEZONE_OPTIONS = useMemo(() => [
-    { value: 'America/New_York', label: 'Eastern Time (ET)' },
-    { value: 'America/Chicago', label: 'Central Time (CT)' },
-    { value: 'America/Denver', label: 'Mountain Time (MT)' },
-    { value: 'America/Los_Angeles', label: 'Pacific Time (PT)' },
-    { value: 'UTC', label: 'UTC' }
+    { value: 'America/New_York', label: 'Eastern Standard Time (EST)' },
+    { value: 'America/Chicago', label: 'Central Standard Time (CST)' },
+    { value: 'America/Denver', label: 'Mountain Standard Time (MST)' },
+    { value: 'America/Los_Angeles', label: 'Pacific Standard Time (PST)' },
+    { value: 'UTC', label: 'Coordinated Universal Time (UTC)' }
   ], []);
 
   const handleInputChange = (field: keyof CreateCareerPayload) => (
@@ -338,24 +338,7 @@ export const CreateJobModal: React.FC<CreateJobModalProps> = ({
 
                 {/* City, State, Zip Code Row (Enhanced with search functionality) */}
                 <div className="grid grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      State *
-                    </label>
-                    <Select
-                      options={(statesCities ? Object.entries(statesCities).map(([key, value]) => ({
-                        value: `${value.name} (${key})`,
-                        label: value.name
-                      })) : []).sort((a, b) => a.label.localeCompare(b.label))}
-                      value={formData.state}
-                      onChange={handleSelectState}
-                      placeholder={isLoadingStates ? 'Loading states...' : 'Select State'}
-                      disabled={isLoadingStates}
-                    />
-                    {errors.state && (
-                      <p className="mt-1.5 text-xs text-error-500">{errors.state}</p>
-                    )}
-                  </div>
+                  
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       City *
@@ -438,6 +421,24 @@ export const CreateJobModal: React.FC<CreateJobModalProps> = ({
                     </div>
                     {errors.city && (
                       <p className="mt-1.5 text-xs text-error-500">{errors.city}</p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      State *
+                    </label>
+                    <Select
+                      options={(statesCities ? Object.entries(statesCities).map(([key, value]) => ({
+                        value: `${value.name} (${key})`,
+                        label: value.name
+                      })) : []).sort((a, b) => a.label.localeCompare(b.label))}
+                      value={formData.state}
+                      onChange={handleSelectState}
+                      placeholder={isLoadingStates ? 'Loading states...' : 'Select State'}
+                      disabled={isLoadingStates}
+                    />
+                    {errors.state && (
+                      <p className="mt-1.5 text-xs text-error-500">{errors.state}</p>
                     )}
                   </div>
                   <div>

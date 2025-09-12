@@ -2,7 +2,7 @@ import React from 'react';
 import { Modal } from '@/components/ui/modal';
 import Button from '@/components/ui/button/Button';
 import Badge from '@/components/ui/badge/Badge';
-import { User, Mail, Phone, Calendar, FileText, MapPin, Building, GraduationCap, Briefcase } from 'lucide-react';
+import { User, Mail, Phone, Calendar, FileText, MapPin, Building, GraduationCap, Briefcase, Copy, Check } from 'lucide-react';
 
 interface Applicant {
   id: string;
@@ -39,6 +39,8 @@ const ViewApplicantModal: React.FC<ViewApplicantModalProps> = ({
   onClose,
   applicant,
 }) => {
+  const [copiedEmail, setCopiedEmail] = React.useState(false);
+
   if (!applicant) return null;
 
   const formatStatusDisplay = (status: string) => {
@@ -93,6 +95,18 @@ const ViewApplicantModal: React.FC<ViewApplicantModalProps> = ({
     }
     // Extract filename from URL
     return url.split('/').pop() || 'Document';
+  };
+
+  const handleCopyEmail = async () => {
+    if (applicant?.email) {
+      try {
+        await navigator.clipboard.writeText(applicant.email);
+        setCopiedEmail(true);
+        setTimeout(() => setCopiedEmail(false), 2000);
+      } catch (err) {
+        console.error('Failed to copy email:', err);
+      }
+    }
   };
 
   return (
@@ -169,14 +183,26 @@ const ViewApplicantModal: React.FC<ViewApplicantModalProps> = ({
 
                   <div className="flex items-center gap-3">
                     <Mail className="w-5 h-5 text-gray-400" />
-                    <div>
+                    <div className="flex-1">
                       <p className="text-sm text-gray-500 dark:text-gray-400">
                         Email Address
                       </p>
-                      <p className="font-medium text-gray-900 dark:text-white">
-                        {applicant.email}
-                      </p>
-                      
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium text-gray-900 dark:text-white">
+                          {applicant.email}
+                        </p>
+                        <button
+                          onClick={handleCopyEmail}
+                          className="p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                          title="Copy email address"
+                        >
+                          {copiedEmail ? (
+                            <Check className="w-4 h-4 text-green-600" />
+                          ) : (
+                            <Copy className="w-4 h-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
+                          )}
+                        </button>
+                      </div>
                     </div>
                   </div>
 
@@ -392,17 +418,39 @@ const ViewApplicantModal: React.FC<ViewApplicantModalProps> = ({
             Close
           </Button>
           {applicant.email && (
-            <Button
-              variant="default"
-              onClick={() => {
-                const subject = encodeURIComponent('Regarding your job application');
-                const body = encodeURIComponent(`Hi ${applicant.fullName},\n\nThank you for your interest in our position.\n\nBest regards,`);
-                window.open(`mailto:${applicant.email}?subject=${subject}&body=${body}`);
-              }}
-            >
-              <Mail className="w-4 h-4 mr-2" />
-              Contact Applicant
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={handleCopyEmail}
+                className="flex items-center gap-2"
+              >
+                {copiedEmail ? (
+                  <Check className="w-4 h-4 text-green-600" />
+                ) : (
+                  <Copy className="w-4 h-4" />
+                )}
+                {copiedEmail ? 'Copied!' : 'Copy Email'}
+              </Button>
+              {/* <Button
+                variant="default"
+                onClick={() => {
+                  const subject = encodeURIComponent('Regarding your job application');
+                  const body = encodeURIComponent(`Hi ${applicant.fullName},\n\nThank you for your interest in our position.\n\nBest regards,`);
+                  const mailtoUrl = `mailto:${applicant.email}?subject=${subject}&body=${body}`;
+
+                  // Try to open in new tab first (works better in browsers)
+                  const newTab = window.open(mailtoUrl, '_blank');
+
+                  // If popup blocked or mailto doesn't work, fallback to current window
+                  if (!newTab || newTab.closed) {
+                    window.location.href = mailtoUrl;
+                  }
+                }}
+              >
+                <Mail className="w-4 h-4 mr-2" />
+                Contact Applicant
+              </Button> */}
+            </div>
           )}
         </div>
       </div>
