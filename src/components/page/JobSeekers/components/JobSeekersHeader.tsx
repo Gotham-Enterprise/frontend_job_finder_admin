@@ -28,7 +28,7 @@ const JobSeekersHeader: React.FC<JobSeekersHeaderWithDropdownProps> = ({
   return (
     <div className="px-6 py-5 border-b border-gray-200 dark:border-gray-800">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between w-full">
           <div>
             <h3 className="text-xl font-semibold text-gray-800 dark:text-white">
               Job Seekers
@@ -48,7 +48,7 @@ const JobSeekersHeader: React.FC<JobSeekersHeaderWithDropdownProps> = ({
               href="/admin/job-seekers/deleted-accounts"
               className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors"
             >
-              <TrashBinIcon className="w-4 h-4" />
+              <TrashBinIcon className="w-5 h-" />
               <span>Deleted Accounts</span>
             </Link>
             
