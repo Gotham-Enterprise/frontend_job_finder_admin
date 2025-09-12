@@ -264,6 +264,8 @@ export const EditJobSeekerModal: React.FC<EditJobSeekerModalProps> = ({
                   onChange={(value) => updateField('occupationId', value)}
                   placeholder="Select Occupation"
                   disabled={isOccupationsLoading}
+                  searchable={true}
+                  searchPlaceholder="Search occupations..."
                 />
               </div>
               <div>
@@ -276,6 +278,8 @@ export const EditJobSeekerModal: React.FC<EditJobSeekerModalProps> = ({
                   onChange={(value) => updateField('specialtyId', value)}
                   placeholder="Select Specialty"
                   disabled={!selectedOccupationId || selectedOccupationId === 0 || isOccupationsLoading}
+                  searchable={true}
+                  searchPlaceholder="Search specialties..."
                 />
               </div>
             </div>
