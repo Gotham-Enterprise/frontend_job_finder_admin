@@ -65,17 +65,6 @@ const DeletedJobSeekersHeader: React.FC<DeletedJobSeekersHeaderWithDropdownProps
             )}
           </button>
 
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onRefetch()}
-            disabled={isLoading}
-            className="flex items-center gap-2"
-          >
-            <ArrowUpIcon className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-            Refresh
-          </Button>
-
           {hasActiveFilters && (
             <Button
               variant="ghost"

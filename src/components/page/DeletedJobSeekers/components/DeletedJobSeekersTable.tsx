@@ -127,10 +127,10 @@ const DeletedJobSeekersTable: React.FC<DeletedJobSeekersTableProps> = ({
               variant="ghost"
               size="sm"
               onClick={() => onViewDetails(account.id)}
-              className="flex items-center gap-1"
+              className="flex items-center"
             >
-              <EyeIcon className="w-4 h-4" />
-              View
+              <EyeIcon className="w-5 h-5" />
+              <span>View</span>
             </Button>
             
             {!account.isRestored && (
@@ -138,10 +138,10 @@ const DeletedJobSeekersTable: React.FC<DeletedJobSeekersTableProps> = ({
                 variant="outline"
                 size="sm"
                 onClick={() => onRestoreAccount(account)}
-                className="flex items-center gap-1 text-green-600 border-green-300 hover:bg-green-50 dark:text-green-400 dark:border-green-600 dark:hover:bg-green-900/20"
+                className="flex items-center text-green-600 border-green-300 hover:bg-green-50 dark:text-green-400 dark:border-green-600 dark:hover:bg-green-900/20"
               >
-                <ArrowUpIcon className="w-4 h-4" />
-                Restore
+                <ArrowUpIcon className="w-5 h-5 mt-2" />
+                <span>Restore</span>
               </Button>
             )}
           </div>
