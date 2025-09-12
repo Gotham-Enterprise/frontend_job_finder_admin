@@ -79,8 +79,8 @@ const ViewDeletedDetailsModal: React.FC<ViewDeletedDetailsModalProps> = ({
   if (!deletedAccount) return null;
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} className="max-w-4xl mx-auto">
-      <div className="max-h-[90vh] overflow-hidden flex flex-col">
+    <Modal isOpen={isOpen} onClose={onClose} className="max-w-4xl mx-auto border max-h-[95vh] overflow-x-scroll rounded-md">
+      <div className="overflow-hidden flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center gap-3">
@@ -97,22 +97,14 @@ const ViewDeletedDetailsModal: React.FC<ViewDeletedDetailsModalProps> = ({
             </div>
           </div>
           <div className="flex items-center gap-2">
-            {!deletedAccount.isRestored && onRestore && (
-              <Button
-                variant="outline"
-                onClick={() => onRestore(deletedAccount)}
-                className="text-green-600 border-green-300 hover:bg-green-50 dark:text-green-400 dark:border-green-600 dark:hover:bg-green-900/20"
-              >
-                <ArrowUpIcon className="w-4 h-4 mr-2" />
-                Restore Account
-              </Button>
-            )}
-            <button
+            <Button
+              variant="ghost"
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
             >
-              <CloseIcon className="w-5 h-5" />
-            </button>
+              <CloseIcon className="w-4 h-4 mr-2" />
+              Close
+            </Button>
           </div>
         </div>
 
