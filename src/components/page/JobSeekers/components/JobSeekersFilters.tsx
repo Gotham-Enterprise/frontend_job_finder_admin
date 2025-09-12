@@ -69,7 +69,7 @@ const JobSeekersFilters: React.FC<JobSeekersFiltersProps> = ({
             value={filters.occupationId?.toString() || ''}
             onChange={(value: string) => onFilterChange('occupationId', value === '' ? undefined : parseInt(value))}
             options={occupationOptions}
-            placeholder="Select occupation..."
+            placeholder="Select Occupation..."
             searchPlaceholder="Search occupations..."
             className="w-full"
           />

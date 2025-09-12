@@ -608,7 +608,6 @@ const JobCreationDashboard: React.FC = () => {
   ];
 
   const occupationOptions = [
-    { value: '', label: 'Select Occupation' },
     ...(occupationsData?.data?.map(occ => ({
       value: occ.id.toString(),
       label: occ.name
@@ -616,7 +615,6 @@ const JobCreationDashboard: React.FC = () => {
   ];
 
   const specialtyOptions = [
-    { value: '', label: 'Select Specialty' },
     ...(selectedOccupationData?.specialty?.map(spec => ({
       value: spec.id.toString(),
       label: spec.name

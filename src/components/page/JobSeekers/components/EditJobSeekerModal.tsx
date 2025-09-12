@@ -53,37 +53,53 @@ export const EditJobSeekerModal: React.FC<EditJobSeekerModalProps> = ({
   }, [statesData]);
 
   const occupationOptions = useMemo(() => {
-    const baseOptions = [{ value: '', label: 'Select Occupation' }];
-    
     if (occupationsData?.success && occupationsData.data) {
-      const dynamicOptions = occupationsData.data.map(occupation => ({
-        value: occupation.id.toString(),
-        label: occupation.name
-      }));
-      return [...baseOptions, ...dynamicOptions];
+      // Create a Map to deduplicate by name (keep first occurrence)
+      const uniqueOccupations = new Map();
+      
+      occupationsData.data.forEach(occupation => {
+        // Filter out any placeholder-like entries and empty names
+        const name = occupation.name?.trim();
+        if (name && 
+            !name.toLowerCase().includes('select') && 
+            !uniqueOccupations.has(name)) {
+          uniqueOccupations.set(name, {
+            value: occupation.id.toString(),
+            label: name
+          });
+        }
+      });
+      
+      return Array.from(uniqueOccupations.values()).sort((a, b) => a.label.localeCompare(b.label));
     }
     
-    return baseOptions;
+    return [];
   }, [occupationsData]);
 
   const specialtyOptions = useMemo(() => {
-    const baseOptions = [{ value: '', label: 'Select Specialty' }];
-    
     if (selectedOccupationId && occupationsData?.success && occupationsData.data) {
       const selectedOccupation = occupationsData.data.find(
         occupation => occupation.id === selectedOccupationId
       );
       
       if (selectedOccupation?.specialty) {
-        const dynamicOptions = selectedOccupation.specialty.map((specialty: Specialty) => ({
-          value: specialty.id.toString(),
-          label: specialty.name
-        }));
-        return [...baseOptions, ...dynamicOptions];
+        // Create a Map to deduplicate by name (keep first occurrence)
+        const uniqueSpecialties = new Map();
+        
+        selectedOccupation.specialty.forEach((specialty: Specialty) => {
+          if (!uniqueSpecialties.has(specialty.name)) {
+            uniqueSpecialties.set(specialty.name, {
+              value: specialty.id.toString(),
+              label: specialty.name
+            });
+          }
+        });
+        
+        return Array.from(uniqueSpecialties.values()).sort((a, b) => a.label.localeCompare(b.label));
       }
     }
     
-    return baseOptions;
+    return [];
   }, [selectedOccupationId, occupationsData]);
 
   const countryOptions = React.useMemo(() => [
@@ -246,8 +262,10 @@ export const EditJobSeekerModal: React.FC<EditJobSeekerModalProps> = ({
                   options={occupationOptions}
                   value={formData.occupationId > 0 ? formData.occupationId.toString() : ''}
                   onChange={(value) => updateField('occupationId', value)}
-                  placeholder="Select occupation"
+                  placeholder="Select Occupation"
                   disabled={isOccupationsLoading}
+                  searchable={true}
+                  searchPlaceholder="Search occupations..."
                 />
               </div>
               <div>
@@ -258,8 +276,10 @@ export const EditJobSeekerModal: React.FC<EditJobSeekerModalProps> = ({
                   options={specialtyOptions}
                   value={formData.specialtyId ? formData.specialtyId.toString() : ''}
                   onChange={(value) => updateField('specialtyId', value)}
-                  placeholder="Select specialty"
+                  placeholder="Select Specialty"
                   disabled={!selectedOccupationId || selectedOccupationId === 0 || isOccupationsLoading}
+                  searchable={true}
+                  searchPlaceholder="Search specialties..."
                 />
               </div>
             </div>
