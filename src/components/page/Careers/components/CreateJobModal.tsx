@@ -193,6 +193,15 @@ export const CreateJobModal: React.FC<CreateJobModalProps> = ({
       newErrors.zipCode = 'Zip code is required';
     }
 
+    // Salary validation: if min provided, max must be greater than or equal to min
+    if (
+      typeof formData.salaryRangeStart === 'number' &&
+      typeof formData.salaryRangeEnd === 'number' &&
+      formData.salaryRangeEnd < formData.salaryRangeStart
+    ) {
+      newErrors.salaryRangeEnd = 'Max salary must be greater than or equal to min salary';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -486,7 +495,22 @@ export const CreateJobModal: React.FC<CreateJobModalProps> = ({
                         onChange={(e) => {
                           const value = e.target.value ? parseInt(e.target.value) : undefined;
                           setFormData(prev => ({ ...prev, salaryRangeStart: value }));
+                          // Validate relation with current max
+                          const currentMax = formData.salaryRangeEnd;
+                          if (
+              typeof value === 'number' &&
+              typeof currentMax === 'number' &&
+                            currentMax < value
+                          ) {
+                            setErrors(prev => ({ ...prev, salaryRangeEnd: 'Max salary must be greater than or equal to min salary' }));
+                          } else if (errors.salaryRangeEnd) {
+                            setErrors(prev => ({ ...prev, salaryRangeEnd: '' }));
+                          }
                         }}
+            min={0}
+            step={1}
+                        error={!!errors.salaryRangeStart}
+                        hint={errors.salaryRangeStart}
                       />
                       <Input
                         type="number"
@@ -495,7 +519,21 @@ export const CreateJobModal: React.FC<CreateJobModalProps> = ({
                         onChange={(e) => {
                           const value = parseInt(e.target.value) || 0;
                           setFormData(prev => ({ ...prev, salaryRangeEnd: value }));
+                          // Validate relation with current min
+                          const min = formData.salaryRangeStart;
+                          if (
+              typeof min === 'number' &&
+              value < min
+                          ) {
+              setErrors(prev => ({ ...prev, salaryRangeEnd: 'Max salary must be greater than or equal to min salary' }));
+                          } else if (errors.salaryRangeEnd) {
+                            setErrors(prev => ({ ...prev, salaryRangeEnd: '' }));
+                          }
                         }}
+            min={typeof formData.salaryRangeStart === 'number' ? formData.salaryRangeStart : 0}
+            step={1}
+                        error={!!errors.salaryRangeEnd}
+                        hint={errors.salaryRangeEnd}
                       />
                     </div>
                   </div>

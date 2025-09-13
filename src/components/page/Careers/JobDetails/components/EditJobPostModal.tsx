@@ -51,6 +51,7 @@ const EditJobPostModal: React.FC<EditJobPostModalProps> = ({
     jobDescription: '',
   });
   const [error, setError] = useState<string | null>(null);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   // City search state
   const [citySearch, setCitySearch] = useState('')
@@ -162,6 +163,7 @@ const EditJobPostModal: React.FC<EditJobPostModalProps> = ({
       
       setFormData(newFormData);
       setError(null); // Clear any previous errors
+  setErrors({}); // Clear field errors
       // Reset city search state when job changes
       setCitySearch('');
       setIsCityDropdownOpen(false);
@@ -463,8 +465,24 @@ const EditJobPostModal: React.FC<EditJobPostModalProps> = ({
                   <Input
                     type="number"
                     value={formData.salaryRangeStart}
-                    onChange={(e) => updateField('salaryRangeStart', e.target.value)}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      updateField('salaryRangeStart', val);
+                      const min = val ? parseFloat(val) : undefined;
+                      const max = formData.salaryRangeEnd ? parseFloat(formData.salaryRangeEnd) : undefined;
+                      if (
+                        typeof min === 'number' && !isNaN(min) &&
+                        typeof max === 'number' && !isNaN(max) &&
+                        max < min
+                      ) {
+                        setErrors(prev => ({ ...prev, salaryRangeEnd: 'Max salary must be greater than or equal to min salary' }));
+                      } else if (errors.salaryRangeEnd) {
+                        setErrors(prev => ({ ...prev, salaryRangeEnd: '' }));
+                      }
+                    }}
                     placeholder="Enter starting salary"
+                    min={0}
+                    step={1}
                   />
                 </div>
                 <div>
@@ -474,8 +492,26 @@ const EditJobPostModal: React.FC<EditJobPostModalProps> = ({
                   <Input
                     type="number"
                     value={formData.salaryRangeEnd}
-                    onChange={(e) => updateField('salaryRangeEnd', e.target.value)}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      updateField('salaryRangeEnd', val);
+                      const max = val ? parseFloat(val) : undefined;
+                      const min = formData.salaryRangeStart ? parseFloat(formData.salaryRangeStart) : undefined;
+                      if (
+                        typeof min === 'number' && !isNaN(min) &&
+                        typeof max === 'number' && !isNaN(max) &&
+                        max < min
+                      ) {
+                        setErrors(prev => ({ ...prev, salaryRangeEnd: 'Max salary must be greater than or equal to min salary' }));
+                      } else if (errors.salaryRangeEnd) {
+                        setErrors(prev => ({ ...prev, salaryRangeEnd: '' }));
+                      }
+                    }}
                     placeholder="Enter ending salary"
+                    min={(() => { const n = Number(formData.salaryRangeStart); return Number.isFinite(n) ? n : 0; })()}
+                    step={1}
+                    error={!!errors.salaryRangeEnd}
+                    hint={errors.salaryRangeEnd}
                   />
                 </div>
               </div>
@@ -509,8 +545,22 @@ const EditJobPostModal: React.FC<EditJobPostModalProps> = ({
           </Button>
           <Button
             variant="default"
-            onClick={saveChanges}
-            disabled={!isFormValid() || updateCareerMutation.isPending}
+            onClick={async () => {
+              // Final salary validation before save
+              const min = formData.salaryRangeStart ? parseFloat(formData.salaryRangeStart) : undefined;
+              const max = formData.salaryRangeEnd ? parseFloat(formData.salaryRangeEnd) : undefined;
+              if (
+                typeof min === 'number' && !isNaN(min) &&
+                typeof max === 'number' && !isNaN(max) &&
+                max < min
+              ) {
+                setErrors(prev => ({ ...prev, salaryRangeEnd: 'Max salary must be greater than or equal to min salary' }));
+                setError('Please fix the salary range: max must be greater than or equal to min.');
+                return;
+              }
+              await saveChanges();
+            }}
+            disabled={!isFormValid() || !!errors.salaryRangeEnd || updateCareerMutation.isPending}
           >
             {updateCareerMutation.isPending ? (
               <>

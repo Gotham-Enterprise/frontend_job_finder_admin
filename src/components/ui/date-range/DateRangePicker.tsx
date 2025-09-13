@@ -31,9 +31,9 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
 
   // Keep internal state in sync
   useEffect(() => { setInternalRange(value); }, [value]);
-
-  const startDate = internalRange?.from ? internalRange.from.toISOString().slice(0,10) : '';
-  const endDate = internalRange?.to ? internalRange.to.toISOString().slice(0,10) : '';
+  // Avoid UTC conversions that shift the day; use Date objects directly in local time.
+  const startDate: Date | undefined = internalRange?.from;
+  const endDate: Date | undefined = internalRange?.to;
 
   useEffect(() => {
     if (internalRange?.from && internalRange?.to) {
@@ -63,9 +63,9 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
         <CalendarIcon className="w-4 h-4" />
         <span className="text-xs">
           {startDate && endDate
-            ? `${new Date(startDate).toLocaleDateString(undefined,{month:'short',day:'numeric'})} - ${new Date(endDate).toLocaleDateString(undefined,{month:'short',day:'numeric'})}`
+            ? `${startDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} - ${endDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`
             : startDate
-              ? new Date(startDate).toLocaleDateString()
+              ? startDate.toLocaleDateString()
               : placeholder}
         </span>
         {(startDate || endDate) && !disabled && (
