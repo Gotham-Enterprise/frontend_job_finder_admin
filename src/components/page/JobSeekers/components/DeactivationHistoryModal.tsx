@@ -20,7 +20,6 @@ export const DeactivationHistoryModal: React.FC<DeactivationHistoryModalProps> =
   userName,
 }) => {
   const [history, setHistory] = useState<DeactivationHistoryEntry[]>([]);
-  const [userInfo, setUserInfo] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { addToast } = useToast();
 
@@ -35,8 +34,7 @@ export const DeactivationHistoryModal: React.FC<DeactivationHistoryModalProps> =
     
     try {
       const response = await adminUserManagementApi.getUserDeactivationHistory(userId);
-      setHistory(response.data.history);
-      setUserInfo(response.data.user);
+      setHistory(response.data);
     } catch (error: any) {
       console.error('Error fetching deactivation history:', error);
       addToast({
@@ -103,36 +101,6 @@ export const DeactivationHistoryModal: React.FC<DeactivationHistoryModalProps> =
           </div>
         ) : (
           <>
-            {userInfo && (
-              <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 mb-4">
-                <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-2">
-                  User Information
-                </h3>
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <span className="text-gray-500 dark:text-gray-400">Name:</span>{' '}
-                    <span className="text-gray-900 dark:text-white">
-                      {userInfo.firstName} {userInfo.lastName}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-gray-500 dark:text-gray-400">Email:</span>{' '}
-                    <span className="text-gray-900 dark:text-white">{userInfo.email}</span>
-                  </div>
-                  <div>
-                    <span className="text-gray-500 dark:text-gray-400">Current Status:</span>{' '}
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      userInfo.status === 'active' 
-                        ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                        : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
-                    }`}>
-                      {userInfo.status}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            )}
-
             <div className="space-y-4">
               {history.length === 0 ? (
                 <div className="text-center py-8">
@@ -175,14 +143,14 @@ export const DeactivationHistoryModal: React.FC<DeactivationHistoryModalProps> =
                                 <div>
                                   <span className="text-gray-600 dark:text-gray-400">Reason:</span>
                                   <p className="text-gray-900 dark:text-white mt-1">
-                                    {entry.deactivationReason}
+                                    {entry.reason}
                                   </p>
                                 </div>
                                 <div>
                                   <span className="text-gray-600 dark:text-gray-400">Deactivated by:</span>
                                   <p className="text-gray-900 dark:text-white mt-1">
-                                    {entry.deactivatedByAdmin
-                                      ? `${entry.deactivatedByAdmin.firstName} ${entry.deactivatedByAdmin.lastName} (${entry.deactivatedByAdmin.email})`
+                                    {entry.deactivatedBy
+                                      ? `${entry.deactivatedBy.firstName} ${entry.deactivatedBy.lastName} (${entry.deactivatedBy.email})`
                                       : entry.isDeactivatedBySystem
                                       ? 'System'
                                       : 'Unknown'
@@ -210,8 +178,8 @@ export const DeactivationHistoryModal: React.FC<DeactivationHistoryModalProps> =
                                   <div>
                                     <span className="text-gray-600 dark:text-gray-400">Reactivated by:</span>
                                     <p className="text-gray-900 dark:text-white mt-1">
-                                      {entry.reactivatedByAdmin
-                                        ? `${entry.reactivatedByAdmin.firstName} ${entry.reactivatedByAdmin.lastName} (${entry.reactivatedByAdmin.email})`
+                                      {entry.reactivatedBy
+                                        ? `${entry.reactivatedBy.firstName} ${entry.reactivatedBy.lastName} (${entry.reactivatedBy.email})`
                                         : 'Unknown'
                                       }
                                     </p>

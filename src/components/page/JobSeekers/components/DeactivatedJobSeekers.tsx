@@ -89,7 +89,7 @@ export const DeactivatedJobSeekers: React.FC<DeactivatedJobSeekersProps> = ({
     
     try {
       const response = await adminUserManagementApi.getDeactivatedJobSeekers(filters);
-      setData(response.data);
+      setData(response);
     } catch (error: any) {
       console.error('Error fetching deactivated job seekers:', error);
       addToast({
@@ -173,8 +173,9 @@ export const DeactivatedJobSeekers: React.FC<DeactivatedJobSeekersProps> = ({
 
   const getLocationString = (jobSeeker: DeactivatedJobSeeker) => {
     if (jobSeeker.user.profile) {
-      // Assuming profile has location fields
-      return 'Location not implemented'; // You'll need to check the actual profile structure
+      const { city, state, country } = jobSeeker.user.profile;
+      const locationParts = [city, state, country].filter(Boolean);
+      return locationParts.length > 0 ? locationParts.join(', ') : 'Not specified';
     }
     return 'Not specified';
   };
@@ -310,7 +311,7 @@ export const DeactivatedJobSeekers: React.FC<DeactivatedJobSeekersProps> = ({
                   </div>
                 </TableCell>
               </TableRow>
-            ) : !data?.deactivatedUsers?.length ? (
+            ) : !data?.data?.length ? (
               <TableRow>
                 <TableCell className="text-center py-12 px-6" colSpan={7}>
                   <div className="flex flex-col items-center justify-center space-y-3">
@@ -327,7 +328,7 @@ export const DeactivatedJobSeekers: React.FC<DeactivatedJobSeekersProps> = ({
                 </TableCell>
               </TableRow>
             ) : (
-              data.deactivatedUsers.map((jobSeeker: DeactivatedJobSeeker) => (
+              data.data.map((jobSeeker: DeactivatedJobSeeker) => (
                 <TableRow 
                   key={jobSeeker.id}
                   className="border-b text-sm border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50"
@@ -335,7 +336,7 @@ export const DeactivatedJobSeekers: React.FC<DeactivatedJobSeekersProps> = ({
                   <TableCell className="py-4 px-6">
                     <div className="flex items-center gap-3">
                       <Avatar
-                        src={jobSeeker.user.profile?.profilePicture?.url}
+                        src={jobSeeker.user.profile?.avatarUrl}
                         alt={jobSeeker.user.fullName}
                         name={jobSeeker.user.fullName}
                         size="medium"
@@ -365,16 +366,16 @@ export const DeactivatedJobSeekers: React.FC<DeactivatedJobSeekersProps> = ({
                   </TableCell>
                   
                   <TableCell className="py-4 px-6">
-                    <p className="text-sm text-gray-900 dark:text-white max-w-xs truncate" title={jobSeeker.deactivationReason}>
-                      {jobSeeker.deactivationReason}
+                    <p className="text-sm text-gray-900 dark:text-white max-w-xs truncate" title={jobSeeker.deactivation.reason}>
+                      {jobSeeker.deactivation.reason}
                     </p>
                   </TableCell>
                   
                   <TableCell className="py-4 px-6">
                     <p className="text-sm text-gray-900 dark:text-white">
-                      {jobSeeker.deactivatedByAdmin
-                        ? `${jobSeeker.deactivatedByAdmin.firstName} ${jobSeeker.deactivatedByAdmin.lastName}`
-                        : jobSeeker.isDeactivatedBySystem
+                      {jobSeeker.deactivation.deactivatedBy
+                        ? `${jobSeeker.deactivation.deactivatedBy.firstName} ${jobSeeker.deactivation.deactivatedBy.lastName}`
+                        : jobSeeker.deactivation.isDeactivatedBySystem
                         ? 'System'
                         : 'Unknown'
                       }
@@ -382,7 +383,7 @@ export const DeactivatedJobSeekers: React.FC<DeactivatedJobSeekersProps> = ({
                   </TableCell>
                   
                   <TableCell className="py-4 px-6 whitespace-nowrap">
-                    {formatDate(jobSeeker.deactivatedAt)}
+                    {formatDate(jobSeeker.deactivation.deactivatedAt)}
                   </TableCell>
                   
                   <TableCell className="py-4 px-6 text-right">
@@ -390,7 +391,7 @@ export const DeactivatedJobSeekers: React.FC<DeactivatedJobSeekersProps> = ({
                       <Button
                         variant="text-primary"
                         size="sm"
-                        onClick={() => openHistoryModal(jobSeeker.userId, jobSeeker.user.fullName || `${jobSeeker.user.firstName} ${jobSeeker.user.lastName}`)}
+                        onClick={() => openHistoryModal(jobSeeker.user.id, jobSeeker.user.fullName || `${jobSeeker.user.firstName} ${jobSeeker.user.lastName}`)}
                         startIcon={<DocsIcon />}
                       >
                         History
@@ -398,7 +399,7 @@ export const DeactivatedJobSeekers: React.FC<DeactivatedJobSeekersProps> = ({
                       <Button
                         variant="default"
                         size="sm"
-                        onClick={() => openReactivateModal(jobSeeker.userId, jobSeeker.user.fullName || `${jobSeeker.user.firstName} ${jobSeeker.user.lastName}`)}
+                        onClick={() => openReactivateModal(jobSeeker.user.id, jobSeeker.user.fullName || `${jobSeeker.user.firstName} ${jobSeeker.user.lastName}`)}
                         className="bg-green-600 hover:bg-green-700 text-white"
                       >
                         Reactivate

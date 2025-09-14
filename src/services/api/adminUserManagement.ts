@@ -22,50 +22,51 @@ export interface DeactivatedJobSeekersFilters {
 
 export interface DeactivatedJobSeeker {
   id: string;
-  userId: string;
-  deactivationReason: string;
-  isDeactivatedBySystem: boolean;
-  deactivatedAt: string;
-  deactivatedBy: string;
-  reactivatedAt?: string;
-  reactivatedBy?: string;
   user: {
     id: string;
     email: string;
     firstName: string;
     lastName: string;
     fullName: string;
-    role: string;
     status: string;
-    profile?: any;
+    profile?: {
+      phoneNumber?: string;
+      city?: string;
+      state?: string;
+      country?: string;
+      avatarUrl?: string;
+    };
     candidateProfile?: {
+      id: string;
       occupation?: {
         id: number;
         name: string;
       };
-      specialty?: string;
     };
   };
-  deactivatedByAdmin?: {
-    id: string;
-    firstName: string;
-    lastName: string;
-    email: string;
+  deactivation: {
+    reason: string;
+    deactivatedAt: string;
+    isDeactivatedBySystem: boolean;
+    deactivatedBy?: {
+      id: string;
+      firstName: string;
+      lastName: string;
+      email: string;
+    } | null;
   };
 }
 
 export interface DeactivatedJobSeekersResponse {
   success: boolean;
-  data: {
-    deactivatedUsers: DeactivatedJobSeeker[];
-    pagination: {
-      current_page: number;
-      per_page: number;
-      total: number;
-      total_pages: number;
-      has_next_page: boolean;
-      has_previous_page: boolean;
-    };
+  data: DeactivatedJobSeeker[];
+  pagination: {
+    current_page: number;
+    per_page: number;
+    total: number;
+    total_pages: number;
+    has_next_page: boolean;
+    has_previous_page: boolean;
   };
 }
 
@@ -92,38 +93,27 @@ export interface DeactivationStats {
 
 export interface DeactivationHistoryEntry {
   id: string;
-  deactivationReason: string;
-  isDeactivatedBySystem: boolean;
+  reason: string;
   deactivatedAt: string;
-  deactivatedBy: string;
   reactivatedAt?: string;
-  reactivatedBy?: string;
-  deactivatedByAdmin?: {
+  isDeactivatedBySystem: boolean;
+  deactivatedBy?: {
     id: string;
     firstName: string;
     lastName: string;
     email: string;
-  };
-  reactivatedByAdmin?: {
+  } | null;
+  reactivatedBy?: {
     id: string;
     firstName: string;
     lastName: string;
     email: string;
-  };
+  } | null;
 }
 
 export interface DeactivationHistoryResponse {
   success: boolean;
-  data: {
-    user: {
-      id: string;
-      email: string;
-      firstName: string;
-      lastName: string;
-      status: string;
-    };
-    history: DeactivationHistoryEntry[];
-  };
+  data: DeactivationHistoryEntry[];
 }
 
 export const adminUserManagementApi = {
