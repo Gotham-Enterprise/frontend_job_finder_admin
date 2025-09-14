@@ -5,6 +5,7 @@ import FilterDropdown from '../../../ui/FilterDropdown';
 import { SearchIcon, FilterIcon } from '../../../ui/icons';
 import { TrashBinIcon } from '@/icons';
 import { JobSeekersHeaderProps } from '@/services/types/JobSeekersTypes';
+import { MdOutlineLock } from "react-icons/md";
 
 interface JobSeekersHeaderWithDropdownProps extends JobSeekersHeaderProps {
   filterDropdownContent?: React.ReactNode;
@@ -48,7 +49,7 @@ const JobSeekersHeader: React.FC<JobSeekersHeaderWithDropdownProps> = ({
               href="/admin/job-seekers/deactivated"
               className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors"
             >
-              <TrashBinIcon className="w-4 h-4" />
+              <MdOutlineLock className="w-5 h-5" />
               <span>Deactivated Users</span>
             </Link>
             
