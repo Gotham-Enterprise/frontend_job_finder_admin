@@ -561,7 +561,7 @@ const UserForm: React.FC<UserFormProps> = ({
                               label="Delete"
                               checked={formData.permissions[module.key]?.delete || false}
                               onChange={(checked) => updatePermission(module.key, 'delete', checked)}
-                              disabled={isLoading || createRoleMutation.isPending}
+                              disabled={module.key !== 'blog' || isLoading || createRoleMutation.isPending}
                               size="sm"
                             />
                           </div>
