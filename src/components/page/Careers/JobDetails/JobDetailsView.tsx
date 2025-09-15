@@ -34,6 +34,27 @@ const JobDetailsView: React.FC<JobDetailsViewProps> = ({ jobId }) => {
   const startDate = dateRange?.from ? dateRange.from.toISOString().slice(0,10) : '';
   const endDate = dateRange?.to ? dateRange.to.toISOString().slice(0,10) : '';
 
+  // Function to format currency
+  const formatCurrency = (value: string | number | null | undefined) => {
+    if (!value) return 'Not specified';
+    const str = String(value);
+    // Check if it's a range
+    const parts = str.split('-').map(s => s.trim());
+    if (parts.length === 2) {
+      const start = parseFloat(parts[0].replace(/,/g, ''));
+      const end = parseFloat(parts[1].replace(/,/g, ''));
+      if (!isNaN(start) && !isNaN(end)) {
+        return `${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(start)} - ${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(end)}`;
+      }
+    }
+    // Single value
+    const num = parseFloat(str.replace(/,/g, ''));
+    if (!isNaN(num)) {
+      return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(num);
+    }
+    return str;
+  };
+
   // Function to format status for display
   const formatStatusDisplay = (status: string) => {
     switch (status) {
@@ -249,7 +270,7 @@ const JobDetailsView: React.FC<JobDetailsViewProps> = ({ jobId }) => {
           <div className="flex items-center gap-2"><Briefcase className="w-4 h-4 text-gray-500" /><h2 className='font-semibold'>{job.jobTitle}</h2></div>
           <div className="flex items-center gap-2"><Briefcase className="w-4 h-4 text-gray-500" /><span>{job.jobType}</span></div>
           <div className="flex items-center gap-2"><MapPin className="w-4 h-4 text-gray-500" /><span>{job.city}</span></div>
-          <div className="flex items-center gap-2"><DollarSign className="w-4 h-4 text-gray-500" /><span>{job.salaryRange || 'Not specified'}</span></div>
+          <div className="flex items-center gap-2"><DollarSign className="w-4 h-4 text-gray-500" /><span>{formatCurrency(job.salaryRange)}</span></div>
           {job.department &&
             <div className="flex items-center gap-2"><Building className="w-4 h-4 text-gray-500" /><span>{job.department}</span></div>
           }
