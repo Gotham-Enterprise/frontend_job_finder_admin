@@ -3,6 +3,7 @@ import Input from '../../../ui/input/Input';
 import FilterDropdown from '../../../ui/FilterDropdown';
 import { SearchIcon, FilterIcon } from '../../../ui/icons';
 import { CouponsHeaderProps } from '@/services/types/CouponsTypes';
+import PermissionWrapper from '../../../common/PermissionWrapper';
 
 
 const CouponsHeader: React.FC<CouponsHeaderProps> = ({
@@ -57,15 +58,17 @@ const CouponsHeader: React.FC<CouponsHeaderProps> = ({
             )}
           </button>
 
-          <button
-            onClick={onCreateCoupon}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border bg-white border-gray-200 text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-            </svg>
-            <span className="whitespace-nowrap">Add new</span>
-          </button>
+          <PermissionWrapper module="coupons" action="add">
+            <button
+              onClick={onCreateCoupon}
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border bg-white border-gray-200 text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              <span className="whitespace-nowrap">Add new</span>
+            </button>
+          </PermissionWrapper>
         </div>
       </div>
       
