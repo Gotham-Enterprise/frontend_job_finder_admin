@@ -1,27 +1,40 @@
 "use client";
 import { useMemo } from 'react';
 import { authUtils } from '@/services/utils/authUtils';
-import { RolePermission } from '@/services/types/auth';
 
 export const usePermissions = () => {
   const permissions = useMemo(() => {
     try {
       const user = authUtils.getUser();
-      if (!user || !user.adminRoleAccess || !user.adminRoleAccess.rolePermissions) {
+      if (!user?.adminRoleAccess?.rolePermissions) {
         return {};
       }
 
       const permissionsMap: Record<string, { add: boolean; view: boolean; edit: boolean; delete: boolean }> = {};
       
-      user.adminRoleAccess.rolePermissions.forEach((rolePermission: RolePermission) => {
-        const permissionKey = rolePermission.permission.name.toLowerCase().replace(/\s+/g, '');
-        permissionsMap[permissionKey] = {
-          add: rolePermission.add,
-          view: rolePermission.view,
-          edit: rolePermission.edit,
-          delete: rolePermission.delete,
-        };
+      user.adminRoleAccess.rolePermissions.forEach((rolePermission: any) => {
+        // Handle both nested and flat permission structure
+        const permissionName = rolePermission.permission?.name || rolePermission.name;
+        if (permissionName) {
+          const permissionKey = permissionName.toLowerCase().replace(/\s+/g, '');
+          permissionsMap[permissionKey] = {
+            add: rolePermission.add,
+            view: rolePermission.view,
+            edit: rolePermission.edit,
+            delete: rolePermission.delete,
+          };
+          
+          // Debug logging
+          if (permissionKey === 'jobseekers') {
+            console.log('Job Seekers Permission:', {
+              key: permissionKey,
+              permissions: permissionsMap[permissionKey]
+            });
+          }
+        }
       });
+
+      console.log('All permissions:', permissionsMap);
 
       return permissionsMap;
     } catch (error) {
@@ -32,6 +45,15 @@ export const usePermissions = () => {
 
   const hasPermission = (module: string, action: 'view' | 'add' | 'edit' | 'delete'): boolean => {
     const permission = permissions[module];
+    
+    // Debug logging for jobseekers
+    if (module === 'jobseekers') {
+      console.log(`Checking permission for ${module}.${action}:`, {
+        permission,
+        result: permission ? permission[action] : false
+      });
+    }
+    
     if (!permission) return false;
     return permission[action];
   };
