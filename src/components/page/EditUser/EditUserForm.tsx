@@ -67,7 +67,7 @@ const EditUserForm: React.FC<EditUserFormProps> = ({
     if (userData && apiRoles.length > 0) {
       const transformedData = transformApiUserToFormData(userData, apiRoles);
       
-      const standardModules = ['tickets', 'jobSeekers', 'employers', 'applications', 'coupons', 'blog', 'careers'];
+      const standardModules = ['jobSeekers', 'employers', 'jobs', 'applications', 'careers', 'tickets', 'coupons', 'blog'];
       const enhancedPermissions = { ...transformedData.permissions };
       
       standardModules.forEach(module => {
@@ -105,7 +105,7 @@ const EditUserForm: React.FC<EditUserFormProps> = ({
       if (isAdminRole(role)) {
         // Give full permissions to all modules for admin roles
         const adminPermissions: FlexiblePermissions = {};
-        const standardModules = ['tickets', 'jobSeekers', 'employers', 'applications', 'coupons', 'blog', 'careers'];
+        const standardModules = ['jobSeekers', 'employers', 'jobs', 'applications', 'careers', 'tickets', 'coupons', 'blog'];
         
         standardModules.forEach(module => {
           adminPermissions[module] = {
@@ -270,15 +270,21 @@ const EditUserForm: React.FC<EditUserFormProps> = ({
   }, []);
 
   const getDynamicModules = useCallback(() => {
-    const availableModules = new Set<string>();
+    // Define the order to match the sidebar
+    const standardModules = ['jobSeekers', 'employers', 'jobs', 'applications', 'careers', 'tickets', 'coupons', 'blog'];
     
-    const standardModules = ['tickets', 'jobSeekers', 'employers', 'applications', 'coupons', 'blog', 'careers'];
-    standardModules.forEach(module => availableModules.add(module));
+    // Get all available modules from various sources
+    const allAvailableModules = new Set<string>();
     
+    // Add standard modules
+    standardModules.forEach(module => allAvailableModules.add(module));
+    
+    // Add modules from form permissions
     Object.keys(formData.permissions).forEach(key => {
-      availableModules.add(key);
+      allAvailableModules.add(key);
     });
     
+    // Add modules from user data
     if (userData?.access) {
       Object.keys(userData.access).forEach(moduleKey => {
         const keyMap: { [key: string]: string } = {
@@ -293,11 +299,28 @@ const EditUserForm: React.FC<EditUserFormProps> = ({
         };
         
         const mappedKey = keyMap[moduleKey] || moduleKey.toLowerCase().replace(/\s+/g, '');
-        availableModules.add(mappedKey);
+        allAvailableModules.add(mappedKey);
       });
     }
     
-    return Array.from(availableModules).map(key => ({
+    // Create ordered array with standard modules first, then any additional ones
+    const orderedModules: string[] = [];
+    
+    // Add standard modules in the defined order
+    standardModules.forEach(module => {
+      if (allAvailableModules.has(module)) {
+        orderedModules.push(module);
+      }
+    });
+    
+    // Add any additional modules not in the standard list
+    allAvailableModules.forEach(module => {
+      if (!standardModules.includes(module)) {
+        orderedModules.push(module);
+      }
+    });
+    
+    return orderedModules.map(key => ({
       key,
       name: key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1').trim(),
       description: `Manage ${key.toLowerCase().replace(/([A-Z])/g, ' $1').trim()} access and operations`,
