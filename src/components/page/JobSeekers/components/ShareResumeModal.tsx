@@ -86,13 +86,13 @@ export const ShareResumeModal: React.FC<ShareResumeModalProps> = ({
     }
   };
 
-  const handleClose = () => {
+  const initClose = () => {
     setEmail('');
     onClose();
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} isFullscreen={false} className="max-w-md mx-auto">
+    <Modal isOpen={isOpen} onClose={initClose} isFullscreen={false} className="max-w-md mx-auto">
       <div className="p-6">
         {/* Header */}
         <div className="flex items-center gap-3 mb-6">
@@ -117,7 +117,7 @@ export const ShareResumeModal: React.FC<ShareResumeModalProps> = ({
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <EnvelopeIcon className="h-4 w-4 text-gray-400" />
+                <EnvelopeIcon className="text-gray-400" />
               </div>
               <input
                 type="email"
@@ -135,7 +135,7 @@ export const ShareResumeModal: React.FC<ShareResumeModalProps> = ({
           <div className="flex gap-3 pt-4">
             <button
               type="button"
-              onClick={handleClose}
+              onClick={initClose}
               disabled={isSubmitting}
               className="flex-1 h-[45px] rounded-sm px-7 inline-flex items-center justify-center font-medium gap-2 transition border bg-transparent hover:bg-transparent hover:shadow disabled:cursor-not-allowed disabled:opacity-50"
             >
@@ -158,14 +158,6 @@ export const ShareResumeModal: React.FC<ShareResumeModalProps> = ({
             </Button>
           </div>
         </form>
-
-        {resumeFileName && (
-          <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              <span className="font-medium">File:</span> {resumeFileName}
-            </p>
-          </div>
-        )}
       </div>
     </Modal>
   );
