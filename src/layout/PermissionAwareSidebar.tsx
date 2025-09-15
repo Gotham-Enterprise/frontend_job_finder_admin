@@ -149,25 +149,24 @@ const AppSidebar: React.FC = () => {
       return item.isAccessible;
     }
     
-    // If item has permissionKey, check permissions
+    // If item has permissionKey and we have permissions, check permissions
     if (item.permissionKey && permissions) {
       const hasPermission = hasAnyModulePermission(permissions, item.permissionKey);
       return hasPermission;
     }
     
-    // If we're authenticated and have user data but still loading permissions, 
-    // show items to prevent empty sidebar during development refresh
+    // If we're authenticated but still loading permissions, show loading state instead of showing all items
     if (isAuthenticated && hasUserData && loading) {
-      return true;
+      return false; // Don't show items while loading to avoid false positive access
     }
     
-    // If we're authenticated but no permissions yet, show items
+    // If we're authenticated but don't have permissions yet, don't show items
     if (isAuthenticated && hasUserData && !permissions) {
-      return true;
+      return false; // Don't show items if we don't have permission data
     }
     
-    // Default to accessible if no permission key or during loading
-    return true;
+    // Only default to accessible if no permission key is required
+    return !item.permissionKey;
   };
 
   const renderMenuItems = (
@@ -272,12 +271,13 @@ const AppSidebar: React.FC = () => {
                         return hasRequiredPermission;
                       }
                       
-                      // If we're authenticated but permissions are still loading, show submenu items
-                      if (isAuthenticated && hasUserData && (loading || !permissions)) {
+                      // If we have permissions loaded but no specific permission requirement, show the item
+                      if (permissions && !subItem.requiredAction) {
                         return true;
                       }
                       
-                      return true; // Show if no permission requirement
+                      // If we don't have permissions or are loading, don't show submenu items
+                      return false;
                     })
                     .map((subItem) => (
                     <li key={subItem.name}>
@@ -389,9 +389,8 @@ const AppSidebar: React.FC = () => {
   };
 
 
-  // Only show skeleton if we're loading and don't have any permissions yet
-  // AND either not authenticated or no user data, OR if it's the initial mount and we're still loading
-  if ((loading && !permissions && (!isAuthenticated || !hasUserData)) || (isInitialMount && loading && isAuthenticated)) {
+  // Show skeleton if we're loading and don't have permissions yet, but only if authenticated
+  if (loading && !permissions && isAuthenticated && hasUserData) {
     return (
       <aside
         className={`fixed lex flex-col lg:mt-0 top-0 px-5 left-0 bg-white dark:bg-gray-900 dark:border-gray-800 text-gray-900 h-screen transition-all duration-300 ease-in-out z-50 border-r border-gray-200 

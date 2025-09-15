@@ -154,22 +154,9 @@ export const useAuthPermissions = (): UseAuthPermissionsReturn => {
       setError(errorMessage);
       console.error('Error fetching user permissions:', err);
       
-      // If there's an error and we have some user data, set minimal permissions
-      const user = authUtils.getUser();
-      if (user && authUtils.isAuthenticated()) {
+      // Don't set fallback permissions - let the component handle the no-permissions state
+      // This ensures that if the API call fails, we don't accidentally grant permissions
       
-        setPermissions({
-          tickets: { view: true, create: false, update: false, delete: false },
-          jobSeekers: { view: true, create: false, update: false, delete: false },
-          employers: { view: true, create: false, update: false, delete: false },
-          jobs: { view: true, create: false, update: false, delete: false },
-          applications: { view: true, create: false, update: false, delete: false },
-          coupons: { view: false, create: false, update: false, delete: false },
-          blog: { view: true, create: false, update: false, delete: false },
-          careers: { view: true, create: false, update: false, delete: false },
-        });
-        setError(null); 
-      }
     } finally {
       setLoading(false);
       if (initialLoad) setInitialLoad(false);

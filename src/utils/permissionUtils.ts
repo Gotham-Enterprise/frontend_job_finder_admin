@@ -8,7 +8,9 @@ interface ApiRolePermission {
   view: boolean;
   edit: boolean;
   delete: boolean;
-  permission: {
+  name: string;
+  description: string;
+  permission?: {
     id: string;
     name: string;
     description: string;
@@ -61,9 +63,17 @@ export function convertApiPermissionsToUserPermissions(userData: ApiUserData): U
 
   // Convert API permissions to our format
   rolePermissions.forEach((apiPermission) => {
-    const moduleName = permissionMapping[apiPermission.permission.name];
+    // The API data structure shows the permission name is directly in apiPermission.name, not apiPermission.permission.name
+    const permissionName = apiPermission.name || (apiPermission.permission && apiPermission.permission.name);
     
-    if (moduleName && userPermissions[moduleName]) {
+    if (!permissionName) {
+      console.warn('Permission name is missing for:', apiPermission);
+      return;
+    }
+    
+    const moduleName = permissionMapping[permissionName];
+    
+    if (moduleName && moduleName in userPermissions) {
       userPermissions[moduleName] = {
         view: apiPermission.view,
         create: apiPermission.add,
@@ -71,7 +81,7 @@ export function convertApiPermissionsToUserPermissions(userData: ApiUserData): U
         delete: apiPermission.delete,
       };
     } else {
-      console.warn('Unknown permission name:', apiPermission.permission.name, 'Available mappings:', Object.keys(permissionMapping));
+      console.warn('Unknown permission name:', permissionName, 'Available mappings:', Object.keys(permissionMapping));
     }
   });
 
