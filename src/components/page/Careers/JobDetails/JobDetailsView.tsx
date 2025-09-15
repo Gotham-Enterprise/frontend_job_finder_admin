@@ -38,7 +38,7 @@ const JobDetailsView: React.FC<JobDetailsViewProps> = ({ jobId }) => {
   const formatCurrency = (value: string | number | null | undefined) => {
     if (!value) return 'Not specified';
     const str = String(value);
-    // Check if it's a range
+    // Check if it's a rangeda
     const parts = str.split('-').map(s => s.trim());
     if (parts.length === 2) {
       const start = parseFloat(parts[0].replace(/,/g, ''));
@@ -71,7 +71,7 @@ const JobDetailsView: React.FC<JobDetailsViewProps> = ({ jobId }) => {
 
   // Contextual empty state messaging for applicants table
   const getEmptyStateMessage = () => {
-    const hasFilters = !!searchTerm || !!startDate || !!endDate;
+    const hasFilters = !!searchTerm || !!dateRange?.from || !!dateRange?.to;
     if (hasFilters) {
       return 'No applicants match your current search or filters.';
     }
@@ -116,22 +116,31 @@ const JobDetailsView: React.FC<JobDetailsViewProps> = ({ jobId }) => {
         applicant.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         applicant.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (applicant.phoneNumber && applicant.phoneNumber.includes(searchTerm));
+      
       let matchesDate = true;
-      if (startDate || endDate) {
+      if (dateRange?.from || dateRange?.to) {
+        // Use the actual Date objects from dateRange instead of string conversion
         const applied = new Date(applicant.applicationDate);
-        if (startDate) {
-          const start = new Date(startDate + 'T00:00:00');
-          if (applied < start) matchesDate = false;
+        
+        // Normalize the applied date to start of day for comparison
+        const appliedNormalized = new Date(applied);
+        appliedNormalized.setHours(0, 0, 0, 0);
+        
+        if (dateRange.from) {
+          const start = new Date(dateRange.from);
+          start.setHours(0, 0, 0, 0);
+          if (appliedNormalized < start) matchesDate = false;
         }
-        if (endDate) {
-          // Include the whole end date day
-            const end = new Date(endDate + 'T23:59:59.999');
-          if (applied > end) matchesDate = false;
+        
+        if (dateRange.to) {
+          const end = new Date(dateRange.to);
+          end.setHours(0, 0, 0, 0);
+          if (appliedNormalized > end) matchesDate = false;
         }
       }
       return matchesTab && matchesSearch && matchesDate;
     });
-  }, [jobData, activeTab, searchTerm, startDate, endDate]);
+  }, [jobData, activeTab, searchTerm, dateRange]);
 
   const handleUpdate = () => {
     refetch();
@@ -230,7 +239,7 @@ const JobDetailsView: React.FC<JobDetailsViewProps> = ({ jobId }) => {
             &larr; Back to Careers
           </Button>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="  ">
           <Button variant="outline" onClick={openEditModal}>
             <Edit className="w-4 h-4 mr-2" />
             Edit Job Post
