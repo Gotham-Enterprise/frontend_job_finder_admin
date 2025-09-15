@@ -85,7 +85,7 @@ export function convertApiPermissionsToUserPermissions(userData: ApiUserData): U
     }
   });
 
-  console.log('Final converted permissions:', userPermissions);
+
   return userPermissions;
 }
 

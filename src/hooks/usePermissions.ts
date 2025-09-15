@@ -23,18 +23,8 @@ export const usePermissions = () => {
             edit: rolePermission.edit,
             delete: rolePermission.delete,
           };
-          
-          // Debug logging
-          if (permissionKey === 'jobseekers') {
-            console.log('Job Seekers Permission:', {
-              key: permissionKey,
-              permissions: permissionsMap[permissionKey]
-            });
-          }
         }
       });
-
-      console.log('All permissions:', permissionsMap);
 
       return permissionsMap;
     } catch (error) {
@@ -45,15 +35,6 @@ export const usePermissions = () => {
 
   const hasPermission = (module: string, action: 'view' | 'add' | 'edit' | 'delete'): boolean => {
     const permission = permissions[module];
-    
-    // Debug logging for jobseekers
-    if (module === 'jobseekers') {
-      console.log(`Checking permission for ${module}.${action}:`, {
-        permission,
-        result: permission ? permission[action] : false
-      });
-    }
-    
     if (!permission) return false;
     return permission[action];
   };
