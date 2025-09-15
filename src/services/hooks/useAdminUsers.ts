@@ -34,7 +34,7 @@ export const useCreateAdminUser = () => {
     onSuccess: (response) => {
       if (response.success) {
         queryClient.invalidateQueries({ queryKey: ['adminUsers'] });
-        showToast.success('Success', 'User created successfully');
+        // Let the calling component handle the success toast to avoid duplicates
       } else {
         showToast.error('Error', 'Failed to create user');
       }
@@ -55,7 +55,7 @@ export const useUpdateAdminUser = () => {
     onSuccess: (response) => {
       if (response.success) {
         queryClient.invalidateQueries({ queryKey: ['adminUsers'] });
-        showToast.success('Success', 'User updated successfully');
+        // Let the calling component handle the success toast to avoid duplicates
       } else {
         showToast.error('Error', 'Failed to update user');
       }
@@ -148,7 +148,7 @@ export const useCreateRole = () => {
     onSuccess: (response) => {
       if (response.success) {
         queryClient.invalidateQueries({ queryKey: ['adminRoles'] });
-        showToast.success('Success', 'Role created successfully');
+        // Let the calling component handle the success toast to avoid duplicates
       } else {
         showToast.error('Error', 'Failed to create role');
       }

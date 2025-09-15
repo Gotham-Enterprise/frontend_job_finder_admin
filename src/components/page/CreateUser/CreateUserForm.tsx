@@ -5,6 +5,7 @@ import { CreateUserFormData, ROLE_OPTIONS } from '@/types/permissions';
 import { getPermissionsForRole } from '@/config/permissions';
 import { DEFAULT_PERMISSIONS, FlexiblePermissions } from '@/types/permissions';
 import { useCreateRole, useAdminRoles } from '@/services/hooks/useAdminUsers';
+import { showToast } from '@/services/utils/toast';
 import Input from '@/components/ui/input/Input';
 import Label from '@/components/form/Label';
 import Select from '@/components/form/Select';
@@ -229,6 +230,9 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({
         
         setIsRoleModalOpen(false);
         setNewRoleData({ value: '', label: '' });
+        
+        // Show success toast for role creation
+        showToast.success('Success', 'Role created successfully');
       }
     } catch (error) {
       console.error('Role creation error:', error);
