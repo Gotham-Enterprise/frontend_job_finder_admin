@@ -612,7 +612,12 @@ const EditUserForm: React.FC<EditUserFormProps> = ({
                                 ...prev,
                                 permissions: {
                                   ...prev.permissions,
-                                  [module.key]: { view: true, add: true, edit: true, delete: true }
+                                  [module.key]: { 
+                                    view: true, 
+                                    add: true, 
+                                    edit: !['jobs', 'applications', 'tickets', 'careers', 'coupons'].includes(module.key),
+                                    delete: module.key === 'blog'
+                                  }
                                 }
                               }));
                             }}
@@ -647,9 +652,13 @@ const EditUserForm: React.FC<EditUserFormProps> = ({
                     <button
                       type="button"
                       onClick={() => {
-                        const allPermissions = { view: true, add: true, edit: true, delete: true };
                         const globalPermissions = dynamicModules.reduce((acc, module) => {
-                          acc[module.key] = allPermissions;
+                          acc[module.key] = {
+                            view: true,
+                            add: true,
+                            edit: !['jobs', 'applications', 'tickets', 'careers', 'coupons'].includes(module.key),
+                            delete: module.key === 'blog'
+                          };
                           return acc;
                         }, {} as FlexiblePermissions);
                         setFormData(prev => ({ ...prev, permissions: globalPermissions }));
