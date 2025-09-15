@@ -1,10 +1,8 @@
 'use client';
 
 import React, { useState, useCallback, useEffect } from 'react';
-import { CreateUserFormData, ROLE_OPTIONS } from '@/types/permissions';
-import { CreateUserFormData as ServiceCreateUserFormData } from '@/services/types/permissions';
+import { CreateUserFormData, ROLE_OPTIONS, DEFAULT_PERMISSIONS, FlexiblePermissions } from '@/types/permissions';
 import { getPermissionsForRole } from '@/config/permissions';
-import { DEFAULT_PERMISSIONS, FlexiblePermissions } from '@/types/permissions';
 import { useCreateRole, useAdminRoles } from '@/services/hooks/useAdminUsers';
 import { AdminUser } from '@/services/api/adminUsers';
 import { transformApiUserToFormData } from '@/services/utils/userUtils';
@@ -60,12 +58,20 @@ const UserForm: React.FC<UserFormProps> = ({
   useEffect(() => {
     if (apiRoles.length > 0) {
       console.log('API Roles:', apiRoles);
-      const mappedRoles = apiRoles.map(role => ({
-        value: role.roleName.toLowerCase().replace(/\s+/g, '-'),
-        label: role.roleName
-      }));
+      const mappedRoles = apiRoles
+        .filter(role => {
+          // Filter out Super Admin roles
+          const roleName = role.roleName.toLowerCase();
+          return !roleName.includes('super admin') && 
+                 !roleName.includes('superadmin') && 
+                 roleName !== 'admin';
+        })
+        .map(role => ({
+          value: role.roleName.toLowerCase().replace(/\s+/g, '-'),
+          label: role.roleName
+        }));
       
-      console.log('Mapped Roles:', mappedRoles);
+      console.log('Mapped Roles (Super Admin filtered):', mappedRoles);
       
       // Remove duplicates based on value
       const uniqueRoles = mappedRoles.filter((role, index, self) => 

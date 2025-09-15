@@ -1,9 +1,8 @@
 'use client';
 
 import React, { useState, useCallback, useEffect } from 'react';
-import { CreateUserFormData, ROLE_OPTIONS } from '@/types/permissions';
+import { CreateUserFormData, ROLE_OPTIONS, DEFAULT_PERMISSIONS, FlexiblePermissions } from '@/types/permissions';
 import { getPermissionsForRole } from '@/config/permissions';
-import { DEFAULT_PERMISSIONS, FlexiblePermissions } from '@/types/permissions';
 import { useCreateRole, useAdminRoles } from '@/services/hooks/useAdminUsers';
 import { showToast } from '@/services/utils/toast';
 import Input from '@/components/ui/input/Input';
@@ -46,10 +45,18 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({
 
   useEffect(() => {
     if (apiRoles.length > 0) {
-      const mappedRoles = apiRoles.map(role => ({
-        value: role.roleName.toLowerCase().replace(/\s+/g, '-'),
-        label: role.roleName
-      }));
+      const mappedRoles = apiRoles
+        .filter(role => {
+          // Filter out Super Admin roles
+          const roleName = role.roleName.toLowerCase();
+          return !roleName.includes('super admin') && 
+                 !roleName.includes('superadmin') && 
+                 roleName !== 'admin';
+        })
+        .map(role => ({
+          value: role.roleName.toLowerCase().replace(/\s+/g, '-'),
+          label: role.roleName
+        }));
       
       const uniqueRoles = mappedRoles.filter((role, index, self) => 
         index === self.findIndex(r => r.value === role.value)

@@ -58,6 +58,10 @@ export const DEFAULT_PERMISSIONS: FlexiblePermissions = {
   careers: { view: false, add: false, edit: false, delete: false },
 };
 
-export const ROLE_OPTIONS = [
-  { value: 'super-admin', label: 'Super Admin' },
+export const ROLE_OPTIONS: { value: string; label: string }[] = [
+  { value: 'manager', label: 'Manager' },
+  { value: 'user', label: 'User' },
+  { value: 'content-manager', label: 'Content Creator' },
+  { value: 'viewer', label: 'Viewer' },
+  // Super Admin option has been removed - users cannot select this role
 ];
