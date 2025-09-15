@@ -68,10 +68,10 @@ const Careers: React.FC<CareersProps> = ({ className = "" }) => {
         isLoading={isLoading}
         onViewJobDetails={viewJobDetails}
         onViewApplicants={viewApplicants}
-  meta={closedMeta}
-  onPrevPage={prevClosedPage}
-  onNextPage={nextClosedPage}
-  onPageSizeChange={onPageSizeChange}
+        meta={closedMeta}
+        onPrevPage={prevClosedPage}
+        onNextPage={nextClosedPage}
+        onPageSizeChange={onPageSizeChange}
       />
 
       <CreateJobModal
