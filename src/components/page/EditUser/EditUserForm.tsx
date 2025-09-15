@@ -534,7 +534,7 @@ const EditUserForm: React.FC<EditUserFormProps> = ({
                               label="Create"
                               checked={formData.permissions[module.key]?.add || false}
                               onChange={(checked) => updatePermission(module.key, 'add', checked)}
-                              disabled={isLoading || createRoleMutation.isPending || !formData.permissions[module.key]?.view}
+                              disabled={['jobSeekers', 'applications', 'careers', 'tickets'].includes(module.key) || isLoading || createRoleMutation.isPending || !formData.permissions[module.key]?.view}
                               size="sm"
                             />
                           </div>
@@ -614,7 +614,7 @@ const EditUserForm: React.FC<EditUserFormProps> = ({
                                   ...prev.permissions,
                                   [module.key]: { 
                                     view: true, 
-                                    add: true, 
+                                    add: !['jobSeekers', 'applications', 'careers', 'tickets'].includes(module.key), 
                                     edit: !['jobs', 'applications', 'tickets', 'careers', 'coupons'].includes(module.key),
                                     delete: module.key === 'blog'
                                   }
@@ -655,7 +655,7 @@ const EditUserForm: React.FC<EditUserFormProps> = ({
                         const globalPermissions = dynamicModules.reduce((acc, module) => {
                           acc[module.key] = {
                             view: true,
-                            add: true,
+                            add: !['jobSeekers', 'applications', 'careers', 'tickets'].includes(module.key),
                             edit: !['jobs', 'applications', 'tickets', 'careers', 'coupons'].includes(module.key),
                             delete: module.key === 'blog'
                           };
