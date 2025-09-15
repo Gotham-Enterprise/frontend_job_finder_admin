@@ -529,7 +529,7 @@ const UserForm: React.FC<UserFormProps> = ({
                               label="Update"
                               checked={formData.permissions[module.key]?.edit || false}
                               onChange={(checked) => updatePermission(module.key, 'edit', checked)}
-                              disabled={isLoading || createRoleMutation.isPending}
+                              disabled={['jobs', 'applications', 'tickets', 'careers', 'coupons'].includes(module.key) || isLoading || createRoleMutation.isPending}
                               size="sm"
                             />
                           </div>
