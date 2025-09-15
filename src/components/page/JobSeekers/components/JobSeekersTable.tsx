@@ -10,10 +10,11 @@ import {
 import Badge from '../../../ui/badge/Badge';
 import Button from '../../../ui/button/Button';
 import TableHeading from '../../../tables/tableHeader';
-import { EyeIcon, TimeIcon, FileIcon, DownloadIcon, PencilIcon } from '@/icons';
+import { EyeIcon, TimeIcon, FileIcon, DownloadIcon, PencilIcon, PaperPlaneIcon } from '@/icons';
 import { JobSeekersTableProps } from '@/services/types/JobSeekersTypes';
 import Avatar from '../../../ui/avatar/Avatar';
 import { EditJobSeekerModal } from './EditJobSeekerModal';
+import { ShareResumeModal } from './ShareResumeModal';
 import { useToast } from '@/context/ToastContext';
 
 
@@ -79,6 +80,8 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
   const [loadingResumeId, setLoadingResumeId] = useState<string | null>(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedJobSeekerId, setSelectedJobSeekerId] = useState<string | null>(null);
+  const [shareModalOpen, setShareModalOpen] = useState(false);
+  const [selectedJobSeekerForShare, setSelectedJobSeekerForShare] = useState<any>(null);
   const { addToast } = useToast();
 
   const openEditModal = (jobSeekerId: string) => {
@@ -89,6 +92,55 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
   const closeEditModal = () => {
     setEditModalOpen(false);
     setSelectedJobSeekerId(null);
+  };
+
+  const openShareModal = (jobSeeker: any) => {
+    setSelectedJobSeekerForShare(jobSeeker);
+    setShareModalOpen(true);
+  };
+
+  const closeShareModal = () => {
+    setShareModalOpen(false);
+    setSelectedJobSeekerForShare(null);
+  };
+
+  const hasResume = (jobSeeker: any) => {
+    return (jobSeeker.hasResume && jobSeeker.resumeFileObjectKey) ||
+           (jobSeeker.resumeId && jobSeeker.resumeFileObjectKey) ||
+           (jobSeeker.documents && jobSeeker.documents.length > 0 && 
+            jobSeeker.documents.some((doc: any) => doc.objectKey));
+  };
+
+  const getResumeData = (jobSeeker: any) => {
+    if (jobSeeker.hasResume && jobSeeker.resumeFileObjectKey) {
+      return {
+        objectKey: jobSeeker.resumeFileObjectKey,
+        fileName: jobSeeker.resumeFileName
+      };
+    }
+    
+    if (jobSeeker.resumeId && jobSeeker.resumeFileObjectKey) {
+      return {
+        objectKey: jobSeeker.resumeFileObjectKey,
+        fileName: jobSeeker.resumeFileName
+      };
+    }
+
+    if (jobSeeker.documents && jobSeeker.documents.length > 0) {
+      const resumeDoc = jobSeeker.documents.find((doc: any) => 
+        doc.type?.toLowerCase().includes('resume') || 
+        doc.fileName?.toLowerCase().includes('resume')
+      ) || jobSeeker.documents[0];
+      
+      if (resumeDoc && resumeDoc.objectKey) {
+        return {
+          objectKey: resumeDoc.objectKey,
+          fileName: resumeDoc.fileName
+        };
+      }
+    }
+
+    return null;
   };
 
   const refreshData = (showSuccessToast = false) => {
@@ -353,11 +405,23 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
                 </TableCell>
                 <TableCell className="py-4 px-6 text-right">
                   <div className="flex items-center gap-4">
+                    {hasResume(jobSeeker) ? (
+                      <button 
+                        className="flex gap-2 text-blue-500 hover:text-blue-600 transition-colors duration-200"
+                        onClick={() => openShareModal(jobSeeker)}
+                        title="Share resume"
+                      >
+                        <PaperPlaneIcon /> Share
+                      </button>
+                    ) : (
+                      <span className="flex gap-2 text-gray-400 dark:text-gray-500 cursor-not-allowed" title="No resume to share">
+                        <PaperPlaneIcon className="opacity-50" /> Share
+                      </span>
+                    )}
+                    
                     <button 
-                   
                       className="flex gap-2 text-brand-400"
                       onClick={() => onViewJobSeeker(jobSeeker.id)}
-                    
                     >
                      <EyeIcon />  View
                     </button>
@@ -365,7 +429,6 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
                     <button 
                        className="flex gap-2 text-brand-400"
                       onClick={() => openEditModal(jobSeeker.id)}
-                   
                     >
                       <PencilIcon /> Edit
                     </button>
@@ -383,6 +446,17 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
           onClose={closeEditModal}
           jobSeekerId={selectedJobSeekerId}
           onUpdate={() => refreshData(true)}
+        />
+      )}
+
+      {selectedJobSeekerForShare && (
+        <ShareResumeModal
+          isOpen={shareModalOpen}
+          onClose={closeShareModal}
+          jobSeekerName={selectedJobSeekerForShare.name}
+          jobSeekerId={selectedJobSeekerForShare.id}
+          resumeObjectKey={getResumeData(selectedJobSeekerForShare)?.objectKey}
+          resumeFileName={getResumeData(selectedJobSeekerForShare)?.fileName}
         />
       )}
     </div>
