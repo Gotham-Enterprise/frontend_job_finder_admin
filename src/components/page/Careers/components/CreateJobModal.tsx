@@ -337,7 +337,7 @@ export const CreateJobModal: React.FC<CreateJobModalProps> = ({
                   </label>
                   <Input
                     type="text"
-                    placeholder="Street address"
+                    placeholder="Address"
                     value={formData.address || ''}
                     onChange={handleInputChange('address')}
                     error={!!errors.address}
@@ -477,7 +477,7 @@ export const CreateJobModal: React.FC<CreateJobModalProps> = ({
                       options={TIMEZONE_OPTIONS}
                       value={formData.timezone}
                       onChange={handleSelectChange('timezone')}
-                      placeholder="Select timezone"
+                      placeholder="Timezone"
                     />
                     {errors.timezone && (
                       <p className="mt-1.5 text-xs text-error-500">{errors.timezone}</p>
