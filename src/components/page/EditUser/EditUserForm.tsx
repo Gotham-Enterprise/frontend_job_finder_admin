@@ -86,6 +86,16 @@ const EditUserForm: React.FC<EditUserFormProps> = ({
             delete: false,
           };
         }
+        // Force disabled permissions to be false
+        if (['jobSeekers', 'applications', 'careers', 'tickets'].includes(module)) {
+          enhancedPermissions[module].add = false;
+        }
+        if (['jobs', 'applications', 'tickets', 'careers', 'coupons'].includes(module)) {
+          enhancedPermissions[module].edit = false;
+        }
+        if (module !== 'blog') {
+          enhancedPermissions[module].delete = false;
+        }
       });
       
       setFormData({
@@ -117,9 +127,9 @@ const EditUserForm: React.FC<EditUserFormProps> = ({
         standardModules.forEach(module => {
           adminPermissions[module] = {
             view: true,
-            add: true,
-            edit: true,
-            delete: true,
+            add: !['jobSeekers', 'applications', 'careers', 'tickets'].includes(module),
+            edit: !['jobs', 'applications', 'tickets', 'careers', 'coupons'].includes(module),
+            delete: module === 'blog',
           };
         });
         
@@ -136,9 +146,9 @@ const EditUserForm: React.FC<EditUserFormProps> = ({
         Object.entries(rolePermissions).forEach(([key, perm]) => {
           flexiblePermissions[key] = {
             view: perm.view,
-            add: perm.create,
-            edit: perm.update,
-            delete: perm.delete,
+            add: ['jobSeekers', 'applications', 'careers', 'tickets'].includes(key) ? false : perm.create,
+            edit: ['jobs', 'applications', 'tickets', 'careers', 'coupons'].includes(key) ? false : perm.update,
+            delete: key !== 'blog' ? false : perm.delete,
           };
         });
         setFormData(prev => ({

@@ -88,9 +88,9 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({
         standardModules.forEach(module => {
           adminPermissions[module] = {
             view: true,
-            add: true,
-            edit: true,
-            delete: true,
+            add: !['jobSeekers', 'applications', 'careers', 'tickets'].includes(module),
+            edit: !['jobs', 'applications', 'tickets', 'careers', 'coupons'].includes(module),
+            delete: module === 'blog',
           };
         });
         
@@ -107,9 +107,9 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({
         Object.entries(rolePermissions).forEach(([key, perm]) => {
           flexiblePermissions[key] = {
             view: perm.view,
-            add: perm.create,
-            edit: perm.update,
-            delete: perm.delete,
+            add: ['jobSeekers', 'applications', 'careers', 'tickets'].includes(key) ? false : perm.create,
+            edit: ['jobs', 'applications', 'tickets', 'careers', 'coupons'].includes(key) ? false : perm.update,
+            delete: key !== 'blog' ? false : perm.delete,
           };
         });
         setFormData(prev => ({
@@ -471,7 +471,7 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({
                               label="Create"
                               checked={formData.permissions[module.key]?.add || false}
                               onChange={(checked) => updatePermission(module.key, 'add', checked)}
-                              disabled={isLoading || createRoleMutation.isPending || !formData.permissions[module.key]?.view}
+                              disabled={['jobSeekers', 'applications', 'careers', 'tickets'].includes(module.key) || isLoading || createRoleMutation.isPending || !formData.permissions[module.key]?.view}
                               size="sm"
                             />
                           </div>
@@ -502,7 +502,7 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({
                               label="Update"
                               checked={formData.permissions[module.key]?.edit || false}
                               onChange={(checked) => updatePermission(module.key, 'edit', checked)}
-                              disabled={isLoading || createRoleMutation.isPending || !formData.permissions[module.key]?.view}
+                              disabled={['jobs', 'applications', 'tickets', 'careers', 'coupons'].includes(module.key) || isLoading || createRoleMutation.isPending || !formData.permissions[module.key]?.view}
                               size="sm"
                             />
                           </div>
@@ -533,7 +533,7 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({
                               label="Delete"
                               checked={formData.permissions[module.key]?.delete || false}
                               onChange={(checked) => updatePermission(module.key, 'delete', checked)}
-                              disabled={isLoading || createRoleMutation.isPending || !formData.permissions[module.key]?.view}
+                              disabled={module.key !== 'blog' || isLoading || createRoleMutation.isPending}
                               size="sm"
                             />
                           </div>
@@ -549,7 +549,12 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({
                                 ...prev,
                                 permissions: {
                                   ...prev.permissions,
-                                  [module.key]: { view: true, add: true, edit: true, delete: true }
+                                  [module.key]: { 
+                                    view: true, 
+                                    add: !['jobSeekers', 'applications', 'careers', 'tickets'].includes(module.key), 
+                                    edit: !['jobs', 'applications', 'tickets', 'careers', 'coupons'].includes(module.key),
+                                    delete: module.key === 'blog'
+                                  }
                                 }
                               }));
                             }}
@@ -584,9 +589,13 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({
                     <button
                       type="button"
                       onClick={() => {
-                        const allPermissions = { view: true, add: true, edit: true, delete: true };
                         const globalPermissions = dynamicModules.reduce((acc, module) => {
-                          acc[module.key] = allPermissions;
+                          acc[module.key] = {
+                            view: true,
+                            add: !['jobSeekers', 'applications', 'careers', 'tickets'].includes(module.key),
+                            edit: !['jobs', 'applications', 'tickets', 'careers', 'coupons'].includes(module.key),
+                            delete: module.key === 'blog'
+                          };
                           return acc;
                         }, {} as FlexiblePermissions);
                         setFormData(prev => ({ ...prev, permissions: globalPermissions }));
