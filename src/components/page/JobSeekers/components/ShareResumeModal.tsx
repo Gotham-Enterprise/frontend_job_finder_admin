@@ -144,7 +144,7 @@ export const ShareResumeModal: React.FC<ShareResumeModalProps> = ({
             <Button
               variant="default"
               disabled={isSubmitting || !email.trim()}
-              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+              className="flex-1 bg-primary text-white"
               startIcon={isSubmitting ? null : <PaperPlaneIcon />}
             >
               {isSubmitting ? (
