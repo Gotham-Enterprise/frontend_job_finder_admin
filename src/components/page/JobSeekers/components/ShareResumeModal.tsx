@@ -4,12 +4,14 @@ import { Modal } from '@/components/ui/modal';
 import Button from '@/components/ui/button/Button';
 import { PaperPlaneIcon, EnvelopeIcon } from '@/icons';
 import { useToast } from '@/context/ToastContext';
+import { jobSeekerApi } from '@/services/api/jobSeeker';
 
 interface ShareResumeModalProps {
   isOpen: boolean;
   onClose: () => void;
   jobSeekerName: string;
   jobSeekerId: string;
+  resumeId?: string;
   resumeObjectKey?: string;
   resumeFileName?: string;
 }
@@ -19,6 +21,7 @@ export const ShareResumeModal: React.FC<ShareResumeModalProps> = ({
   onClose,
   jobSeekerName,
   jobSeekerId,
+  resumeId,
   resumeObjectKey,
   resumeFileName,
 }) => {
@@ -54,27 +57,44 @@ export const ShareResumeModal: React.FC<ShareResumeModalProps> = ({
     setIsSubmitting(true);
 
     try {
-      // TODO: Replace with actual API call to share resume
-      // const response = await shareResume({
-      //   jobSeekerId,
-      //   email,
-      //   resumeObjectKey,
-      //   resumeFileName
-      // });
+      // Check if we have a resume to share
+      if (!resumeId && !resumeObjectKey) {
+        addToast({
+          variant: 'error',
+          title: 'No Resume Found',
+          message: 'No resume available to share for this job seeker.',
+          duration: 5000,
+        });
+        return;
+      }
 
-      // Simulate API call for now
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Use resumeId if available, otherwise fall back to resumeObjectKey
+      const idToUse = resumeId || resumeObjectKey;
+      
+      // Call the actual API to share resume
+      console.log('Sharing resume with ID:', idToUse, 'to email:', email);
+      const response = await jobSeekerApi.shareResume(idToUse!, { email });
 
-      addToast({
-        variant: 'success',
-        title: 'Resume Shared Successfully',
-        message: `${jobSeekerName}'s resume has been shared to ${email}`,
-        duration: 5000,
-      });
+      if (response.success) {
+        addToast({
+          variant: 'success',
+          title: 'Resume Shared Successfully',
+          message: response.message || `${jobSeekerName}'s resume has been shared to ${email}`,
+          duration: 5000,
+        });
 
-      setEmail('');
-      onClose();
+        setEmail('');
+        onClose();
+      } else {
+        addToast({
+          variant: 'error',
+          title: 'Share Failed',
+          message: response.message || 'Failed to share the resume. Please try again.',
+          duration: 5000,
+        });
+      }
     } catch (error) {
+      console.error('Error sharing resume:', error);
       addToast({
         variant: 'error',
         title: 'Share Failed',

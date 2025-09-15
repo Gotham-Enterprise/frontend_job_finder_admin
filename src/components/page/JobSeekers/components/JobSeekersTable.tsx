@@ -114,6 +114,7 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
   const getResumeData = (jobSeeker: any) => {
     if (jobSeeker.hasResume && jobSeeker.resumeFileObjectKey) {
       return {
+        id: jobSeeker.resumeId, // Include the resume ID
         objectKey: jobSeeker.resumeFileObjectKey,
         fileName: jobSeeker.resumeFileName
       };
@@ -121,6 +122,7 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
     
     if (jobSeeker.resumeId && jobSeeker.resumeFileObjectKey) {
       return {
+        id: jobSeeker.resumeId, // Include the resume ID
         objectKey: jobSeeker.resumeFileObjectKey,
         fileName: jobSeeker.resumeFileName
       };
@@ -134,16 +136,15 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
       
       if (resumeDoc && resumeDoc.objectKey) {
         return {
+          id: resumeDoc.id, // Include the document ID
           objectKey: resumeDoc.objectKey,
           fileName: resumeDoc.fileName
         };
       }
     }
-
+    
     return null;
-  };
-
-  const refreshData = (showSuccessToast = false) => {
+  };  const refreshData = (showSuccessToast = false) => {
     if (showSuccessToast) {
       addToast({
         variant: 'success',
@@ -455,6 +456,7 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
           onClose={closeShareModal}
           jobSeekerName={selectedJobSeekerForShare.name}
           jobSeekerId={selectedJobSeekerForShare.id}
+          resumeId={getResumeData(selectedJobSeekerForShare)?.id}
           resumeObjectKey={getResumeData(selectedJobSeekerForShare)?.objectKey}
           resumeFileName={getResumeData(selectedJobSeekerForShare)?.fileName}
         />
