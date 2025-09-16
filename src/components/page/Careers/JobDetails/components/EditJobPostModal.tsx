@@ -50,7 +50,6 @@ const EditJobPostModal: React.FC<EditJobPostModalProps> = ({
     salaryRangeEnd: '',
     jobDescription: '',
   });
-  const [error, setError] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // City search state
@@ -162,8 +161,7 @@ const EditJobPostModal: React.FC<EditJobPostModalProps> = ({
       };
       
       setFormData(newFormData);
-      setError(null); // Clear any previous errors
-  setErrors({}); // Clear field errors
+      setErrors({}); // Clear field errors
       // Reset city search state when job changes
       setCitySearch('');
       setIsCityDropdownOpen(false);
@@ -239,7 +237,8 @@ const EditJobPostModal: React.FC<EditJobPostModalProps> = ({
       onUpdate();
       onClose();
     } catch (err) {
-      setError('Failed to update job post');
+      // Error toast is automatically shown by the mutation hook
+      console.error('Failed to update job post:', err);
     }
   };
 
@@ -267,12 +266,6 @@ const EditJobPostModal: React.FC<EditJobPostModalProps> = ({
         </div>
 
         <div className="flex-1 overflow-y-auto p-6">
-          {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
-              <p className="text-sm text-red-600">{error}</p>
-            </div>
-          )}
-
           <div className="grid grid-cols-2 gap-8 h-full">
             {/* Left Column - Form Fields */}
             <div className="space-y-4 overflow-y-auto pr-4">
@@ -556,8 +549,7 @@ const EditJobPostModal: React.FC<EditJobPostModalProps> = ({
                 max < min
               ) {
                 setErrors(prev => ({ ...prev, salaryRangeEnd: 'Max salary must be greater than or equal to min salary' }));
-                setError('Please fix the salary range: max must be greater than or equal to min.');
-                return;
+                return; // Don't save if there's a validation error
               }
               await saveChanges();
             }}
