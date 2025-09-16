@@ -50,3 +50,16 @@ export interface ApplicationTrendParams {
   year: number;
   month?: number; // Required for daily type
 }
+
+// Application Category Types (same data structure as trends)
+export interface ApplicationCategoryParams {
+  type: TrendType;
+  year: number;
+  month?: number; // Required for daily type
+  occupationId: number; // Required occupation filter
+}
+
+export interface ApplicationCategoryResponse<T> {
+  success: boolean;
+  data: T[];
+}

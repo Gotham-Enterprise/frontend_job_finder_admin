@@ -6,6 +6,8 @@ import {
   MonthlyTrendData,
   QuarterlyTrendData,
   ApplicationTrendParams,
+  ApplicationCategoryParams,
+  ApplicationCategoryResponse,
 } from "../types/dashboard";
 
 export const dashboardApi = {
@@ -25,5 +27,19 @@ export const dashboardApi = {
     }
 
     return apiGet<ApplicationTrendResponse<T>>(endpoint);
+  },
+
+  getApplicationCategory: async <T = DailyTrendData | MonthlyTrendData | QuarterlyTrendData>(
+    params: ApplicationCategoryParams
+  ): Promise<ApplicationCategoryResponse<T>> => {
+    const { type, year, month, occupationId } = params;
+
+    let endpoint = `/api/admin/dashboard/application-category?type=${type}&year=${year}&occupationId=${occupationId}`;
+
+    if (type === "daily" && month !== undefined) {
+      endpoint += `&month=${month}`;
+    }
+
+    return apiGet<ApplicationCategoryResponse<T>>(endpoint);
   },
 };
