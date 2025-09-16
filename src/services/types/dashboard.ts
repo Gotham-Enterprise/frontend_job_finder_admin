@@ -21,3 +21,32 @@ export interface DashboardMetricCard {
     isPositive: boolean;
   };
 }
+
+// Application Trends Types
+export interface DailyTrendData {
+  day: number;
+  count: number;
+}
+
+export interface MonthlyTrendData {
+  month: string;
+  count: number;
+}
+
+export interface QuarterlyTrendData {
+  quarter: string;
+  count: number;
+}
+
+export interface ApplicationTrendResponse<T> {
+  success: boolean;
+  data: T[];
+}
+
+export type TrendType = "daily" | "monthly" | "quarterly";
+
+export interface ApplicationTrendParams {
+  type: TrendType;
+  year: number;
+  month?: number; // Required for daily type
+}
