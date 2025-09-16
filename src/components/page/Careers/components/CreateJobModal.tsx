@@ -47,7 +47,6 @@ export const CreateJobModal: React.FC<CreateJobModalProps> = ({
   const { data: statesCities, isLoading: isLoadingStates } = useStatesCities();
   
   // City search state
-  const [citySearch, setCitySearch] = useState('')
   const [isCityDropdownOpen, setIsCityDropdownOpen] = useState(false)
   
   const [formData, setFormData] = useState<CreateCareerPayload>({
@@ -78,7 +77,7 @@ export const CreateJobModal: React.FC<CreateJobModalProps> = ({
   
   // Filter cities based on search
   const filteredCities = cities?.filter(city => 
-    city.toLowerCase().includes(citySearch.toLowerCase())
+    city.toLowerCase().includes(formData.city.toLowerCase())
   ) || []
 
   // Department & unit selection removed
@@ -134,7 +133,6 @@ export const CreateJobModal: React.FC<CreateJobModalProps> = ({
       state: val, // val is already formatted as "State Name (AB)"
       city: '' // Reset city when state changes
     }));
-    setCitySearch(''); // Reset city search
     setIsCityDropdownOpen(false); // Close city dropdown
   };
 
@@ -143,20 +141,7 @@ export const CreateJobModal: React.FC<CreateJobModalProps> = ({
       ...prev,
       city: val
     }));
-    setCitySearch(''); // Clear search after selection
     setIsCityDropdownOpen(false); // Close dropdown after selection
-  };
-
-  const handleCitySearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setCitySearch(e.target.value);
-    if (!isCityDropdownOpen && e.target.value) {
-      setIsCityDropdownOpen(true);
-    }
-  };
-
-  const clearCitySearch = () => {
-    setCitySearch('');
-    setIsCityDropdownOpen(false);
   };
 
   const validateForm = (): boolean => {
@@ -243,7 +228,6 @@ export const CreateJobModal: React.FC<CreateJobModalProps> = ({
         jobDescription: '',
       });
       // Reset city search state
-      setCitySearch('');
       setIsCityDropdownOpen(false);
     } catch (error) {
       console.error('Failed to create job:', error);
@@ -254,7 +238,6 @@ export const CreateJobModal: React.FC<CreateJobModalProps> = ({
     onClose();
     setErrors({});
     // Reset city search state
-    setCitySearch('');
     setIsCityDropdownOpen(false);
   };
 
@@ -353,45 +336,29 @@ export const CreateJobModal: React.FC<CreateJobModalProps> = ({
                       City *
                     </label>
                     <div className="relative">
-                      {/* Select Trigger */}
-                      <button
-                        type="button"
-                        onClick={() => stateAbbr && !isLoadingCities && setIsCityDropdownOpen(!isCityDropdownOpen)}
+                      {/* City Input with Dropdown */}
+                      <input
+                        type="text"
+                        value={formData.city}
+                        onChange={(e) => {
+                          setFormData(prev => ({ ...prev, city: e.target.value }));
+                          if (!isCityDropdownOpen && e.target.value && stateAbbr) {
+                            setIsCityDropdownOpen(true);
+                          }
+                        }}
+                        onFocus={() => {
+                          if (stateAbbr && !isLoadingCities && !isCityDropdownOpen) {
+                            setIsCityDropdownOpen(true);
+                          }
+                        }}
+                        placeholder={!stateAbbr ? 'Select a state first' : isLoadingCities ? 'Loading cities...' : 'Enter or search city'}
                         disabled={!stateAbbr || isLoadingCities}
-                        className={`w-full h-11 rounded-lg border bg-transparent text-gray-800 border-gray-300 focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 px-4 py-2.5 text-sm shadow-theme-xs focus:outline-hidden text-left flex items-center justify-between disabled:bg-gray-50 disabled:text-gray-500 ${formData.city ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-500'}`}
-                      >
-                        <span>
-                          {formData.city || (!stateAbbr ? 'Select a state first' : isLoadingCities ? 'Loading cities...' : 'Select city')}
-                        </span>
-                        <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                        </svg>
-                      </button>
+                        className={`w-full h-11 rounded-lg border bg-transparent text-gray-800 border-gray-300 focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 px-4 py-2.5 text-sm shadow-theme-xs focus:outline-hidden disabled:bg-gray-50 disabled:text-gray-500 ${formData.city ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-500'}`}
+                      />
 
                       {/* Dropdown */}
                       {isCityDropdownOpen && stateAbbr && !isLoadingCities && (
                         <div className="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg">
-                          {/* Search Input Inside Dropdown */}
-                          <div className="p-2 border-b border-gray-200 dark:border-gray-600">
-                            <div className="relative">
-                              <input
-                                type="text"
-                                placeholder="Search cities..."
-                                value={citySearch}
-                                onChange={handleCitySearchChange}
-                                className="w-full p-2 pl-8 text-sm border border-gray-300 dark:border-gray-600 rounded-md focus:ring-1 focus:ring-brand-300 focus:border-brand-300 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                                autoFocus
-                              />
-                              <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400 dark:text-gray-500" />
-                              {citySearch && (
-                                <X 
-                                  className="absolute right-2 top-2.5 h-4 w-4 text-gray-400 dark:text-gray-500 cursor-pointer hover:text-gray-600 dark:hover:text-gray-300" 
-                                  onClick={clearCitySearch}
-                                />
-                              )}
-                            </div>
-                          </div>
-
                           {/* Cities List */}
                           <div className="max-h-48 overflow-y-auto">
                             {filteredCities.length > 0 ? (
@@ -411,9 +378,13 @@ export const CreateJobModal: React.FC<CreateJobModalProps> = ({
                                   </div>
                                 )}
                               </>
+                            ) : formData.city ? (
+                              <div className="px-3 py-4 text-sm text-gray-500 dark:text-gray-400 text-center">
+                                No cities found matching "{formData.city}". You can still enter it manually.
+                              </div>
                             ) : (
                               <div className="px-3 py-4 text-sm text-gray-500 dark:text-gray-400 text-center">
-                                {citySearch ? 'No cities found matching your search' : 'Start typing to search cities'}
+                                Start typing to search cities or enter manually
                               </div>
                             )}
                           </div>
