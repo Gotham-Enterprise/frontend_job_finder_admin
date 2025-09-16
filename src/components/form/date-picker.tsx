@@ -1,8 +1,8 @@
-import { useEffect } from 'react';
-import flatpickr from 'flatpickr';
-import 'flatpickr/dist/flatpickr.css';
-import Label from './Label';
-import { CalenderIcon } from '../../icons';
+import { useEffect } from "react";
+import flatpickr from "flatpickr";
+import "flatpickr/dist/flatpickr.css";
+import Label from "./Label";
+import { CalenderIcon } from "../../icons";
 import Hook = flatpickr.Options.Hook;
 import DateOption = flatpickr.Options.DateOption;
 
@@ -15,15 +15,40 @@ type PropsType = {
   placeholder?: string;
 };
 
-export default function DatePicker({
-  id,
-  mode,
-  onChange,
-  label,
-  defaultDate,
-  placeholder,
-}: PropsType) {
+export default function DatePicker({ id, mode, onChange, label, defaultDate, placeholder }: PropsType) {
   useEffect(() => {
+    let scrollHandler: (() => void) | null = null;
+    let resizeHandler: (() => void) | null = null;
+
+    const updateCalendarPosition = () => {
+      const calendar = document.querySelector(".flatpickr-calendar") as HTMLElement;
+      const input = document.getElementById(id);
+
+      if (calendar && input && calendar.classList.contains("open")) {
+        const rect = input.getBoundingClientRect();
+        const calendarWidth = 280;
+        const calendarHeight = 320;
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+
+        let left = rect.left;
+        let top = rect.bottom + 5;
+
+        // Adjust horizontal position if calendar would go off-screen
+        if (rect.right + calendarWidth > viewportWidth) {
+          left = Math.max(10, rect.right - calendarWidth);
+        }
+
+        // Adjust vertical position if calendar would go off-screen
+        if (rect.bottom + calendarHeight > viewportHeight) {
+          top = Math.max(10, rect.top - calendarHeight - 5);
+        }
+
+        calendar.style.left = `${left}px`;
+        calendar.style.top = `${top}px`;
+      }
+    };
+
     const flatPickr = flatpickr(`#${id}`, {
       mode: mode || "single",
       static: false,
@@ -32,31 +57,34 @@ export default function DatePicker({
       dateFormat: "Y-m-d",
       defaultDate,
       onChange,
-      onOpen: function() {
-      
-        const calendar = document.querySelector('.flatpickr-calendar') as HTMLElement;
+      onOpen: function () {
+        const calendar = document.querySelector(".flatpickr-calendar") as HTMLElement;
         if (calendar) {
-          calendar.style.zIndex = '999999';
-          calendar.style.position = 'fixed';
-          
-         
-          const input = document.getElementById(id);
-          if (input) {
-            const rect = input.getBoundingClientRect();
-            const calendarWidth = 280;
-            const viewportWidth = window.innerWidth;
-            
-         
-            if (rect.right + calendarWidth > viewportWidth) {
-              calendar.style.left = `${Math.max(10, rect.left - calendarWidth + rect.width)}px`;
-            } else {
-              calendar.style.left = `${rect.left + 124}px`; 
-            }
-            
-            calendar.style.top = `${rect.bottom + 5}px`;
-          }
+          calendar.style.zIndex = "999999";
+          calendar.style.position = "absolute";
+
+          // Initial positioning
+          updateCalendarPosition();
+
+          // Add scroll and resize event listeners
+          scrollHandler = () => updateCalendarPosition();
+          resizeHandler = () => updateCalendarPosition();
+
+          window.addEventListener("scroll", scrollHandler, true);
+          window.addEventListener("resize", resizeHandler);
         }
-      }
+      },
+      onClose: function () {
+        // Remove event listeners when calendar closes
+        if (scrollHandler) {
+          window.removeEventListener("scroll", scrollHandler, true);
+          scrollHandler = null;
+        }
+        if (resizeHandler) {
+          window.removeEventListener("resize", resizeHandler);
+          resizeHandler = null;
+        }
+      },
     });
 
     if (defaultDate && flatPickr && !Array.isArray(flatPickr)) {
@@ -64,6 +92,14 @@ export default function DatePicker({
     }
 
     return () => {
+      // Clean up event listeners
+      if (scrollHandler) {
+        window.removeEventListener("scroll", scrollHandler, true);
+      }
+      if (resizeHandler) {
+        window.removeEventListener("resize", resizeHandler);
+      }
+
       if (!Array.isArray(flatPickr)) {
         flatPickr.destroy();
       }
@@ -85,7 +121,7 @@ export default function DatePicker({
           <CalenderIcon className="size-6" />
         </span>
       </div>
-      
+
       <style jsx global>{`
         .flatpickr-calendar {
           background-color: #1f2937 !important;
