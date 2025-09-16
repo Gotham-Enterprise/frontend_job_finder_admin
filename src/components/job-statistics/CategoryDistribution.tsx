@@ -79,17 +79,35 @@ export default function CategoryDistribution() {
     chart: {
       fontFamily: "Outfit, sans-serif",
       height: 310,
-      type: "bar",
+      type: "line",
       toolbar: {
         show: false,
       },
     },
-    colors: ["#465FFF"],
-    plotOptions: {
-      bar: {
-        horizontal: false,
-        columnWidth: "55%",
-        borderRadius: 4,
+    colors: ["#006d36"],
+    stroke: {
+      curve: "smooth",
+      width: 3,
+    },
+    markers: {
+      size: 6,
+      strokeColors: "#fff",
+      strokeWidth: 2,
+      hover: {
+        size: 8,
+      },
+    },
+    fill: {
+      type: "gradient",
+      gradient: {
+        shade: "light",
+        type: "vertical",
+        shadeIntensity: 0.5,
+        gradientToColors: ["#9CB9FF"],
+        inverseColors: false,
+        opacityFrom: 0.4,
+        opacityTo: 0.1,
+        stops: [0, 100],
       },
     },
     dataLabels: {
@@ -106,6 +124,8 @@ export default function CategoryDistribution() {
           show: true,
         },
       },
+      strokeDashArray: 3,
+      borderColor: "#e0e6ed",
     },
     xaxis: {
       categories: chartData.categories,
@@ -270,7 +290,7 @@ export default function CategoryDistribution() {
       ) : categoryData && chartData.categories.length > 0 ? (
         <div className="max-w-full overflow-x-auto custom-scrollbar">
           <div className="-ml-5 min-w-[650px] xl:min-w-full pl-2">
-            <ReactApexChart options={options} series={series} type="bar" height={400} />
+            <ReactApexChart options={options} series={series} type="area" height={400} />
           </div>
         </div>
       ) : (

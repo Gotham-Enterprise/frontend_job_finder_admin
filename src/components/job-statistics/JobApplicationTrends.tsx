@@ -64,7 +64,7 @@ export default function JobApplicationTrends() {
   }, [data, activeTab]);
 
   const options: ApexOptions = {
-    colors: ["#465fff"],
+    colors: ["#006d36"],
     chart: {
       fontFamily: "Outfit, sans-serif",
       type: "bar",
