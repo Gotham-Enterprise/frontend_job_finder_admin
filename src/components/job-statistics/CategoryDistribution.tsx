@@ -7,6 +7,7 @@ import { dashboardApi } from "../../services/api/dashboard";
 import { useOccupations } from "../../services/hooks/useOccupations";
 import { TrendType, DailyTrendData, MonthlyTrendData, QuarterlyTrendData } from "../../services/types/dashboard";
 import DatePicker from "../form/date-picker";
+import Select from "../form/Select";
 
 const ReactApexChart = dynamic(() => import("react-apexcharts"), {
   ssr: false,
@@ -175,19 +176,22 @@ export default function CategoryDistribution() {
       <div className="mb-4">
         <div className="flex items-center gap-2">
           <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Occupation:</label>
-          <select
-            value={selectedOccupationId || ""}
-            onChange={(e) => setSelectedOccupationId(Number(e.target.value))}
-            className="px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            disabled={occupationsLoading}
-          >
-            <option value="">Select Occupation</option>
-            {occupationsData?.data?.map((occupation) => (
-              <option key={occupation.id} value={occupation.id}>
-                {occupation.name}
-              </option>
-            ))}
-          </select>
+          <div className="min-w-[300px]">
+            <Select
+              options={
+                occupationsData?.data?.map((occupation) => ({
+                  value: occupation.id.toString(),
+                  label: occupation.name,
+                })) || []
+              }
+              placeholder="Select Occupation"
+              value={selectedOccupationId?.toString() || ""}
+              onChange={(value) => setSelectedOccupationId(value ? Number(value) : null)}
+              disabled={occupationsLoading}
+              searchable={true}
+              searchPlaceholder="Search occupations..."
+            />
+          </div>
         </div>
       </div>
 
