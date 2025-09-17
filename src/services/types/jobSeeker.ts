@@ -9,6 +9,7 @@ export interface JobSeekerUpdateData {
   phoneNumber: string;
   occupationId: number;
   specialtyId?: number;
+  uploadProfilePicture?: File;
 }
 
 export interface JobSeeker {
