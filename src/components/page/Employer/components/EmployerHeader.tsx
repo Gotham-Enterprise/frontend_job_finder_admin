@@ -3,6 +3,7 @@ import Input from '../../../ui/input/Input';
 import FilterDropdown from '../../../ui/FilterDropdown';
 import { SearchIcon, PlusIcon, FilterIcon } from '../../../ui/icons';
 import { EmployerHeaderProps } from '@/services/types/EmployerTypes';
+import PermissionWrapper from '@/components/common/PermissionWrapper';
 
 const EmployerHeader: React.FC<EmployerHeaderProps> = ({
   totalCount,
@@ -57,24 +58,26 @@ const EmployerHeader: React.FC<EmployerHeaderProps> = ({
             )}
           </button>
           
-          <button
-            onClick={onCreateJob}
-            disabled={!selectedEmployerId || isCreatingJob}
-            className={`
-              flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border transition-colors
-              ${!selectedEmployerId || isCreatingJob
-                ? 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed dark:bg-gray-800 dark:border-gray-700 dark:text-gray-500' 
-                : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700'
-              }
-            `}
-          >
-            {!isCreatingJob && (
-              <PlusIcon className="flex-shrink-0" width={16} height={16} />
-            )}
-            <span className="whitespace-nowrap">
-              {isCreatingJob ? 'Creating...' : 'Create new job'}
-            </span>
-          </button>
+          <PermissionWrapper module="employers" action="add">
+            <button
+              onClick={onCreateJob}
+              disabled={!selectedEmployerId || isCreatingJob}
+              className={`
+                flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border transition-colors
+                ${!selectedEmployerId || isCreatingJob
+                  ? 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed dark:bg-gray-800 dark:border-gray-700 dark:text-gray-500' 
+                  : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700'
+                }
+              `}
+            >
+              {!isCreatingJob && (
+                <PlusIcon className="flex-shrink-0" width={16} height={16} />
+              )}
+              <span className="whitespace-nowrap">
+                {isCreatingJob ? 'Creating...' : 'Create new job'}
+              </span>
+            </button>
+          </PermissionWrapper>
         </div>
       </div>
       

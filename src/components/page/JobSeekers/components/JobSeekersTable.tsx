@@ -1,22 +1,17 @@
-import React, { useState } from 'react';
-import Link from 'next/link';
-import {  formatDateTimeEST } from '@/services/utils/dateUtils';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableRow,
-} from '../../../ui/table';
-import Badge from '../../../ui/badge/Badge';
-import Button from '../../../ui/button/Button';
-import TableHeading from '../../../tables/tableHeader';
-import { EyeIcon, TimeIcon, FileIcon, DownloadIcon, PencilIcon, PaperPlaneIcon } from '@/icons';
-import { JobSeekersTableProps } from '@/services/types/JobSeekersTypes';
-import Avatar from '../../../ui/avatar/Avatar';
-import { EditJobSeekerModal } from './EditJobSeekerModal';
-import { ShareResumeModal } from './ShareResumeModal';
-import { useToast } from '@/context/ToastContext';
-
+import React, { useState } from "react";
+import Link from "next/link";
+import { formatDateTimeEST } from "@/services/utils/dateUtils";
+import { Table, TableBody, TableCell, TableRow } from "../../../ui/table";
+import Badge from "../../../ui/badge/Badge";
+import Button from "../../../ui/button/Button";
+import TableHeading from "../../../tables/tableHeader";
+import { EyeIcon, TimeIcon, FileIcon, DownloadIcon, PencilIcon, PaperPlaneIcon } from "@/icons";
+import { JobSeekersTableProps } from "@/services/types/JobSeekersTypes";
+import Avatar from "../../../ui/avatar/Avatar";
+import { EditJobSeekerModal } from "./EditJobSeekerModal";
+import { ShareResumeModal } from "./ShareResumeModal";
+import { useToast } from "@/context/ToastContext";
+import PermissionWrapper from "@/components/common/PermissionWrapper";
 
 interface SpecialtyDisplayProps {
   specialties: string[];
@@ -25,11 +20,11 @@ interface SpecialtyDisplayProps {
   onToggleExpanded: (jobSeekerId: string) => void;
 }
 
-const SpecialtyDisplay: React.FC<SpecialtyDisplayProps> = ({ 
-  specialties, 
-  jobSeekerId, 
-  expandedRows, 
-  onToggleExpanded 
+const SpecialtyDisplay: React.FC<SpecialtyDisplayProps> = ({
+  specialties,
+  jobSeekerId,
+  expandedRows,
+  onToggleExpanded,
 }) => {
   if (!specialties || specialties.length === 0) {
     return <span className="text-gray-400 dark:text-gray-500 text-sm italic">Not specified</span>;
@@ -59,7 +54,7 @@ const SpecialtyDisplay: React.FC<SpecialtyDisplayProps> = ({
           className="text-brand-400 mt-1 p-0 h-auto text-xs"
           onClick={toggleExpanded}
         >
-          {isExpanded ? 'See Less' : `See More (${specialties.length - 2} more)`}
+          {isExpanded ? "See Less" : `See More (${specialties.length - 2} more)`}
         </Button>
       )}
     </div>
@@ -105,10 +100,11 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
   };
 
   const hasResume = (jobSeeker: any) => {
-    return (jobSeeker.hasResume && jobSeeker.resumeFileObjectKey) ||
-           (jobSeeker.resumeId && jobSeeker.resumeFileObjectKey) ||
-           (jobSeeker.documents && jobSeeker.documents.length > 0 && 
-            jobSeeker.documents.some((doc: any) => doc.objectKey));
+    return (
+      (jobSeeker.hasResume && jobSeeker.resumeFileObjectKey) ||
+      (jobSeeker.resumeId && jobSeeker.resumeFileObjectKey) ||
+      (jobSeeker.documents && jobSeeker.documents.length > 0 && jobSeeker.documents.some((doc: any) => doc.objectKey))
+    );
   };
 
   const getResumeData = (jobSeeker: any) => {
@@ -116,47 +112,48 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
       return {
         id: jobSeeker.resumeId, // Include the resume ID
         objectKey: jobSeeker.resumeFileObjectKey,
-        fileName: jobSeeker.resumeFileName
+        fileName: jobSeeker.resumeFileName,
       };
     }
-    
+
     if (jobSeeker.resumeId && jobSeeker.resumeFileObjectKey) {
       return {
         id: jobSeeker.resumeId, // Include the resume ID
         objectKey: jobSeeker.resumeFileObjectKey,
-        fileName: jobSeeker.resumeFileName
+        fileName: jobSeeker.resumeFileName,
       };
     }
 
     if (jobSeeker.documents && jobSeeker.documents.length > 0) {
-      const resumeDoc = jobSeeker.documents.find((doc: any) => 
-        doc.type?.toLowerCase().includes('resume') || 
-        doc.fileName?.toLowerCase().includes('resume')
-      ) || jobSeeker.documents[0];
-      
+      const resumeDoc =
+        jobSeeker.documents.find(
+          (doc: any) => doc.type?.toLowerCase().includes("resume") || doc.fileName?.toLowerCase().includes("resume")
+        ) || jobSeeker.documents[0];
+
       if (resumeDoc && resumeDoc.objectKey) {
         return {
           id: resumeDoc.id, // Include the document ID
           objectKey: resumeDoc.objectKey,
-          fileName: resumeDoc.fileName
+          fileName: resumeDoc.fileName,
         };
       }
     }
-    
+
     return null;
-  };  const refreshData = (showSuccessToast = false) => {
+  };
+  const refreshData = (showSuccessToast = false) => {
     if (showSuccessToast) {
       addToast({
-        variant: 'success',
-        title: 'Success',
-        message: 'Job seeker has been updated successfully',
+        variant: "success",
+        title: "Success",
+        message: "Job seeker has been updated successfully",
         duration: 5000,
       });
     }
-    
+
     if (onRefresh) {
       onRefresh();
-    } else if (typeof window !== 'undefined') {
+    } else if (typeof window !== "undefined") {
       window.location.reload();
     }
   };
@@ -191,7 +188,7 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
           className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 text-xs font-medium rounded-md shadow-sm hover:shadow-md transition-all duration-200 flex items-center gap-1.5"
           onClick={() => viewResume(jobSeeker.id, jobSeeker.resumeFileObjectKey, jobSeeker.resumeFileName)}
           disabled={isLoadingThisResume}
-          startIcon={isLoadingThisResume ? null : <FileIcon  />}
+          startIcon={isLoadingThisResume ? null : <FileIcon />}
         >
           {isLoadingThisResume ? (
             <>
@@ -199,12 +196,12 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
               Opening...
             </>
           ) : (
-            'Resume'
+            "Resume"
           )}
         </Button>
       );
     }
-    
+
     if (jobSeeker.resumeId && jobSeeker.resumeFileObjectKey) {
       return (
         <Button
@@ -213,7 +210,7 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
           className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 text-xs font-medium rounded-md shadow-sm hover:shadow-md transition-all duration-200 flex items-center gap-1.5"
           onClick={() => viewResume(jobSeeker.id, jobSeeker.resumeFileObjectKey, jobSeeker.resumeFileName)}
           disabled={isLoadingThisResume}
-          startIcon={isLoadingThisResume ? null : <FileIcon  />}
+          startIcon={isLoadingThisResume ? null : <FileIcon />}
         >
           {isLoadingThisResume ? (
             <>
@@ -221,18 +218,18 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
               Opening...
             </>
           ) : (
-            'Resume'
+            "Resume"
           )}
         </Button>
       );
     }
 
     if (jobSeeker.documents && jobSeeker.documents.length > 0) {
-      const resumeDoc = jobSeeker.documents.find((doc: any) => 
-        doc.type?.toLowerCase().includes('resume') || 
-        doc.fileName?.toLowerCase().includes('resume')
-      ) || jobSeeker.documents[0];
-      
+      const resumeDoc =
+        jobSeeker.documents.find(
+          (doc: any) => doc.type?.toLowerCase().includes("resume") || doc.fileName?.toLowerCase().includes("resume")
+        ) || jobSeeker.documents[0];
+
       if (resumeDoc && resumeDoc.objectKey) {
         return (
           <Button
@@ -249,7 +246,7 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
                 Opening...
               </>
             ) : (
-              'Resume'
+              "Resume"
             )}
           </Button>
         );
@@ -296,8 +293,8 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
             </TableRow>
           ) : (
             data.data.map((jobSeeker: any) => (
-              <TableRow 
-                key={jobSeeker.id} 
+              <TableRow
+                key={jobSeeker.id}
                 data-item-id={jobSeeker.id}
                 data-jobseeker-id={jobSeeker.id}
                 className="border-b text-sm border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50"
@@ -312,16 +309,12 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
                       className="flex-shrink-0"
                     />
                     <div>
-                      <p className="font-medium text-gray-900 dark:text-white">
-                        {jobSeeker.name}
-                      </p>
+                      <p className="font-medium text-gray-900 dark:text-white">{jobSeeker.name}</p>
                       {jobSeeker.email && (
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-                          {jobSeeker.email}
-                        </p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{jobSeeker.email}</p>
                       )}
-                      <Link 
-                        href={`/admin/applications?name=${encodeURIComponent(jobSeeker.name.split(' ')[0])}`}
+                      <Link
+                        href={`/admin/applications?name=${encodeURIComponent(jobSeeker.name.split(" ")[0])}`}
                         className="text-sm text-blue-500 dark:text-blue-500 hover:text-brand-500 dark:hover:text-brand-400 cursor-pointer transition-colors duration-200"
                       >
                         {jobSeeker.jobApplications} applications
@@ -330,13 +323,17 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
                   </div>
                 </TableCell>
                 <TableCell className="py-4 px-6">
-                  <p className="text-sm text-gray-900 dark:text-white">
-                    {jobSeeker.occupation || 'Not specified'}
-                  </p>
+                  <p className="text-sm text-gray-900 dark:text-white">{jobSeeker.occupation || "Not specified"}</p>
                 </TableCell>
                 <TableCell className="py-4 px-6">
-                  <SpecialtyDisplay 
-                    specialties={Array.isArray(jobSeeker.specialty) ? jobSeeker.specialty : (jobSeeker.specialty ? [jobSeeker.specialty] : [])} 
+                  <SpecialtyDisplay
+                    specialties={
+                      Array.isArray(jobSeeker.specialty)
+                        ? jobSeeker.specialty
+                        : jobSeeker.specialty
+                          ? [jobSeeker.specialty]
+                          : []
+                    }
                     jobSeekerId={jobSeeker.id}
                     expandedRows={expandedRows}
                     onToggleExpanded={toggleExpanded}
@@ -344,95 +341,69 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
                 </TableCell>
                 <TableCell className="py-4 px-6">
                   <p className="text-sm text-gray-900 dark:text-white">
-                    {jobSeeker.city && jobSeeker.state 
+                    {jobSeeker.city && jobSeeker.state
                       ? `${jobSeeker.city}, ${jobSeeker.state}`
-                      : jobSeeker.city || jobSeeker.state || 'Not specified'
-                    }
+                      : jobSeeker.city || jobSeeker.state || "Not specified"}
                   </p>
                 </TableCell>
-                <TableCell className="py-4 px-6 text-left">
-                  {renderResumeButton(jobSeeker)}
-                </TableCell>
+                <TableCell className="py-4 px-6 text-left">{renderResumeButton(jobSeeker)}</TableCell>
                 <TableCell className="py-4 px-6 whitespace-nowrap">
-                  {jobSeeker.dateJoined ? (() => {
-                    const dateJoined = formatDateTimeEST(jobSeeker.dateJoined);
-                    if (typeof dateJoined === 'string') {
+                  {jobSeeker.dateJoined ? (
+                    (() => {
+                      const dateJoined = formatDateTimeEST(jobSeeker.dateJoined);
+                      if (typeof dateJoined === "string") {
+                        return <p className="text-sm text-gray-900 dark:text-white">{dateJoined}</p>;
+                      }
                       return (
-                        <p className="text-sm text-gray-900 dark:text-white">
-                          {dateJoined}
-                        </p>
-                      );
-                    }
-                    return (
-                      <div className="text-sm text-gray-900 dark:text-white">
-                        <div>{dateJoined.date}</div>
-                        <div className="flex items-center mt-1">
-                          <TimeIcon className="mr-1" />
-                          <span>{dateJoined.time}</span>
+                        <div className="text-sm text-gray-900 dark:text-white">
+                          <div>{dateJoined.date}</div>
+                          <div className="flex items-center mt-1">
+                            <TimeIcon className="mr-1" />
+                            <span>{dateJoined.time}</span>
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })() : (
+                      );
+                    })()
+                  ) : (
                     <span className="text-gray-400 dark:text-gray-500 italic">Not specified</span>
                   )}
                 </TableCell>
                 <TableCell className="py-4 px-6 whitespace-nowrap">
-                  {jobSeeker.lastActivity ? (() => {
-                    const lastActivity = formatDateTimeEST(jobSeeker.lastActivity);
-                    if (typeof lastActivity === 'string') {
+                  {jobSeeker.lastActivity ? (
+                    (() => {
+                      const lastActivity = formatDateTimeEST(jobSeeker.lastActivity);
+                      if (typeof lastActivity === "string") {
+                        return <p className="text-sm text-gray-900 dark:text-white">{lastActivity}</p>;
+                      }
                       return (
-                        <p className="text-sm text-gray-900 dark:text-white">
-                          {lastActivity}
-                        </p>
-                      );
-                    }
-                    return (
-                      <div className="text-sm text-gray-900 dark:text-white">
-                        <div>{lastActivity.date}</div>
-                        <div className="flex items-center mt-1">
-                          <TimeIcon className="mr-1" />
-                          <span>{lastActivity.time}</span>
+                        <div className="text-sm text-gray-900 dark:text-white">
+                          <div>{lastActivity.date}</div>
+                          <div className="flex items-center mt-1">
+                            <TimeIcon className="mr-1" />
+                            <span>{lastActivity.time}</span>
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })() : (
+                      );
+                    })()
+                  ) : (
                     <span className="text-gray-400 dark:text-gray-500 italic">No activity</span>
                   )}
                 </TableCell>
                 <TableCell className="py-4 px-6">
-                  <Badge variant={getStatusVariant(jobSeeker.status)}>
-                    {jobSeeker.status}
-                  </Badge>
+                  <Badge variant={getStatusVariant(jobSeeker.status)}>{jobSeeker.status}</Badge>
                 </TableCell>
                 <TableCell className="py-4 px-6 text-right">
                   <div className="flex items-center gap-4">
-                    {hasResume(jobSeeker) ? (
-                      <button 
-                        className="flex gap-2 text-blue-500 hover:text-blue-600 transition-colors duration-200"
-                        onClick={() => openShareModal(jobSeeker)}
-                        title="Share resume"
-                      >
-                        <PaperPlaneIcon /> Share
+                    <PermissionWrapper module="jobseekers" action="view">
+                      <button className="flex gap-2 text-brand-400" onClick={() => onViewJobSeeker(jobSeeker.id)}>
+                        <EyeIcon /> View
                       </button>
-                    ) : (
-                      <span className="flex gap-2 text-gray-400 dark:text-gray-500 cursor-not-allowed" title="No resume to share">
-                        <PaperPlaneIcon className="opacity-50" /> Share
-                      </span>
-                    )}
-                    
-                    <button 
-                      className="flex gap-2 text-brand-400"
-                      onClick={() => onViewJobSeeker(jobSeeker.id)}
-                    >
-                     <EyeIcon />  View
-                    </button>
-                   
-                    <button 
-                       className="flex gap-2 text-brand-400"
-                      onClick={() => openEditModal(jobSeeker.id)}
-                    >
-                      <PencilIcon /> Edit
-                    </button>
+                    </PermissionWrapper>
+                    <PermissionWrapper module="jobseekers" action="edit">
+                      <button className="flex gap-2 text-brand-400" onClick={() => openEditModal(jobSeeker.id)}>
+                        <PencilIcon /> Edit
+                      </button>
+                    </PermissionWrapper>
                   </div>
                 </TableCell>
               </TableRow>

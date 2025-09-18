@@ -1,176 +1,340 @@
 'use client';
 
-import React, { useState } from 'react';
-import { User } from '@/services/types/auth';
-import { Table, TableHeader, TableBody, TableRow, TableCell } from '@/components/ui/table';
-import { DotsIcon } from '@/components/ui/icons';
-import { Dropdown } from '@/components/ui/dropdown/Dropdown';
-import { DropdownItem } from '@/components/ui/dropdown/DropdownItem';
-import Avatar from '@/components/ui/avatar/Avatar';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAdminUsers, useDeleteAdminUsers, useAdminRoles } from '@/services/hooks/useAdminUsers';
+import { AdminUser } from '@/services/api/adminUsers';
+import { getUserInitials, formatUserRole, getUserStatusVariant, getRoleColor } from '@/services/utils/userUtils';
+import ConfirmationDialog from '@/components/ui/ConfirmationDialog';
+import FullScreenSpinner from '@/components/ui/FullScreenSpinner';
+import BulkActionDropdown from '@/components/ui/BulkActionDropdown';
+import Checkbox from '@/components/form/input/Checkbox';
+import Pagination from '@/components/tables/Pagination';
+import Select from '@/components/form/Select';
+
+const itemsPerPageOptions = [
+  { value: '5', label: '5 per page' },
+  { value: '10', label: '10 per page' },
+  { value: '20', label: '20 per page' },
+  { value: '50', label: '50 per page' },
+  { value: '100', label: '100 per page' },
+];
+
+const UserTable: React.FC = () => {
+  const router = useRouter();
+  const [mounted, setMounted] = useState(false);
+  const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  const { data: response, isLoading, error, refetch } = useAdminUsers(currentPage, itemsPerPage);
+  const deleteUsersMutation = useDeleteAdminUsers();
+
+  const users = response?.data || [];
+  const metaData = response?.metaData;
 
 
-interface ExtendedUser extends User {
-  lastActivity?: string;
-}
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
-interface UserTableProps {
-  users: ExtendedUser[];
-  onUserAction: (userId: string, action: 'manage' | 'remove') => void;
-}
+  const isAllSelected = users.length > 0 && selectedUsers.length === users.length;
+  const isIndeterminate = selectedUsers.length > 0 && selectedUsers.length < users.length;
 
-const UserActionDropdown: React.FC<{
-  userId: string;
-  onAction: (userId: string, action: 'manage' | 'remove') => void;
-}> = ({ userId, onAction }) => {
-  const [isOpen, setIsOpen] = useState(false);
+  const memoizedUsers = useMemo(() => users, [users]);
 
-  return (
-    <div className="relative">
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-      >
-        <DotsIcon className="w-5 h-5 text-gray-600" />
-      </button>
-      <Dropdown 
-        isOpen={isOpen} 
-        onClose={() => setIsOpen(false)}
-        className="w-32"
-      >
-        <DropdownItem
-          onClick={() => {
-            onAction(userId, 'manage');
-            setIsOpen(false);
-          }}
-        >
-          Manage
-        </DropdownItem>
-        <DropdownItem
-          onClick={() => {
-            onAction(userId, 'remove');
-            setIsOpen(false);
-          }}
-          className="text-red-600 hover:bg-red-50"
-        >
-          Remove
-        </DropdownItem>
-      </Dropdown>
-    </div>
-  );
-};
-
-const UserTable: React.FC<UserTableProps> = ({ users, onUserAction }) => {
-  const getUserDisplayName = (user: User): string => {
-    return `${user.firstName} ${user.lastName}`.trim();
-  };
-
-  const getUserInitials = (user: User): string => {
-    const firstInitial = user.firstName?.charAt(0)?.toUpperCase() || '';
-    const lastInitial = user.lastName?.charAt(0)?.toUpperCase() || '';
-    return firstInitial + lastInitial;
-  };
-
-  const getRoleColor = (role: string) => {
-    switch (role.toLowerCase()) {
-      case 'admin':
-        return 'text-purple-600 dark:text-purple-400';
-      case 'manager':
-        return 'text-blue-600 dark:text-blue-400';
-      case 'user':
-        return 'text-green-600 dark:text-green-400';
-      default:
-        return 'text-gray-600 dark:text-gray-400';
+  const toggleAllUsers = (checked: boolean) => {
+    if (checked) {
+      setSelectedUsers(users.map(user => user.userId));
+    } else {
+      setSelectedUsers([]);
     }
   };
 
-  return (
-    <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
-      <div className="px-6 py-5 border-b border-gray-200 dark:border-gray-800">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h3 className="text-xl font-semibold text-gray-800 dark:text-white">
-              Users Management
-            </h3>
-            <p className="text-sm text-gray-500 mt-1 dark:text-gray-400">
-              {users.length} total users
-            </p>
-          </div>
+  const toggleUserSelection = (userId: string) => {
+    setSelectedUsers(prev => 
+      prev.includes(userId) 
+        ? prev.filter(id => id !== userId)
+        : [...prev, userId]
+    );
+  };
+
+  const openEditPage = (user: AdminUser) => {
+    router.push(`/admin/users/edit?id=${user.userId}`);
+  };
+
+  const navigateToCreateUser = useCallback(() => {
+    router.push('/admin/users/create');
+  }, [router]);
+
+  const handleBulkAction = (action: string) => {
+    if (action === 'delete' && selectedUsers.length > 0) {
+      setIsDeleteModalOpen(true);
+    }
+  };
+
+  const openDeleteModal = () => {
+    if (selectedUsers.length > 0) {
+      setIsDeleteModalOpen(true);
+    }
+  };
+
+  const closeDeleteModal = () => {
+    setIsDeleteModalOpen(false);
+  };
+
+  const confirmDeleteUsers = async () => {
+    try {
+      await deleteUsersMutation.mutateAsync(selectedUsers);
+      setSelectedUsers([]);
+      closeDeleteModal();
+    } catch (error) {
+      console.error('Delete operation failed:', error);
+    }
+  };
+
+  const refreshData = () => {
+    refetch();
+    setSelectedUsers([]);
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    setSelectedUsers([]);
+  };
+
+  const handleItemsPerPageChange = (newItemsPerPage: number) => {
+    setItemsPerPage(newItemsPerPage);
+    setCurrentPage(1); 
+    setSelectedUsers([]); 
+  };
+
+
+  if (!mounted) {
+    return <FullScreenSpinner isVisible={true} message="Initializing..." />;
+  }
+
+  if (isLoading) {
+    return <FullScreenSpinner isVisible={true} message="Loading users..." />;
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <p className="text-red-600 dark:text-red-400 mb-4">Failed to load users</p>
+          <button 
+            onClick={refreshData}
+            className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90"
+          >
+            Retry
+          </button>
         </div>
       </div>
-      
-      <div className="overflow-x-auto">
-        <Table>
-          <TableHeader className="border-b border-gray-100">
-            <TableRow className="border-b text-sm border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50">
-              <TableCell
-                isHeader
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+    );
+  }
+
+  return (
+    <>
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+                Users Management
+              </h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                {users.length} total users
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              <BulkActionDropdown
+                selectedItems={selectedUsers}
+                itemType="users"
+                onBulkDelete={() => setIsDeleteModalOpen(true)}
+                onClearSelection={() => setSelectedUsers([])}
+                isDeleting={deleteUsersMutation.isPending}
+              />
+              <button
+                onClick={navigateToCreateUser}
+                className="inline-flex items-center justify-center font-medium gap-2 transition px-4 py-2 w-[140px] bg-green-600 hover:bg-green-700 text-white h-[45px] w-[100px] rounded-sm px-3 text-xs bg-primary text-white hover:bg-primary/90 "
               >
-                Name
-              </TableCell>
-              <TableCell
-                isHeader
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                Role
-              </TableCell>
-              <TableCell
-                isHeader
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                Status
-              </TableCell>
-              <TableCell
-                isHeader
-                className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                Actions
-              </TableCell>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {users.map((user) => (
-              <TableRow key={user.id} className="border-b text-sm border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                <TableCell className="py-4 px-6">
-                  <div className="flex items-center gap-3">
-                    <Avatar
-                      name={getUserDisplayName(user)}
-                      size="medium"
-                      className="flex-shrink-0"
-                    />
-                    <div>
-                      <p className="font-medium text-gray-900 dark:text-white">
-                        {getUserDisplayName(user)}
-                      </p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
-                        {user.email}
-                      </p>
-                    </div>
-                  </div>
-                </TableCell>
-                <TableCell className="py-4 px-6">
-                  <span className={`text-sm font-medium capitalize ${getRoleColor(user.role)}`}>
-                    {user.role}
-                  </span>
-                </TableCell>
-                <TableCell className="py-4 px-6">                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                    user.status === 'active' 
-                      ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
-                      : 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400'
-                  }`}>
-                    {user.status}
-                  </span>
-                </TableCell>
-                <TableCell className="py-4 px-6 text-right">
-                  <UserActionDropdown userId={user.id} onAction={onUserAction} />
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                Add User
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead className="bg-gray-50 dark:bg-gray-900/50">
+              <tr>
+                <th className="w-12 px-6 py-3">
+                  <Checkbox
+                    checked={isAllSelected || isIndeterminate}
+                    onChange={toggleAllUsers}
+                  />
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Name
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Role
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Status
+                </th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+              {memoizedUsers.map((user) => {
+                const statusVariant = getUserStatusVariant(user.status);
+                const roleColorClass = getRoleColor(user.role);
+                
+                return (
+                  <tr 
+                    key={user.userId}
+                    className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-200"
+                  >
+                    <td className="px-6 py-4">
+                      <Checkbox
+                        checked={selectedUsers.includes(user.userId)}
+                        onChange={(checked) => {
+                          if (checked) {
+                            setSelectedUsers(prev => [...prev, user.userId]);
+                          } else {
+                            setSelectedUsers(prev => prev.filter(id => id !== user.userId));
+                          }
+                        }}
+                      />
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+                          {user.avatarUrl ? (
+                            <img 
+                              src={user.avatarUrl} 
+                              alt={user.name}
+                              className="w-10 h-10 rounded-full object-cover"
+                            />
+                          ) : (
+                            <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                              {mounted ? getUserInitials(user.name) : '?'}
+                            </span>
+                          )}
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-gray-900 dark:text-white">
+                            {user.name}
+                          </p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">
+                            {user.email}
+                          </p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${roleColorClass}`}>
+                        {formatUserRole(user.role)}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${statusVariant.className}`}>
+                        {statusVariant.label}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => openEditPage(user)}
+                          className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-md hover:bg-blue-100 transition-colors duration-200"
+                        >
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                          Manage
+                        </button>
+                        <button
+                          onClick={() => {
+                            setSelectedUsers([user.userId]);
+                            openDeleteModal();
+                          }}
+                          className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-red-700 bg-red-50 border border-red-200 rounded-md hover:bg-red-100 transition-colors duration-200"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+           {/* Pagination */}
+      {metaData && (
+        <div className="px-5 py-4 border-t border-gray-200 dark:border-gray-700">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="text-sm ml-2 text-gray-500 dark:text-gray-400">
+                Showing {((currentPage - 1) * itemsPerPage) + 1} of {Math.min(currentPage * itemsPerPage, metaData.totalCount)} results
+              </div>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">Items per page:</span>
+                <Select
+                  value={itemsPerPage.toString()}
+                  onChange={(value: string) => handleItemsPerPageChange(parseInt(value))}
+                  options={itemsPerPageOptions}
+                  className="w-auto min-w-[120px]"
+                />
+              </div>
+              <Pagination
+                currentPage={currentPage}
+                totalPages={metaData.totalPages}
+                onPageChange={handlePageChange}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+        </div>
+
+        {users.length === 0 && (
+          <div className="text-center py-12">
+            <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+            </svg>
+            <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-white">No users found</h3>
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              Get started by adding your first user.
+            </p>
+          </div>
+        )}
       </div>
-    </div>
+
+     
+
+      <ConfirmationDialog
+        isOpen={isDeleteModalOpen}
+        onClose={closeDeleteModal}
+        onConfirm={confirmDeleteUsers}
+        onCancel={closeDeleteModal}
+        title="Delete Users"
+        message={`Are you sure you want to delete ${selectedUsers.length} user${selectedUsers.length > 1 ? 's' : ''}? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        isLoading={deleteUsersMutation.isPending}
+      />
+    </>
   );
 };
 
-export default UserTable;
+export default React.memo(UserTable);

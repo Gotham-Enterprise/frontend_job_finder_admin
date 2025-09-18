@@ -62,10 +62,18 @@ const ProfileInformation: FC<ProfileInformationProps> = ({
                 </Button>
             </div>
             <div className="space-y-4">                <div className="flex items-center justify-center mb-4">
-                    <div className="w-20 h-20 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
-                        <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                            {isClient ? (userInitials && userInitials.trim() !== '' ? userInitials : '?') : '?'}
-                        </span>
+                    <div className="w-20 h-20 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center overflow-hidden">
+                        {user?.adminProfile?.avatarUrl ? (
+                            <img 
+                                src={user.adminProfile.avatarUrl} 
+                                alt="Profile avatar"
+                                className="w-full h-full object-cover rounded-full"
+                            />
+                        ) : (
+                            <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                                {isClient ? (userInitials && userInitials.trim() !== '' ? userInitials : '?') : '?'}
+                            </span>
+                        )}
                     </div>
                 </div>
 
