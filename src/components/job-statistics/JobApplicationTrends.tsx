@@ -221,6 +221,9 @@ export default function JobApplicationTrends() {
             <DatePicker
               id="daily-date-picker"
               defaultDate={new Date(selectedYear, selectedMonth - 1, 1)}
+              monthSelectorType="dropdown"
+              showMonths={1}
+              dateFormat="Y-m"
               onChange={(selectedDates: Date[]) => {
                 if (selectedDates && selectedDates.length > 0) {
                   const date = selectedDates[0];
@@ -250,6 +253,9 @@ export default function JobApplicationTrends() {
             <DatePicker
               id="year-date-picker"
               defaultDate={new Date(selectedYear, 0, 1)}
+              monthSelectorType="dropdown"
+              showMonths={1}
+              dateFormat="Y"
               onChange={(selectedDates: Date[]) => {
                 if (selectedDates && selectedDates.length > 0) {
                   const date = selectedDates[0];

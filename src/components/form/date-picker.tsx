@@ -13,9 +13,22 @@ type PropsType = {
   defaultDate?: DateOption;
   label?: string;
   placeholder?: string;
+  monthSelectorType?: "dropdown" | "static";
+  showMonths?: number;
+  dateFormat?: string;
 };
 
-export default function DatePicker({ id, mode, onChange, label, defaultDate, placeholder }: PropsType) {
+export default function DatePicker({ 
+  id, 
+  mode, 
+  onChange, 
+  label, 
+  defaultDate, 
+  placeholder, 
+  monthSelectorType = "dropdown",
+  showMonths = 1,
+  dateFormat = "Y-m-d"
+}: PropsType) {
   useEffect(() => {
     let scrollHandler: (() => void) | null = null;
     let resizeHandler: (() => void) | null = null;
@@ -53,10 +66,12 @@ export default function DatePicker({ id, mode, onChange, label, defaultDate, pla
       mode: mode || "single",
       static: false,
       position: "auto right",
-      monthSelectorType: "static",
-      dateFormat: "Y-m-d",
+      monthSelectorType,
+      dateFormat,
       defaultDate,
       onChange,
+      showMonths,
+      enableTime: false,
       onOpen: function () {
         const calendar = document.querySelector(".flatpickr-calendar") as HTMLElement;
         if (calendar) {
@@ -104,7 +119,7 @@ export default function DatePicker({ id, mode, onChange, label, defaultDate, pla
         flatPickr.destroy();
       }
     };
-  }, [mode, onChange, id, defaultDate]);
+  }, [mode, onChange, id, defaultDate, monthSelectorType, showMonths, dateFormat]);
 
   return (
     <div>
@@ -175,6 +190,18 @@ export default function DatePicker({ id, mode, onChange, label, defaultDate, pla
           background-color: #1f2937 !important;
           color: #f3f4f6 !important;
           border: 1px solid #4b5563 !important;
+          border-radius: 4px !important;
+        }
+        .flatpickr-current-month .flatpickr-monthDropdown-months:hover {
+          background-color: #374151 !important;
+          border-color: #3b82f6 !important;
+        }
+        .flatpickr-current-month .flatpickr-monthDropdown-months option {
+          background-color: #1f2937 !important;
+          color: #f3f4f6 !important;
+        }
+        .flatpickr-current-month .flatpickr-monthDropdown-months option:hover {
+          background-color: #3b82f6 !important;
         }
         .flatpickr-current-month input.cur-year {
           background-color: #1f2937 !important;
@@ -188,6 +215,25 @@ export default function DatePicker({ id, mode, onChange, label, defaultDate, pla
         }
         .flatpickr-current-month .numInputWrapper span:hover {
           background: #4b5563 !important;
+        }
+        .flatpickr-month {
+          height: auto !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: space-between !important;
+          padding: 8px 12px !important;
+        }
+        .flatpickr-current-month {
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          flex: 1 !important;
+        }
+        .flatpickr-current-month .flatpickr-monthDropdown-months {
+          font-size: 14px !important;
+          font-weight: 500 !important;
+          padding: 4px 8px !important;
+          min-width: 100px !important;
         }
       `}</style>
     </div>
