@@ -1,7 +1,7 @@
-import React, { useState, useRef, useEffect } from 'react';
-import Button from './button/Button';
-import { ChevronDownIcon } from '@/icons';
-import { usePermissions } from '@/hooks/usePermissions';
+import React, { useState, useRef, useEffect } from "react";
+import Button from "./button/Button";
+import { ChevronDownIcon } from "@/icons";
+import { usePermissions } from "@/hooks/usePermissions";
 
 interface BulkActionDropdownProps {
   selectedItems: string[];
@@ -43,9 +43,9 @@ const BulkActionDropdown: React.FC<BulkActionDropdownProps> = ({
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
@@ -53,14 +53,14 @@ const BulkActionDropdown: React.FC<BulkActionDropdownProps> = ({
   const buttonDisabled = isDeleting || isUpdatingStatus;
 
   // Check permissions for different actions based on item type
-  const modulePermission = itemType === 'posts' || itemType === 'categories' || itemType === 'tags' ? 'blog' : 'general';
-  const canPublish = hasPermission(modulePermission, 'edit') && onBulkPublish;
-  const canDraft = hasPermission(modulePermission, 'edit') && onBulkDraft;
-  const canArchive = hasPermission(modulePermission, 'delete') && onBulkDelete;
+  const modulePermission =
+    itemType === "posts" || itemType === "categories" || itemType === "tags" ? "blog" : "general";
+  const canPublish = hasPermission(modulePermission, "edit") && onBulkPublish;
+  const canDraft = hasPermission(modulePermission, "edit") && onBulkDraft;
+  const canArchive = hasPermission(modulePermission, "delete") && onBulkDelete;
 
   // Check if there are any available actions based on permissions
   const hasAvailableActions: boolean = !!(canPublish || canDraft || canArchive);
-
 
   // Only show the dropdown if there are selected items and at least some actions are available
   if (!hasSelectedItems) {
@@ -85,17 +85,17 @@ const BulkActionDropdown: React.FC<BulkActionDropdownProps> = ({
             : "bg-gray-300 text-gray-500 cursor-not-allowed"
         }`}
       >
-        {isDeleting ? 'Deleting...' : isUpdatingStatus ? 'Updating...' : 'Bulk Actions'}
+        {isDeleting ? "Deleting..." : isUpdatingStatus ? "Updating..." : "Bulk Actions"}
       </Button>
 
       {isOpen && hasAvailableActions && (
-        <div 
-          className="absolute right-0 z-10 mt-2 w-56 origin-top-right rounded-lg bg-white dark:bg-gray-800 focus:outline-none" 
-          style={{ boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)' }}
+        <div
+          className="absolute right-0 z-10 mt-2 w-56 origin-top-right rounded-lg bg-white dark:bg-gray-800 focus:outline-none"
+          style={{ boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)" }}
         >
           <div className="py-2">
             {/* Status Update Options - only show for posts */}
-            {itemType === 'posts' && canPublish && (
+            {itemType === "posts" && canPublish && (
               <button
                 onClick={() => {
                   onBulkPublish();
@@ -106,19 +106,16 @@ const BulkActionDropdown: React.FC<BulkActionDropdownProps> = ({
               >
                 <div className="flex-1">
                   <div className="font-medium text-gray-900 dark:text-white">Publish</div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400">
-                    Set selected {itemType} as published
-                  </div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">Set selected {itemType} as published</div>
                 </div>
               </button>
             )}
-            
-       
-            {itemType === 'posts' && canPublish && canDraft && (
+
+            {itemType === "posts" && canPublish && canDraft && (
               <div className="border-t border-gray-100 dark:border-gray-700 mx-2"></div>
             )}
-            
-            {itemType === 'posts' && canDraft && (
+
+            {itemType === "posts" && canDraft && (
               <button
                 onClick={() => {
                   onBulkDraft();
@@ -129,18 +126,16 @@ const BulkActionDropdown: React.FC<BulkActionDropdownProps> = ({
               >
                 <div className="flex-1">
                   <div className="font-medium text-gray-900 dark:text-white">Draft</div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400">
-                    Set selected {itemType} as draft
-                  </div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">Set selected {itemType} as draft</div>
                 </div>
               </button>
             )}
-            
+
             {/* Add separator if status options are shown */}
-            {itemType === 'posts' && (canPublish || canDraft) && canArchive && (
+            {itemType === "posts" && (canPublish || canDraft) && canArchive && (
               <div className="border-t border-gray-100 dark:border-gray-700 mx-2"></div>
             )}
-            
+
             {/* Only show Archive if user has delete permission */}
             {canArchive && (
               <button
@@ -153,9 +148,7 @@ const BulkActionDropdown: React.FC<BulkActionDropdownProps> = ({
               >
                 <div className="flex-1">
                   <div className="font-medium text-gray-900 dark:text-white">Archive</div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400">
-                    Move selected {itemType} to Archive
-                  </div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">Move selected {itemType} to Archive</div>
                 </div>
               </button>
             )}
