@@ -156,3 +156,12 @@ export interface JobSeekerDetailsResponse {
   data: JobSeekerDetails;
   message?: string;
 }
+
+export interface ShareResumeRequest {
+  email: string;
+}
+
+export interface ShareResumeResponse {
+  success: boolean;
+  message: string;
+}
