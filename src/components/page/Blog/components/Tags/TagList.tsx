@@ -6,6 +6,7 @@ import { Table, TableHeader, TableBody, TableRow, TableCell } from "@/components
 import Pagination from "@/components/tables/Pagination";
 import BulkActionDropdown from "@/components/ui/BulkActionDropdown";
 import PermissionWrapper from "@/components/common/PermissionWrapper";
+import { usePermissions } from "@/hooks/usePermissions";
 import { Tag } from "@/services/api/tag";
 import { PencilIcon, TrashBinIcon } from "@/icons";
 import FullScreenSpinner from "@/components/ui/FullScreenSpinner";
@@ -61,6 +62,11 @@ const TagList: React.FC<TagListProps> = ({
   onItemsPerPageChange,
   metaData,
 }) => {
+  const { hasPermission } = usePermissions();
+  
+  // Show checkboxes if user has either edit OR delete permissions
+  const canShowCheckboxes = hasPermission('blog', 'edit') || hasPermission('blog', 'delete');
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
@@ -100,14 +106,16 @@ const TagList: React.FC<TagListProps> = ({
               </div>
             </div>
 
-            {onBulkDelete && onClearSelection && (
-              <BulkActionDropdown
-                selectedItems={selectedTags}
-                itemType="tags"
-                onBulkDelete={onBulkDelete}
-                onClearSelection={onClearSelection}
-                isDeleting={isBulkDeleting}
-              />
+            {canShowCheckboxes && onBulkDelete && onClearSelection && (
+              <PermissionWrapper module="blog" action="delete">
+                <BulkActionDropdown
+                  selectedItems={selectedTags}
+                  itemType="tags"
+                  onBulkDelete={onBulkDelete}
+                  onClearSelection={onClearSelection}
+                  isDeleting={isBulkDeleting}
+                />
+              </PermissionWrapper>
             )}
           </div>
         </div>
@@ -116,7 +124,7 @@ const TagList: React.FC<TagListProps> = ({
           <Table className="w-full">
             <TableHeader className="bg-gray-50 dark:bg-gray-700">
               <TableRow>
-                {onSelectTag && onSelectAll && (
+                {canShowCheckboxes && onSelectTag && onSelectAll && (
                   <TableCell isHeader className="px-6 py-3 w-12">
                     <Checkbox
                       checked={selectedTags.length === tags.length && tags.length > 0}
@@ -153,7 +161,7 @@ const TagList: React.FC<TagListProps> = ({
             <TableBody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
               {tags.map((tag) => (
                 <TableRow key={tag.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                  {onSelectTag && (
+                  {canShowCheckboxes && onSelectTag && (
                     <TableCell className="px-6 py-4 w-12">
                       <Checkbox
                         checked={selectedTags.includes(tag.id)}

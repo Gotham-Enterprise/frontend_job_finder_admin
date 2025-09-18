@@ -5,6 +5,7 @@ import { Table, TableHeader, TableBody, TableRow, TableCell } from "@/components
 import Pagination from "@/components/tables/Pagination";
 import BulkActionDropdown from "@/components/ui/BulkActionDropdown";
 import PermissionWrapper from "@/components/common/PermissionWrapper";
+import { usePermissions } from "@/hooks/usePermissions";
 import { CategoryListProps } from "@/services/types/categoryTypes";
 import Button from "../../../../ui/button/Button";
 import { PencilIcon, TrashBinIcon } from "@/icons";
@@ -34,6 +35,10 @@ export default function CategoryList({
   metaData,
 }: CategoryListProps) {
   const displayedCategories = categories;
+  const { hasPermission } = usePermissions();
+
+  // Show checkboxes if user has either edit OR delete permissions
+  const canShowCheckboxes = hasPermission("blog", "edit") || hasPermission("blog", "delete");
 
   return (
     <>
@@ -66,7 +71,7 @@ export default function CategoryList({
               </div>
             </div>
 
-            {onBulkDelete && onClearSelection && (
+            {canShowCheckboxes && onBulkDelete && onClearSelection && (
               <PermissionWrapper module="blog" action="delete">
                 <BulkActionDropdown
                   selectedItems={selectedCategories || []}
@@ -92,7 +97,7 @@ export default function CategoryList({
           <Table className="w-full">
             <TableHeader className="bg-gray-50 dark:bg-gray-700">
               <TableRow>
-                {onSelectCategory && onSelectAll && (
+                {canShowCheckboxes && onSelectCategory && onSelectAll && (
                   <TableCell isHeader className="px-6 py-3 w-12">
                     <Checkbox
                       checked={
@@ -138,7 +143,7 @@ export default function CategoryList({
             <TableBody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
               {displayedCategories.map((category) => (
                 <TableRow key={category.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                  {onSelectCategory && (
+                  {canShowCheckboxes && onSelectCategory && (
                     <TableCell className="px-6 py-4 w-12">
                       <Checkbox
                         checked={selectedCategories.includes(category.id)}
