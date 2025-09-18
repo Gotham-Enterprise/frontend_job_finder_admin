@@ -1,34 +1,36 @@
-import { EmployerFilters, 
+import {
+  EmployerFilters,
   EmployersResponse,
-   EmployerStatesResponse,
-   EmployerDetailsResponse,
-    CompanyReviewsResponse,
-    EmployerUpdateData } from '../types/employer';
-import { ApplicantDetailsResponse } from '../types/applicant';
-import { apiGet, apiPut } from './apiUtils';
-import { showToast } from '../utils/toast';
+  EmployerStatesResponse,
+  EmployerDetailsResponse,
+  CompanyReviewsResponse,
+  EmployerUpdateData,
+} from "../types/employer";
+import { ApplicantDetailsResponse } from "../types/applicant";
+import { apiGet, apiPut } from "./apiUtils";
+import { showToast } from "../utils/toast";
 
 export const employerApi = {
   async getEmployers(filters: EmployerFilters = {}): Promise<EmployersResponse> {
     try {
       const queryParams = new URLSearchParams();
-      
-      if (filters.page) queryParams.append('page', filters.page.toString());
-      if (filters.limit) queryParams.append('limit', filters.limit.toString());
-      if (filters.name) queryParams.append('name', filters.name);
-      if (filters.location) queryParams.append('location', filters.location);     
-      if (filters.status) queryParams.append('status', filters.status);        
-      
+
+      if (filters.page) queryParams.append("page", filters.page.toString());
+      if (filters.limit) queryParams.append("limit", filters.limit.toString());
+      if (filters.name) queryParams.append("name", filters.name);
+      if (filters.location) queryParams.append("location", filters.location);
+      if (filters.status) queryParams.append("status", filters.status);
+
       const endpoint = `/api/admin/employers?${queryParams.toString()}`;
-      
+
       return apiGet<EmployersResponse>(endpoint);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      showToast.error('Employer Error', errorMessage);
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      showToast.error("Employer Error", errorMessage);
       throw error;
     }
   },
-  
+
   async getEmployerById(id: string): Promise<EmployerDetailsResponse> {
     return apiGet<EmployerDetailsResponse>(`/api/admin/employers/${id}`);
   },
@@ -42,6 +44,38 @@ export const employerApi = {
   },
 
   async updateEmployer(id: string, data: EmployerUpdateData): Promise<any> {
-    return apiPut<any>(`/api/admin/employers/${id}`, data);
+    // Create FormData if file is present
+    if (data.uploadProfilePicture) {
+      const formData = new FormData();
+
+      // Append all form fields
+      formData.append("name", data.name);
+      formData.append("overview", data.overview);
+      formData.append("address", data.address);
+      formData.append("city", data.city);
+      formData.append("state", data.state);
+      formData.append("country", data.country);
+      formData.append("zipCode", data.zipCode);
+      formData.append("phoneNumber", data.phoneNumber);
+
+      // Append the file
+      formData.append("uploadProfilePicture", data.uploadProfilePicture);
+
+      return apiPut<any>(`/api/admin/employers/${id}`, formData);
+    }
+
+    // Use regular JSON if no file - map fields to match backend expectations
+    const mappedData = {
+      name: data.name,
+      overview: data.overview,
+      address: data.address,
+      city: data.city,
+      state: data.state,
+      country: data.country,
+      zipCode: data.zipCode,
+      phoneNumber: data.phoneNumber,
+    };
+
+    return apiPut<any>(`/api/admin/employers/${id}`, mappedData);
   },
 };
