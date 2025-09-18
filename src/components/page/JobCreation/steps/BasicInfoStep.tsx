@@ -32,16 +32,20 @@ const BasicInfoStep: React.FC<BasicInfoStepProps> = ({
           <div>
             <Label>Occupation *</Label>
             <Select
+             placeholder='Select Occupation'
               options={occupationOptions}
               disabled={isLoadingOccupations}
               onChange={(value: string) => onUpdateField('occupationId', value)}
               defaultValue={formData.occupationId}
             />
+
+          
           </div>
 
           <div>
             <Label>Specialty</Label>
             <Select
+              placeholder="Select Specialty"
               options={specialtyOptions}
               disabled={!selectedOccupation}
               onChange={(value: string) => onUpdateField('specialtyId', value)}

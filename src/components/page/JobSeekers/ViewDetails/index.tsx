@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import { useJobSeekerDetails } from "@/services/hooks/useJobSeekers";
 import { formatDate, formatDateTimeEST } from "@/services/utils/dateUtils";
 import ErrorState from "../../../common/ErrorState";
@@ -14,14 +14,77 @@ import {
   Skills,
   PermanentDeletion,
 } from "./components";
+import { DeactivateUserModal, DeactivationHistoryModal } from "../components";
 import BackToListButton from "@/components/ui/BackToListButton";
-
+import { DocsIcon } from "@/icons";
+import { MdOutlineLock } from "react-icons/md";
 interface ViewDetailsProps {
   id: string;
 }
 
 export default function ViewDetails({ id }: ViewDetailsProps) {
   const { data, isLoading, error } = useJobSeekerDetails(id);
+  
+  const [deactivateModal, setDeactivateModal] = useState<{
+    isOpen: boolean;
+    userId: string;
+    userName: string;
+  }>({
+    isOpen: false,
+    userId: '',
+    userName: '',
+  });
+  
+  const [historyModal, setHistoryModal] = useState<{
+    isOpen: boolean;
+    userId: string;
+    userName: string;
+  }>({
+    isOpen: false,
+    userId: '',
+    userName: '',
+  });
+
+  const openDeactivateModal = () => {
+    if (data?.data) {
+      setDeactivateModal({
+        isOpen: true,
+        userId: data.data.id,
+        userName: data.data.name,
+      });
+    }
+  };
+
+  const closeDeactivateModal = () => {
+    setDeactivateModal({
+      isOpen: false,
+      userId: '',
+      userName: '',
+    });
+  };
+
+  const openHistoryModal = () => {
+    if (data?.data) {
+      setHistoryModal({
+        isOpen: true,
+        userId: data.data.id,
+        userName: data.data.name,
+      });
+    }
+  };
+
+  const closeHistoryModal = () => {
+    setHistoryModal({
+      isOpen: false,
+      userId: '',
+      userName: '',
+    });
+  };
+
+  const handleDeactivateSuccess = () => {
+    // Refresh the page or redirect back to list
+    window.location.reload();
+  };
 
   const getProficiencyLabel = (proficiency: string) => {
     if (!proficiency || proficiency.trim() === "" || proficiency.toLowerCase() === "null") {
@@ -122,9 +185,32 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
   return (
     <>
       <div className="px-4 pt-4 pb-2">
-        <BackToListButton href="/admin/job-seekers" preserveState={true}>
-          Back to Job Seekers
-        </BackToListButton>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <BackToListButton href="/admin/job-seekers" preserveState={true}>
+            Back to Job Seekers
+          </BackToListButton>
+          
+          {/* Action Buttons */}
+          <div className="flex flex-wrap gap-3">
+            {/* <button
+              onClick={openHistoryModal}
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:hover:bg-blue-900/30 rounded-lg transition-colors"
+            >
+              <DocsIcon className="w-4 h-4" />
+              View History
+            </button> */}
+            
+            {jobSeeker.status === 'active' && (
+              <button
+                onClick={openDeactivateModal}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-yellow-600 bg-yellow-50 hover:bg-yellow-100 dark:bg-yellow-900/20 dark:text-yellow-400 dark:hover:bg-yellow-900/30 rounded-lg transition-colors"
+              >
+                <MdOutlineLock className="w-4 h-4 text-yellow-600" />
+                Deactivate Account
+              </button>
+            )}
+          </div>
+        </div>
       </div>
       <div className="grid grid-cols-1 px-4 pt-6 xl:grid-cols-3 xl:gap-6">
         <div className="col-span-full xl:col-auto">
@@ -152,6 +238,23 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
           />
         </div>
       </div>
+
+      {/* Deactivate Modal */}
+      <DeactivateUserModal
+        isOpen={deactivateModal.isOpen}
+        onClose={closeDeactivateModal}
+        userId={deactivateModal.userId}
+        userName={deactivateModal.userName}
+        onSuccess={handleDeactivateSuccess}
+      />
+
+      {/* History Modal */}
+      <DeactivationHistoryModal
+        isOpen={historyModal.isOpen}
+        onClose={closeHistoryModal}
+        userId={historyModal.userId}
+        userName={historyModal.userName}
+      />
     </>
   );
 }
