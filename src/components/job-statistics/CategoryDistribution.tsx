@@ -24,7 +24,11 @@ export default function CategoryDistribution() {
   const { data: occupationsData, isLoading: occupationsLoading } = useOccupations();
 
   // Fetch application category data
-  const { data: categoryData, isLoading: categoryLoading } = useQuery({
+  const {
+    data: categoryData,
+    isLoading: categoryLoading,
+    refetch,
+  } = useQuery({
     queryKey: ["applicationCategory", selectedOccupationId, activeTab, selectedYear, selectedMonth],
     queryFn: () => {
       if (!selectedOccupationId) return null;
@@ -45,6 +49,13 @@ export default function CategoryDistribution() {
       setSelectedOccupationId(occupationsData.data[0].id);
     }
   }, [occupationsData, selectedOccupationId]);
+
+  // Refetch data when filters change
+  useEffect(() => {
+    if (selectedOccupationId) {
+      refetch();
+    }
+  }, [selectedOccupationId, activeTab, selectedYear, selectedMonth, refetch]);
 
   // Process data for chart
   const getChartData = () => {
@@ -234,43 +245,34 @@ export default function CategoryDistribution() {
           ))}
         </div>
 
-        {/* Date Picker for Daily View */}
-        {activeTab === "daily" && selectedOccupationId && (
-          <div className="w-48">
+        {/* Date Picker - Dynamic based on active filter */}
+        {selectedOccupationId && (
+          <div className={activeTab === "daily" ? "w-48" : "w-32"}>
             <DatePicker
-              id="daily-date-picker"
-              defaultDate={new Date(selectedYear, selectedMonth - 1, 1)}
+              id="category-date-picker"
+              defaultDate={
+                activeTab === "daily" ? new Date(selectedYear, selectedMonth - 1, 1) : new Date(selectedYear, 0, 1)
+              }
+              monthSelectorType="dropdown"
+              showMonths={1}
+              dateFormat={activeTab === "daily" ? "Y-m-d" : "Y"}
               onChange={(selectedDates: Date[]) => {
                 if (selectedDates && selectedDates.length > 0) {
                   const date = selectedDates[0];
                   const year = date.getFullYear();
                   const month = date.getMonth() + 1;
 
+                  // Update state based on filter type
                   setSelectedYear(year);
-                  setSelectedMonth(month);
-                }
-              }}
-              placeholder="Select Month/Year"
-            />
-          </div>
-        )}
-
-        {/* Date Picker for Monthly and Quarterly Views (Year only) */}
-        {(activeTab === "monthly" || activeTab === "quarterly") && selectedOccupationId && (
-          <div className="w-32">
-            <DatePicker
-              id="year-date-picker"
-              defaultDate={new Date(selectedYear, 0, 1)}
-              onChange={(selectedDates: Date[]) => {
-                if (selectedDates && selectedDates.length > 0) {
-                  const date = selectedDates[0];
-                  const year = date.getFullYear();
-                  if (year !== selectedYear) {
-                    setSelectedYear(year);
+                  if (activeTab === "daily") {
+                    setSelectedMonth(month);
                   }
+
+                  // The refetch will be triggered automatically by the useEffect
+                  // that watches selectedYear and selectedMonth changes
                 }
               }}
-              placeholder="Select Year"
+              placeholder={activeTab === "daily" ? "Select Month/Year" : "Select Year"}
             />
           </div>
         )}

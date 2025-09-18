@@ -215,61 +215,39 @@ export default function JobApplicationTrends() {
           ))}
         </div>
 
-        {/* Date Picker for Daily View */}
-        {activeTab === "daily" && (
-          <div className="w-48">
-            <DatePicker
-              id="daily-date-picker"
-              defaultDate={new Date(selectedYear, selectedMonth - 1, 1)}
-              monthSelectorType="dropdown"
-              showMonths={1}
-              dateFormat="Y-m"
-              onChange={(selectedDates: Date[]) => {
-                if (selectedDates && selectedDates.length > 0) {
-                  const date = selectedDates[0];
-                  const year = date.getFullYear();
-                  const month = date.getMonth() + 1;
+        {/* Date Picker - Dynamic based on active filter */}
+        <div className={activeTab === "daily" ? "w-48" : "w-32"}>
+          <DatePicker
+            id="trends-date-picker"
+            defaultDate={activeTab === "daily" ? new Date(selectedYear, selectedMonth - 1, 1) : new Date(selectedYear, 0, 1)}
+            monthSelectorType="dropdown"
+            showMonths={1}
+            dateFormat={activeTab === "daily" ? "Y-m-d" : "Y"}
+            onChange={(selectedDates: Date[]) => {
+              if (selectedDates && selectedDates.length > 0) {
+                const date = selectedDates[0];
+                const year = date.getFullYear();
+                const month = date.getMonth() + 1;
 
-                  // Update state
-                  setSelectedYear(year);
+                // Update state based on filter type
+                setSelectedYear(year);
+                if (activeTab === "daily") {
                   setSelectedMonth(month);
-
-                  // Make a single API call with the new values
-                  fetchTrends({
-                    type: "daily",
-                    year,
-                    month,
-                  });
                 }
-              }}
-              placeholder="Select Month/Year"
-            />
-          </div>
-        )}
 
-        {/* Date Picker for Monthly and Quarterly Views (Year only) */}
-        {(activeTab === "monthly" || activeTab === "quarterly") && (
-          <div className="w-32">
-            <DatePicker
-              id="year-date-picker"
-              defaultDate={new Date(selectedYear, 0, 1)}
-              monthSelectorType="dropdown"
-              showMonths={1}
-              dateFormat="Y"
-              onChange={(selectedDates: Date[]) => {
-                if (selectedDates && selectedDates.length > 0) {
-                  const date = selectedDates[0];
-                  const year = date.getFullYear();
-                  if (year !== selectedYear) {
-                    setSelectedYear(year);
-                    handleYearChange(year);
-                  }
-                }
-              }}
-              placeholder="Select Year"
-            />
-          </div>
-        )}
+                // Make API call with current active filter
+                const params = {
+                  type: activeTab,
+                  year,
+                  ...(activeTab === "daily" && { month }),
+                };
+                
+                fetchTrends(params);
+              }
+            }}
+            placeholder={activeTab === "daily" ? "Select Month/Year" : "Select Year"}
+          />
+        </div>
       </div>
 
       {loading ? (
