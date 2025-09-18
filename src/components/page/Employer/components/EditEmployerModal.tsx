@@ -140,7 +140,7 @@ export const EditEmployerModal: React.FC<EditEmployerModalProps> = ({ isOpen, on
           overview: stripHtmlTags(employer.overview || ""),
           address: employer.address || "",
           city: employer.city || "",
-          state: getStateAbbreviation(employer.state || ""),
+          state: employer.state || "",
           country: employer.country || "US",
           zipCode: employer.zipCode || "",
           phoneNumber: employer.phoneNumber || "",
@@ -151,7 +151,7 @@ export const EditEmployerModal: React.FC<EditEmployerModalProps> = ({ isOpen, on
           setCurrentProfilePicture({
             fileName: "Current Profile Picture",
             url: employer.avatarUrl,
-            expiresAt: ""
+            expiresAt: "",
           });
         } else {
           setCurrentProfilePicture(null);
