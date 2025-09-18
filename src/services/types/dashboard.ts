@@ -63,3 +63,28 @@ export interface ApplicationCategoryResponse<T> {
   success: boolean;
   data: T[];
 }
+
+// Blog Analytics Types
+export interface BlogViewCountData {
+  blogViewCount: number;
+  blogViewCountToday: number;
+  blogViewMonth: number;
+}
+
+export interface BlogViewCountResponse {
+  success: boolean;
+  data: {
+    viewCount: BlogViewCountData;
+  };
+}
+
+export interface BlogAnalyticsParams {
+  type: TrendType;
+  year: number;
+  month?: number; // Required for daily type
+}
+
+export interface BlogAnalyticsResponse<T> {
+  success: boolean;
+  data: T[];
+}
