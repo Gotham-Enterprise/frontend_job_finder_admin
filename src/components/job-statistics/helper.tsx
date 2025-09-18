@@ -28,28 +28,39 @@ export const createJobMetricsData = (data: DashboardDetailsData): MetricCardProp
     icon: <BoxIconLine className="text-gray-800 size-6 dark:text-white/90" />,
     title: "Employers",
     value: formatNumber(data.employerCount),
-    trend: data.employerCountToday > 0 ? {
-      value: `+${data.employerCountToday} today`,
-      isPositive: true,
-    } : undefined,
+    trend:
+      data.employerCountToday > 0
+        ? {
+            value: `+${data.employerCountToday} today`,
+            isPositive: true,
+          }
+        : undefined,
   },
   {
     icon: <UserIcon className="text-gray-800 size-6 dark:text-white/90" />,
     title: "Job Seekers",
     value: formatNumber(data.jobSeekerCount),
-    trend: data.jobseekerCountToday > 0 ? {
-      value: `+${data.jobseekerCountToday} today`,
-      isPositive: true,
-    } : undefined,
+    trend:
+      data.jobseekerCountToday > 0
+        ? {
+            value: `+${data.jobseekerCountToday} today`,
+            isPositive: true,
+          }
+        : undefined,
+  },
+  {
+    icon: <BoxIconLine className="text-gray-800 size-6 dark:text-white/90" />,
+    title: "New Employers Today",
+    value: formatNumber(data.employerCountToday),
   },
   {
     icon: <CalenderIcon className="text-gray-800 size-6 dark:text-white/90" />,
-    title: "Today's Job Seekers",
+    title: "New Job Seekers Today",
     value: formatNumber(data.jobseekerCountToday),
   },
   {
     icon: <GroupIcon className="text-gray-800 size-6 dark:text-white/90" />,
-    title: "Today's Applications",
+    title: "New Applications Today",
     value: formatNumber(data.applicationCountToday),
   },
 ];
@@ -72,23 +83,24 @@ export const jobMetricsData: MetricCardProps[] = [
     value: "0",
   },
   {
+    icon: <BoxIconLine className="text-gray-800 size-6 dark:text-white/90" />,
+    title: "New Employers Today",
+    value: "0",
+  },
+  {
     icon: <CalenderIcon className="text-gray-800 size-6 dark:text-white/90" />,
-    title: "Today's Job Seekers",
+    title: "New Job Seekers Today",
     value: "0",
   },
   {
     icon: <GroupIcon className="text-gray-800 size-6 dark:text-white/90" />,
-    title: "Today's Applications",
+    title: "New Applications Today",
     value: "0",
   },
 ];
 
 export const renderTrendIcon = (isPositive: boolean) => {
-  return isPositive ? (
-    <ArrowUpIcon />
-  ) : (
-    <ArrowDownIcon className="text-error-500" />
-  );
+  return isPositive ? <ArrowUpIcon /> : <ArrowDownIcon className="text-error-500" />;
 };
 
 export const renderBadgeColor = (isPositive: boolean): "success" | "error" => {
