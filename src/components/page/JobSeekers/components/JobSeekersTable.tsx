@@ -147,7 +147,7 @@ const LicensesPopover: React.FC<LicensesPopoverProps> = ({ licenses, isOpen, onC
                     {license.issuingState && <span className="flex flex-col">{license.issuingState}</span>}
                   </div>
                   <div className="flex justify-between gap-2 mb-2">
-                    <span>Issue Date:</span>
+                    <span>Issued Date:</span>
                     {license.issueDate && (
                       <div className="flex flex-col">
                         {new Date(license.issueDate).toLocaleDateString("en-US", {
@@ -248,7 +248,7 @@ const CertificationsPopover: React.FC<CertificationsPopoverProps> = ({
                     {certification.issuer && <span className="flex flex-col">{certification.issuer}</span>}
                   </div>
                   <div className="flex justify-between gap-2 mb-2">
-                    <span>Issue Date:</span>
+                    <span>Issued Date:</span>
                     {certification.issueDate && (
                       <div className="flex flex-col">
                         {new Date(certification.issueDate).toLocaleDateString("en-US", {
