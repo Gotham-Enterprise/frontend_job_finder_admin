@@ -1,27 +1,18 @@
-import { authUtils } from '../utils/authUtils';
-import { errorUtils } from '../utils/errorUtils';
+import { authUtils } from "../utils/authUtils";
+import { errorUtils } from "../utils/errorUtils";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export interface ApiOptions {
-  method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
+  method?: "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
   body?: any;
   headers?: Record<string, string>;
   includeAuth?: boolean;
   credentials?: RequestCredentials;
 }
 
-export async function apiRequest<T = any>(
-  endpoint: string,
-  options: ApiOptions = {}
-): Promise<T> {
-  const {
-    method = 'GET',
-    body,
-    headers = {},
-    includeAuth = true,
-    credentials = 'include'
-  } = options;
+export async function apiRequest<T = any>(endpoint: string, options: ApiOptions = {}): Promise<T> {
+  const { method = "GET", body, headers = {}, includeAuth = true, credentials = "include" } = options;
 
   const url = `${API_URL}${endpoint}`;
 
@@ -33,13 +24,12 @@ export async function apiRequest<T = any>(
     Object.assign(requestHeaders, authUtils.getAuthHeaders());
   }
 
-
-  if (body && !(body instanceof FormData) && !requestHeaders['Content-Type']) {
-    requestHeaders['Content-Type'] = 'application/json';
+  if (body && !(body instanceof FormData) && !requestHeaders["Content-Type"]) {
+    requestHeaders["Content-Type"] = "application/json";
   } else if (body instanceof FormData) {
-    delete requestHeaders['Content-Type'];
+    delete requestHeaders["Content-Type"];
   }
-  
+
   const requestConfig: RequestInit = {
     method,
     headers: requestHeaders,
@@ -47,9 +37,7 @@ export async function apiRequest<T = any>(
   };
 
   if (body) {
-
-    requestConfig.body = body instanceof FormData ? body : 
-                         typeof body === 'string' ? body : JSON.stringify(body);
+    requestConfig.body = body instanceof FormData ? body : typeof body === "string" ? body : JSON.stringify(body);
   }
 
   try {
@@ -63,12 +51,12 @@ export async function apiRequest<T = any>(
       return {} as T;
     }
 
-    const contentType = response.headers.get('content-type');
-    if (contentType && contentType.includes('application/json')) {
+    const contentType = response.headers.get("content-type");
+    if (contentType && contentType.includes("application/json")) {
       const jsonResponse = await response.json();
       return jsonResponse;
     }
-    
+
     const textResponse = await response.text();
     if (textResponse) {
       try {
@@ -77,24 +65,24 @@ export async function apiRequest<T = any>(
         return textResponse as T;
       }
     }
-    
+
     return {} as T;
   } catch (error) {
     throw error;
   }
 }
 
-export const apiGet = <T = any>(endpoint: string, options?: Omit<ApiOptions, 'method'>) =>
-  apiRequest<T>(endpoint, { ...options, method: 'GET' });
+export const apiGet = <T = any>(endpoint: string, options?: Omit<ApiOptions, "method">) =>
+  apiRequest<T>(endpoint, { ...options, method: "GET" });
 
-export const apiPost = <T = any>(endpoint: string, body?: any, options?: Omit<ApiOptions, 'method' | 'body'>) =>
-  apiRequest<T>(endpoint, { ...options, method: 'POST', body });
+export const apiPost = <T = any>(endpoint: string, body?: any, options?: Omit<ApiOptions, "method" | "body">) =>
+  apiRequest<T>(endpoint, { ...options, method: "POST", body });
 
-export const apiPut = <T = any>(endpoint: string, body?: any, options?: Omit<ApiOptions, 'method' | 'body'>) =>
-  apiRequest<T>(endpoint, { ...options, method: 'PUT', body });
+export const apiPut = <T = any>(endpoint: string, body?: any, options?: Omit<ApiOptions, "method" | "body">) =>
+  apiRequest<T>(endpoint, { ...options, method: "PUT", body });
 
-export const apiDelete = <T = any>(endpoint: string, options?: Omit<ApiOptions, 'method'>) =>
-  apiRequest<T>(endpoint, { ...options, method: 'DELETE' });
+export const apiDelete = <T = any>(endpoint: string, options?: Omit<ApiOptions, "method">) =>
+  apiRequest<T>(endpoint, { ...options, method: "DELETE" });
 
-export const apiPatch = <T = any>(endpoint: string, body?: any, options?: Omit<ApiOptions, 'method' | 'body'>) =>
-  apiRequest<T>(endpoint, { ...options, method: 'PATCH', body });
+export const apiPatch = <T = any>(endpoint: string, body?: any, options?: Omit<ApiOptions, "method" | "body">) =>
+  apiRequest<T>(endpoint, { ...options, method: "PATCH", body });

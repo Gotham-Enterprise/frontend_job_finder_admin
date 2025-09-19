@@ -5,6 +5,7 @@ import { SidebarProvider } from '@/context/SidebarContext';
 import { ThemeProvider } from '@/context/ThemeContext';
 import { ToastProvider } from '@/context/ToastContext';
 import { SubscriptionProvider } from '@/context/SubscriptionContext';
+import { ReduxProvider } from '@/store/ReduxProvider';
 import QueryProvider from '@/services/providers/QueryProvider';
 import ToastContainer from '@/components/ui/toast/ToastContainer';
 
@@ -19,16 +20,18 @@ export default function RootLayout({
 }>) {  return (
     <html lang="en">
       <body className={`${outfit.className} dark:bg-gray-900`}>
-        <QueryProvider>
-          <ThemeProvider>
-            <ToastProvider>
-              <SubscriptionProvider>
-                <SidebarProvider>{children}</SidebarProvider>
-              </SubscriptionProvider>
-              <ToastContainer />
-            </ToastProvider>
-          </ThemeProvider>
-        </QueryProvider>
+        <ReduxProvider>
+          <QueryProvider>
+            <ThemeProvider>
+              <ToastProvider>
+                <SubscriptionProvider>
+                  <SidebarProvider>{children}</SidebarProvider>
+                </SubscriptionProvider>
+                <ToastContainer />
+              </ToastProvider>
+            </ThemeProvider>
+          </QueryProvider>
+        </ReduxProvider>
       </body>
     </html>
   );

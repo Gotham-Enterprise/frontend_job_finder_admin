@@ -240,7 +240,6 @@ export function transformBlogDataForAPI(
     analytics
   };
 
-
   return payload;
 }
 

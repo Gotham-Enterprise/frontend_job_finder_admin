@@ -309,9 +309,11 @@ export const EditEmployerModal: React.FC<EditEmployerModalProps> = ({
                 <Select
                   options={stateOptions}
                   value={formData.state}
-                  onChange={handleSelectState}
-                  placeholder={isLoadingStates ? 'Loading states...' : 'Select State'}
-                  disabled={isLoadingStates}
+                  onChange={(value: string) => updateField('state', value)}
+                  placeholder="Select state"
+                  disabled={isStatesLoading}
+                  searchable={true}
+                  searchPlaceholder="Search states..."
                 />
               </div>
             </div>

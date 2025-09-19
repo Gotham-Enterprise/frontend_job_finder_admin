@@ -9,6 +9,7 @@ export interface JobSeekerUpdateData {
   phoneNumber: string;
   occupationId: number;
   specialtyId?: number;
+  uploadProfilePicture?: File;
 }
 
 export interface JobSeeker {
@@ -25,7 +26,7 @@ export interface JobSeeker {
   dateJoined: string;
   documents?: Document[];
   lastActivity: string;
-  status: 'active' | 'inactive' | 'suspended' | 'pending';
+  status: "active" | "inactive" | "suspended" | "pending";
   profilePicture?: {
     fileName: string;
     url: string;
@@ -41,10 +42,10 @@ export interface JobSeekerFilters {
   search?: string;
   city?: string;
   radius?: number;
-  location?: string;  
+  location?: string;
   specialty?: string;
   occupationId?: number;
-  status?: 'active' | 'inactive' | 'suspended' | 'pending';
+  status?: "active" | "inactive" | "suspended" | "pending";
 }
 
 export interface JobSeekersResponse {
@@ -72,7 +73,7 @@ export interface JobSeekerStats {
 export interface JobSeekerDetails {
   id: string;
   name: string;
-  status: 'active' | 'inactive' | 'suspended';
+  status: "active" | "inactive" | "suspended" | "deleted";
   profilePicture?: {
     fileName: string;
     url: string;
@@ -95,6 +96,8 @@ export interface JobSeekerDetails {
   languages?: Language[];
   occupationId?: number;
   specialtyId?: number;
+  isPermanentlyDeleted?: boolean;
+  permanentlyDeletedAt?: string;
 }
 
 export interface Document {
@@ -152,4 +155,13 @@ export interface JobSeekerDetailsResponse {
   success: boolean;
   data: JobSeekerDetails;
   message?: string;
+}
+
+export interface ShareResumeRequest {
+  email: string;
+}
+
+export interface ShareResumeResponse {
+  success: boolean;
+  message: string;
 }

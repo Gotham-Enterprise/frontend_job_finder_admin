@@ -4,6 +4,7 @@ import TextArea from "@/components/form/input/TextArea";
 import Button from "@/components/ui/button/Button";
 import Label from "@/components/form/Label";
 import SubCategoryDropdown from "@/components/form/SubCategoryDropdown";
+import PermissionWrapper from "@/components/common/PermissionWrapper";
 import { CategoryFormProps } from "@/services/types/categoryTypes";
 import { useSubCategories } from "@/services/hooks/useSubCategories";
 
@@ -12,7 +13,7 @@ export default function CategoryForm({
   onInputChange,
   onAddCategory,
   onSubCategoryChange,
-  isLoading = false
+  isLoading = false,
 }: CategoryFormProps) {
   const { subCategories, isLoading: isLoadingSubCategories } = useSubCategories();
 
@@ -27,20 +28,24 @@ export default function CategoryForm({
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
       <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">Add New Category</h2>
-      
-      <div className="space-y-4">        
+
+      <div className="space-y-4">
         <div>
-          <Label>Name <span className="text-red-500">*</span></Label>
+          <Label>
+            Name <span className="text-red-500">*</span>
+          </Label>
           <Input
             type="text"
             placeholder="Category name"
             defaultValue={newCategory.name}
-            onChange={(e) => onInputChange('name', e.target.value)}
+            onChange={(e) => onInputChange("name", e.target.value)}
           />
-        </div>        
-         
+        </div>
+
         <div>
-          <Label>Sub Categories <span className="text-red-500">*</span></Label>
+          <Label>
+            Sub Categories <span className="text-red-500">*</span>
+          </Label>
           <SubCategoryDropdown
             selectedSubCategories={currentSubCategories}
             availableSubCategories={subCategories}
@@ -52,9 +57,7 @@ export default function CategoryForm({
             Select existing subcategories or type to create new ones.
           </p>
           {isLoadingSubCategories && (
-            <p className="mt-1 text-xs text-blue-500 dark:text-blue-400">
-              Loading subcategories...
-            </p>
+            <p className="mt-1 text-xs text-blue-500 dark:text-blue-400">Loading subcategories...</p>
           )}
         </div>
 
@@ -64,18 +67,20 @@ export default function CategoryForm({
             placeholder="Category description (optional)"
             rows={4}
             value={newCategory.description}
-            onChange={(value) => onInputChange('description', value)}
+            onChange={(value) => onInputChange("description", value)}
           />
         </div>
 
-        <Button
-          variant="default"
-          onClick={onAddCategory}
-          className="w-full"
-          disabled={!newCategory.name.trim() || isLoading}
-        >
-          {isLoading ? "Adding..." : "Add New Category"}
-        </Button>
+        <PermissionWrapper module="blog" action="add">
+          <Button
+            variant="default"
+            onClick={onAddCategory}
+            className="w-full"
+            disabled={!newCategory.name.trim() || isLoading}
+          >
+            {isLoading ? "Adding..." : "Add New Category"}
+          </Button>
+        </PermissionWrapper>
       </div>
     </div>
   );
