@@ -7,6 +7,7 @@ import Select from "@/components/form/Select";
 import { employerApi } from "@/services/api/employer";
 import { EmployerUpdateData } from "@/services/types/employer";
 import { useStates } from "@/services/hooks/useStates";
+import { useStatesCities } from "@/lib/useStatesCities";
 
 interface EditEmployerModalProps {
   isOpen: boolean;
@@ -50,6 +51,9 @@ export const EditEmployerModal: React.FC<EditEmployerModalProps> = ({ isOpen, on
     url: string;
     expiresAt: string;
   } | null>(null);
+
+  // City dropdown state
+  const [isCityDropdownOpen, setIsCityDropdownOpen] = useState(false);
 
   const { data: statesData, isLoading: isStatesLoading } = useStates();
   const { data: statesCities, isLoading: isLoadingStates } = useStatesCities();
@@ -180,8 +184,9 @@ export const EditEmployerModal: React.FC<EditEmployerModalProps> = ({ isOpen, on
   useEffect(() => {
     if (isOpen && employerId && statesCities && formData.state && !formData.state.includes("(")) {
       const stateEntry = Object.entries(statesCities).find(([abbr]) => abbr === formData.state);
-      if (stateEntry) {
-        setFormData((prev) => ({ ...prev, state: `${stateEntry[1].name} (${formData.state})` }));
+      if (stateEntry && stateEntry[1] && typeof stateEntry[1] === "object" && "name" in stateEntry[1]) {
+        const stateData = stateEntry[1] as { name: string; cities: string[] };
+        setFormData((prev) => ({ ...prev, state: `${stateData.name} (${formData.state})` }));
       }
     }
   }, [statesCities, employerId, isOpen, formData.state]);
