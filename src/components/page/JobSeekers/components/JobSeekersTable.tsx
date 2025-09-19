@@ -213,42 +213,50 @@ const CertificationsPopover: React.FC<CertificationsPopoverProps> = ({
       >
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <CheckCircleIcon className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
             <h3 className="text-sm font-semibold text-gray-900 dark:text-white">All Certifications</h3>
           </div>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full p-1 transition-colors duration-200"
-          >
-            ×
+          <button onClick={onClose} className="text-gray-400 p-1 transition-colors duration-200">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path
+                fillRule="evenodd"
+                clipRule="evenodd"
+                d="M6.04289 16.5413C5.65237 16.9318 5.65237 17.565 6.04289 17.9555C6.43342 18.346 7.06658 18.346 7.45711 17.9555L11.9987 13.4139L16.5408 17.956C16.9313 18.3466 17.5645 18.3466 17.955 17.956C18.3455 17.5655 18.3455 16.9323 17.955 16.5418L13.4129 11.9997L17.955 7.4576C18.3455 7.06707 18.3455 6.43391 17.955 6.04338C17.5645 5.65286 16.9313 5.65286 16.5408 6.04338L11.9987 10.5855L7.45711 6.0439C7.06658 5.65338 6.43342 5.65338 6.04289 6.0439C5.65237 6.43442 5.65237 7.06759 6.04289 7.45811L10.5845 11.9997L6.04289 16.5413Z"
+                fill="currentColor"
+              />
+            </svg>
           </button>
         </div>
         <div className="space-y-3 max-h-80 overflow-y-auto pr-1">
           {certifications.map((certification: any, index: number) => (
-            <div
-              key={certification.id || index}
-              className="bg-gradient-to-r from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-800/20 px-4 py-3 rounded-lg border border-emerald-200 dark:border-emerald-700 shadow-sm hover:shadow-md transition-all duration-200"
-            >
+            <div key={certification.id || index} className="py-3 border-b transition-all duration-200">
               <div className="flex items-start gap-3">
                 <div className="flex-shrink-0 mt-0.5">
-                  <CheckCircleIcon className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                  <CheckCircleIcon className="text-emerald-600 dark:text-emerald-400" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="font-semibold text-sm text-emerald-900 dark:text-emerald-100 mb-2">
                     {certification.name}
                   </div>
-                  {certification.issuer && (
-                    <div className="mb-2">
-                      <span className="inline-flex items-center text-xs text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/40 px-2.5 py-1 rounded-full font-medium">
-                        {certification.issuer}
-                      </span>
-                    </div>
-                  )}
-                  {certification.issueDate && (
-                    <div className="text-xs text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-md inline-block">
-                      Issued: {new Date(certification.issueDate).toLocaleDateString()}
-                    </div>
-                  )}
+                  <div className="flex justify-between gap-2 mb-2 flex-wrap">
+                    <span>Issuer:</span>
+                    {certification.issuer && <span className="flex flex-col">{certification.issuer}</span>}
+                  </div>
+                  <div className="flex justify-between gap-2 mb-2 flex-wrap">
+                    <span>Issue Date:</span>
+                    {certification.issueDate && (
+                      <div className="flex flex-col">
+                        Issued: {new Date(certification.issueDate).toLocaleDateString()}
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex justify-between gap-2 mb-2 flex-wrap">
+                    <span>Expiration Date:</span>
+                    {certification.expirationDate && (
+                      <div className="flex flex-col">
+                        Expires: {new Date(certification.expirationDate).toLocaleDateString()}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -609,7 +617,7 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
                               <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
                             </>
                           ) : (
-                            <>View Licenses</>
+                            <>Licenses</>
                           )}
                         </button>
                       </div>
@@ -624,46 +632,14 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
                 <TableCell className="py-4 px-6">
                   <div className="text-sm text-gray-900 dark:text-white">
                     {jobSeeker.certifications && jobSeeker.certifications.length > 0 ? (
-                      <div className="space-y-2 max-w-[220px]">
-                        {jobSeeker.certifications.slice(0, 1).map((certification: any, index: number) => (
-                          <div
-                            key={certification.id || index}
-                            className="font-semibold text-xs text-emerald-900 dark:text-emerald-100 truncate leading-tight"
-                          >
-                            <div className="flex items-start gap-2">
-                              <div className="flex-shrink-0 mt-0.5">
-                                <CheckCircleIcon className=" text-emerald-600 dark:text-emerald-400" />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <div
-                                  className="font-semibold text-sm text-emerald-900 dark:text-emerald-100 truncate leading-tight"
-                                  title={certification.name}
-                                >
-                                  {certification.name}
-                                </div>
-                                {certification.issuer && (
-                                  <div className="mt-1.5">
-                                    <span
-                                      className="font-semibold text-sm text-primary dark:text-primary truncate leading-tight"
-                                      title={certification.issuer}
-                                    >
-                                      {certification.issuer}
-                                    </span>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                        {jobSeeker.certifications.length > 1 && (
-                          <button
-                            ref={getCertificationsButtonRef(jobSeeker.id)}
-                            onClick={() => openCertificationsPopover(jobSeeker.id)}
-                            className="inline-flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400 font-semibold hover:text-emerald-800 dark:hover:text-emerald-200 cursor-pointer transition-all duration-200 bg-emerald-50 dark:bg-emerald-900/20 hover:bg-emerald-100 dark:hover:bg-emerald-800/30 px-2.5 py-1.5 rounded-md border border-emerald-200 dark:border-emerald-700"
-                          >
-                            <CheckCircleIcon className="w-3 h-3" />+{jobSeeker.certifications.length - 1} more
-                          </button>
-                        )}
+                      <div className="space-y-2">
+                        <button
+                          ref={getCertificationsButtonRef(jobSeeker.id)}
+                          onClick={() => openCertificationsPopover(jobSeeker.id)}
+                          className="inline-flex items-center justify-center font-medium gap-2 transition bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 disabled:cursor-not-allowed text-white px-3 py-1.5 text-xs font-medium rounded-md shadow-sm hover:shadow-md transition-all duration-200 flex items-center gap-1.5 h-[45px] w-[100px] rounded-sm px-3 text-xs bg-primary text-primary-foreground text-white shadow hover:bg-primary/90 disabled:bg-primary/50 [&>svg]:text-primary-foreground"
+                        >
+                          Certifications
+                        </button>
                       </div>
                     ) : (
                       <div className="flex items-center gap-2 text-gray-400 dark:text-gray-500 text-sm italic">
