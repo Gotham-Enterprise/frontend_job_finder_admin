@@ -283,17 +283,25 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
     isOpen: false,
     jobSeekerId: null,
   });
+  const [loadingLicensesId, setLoadingLicensesId] = useState<string | null>(null);
   const licensesButtonRefs = useRef<{ [key: string]: React.RefObject<HTMLButtonElement | null> }>({});
   const certificationsButtonRefs = useRef<{ [key: string]: React.RefObject<HTMLButtonElement | null> }>({});
   const { addToast } = useToast();
 
   // Helper functions for popovers
-  const openLicensesPopover = (jobSeekerId: string) => {
+  const openLicensesPopover = async (jobSeekerId: string) => {
+    setLoadingLicensesId(jobSeekerId);
+
+    // Simulate a brief delay to show loading state (you can replace this with actual API call if needed)
+    await new Promise((resolve) => setTimeout(resolve, 300));
+
     setLicensesPopover({ isOpen: true, jobSeekerId });
+    setLoadingLicensesId(null);
   };
 
   const closeLicensesPopover = () => {
     setLicensesPopover({ isOpen: false, jobSeekerId: null });
+    setLoadingLicensesId(null);
   };
 
   const openCertificationsPopover = (jobSeekerId: string) => {
@@ -593,9 +601,16 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
                         <button
                           ref={getLicensesButtonRef(jobSeeker.id)}
                           onClick={() => openLicensesPopover(jobSeeker.id)}
-                          className="inline-flex items-center justify-center font-medium gap-2 transition bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 text-xs font-medium rounded-md shadow-sm hover:shadow-md transition-all duration-200 flex items-center gap-1.5 h-[45px] w-[100px] rounded-sm px-3 text-xs bg-primary text-primary-foreground text-white shadow hover:bg-primary/90 [&>svg]:text-primary-foreground "
+                          disabled={loadingLicensesId === jobSeeker.id}
+                          className="inline-flex items-center justify-center font-medium gap-2 transition bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 disabled:cursor-not-allowed text-white px-3 py-1.5 text-xs font-medium rounded-md shadow-sm hover:shadow-md transition-all duration-200 flex items-center gap-1.5 h-[45px] w-[100px] rounded-sm px-3 text-xs bg-primary text-primary-foreground text-white shadow hover:bg-primary/90 disabled:bg-primary/50 [&>svg]:text-primary-foreground"
                         >
-                          View Licenses
+                          {loadingLicensesId === jobSeeker.id ? (
+                            <>
+                              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
+                            </>
+                          ) : (
+                            <>View Licenses</>
+                          )}
                         </button>
                       </div>
                     ) : (
