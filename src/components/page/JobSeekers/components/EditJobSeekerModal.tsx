@@ -6,6 +6,7 @@ import Select from "@/components/form/Select";
 import { jobSeekerApi } from "@/services/api/jobSeeker";
 import { useStates } from "@/services/hooks/useStates";
 import { useJobsAdminOccupations } from "@/services/hooks/useJobsAdmin";
+import { useStatesCities, useCitiesByState } from "@/lib/useStatesCities";
 import { JobSeekerUpdateData, JobSeekerDetails } from "@/services/types/jobSeeker";
 import { Specialty } from "@/services/types/jobsAdmin";
 
@@ -45,6 +46,9 @@ export const EditJobSeekerModal: React.FC<EditJobSeekerModalProps> = ({ isOpen, 
   const [error, setError] = useState<string | null>(null);
   const [selectedOccupationId, setSelectedOccupationId] = useState<number | undefined>(undefined);
 
+  // City search state
+  const [isCityDropdownOpen, setIsCityDropdownOpen] = useState(false)
+
   // Profile picture states
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -55,34 +59,8 @@ export const EditJobSeekerModal: React.FC<EditJobSeekerModalProps> = ({ isOpen, 
   } | null>(null);
 
   const { data: statesData, isLoading: isStatesLoading } = useStates();
+  const { data: statesCities, isLoading: isLoadingStates } = useStatesCities();
   const { data: occupationsData, isLoading: isOccupationsLoading } = useJobsAdminOccupations();
-
-  // Helper function to normalize state value (convert name to abbreviation if needed)
-  const normalizeStateValue = useCallback(
-    (stateValue: string) => {
-      if (!stateValue || !statesData?.success || !statesData.data) {
-        return stateValue;
-      }
-
-      // First try to find by abbreviation (exact match)
-      const stateByAbbr = statesData.data.states.find(
-        (state) => state.abbreviation.toLowerCase() === stateValue.toLowerCase()
-      );
-      if (stateByAbbr) {
-        return stateByAbbr.abbreviation;
-      }
-
-      // If not found by abbreviation, try to find by name
-      const stateByName = statesData.data.states.find((state) => state.name.toLowerCase() === stateValue.toLowerCase());
-      if (stateByName) {
-        return stateByName.abbreviation;
-      }
-
-      // Return original value if no match found
-      return stateValue;
-    },
-    [statesData]
-  );
 
   // Profile picture handling functions
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -129,14 +107,14 @@ export const EditJobSeekerModal: React.FC<EditJobSeekerModalProps> = ({ isOpen, 
   }, [previewUrl]);
 
   const stateOptions = React.useMemo(() => {
-    if (statesData?.success && statesData.data) {
-      return statesData.data.states.map((state) => ({
-        value: state.abbreviation,
-        label: state.name,
-      }));
+    if (statesCities) {
+      return Object.entries(statesCities).map(([key, value]) => ({
+        value: `${value.name} (${key})`,
+        label: value.name
+      })).sort((a, b) => a.label.localeCompare(b.label));
     }
     return [];
-  }, [statesData]);
+  }, [statesCities]);
 
   const occupationOptions = useMemo(() => {
     if (occupationsData?.success && occupationsData.data) {
@@ -198,6 +176,20 @@ export const EditJobSeekerModal: React.FC<EditJobSeekerModalProps> = ({ isOpen, 
     []
   );
 
+  // Extract state abbreviation from formatted state string "State Name (AB)" -> "AB"
+  const getStateAbbreviation = (formattedState: string) => {
+    const match = formattedState.match(/\(([^)]+)\)$/);
+    return match ? match[1] : formattedState;
+  };
+  
+  const stateAbbr = formData.state ? getStateAbbreviation(formData.state) : '';
+  const { data: cities, isLoading: isLoadingCities } = useCitiesByState(stateAbbr)
+  
+  // Filter cities based on search
+  const filteredCities = cities?.filter(city => 
+    city.toLowerCase().includes(formData.city.toLowerCase())
+  ) || []
+
   const loadJobSeekerData = useCallback(async () => {
     setIsLoading(true);
     setError(null);
@@ -206,14 +198,14 @@ export const EditJobSeekerModal: React.FC<EditJobSeekerModalProps> = ({ isOpen, 
       if (response.success && response.data) {
         const jobSeeker = response.data;
         const nameParts = jobSeeker.name?.split(" ") || ["", ""];
-        const normalizedState = normalizeStateValue(jobSeeker.state || "");
+        const formattedState = statesCities && jobSeeker.state && statesCities[jobSeeker.state] ? `${statesCities[jobSeeker.state].name} (${jobSeeker.state})` : jobSeeker.state || '';
 
         setFormData({
           firstName: nameParts[0] || "",
           lastName: nameParts.slice(1).join(" ") || "",
           address: jobSeeker.address || "",
           city: jobSeeker.city || "",
-          state: normalizedState,
+          state: formattedState,
           country: "US",
           zipCode: jobSeeker.zipCode || "",
           phoneNumber: jobSeeker.phoneNumber || "",
@@ -235,26 +227,16 @@ export const EditJobSeekerModal: React.FC<EditJobSeekerModalProps> = ({ isOpen, 
     } finally {
       setIsLoading(false);
     }
-  }, [jobSeekerId, normalizeStateValue]);
+  }, [jobSeekerId, statesCities]);
 
   useEffect(() => {
-    if (isOpen && jobSeekerId) {
-      loadJobSeekerData();
-    }
-  }, [isOpen, jobSeekerId, loadJobSeekerData]);
-
-  // Re-normalize state value when states data becomes available
-  useEffect(() => {
-    if (statesData?.success && formData.state) {
-      const normalizedState = normalizeStateValue(formData.state);
-      if (normalizedState !== formData.state) {
-        setFormData((prev) => ({
-          ...prev,
-          state: normalizedState,
-        }));
+    if (isOpen && jobSeekerId && statesCities && formData.state && !formData.state.includes('(')) {
+      const stateEntry = Object.entries(statesCities).find(([abbr]) => abbr === formData.state);
+      if (stateEntry) {
+        setFormData(prev => ({ ...prev, state: `${stateEntry[1].name} (${formData.state})` }));
       }
     }
-  }, [statesData?.success, formData.state, normalizeStateValue]);
+  }, [statesCities, jobSeekerId, isOpen, formData.state]);
 
   const updateField = (field: keyof JobSeekerUpdateData, value: string) => {
     setFormData((prev) => ({
@@ -282,12 +264,30 @@ export const EditJobSeekerModal: React.FC<EditJobSeekerModalProps> = ({ isOpen, 
     }
   };
 
+  const handleSelectState = (val: string) => {
+    setFormData(prev => ({
+      ...prev,
+      state: val, // val is already formatted as "State Name (AB)"
+      city: '' // Reset city when state changes
+    }));
+    setIsCityDropdownOpen(false); // Close city dropdown
+  };
+
+  const handleSelectCity = (val: string) => {
+    setFormData(prev => ({
+      ...prev,
+      city: val
+    }));
+    setIsCityDropdownOpen(false); // Close dropdown after selection
+  };
+
   const saveChanges = async () => {
     setIsSaving(true);
     setError(null);
     try {
       // Create form data with file if selected
-      const updateData = { ...formData };
+      const stateAbbr = formData.state ? getStateAbbreviation(formData.state) : '';
+      const updateData = { ...formData, state: stateAbbr };
       if (selectedFile) {
         updateData.uploadProfilePicture = selectedFile;
       }
@@ -490,19 +490,77 @@ export const EditJobSeekerModal: React.FC<EditJobSeekerModalProps> = ({ isOpen, 
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">City</label>
-                  <Input
-                    type="text"
-                    value={formData.city}
-                    onChange={(e) => updateField("city", e.target.value)}
-                    placeholder="Enter city"
-                  />
+                  <div className="relative">
+                    {/* City Input with Dropdown */}
+                    <input
+                      type="text"
+                      value={formData.city}
+                      onChange={(e) => {
+                        setFormData(prev => ({ ...prev, city: e.target.value }));
+                        if (!isCityDropdownOpen && e.target.value && stateAbbr) {
+                          setIsCityDropdownOpen(true);
+                        }
+                      }}
+                      onFocus={() => {
+                        if (stateAbbr && !isLoadingCities && !isCityDropdownOpen) {
+                          setIsCityDropdownOpen(true);
+                        }
+                      }}
+                      placeholder={!stateAbbr ? 'Select a state first' : isLoadingCities ? 'Loading cities...' : 'Enter or search city'}
+                      disabled={!stateAbbr || isLoadingCities}
+                      className={`w-full h-11 rounded-lg border bg-transparent text-gray-800 border-gray-300 focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 px-4 py-2.5 text-sm shadow-theme-xs focus:outline-hidden disabled:bg-gray-50 disabled:text-gray-500 ${formData.city ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-500'}`}
+                    />
+
+                    {/* Dropdown */}
+                    {isCityDropdownOpen && stateAbbr && !isLoadingCities && (
+                      <div className="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg">
+                        {/* Cities List */}
+                        <div className="max-h-48 overflow-y-auto">
+                          {filteredCities.length > 0 ? (
+                            <>
+                              {filteredCities.slice(0, 100).map((city) => (
+                                <div
+                                  key={city}
+                                  className="px-3 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 text-sm text-gray-900 dark:text-white"
+                                  onClick={() => handleSelectCity(city)}
+                                >
+                                  {city}
+                                </div>
+                              ))}
+                              {filteredCities.length > 100 && (
+                                <div className="px-3 py-2 text-xs text-gray-500 dark:text-gray-400 border-t bg-gray-50 dark:bg-gray-700">
+                                  Showing first 100 results. Keep typing to narrow down...
+                                </div>
+                              )}
+                            </>
+                          ) : formData.city ? (
+                            <div className="px-3 py-4 text-sm text-gray-500 dark:text-gray-400 text-center">
+                              No cities found matching "{formData.city}". You can still enter it manually.
+                            </div>
+                          ) : (
+                            <div className="px-3 py-4 text-sm text-gray-500 dark:text-gray-400 text-center">
+                              Start typing to search cities or enter manually
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Click outside to close */}
+                    {isCityDropdownOpen && (
+                      <div 
+                        className="fixed inset-0 z-40" 
+                        onClick={() => setIsCityDropdownOpen(false)}
+                      />
+                    )}
+                  </div>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">State</label>
                   <Select
                     options={stateOptions}
                     value={formData.state}
-                    onChange={(value) => updateField("state", value)}
+                    onChange={(value: string) => handleSelectState(value)}
                     placeholder="Select state"
                     disabled={isStatesLoading}
                     searchable={true}

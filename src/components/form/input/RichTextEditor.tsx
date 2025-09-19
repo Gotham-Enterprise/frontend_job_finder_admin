@@ -32,6 +32,7 @@ const ToolbarButton: React.FC<{
   title?: string;
 }> = ({ onClick, isActive, disabled, children, title }) => (
   <button
+    type="button"
     onClick={onClick}
     disabled={disabled}
     title={title}
@@ -61,6 +62,7 @@ const ColorPicker: React.FC<{
       {colors.map((color) => (
         <button
           key={color}
+          type="button"
           onClick={() => onColorChange(color)}
           className={`w-6 h-6 rounded border-2 ${
             currentColor === color ? "border-gray-800 dark:border-white" : "border-gray-300"
@@ -103,6 +105,7 @@ const FormatDropdown: React.FC<{
       {formatOptions.map((option) => (
         <button
           key={option.value}
+          type="button"
           onClick={() => formatChange(option.value)}
           className={`w-full text-left px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
             currentFormat === option.label
@@ -140,6 +143,7 @@ const ListDropdown: React.FC<{
       {listOptions.map((option) => (
         <button
           key={option.value}
+          type="button"
           onClick={() => listChange(option.value)}
           className={`w-full text-left px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2 ${
             editor.isActive(option.value)

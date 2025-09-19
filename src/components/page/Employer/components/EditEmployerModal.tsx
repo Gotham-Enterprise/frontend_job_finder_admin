@@ -7,6 +7,8 @@ import Select from '@/components/form/Select';
 import { employerApi } from '@/services/api/employer';
 import { EmployerUpdateData } from '@/services/types/employer';
 import { useStates } from '@/services/hooks/useStates';
+import { useStatesCities, useCitiesByState } from '@/lib/useStatesCities';
+import { Search, X } from 'lucide-react';
 
 interface EditEmployerModalProps {
   isOpen: boolean;
@@ -36,16 +38,34 @@ export const EditEmployerModal: React.FC<EditEmployerModalProps> = ({
   const [error, setError] = useState<string | null>(null);
 
   const { data: statesData, isLoading: isStatesLoading } = useStates();
+  const { data: statesCities, isLoading: isLoadingStates } = useStatesCities();
 
-  const stateOptions = [
-    { value: '', label: 'Select state' },
-    ...(statesData?.success && statesData.data
-      ? statesData.data.states.map(state => ({
-          value: state.abbreviation,
-          label: state.name
-        }))
-      : [])
-  ];
+  // City search state
+  const [isCityDropdownOpen, setIsCityDropdownOpen] = useState(false)
+
+  const stateOptions = React.useMemo(() => {
+    if (statesCities) {
+      return Object.entries(statesCities).map(([key, value]) => ({
+        value: `${value.name} (${key})`,
+        label: value.name
+      })).sort((a, b) => a.label.localeCompare(b.label));
+    }
+    return [];
+  }, [statesCities]);
+
+  // Extract state abbreviation from formatted state string "State Name (AB)" -> "AB"
+  const getStateAbbreviation = (formattedState: string) => {
+    const match = formattedState.match(/\(([^)]+)\)$/);
+    return match ? match[1] : formattedState;
+  };
+  
+  const stateAbbr = formData.state ? getStateAbbreviation(formData.state) : '';
+  const { data: cities, isLoading: isLoadingCities } = useCitiesByState(stateAbbr)
+  
+  // Filter cities based on search
+  const filteredCities = cities?.filter(city => 
+    city.toLowerCase().includes(formData.city.toLowerCase())
+  ) || []
 
   const countryOptions = [
     { value: 'US', label: 'United States' },
@@ -67,12 +87,13 @@ export const EditEmployerModal: React.FC<EditEmployerModalProps> = ({
       const response = await employerApi.getEmployerById(employerId);
       if (response.success && response.data) {
         const employer = response.data;
+        const formattedState = statesCities && employer.state && statesCities[employer.state] ? `${statesCities[employer.state].name} (${employer.state})` : employer.state || '';
         setFormData({
           name: employer.companyName || '',
           overview: stripHtmlTags(employer.overview || ''),
           address: employer.address || '',
           city: employer.city || '',
-          state: employer.state || '',
+          state: formattedState,
           country: employer.country || 'US',
           zipCode: '', // Not available in the current employer details
           phoneNumber: employer.phoneNumber || '',
@@ -92,6 +113,15 @@ export const EditEmployerModal: React.FC<EditEmployerModalProps> = ({
     }
   }, [isOpen, employerId, loadEmployerData]);
 
+  useEffect(() => {
+    if (isOpen && employerId && statesCities && formData.state && !formData.state.includes('(')) {
+      const stateEntry = Object.entries(statesCities).find(([abbr]) => abbr === formData.state);
+      if (stateEntry) {
+        setFormData(prev => ({ ...prev, state: `${stateEntry[1].name} (${formData.state})` }));
+      }
+    }
+  }, [statesCities, employerId, isOpen, formData.state]);
+
   const updateField = (field: keyof EmployerUpdateData, value: string) => {
     setFormData(prev => ({
       ...prev,
@@ -99,11 +129,29 @@ export const EditEmployerModal: React.FC<EditEmployerModalProps> = ({
     }));
   };
 
+  const handleSelectState = (val: string) => {
+    setFormData(prev => ({
+      ...prev,
+      state: val, // val is already formatted as "State Name (AB)"
+      city: '' // Reset city when state changes
+    }));
+    setIsCityDropdownOpen(false); // Close city dropdown
+  };
+
+  const handleSelectCity = (val: string) => {
+    setFormData(prev => ({
+      ...prev,
+      city: val
+    }));
+    setIsCityDropdownOpen(false); // Close dropdown after selection
+  };
+
   const saveChanges = async () => {
     setIsSaving(true);
     setError(null);
     try {
-      await employerApi.updateEmployer(employerId, formData);
+      const stateAbbr = formData.state ? getStateAbbreviation(formData.state) : '';
+      await employerApi.updateEmployer(employerId, { ...formData, state: stateAbbr });
       onUpdate();
       onClose();
     } catch (err) {
@@ -189,12 +237,70 @@ export const EditEmployerModal: React.FC<EditEmployerModalProps> = ({
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   City
                 </label>
-                <Input
-                  type="text"
-                  value={formData.city}
-                  onChange={(e) => updateField('city', e.target.value)}
-                  placeholder="Enter city"
-                />
+                <div className="relative">
+                  {/* City Input with Dropdown */}
+                  <input
+                    type="text"
+                    value={formData.city}
+                    onChange={(e) => {
+                      setFormData(prev => ({ ...prev, city: e.target.value }));
+                      if (!isCityDropdownOpen && e.target.value && stateAbbr) {
+                        setIsCityDropdownOpen(true);
+                      }
+                    }}
+                    onFocus={() => {
+                      if (stateAbbr && !isLoadingCities && !isCityDropdownOpen) {
+                        setIsCityDropdownOpen(true);
+                      }
+                    }}
+                    placeholder={!stateAbbr ? 'Select a state first' : isLoadingCities ? 'Loading cities...' : 'Enter or search city'}
+                    disabled={!stateAbbr || isLoadingCities}
+                    className={`w-full h-11 rounded-lg border bg-transparent text-gray-800 border-gray-300 focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 px-4 py-2.5 text-sm shadow-theme-xs focus:outline-hidden disabled:bg-gray-50 disabled:text-gray-500 ${formData.city ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-500'}`}
+                  />
+
+                  {/* Dropdown */}
+                  {isCityDropdownOpen && stateAbbr && !isLoadingCities && (
+                    <div className="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg">
+                      {/* Cities List */}
+                      <div className="max-h-48 overflow-y-auto">
+                        {filteredCities.length > 0 ? (
+                          <>
+                            {filteredCities.slice(0, 100).map((city) => (
+                              <div
+                                key={city}
+                                className="px-3 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 text-sm text-gray-900 dark:text-white"
+                                onClick={() => handleSelectCity(city)}
+                              >
+                                {city}
+                              </div>
+                            ))}
+                            {filteredCities.length > 100 && (
+                              <div className="px-3 py-2 text-xs text-gray-500 dark:text-gray-400 border-t bg-gray-50 dark:bg-gray-700">
+                                Showing first 100 results. Keep typing to narrow down...
+                              </div>
+                            )}
+                          </>
+                        ) : formData.city ? (
+                          <div className="px-3 py-4 text-sm text-gray-500 dark:text-gray-400 text-center">
+                            No cities found matching "{formData.city}". You can still enter it manually.
+                          </div>
+                        ) : (
+                          <div className="px-3 py-4 text-sm text-gray-500 dark:text-gray-400 text-center">
+                            Start typing to search cities or enter manually
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Click outside to close */}
+                  {isCityDropdownOpen && (
+                    <div 
+                      className="fixed inset-0 z-40" 
+                      onClick={() => setIsCityDropdownOpen(false)}
+                    />
+                  )}
+                </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
