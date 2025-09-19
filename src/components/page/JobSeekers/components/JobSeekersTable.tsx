@@ -149,7 +149,13 @@ const LicensesPopover: React.FC<LicensesPopoverProps> = ({ licenses, isOpen, onC
                   <div className="flex justify-between gap-2 mb-2">
                     <span>Issue Date:</span>
                     {license.issueDate && (
-                      <div className="flex flex-col">{new Date(license.issueDate).toLocaleDateString()}</div>
+                      <div className="flex flex-col">
+                        {new Date(license.issueDate).toLocaleDateString("en-US", {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                        })}
+                      </div>
                     )}
                   </div>
                 </div>
@@ -244,14 +250,24 @@ const CertificationsPopover: React.FC<CertificationsPopoverProps> = ({
                   <div className="flex justify-between gap-2 mb-2">
                     <span>Issue Date:</span>
                     {certification.issueDate && (
-                      <div className="flex flex-col">{new Date(certification.issueDate).toLocaleDateString()}</div>
+                      <div className="flex flex-col">
+                        {new Date(certification.issueDate).toLocaleDateString("en-US", {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                        })}
+                      </div>
                     )}
                   </div>
                   <div className="flex justify-between gap-2 mb-2">
                     <span>Expiration Date:</span>
                     {certification.expirationDate && (
                       <div className="flex flex-col">
-                        Expires: {new Date(certification.expirationDate).toLocaleDateString()}
+                        {new Date(certification.expirationDate).toLocaleDateString("en-US", {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                        })}
                       </div>
                     )}
                   </div>
