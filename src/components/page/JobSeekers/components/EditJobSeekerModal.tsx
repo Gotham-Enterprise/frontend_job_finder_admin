@@ -1,14 +1,12 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Modal } from "@/components/ui/modal";
 import Button from "@/components/ui/button/Button";
 import Input from "@/components/ui/input/Input";
 import Select from "@/components/form/Select";
 import { jobSeekerApi } from "@/services/api/jobSeeker";
+import { JobSeekerUpdateData } from "@/services/types/jobSeeker";
 import { useStates } from "@/services/hooks/useStates";
-import { useJobsAdminOccupations } from "@/services/hooks/useJobsAdmin";
-import { useStatesCities, useCitiesByState } from "@/lib/useStatesCities";
-import { JobSeekerUpdateData, JobSeekerDetails } from "@/services/types/jobSeeker";
-import { Specialty } from "@/services/types/jobsAdmin";
+import { useOccupationsWithSpecialties } from "@/services/hooks/useJobCreation";
 
 interface EditJobSeekerModalProps {
   isOpen: boolean;
@@ -29,6 +27,7 @@ export const EditJobSeekerModal: React.FC<EditJobSeekerModalProps> = ({ isOpen, 
     setError(null);
     onClose();
   };
+
   const [formData, setFormData] = useState<JobSeekerUpdateData>({
     firstName: "",
     lastName: "",
@@ -44,10 +43,6 @@ export const EditJobSeekerModal: React.FC<EditJobSeekerModalProps> = ({ isOpen, 
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [selectedOccupationId, setSelectedOccupationId] = useState<number | undefined>(undefined);
-
-  // City search state
-  const [isCityDropdownOpen, setIsCityDropdownOpen] = useState(false)
 
   // Profile picture states
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -59,8 +54,56 @@ export const EditJobSeekerModal: React.FC<EditJobSeekerModalProps> = ({ isOpen, 
   } | null>(null);
 
   const { data: statesData, isLoading: isStatesLoading } = useStates();
-  const { data: statesCities, isLoading: isLoadingStates } = useStatesCities();
-  const { data: occupationsData, isLoading: isOccupationsLoading } = useJobsAdminOccupations();
+  const { data: occupationsData, isLoading: isOccupationsLoading } = useOccupationsWithSpecialties();
+
+  const stateOptions = [
+    { value: "", label: "Select state" },
+    ...(statesData?.success && statesData.data
+      ? statesData.data.states.map((state) => ({
+          value: state.abbreviation,
+          label: state.name,
+        }))
+      : []),
+  ];
+
+  const countryOptions = [
+    { value: "US", label: "United States" },
+    { value: "CA", label: "Canada" },
+    { value: "MX", label: "Mexico" },
+  ];
+
+  const occupationOptions = [
+    { value: "", label: "Select occupation" },
+    ...(occupationsData?.success && occupationsData.data
+      ? occupationsData.data.map((occupation) => ({
+          value: occupation.id.toString(),
+          label: occupation.name,
+        }))
+      : []),
+  ];
+
+  // Get specialties for selected occupation
+  const getSpecialtyOptions = () => {
+    if (!formData.occupationId || !occupationsData?.success || !occupationsData.data) {
+      return [{ value: "", label: "Select occupation first" }];
+    }
+
+    const selectedOccupation = occupationsData.data.find(
+      (occ) => occ.id === parseInt(formData.occupationId.toString())
+    );
+
+    if (!selectedOccupation || !selectedOccupation.specialty) {
+      return [{ value: "", label: "No specialties available" }];
+    }
+
+    return [
+      { value: "", label: "Select specialty (optional)" },
+      ...selectedOccupation.specialty.map((specialty) => ({
+        value: specialty.id.toString(),
+        label: specialty.name,
+      })),
+    ];
+  };
 
   // Profile picture handling functions
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -106,90 +149,6 @@ export const EditJobSeekerModal: React.FC<EditJobSeekerModalProps> = ({ isOpen, 
     };
   }, [previewUrl]);
 
-  const stateOptions = React.useMemo(() => {
-    if (statesCities) {
-      return Object.entries(statesCities).map(([key, value]) => ({
-        value: `${value.name} (${key})`,
-        label: value.name
-      })).sort((a, b) => a.label.localeCompare(b.label));
-    }
-    return [];
-  }, [statesCities]);
-
-  const occupationOptions = useMemo(() => {
-    if (occupationsData?.success && occupationsData.data) {
-      // Create a Map to deduplicate by name (keep first occurrence)
-      const uniqueOccupations = new Map();
-
-      occupationsData.data.forEach((occupation) => {
-        // Filter out any placeholder-like entries and empty names
-        const name = occupation.name?.trim();
-        if (name && !name.toLowerCase().includes("select") && !uniqueOccupations.has(name)) {
-          uniqueOccupations.set(name, {
-            value: occupation.id.toString(),
-            label: name,
-          });
-        }
-      });
-
-      return Array.from(uniqueOccupations.values()).sort((a, b) => a.label.localeCompare(b.label));
-    }
-
-    return [];
-  }, [occupationsData]);
-
-  const specialtyOptions = useMemo(() => {
-    if (selectedOccupationId && occupationsData?.success && occupationsData.data) {
-      const selectedOccupation = occupationsData.data.find((occupation) => occupation.id === selectedOccupationId);
-
-      if (selectedOccupation?.specialty) {
-        // Create a Map to deduplicate by name (keep first occurrence)
-        const uniqueSpecialties = new Map();
-
-        selectedOccupation.specialty.forEach((specialty: Specialty) => {
-          if (!uniqueSpecialties.has(specialty.name)) {
-            uniqueSpecialties.set(specialty.name, {
-              value: specialty.id.toString(),
-              label: specialty.name,
-            });
-          }
-        });
-
-        return Array.from(uniqueSpecialties.values()).sort((a, b) => a.label.localeCompare(b.label));
-      }
-    }
-
-    return [];
-  }, [selectedOccupationId, occupationsData]);
-
-  const countryOptions = React.useMemo(
-    () => [
-      { value: "US", label: "United States" },
-      { value: "CA", label: "Canada" },
-      { value: "GB", label: "United Kingdom" },
-      { value: "AU", label: "Australia" },
-      { value: "DE", label: "Germany" },
-      { value: "FR", label: "France" },
-      { value: "MX", label: "Mexico" },
-      { value: "OTHER", label: "Other" },
-    ],
-    []
-  );
-
-  // Extract state abbreviation from formatted state string "State Name (AB)" -> "AB"
-  const getStateAbbreviation = (formattedState: string) => {
-    const match = formattedState.match(/\(([^)]+)\)$/);
-    return match ? match[1] : formattedState;
-  };
-  
-  const stateAbbr = formData.state ? getStateAbbreviation(formData.state) : '';
-  const { data: cities, isLoading: isLoadingCities } = useCitiesByState(stateAbbr)
-  
-  // Filter cities based on search
-  const filteredCities = cities?.filter(city => 
-    city.toLowerCase().includes(formData.city.toLowerCase())
-  ) || []
-
   const loadJobSeekerData = useCallback(async () => {
     setIsLoading(true);
     setError(null);
@@ -197,26 +156,31 @@ export const EditJobSeekerModal: React.FC<EditJobSeekerModalProps> = ({ isOpen, 
       const response = await jobSeekerApi.getJobSeekerById(jobSeekerId);
       if (response.success && response.data) {
         const jobSeeker = response.data;
+        // Split name into first and last name
         const nameParts = jobSeeker.name?.split(" ") || ["", ""];
-        const formattedState = statesCities && jobSeeker.state && statesCities[jobSeeker.state] ? `${statesCities[jobSeeker.state].name} (${jobSeeker.state})` : jobSeeker.state || '';
+        const firstName = nameParts[0] || "";
+        const lastName = nameParts.slice(1).join(" ") || "";
 
         setFormData({
-          firstName: nameParts[0] || "",
-          lastName: nameParts.slice(1).join(" ") || "",
+          firstName,
+          lastName,
           address: jobSeeker.address || "",
           city: jobSeeker.city || "",
-          state: formattedState,
-          country: "US",
+          state: jobSeeker.state || "",
+          country: "US", // Default to US
           zipCode: jobSeeker.zipCode || "",
           phoneNumber: jobSeeker.phoneNumber || "",
           occupationId: jobSeeker.occupationId || 0,
-          specialtyId: jobSeeker.specialtyId,
+          specialtyId: jobSeeker.specialtyId || undefined,
         });
-        setSelectedOccupationId(jobSeeker.occupationId);
 
         // Set current profile picture if exists
-        if (jobSeeker.profilePicture && jobSeeker.profilePicture.url) {
-          setCurrentProfilePicture(jobSeeker.profilePicture);
+        if (jobSeeker.profilePicture?.url) {
+          setCurrentProfilePicture({
+            fileName: "Current Profile Picture",
+            url: jobSeeker.profilePicture.url,
+            expiresAt: jobSeeker.profilePicture.expiresAt || "",
+          });
         } else {
           setCurrentProfilePicture(null);
         }
@@ -227,67 +191,68 @@ export const EditJobSeekerModal: React.FC<EditJobSeekerModalProps> = ({ isOpen, 
     } finally {
       setIsLoading(false);
     }
-  }, [jobSeekerId, statesCities]);
+  }, [jobSeekerId]);
 
   useEffect(() => {
-    if (isOpen && jobSeekerId && statesCities && formData.state && !formData.state.includes('(')) {
-      const stateEntry = Object.entries(statesCities).find(([abbr]) => abbr === formData.state);
-      if (stateEntry) {
-        setFormData(prev => ({ ...prev, state: `${stateEntry[1].name} (${formData.state})` }));
-      }
+    if (isOpen && jobSeekerId && statesData?.success && occupationsData?.success) {
+      setError(null); // Clear any previous errors
+      loadJobSeekerData();
     }
-  }, [statesCities, jobSeekerId, isOpen, formData.state]);
+  }, [isOpen, jobSeekerId, loadJobSeekerData, statesData, occupationsData]);
 
-  const updateField = (field: keyof JobSeekerUpdateData, value: string) => {
+  const updateField = (field: keyof JobSeekerUpdateData, value: string | number | undefined) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
     }));
 
-    // Handle occupation change to reset specialty
+    // Clear error when user starts typing in required fields
+    if (
+      (field === "firstName" || field === "lastName") &&
+      value &&
+      typeof value === "string" &&
+      value.trim() &&
+      error
+    ) {
+      setError(null);
+    }
+
+    // Reset specialty when occupation changes
     if (field === "occupationId") {
-      const occupationId = value ? parseInt(value) : 0;
-      setSelectedOccupationId(occupationId);
       setFormData((prev) => ({
         ...prev,
-        occupationId,
-        specialtyId: undefined, // Reset specialty when occupation changes
+        occupationId: value as number,
+        specialtyId: undefined,
       }));
     }
-
-    // Handle specialty change
-    if (field === "specialtyId") {
-      setFormData((prev) => ({
-        ...prev,
-        specialtyId: value ? parseInt(value) : undefined,
-      }));
-    }
-  };
-
-  const handleSelectState = (val: string) => {
-    setFormData(prev => ({
-      ...prev,
-      state: val, // val is already formatted as "State Name (AB)"
-      city: '' // Reset city when state changes
-    }));
-    setIsCityDropdownOpen(false); // Close city dropdown
-  };
-
-  const handleSelectCity = (val: string) => {
-    setFormData(prev => ({
-      ...prev,
-      city: val
-    }));
-    setIsCityDropdownOpen(false); // Close dropdown after selection
   };
 
   const saveChanges = async () => {
     setIsSaving(true);
     setError(null);
+
+    // Frontend validation
+    if (!formData.firstName.trim()) {
+      setError("First name is required");
+      setIsSaving(false);
+      return;
+    }
+
+    if (!formData.lastName.trim()) {
+      setError("Last name is required");
+      setIsSaving(false);
+      return;
+    }
+
+    if (!formData.occupationId || formData.occupationId === 0) {
+      setError("Occupation is required");
+      setIsSaving(false);
+      return;
+    }
+
     try {
       // Create form data with file if selected
-      const stateAbbr = formData.state ? getStateAbbreviation(formData.state) : '';
-      const updateData = { ...formData, state: stateAbbr };
+      const updateData = { ...formData };
       if (selectedFile) {
         updateData.uploadProfilePicture = selectedFile;
       }
@@ -306,7 +271,9 @@ export const EditJobSeekerModal: React.FC<EditJobSeekerModalProps> = ({ isOpen, 
   };
 
   const isFormValid = () => {
-    return formData.firstName.trim() && formData.lastName.trim() && formData.occupationId > 0;
+    return (
+      formData.firstName.trim() && formData.lastName.trim() && formData.occupationId && formData.occupationId !== 0
+    );
   };
 
   return (
@@ -362,7 +329,7 @@ export const EditJobSeekerModal: React.FC<EditJobSeekerModalProps> = ({ isOpen, 
 
                   {/* Camera Icon Button */}
                   <label
-                    htmlFor="profile-picture-upload"
+                    htmlFor="jobseeker-profile-picture-upload"
                     className="absolute bottom-2 right-2 w-10 h-10 bg-brand-500 hover:bg-brand-600 rounded-full flex items-center justify-center cursor-pointer shadow-lg transition-colors"
                   >
                     <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -408,7 +375,7 @@ export const EditJobSeekerModal: React.FC<EditJobSeekerModalProps> = ({ isOpen, 
 
                 {/* Hidden file input */}
                 <input
-                  id="profile-picture-upload"
+                  id="jobseeker-profile-picture-upload"
                   type="file"
                   accept="image/*"
                   onChange={handleFileSelect}
@@ -448,35 +415,6 @@ export const EditJobSeekerModal: React.FC<EditJobSeekerModalProps> = ({ isOpen, 
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Occupation *
-                  </label>
-                  <Select
-                    options={occupationOptions}
-                    value={formData.occupationId > 0 ? formData.occupationId.toString() : ""}
-                    onChange={(value) => updateField("occupationId", value)}
-                    placeholder="Select Occupation"
-                    disabled={isOccupationsLoading}
-                    searchable={true}
-                    searchPlaceholder="Search occupations..."
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Specialty</label>
-                  <Select
-                    options={specialtyOptions}
-                    value={formData.specialtyId ? formData.specialtyId.toString() : ""}
-                    onChange={(value) => updateField("specialtyId", value)}
-                    placeholder="Select Specialty"
-                    disabled={!selectedOccupationId || selectedOccupationId === 0 || isOccupationsLoading}
-                    searchable={true}
-                    searchPlaceholder="Search specialties..."
-                  />
-                </div>
-              </div>
-
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Address</label>
                 <Input
@@ -490,77 +428,19 @@ export const EditJobSeekerModal: React.FC<EditJobSeekerModalProps> = ({ isOpen, 
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">City</label>
-                  <div className="relative">
-                    {/* City Input with Dropdown */}
-                    <input
-                      type="text"
-                      value={formData.city}
-                      onChange={(e) => {
-                        setFormData(prev => ({ ...prev, city: e.target.value }));
-                        if (!isCityDropdownOpen && e.target.value && stateAbbr) {
-                          setIsCityDropdownOpen(true);
-                        }
-                      }}
-                      onFocus={() => {
-                        if (stateAbbr && !isLoadingCities && !isCityDropdownOpen) {
-                          setIsCityDropdownOpen(true);
-                        }
-                      }}
-                      placeholder={!stateAbbr ? 'Select a state first' : isLoadingCities ? 'Loading cities...' : 'Enter or search city'}
-                      disabled={!stateAbbr || isLoadingCities}
-                      className={`w-full h-11 rounded-lg border bg-transparent text-gray-800 border-gray-300 focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 px-4 py-2.5 text-sm shadow-theme-xs focus:outline-hidden disabled:bg-gray-50 disabled:text-gray-500 ${formData.city ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-500'}`}
-                    />
-
-                    {/* Dropdown */}
-                    {isCityDropdownOpen && stateAbbr && !isLoadingCities && (
-                      <div className="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg">
-                        {/* Cities List */}
-                        <div className="max-h-48 overflow-y-auto">
-                          {filteredCities.length > 0 ? (
-                            <>
-                              {filteredCities.slice(0, 100).map((city) => (
-                                <div
-                                  key={city}
-                                  className="px-3 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 text-sm text-gray-900 dark:text-white"
-                                  onClick={() => handleSelectCity(city)}
-                                >
-                                  {city}
-                                </div>
-                              ))}
-                              {filteredCities.length > 100 && (
-                                <div className="px-3 py-2 text-xs text-gray-500 dark:text-gray-400 border-t bg-gray-50 dark:bg-gray-700">
-                                  Showing first 100 results. Keep typing to narrow down...
-                                </div>
-                              )}
-                            </>
-                          ) : formData.city ? (
-                            <div className="px-3 py-4 text-sm text-gray-500 dark:text-gray-400 text-center">
-                              No cities found matching "{formData.city}". You can still enter it manually.
-                            </div>
-                          ) : (
-                            <div className="px-3 py-4 text-sm text-gray-500 dark:text-gray-400 text-center">
-                              Start typing to search cities or enter manually
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Click outside to close */}
-                    {isCityDropdownOpen && (
-                      <div 
-                        className="fixed inset-0 z-40" 
-                        onClick={() => setIsCityDropdownOpen(false)}
-                      />
-                    )}
-                  </div>
+                  <Input
+                    type="text"
+                    value={formData.city}
+                    onChange={(e) => updateField("city", e.target.value)}
+                    placeholder="Enter city"
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">State</label>
                   <Select
                     options={stateOptions}
                     value={formData.state}
-                    onChange={(value: string) => handleSelectState(value)}
+                    onChange={(value: string) => updateField("state", value)}
                     placeholder="Select state"
                     disabled={isStatesLoading}
                     searchable={true}
@@ -575,8 +455,9 @@ export const EditJobSeekerModal: React.FC<EditJobSeekerModalProps> = ({ isOpen, 
                   <Select
                     options={countryOptions}
                     value={formData.country}
-                    onChange={(value) => updateField("country", value)}
-                    placeholder="Select country"
+                    defaultValue="US"
+                    onChange={(value: string) => updateField("country", value)}
+                    placeholder="United States"
                     disabled={true}
                   />
                 </div>
@@ -598,6 +479,32 @@ export const EditJobSeekerModal: React.FC<EditJobSeekerModalProps> = ({ isOpen, 
                   value={formData.phoneNumber}
                   onChange={(e) => updateField("phoneNumber", e.target.value)}
                   placeholder="Enter phone number"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Occupation *</label>
+                <Select
+                  options={occupationOptions}
+                  value={formData.occupationId.toString()}
+                  onChange={(value: string) => updateField("occupationId", parseInt(value) || 0)}
+                  placeholder="Select occupation"
+                  disabled={isOccupationsLoading}
+                  searchable={true}
+                  searchPlaceholder="Search occupations..."
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Specialty</label>
+                <Select
+                  options={getSpecialtyOptions()}
+                  value={formData.specialtyId?.toString() || ""}
+                  onChange={(value: string) => updateField("specialtyId", value ? parseInt(value) : undefined)}
+                  placeholder="Select specialty (optional)"
+                  disabled={!formData.occupationId || formData.occupationId === 0}
+                  searchable={true}
+                  searchPlaceholder="Search specialties..."
                 />
               </div>
             </div>

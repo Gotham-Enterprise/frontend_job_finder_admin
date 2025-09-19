@@ -1,22 +1,17 @@
-import React, { useState } from 'react';
-import { formatDate, formatDateTimeEST } from '@/services/utils/dateUtils';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableRow,
-} from '../../../ui/table';
-import Badge from '../../../ui/badge/Badge';
-import Button from '../../../ui/button/Button';
-import TableHeading from '../../../tables/tableHeader';
-import Checkbox from '../../../form/input/Checkbox';
-import { EyeIcon, TimeIcon, PencilIcon } from '@/icons';
-import { EmployerTableProps } from '@/services/types/EmployerTypes';
-import Avatar from '../../../ui/avatar/Avatar';
-import { EditEmployerModal } from './EditEmployerModal';
-import { useToast } from '@/context/ToastContext';
-import PermissionWrapper from '@/components/common/PermissionWrapper';
-import { usePermissions } from '@/hooks/usePermissions';
+import React, { useState } from "react";
+import { formatDate, formatDateTimeEST } from "@/services/utils/dateUtils";
+import { Table, TableBody, TableCell, TableRow } from "../../../ui/table";
+import Badge from "../../../ui/badge/Badge";
+import Button from "../../../ui/button/Button";
+import TableHeading from "../../../tables/tableHeader";
+import Checkbox from "../../../form/input/Checkbox";
+import { EyeIcon, TimeIcon, PencilIcon } from "@/icons";
+import { EmployerTableProps } from "@/services/types/EmployerTypes";
+import Avatar from "../../../ui/avatar/Avatar";
+import { EditEmployerModal } from "./EditEmployerModal";
+import { useToast } from "@/context/ToastContext";
+import PermissionWrapper from "@/components/common/PermissionWrapper";
+import { usePermissions } from "@/hooks/usePermissions";
 
 const EmployerTable: React.FC<EmployerTableProps> = ({
   data,
@@ -35,7 +30,7 @@ const EmployerTable: React.FC<EmployerTableProps> = ({
   const { hasPermission } = usePermissions();
 
   // Check if user has permission to add jobs (needed for checkbox selection)
-  const canCreateJobs = hasPermission('employers', 'add');
+  const canCreateJobs = hasPermission("employers", "add");
 
   const openEditModal = (employerId: string) => {
     setSelectedEmployerIdForEdit(employerId);
@@ -50,19 +45,20 @@ const EmployerTable: React.FC<EmployerTableProps> = ({
   const refreshData = (showSuccessToast = false) => {
     if (showSuccessToast) {
       addToast({
-        variant: 'success',
-        title: 'Success',
-        message: 'Employer has been updated successfully',
+        variant: "success",
+        title: "Success",
+        message: "Employer has been updated successfully",
         duration: 5000,
       });
     }
-    
+
     if (onRefresh) {
       onRefresh();
-    } else if (typeof window !== 'undefined') {
+    } else if (typeof window !== "undefined") {
       window.location.reload();
     }
-  };  return (
+  };
+  return (
     <div className="overflow-x-auto">
       <Table>
         <TableHeading columns={tableColumns} />
@@ -84,8 +80,8 @@ const EmployerTable: React.FC<EmployerTableProps> = ({
             </TableRow>
           ) : (
             data.data.map((employer: any) => (
-              <TableRow 
-                key={employer.id} 
+              <TableRow
+                key={employer.id}
                 data-item-id={employer.id}
                 data-employer-id={employer.id}
                 className="border-b border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50"
@@ -103,6 +99,7 @@ const EmployerTable: React.FC<EmployerTableProps> = ({
                 <TableCell className="py-4 px-6 text-sm max-w-xs">
                   <div className="flex items-center gap-3">
                     <Avatar
+                      src={employer.avatarUrl}
                       name={employer.companyName}
                       size="medium"
                       className="flex-shrink-0"
@@ -111,98 +108,85 @@ const EmployerTable: React.FC<EmployerTableProps> = ({
                       <p className="font-medium text-gray-900 dark:text-white truncate" title={employer.companyName}>
                         {employer.companyName}
                       </p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
-                        {employer.jobPostCount} job posts
-                      </p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">{employer.jobPostCount} job posts</p>
                     </div>
                   </div>
                 </TableCell>
                 <TableCell className="py-4 px-6">
-                  <p className="text-sm text-gray-900 dark:text-white">
-                    {employer.email}
-                  </p>
+                  <p className="text-sm text-gray-900 dark:text-white">{employer.email}</p>
                 </TableCell>
                 <TableCell className="py-4 px-6">
-                <p className="text-sm text-gray-900 dark:text-white">
-                    {employer.city && employer.state 
+                  <p className="text-sm text-gray-900 dark:text-white">
+                    {employer.city && employer.state
                       ? `${employer.city}, ${employer.state}`
-                      : employer.city || employer.state || 'Not specified'
-                    }
+                      : employer.city || employer.state || "Not specified"}
                   </p>
                 </TableCell>
                 <TableCell className="py-4 px-6">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-gray-900 dark:text-white">
-                      {employer.jobPostCount}
-                    </span>
+                    <span className="text-sm font-medium text-gray-900 dark:text-white">{employer.jobPostCount}</span>
                   </div>
                 </TableCell>
                 <TableCell className="py-4 px-6 whitespace-nowrap">
-                  {employer.dateJoined ? (() => {
-                    const dateJoined = formatDateTimeEST(employer.dateJoined);
-                    if (typeof dateJoined === 'string') {
+                  {employer.dateJoined ? (
+                    (() => {
+                      const dateJoined = formatDateTimeEST(employer.dateJoined);
+                      if (typeof dateJoined === "string") {
+                        return <p className="text-sm text-gray-900 dark:text-white">{dateJoined}</p>;
+                      }
                       return (
-                        <p className="text-sm text-gray-900 dark:text-white">
-                          {dateJoined}
-                        </p>
-                      );
-                    }
-                    return (
-                      <div className="text-sm text-gray-900 dark:text-white">
-                        <div>{dateJoined.date}</div>
-                        <div className="flex items-center mt-1">
-                          <TimeIcon className="mr-1" />
-                          <span>{dateJoined.time}</span>
+                        <div className="text-sm text-gray-900 dark:text-white">
+                          <div>{dateJoined.date}</div>
+                          <div className="flex items-center mt-1">
+                            <TimeIcon className="mr-1" />
+                            <span>{dateJoined.time}</span>
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })() : (
+                      );
+                    })()
+                  ) : (
                     <span className="text-gray-400 dark:text-gray-500 italic">Not specified</span>
                   )}
                 </TableCell>
                 <TableCell className="py-4 px-6 whitespace-nowrap">
-                  {employer.lastActivity ? (() => {
-                    const lastActivity = formatDateTimeEST(employer.lastActivity);
-                    if (typeof lastActivity === 'string') {
+                  {employer.lastActivity ? (
+                    (() => {
+                      const lastActivity = formatDateTimeEST(employer.lastActivity);
+                      if (typeof lastActivity === "string") {
+                        return <p className="text-sm text-gray-900 dark:text-white">{lastActivity}</p>;
+                      }
                       return (
-                        <p className="text-sm text-gray-900 dark:text-white">
-                          {lastActivity}
-                        </p>
-                      );
-                    }
-                    return (
-                      <div className="text-sm text-gray-900 dark:text-white">
-                        <div>{lastActivity.date}</div>
-                        <div className="flex items-center mt-1">
-                          <TimeIcon className="mr-1" />
-                          <span>{lastActivity.time}</span>
+                        <div className="text-sm text-gray-900 dark:text-white">
+                          <div>{lastActivity.date}</div>
+                          <div className="flex items-center mt-1">
+                            <TimeIcon className="mr-1" />
+                            <span>{lastActivity.time}</span>
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })() : (
+                      );
+                    })()
+                  ) : (
                     <span className="text-gray-400 dark:text-gray-500 italic">No activity</span>
                   )}
-                </TableCell>               
-                 <TableCell className="py-4 px-6">
-                  <Badge variant={getStatusVariant(employer.status)}>
-                    {employer.status}
-                  </Badge>
                 </TableCell>
                 <TableCell className="py-4 px-6">
-                  <span 
+                  <Badge variant={getStatusVariant(employer.status)}>{employer.status}</Badge>
+                </TableCell>
+                <TableCell className="py-4 px-6">
+                  <span
                     onClick={() => onViewSubscription(employer.id)}
                     className="cursor-pointer inline-block hover:opacity-80 transition-opacity"
                     role="button"
                     tabIndex={0}
                     onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
+                      if (e.key === "Enter" || e.key === " ") {
                         e.preventDefault();
                         onViewSubscription(employer.id);
                       }
                     }}
                   >
-                    <Badge 
-                      variant="light" 
+                    <Badge
+                      variant="light"
                       className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-700"
                     >
                       {employer.currentPlan}
@@ -210,26 +194,18 @@ const EmployerTable: React.FC<EmployerTableProps> = ({
                   </span>
                 </TableCell>
                 <TableCell className="py-4 px-6 text-right">
-
                   <div className="flex items-center gap-4">
                     <PermissionWrapper module="employers" action="view">
-                      <button 
-                        className="flex gap-2 text-brand-400"
-                        onClick={() => onViewEmployer(employer.id)}
-                      >
-                        <EyeIcon />  View
+                      <button className="flex gap-2 text-brand-400" onClick={() => onViewEmployer(employer.id)}>
+                        <EyeIcon /> View
                       </button>
                     </PermissionWrapper>
                     <PermissionWrapper module="employers" action="edit">
-                      <button 
-                        className="flex gap-2 text-brand-400"
-                        onClick={() => openEditModal(employer.id)}
-                      >
+                      <button className="flex gap-2 text-brand-400" onClick={() => openEditModal(employer.id)}>
                         <PencilIcon /> Edit
                       </button>
                     </PermissionWrapper>
                   </div>
-             
                 </TableCell>
               </TableRow>
             ))
