@@ -292,6 +292,7 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
     jobSeekerId: null,
   });
   const [loadingLicensesId, setLoadingLicensesId] = useState<string | null>(null);
+  const [loadingCertificationsId, setLoadingCertificationsId] = useState<string | null>(null);
   const licensesButtonRefs = useRef<{ [key: string]: React.RefObject<HTMLButtonElement | null> }>({});
   const certificationsButtonRefs = useRef<{ [key: string]: React.RefObject<HTMLButtonElement | null> }>({});
   const { addToast } = useToast();
@@ -312,12 +313,19 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
     setLoadingLicensesId(null);
   };
 
-  const openCertificationsPopover = (jobSeekerId: string) => {
+  const openCertificationsPopover = async (jobSeekerId: string) => {
+    setLoadingCertificationsId(jobSeekerId);
+
+    // Simulate a brief delay to show loading state (you can replace this with actual API call if needed)
+    await new Promise((resolve) => setTimeout(resolve, 300));
+
     setCertificationsPopover({ isOpen: true, jobSeekerId });
+    setLoadingCertificationsId(null);
   };
 
   const closeCertificationsPopover = () => {
     setCertificationsPopover({ isOpen: false, jobSeekerId: null });
+    setLoadingCertificationsId(null);
   };
 
   // Ensure refs exist for each job seeker
@@ -636,9 +644,16 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
                         <button
                           ref={getCertificationsButtonRef(jobSeeker.id)}
                           onClick={() => openCertificationsPopover(jobSeeker.id)}
+                          disabled={loadingCertificationsId === jobSeeker.id}
                           className="inline-flex items-center justify-center font-medium gap-2 transition bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 disabled:cursor-not-allowed text-white px-3 py-1.5 text-xs font-medium rounded-md shadow-sm hover:shadow-md transition-all duration-200 flex items-center gap-1.5 h-[45px] w-[100px] rounded-sm px-3 text-xs bg-primary text-primary-foreground text-white shadow hover:bg-primary/90 disabled:bg-primary/50 [&>svg]:text-primary-foreground"
                         >
-                          Certifications
+                          {loadingCertificationsId === jobSeeker.id ? (
+                            <>
+                              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
+                            </>
+                          ) : (
+                            <>Certifications</>
+                          )}
                         </button>
                       </div>
                     ) : (
