@@ -185,6 +185,13 @@ export default function BlogAnalytics() {
 
   const handleTabChange = (tab: TrendType) => {
     setActiveTab(tab);
+
+    // Immediately fetch analytics for the new tab
+    fetchAnalytics({
+      type: tab,
+      year: selectedYear,
+      ...(tab === "daily" && { month: selectedMonth }),
+    });
   };
 
   if (error) {
@@ -289,6 +296,7 @@ export default function BlogAnalytics() {
           {/* Date Picker - Dynamic based on active filter */}
           <div className={activeTab === "daily" ? "w-48" : "w-32"}>
             <DatePicker
+              key={`${activeTab}-${selectedYear}-${selectedMonth}`}
               id="blog-analytics-date-picker"
               defaultDate={
                 activeTab === "daily" ? new Date(selectedYear, selectedMonth - 1, 1) : new Date(selectedYear, 0, 1)
@@ -307,6 +315,18 @@ export default function BlogAnalytics() {
                   if (activeTab === "daily") {
                     setSelectedMonth(month);
                   }
+
+                  // Immediately trigger API calls with new values
+                  fetchAnalytics({
+                    type: activeTab,
+                    year: year,
+                    ...(activeTab === "daily" && { month: month }),
+                  });
+
+                  fetchViewCount({
+                    month: activeTab === "daily" ? month : selectedMonth,
+                    year: year,
+                  });
                 }
               }}
               placeholder={activeTab === "daily" ? "Select Month/Year" : "Select Year"}
