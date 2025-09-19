@@ -2,20 +2,20 @@ import React, { useState, useEffect, useCallback } from "react";
 import { Modal } from "@/components/ui/modal";
 import Button from "@/components/ui/button/Button";
 import Input from "@/components/ui/input/Input";
-import TextArea from "@/components/form/input/TextArea";
 import Select from "@/components/form/Select";
-import { employerApi } from "@/services/api/employer";
-import { EmployerUpdateData } from "@/services/types/employer";
+import { jobSeekerApi } from "@/services/api/jobSeeker";
+import { JobSeekerUpdateData } from "@/services/types/jobSeeker";
 import { useStates } from "@/services/hooks/useStates";
+import { useOccupationsWithSpecialties } from "@/services/hooks/useJobCreation";
 
-interface EditEmployerModalProps {
+interface EditJobSeekerModalProps {
   isOpen: boolean;
   onClose: () => void;
-  employerId: string;
+  jobSeekerId: string;
   onUpdate: () => void;
 }
 
-export const EditEmployerModal: React.FC<EditEmployerModalProps> = ({ isOpen, onClose, employerId, onUpdate }) => {
+export const EditJobSeekerModal: React.FC<EditJobSeekerModalProps> = ({ isOpen, onClose, jobSeekerId, onUpdate }) => {
   const handleClose = () => {
     // Clean up file states when closing
     setSelectedFile(null);
@@ -28,15 +28,17 @@ export const EditEmployerModal: React.FC<EditEmployerModalProps> = ({ isOpen, on
     onClose();
   };
 
-  const [formData, setFormData] = useState<EmployerUpdateData>({
-    name: "",
-    overview: "",
+  const [formData, setFormData] = useState<JobSeekerUpdateData>({
+    firstName: "",
+    lastName: "",
     address: "",
     city: "",
     state: "",
     country: "US",
     zipCode: "",
     phoneNumber: "",
+    occupationId: 0,
+    specialtyId: undefined,
   });
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -52,6 +54,7 @@ export const EditEmployerModal: React.FC<EditEmployerModalProps> = ({ isOpen, on
   } | null>(null);
 
   const { data: statesData, isLoading: isStatesLoading } = useStates();
+  const { data: occupationsData, isLoading: isOccupationsLoading } = useOccupationsWithSpecialties();
 
   const stateOptions = [
     { value: "", label: "Select state" },
@@ -69,19 +72,37 @@ export const EditEmployerModal: React.FC<EditEmployerModalProps> = ({ isOpen, on
     { value: "MX", label: "Mexico" },
   ];
 
-  const stripHtmlTags = (html: string) => {
-    if (!html) return "";
-    const tempDiv = document.createElement("div");
-    tempDiv.innerHTML = html;
-    return tempDiv.textContent || tempDiv.innerText || "";
-  };
+  const occupationOptions = [
+    { value: "", label: "Select occupation" },
+    ...(occupationsData?.success && occupationsData.data
+      ? occupationsData.data.map((occupation) => ({
+          value: occupation.id.toString(),
+          label: occupation.name,
+        }))
+      : []),
+  ];
 
-  // Function to find state abbreviation from full state name
-  const getStateAbbreviation = (stateName: string) => {
-    if (!stateName || !statesData?.success || !statesData.data) return "";
+  // Get specialties for selected occupation
+  const getSpecialtyOptions = () => {
+    if (!formData.occupationId || !occupationsData?.success || !occupationsData.data) {
+      return [{ value: "", label: "Select occupation first" }];
+    }
 
-    const state = statesData.data.states.find((s) => s.name.toLowerCase() === stateName.toLowerCase());
-    return state ? state.abbreviation : "";
+    const selectedOccupation = occupationsData.data.find(
+      (occ) => occ.id === parseInt(formData.occupationId.toString())
+    );
+
+    if (!selectedOccupation || !selectedOccupation.specialty) {
+      return [{ value: "", label: "No specialties available" }];
+    }
+
+    return [
+      { value: "", label: "Select specialty (optional)" },
+      ...selectedOccupation.specialty.map((specialty) => ({
+        value: specialty.id.toString(),
+        label: specialty.name,
+      })),
+    ];
   };
 
   // Profile picture handling functions
@@ -128,59 +149,81 @@ export const EditEmployerModal: React.FC<EditEmployerModalProps> = ({ isOpen, on
     };
   }, [previewUrl]);
 
-  const loadEmployerData = useCallback(async () => {
+  const loadJobSeekerData = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await employerApi.getEmployerById(employerId);
+      const response = await jobSeekerApi.getJobSeekerById(jobSeekerId);
       if (response.success && response.data) {
-        const employer = response.data;
+        const jobSeeker = response.data;
+        // Split name into first and last name
+        const nameParts = jobSeeker.name?.split(" ") || ["", ""];
+        const firstName = nameParts[0] || "";
+        const lastName = nameParts.slice(1).join(" ") || "";
+
         setFormData({
-          name: employer.companyName || "",
-          overview: stripHtmlTags(employer.overview || ""),
-          address: employer.address || "",
-          city: employer.city || "",
-          state: employer.state || "",
-          country: employer.country || "US",
-          zipCode: employer.zipCode || "",
-          phoneNumber: employer.phoneNumber || "",
+          firstName,
+          lastName,
+          address: jobSeeker.address || "",
+          city: jobSeeker.city || "",
+          state: jobSeeker.state || "",
+          country: "US", // Default to US
+          zipCode: jobSeeker.zipCode || "",
+          phoneNumber: jobSeeker.phoneNumber || "",
+          occupationId: jobSeeker.occupationId || 0,
+          specialtyId: jobSeeker.specialtyId || undefined,
         });
 
         // Set current profile picture if exists
-        if (employer.avatarUrl) {
+        if (jobSeeker.profilePicture?.url) {
           setCurrentProfilePicture({
             fileName: "Current Profile Picture",
-            url: employer.avatarUrl,
-            expiresAt: "",
+            url: jobSeeker.profilePicture.url,
+            expiresAt: jobSeeker.profilePicture.expiresAt || "",
           });
         } else {
           setCurrentProfilePicture(null);
         }
       }
     } catch (err) {
-      setError("Failed to load employer data");
-      console.error("Error loading employer:", err);
+      setError("Failed to load job seeker data");
+      console.error("Error loading job seeker:", err);
     } finally {
       setIsLoading(false);
     }
-  }, [employerId, statesData]);
+  }, [jobSeekerId]);
 
   useEffect(() => {
-    if (isOpen && employerId && statesData?.success) {
+    if (isOpen && jobSeekerId && statesData?.success && occupationsData?.success) {
       setError(null); // Clear any previous errors
-      loadEmployerData();
+      loadJobSeekerData();
     }
-  }, [isOpen, employerId, loadEmployerData, statesData]);
+  }, [isOpen, jobSeekerId, loadJobSeekerData, statesData, occupationsData]);
 
-  const updateField = (field: keyof EmployerUpdateData, value: string) => {
+  const updateField = (field: keyof JobSeekerUpdateData, value: string | number | undefined) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
     }));
 
     // Clear error when user starts typing in required fields
-    if ((field === "name" || field === "overview") && value.trim() && error) {
+    if (
+      (field === "firstName" || field === "lastName") &&
+      value &&
+      typeof value === "string" &&
+      value.trim() &&
+      error
+    ) {
       setError(null);
+    }
+
+    // Reset specialty when occupation changes
+    if (field === "occupationId") {
+      setFormData((prev) => ({
+        ...prev,
+        occupationId: value as number,
+        specialtyId: undefined,
+      }));
     }
   };
 
@@ -189,14 +232,20 @@ export const EditEmployerModal: React.FC<EditEmployerModalProps> = ({ isOpen, on
     setError(null);
 
     // Frontend validation
-    if (!formData.name.trim()) {
-      setError("Company name is required");
+    if (!formData.firstName.trim()) {
+      setError("First name is required");
       setIsSaving(false);
       return;
     }
 
-    if (!formData.overview.trim()) {
-      setError("Company overview is required");
+    if (!formData.lastName.trim()) {
+      setError("Last name is required");
+      setIsSaving(false);
+      return;
+    }
+
+    if (!formData.occupationId || formData.occupationId === 0) {
+      setError("Occupation is required");
       setIsSaving(false);
       return;
     }
@@ -208,21 +257,23 @@ export const EditEmployerModal: React.FC<EditEmployerModalProps> = ({ isOpen, on
         updateData.uploadProfilePicture = selectedFile;
       }
 
-      await employerApi.updateEmployer(employerId, updateData);
+      await jobSeekerApi.updateJobSeeker(jobSeekerId, updateData);
       onUpdate();
       handleClose();
     } catch (err) {
       const errorMessage =
         typeof err === "object" && err !== null && "message" in err ? (err as { message?: string }).message : undefined;
-      setError(errorMessage || "Failed to update employer");
-      console.error("Error updating employer:", err);
+      setError(errorMessage || "Failed to update job seeker");
+      console.error("Error updating job seeker:", err);
     } finally {
       setIsSaving(false);
     }
   };
 
   const isFormValid = () => {
-    return formData.name.trim() && formData.overview.trim();
+    return (
+      formData.firstName.trim() && formData.lastName.trim() && formData.occupationId && formData.occupationId !== 0
+    );
   };
 
   return (
@@ -234,7 +285,7 @@ export const EditEmployerModal: React.FC<EditEmployerModalProps> = ({ isOpen, on
     >
       <div className="flex flex-col max-h-[90vh]">
         <div className="p-6 pb-4 border-b border-gray-200 dark:border-gray-700">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Edit Employer</h2>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Edit Job Seeker</h2>
         </div>
 
         <div className="flex-1 overflow-y-auto p-6">
@@ -270,7 +321,7 @@ export const EditEmployerModal: React.FC<EditEmployerModalProps> = ({ isOpen, on
                           strokeLinecap="round"
                           strokeLinejoin="round"
                           strokeWidth={1.5}
-                          d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
                         />
                       </svg>
                     )}
@@ -278,7 +329,7 @@ export const EditEmployerModal: React.FC<EditEmployerModalProps> = ({ isOpen, on
 
                   {/* Camera Icon Button */}
                   <label
-                    htmlFor="employer-profile-picture-upload"
+                    htmlFor="jobseeker-profile-picture-upload"
                     className="absolute bottom-2 right-2 w-10 h-10 bg-brand-500 hover:bg-brand-600 rounded-full flex items-center justify-center cursor-pointer shadow-lg transition-colors"
                   >
                     <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -313,9 +364,9 @@ export const EditEmployerModal: React.FC<EditEmployerModalProps> = ({ isOpen, on
 
                 {/* Upload Instructions - Right Side */}
                 <div className="flex-1">
-                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Upload Company Logo</h3>
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Upload Profile Picture</h3>
                   <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
-                    Click the camera icon to select a company logo. PNG, JPG up to 5MB.
+                    Click the camera icon to select a profile picture. PNG, JPG up to 5MB.
                   </p>
                   {selectedFile && (
                     <div className="text-sm text-green-600 dark:text-green-400">✓ New image selected</div>
@@ -324,7 +375,7 @@ export const EditEmployerModal: React.FC<EditEmployerModalProps> = ({ isOpen, on
 
                 {/* Hidden file input */}
                 <input
-                  id="employer-profile-picture-upload"
+                  id="jobseeker-profile-picture-upload"
                   type="file"
                   accept="image/*"
                   onChange={handleFileSelect}
@@ -339,28 +390,29 @@ export const EditEmployerModal: React.FC<EditEmployerModalProps> = ({ isOpen, on
                 </div>
               )}
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Company Name *
-                </label>
-                <Input
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) => updateField("name", e.target.value)}
-                  placeholder="Enter company name"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Overview *</label>
-                <TextArea
-                  value={formData.overview}
-                  onChange={(value) => updateField("overview", value)}
-                  placeholder="Enter company overview"
-                  rows={4}
-                  className="text-gray-900 dark:text-white"
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    First Name *
+                  </label>
+                  <Input
+                    type="text"
+                    value={formData.firstName}
+                    onChange={(e) => updateField("firstName", e.target.value)}
+                    placeholder="Enter first name"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Last Name *</label>
+                  <Input
+                    type="text"
+                    value={formData.lastName}
+                    onChange={(e) => updateField("lastName", e.target.value)}
+                    placeholder="Enter last name"
+                    required
+                  />
+                </div>
               </div>
 
               <div>
@@ -427,6 +479,32 @@ export const EditEmployerModal: React.FC<EditEmployerModalProps> = ({ isOpen, on
                   value={formData.phoneNumber}
                   onChange={(e) => updateField("phoneNumber", e.target.value)}
                   placeholder="Enter phone number"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Occupation *</label>
+                <Select
+                  options={occupationOptions}
+                  value={formData.occupationId.toString()}
+                  onChange={(value: string) => updateField("occupationId", parseInt(value) || 0)}
+                  placeholder="Select occupation"
+                  disabled={isOccupationsLoading}
+                  searchable={true}
+                  searchPlaceholder="Search occupations..."
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Specialty</label>
+                <Select
+                  options={getSpecialtyOptions()}
+                  value={formData.specialtyId?.toString() || ""}
+                  onChange={(value: string) => updateField("specialtyId", value ? parseInt(value) : undefined)}
+                  placeholder="Select specialty (optional)"
+                  disabled={!formData.occupationId || formData.occupationId === 0}
+                  searchable={true}
+                  searchPlaceholder="Search specialties..."
                 />
               </div>
             </div>
