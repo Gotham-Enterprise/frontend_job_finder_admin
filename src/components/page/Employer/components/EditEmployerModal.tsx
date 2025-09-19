@@ -7,7 +7,6 @@ import Select from "@/components/form/Select";
 import { employerApi } from "@/services/api/employer";
 import { EmployerUpdateData } from "@/services/types/employer";
 import { useStates } from "@/services/hooks/useStates";
-import { useStatesCities } from "@/lib/useStatesCities";
 
 interface EditEmployerModalProps {
   isOpen: boolean;
@@ -52,11 +51,7 @@ export const EditEmployerModal: React.FC<EditEmployerModalProps> = ({ isOpen, on
     expiresAt: string;
   } | null>(null);
 
-  // City dropdown state
-  const [isCityDropdownOpen, setIsCityDropdownOpen] = useState(false);
-
   const { data: statesData, isLoading: isStatesLoading } = useStates();
-  const { data: statesCities, isLoading: isLoadingStates } = useStatesCities();
 
   const stateOptions = [
     { value: "", label: "Select state" },
@@ -140,16 +135,34 @@ export const EditEmployerModal: React.FC<EditEmployerModalProps> = ({ isOpen, on
       const response = await employerApi.getEmployerById(employerId);
       if (response.success && response.data) {
         const employer = response.data;
-        const formattedState =
-          statesCities && employer.state && statesCities[employer.state]
-            ? `${statesCities[employer.state].name} (${employer.state})`
-            : employer.state || "";
+
+        // Map the state value to match the dropdown options format
+        let mappedState = "";
+        if (employer.state && statesData?.success && statesData.data) {
+          // Check if the state is already an abbreviation
+          const stateByAbbr = statesData.data.states.find((s) => s.abbreviation === employer.state);
+          if (stateByAbbr) {
+            mappedState = stateByAbbr.abbreviation;
+          } else {
+            // Check if the state is a full name
+            const stateByName = statesData.data.states.find(
+              (s) => s.name.toLowerCase() === employer.state.toLowerCase()
+            );
+            if (stateByName) {
+              mappedState = stateByName.abbreviation;
+            } else {
+              // If no match found, use the original value
+              mappedState = employer.state;
+            }
+          }
+        }
+
         setFormData({
           name: employer.companyName || "",
           overview: stripHtmlTags(employer.overview || ""),
           address: employer.address || "",
           city: employer.city || "",
-          state: employer.state || "",
+          state: mappedState,
           country: employer.country || "US",
           zipCode: employer.zipCode || "",
           phoneNumber: employer.phoneNumber || "",
@@ -181,16 +194,6 @@ export const EditEmployerModal: React.FC<EditEmployerModalProps> = ({ isOpen, on
     }
   }, [isOpen, employerId, loadEmployerData, statesData]);
 
-  useEffect(() => {
-    if (isOpen && employerId && statesCities && formData.state && !formData.state.includes("(")) {
-      const stateEntry = Object.entries(statesCities).find(([abbr]) => abbr === formData.state);
-      if (stateEntry && stateEntry[1] && typeof stateEntry[1] === "object" && "name" in stateEntry[1]) {
-        const stateData = stateEntry[1] as { name: string; cities: string[] };
-        setFormData((prev) => ({ ...prev, state: `${stateData.name} (${formData.state})` }));
-      }
-    }
-  }, [statesCities, employerId, isOpen, formData.state]);
-
   const updateField = (field: keyof EmployerUpdateData, value: string) => {
     setFormData((prev) => ({
       ...prev,
@@ -201,23 +204,6 @@ export const EditEmployerModal: React.FC<EditEmployerModalProps> = ({ isOpen, on
     if ((field === "name" || field === "overview") && value.trim() && error) {
       setError(null);
     }
-  };
-
-  const handleSelectState = (val: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      state: val, // val is already formatted as "State Name (AB)"
-      city: "", // Reset city when state changes
-    }));
-    setIsCityDropdownOpen(false); // Close city dropdown
-  };
-
-  const handleSelectCity = (val: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      city: val,
-    }));
-    setIsCityDropdownOpen(false); // Close dropdown after selection
   };
 
   const saveChanges = async () => {
