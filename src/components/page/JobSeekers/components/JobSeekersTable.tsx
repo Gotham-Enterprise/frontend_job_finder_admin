@@ -1,11 +1,20 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { formatDateTimeEST } from "@/services/utils/dateUtils";
 import { Table, TableBody, TableCell, TableRow } from "../../../ui/table";
 import Badge from "../../../ui/badge/Badge";
 import Button from "../../../ui/button/Button";
 import TableHeading from "../../../tables/tableHeader";
-import { EyeIcon, TimeIcon, FileIcon, DownloadIcon, PencilIcon, PaperPlaneIcon } from "@/icons";
+import {
+  EyeIcon,
+  TimeIcon,
+  FileIcon,
+  DownloadIcon,
+  PencilIcon,
+  PaperPlaneIcon,
+  IdCardIcon,
+  CheckCircleIcon,
+} from "@/icons";
 import { JobSeekersTableProps } from "@/services/types/JobSeekersTypes";
 import Avatar from "../../../ui/avatar/Avatar";
 import { EditJobSeekerModal } from "./EditJobSeekerModal";
@@ -61,6 +70,191 @@ const SpecialtyDisplay: React.FC<SpecialtyDisplayProps> = ({
   );
 };
 
+interface LicensesPopoverProps {
+  licenses: any[];
+  isOpen: boolean;
+  onClose: () => void;
+  triggerRef: React.RefObject<HTMLButtonElement | null>;
+}
+
+const LicensesPopover: React.FC<LicensesPopoverProps> = ({ licenses, isOpen, onClose, triggerRef }) => {
+  const popoverRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        popoverRef.current &&
+        !popoverRef.current.contains(event.target as Node) &&
+        triggerRef.current &&
+        !triggerRef.current.contains(event.target as Node)
+      ) {
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isOpen, onClose, triggerRef]);
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50">
+      <div className="absolute inset-0" onClick={onClose} />
+      <div
+        ref={popoverRef}
+        className="absolute bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-4 max-w-md w-80 z-10"
+        style={{
+          top: triggerRef.current ? triggerRef.current.getBoundingClientRect().bottom + 5 : 0,
+          left: triggerRef.current ? Math.max(10, triggerRef.current.getBoundingClientRect().left - 150) : 0,
+        }}
+      >
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <h3 className="text-sm font-semibold text-gray-900 dark:text-white">All Licenses</h3>
+          </div>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full p-1 transition-colors duration-200"
+          >
+            ×
+          </button>
+        </div>
+        <div className="space-y-3 max-h-80 overflow-y-auto pr-1">
+          {licenses.map((license: any, index: number) => (
+            <div key={license.id || index} className="px-4 py-3 rounded-lg border-b transition-all duration-200">
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 mt-0.5">
+                  <IdCardIcon className="w-4 h-4 text-primary dark:text-blue-400" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="font-semibold text-sm text-primary mb-2">{license.name}</div>
+                  <div className="flex justify-between gap-2 mb-2 flex-wrap">
+                    <span>License Number:</span>
+                    {license.licenseIdNumber && <span className="flex flex-col">#{license.licenseIdNumber}</span>}
+                  </div>
+                  <div className="flex justify-between gap-2 mb-2 flex-wrap">
+                    <span>Issuing State:</span>
+                    {license.issuingState && <span className="flex flex-col">{license.issuingState}</span>}
+                  </div>
+                  <div className="flex justify-between gap-2 mb-2 flex-wrap">
+                    <span>Issue Date:</span>
+                    {license.issueDate && (
+                      <div className="flex flex-col">Issued: {new Date(license.issueDate).toLocaleDateString()}</div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+interface CertificationsPopoverProps {
+  certifications: any[];
+  isOpen: boolean;
+  onClose: () => void;
+  triggerRef: React.RefObject<HTMLButtonElement | null>;
+}
+
+const CertificationsPopover: React.FC<CertificationsPopoverProps> = ({
+  certifications,
+  isOpen,
+  onClose,
+  triggerRef,
+}) => {
+  const popoverRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        popoverRef.current &&
+        !popoverRef.current.contains(event.target as Node) &&
+        triggerRef.current &&
+        !triggerRef.current.contains(event.target as Node)
+      ) {
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isOpen, onClose, triggerRef]);
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50">
+      <div className="absolute inset-0" onClick={onClose} />
+      <div
+        ref={popoverRef}
+        className="absolute bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-4 max-w-md w-80 z-10"
+        style={{
+          top: triggerRef.current ? triggerRef.current.getBoundingClientRect().bottom + 5 : 0,
+          left: triggerRef.current ? Math.max(10, triggerRef.current.getBoundingClientRect().left - 150) : 0,
+        }}
+      >
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <CheckCircleIcon className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+            <h3 className="text-sm font-semibold text-gray-900 dark:text-white">All Certifications</h3>
+          </div>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full p-1 transition-colors duration-200"
+          >
+            ×
+          </button>
+        </div>
+        <div className="space-y-3 max-h-80 overflow-y-auto pr-1">
+          {certifications.map((certification: any, index: number) => (
+            <div
+              key={certification.id || index}
+              className="bg-gradient-to-r from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-800/20 px-4 py-3 rounded-lg border border-emerald-200 dark:border-emerald-700 shadow-sm hover:shadow-md transition-all duration-200"
+            >
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 mt-0.5">
+                  <CheckCircleIcon className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="font-semibold text-sm text-emerald-900 dark:text-emerald-100 mb-2">
+                    {certification.name}
+                  </div>
+                  {certification.issuer && (
+                    <div className="mb-2">
+                      <span className="inline-flex items-center text-xs text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/40 px-2.5 py-1 rounded-full font-medium">
+                        {certification.issuer}
+                      </span>
+                    </div>
+                  )}
+                  {certification.issueDate && (
+                    <div className="text-xs text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-md inline-block">
+                      Issued: {new Date(certification.issueDate).toLocaleDateString()}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
   data,
   isLoading,
@@ -77,7 +271,49 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
   const [selectedJobSeekerId, setSelectedJobSeekerId] = useState<string | null>(null);
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [selectedJobSeekerForShare, setSelectedJobSeekerForShare] = useState<any>(null);
+  const [licensesPopover, setLicensesPopover] = useState<{ isOpen: boolean; jobSeekerId: string | null }>({
+    isOpen: false,
+    jobSeekerId: null,
+  });
+  const [certificationsPopover, setCertificationsPopover] = useState<{ isOpen: boolean; jobSeekerId: string | null }>({
+    isOpen: false,
+    jobSeekerId: null,
+  });
+  const licensesButtonRefs = useRef<{ [key: string]: React.RefObject<HTMLButtonElement | null> }>({});
+  const certificationsButtonRefs = useRef<{ [key: string]: React.RefObject<HTMLButtonElement | null> }>({});
   const { addToast } = useToast();
+
+  // Helper functions for popovers
+  const openLicensesPopover = (jobSeekerId: string) => {
+    setLicensesPopover({ isOpen: true, jobSeekerId });
+  };
+
+  const closeLicensesPopover = () => {
+    setLicensesPopover({ isOpen: false, jobSeekerId: null });
+  };
+
+  const openCertificationsPopover = (jobSeekerId: string) => {
+    setCertificationsPopover({ isOpen: true, jobSeekerId });
+  };
+
+  const closeCertificationsPopover = () => {
+    setCertificationsPopover({ isOpen: false, jobSeekerId: null });
+  };
+
+  // Ensure refs exist for each job seeker
+  const getLicensesButtonRef = (jobSeekerId: string) => {
+    if (!licensesButtonRefs.current[jobSeekerId]) {
+      licensesButtonRefs.current[jobSeekerId] = React.createRef<HTMLButtonElement>();
+    }
+    return licensesButtonRefs.current[jobSeekerId];
+  };
+
+  const getCertificationsButtonRef = (jobSeekerId: string) => {
+    if (!certificationsButtonRefs.current[jobSeekerId]) {
+      certificationsButtonRefs.current[jobSeekerId] = React.createRef<HTMLButtonElement>();
+    }
+    return certificationsButtonRefs.current[jobSeekerId];
+  };
 
   const openEditModal = (jobSeekerId: string) => {
     setSelectedJobSeekerId(jobSeekerId);
@@ -346,6 +582,106 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
                       : jobSeeker.city || jobSeeker.state || "Not specified"}
                   </p>
                 </TableCell>
+                <TableCell className="py-4 px-6">
+                  <div className="text-sm text-gray-900 dark:text-white">
+                    {jobSeeker.licenses && jobSeeker.licenses.length > 0 ? (
+                      <div className="space-y-2 max-w-[220px]">
+                        {jobSeeker.licenses.slice(0, 1).map((license: any, index: number) => (
+                          <div key={license.id || index} className="flex">
+                            <div className="flex items-start gap-2">
+                              <div className="flex-1 min-w-0">
+                                <div
+                                  className="font-semibold text-xs text-primary dark:text-primary truncate leading-tight"
+                                  title={license.name}
+                                >
+                                  {license.name}
+                                </div>
+                                <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                                  {license.licenseIdNumber && (
+                                    <span className="inline-flex items-center text-xs text-white dark:text-white bg-primary py-1 rounded-full px-2 font-mono font-medium">
+                                      #{license.licenseIdNumber}
+                                    </span>
+                                  )}
+                                  {license.issuingState && (
+                                    <span className="inline-flex items-center text-xs text-white dark:text-white bg-primary py-1 rounded-full px-2 font-mono font-medium">
+                                      {license.issuingState}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                        {jobSeeker.licenses.length > 1 && (
+                          <button
+                            ref={getLicensesButtonRef(jobSeeker.id)}
+                            onClick={() => openLicensesPopover(jobSeeker.id)}
+                            className="inline-flex items-center gap-1.5 text-xs text-primary dark:text-primary font-semibold cursor-pointer transition-all duration-200 hover:bg-blue-100 dark:hover:bg-blue-800/30 px-2.5 py-1.5 rounded-md"
+                          >
+                            +{jobSeeker.licenses.length - 1} more
+                          </button>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2 text-gray-400 dark:text-gray-500 text-sm italic">
+                        <IdCardIcon className="w-4 h-4 opacity-50" />
+                        <span>Not specified</span>
+                      </div>
+                    )}
+                  </div>
+                </TableCell>
+                <TableCell className="py-4 px-6">
+                  <div className="text-sm text-gray-900 dark:text-white">
+                    {jobSeeker.certifications && jobSeeker.certifications.length > 0 ? (
+                      <div className="space-y-2 max-w-[220px]">
+                        {jobSeeker.certifications.slice(0, 1).map((certification: any, index: number) => (
+                          <div
+                            key={certification.id || index}
+                            className="font-semibold text-xs text-emerald-900 dark:text-emerald-100 truncate leading-tight"
+                          >
+                            <div className="flex items-start gap-2">
+                              <div className="flex-shrink-0 mt-0.5">
+                                <CheckCircleIcon className=" text-emerald-600 dark:text-emerald-400" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div
+                                  className="font-semibold text-xs text-emerald-900 dark:text-emerald-100 truncate leading-tight"
+                                  title={certification.name}
+                                >
+                                  {certification.name}
+                                </div>
+                                {certification.issuer && (
+                                  <div className="mt-1.5">
+                                    <span
+                                      className="inline-flex items-center text-xs text-white dark:text-primary bg-primary dark:bg-primary px-4 py-1 rounded-full font-medium truncate"
+                                      title={certification.issuer}
+                                    >
+                                      {certification.issuer}
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                        {jobSeeker.certifications.length > 1 && (
+                          <button
+                            ref={getCertificationsButtonRef(jobSeeker.id)}
+                            onClick={() => openCertificationsPopover(jobSeeker.id)}
+                            className="inline-flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400 font-semibold hover:text-emerald-800 dark:hover:text-emerald-200 cursor-pointer transition-all duration-200 bg-emerald-50 dark:bg-emerald-900/20 hover:bg-emerald-100 dark:hover:bg-emerald-800/30 px-2.5 py-1.5 rounded-md border border-emerald-200 dark:border-emerald-700"
+                          >
+                            <CheckCircleIcon className="w-3 h-3" />+{jobSeeker.certifications.length - 1} more
+                          </button>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2 text-gray-400 dark:text-gray-500 text-sm italic">
+                        <CheckCircleIcon className="w-4 h-4 opacity-50" />
+                        <span>Not specified</span>
+                      </div>
+                    )}
+                  </div>
+                </TableCell>
                 <TableCell className="py-4 px-6 text-left">{renderResumeButton(jobSeeker)}</TableCell>
                 <TableCell className="py-4 px-6 whitespace-nowrap">
                   {jobSeeker.dateJoined ? (
@@ -430,6 +766,28 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
           resumeId={getResumeData(selectedJobSeekerForShare)?.id}
           resumeObjectKey={getResumeData(selectedJobSeekerForShare)?.objectKey}
           resumeFileName={getResumeData(selectedJobSeekerForShare)?.fileName}
+        />
+      )}
+
+      {/* Licenses Popover */}
+      {licensesPopover.isOpen && licensesPopover.jobSeekerId && (
+        <LicensesPopover
+          licenses={data?.data?.find((js: any) => js.id === licensesPopover.jobSeekerId)?.licenses || []}
+          isOpen={licensesPopover.isOpen}
+          onClose={closeLicensesPopover}
+          triggerRef={getLicensesButtonRef(licensesPopover.jobSeekerId)}
+        />
+      )}
+
+      {/* Certifications Popover */}
+      {certificationsPopover.isOpen && certificationsPopover.jobSeekerId && (
+        <CertificationsPopover
+          certifications={
+            data?.data?.find((js: any) => js.id === certificationsPopover.jobSeekerId)?.certifications || []
+          }
+          isOpen={certificationsPopover.isOpen}
+          onClose={closeCertificationsPopover}
+          triggerRef={getCertificationsButtonRef(certificationsPopover.jobSeekerId)}
         />
       )}
     </div>
