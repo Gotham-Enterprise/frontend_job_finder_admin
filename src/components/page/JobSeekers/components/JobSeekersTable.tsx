@@ -585,13 +585,13 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
                 <TableCell className="py-4 px-6">
                   <div className="text-sm text-gray-900 dark:text-white">
                     {jobSeeker.licenses && jobSeeker.licenses.length > 0 ? (
-                      <div className="space-y-2 max-w-[220px]">
+                      <div className="space-y-2">
                         {jobSeeker.licenses.slice(0, 1).map((license: any, index: number) => (
                           <div key={license.id || index} className="flex">
                             <div className="flex items-start gap-2">
                               <div className="flex-1 min-w-0">
                                 <div
-                                  className="font-semibold text-xs text-primary dark:text-primary truncate leading-tight"
+                                  className="font-semibold text-sm text-primary dark:text-primary truncate leading-tight"
                                   title={license.name}
                                 >
                                   {license.name}
@@ -624,7 +624,7 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
                       </div>
                     ) : (
                       <div className="flex items-center gap-2 text-gray-400 dark:text-gray-500 text-sm italic">
-                        <IdCardIcon className="w-4 h-4 opacity-50" />
+                        <IdCardIcon className="opacity-50" />
                         <span>Not specified</span>
                       </div>
                     )}
@@ -645,7 +645,7 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
                               </div>
                               <div className="flex-1 min-w-0">
                                 <div
-                                  className="font-semibold text-xs text-emerald-900 dark:text-emerald-100 truncate leading-tight"
+                                  className="font-semibold text-sm text-emerald-900 dark:text-emerald-100 truncate leading-tight"
                                   title={certification.name}
                                 >
                                   {certification.name}
@@ -653,7 +653,7 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
                                 {certification.issuer && (
                                   <div className="mt-1.5">
                                     <span
-                                      className="inline-flex items-center text-xs text-white dark:text-primary bg-primary dark:bg-primary px-4 py-1 rounded-full font-medium truncate"
+                                      className="font-semibold text-sm text-primary dark:text-primary truncate leading-tight"
                                       title={certification.issuer}
                                     >
                                       {certification.issuer}
@@ -676,7 +676,7 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
                       </div>
                     ) : (
                       <div className="flex items-center gap-2 text-gray-400 dark:text-gray-500 text-sm italic">
-                        <CheckCircleIcon className="w-4 h-4 opacity-50" />
+                        <CheckCircleIcon className="opacity-50" />
                         <span>Not specified</span>
                       </div>
                     )}
