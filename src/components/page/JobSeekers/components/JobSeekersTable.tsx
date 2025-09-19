@@ -138,18 +138,18 @@ const LicensesPopover: React.FC<LicensesPopoverProps> = ({ licenses, isOpen, onC
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="font-semibold text-sm text-primary mb-2">{license.name}</div>
-                  <div className="flex justify-between gap-2 mb-2 flex-wrap">
+                  <div className="flex justify-between gap-2 mb-2">
                     <span>License Number:</span>
                     {license.licenseIdNumber && <span className="flex flex-col">#{license.licenseIdNumber}</span>}
                   </div>
-                  <div className="flex justify-between gap-2 mb-2 flex-wrap">
+                  <div className="flex justify-between gap-2 mb-2">
                     <span>Issuing State:</span>
                     {license.issuingState && <span className="flex flex-col">{license.issuingState}</span>}
                   </div>
-                  <div className="flex justify-between gap-2 mb-2 flex-wrap">
+                  <div className="flex justify-between gap-2 mb-2">
                     <span>Issue Date:</span>
                     {license.issueDate && (
-                      <div className="flex flex-col">Issued: {new Date(license.issueDate).toLocaleDateString()}</div>
+                      <div className="flex flex-col">{new Date(license.issueDate).toLocaleDateString()}</div>
                     )}
                   </div>
                 </div>
@@ -237,19 +237,17 @@ const CertificationsPopover: React.FC<CertificationsPopoverProps> = ({
                   <div className="font-semibold text-sm text-emerald-900 dark:text-emerald-100 mb-2">
                     {certification.name}
                   </div>
-                  <div className="flex justify-between gap-2 mb-2 flex-wrap">
+                  <div className="flex justify-between gap-2 mb-2">
                     <span>Issuer:</span>
                     {certification.issuer && <span className="flex flex-col">{certification.issuer}</span>}
                   </div>
-                  <div className="flex justify-between gap-2 mb-2 flex-wrap">
+                  <div className="flex justify-between gap-2 mb-2">
                     <span>Issue Date:</span>
                     {certification.issueDate && (
-                      <div className="flex flex-col">
-                        Issued: {new Date(certification.issueDate).toLocaleDateString()}
-                      </div>
+                      <div className="flex flex-col">{new Date(certification.issueDate).toLocaleDateString()}</div>
                     )}
                   </div>
-                  <div className="flex justify-between gap-2 mb-2 flex-wrap">
+                  <div className="flex justify-between gap-2 mb-2">
                     <span>Expiration Date:</span>
                     {certification.expirationDate && (
                       <div className="flex flex-col">
