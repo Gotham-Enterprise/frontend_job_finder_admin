@@ -143,8 +143,8 @@ const LicensesPopover: React.FC<LicensesPopoverProps> = ({ licenses, isOpen, onC
                     {license.licenseIdNumber && <span className="flex flex-col">#{license.licenseIdNumber}</span>}
                   </div>
                   <div className="flex justify-between gap-2 mb-2">
-                    <span>Issuing State:</span>
-                    {license.issuingState && <span className="flex flex-col">{license.issuingState}</span>}
+                    <span className="whitespace-nowrap">Issuing State:</span>
+                    {license.issuingState && <span className="text-right">{license.issuingState}</span>}
                   </div>
                   <div className="flex justify-between gap-2 mb-2">
                     <span>Date Issued:</span>
