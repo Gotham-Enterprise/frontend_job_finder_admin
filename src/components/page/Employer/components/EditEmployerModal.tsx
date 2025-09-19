@@ -386,7 +386,7 @@ export const EditEmployerModal: React.FC<EditEmployerModalProps> = ({ isOpen, on
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Address</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Address *</label>
                 <Input
                   type="text"
                   value={formData.address}
@@ -397,7 +397,7 @@ export const EditEmployerModal: React.FC<EditEmployerModalProps> = ({ isOpen, on
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">City</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">City *</label>
                   <Input
                     type="text"
                     value={formData.city}
@@ -432,7 +432,7 @@ export const EditEmployerModal: React.FC<EditEmployerModalProps> = ({ isOpen, on
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Zip Code</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Zip Code *</label>
                   <Input
                     type="text"
                     value={formData.zipCode}
