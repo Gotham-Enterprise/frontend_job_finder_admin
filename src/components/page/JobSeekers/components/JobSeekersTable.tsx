@@ -118,16 +118,20 @@ const LicensesPopover: React.FC<LicensesPopoverProps> = ({ licenses, isOpen, onC
           <div className="flex items-center gap-2">
             <h3 className="text-sm font-semibold text-gray-900 dark:text-white">All Licenses</h3>
           </div>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full p-1 transition-colors duration-200"
-          >
-            ×
+          <button onClick={onClose} className="text-gray-400 p-1 transition-colors duration-200">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path
+                fillRule="evenodd"
+                clipRule="evenodd"
+                d="M6.04289 16.5413C5.65237 16.9318 5.65237 17.565 6.04289 17.9555C6.43342 18.346 7.06658 18.346 7.45711 17.9555L11.9987 13.4139L16.5408 17.956C16.9313 18.3466 17.5645 18.3466 17.955 17.956C18.3455 17.5655 18.3455 16.9323 17.955 16.5418L13.4129 11.9997L17.955 7.4576C18.3455 7.06707 18.3455 6.43391 17.955 6.04338C17.5645 5.65286 16.9313 5.65286 16.5408 6.04338L11.9987 10.5855L7.45711 6.0439C7.06658 5.65338 6.43342 5.65338 6.04289 6.0439C5.65237 6.43442 5.65237 7.06759 6.04289 7.45811L10.5845 11.9997L6.04289 16.5413Z"
+                fill="currentColor"
+              />
+            </svg>
           </button>
         </div>
         <div className="space-y-3 max-h-80 overflow-y-auto pr-1">
           {licenses.map((license: any, index: number) => (
-            <div key={license.id || index} className="px-4 py-3 rounded-lg border-b transition-all duration-200">
+            <div key={license.id || index} className="py-3 border-b transition-all duration-200">
               <div className="flex items-start gap-3">
                 <div className="flex-shrink-0 mt-0.5">
                   <IdCardIcon className="w-4 h-4 text-primary dark:text-blue-400" />
@@ -586,46 +590,18 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
                   <div className="text-sm text-gray-900 dark:text-white">
                     {jobSeeker.licenses && jobSeeker.licenses.length > 0 ? (
                       <div className="space-y-2">
-                        {jobSeeker.licenses.slice(0, 1).map((license: any, index: number) => (
-                          <div key={license.id || index} className="flex">
-                            <div className="flex items-start gap-2">
-                              <div className="flex-1 min-w-0">
-                                <div
-                                  className="font-semibold text-sm text-primary dark:text-primary truncate leading-tight"
-                                  title={license.name}
-                                >
-                                  {license.name}
-                                </div>
-                                <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                                  {license.licenseIdNumber && (
-                                    <span className="inline-flex items-center text-xs text-white dark:text-white bg-primary py-1 rounded-full px-2 font-mono font-medium">
-                                      #{license.licenseIdNumber}
-                                    </span>
-                                  )}
-                                  {license.issuingState && (
-                                    <span className="inline-flex items-center text-xs text-white dark:text-white bg-primary py-1 rounded-full px-2 font-mono font-medium">
-                                      {license.issuingState}
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                        {jobSeeker.licenses.length > 1 && (
-                          <button
-                            ref={getLicensesButtonRef(jobSeeker.id)}
-                            onClick={() => openLicensesPopover(jobSeeker.id)}
-                            className="inline-flex items-center gap-1.5 text-xs text-primary dark:text-primary font-semibold cursor-pointer transition-all duration-200 hover:bg-blue-100 dark:hover:bg-blue-800/30 px-2.5 py-1.5 rounded-md"
-                          >
-                            +{jobSeeker.licenses.length - 1} more
-                          </button>
-                        )}
+                        <button
+                          ref={getLicensesButtonRef(jobSeeker.id)}
+                          onClick={() => openLicensesPopover(jobSeeker.id)}
+                          className="inline-flex items-center justify-center font-medium gap-2 transition bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 text-xs font-medium rounded-md shadow-sm hover:shadow-md transition-all duration-200 flex items-center gap-1.5 h-[45px] w-[100px] rounded-sm px-3 text-xs bg-primary text-primary-foreground text-white shadow hover:bg-primary/90 [&>svg]:text-primary-foreground "
+                        >
+                          View Licenses
+                        </button>
                       </div>
                     ) : (
                       <div className="flex items-center gap-2 text-gray-400 dark:text-gray-500 text-sm italic">
                         <IdCardIcon className="opacity-50" />
-                        <span>Not specified</span>
+                        <span>N/A</span>
                       </div>
                     )}
                   </div>
@@ -677,7 +653,7 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
                     ) : (
                       <div className="flex items-center gap-2 text-gray-400 dark:text-gray-500 text-sm italic">
                         <CheckCircleIcon className="opacity-50" />
-                        <span>Not specified</span>
+                        <span>N/A</span>
                       </div>
                     )}
                   </div>
