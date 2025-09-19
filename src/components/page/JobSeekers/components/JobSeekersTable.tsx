@@ -108,10 +108,10 @@ const LicensesPopover: React.FC<LicensesPopoverProps> = ({ licenses, isOpen, onC
       <div className="absolute inset-0" onClick={onClose} />
       <div
         ref={popoverRef}
-        className="absolute bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-4 max-w-md w-80 z-10"
+        className="absolute bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-4 max-w-lg w-96 z-10"
         style={{
           top: triggerRef.current ? triggerRef.current.getBoundingClientRect().bottom + 5 : 0,
-          left: triggerRef.current ? Math.max(10, triggerRef.current.getBoundingClientRect().left - 150) : 0,
+          left: triggerRef.current ? Math.max(10, triggerRef.current.getBoundingClientRect().left - 180) : 0,
         }}
       >
         <div className="flex items-center justify-between mb-4">
@@ -211,10 +211,10 @@ const CertificationsPopover: React.FC<CertificationsPopoverProps> = ({
       <div className="absolute inset-0" onClick={onClose} />
       <div
         ref={popoverRef}
-        className="absolute bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-4 max-w-md w-80 z-10"
+        className="absolute bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-4 max-w-lg w-96 z-10"
         style={{
           top: triggerRef.current ? triggerRef.current.getBoundingClientRect().bottom + 5 : 0,
-          left: triggerRef.current ? Math.max(10, triggerRef.current.getBoundingClientRect().left - 150) : 0,
+          left: triggerRef.current ? Math.max(10, triggerRef.current.getBoundingClientRect().left - 180) : 0,
         }}
       >
         <div className="flex items-center justify-between mb-4">
