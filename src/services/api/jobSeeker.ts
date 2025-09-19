@@ -3,8 +3,10 @@ import {
   JobSeekersResponse,
   JobSeekerDetailsResponse,
   JobSeekerUpdateData,
+  ShareResumeRequest,
+  ShareResumeResponse,
 } from "../types/jobSeeker";
-import { apiGet, apiPut } from "./apiUtils";
+import { apiGet, apiPut, apiPost } from "./apiUtils";
 
 export const jobSeekerApi = {
   async getJobSeekers(filters: JobSeekerFilters = {}): Promise<JobSeekersResponse> {
@@ -60,5 +62,11 @@ export const jobSeekerApi = {
 
     // Use regular JSON if no file
     return apiPut<any>(`/api/admin/jobseekers/${id}`, data);
+  },
+
+  async shareResume(resumeId: string, request: ShareResumeRequest): Promise<ShareResumeResponse> {
+    const endpoint = `/api/admin/jobseekers/share/${resumeId}/send-email`;
+    console.log("Share Resume API Call:", { endpoint, resumeId, request });
+    return apiPost<ShareResumeResponse>(endpoint, request);
   },
 };

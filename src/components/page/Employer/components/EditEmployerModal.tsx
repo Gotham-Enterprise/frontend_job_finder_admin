@@ -52,6 +52,7 @@ export const EditEmployerModal: React.FC<EditEmployerModalProps> = ({ isOpen, on
   } | null>(null);
 
   const { data: statesData, isLoading: isStatesLoading } = useStates();
+  const { data: statesCities, isLoading: isLoadingStates } = useStatesCities();
 
   const stateOptions = [
     { value: "", label: "Select state" },
@@ -135,6 +136,10 @@ export const EditEmployerModal: React.FC<EditEmployerModalProps> = ({ isOpen, on
       const response = await employerApi.getEmployerById(employerId);
       if (response.success && response.data) {
         const employer = response.data;
+        const formattedState =
+          statesCities && employer.state && statesCities[employer.state]
+            ? `${statesCities[employer.state].name} (${employer.state})`
+            : employer.state || "";
         setFormData({
           name: employer.companyName || "",
           overview: stripHtmlTags(employer.overview || ""),
@@ -172,6 +177,15 @@ export const EditEmployerModal: React.FC<EditEmployerModalProps> = ({ isOpen, on
     }
   }, [isOpen, employerId, loadEmployerData, statesData]);
 
+  useEffect(() => {
+    if (isOpen && employerId && statesCities && formData.state && !formData.state.includes("(")) {
+      const stateEntry = Object.entries(statesCities).find(([abbr]) => abbr === formData.state);
+      if (stateEntry) {
+        setFormData((prev) => ({ ...prev, state: `${stateEntry[1].name} (${formData.state})` }));
+      }
+    }
+  }, [statesCities, employerId, isOpen, formData.state]);
+
   const updateField = (field: keyof EmployerUpdateData, value: string) => {
     setFormData((prev) => ({
       ...prev,
@@ -182,6 +196,23 @@ export const EditEmployerModal: React.FC<EditEmployerModalProps> = ({ isOpen, on
     if ((field === "name" || field === "overview") && value.trim() && error) {
       setError(null);
     }
+  };
+
+  const handleSelectState = (val: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      state: val, // val is already formatted as "State Name (AB)"
+      city: "", // Reset city when state changes
+    }));
+    setIsCityDropdownOpen(false); // Close city dropdown
+  };
+
+  const handleSelectCity = (val: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      city: val,
+    }));
+    setIsCityDropdownOpen(false); // Close dropdown after selection
   };
 
   const saveChanges = async () => {

@@ -50,7 +50,6 @@ export default function SubCategoryDropdown({
       subCat => subCat.name.toLowerCase() === inputValue.toLowerCase()
     );
     
-
     const isAlreadySelected = selectedSubCategories.some(
       selected => selected.name.toLowerCase() === inputValue.toLowerCase()
     );

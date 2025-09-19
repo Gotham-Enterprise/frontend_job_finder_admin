@@ -11,6 +11,7 @@ import Button from '../../../ui/button/Button';
 import TableHeading from '../../../tables/tableHeader';
 import { EyeIcon, PencilIcon, TimeIcon } from '@/icons';
 import { JobsAdminTableProps } from '@/services/types/JobsAdminTypes';
+import PermissionWrapper from '@/components/common/PermissionWrapper';
 
 const JobsAdminTable: React.FC<JobsAdminTableProps> = ({
   data,
@@ -122,24 +123,28 @@ const JobsAdminTable: React.FC<JobsAdminTableProps> = ({
                 </TableCell>
                 <TableCell className="py-4 px-6 text-right">
                   <div className="flex items-center justify-end gap-2">
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="text-brand-400"
-                      onClick={() => onViewJobDetails(job.id)}
-                      startIcon={<EyeIcon />}
-                    >
-                      View
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="text-blue-400 hover:text-blue-700"
-                      onClick={() => onEditJobPost(job.id)}
-                      startIcon={<PencilIcon />}
-                    >
-                      Edit
-                    </Button>
+                    <PermissionWrapper module="jobs" action="view">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="text-brand-400"
+                        onClick={() => onViewJobDetails(job.id)}
+                        startIcon={<EyeIcon />}
+                      >
+                        View
+                      </Button>
+                    </PermissionWrapper>
+                    <PermissionWrapper module="jobs" action="edit">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="text-blue-400 hover:text-blue-700"
+                        onClick={() => onEditJobPost(job.id)}
+                        startIcon={<PencilIcon />}
+                      >
+                        Edit
+                      </Button>
+                    </PermissionWrapper>
                   </div>
                 </TableCell>
               </TableRow>
