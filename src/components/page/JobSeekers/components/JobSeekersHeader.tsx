@@ -1,11 +1,12 @@
-import React, { useRef } from 'react';
-import Link from 'next/link';
-import Input from '../../../ui/input/Input';
-import FilterDropdown from '../../../ui/FilterDropdown';
-import { SearchIcon, FilterIcon } from '../../../ui/icons';
-import { TrashBinIcon } from '@/icons';
-import { JobSeekersHeaderProps } from '@/services/types/JobSeekersTypes';
+import React, { useRef } from "react";
+import Link from "next/link";
+import Input from "../../../ui/input/Input";
+import FilterDropdown from "../../../ui/FilterDropdown";
+import { SearchIcon, FilterIcon } from "../../../ui/icons";
+import { TrashBinIcon } from "@/icons";
+import { JobSeekersHeaderProps } from "@/services/types/JobSeekersTypes";
 import { MdOutlineLock } from "react-icons/md";
+import PermissionWrapper from "@/components/common/PermissionWrapper";
 
 interface JobSeekersHeaderWithDropdownProps extends JobSeekersHeaderProps {
   filterDropdownContent?: React.ReactNode;
@@ -31,59 +32,56 @@ const JobSeekersHeader: React.FC<JobSeekersHeaderWithDropdownProps> = ({
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center justify-between w-full">
           <div>
-            <h3 className="text-xl font-semibold text-gray-800 dark:text-white">
-              Job Seekers
-            </h3>
+            <h3 className="text-xl font-semibold text-gray-800 dark:text-white">Job Seekers</h3>
             <p className="text-sm text-gray-500 mt-1 dark:text-gray-400">
               {totalCount || 0} total job seekers
-              {isPending && (
-                <span className="ml-2 text-xs text-primary">
-                  Updating...
-                </span>
-              )}
+              {isPending && <span className="ml-2 text-xs text-primary">Updating...</span>}
             </p>
           </div>
-          
+
           <div className="flex items-center gap-2">
-            <Link
-              href="/admin/job-seekers/deactivated"
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors"
-            >
-              <MdOutlineLock className="w-5 h-5" />
-              <span>Deactivated Users</span>
-            </Link>
-            
-            <Link
-              href="/admin/job-seekers/deleted-accounts"
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors"
-            >
-              <TrashBinIcon className="w-5 h-5" />
-              <span>Deleted Accounts</span>
-            </Link>
-            
+            <PermissionWrapper module="jobseekers" action="edit">
+              <Link
+                href="/admin/job-seekers/deactivated"
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors"
+              >
+                <MdOutlineLock className="w-5 h-5" />
+                <span>Deactivated Users</span>
+              </Link>
+            </PermissionWrapper>
+
+            <PermissionWrapper module="jobseekers" action="delete">
+              <Link
+                href="/admin/job-seekers/deleted-accounts"
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors"
+              >
+                <TrashBinIcon className="w-5 h-5" />
+                <span>Deleted Accounts</span>
+              </Link>
+            </PermissionWrapper>
+
             <button
               ref={filterButtonRef}
               onClick={() => setIsFilterOpen(!isFilterOpen)}
               className={`
                 flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border transition-colors
-                ${isFilterOpen 
-                  ? 'bg-primary/10 border-primary/20 text-primary' 
-                  : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700'
+                ${
+                  isFilterOpen
+                    ? "bg-primary/10 border-primary/20 text-primary"
+                    : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700"
                 }
               `}
             >
               <FilterIcon />
               <span>Filter</span>
               {hasActiveFilters && (
-                <span className="ml-1 bg-primary text-white text-xs rounded-full px-1.5 py-0.5 min-w-[18px] h-4 flex items-center justify-center font-medium">
-             
-                </span>
+                <span className="ml-1 bg-primary text-white text-xs rounded-full px-1.5 py-0.5 min-w-[18px] h-4 flex items-center justify-center font-medium"></span>
               )}
             </button>
           </div>
         </div>
       </div>
-      
+
       <div className="mt-4">
         <div className="relative">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -94,13 +92,13 @@ const JobSeekersHeader: React.FC<JobSeekersHeaderWithDropdownProps> = ({
             placeholder="Search by name or email..."
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
-            className={`w-full pl-10 ${searchInput ? 'pr-10' : ''}`}
+            className={`w-full pl-10 ${searchInput ? "pr-10" : ""}`}
           />
           {searchInput && (
             <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
               <button
                 type="button"
-                onClick={() => setSearchInput('')}
+                onClick={() => setSearchInput("")}
                 className="text-gray-400 hover:text-gray-600 dark:text-gray-300 dark:hover:text-white transition-colors"
               >
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
