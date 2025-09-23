@@ -7,7 +7,7 @@ import { useState, useMemo } from "react";
 import { Dropdown } from "../ui/dropdown/Dropdown";
 import { useApplicationTrends } from "@/services/hooks/useApplicationTrends";
 import { TrendType, DailyTrendData, MonthlyTrendData, QuarterlyTrendData } from "@/services/types/dashboard";
-import DatePicker from "../form/date-picker";
+import Select from "../form/Select";
 
 const ReactApexChart = dynamic(() => import("react-apexcharts"), {
   ssr: false,
@@ -215,39 +215,26 @@ export default function JobApplicationTrends() {
           ))}
         </div>
 
-        {/* Date Picker - Dynamic based on active filter */}
-        <div className={activeTab === "daily" ? "w-48" : "w-32"}>
-          <DatePicker
-            id="trends-date-picker"
-            defaultDate={activeTab === "daily" ? new Date(selectedYear, selectedMonth - 1, 1) : new Date(selectedYear, 0, 1)}
-            monthSelectorType="dropdown"
-            showMonths={1}
-            dateFormat={activeTab === "daily" ? "Y-m-d" : "Y"}
-            onChange={(selectedDates: Date[]) => {
-              if (selectedDates && selectedDates.length > 0) {
-                const date = selectedDates[0];
-                const year = date.getFullYear();
-                const month = date.getMonth() + 1;
-
-                // Update state based on filter type
-                setSelectedYear(year);
-                if (activeTab === "daily") {
-                  setSelectedMonth(month);
-                }
-
-                // Make API call with current active filter
-                const params = {
-                  type: activeTab,
-                  year,
-                  ...(activeTab === "daily" && { month }),
-                };
-                
-                fetchTrends(params);
-              }
-            }}
-            placeholder={activeTab === "daily" ? "Select Month/Year" : "Select Year"}
-          />
-        </div>
+        {/* Filter Controls - Show based on active tab */}
+        {activeTab !== "daily" && (
+          <div className="flex items-center space-x-3">
+            {/* Year Dropdown - Show for both monthly and quarterly */}
+            <div className="w-24">
+              <Select
+                value={selectedYear.toString()}
+                onChange={(value) => {
+                  const year = parseInt(value);
+                  handleYearChange(year);
+                }}
+                options={Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - i).map((year) => ({
+                  value: year.toString(),
+                  label: year.toString(),
+                }))}
+                placeholder="Select Year"
+              />
+            </div>
+          </div>
+        )}
       </div>
 
       {loading ? (
