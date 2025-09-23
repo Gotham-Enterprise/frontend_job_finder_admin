@@ -4,9 +4,9 @@ import { ApexOptions } from "apexcharts";
 import dynamic from "next/dynamic";
 import { useBlogAnalytics } from "../../services/hooks/useBlogAnalytics";
 import { TrendType, DailyTrendData, MonthlyTrendData, QuarterlyTrendData } from "../../services/types/dashboard";
-import DatePicker from "../form/date-picker";
 import { BlogIcon, EyeIcon, PieChartIcon } from "@/icons";
 import Badge from "../ui/badge/Badge";
+import Select from "../form/Select";
 
 const ReactApexChart = dynamic(() => import("react-apexcharts"), {
   ssr: false,
@@ -161,7 +161,7 @@ export default function BlogAnalytics() {
         },
       },
       title: {
-        text: "Blog Views",
+        text: "",
         style: {
           fontSize: "14px",
           color: "#374151",
@@ -293,25 +293,18 @@ export default function BlogAnalytics() {
             ))}
           </div>
 
-          {/* Date Picker - Hidden when daily filter is active */}
+          {/* Filter Controls - Show based on active tab */}
           {activeTab !== "daily" && (
-            <div className="w-32">
-              <DatePicker
-                key={`${activeTab}-${selectedYear}-${selectedMonth}`}
-                id="blog-analytics-date-picker"
-                defaultDate={new Date(selectedYear, 0, 1)}
-                monthSelectorType="dropdown"
-                showMonths={1}
-                dateFormat="Y"
-                onChange={(selectedDates: Date[]) => {
-                  if (selectedDates && selectedDates.length > 0) {
-                    const date = selectedDates[0];
-                    const year = date.getFullYear();
-
-                    // Update state based on filter type
+            <div className="flex items-center space-x-3">
+              {/* Year Dropdown - Show for both monthly and quarterly */}
+              <div className="w-24">
+                <Select
+                  value={selectedYear.toString()}
+                  onChange={(value) => {
+                    const year = parseInt(value);
                     setSelectedYear(year);
 
-                    // Immediately trigger API calls with new values
+                    // Immediately trigger API calls with new year
                     fetchAnalytics({
                       type: activeTab,
                       year: year,
@@ -321,10 +314,14 @@ export default function BlogAnalytics() {
                       month: selectedMonth,
                       year: year,
                     });
-                  }
-                }}
-                placeholder="Select Year"
-              />
+                  }}
+                  options={Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - i).map((year) => ({
+                    value: year.toString(),
+                    label: year.toString(),
+                  }))}
+                  placeholder="Select Year"
+                />
+              </div>
             </div>
           )}
         </div>
