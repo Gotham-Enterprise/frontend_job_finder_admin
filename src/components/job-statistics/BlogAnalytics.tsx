@@ -293,45 +293,40 @@ export default function BlogAnalytics() {
             ))}
           </div>
 
-          {/* Date Picker - Dynamic based on active filter */}
-          <div className={activeTab === "daily" ? "w-48" : "w-32"}>
-            <DatePicker
-              key={`${activeTab}-${selectedYear}-${selectedMonth}`}
-              id="blog-analytics-date-picker"
-              defaultDate={
-                activeTab === "daily" ? new Date(selectedYear, selectedMonth - 1, 1) : new Date(selectedYear, 0, 1)
-              }
-              monthSelectorType="dropdown"
-              showMonths={1}
-              dateFormat={activeTab === "daily" ? "Y-m-d" : "Y"}
-              onChange={(selectedDates: Date[]) => {
-                if (selectedDates && selectedDates.length > 0) {
-                  const date = selectedDates[0];
-                  const year = date.getFullYear();
-                  const month = date.getMonth() + 1;
+          {/* Date Picker - Hidden when daily filter is active */}
+          {activeTab !== "daily" && (
+            <div className="w-32">
+              <DatePicker
+                key={`${activeTab}-${selectedYear}-${selectedMonth}`}
+                id="blog-analytics-date-picker"
+                defaultDate={new Date(selectedYear, 0, 1)}
+                monthSelectorType="dropdown"
+                showMonths={1}
+                dateFormat="Y"
+                onChange={(selectedDates: Date[]) => {
+                  if (selectedDates && selectedDates.length > 0) {
+                    const date = selectedDates[0];
+                    const year = date.getFullYear();
 
-                  // Update state based on filter type
-                  setSelectedYear(year);
-                  if (activeTab === "daily") {
-                    setSelectedMonth(month);
+                    // Update state based on filter type
+                    setSelectedYear(year);
+
+                    // Immediately trigger API calls with new values
+                    fetchAnalytics({
+                      type: activeTab,
+                      year: year,
+                    });
+
+                    fetchViewCount({
+                      month: selectedMonth,
+                      year: year,
+                    });
                   }
-
-                  // Immediately trigger API calls with new values
-                  fetchAnalytics({
-                    type: activeTab,
-                    year: year,
-                    ...(activeTab === "daily" && { month: month }),
-                  });
-
-                  fetchViewCount({
-                    month: activeTab === "daily" ? month : selectedMonth,
-                    year: year,
-                  });
-                }
-              }}
-              placeholder={activeTab === "daily" ? "Select Month/Year" : "Select Year"}
-            />
-          </div>
+                }}
+                placeholder="Select Year"
+              />
+            </div>
+          )}
         </div>
 
         {/* Chart Content */}
