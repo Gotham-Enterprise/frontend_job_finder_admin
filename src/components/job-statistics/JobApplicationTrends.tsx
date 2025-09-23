@@ -1,13 +1,11 @@
 "use client";
 import { ApexOptions } from "apexcharts";
 import dynamic from "next/dynamic";
-import { MoreDotIcon } from "@/icons";
-import { DropdownItem } from "../ui/dropdown/DropdownItem";
 import { useState, useMemo } from "react";
-import { Dropdown } from "../ui/dropdown/Dropdown";
 import { useApplicationTrends } from "@/services/hooks/useApplicationTrends";
 import { TrendType, DailyTrendData, MonthlyTrendData, QuarterlyTrendData } from "@/services/types/dashboard";
 import Select from "../form/Select";
+import { CalenderIcon } from "@/icons";
 
 const ReactApexChart = dynamic(() => import("react-apexcharts"), {
   ssr: false,
@@ -219,7 +217,7 @@ export default function JobApplicationTrends() {
         {activeTab !== "daily" && (
           <div className="flex items-center space-x-3">
             {/* Year Dropdown - Show for both monthly and quarterly */}
-            <div className="w-24">
+            <div className="w-32 relative">
               <Select
                 value={selectedYear.toString()}
                 onChange={(value) => {
@@ -232,6 +230,9 @@ export default function JobApplicationTrends() {
                 }))}
                 placeholder="Select Year"
               />
+              <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none z-10">
+                <CalenderIcon className="text-gray-400" />
+              </div>
             </div>
           </div>
         )}

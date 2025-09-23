@@ -5,7 +5,7 @@ import dynamic from "next/dynamic";
 import { useBlogAnalytics } from "../../services/hooks/useBlogAnalytics";
 import { TrendType, DailyTrendData, MonthlyTrendData, QuarterlyTrendData } from "../../services/types/dashboard";
 import { BlogIcon, EyeIcon, PieChartIcon } from "@/icons";
-import Badge from "../ui/badge/Badge";
+import { CalenderIcon } from "@/icons";
 import Select from "../form/Select";
 
 const ReactApexChart = dynamic(() => import("react-apexcharts"), {
@@ -297,7 +297,7 @@ export default function BlogAnalytics() {
           {activeTab !== "daily" && (
             <div className="flex items-center space-x-3">
               {/* Year Dropdown - Show for both monthly and quarterly */}
-              <div className="w-24">
+              <div className="w-32 relative">
                 <Select
                   value={selectedYear.toString()}
                   onChange={(value) => {
@@ -321,6 +321,9 @@ export default function BlogAnalytics() {
                   }))}
                   placeholder="Select Year"
                 />
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none z-10">
+                  <CalenderIcon className="text-gray-400" />
+                </div>
               </div>
             </div>
           )}

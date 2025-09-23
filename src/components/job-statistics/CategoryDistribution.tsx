@@ -6,8 +6,8 @@ import { useQuery } from "@tanstack/react-query";
 import { dashboardApi } from "../../services/api/dashboard";
 import { useOccupations } from "../../services/hooks/useOccupations";
 import { TrendType, DailyTrendData, MonthlyTrendData, QuarterlyTrendData } from "../../services/types/dashboard";
-import DatePicker from "../form/date-picker";
 import Select from "../form/Select";
+import { CalenderIcon } from "@/icons";
 
 const ReactApexChart = dynamic(() => import("react-apexcharts"), {
   ssr: false,
@@ -249,7 +249,7 @@ export default function CategoryDistribution() {
         {selectedOccupationId && activeTab !== "daily" && (
           <div className="flex items-center space-x-3">
             {/* Year Select - Show for both monthly and quarterly */}
-            <div className="w-32">
+            <div className="w-32 relative">
               <Select
                 value={selectedYear.toString()}
                 onChange={(value) => {
@@ -261,7 +261,11 @@ export default function CategoryDistribution() {
                   label: year.toString(),
                 }))}
                 placeholder="Select Year"
+                className="pr-10"
               />
+              <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none z-10">
+                <CalenderIcon className="text-gray-400" />
+              </div>
             </div>
           </div>
         )}
