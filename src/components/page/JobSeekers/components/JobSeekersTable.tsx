@@ -80,6 +80,17 @@ interface LicensesPopoverProps {
 const LicensesPopover: React.FC<LicensesPopoverProps> = ({ licenses, isOpen, onClose, triggerRef }) => {
   const popoverRef = useRef<HTMLDivElement>(null);
 
+  // Calculate optimal height based on number of licenses
+  const calculateOptimalHeight = () => {
+    const baseHeight = 120; // Header + padding
+    const itemHeight = 140; // Height per license item
+    const maxHeight = 400; // Maximum height
+    const minHeight = 200; // Minimum height
+    
+    const calculatedHeight = baseHeight + (licenses.length * itemHeight);
+    return Math.min(maxHeight, Math.max(minHeight, calculatedHeight));
+  };
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -95,32 +106,60 @@ const LicensesPopover: React.FC<LicensesPopoverProps> = ({ licenses, isOpen, onC
     const handleScroll = () => {
       if (popoverRef.current && triggerRef.current) {
         const triggerRect = triggerRef.current.getBoundingClientRect();
-        const popoverHeight = 280; // Reduced height for better fit
         const viewportHeight = window.innerHeight;
+        const viewportWidth = window.innerWidth;
+        
+        // Calculate optimal height based on content
+        const optimalHeight = calculateOptimalHeight();
+        const popoverHeight = Math.min(optimalHeight, viewportHeight - 40); // Leave 40px margin
+        const popoverWidth = 384; // Fixed width
+        
         const spaceBelow = viewportHeight - triggerRect.bottom;
         const spaceAbove = triggerRect.top;
+        const spaceRight = viewportWidth - triggerRect.left;
+        const spaceLeft = triggerRect.right;
         
-        // Determine if we should position above or below
-        // Position above if there's not enough space below AND there's more space above
-        const shouldPositionAbove = spaceBelow < popoverHeight + 20 && spaceAbove > spaceBelow;
+        let topPosition: number;
+        let leftPosition: number;
         
-        if (shouldPositionAbove) {
-          // Position above the button with some margin
-          const topPosition = Math.max(10, triggerRect.top - popoverHeight - 10);
-          popoverRef.current.style.top = `${topPosition}px`;
+        // Determine vertical position
+        if (spaceBelow >= popoverHeight + 20) {
+          // Enough space below - position below
+          topPosition = triggerRect.bottom + 5;
+        } else if (spaceAbove >= popoverHeight + 20) {
+          // Not enough space below but enough above - position above
+          topPosition = triggerRect.top - popoverHeight - 5;
         } else {
-          // Position below the button (default)
-          const bottomPosition = Math.min(viewportHeight - popoverHeight - 10, triggerRect.bottom + 5);
-          popoverRef.current.style.top = `${bottomPosition}px`;
+          // Not enough space in either direction - center vertically
+          topPosition = Math.max(10, (viewportHeight - popoverHeight) / 2);
         }
         
-        popoverRef.current.style.left = `${Math.max(10, triggerRef.current.getBoundingClientRect().left - 180)}px`;
+        // Determine horizontal position
+        if (spaceRight >= popoverWidth + 20) {
+          // Enough space to the right - position to the right
+          leftPosition = triggerRect.left + 5;
+        } else if (spaceLeft >= popoverWidth + 20) {
+          // Not enough space to the right but enough to the left - position to the left
+          leftPosition = triggerRect.right - popoverWidth - 5;
+        } else {
+          // Not enough space on either side - center horizontally
+          leftPosition = Math.max(10, (viewportWidth - popoverWidth) / 2);
+        }
+        
+        // Ensure popover stays within viewport bounds
+        topPosition = Math.max(10, Math.min(topPosition, viewportHeight - popoverHeight - 10));
+        leftPosition = Math.max(10, Math.min(leftPosition, viewportWidth - popoverWidth - 10));
+        
+        popoverRef.current.style.top = `${topPosition}px`;
+        popoverRef.current.style.left = `${leftPosition}px`;
+        popoverRef.current.style.height = `${popoverHeight}px`;
       }
     };
 
     if (isOpen) {
       document.addEventListener("mousedown", handleClickOutside);
       window.addEventListener("scroll", handleScroll, true);
+      window.addEventListener("resize", handleScroll);
       // Initial positioning
       handleScroll();
     }
@@ -128,6 +167,7 @@ const LicensesPopover: React.FC<LicensesPopoverProps> = ({ licenses, isOpen, onC
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
       window.removeEventListener("scroll", handleScroll, true);
+      window.removeEventListener("resize", handleScroll);
     };
   }, [isOpen, onClose, triggerRef]);
 
@@ -138,23 +178,50 @@ const LicensesPopover: React.FC<LicensesPopoverProps> = ({ licenses, isOpen, onC
       <div className="absolute inset-0" onClick={onClose} />
       <div
         ref={popoverRef}
-        className="absolute bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-4 max-w-lg w-96 z-10 max-h-80"
+        className="absolute bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-4 max-w-lg w-96 z-10"
         style={{
           top: triggerRef.current ? (() => {
             const triggerRect = triggerRef.current.getBoundingClientRect();
-            const popoverHeight = 280;
             const viewportHeight = window.innerHeight;
+            const viewportWidth = window.innerWidth;
+            const popoverHeight = 300; // Initial estimate
+            const popoverWidth = 384; // Initial estimate
+            
             const spaceBelow = viewportHeight - triggerRect.bottom;
             const spaceAbove = triggerRect.top;
-            const shouldPositionAbove = spaceBelow < popoverHeight + 20 && spaceAbove > spaceBelow;
             
-            if (shouldPositionAbove) {
-              return Math.max(10, triggerRect.top - popoverHeight - 10);
+            let topPosition: number;
+            
+            if (spaceBelow >= popoverHeight + 20) {
+              topPosition = triggerRect.bottom + 5;
+            } else if (spaceAbove >= popoverHeight + 20) {
+              topPosition = triggerRect.top - popoverHeight - 5;
             } else {
-              return Math.min(viewportHeight - popoverHeight - 10, triggerRect.bottom + 5);
+              topPosition = Math.max(10, (viewportHeight - popoverHeight) / 2);
             }
+            
+            return Math.max(10, Math.min(topPosition, viewportHeight - popoverHeight - 10));
           })() : 0,
-          left: triggerRef.current ? Math.max(10, triggerRef.current.getBoundingClientRect().left - 180) : 0,
+          left: triggerRef.current ? (() => {
+            const triggerRect = triggerRef.current.getBoundingClientRect();
+            const viewportWidth = window.innerWidth;
+            const popoverWidth = 384;
+            
+            const spaceRight = viewportWidth - triggerRect.left;
+            const spaceLeft = triggerRect.right;
+            
+            let leftPosition: number;
+            
+            if (spaceRight >= popoverWidth + 20) {
+              leftPosition = triggerRect.left + 5;
+            } else if (spaceLeft >= popoverWidth + 20) {
+              leftPosition = triggerRect.right - popoverWidth - 5;
+            } else {
+              leftPosition = Math.max(10, (viewportWidth - popoverWidth) / 2);
+            }
+            
+            return Math.max(10, Math.min(leftPosition, viewportWidth - popoverWidth - 10));
+          })() : 0,
         }}
       >
         <div className="flex items-center justify-between mb-4">
@@ -238,6 +305,17 @@ const CertificationsPopover: React.FC<CertificationsPopoverProps> = ({
 }) => {
   const popoverRef = useRef<HTMLDivElement>(null);
 
+  // Calculate optimal height based on number of certifications
+  const calculateOptimalHeight = () => {
+    const baseHeight = 120; // Header + padding
+    const itemHeight = 140; // Height per certification item
+    const maxHeight = 400; // Maximum height
+    const minHeight = 200; // Minimum height
+    
+    const calculatedHeight = baseHeight + (certifications.length * itemHeight);
+    return Math.min(maxHeight, Math.max(minHeight, calculatedHeight));
+  };
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -253,32 +331,60 @@ const CertificationsPopover: React.FC<CertificationsPopoverProps> = ({
     const handleScroll = () => {
       if (popoverRef.current && triggerRef.current) {
         const triggerRect = triggerRef.current.getBoundingClientRect();
-        const popoverHeight = 280; // Reduced height for better fit
         const viewportHeight = window.innerHeight;
+        const viewportWidth = window.innerWidth;
+        
+        // Calculate optimal height based on content
+        const optimalHeight = calculateOptimalHeight();
+        const popoverHeight = Math.min(optimalHeight, viewportHeight - 40); // Leave 40px margin
+        const popoverWidth = 384; // Fixed width
+        
         const spaceBelow = viewportHeight - triggerRect.bottom;
         const spaceAbove = triggerRect.top;
+        const spaceRight = viewportWidth - triggerRect.left;
+        const spaceLeft = triggerRect.right;
         
-        // Determine if we should position above or below
-        // Position above if there's not enough space below AND there's more space above
-        const shouldPositionAbove = spaceBelow < popoverHeight + 20 && spaceAbove > spaceBelow;
+        let topPosition: number;
+        let leftPosition: number;
         
-        if (shouldPositionAbove) {
-          // Position above the button with some margin
-          const topPosition = Math.max(10, triggerRect.top - popoverHeight - 10);
-          popoverRef.current.style.top = `${topPosition}px`;
+        // Determine vertical position
+        if (spaceBelow >= popoverHeight + 20) {
+          // Enough space below - position below
+          topPosition = triggerRect.bottom + 5;
+        } else if (spaceAbove >= popoverHeight + 20) {
+          // Not enough space below but enough above - position above
+          topPosition = triggerRect.top - popoverHeight - 5;
         } else {
-          // Position below the button (default)
-          const bottomPosition = Math.min(viewportHeight - popoverHeight - 10, triggerRect.bottom + 5);
-          popoverRef.current.style.top = `${bottomPosition}px`;
+          // Not enough space in either direction - center vertically
+          topPosition = Math.max(10, (viewportHeight - popoverHeight) / 2);
         }
         
-        popoverRef.current.style.left = `${Math.max(10, triggerRef.current.getBoundingClientRect().left - 180)}px`;
+        // Determine horizontal position
+        if (spaceRight >= popoverWidth + 20) {
+          // Enough space to the right - position to the right
+          leftPosition = triggerRect.left + 5;
+        } else if (spaceLeft >= popoverWidth + 20) {
+          // Not enough space to the right but enough to the left - position to the left
+          leftPosition = triggerRect.right - popoverWidth - 5;
+        } else {
+          // Not enough space on either side - center horizontally
+          leftPosition = Math.max(10, (viewportWidth - popoverWidth) / 2);
+        }
+        
+        // Ensure popover stays within viewport bounds
+        topPosition = Math.max(10, Math.min(topPosition, viewportHeight - popoverHeight - 10));
+        leftPosition = Math.max(10, Math.min(leftPosition, viewportWidth - popoverWidth - 10));
+        
+        popoverRef.current.style.top = `${topPosition}px`;
+        popoverRef.current.style.left = `${leftPosition}px`;
+        popoverRef.current.style.height = `${popoverHeight}px`;
       }
     };
 
     if (isOpen) {
       document.addEventListener("mousedown", handleClickOutside);
       window.addEventListener("scroll", handleScroll, true);
+      window.addEventListener("resize", handleScroll);
       // Initial positioning
       handleScroll();
     }
@@ -286,6 +392,7 @@ const CertificationsPopover: React.FC<CertificationsPopoverProps> = ({
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
       window.removeEventListener("scroll", handleScroll, true);
+      window.removeEventListener("resize", handleScroll);
     };
   }, [isOpen, onClose, triggerRef]);
 
@@ -296,23 +403,50 @@ const CertificationsPopover: React.FC<CertificationsPopoverProps> = ({
       <div className="absolute inset-0" onClick={onClose} />
       <div
         ref={popoverRef}
-        className="absolute bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-4 max-w-lg w-96 z-10 max-h-80"
+        className="absolute bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-4 max-w-lg w-96 z-10"
         style={{
           top: triggerRef.current ? (() => {
             const triggerRect = triggerRef.current.getBoundingClientRect();
-            const popoverHeight = 280;
             const viewportHeight = window.innerHeight;
+            const viewportWidth = window.innerWidth;
+            const popoverHeight = 300; // Initial estimate
+            const popoverWidth = 384; // Initial estimate
+            
             const spaceBelow = viewportHeight - triggerRect.bottom;
             const spaceAbove = triggerRect.top;
-            const shouldPositionAbove = spaceBelow < popoverHeight + 20 && spaceAbove > spaceBelow;
             
-            if (shouldPositionAbove) {
-              return Math.max(10, triggerRect.top - popoverHeight - 10);
+            let topPosition: number;
+            
+            if (spaceBelow >= popoverHeight + 20) {
+              topPosition = triggerRect.bottom + 5;
+            } else if (spaceAbove >= popoverHeight + 20) {
+              topPosition = triggerRect.top - popoverHeight - 5;
             } else {
-              return Math.min(viewportHeight - popoverHeight - 10, triggerRect.bottom + 5);
+              topPosition = Math.max(10, (viewportHeight - popoverHeight) / 2);
             }
+            
+            return Math.max(10, Math.min(topPosition, viewportHeight - popoverHeight - 10));
           })() : 0,
-          left: triggerRef.current ? Math.max(10, triggerRef.current.getBoundingClientRect().left - 180) : 0,
+          left: triggerRef.current ? (() => {
+            const triggerRect = triggerRef.current.getBoundingClientRect();
+            const viewportWidth = window.innerWidth;
+            const popoverWidth = 384;
+            
+            const spaceRight = viewportWidth - triggerRect.left;
+            const spaceLeft = triggerRect.right;
+            
+            let leftPosition: number;
+            
+            if (spaceRight >= popoverWidth + 20) {
+              leftPosition = triggerRect.left + 5;
+            } else if (spaceLeft >= popoverWidth + 20) {
+              leftPosition = triggerRect.right - popoverWidth - 5;
+            } else {
+              leftPosition = Math.max(10, (viewportWidth - popoverWidth) / 2);
+            }
+            
+            return Math.max(10, Math.min(leftPosition, viewportWidth - popoverWidth - 10));
+          })() : 0,
         }}
       >
         <div className="flex items-center justify-between mb-4">
