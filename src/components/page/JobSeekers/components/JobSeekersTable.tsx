@@ -95,7 +95,22 @@ const LicensesPopover: React.FC<LicensesPopoverProps> = ({ licenses, isOpen, onC
     const handleScroll = () => {
       if (popoverRef.current && triggerRef.current) {
         const triggerRect = triggerRef.current.getBoundingClientRect();
-        popoverRef.current.style.top = `${triggerRect.bottom + 5}px`;
+        const popoverHeight = 320; // Approximate height of the popover
+        const viewportHeight = window.innerHeight;
+        const spaceBelow = viewportHeight - triggerRect.bottom;
+        const spaceAbove = triggerRect.top;
+        
+        // Determine if we should position above or below
+        const shouldPositionAbove = spaceBelow < popoverHeight && spaceAbove > popoverHeight;
+        
+        if (shouldPositionAbove) {
+          // Position above the button
+          popoverRef.current.style.top = `${triggerRect.top - popoverHeight - 5}px`;
+        } else {
+          // Position below the button (default)
+          popoverRef.current.style.top = `${triggerRect.bottom + 5}px`;
+        }
+        
         popoverRef.current.style.left = `${Math.max(10, triggerRect.left - 180)}px`;
       }
     };
@@ -122,7 +137,15 @@ const LicensesPopover: React.FC<LicensesPopoverProps> = ({ licenses, isOpen, onC
         ref={popoverRef}
         className="absolute bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-4 max-w-lg w-96 z-10"
         style={{
-          top: triggerRef.current ? triggerRef.current.getBoundingClientRect().bottom + 5 : 0,
+          top: triggerRef.current ? (() => {
+            const triggerRect = triggerRef.current.getBoundingClientRect();
+            const popoverHeight = 320;
+            const viewportHeight = window.innerHeight;
+            const spaceBelow = viewportHeight - triggerRect.bottom;
+            const spaceAbove = triggerRect.top;
+            const shouldPositionAbove = spaceBelow < popoverHeight && spaceAbove > popoverHeight;
+            return shouldPositionAbove ? triggerRect.top - popoverHeight - 5 : triggerRect.bottom + 5;
+          })() : 0,
           left: triggerRef.current ? Math.max(10, triggerRef.current.getBoundingClientRect().left - 180) : 0,
         }}
       >
@@ -222,7 +245,22 @@ const CertificationsPopover: React.FC<CertificationsPopoverProps> = ({
     const handleScroll = () => {
       if (popoverRef.current && triggerRef.current) {
         const triggerRect = triggerRef.current.getBoundingClientRect();
-        popoverRef.current.style.top = `${triggerRect.bottom + 5}px`;
+        const popoverHeight = 320; // Approximate height of the popover
+        const viewportHeight = window.innerHeight;
+        const spaceBelow = viewportHeight - triggerRect.bottom;
+        const spaceAbove = triggerRect.top;
+        
+        // Determine if we should position above or below
+        const shouldPositionAbove = spaceBelow < popoverHeight && spaceAbove > popoverHeight;
+        
+        if (shouldPositionAbove) {
+          // Position above the button
+          popoverRef.current.style.top = `${triggerRect.top - popoverHeight - 5}px`;
+        } else {
+          // Position below the button (default)
+          popoverRef.current.style.top = `${triggerRect.bottom + 5}px`;
+        }
+        
         popoverRef.current.style.left = `${Math.max(10, triggerRect.left - 180)}px`;
       }
     };
@@ -249,7 +287,15 @@ const CertificationsPopover: React.FC<CertificationsPopoverProps> = ({
         ref={popoverRef}
         className="absolute bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-4 max-w-lg w-96 z-10"
         style={{
-          top: triggerRef.current ? triggerRef.current.getBoundingClientRect().bottom + 5 : 0,
+          top: triggerRef.current ? (() => {
+            const triggerRect = triggerRef.current.getBoundingClientRect();
+            const popoverHeight = 320;
+            const viewportHeight = window.innerHeight;
+            const spaceBelow = viewportHeight - triggerRect.bottom;
+            const spaceAbove = triggerRect.top;
+            const shouldPositionAbove = spaceBelow < popoverHeight && spaceAbove > popoverHeight;
+            return shouldPositionAbove ? triggerRect.top - popoverHeight - 5 : triggerRect.bottom + 5;
+          })() : 0,
           left: triggerRef.current ? Math.max(10, triggerRef.current.getBoundingClientRect().left - 180) : 0,
         }}
       >
