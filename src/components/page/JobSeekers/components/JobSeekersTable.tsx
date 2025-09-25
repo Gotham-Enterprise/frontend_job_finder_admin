@@ -604,7 +604,7 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
                         <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{jobSeeker.email}</p>
                       )}
                       <Link
-                        href={`/admin/applications?name=${encodeURIComponent(jobSeeker.name.split(" ")[0])}`}
+                        href={`/admin/applications?name=${jobSeeker.id}`}
                         className="text-sm text-blue-500 dark:text-blue-500 hover:text-brand-500 dark:hover:text-brand-400 cursor-pointer transition-colors duration-200"
                       >
                         {jobSeeker.jobApplications} applications
