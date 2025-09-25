@@ -92,12 +92,24 @@ const LicensesPopover: React.FC<LicensesPopoverProps> = ({ licenses, isOpen, onC
       }
     };
 
+    const handleScroll = () => {
+      if (popoverRef.current && triggerRef.current) {
+        const triggerRect = triggerRef.current.getBoundingClientRect();
+        popoverRef.current.style.top = `${triggerRect.bottom + 5}px`;
+        popoverRef.current.style.left = `${Math.max(10, triggerRect.left - 180)}px`;
+      }
+    };
+
     if (isOpen) {
       document.addEventListener("mousedown", handleClickOutside);
+      window.addEventListener("scroll", handleScroll, true);
+      // Initial positioning
+      handleScroll();
     }
 
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
+      window.removeEventListener("scroll", handleScroll, true);
     };
   }, [isOpen, onClose, triggerRef]);
 
@@ -207,12 +219,24 @@ const CertificationsPopover: React.FC<CertificationsPopoverProps> = ({
       }
     };
 
+    const handleScroll = () => {
+      if (popoverRef.current && triggerRef.current) {
+        const triggerRect = triggerRef.current.getBoundingClientRect();
+        popoverRef.current.style.top = `${triggerRect.bottom + 5}px`;
+        popoverRef.current.style.left = `${Math.max(10, triggerRect.left - 180)}px`;
+      }
+    };
+
     if (isOpen) {
       document.addEventListener("mousedown", handleClickOutside);
+      window.addEventListener("scroll", handleScroll, true);
+      // Initial positioning
+      handleScroll();
     }
 
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
+      window.removeEventListener("scroll", handleScroll, true);
     };
   }, [isOpen, onClose, triggerRef]);
 
