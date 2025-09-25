@@ -599,10 +599,7 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
     setSelectedJobSeekerId(null);
   };
 
-  const openShareModal = (jobSeeker: any) => {
-    setSelectedJobSeekerForShare(jobSeeker);
-    setShareModalOpen(true);
-  };
+
 
   const closeShareModal = () => {
     setShareModalOpen(false);
