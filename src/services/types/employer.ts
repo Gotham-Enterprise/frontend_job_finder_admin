@@ -20,6 +20,8 @@ export interface Employer {
   zipCode?: string;
   country?: string;
   jobPostCount: number;
+  totalApplications: number;
+  totalJobViews: number;
   dateJoined: string;
   lastActivity: string;
   status: string;
