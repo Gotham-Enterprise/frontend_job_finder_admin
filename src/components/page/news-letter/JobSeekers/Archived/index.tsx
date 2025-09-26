@@ -57,9 +57,7 @@ const staticEmailData: EmailData[] = [
 export default function ArchivedNewsletters() {
   return (
     <div>
-      <h2 className="text-xl font-semibold mb-4">Archived Newsletters</h2>
-      <p className="mb-6">Here you can view and manage archived newsletters for job seekers.</p>
-
+      <h2 className="text-xl font-semibold mb-4">Archived</h2>
       <div className="overflow-x-auto">
         <Table className="min-w-full bg-white dark:bg-gray-800 shadow-sm rounded-lg">
           <TableHeader>
@@ -121,9 +119,9 @@ export default function ArchivedNewsletters() {
                   {new Date(email.publishedDate).toLocaleDateString()}
                 </TableCell>
                 <TableCell className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <Button variant="outline" size="sm">
+                  <button className="px-4 py-1 border-primary border transparent text-primary rounded-sm">
                     Restore
-                  </Button>
+                  </button>
                 </TableCell>
               </TableRow>
             ))}

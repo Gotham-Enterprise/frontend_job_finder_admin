@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { Table, TableHeader, TableBody, TableRow, TableCell } from "../../../../ui/table";
-import Button from "../../../../ui/button/Button";
 
 interface EmailData {
   id: string;
@@ -57,7 +56,7 @@ const staticEmailData: EmailData[] = [
 export default function DraftsNewsletters() {
   return (
     <div>
-      <h2 className="text-xl font-semibold mb-4">Draft News Letter</h2>
+      <h2 className="text-xl font-semibold mb-4">Draft</h2>
 
       <div className="overflow-x-auto">
         <Table className="min-w-full bg-white dark:bg-gray-800 shadow-sm rounded-lg">
@@ -120,9 +119,9 @@ export default function DraftsNewsletters() {
                   {email.publishedDate}
                 </TableCell>
                 <TableCell className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <Button variant="outline" size="sm">
+                  <button className="px-4 py-1 border-primary border transparent text-primary rounded-sm">
                     Publish
-                  </Button>
+                  </button>
                 </TableCell>
               </TableRow>
             ))}

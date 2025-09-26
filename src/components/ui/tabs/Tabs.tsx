@@ -1,5 +1,4 @@
-import React, { createContext, useContext, ReactNode } from 'react';
-
+import React, { createContext, useContext, ReactNode } from "react";
 
 interface TabsContextType {
   activeTab: string;
@@ -79,7 +78,7 @@ const TabsTrigger: React.FC<TabsTriggerProps> = ({ value, children, className = 
         ${
           isActive
             ? activeClassName ||
-              "text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400 bg-blue-50/50 dark:bg-blue-900/20"
+              "text-primary dark:text-primary border-b-2 border-primary dark:border-primary bg-primary-50/50 dark:bg-primary-900/20"
             : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50"
         }
         ${className}

@@ -1,8 +1,6 @@
 import React, { useState } from "react";
 import { Table, TableHeader, TableBody, TableRow, TableCell } from "../../../../ui/table";
-import { Dropdown } from "../../../../ui/dropdown/Dropdown";
-import { DropdownItem } from "../../../../ui/dropdown/DropdownItem";
-import { DotsIcon } from "../../../../ui/icons";
+import Button from "../../../../ui/button/Button";
 
 interface EmailData {
   id: string;
