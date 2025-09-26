@@ -10,7 +10,7 @@ import SentNewsletters from "./Sent";
 export default function JobSeekersNewsletters() {
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6">Job Seekers Newsletters</h1>
+      <h1 className="text-2xl font-bold mb-6">Job Seekers News Letter</h1>
 
       <Tabs defaultValue="all-emails" className="w-full">
         <TabsList className="grid w-full grid-cols-4">
