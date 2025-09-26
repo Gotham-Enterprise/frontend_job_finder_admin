@@ -14,6 +14,7 @@ export interface UserPermissions {
   coupons: Permission;
   blog: Permission;
   careers: Permission;
+  newsLetter: Permission;
 }
 
 export interface CreateUserFormData {
@@ -31,14 +32,15 @@ export interface PermissionModule {
 }
 
 export const PERMISSION_MODULES: PermissionModule[] = [
-  { key: 'tickets', label: 'Tickets' },
-  { key: 'jobSeekers', label: 'Job Seekers' },
-  { key: 'employers', label: 'Employers' },
-  { key: 'jobs', label: 'Jobs' },
-  { key: 'applications', label: 'Applications' },
-  { key: 'coupons', label: 'Coupons' },
-  { key: 'blog', label: 'Blog' },
-  { key: 'careers', label: 'Careers' },
+  { key: "tickets", label: "Tickets" },
+  { key: "jobSeekers", label: "Job Seekers" },
+  { key: "employers", label: "Employers" },
+  { key: "jobs", label: "Jobs" },
+  { key: "applications", label: "Applications" },
+  { key: "coupons", label: "Coupons" },
+  { key: "blog", label: "Blog" },
+  { key: "careers", label: "Careers" },
+  { key: "newsLetter", label: "News Letter" },
 ];
 
 export const DEFAULT_PERMISSIONS: UserPermissions = {
@@ -50,11 +52,12 @@ export const DEFAULT_PERMISSIONS: UserPermissions = {
   coupons: { view: true, create: false, update: false, delete: false },
   blog: { view: true, create: false, update: false, delete: false },
   careers: { view: true, create: false, update: false, delete: false },
+  newsLetter: { view: true, create: true, update: true, delete: true },
 };
 
 export const ROLE_OPTIONS = [
-  { value: 'manager', label: 'Manager' },
-  { value: 'user', label: 'User' },
-  { value: 'content-manager', label: 'Content Creator' },
-  { value: 'viewer', label: 'Viewer' },
+  { value: "manager", label: "Manager" },
+  { value: "user", label: "User" },
+  { value: "content-manager", label: "Content Creator" },
+  { value: "viewer", label: "Viewer" },
 ];

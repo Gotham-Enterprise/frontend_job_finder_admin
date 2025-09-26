@@ -1,4 +1,4 @@
-import { UserPermissions } from '@/services/types/permissions';
+import { UserPermissions } from "@/services/types/permissions";
 
 interface ApiRolePermission {
   id: string;
@@ -27,7 +27,6 @@ interface ApiUserData {
 
 export function convertApiPermissionsToUserPermissions(userData: ApiUserData): UserPermissions {
   const rolePermissions = userData.adminRoleAccess.rolePermissions;
-  
 
   // Initialize with default false permissions
   const userPermissions: UserPermissions = {
@@ -39,40 +38,42 @@ export function convertApiPermissionsToUserPermissions(userData: ApiUserData): U
     coupons: { view: false, create: false, update: false, delete: false },
     blog: { view: false, create: false, update: false, delete: false },
     careers: { view: false, create: false, update: false, delete: false },
+    newsLetter: { view: true, create: true, update: true, delete: true },
   };
 
   const permissionMapping: Record<string, keyof UserPermissions> = {
-    'Job Seekers Management': 'jobSeekers',
-    'Employers Management': 'employers',
-    'Jobs Management': 'jobs',
-    'Applications Management': 'applications',
-    'Blog Management': 'blog',
-    'Careers Management': 'careers',
-    'Tickets Management': 'tickets',
-    'Coupons Management': 'coupons',
+    "Job Seekers Management": "jobSeekers",
+    "Employers Management": "employers",
+    "Jobs Management": "jobs",
+    "Applications Management": "applications",
+    "Blog Management": "blog",
+    "Careers Management": "careers",
+    "Tickets Management": "tickets",
+    "Coupons Management": "coupons",
     // Also support the old format for backward compatibility
-    'Job Seekers': 'jobSeekers',
-    'Employers': 'employers',
-    'Jobs': 'jobs',
-    'Applications': 'applications',
-    'Blog': 'blog',
-    'Careers': 'careers',
-    'Tickets': 'tickets',
-    'Coupons': 'coupons',
+    "Job Seekers": "jobSeekers",
+    Employers: "employers",
+    Jobs: "jobs",
+    Applications: "applications",
+    Blog: "blog",
+    Careers: "careers",
+    Tickets: "tickets",
+    Coupons: "coupons",
+    "News Letter": "newsLetter",
   };
 
   // Convert API permissions to our format
   rolePermissions.forEach((apiPermission) => {
     // The API data structure shows the permission name is directly in apiPermission.name, not apiPermission.permission.name
     const permissionName = apiPermission.name || (apiPermission.permission && apiPermission.permission.name);
-    
+
     if (!permissionName) {
-      console.warn('Permission name is missing for:', apiPermission);
+      console.warn("Permission name is missing for:", apiPermission);
       return;
     }
-    
+
     const moduleName = permissionMapping[permissionName];
-    
+
     if (moduleName && moduleName in userPermissions) {
       userPermissions[moduleName] = {
         view: apiPermission.view,
@@ -81,29 +82,25 @@ export function convertApiPermissionsToUserPermissions(userData: ApiUserData): U
         delete: apiPermission.delete,
       };
     } else {
-      console.warn('Unknown permission name:', permissionName, 'Available mappings:', Object.keys(permissionMapping));
+      console.warn("Unknown permission name:", permissionName, "Available mappings:", Object.keys(permissionMapping));
     }
   });
-
 
   return userPermissions;
 }
 
-
 export function hasAnyModulePermission(permissions: UserPermissions, module: keyof UserPermissions): boolean {
   const modulePermissions = permissions[module];
-  return Object.values(modulePermissions).some(permission => permission);
+  return Object.values(modulePermissions).some((permission) => permission);
 }
 
-
 export function hasPermission(
-  permissions: UserPermissions, 
-  module: keyof UserPermissions, 
+  permissions: UserPermissions,
+  module: keyof UserPermissions,
   action: keyof UserPermissions[keyof UserPermissions]
 ): boolean {
   return permissions[module][action];
 }
-
 
 export function getUserRole(userData: ApiUserData): { id: number; name: string } {
   return {
