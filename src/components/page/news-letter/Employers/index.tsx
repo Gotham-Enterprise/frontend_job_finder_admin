@@ -20,7 +20,7 @@ export default function EmployersNewsletters() {
 
       <Tabs defaultValue="all-emails" className="w-full">
         <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="all-emails">All Emails</TabsTrigger>
+          <TabsTrigger value="all-emails">News Letter</TabsTrigger>
           <TabsTrigger value="sent">Sent</TabsTrigger>
           <TabsTrigger value="drafts">Drafts</TabsTrigger>
           <TabsTrigger value="archived">Archived</TabsTrigger>

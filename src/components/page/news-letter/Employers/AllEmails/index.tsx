@@ -84,7 +84,7 @@ export default function AllEmailsNewsletters() {
   };
   return (
     <div>
-      <h2 className="text-xl font-semibold mb-4">All Emails</h2>
+      <h2 className="text-xl font-semibold mb-4">All News Letter</h2>
       <div>
         <Table className="min-w-full bg-white dark:bg-gray-800 shadow-sm rounded-lg">
           <TableHeader>
