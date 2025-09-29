@@ -4,7 +4,7 @@ import { ApexOptions } from "apexcharts";
 import dynamic from "next/dynamic";
 import { useQuery } from "@tanstack/react-query";
 import { dashboardApi } from "../../services/api/dashboard";
-import { useOccupations } from "../../services/hooks/useOccupations";
+import { jobCreationApi } from "../../services/api/jobCreation";
 import { TrendType, DailyTrendData, MonthlyTrendData, QuarterlyTrendData } from "../../services/types/dashboard";
 import Select from "../form/Select";
 import { CalenderIcon } from "@/icons";
@@ -20,8 +20,13 @@ export default function CategoryDistribution() {
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
   const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth() + 1);
 
-  // Fetch occupations
-  const { data: occupationsData, isLoading: occupationsLoading } = useOccupations();
+  // Fetch occupations (using API endpoint that returns occupations with specialties)
+  const { data: occupationsData, isLoading: occupationsLoading } = useQuery({
+    queryKey: ["occupationsWithSpecialties"],
+    queryFn: () => jobCreationApi.getOccupationsWithSpecialties(),
+    // keep enabled true so it fetches on mount
+    enabled: true,
+  });
 
   // Fetch application category data
   const {
