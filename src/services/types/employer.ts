@@ -7,6 +7,7 @@ export interface EmployerUpdateData {
   country: string;
   zipCode: string;
   phoneNumber: string;
+  uploadProfilePicture?: File;
 }
 
 export interface Employer {
@@ -14,10 +15,19 @@ export interface Employer {
   companyName: string;
   email: string;
   state: string;
+  city?: string;
+  address?: string;
+  zipCode?: string;
+  country?: string;
   jobPostCount: number;
+  totalApplications: number;
+  totalJobViews: number;
   dateJoined: string;
   lastActivity: string;
   status: string;
+  currentPlan?: string;
+  currentPlanId?: number;
+  avatarUrl?: string;
 }
 
 export interface EmployerFilters {
@@ -76,10 +86,17 @@ export interface EmployerDetails {
   city: string;
   state: string;
   country: string;
+  zipCode: string;
   dateJoined: string;
   lastActivity: string;
   status: string;
   jobPost: JobPost[];
+  avatarUrl?: string;
+  profilePicture?: {
+    fileName: string;
+    url: string;
+    expiresAt: string;
+  };
 }
 
 export interface EmployerDetailsResponse {

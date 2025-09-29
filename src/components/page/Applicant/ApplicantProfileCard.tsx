@@ -123,7 +123,7 @@ export default function ApplicantProfileCard({ applicant, onViewDocument, isView
                     <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
                         {applicant.name}
                     </h2>
-                    <div className="flex items-center items-center justify-center gap-2">
+                    <div className="flex items-center justify-center gap-2">
                         {applicant.jobTitle && (
                             <span className="inline-block px-3 py-1 text-sm font-medium text-blue-600 bg-blue-100 rounded-full dark:bg-blue-900 dark:text-blue-300">
                                 {applicant.jobTitle}

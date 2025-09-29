@@ -4,11 +4,14 @@ import { useSidebar } from "@/context/SidebarContext";
 import { AutoLogoutProvider } from "@/context/AutoLogoutContext";
 import { InactivityStatus } from "@/components/InactivityStatus";
 import AppHeader from "@/layout/AppHeader";
-import AppSidebar from "@/layout/AppSidebar";
+import PermissionAwareSidebar from "@/layout/PermissionAwareSidebar";
 import Backdrop from "@/layout/Backdrop";
+import AuthInitializer from "@/components/auth/AuthInitializer";
+import PermissionGuard from "@/components/guards/PermissionGuard";
 import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { authUtils } from "@/services/utils/authUtils";
+import { useCurrentUser } from "@/services/hooks/useAuth";
 
 export default function AdminLayout({
   children,
@@ -23,30 +26,38 @@ export default function AdminLayout({
     : "lg:ml-[90px]";
 
   const router = useRouter();
+  
+  // Fetch current user data to keep auth state fresh
+  useCurrentUser();
+  
   useEffect(() => {
     if (typeof window !== "undefined" && !authUtils.isAuthenticated()) {
       router.replace("/login");
     }
   }, [router]);
   return (
-    <AutoLogoutProvider>
-      <div className="min-h-screen xl:flex">
-        <AppSidebar />
-        <Backdrop />       
-         <div
-          className={`flex-1 transition-all  duration-300 ease-in-out ${mainContentMargin}`}
-        >
-          <AppHeader />
-          <InactivityStatus 
-            className="mx-4 mb-4 md:mx-6 md:mb-6" 
-            showWarning={true}
-            warningThreshold={0.25}
-          />
-          <div className="p-4 mx-auto md:p-6">
-            {children}
+    <AuthInitializer>
+      <AutoLogoutProvider>
+        <div className="min-h-screen xl:flex">
+          <PermissionAwareSidebar />
+          <Backdrop />       
+           <div
+            className={`flex-1 transition-all  duration-300 ease-in-out ${mainContentMargin}`}
+          >
+            <AppHeader />
+            <InactivityStatus 
+              className="mx-4 mb-4 md:mx-6 md:mb-6" 
+              showWarning={true}
+              warningThreshold={0.25}
+            />
+            <div className="p-4 mx-auto md:p-6">
+              <PermissionGuard showFallback={true}>
+                {children}
+              </PermissionGuard>
+            </div>
           </div>
         </div>
-      </div>
-    </AutoLogoutProvider>
+      </AutoLogoutProvider>
+    </AuthInitializer>
   );
 }
