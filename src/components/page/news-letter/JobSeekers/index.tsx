@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef } from "react";
+import Link from "next/link";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Modal } from "@/components/ui/modal";
 import AllEmailsNewsletters from "./AllEmails";
@@ -52,7 +53,13 @@ export default function JobSeekersNewsletters() {
           >
             Import Emails
           </button>
-          <button className="px-4 py-1 bg-primary text-white rounded-sm">Create New Newsletter</button>
+          {/* Use Link so AdminLayout remains mounted */}
+          <Link
+            href="/admin/news-letter/job-seekers/create"
+            className="px-4 py-1 bg-primary text-white rounded-sm inline-block"
+          >
+            Create New Newsletter
+          </Link>
         </div>
       </div>
       <Tabs defaultValue="all-emails" className="w-full">

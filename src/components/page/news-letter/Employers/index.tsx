@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef } from "react";
+import Link from "next/link";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Modal } from "@/components/ui/modal";
 import AllEmailsNewsletters from "./AllEmails";
@@ -52,7 +53,8 @@ export default function EmployersNewsletters() {
           >
             Import Emails
           </button>
-          <button className="px-4 py-1 bg-primary text-white rounded-sm">Create New Newsletter</button>
+          {/* Use Next.js Link so navigation keeps layout (header/sidebar) */}
+          <Link href="/admin/news-letter/employers/create" className="px-4 py-1 bg-primary text-white rounded-sm inline-block">Create New Newsletter</Link>
         </div>
       </div>
 
