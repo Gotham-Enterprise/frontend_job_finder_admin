@@ -9,6 +9,7 @@ export interface JobSeekerUpdateData {
   phoneNumber: string;
   occupationId: number;
   specialtyId?: number;
+  uploadProfilePicture?: File;
 }
 
 export interface JobSeeker {
@@ -154,4 +155,13 @@ export interface JobSeekerDetailsResponse {
   success: boolean;
   data: JobSeekerDetails;
   message?: string;
+}
+
+export interface ShareResumeRequest {
+  email: string;
+}
+
+export interface ShareResumeResponse {
+  success: boolean;
+  message: string;
 }

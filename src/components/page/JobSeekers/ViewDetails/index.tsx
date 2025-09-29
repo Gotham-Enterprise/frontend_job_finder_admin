@@ -18,31 +18,32 @@ import { DeactivateUserModal, DeactivationHistoryModal } from "../components";
 import BackToListButton from "@/components/ui/BackToListButton";
 import { DocsIcon } from "@/icons";
 import { MdOutlineLock } from "react-icons/md";
+import PermissionWrapper from "@/components/common/PermissionWrapper";
 interface ViewDetailsProps {
   id: string;
 }
 
 export default function ViewDetails({ id }: ViewDetailsProps) {
   const { data, isLoading, error } = useJobSeekerDetails(id);
-  
+
   const [deactivateModal, setDeactivateModal] = useState<{
     isOpen: boolean;
     userId: string;
     userName: string;
   }>({
     isOpen: false,
-    userId: '',
-    userName: '',
+    userId: "",
+    userName: "",
   });
-  
+
   const [historyModal, setHistoryModal] = useState<{
     isOpen: boolean;
     userId: string;
     userName: string;
   }>({
     isOpen: false,
-    userId: '',
-    userName: '',
+    userId: "",
+    userName: "",
   });
 
   const openDeactivateModal = () => {
@@ -58,8 +59,8 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
   const closeDeactivateModal = () => {
     setDeactivateModal({
       isOpen: false,
-      userId: '',
-      userName: '',
+      userId: "",
+      userName: "",
     });
   };
 
@@ -76,8 +77,8 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
   const closeHistoryModal = () => {
     setHistoryModal({
       isOpen: false,
-      userId: '',
-      userName: '',
+      userId: "",
+      userName: "",
     });
   };
 
@@ -189,7 +190,7 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
           <BackToListButton href="/admin/job-seekers" preserveState={true}>
             Back to Job Seekers
           </BackToListButton>
-          
+
           {/* Action Buttons */}
           <div className="flex flex-wrap gap-3">
             {/* <button
@@ -199,15 +200,17 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
               <DocsIcon className="w-4 h-4" />
               View History
             </button> */}
-            
-            {jobSeeker.status === 'active' && (
-              <button
-                onClick={openDeactivateModal}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-yellow-600 bg-yellow-50 hover:bg-yellow-100 dark:bg-yellow-900/20 dark:text-yellow-400 dark:hover:bg-yellow-900/30 rounded-lg transition-colors"
-              >
-                <MdOutlineLock className="w-4 h-4 text-yellow-600" />
-                Deactivate Account
-              </button>
+
+            {jobSeeker.status === "active" && (
+              <PermissionWrapper module="jobseekers" action="edit">
+                <button
+                  onClick={openDeactivateModal}
+                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-yellow-600 bg-yellow-50 hover:bg-yellow-100 dark:bg-yellow-900/20 dark:text-yellow-400 dark:hover:bg-yellow-900/30 rounded-lg transition-colors"
+                >
+                  <MdOutlineLock className="w-4 h-4 text-yellow-600" />
+                  Deactivate Account
+                </button>
+              </PermissionWrapper>
             )}
           </div>
         </div>
@@ -230,12 +233,14 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
 
           <Languages languages={jobSeeker.languages} getProficiencyLabel={getProficiencyLabel} />
 
-          <PermanentDeletion
-            jobSeekerId={id}
-            jobSeekerName={jobSeeker.name}
-            jobSeekerEmail={jobSeeker.email}
-            isAlreadyDeleted={jobSeeker.status === "deleted" || jobSeeker.isPermanentlyDeleted}
-          />
+          <PermissionWrapper module="jobseekers" action="edit">
+            <PermanentDeletion
+              jobSeekerId={id}
+              jobSeekerName={jobSeeker.name}
+              jobSeekerEmail={jobSeeker.email}
+              isAlreadyDeleted={jobSeeker.status === "deleted" || jobSeeker.isPermanentlyDeleted}
+            />
+          </PermissionWrapper>
         </div>
       </div>
 

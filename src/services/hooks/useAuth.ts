@@ -1,4 +1,4 @@
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { authApi } from '../api/auth';
 import { authUtils } from '../utils/authUtils';
@@ -6,10 +6,16 @@ import { LoginCredentials, AuthResponse, ForgotPasswordRequest, ResetPasswordReq
 
 export const useLogin = () => {
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (credentials: LoginCredentials) => authApi.login(credentials),
     onSuccess: (data: AuthResponse) => {
+      console.log('Login successful, saving auth state:', {
+        hasUser: !!data.data,
+        hasPermissions: !!(data.data?.adminRoleAccess?.rolePermissions?.length)
+      });
+      
       authUtils.saveAuthState({
         isAuthenticated: data.isAuthenticated,
         user: data.data,
@@ -17,22 +23,49 @@ export const useLogin = () => {
         refreshToken: data.refreshToken,
       });
       
-      router.push('/admin');
+      // Trigger immediate auth update
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('authUpdate'));
+      }
+      
+      queryClient.invalidateQueries({ queryKey: ['currentUser'] });
+      
+      // Navigate to admin with a slight delay to ensure auth state is fully processed
+      setTimeout(() => {
+        queryClient.prefetchQuery({
+          queryKey: ['currentUser'],
+          queryFn: () => authApi.getCurrentUser(),
+          staleTime: 0, 
+        });
+        
+        router.push('/admin');
+        
+        // Auto-reload after login to ensure permissions are fully loaded
+        // This prevents the sidebar timing issues on first login
+        setTimeout(() => {
+       
+          window.location.reload();
+        }, 800);
+        
+      }, 200); // Slightly longer delay to ensure everything is processed
     }
   });
 };
 
 export const useLogout = () => {
   const router = useRouter();
+  const queryClient = useQueryClient();
   
   return useMutation({
     mutationFn: () => authApi.logout(),
     onSuccess: () => {
       authUtils.forceAuthClear();
+      queryClient.clear();
       router.push('/login');
     },
     onError: () => {
       authUtils.forceAuthClear();
+      queryClient.clear();
       router.push('/login');
     }
   });
@@ -73,5 +106,41 @@ export const useTokenResetPassword = () => {
     onError: (error) => {
       return error; 
     }
+  });
+};
+
+export const useCurrentUser = () => {
+  // Use a more reactive approach for enabled
+  const isAuthenticated = authUtils.isAuthenticated();
+  
+  return useQuery({
+    queryKey: ['currentUser'],
+    queryFn: async () => {
+      const response = await authApi.getCurrentUser();
+      const userData = response?.data || response?.user || response;
+      if (userData) {
+        authUtils.updateUser(userData);
+      }
+      return response;
+    },
+    enabled: isAuthenticated,
+    staleTime: 1 * 60 * 1000, // Reduce stale time to 1 minute for more frequent updates
+    gcTime: 10 * 60 * 1000, // 10 minutes
+    retry: (failureCount, error: any) => {
+      // Don't retry if it's an auth error
+      if (error?.response?.status === 401 || error?.response?.status === 403) {
+        return false;
+      }
+      return failureCount < 2;
+    },
+    throwOnError: (error: any) => {
+      console.error('Failed to fetch current user:', error);
+      // If token is invalid, clear auth state
+      if (error?.response?.status === 401) {
+        authUtils.clearAuthState();
+        return false; // Don't throw, just clear auth
+      }
+      return false; // Don't throw errors
+    },
   });
 };

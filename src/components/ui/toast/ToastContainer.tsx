@@ -9,7 +9,7 @@ const ToastContainer: React.FC = () => {
   if (toasts.length === 0) return null;
 
   return (
-    <div className="fixed top-4 right-4 z-50 space-y-3 max-w-sm">
+    <div className="fixed top-4 right-4 z-[100000] space-y-3 max-w-sm">
       {toasts.map((toast) => (
         <ToastItem
           key={toast.id}
@@ -28,9 +28,10 @@ interface ToastItemProps {
 
 const ToastItem: React.FC<ToastItemProps> = ({ toast, onRemove }) => {  const variantClasses = {
     success: {
-      container: 'bg-green-500 text-white',
+      // Use brand primary green (from --primary) instead of generic green-500
+      container: 'bg-primary text-white',
       icon: 'text-white',
-      closeButton: 'text-white hover:text-green-100',
+      closeButton: 'text-white hover:opacity-80',
     },
     error: {
       container: 'bg-red-500 text-white',
