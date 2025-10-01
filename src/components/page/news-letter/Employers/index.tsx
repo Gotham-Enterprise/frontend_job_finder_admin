@@ -54,7 +54,9 @@ export default function EmployersNewsletters() {
             Import Emails
           </button>
           {/* Use Next.js Link so navigation keeps layout (header/sidebar) */}
-          <Link href="/admin/news-letter/employers/create" className="px-4 py-1 bg-primary text-white rounded-sm inline-block">Create New Newsletter</Link>
+          <Link href="/admin/news-letter/create" className="px-4 py-1 bg-primary text-white rounded-sm inline-block">
+            Create New Newsletter
+          </Link>
         </div>
       </div>
 

@@ -15,10 +15,7 @@ export default function JobSeekersNewsletters() {
         <h1 className="text-2xl font-bold">Job Seekers News Letter</h1>
         <div className="flex gap-4">
           {/* Use Link so AdminLayout remains mounted */}
-          <Link
-            href="/admin/news-letter/job-seekers/create"
-            className="px-4 py-1 bg-primary text-white rounded-sm inline-block"
-          >
+          <Link href="/admin/news-letter/create" className="px-4 py-1 bg-primary text-white rounded-sm inline-block">
             Create News letter
           </Link>
         </div>

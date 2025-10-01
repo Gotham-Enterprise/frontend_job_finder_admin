@@ -21,6 +21,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   // Hide Sidebar and Header on specific newsletter create pages
   const hideSidebarAndHeader =
+    pathname?.startsWith("/admin/news-letter/create") ||
     pathname?.startsWith("/admin/news-letter/job-seekers/create") ||
     pathname?.startsWith("/admin/news-letter/employers/create");
 
@@ -48,8 +49,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <Backdrop />
           <div className={`flex-1 transition-all  duration-300 ease-in-out ${mainContentMargin}`}>
             {!hideSidebarAndHeader && <AppHeader />}
-            <InactivityStatus className="mx-4 mb-4 md:mx-6 md:mb-6" showWarning={true} warningThreshold={0.25} />
-            <div className="p-4 mx-auto md:p-6">
+            {!hideSidebarAndHeader && (
+              <InactivityStatus className="mx-4 mb-4 md:mx-6 md:mb-6" showWarning={true} warningThreshold={0.25} />
+            )}
+            <div className={hideSidebarAndHeader ? "" : "p-4 mx-auto md:p-6"}>
               <PermissionGuard showFallback={true}>{children}</PermissionGuard>
             </div>
           </div>
