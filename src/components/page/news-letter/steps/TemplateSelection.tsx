@@ -2,10 +2,14 @@ import React, { useState, useMemo } from "react";
 import { NewsletterTemplate } from "../types";
 import { newsletterTemplates, templateCategories } from "../templateData";
 import { useNewsletter } from "../NewsletterContext";
+import TemplatePreview from "../components/TemplatePreview";
+import TemplateThumbnail from "../components/TemplateThumbnail";
 
 const TemplateSelection: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
+  const [previewTemplate, setPreviewTemplate] = useState<NewsletterTemplate | null>(null);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const { selectTemplate, goToStep, completeStep, updateNewsletterData } = useNewsletter();
 
   const filteredTemplates = useMemo(() => {
@@ -40,12 +44,13 @@ const TemplateSelection: React.FC = () => {
   );
 
   const onPreviewTemplate = React.useCallback((template: NewsletterTemplate) => {
-    // Open template preview in a modal or new window
-    const previewWindow = window.open("", "_blank", "width=800,height=600");
-    if (previewWindow) {
-      previewWindow.document.write(template.content);
-      previewWindow.document.close();
-    }
+    setPreviewTemplate(template);
+    setIsPreviewOpen(true);
+  }, []);
+
+  const closePreview = React.useCallback(() => {
+    setIsPreviewOpen(false);
+    setPreviewTemplate(null);
   }, []);
 
   return (
@@ -101,94 +106,15 @@ const TemplateSelection: React.FC = () => {
       </div>
 
       {/* Templates Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {/* Removed xl:grid-cols-4 for larger thumbnails */}
         {filteredTemplates.map((template: NewsletterTemplate) => (
-          <div
+          <TemplateThumbnail
             key={template.id}
-            className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-200"
-          >
-            {/* Template Thumbnail */}
-            <div className="aspect-w-16 aspect-h-12 bg-gray-100 relative group">
-              {template.id === "start-from-scratch" ? (
-                <div className="flex items-center justify-center h-48 bg-gradient-to-br from-blue-50 to-indigo-100">
-                  <div className="text-center">
-                    <svg
-                      className="mx-auto h-16 w-16 text-blue-400 mb-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={1}
-                        d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                      />
-                    </svg>
-                    <p className="text-blue-600 font-medium">Start from scratch</p>
-                  </div>
-                </div>
-              ) : (
-                <div className="h-48 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-                  <div className="text-center">
-                    <div className="w-16 h-16 bg-white rounded-lg shadow-sm mx-auto mb-2 flex items-center justify-center">
-                      <svg className="h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                        />
-                      </svg>
-                    </div>
-                    <p className="text-gray-600 text-sm font-medium">{template.name}</p>
-                  </div>
-                </div>
-              )}
-
-              {/* Overlay with action buttons */}
-              {template.id !== "start-from-scratch" && (
-                <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center space-x-2">
-                  <button
-                    onClick={() => onSelectTemplate(template)}
-                    className="bg-white text-gray-900 px-3 py-1 rounded text-sm font-medium hover:bg-gray-100 transition-colors"
-                  >
-                    Choose template
-                  </button>
-                  <button
-                    onClick={() => onPreviewTemplate(template)}
-                    className="bg-blue-600 text-white px-3 py-1 rounded text-sm font-medium hover:bg-blue-700 transition-colors"
-                  >
-                    Preview
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {/* Template Info */}
-            <div className="p-4">
-              <h3 className="font-semibold text-gray-900 mb-2">{template.name}</h3>
-              <p className="text-gray-600 text-sm mb-4">{template.description}</p>
-
-              {/* Action Buttons */}
-              <div className="flex space-x-2">
-                <button
-                  onClick={() => onSelectTemplate(template)}
-                  className="flex-1 bg-blue-600 text-white py-2 px-3 rounded text-sm font-medium hover:bg-blue-700 transition-colors"
-                >
-                  {template.id === "start-from-scratch" ? "Start Building" : "Use Template"}
-                </button>
-                {template.id !== "start-from-scratch" && (
-                  <button
-                    onClick={() => onPreviewTemplate(template)}
-                    className="px-3 py-2 border border-gray-300 text-gray-700 rounded text-sm font-medium hover:bg-gray-50 transition-colors"
-                  >
-                    Preview
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
+            template={template}
+            onSelect={() => onSelectTemplate(template)}
+            onPreview={() => onPreviewTemplate(template)}
+          />
         ))}
       </div>
 
@@ -206,6 +132,16 @@ const TemplateSelection: React.FC = () => {
           <h3 className="text-lg font-medium text-gray-900 mb-2">No templates found</h3>
           <p className="text-gray-600">Try adjusting your search or category filter.</p>
         </div>
+      )}
+
+      {/* Template Preview Modal */}
+      {previewTemplate && (
+        <TemplatePreview
+          template={previewTemplate}
+          isOpen={isPreviewOpen}
+          onClose={closePreview}
+          onSelectTemplate={onSelectTemplate}
+        />
       )}
     </div>
   );
