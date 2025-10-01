@@ -31,7 +31,7 @@ export const newsletterTemplates: NewsletterTemplate[] = [
           <!-- Header -->
           <tr>
             <td style='background:#007bff; padding:30px; text-align:center;'>
-              <img src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjQwIiB2aWV3Qm94PSIwIDAgMTAwIDQwIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjQwIiByeD0iOCIgZmlsbD0iI2ZmZmZmZiIvPgo8dGV4dCB4PSI1MCIgeT0iMjUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZm9udC13ZWlnaHQ9ImJvbGQiIGZpbGw9IiMwMDdiZmYiIHRleHQtYW5jaG9yPSJtaWRkbGUiPkdPVEhBTTwvdGV4dD4KPHN2Zz4K' alt='Company Logo' style='display:block; margin:0 auto; max-width:120px;'>
+              <img src='https://gothamenterprisesltd.com/assets/img/full_logo_dark.svg' alt='Gotham Enterprises Logo' style='display:block; margin:0 auto; max-width:200px; filter: brightness(0) invert(1); margin-bottom:20px;'>
               <h1 style='color:#ffffff; font-size:28px; margin:15px 0 5px; font-weight:bold;'>Company Newsletter</h1>
               <p style='color:#ffffff; font-size:16px; margin:0; opacity:0.9;'>Stay updated with our latest news and updates</p>
             </td>
@@ -152,6 +152,7 @@ export const newsletterTemplates: NewsletterTemplate[] = [
           <!-- Header -->
           <tr>
             <td style='background:#28a745; padding:30px; text-align:center; color:#ffffff;'>
+              <img src='https://gothamenterprisesltd.com/assets/img/full_logo_dark.svg' alt='Gotham Enterprises Logo' style='display:block; margin:0 auto; max-width:180px; filter: brightness(0) invert(1); margin-bottom:20px;'>
               <h1 style='font-size:32px; margin:0 0 10px; font-weight:bold;'>Weekly Job Opportunities</h1>
               <p style='font-size:18px; margin:0; opacity:0.9;'>Latest Openings</p>
               <p style='font-size:14px; margin:15px 0 0; opacity:0.8;'>Discover exciting career opportunities tailored for you</p>
