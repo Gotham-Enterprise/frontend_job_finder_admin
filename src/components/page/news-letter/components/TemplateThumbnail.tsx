@@ -62,7 +62,7 @@ const TemplateThumbnail: React.FC<TemplateThumbnailProps> = ({ template, onClick
   const renderThumbnailContent = () => {
     if (template.id === "start-from-scratch") {
       return (
-        <div className="flex items-center justify-center h-64 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-t-lg">
+        <div className="flex items-center justify-center h-96 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-t-lg">
           <div className="text-center">
             <svg className="mx-auto h-20 w-20 text-blue-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -75,7 +75,7 @@ const TemplateThumbnail: React.FC<TemplateThumbnailProps> = ({ template, onClick
 
     // For templates with HTML content, render the iframe preview
     return (
-      <div className="h-64 bg-white relative overflow-hidden border border-gray-200 rounded-t-lg">
+      <div className="h-96 bg-white relative overflow-hidden border border-gray-200 rounded-t-lg">
         {!thumbnailLoaded && (
           <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -85,10 +85,10 @@ const TemplateThumbnail: React.FC<TemplateThumbnailProps> = ({ template, onClick
           ref={iframeRef}
           className="w-full h-full border-0 pointer-events-none"
           style={{
-            transform: "scale(0.5)",
+            transform: "scale(0.6)",
             transformOrigin: "0 0",
-            width: "200%",
-            height: "200%",
+            width: "166.67%",
+            height: "166.67%",
           }}
           sandbox="allow-same-origin"
           title={`Preview of ${template.name}`}
