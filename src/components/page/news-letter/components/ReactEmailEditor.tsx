@@ -311,7 +311,7 @@ const ReactEmailEditor: React.FC<ReactEmailEditorProps> = ({ onDesignLoad, onLoa
                 theme: "light",
                 panels: {
                   tools: {
-                    dock: "right",
+                    dock: "left",
                   },
                 },
               },
@@ -321,19 +321,54 @@ const ReactEmailEditor: React.FC<ReactEmailEditorProps> = ({ onDesignLoad, onLoa
                 .unlayer-button-action-option[data-value="email"] {
                   display: none !important;
                 }
-                .unlayer-button-action-option[title*="Send Email"],
-                .unlayer-button-action-option[title*="send email"],
-                .unlayer-action-email,
-                [data-action="email"],
-                .email-action-button {
+                /* Hide audit panel */
+                .unlayer-audit,
+                .audit-panel,
+                [data-testid="audit-panel"],
+                .unlayer-audit-tab,
+                .audit-tab,
+                [class*="audit"]:not(.unlayer-button-action-option) {
                   display: none !important;
                 }
+                /* Hide sparkles/AI indicators */
+                .sparkle,
+                .sparkles,
+                [class*="sparkle"],
+                .ai-indicator,
+                .ai-badge,
+                .enhancement-indicator,
+                .unlayer-sparkle,
+                .tool-sparkle,
+                [data-testid*="sparkle"],
+                [aria-label*="sparkle" i],
+                .block-sparkle,
+                .tool-enhancement-badge {
+                  display: none !important;
+                }
+                /* Hide Smart Buttons / AI Magic feature */
+                .smart-buttons,
+                .ai-magic,
+                [class*="smart-button"],
+                [class*="ai-magic"],
+                .unlayer-smart-buttons,
+                .button-suggestions,
+                [data-testid*="smart-button"],
+                [aria-label*="smart button" i],
+                [aria-label*="ai magic" i],
+                .get-suggestions,
+                .magic-button,
+                .ai-suggestions-panel,
+                .smart-button-panel {
+                  display: none !important;
+                }
+                
               `,
               features: {
                 preview: true,
                 imageEditor: true,
-                stockImages: true,
+                stockImages: false, // Disable stock images to hide image picker
                 undoRedo: true,
+                audit: false, // Disable audit feature
                 textEditor: {
                   spellChecker: true,
                   emojis: true,
