@@ -11,21 +11,21 @@ const SimpleTemplateThumbnail: React.FC<SimpleTemplateThumbnailProps> = ({ templ
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 hover:shadow-lg transition-all duration-200 group">
       <div className="h-80 overflow-hidden bg-gray-50 relative">
-        {template.id === "start-from-scratch" ? (
-          <div className="flex items-center justify-center h-full">
+        {template.id === "blank" ? (
+          <div className="flex items-center justify-center h-full relative">
             <div className="text-center">
-              <svg
-                className="mx-auto h-12 w-12 text-gray-400 mb-2"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-              <p className="text-sm text-gray-500 mb-4">Blank Canvas</p>
+              <div className="mx-auto h-24 w-24 text-gray-400 mb-6 flex items-center justify-center bg-gray-100 rounded-full">
+                <img src="/images/email-empty.svg" alt="Email icon" className="h-12 w-12" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-700 mb-2">Start from scratch</h3>
+              <p className="text-sm text-gray-500 mb-6">Create your own design from scratch</p>
+            </div>
+
+            {/* Hover overlay with start building button */}
+            <div className="absolute inset-0 bg-black bg-opacity-10 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
               <button
                 onClick={onSelect}
-                className="bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700 transition-colors"
+                className="bg-primary text-white px-6 py-3 rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors transform translate-y-2 group-hover:translate-y-0 duration-200"
               >
                 Start Building
               </button>
@@ -40,11 +40,11 @@ const SimpleTemplateThumbnail: React.FC<SimpleTemplateThumbnailProps> = ({ templ
             />
 
             {/* Hover overlay with both buttons */}
-            <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
+            <div className="absolute inset-0 bg-black bg-opacity-10 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
               <div className="flex space-x-3">
                 <button
                   onClick={onSelect}
-                  className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors transform translate-y-2 group-hover:translate-y-0 duration-200"
+                  className="bg-primary text-white px-4 py-2 rounded-lg font-medium hover:bg-primary/90 transition-colors transform translate-y-2 group-hover:translate-y-0 duration-200"
                 >
                   Use Template
                 </button>
