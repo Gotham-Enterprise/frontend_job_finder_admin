@@ -6,7 +6,7 @@ import Badge from "../../../ui/badge/Badge";
 import Button from "../../../ui/button/Button";
 import TableHeading from "../../../tables/tableHeader";
 import Checkbox from "../../../form/input/Checkbox";
-import { EyeIcon, TimeIcon, PencilIcon, HorizontaLDots } from "@/icons";
+import { EyeIcon, TimeIcon, PencilIcon } from "@/icons";
 import { EmployerTableProps } from "@/services/types/EmployerTypes";
 import Avatar from "../../../ui/avatar/Avatar";
 import { EditEmployerModal } from "./EditEmployerModal";
@@ -198,62 +198,18 @@ const EmployerTable: React.FC<EmployerTableProps> = ({
                   </span>
                 </TableCell>
                 <TableCell className="py-4 px-6 text-right">
-                  <OptionsDropdown
-                    options={
-                      [
-                        // View option
-                        ...(hasPermission("employers", "view")
-                          ? [
-                              {
-                                id: "view",
-                                label: "View",
-                                icon: <EyeIcon />,
-                                onClick: () => onViewEmployer(employer.id),
-                              },
-                            ]
-                          : []),
-                        // Edit option
-                        ...(hasPermission("employers", "edit")
-                          ? [
-                              {
-                                id: "edit",
-                                label: "Edit",
-                                icon: <PencilIcon />,
-                                onClick: () => openEditModal(employer.id),
-                              },
-                            ]
-                          : []),
-                        // Edit Job option
-                        ...(hasPermission("employers", "edit")
-                          ? [
-                              {
-                                id: "edit-job",
-                                label: "Edit Job",
-                                icon: <PencilIcon />,
-                                onClick: () => {
-                                  const companyName = encodeURIComponent(employer.companyName);
-                                  router.push(`/admin/jobs?name=${companyName}`);
-                                },
-                              },
-                            ]
-                          : []),
-                      ].filter(Boolean) as DropdownOption[]
-                    }
-                    trigger={
-                      <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors">
-                        <svg
-                          className="w-5 h-5"
-                          aria-hidden="true"
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="currentColor"
-                          viewBox="0 0 4 15"
-                        >
-                          <path d="M3.5 1.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Zm0 6.041a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Zm0 5.959a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Z" />
-                        </svg>
+                  <div className="flex items-center gap-4">
+                    <PermissionWrapper module="employers" action="view">
+                      <button className="flex gap-2 text-brand-400" onClick={() => onViewEmployer(employer.id)}>
+                        <EyeIcon /> View
                       </button>
-                    }
-                    align="right"
-                  />
+                    </PermissionWrapper>
+                    <PermissionWrapper module="employers" action="edit">
+                      <button className="flex gap-2 text-brand-400" onClick={() => openEditModal(employer.id)}>
+                        <PencilIcon /> Edit
+                      </button>
+                    </PermissionWrapper>
+                  </div>
                 </TableCell>
               </TableRow>
             ))
