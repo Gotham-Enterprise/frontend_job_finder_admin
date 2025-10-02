@@ -1509,6 +1509,413 @@ table, td { color: #ffffff; } #u_body a { color: #0071e3; text-decoration: under
       schemaVersion: 16,
     },
   },
+  {
+    id: "gallery-four-images-grid",
+    name: "Four images in a grid",
+    category: "engagement" as const,
+    thumbnail: "/images/templates/healthcare-template.png",
+    description: "Elegant four-image grid layout for showcasing products or portfolio items",
+    content: `
+    <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html dir="ltr" lang="en">
+  <head>
+    <link rel="preload" as="image" href="/static/stagg-eletric-kettle.jpg" />
+    <link rel="preload" as="image" href="/static/ode-grinder.jpg" />
+    <link rel="preload" as="image" href="/static/atmos-vacuum-canister.jpg" />
+    <link rel="preload" as="image" href="/static/clyde-electric-kettle.jpg" />
+    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type" />
+    <meta name="x-apple-disable-message-reformatting" />
+    <style>
+      @font-face {
+        font-family: 'Inter';
+        font-style: normal;
+        font-weight: 400;
+        mso-font-alt: 'Helvetica';
+        src: url(https://fonts.gstatic.com/s/inter/v18/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuLyfAZ9hiA.woff2) format('woff2');
+      }
+
+      * {
+        font-family: 'Inter', Helvetica;
+      }
+    </style>
+    <style>
+      @font-face {
+        font-family: 'Inter';
+        font-style: normal;
+        font-weight: 600;
+        mso-font-alt: 'Helvetica';
+        src: url(https://fonts.gstatic.com/s/inter/v18/UcC73FwrK3iLTeHuS_fjbvMwCp50PDca1ZL7.woff2) format('woff2');
+      }
+
+      * {
+        font-family: 'Inter', Helvetica;
+      }
+    </style>
+    <style>
+      @font-face {
+        font-family: 'Inter';
+        font-style: normal;
+        font-weight: 700;
+        mso-font-alt: 'Helvetica';
+        src: url(https://fonts.gstatic.com/s/inter/v18/UcC73FwrK3iLTeHuS_fjbvMwCp50BTca1ZL7.woff2) format('woff2');
+      }
+
+      * {
+        font-family: 'Inter', Helvetica;
+      }
+    </style>
+  </head>
+  <body>
+    <!--$--><!--html--><!--head--><!--body-->
+    <table
+      border="0"
+      width="100%"
+      cellpadding="0"
+      cellspacing="0"
+      role="presentation"
+      align="center">
+      <tbody>
+        <tr>
+          <td style="margin:0;margin-left:12px;margin-right:12px">
+            <table
+              align="center"
+              width="100%"
+              border="0"
+              cellpadding="0"
+              cellspacing="0"
+              role="presentation"
+              style="max-width:37.5em;margin-left:auto;margin-right:auto;box-sizing:border-box;padding-top:1rem;padding-bottom:1rem;height:100vh">
+              <tbody>
+                <tr style="width:100%">
+                  <td>
+                    <table
+                      align="center"
+                      width="100%"
+                      border="0"
+                      cellpadding="0"
+                      cellspacing="0"
+                      role="presentation"
+                      style="margin-top:16px;margin-bottom:16px">
+                      <tbody>
+                        <tr>
+                          <td>
+                            <table
+                              align="center"
+                              width="100%"
+                              border="0"
+                              cellpadding="0"
+                              cellspacing="0"
+                              role="presentation"
+                              style="margin-top:42px">
+                              <tbody>
+                                <tr>
+                                  <td>
+                                    <table
+                                      align="center"
+                                      width="100%"
+                                      border="0"
+                                      cellpadding="0"
+                                      cellspacing="0"
+                                      role="presentation">
+                                      <tbody style="width:100%">
+                                        <tr style="width:100%">
+                                          <p
+                                            style="font-size:16px;line-height:24px;margin:0px;font-weight:600;color:rgb(79,70,229);margin-top:0px;margin-bottom:0px;margin-left:0px;margin-right:0px">
+                                            Our products
+                                          </p>
+                                          <p
+                                            style="font-size:24px;line-height:32px;margin:0px;margin-top:8px;font-weight:600;color:rgb(17,24,39);margin-bottom:0px;margin-left:0px;margin-right:0px">
+                                            Elegant Style
+                                          </p>
+                                          <p
+                                            style="font-size:16px;line-height:24px;margin-top:8px;color:rgb(107,114,128);margin-bottom:16px">
+                                            We spent two years in development to
+                                            bring you the next generation of our
+                                            award-winning home brew grinder.
+                                            From the finest pour-overs to the
+                                            coarsest cold brews, your coffee
+                                            will never be the same again.
+                                          </p>
+                                        </tr>
+                                      </tbody>
+                                    </table>
+                                  </td>
+                                </tr>
+                              </tbody>
+                            </table>
+                            <table
+                              align="center"
+                              width="100%"
+                              border="0"
+                              cellpadding="0"
+                              cellspacing="0"
+                              role="presentation"
+                              style="margin-top:16px">
+                              <tbody>
+                                <tr>
+                                  <td>
+                                    <table
+                                      align="center"
+                                      width="100%"
+                                      border="0"
+                                      cellpadding="0"
+                                      cellspacing="0"
+                                      role="presentation"
+                                      style="margin-top:16px">
+                                      <tbody style="width:100%">
+                                        <tr style="width:100%">
+                                          <td
+                                            data-id="__react-email-column"
+                                            style="width:50%;padding-right:8px">
+                                            <a
+                                              href="#"
+                                              style="color:#067df7;text-decoration-line:none"
+                                              target="_blank"
+                                              ><img
+                                                alt="Stagg Electric Kettle"
+                                                height="288"
+                                                src="https://react.email/static/stagg-eletric-kettle.jpg"
+                                                style="display:block;outline:none;border:none;text-decoration:none;width:100%;border-radius:12px;object-fit:cover"
+                                            /></a>
+                                          </td>
+                                          <td
+                                            data-id="__react-email-column"
+                                            style="width:50%;padding-left:8px">
+                                            <a
+                                              href="#"
+                                              style="color:#067df7;text-decoration-line:none"
+                                              target="_blank"
+                                              ><img
+                                                alt="Ode Grinder"
+                                                height="288"
+                                                src="https://react.email/static/ode-grinder.jpg"
+                                                style="display:block;outline:none;border:none;text-decoration:none;width:100%;border-radius:12px;object-fit:cover"
+                                            /></a>
+                                          </td>
+                                        </tr>
+                                      </tbody>
+                                    </table>
+                                    <table
+                                      align="center"
+                                      width="100%"
+                                      border="0"
+                                      cellpadding="0"
+                                      cellspacing="0"
+                                      role="presentation"
+                                      style="margin-top:16px">
+                                      <tbody style="width:100%">
+                                        <tr style="width:100%">
+                                          <td
+                                            data-id="__react-email-column"
+                                            style="width:50%;padding-right:8px">
+                                            <a
+                                              href="#"
+                                              style="color:#067df7;text-decoration-line:none"
+                                              target="_blank"
+                                              ><img
+                                                alt="Atmos Vacuum Canister"
+                                                height="288"
+                                                src="https://react.email/static/atmos-vacuum-canister.jpg"
+                                                style="display:block;outline:none;border:none;text-decoration:none;width:100%;border-radius:12px;object-fit:cover"
+                                            /></a>
+                                          </td>
+                                          <td
+                                            data-id="__react-email-column"
+                                            style="width:50%;padding-left:8px">
+                                            <a
+                                              href="#"
+                                              style="color:#067df7;text-decoration-line:none"
+                                              target="_blank"
+                                              ><img
+                                                alt="Clyde Electric Kettle"
+                                                height="288"
+                                                src="https://react.email/static/clyde-electric-kettle.jpg"
+                                                style="display:block;outline:none;border:none;text-decoration:none;width:100%;border-radius:12px;object-fit:cover"
+                                            /></a>
+                                          </td>
+                                        </tr>
+                                      </tbody>
+                                    </table>
+                                  </td>
+                                </tr>
+                              </tbody>
+                            </table>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <!--/$-->
+  </body>
+</html>
+
+    `,
+    design: {},
+  },
+  {
+    id: "articles-newsletter",
+    name: "Articles Newsletter",
+    category: "engagement" as const,
+    thumbnail: "/images/templates/healthcare-template.png",
+    description: "Designing with Furniture",
+    content: `
+    <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html dir="ltr" lang="en">
+  <head>
+    <link rel="preload" as="image" href="/static/herman-miller-chair.jpg" />
+    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type" />
+    <meta name="x-apple-disable-message-reformatting" />
+    <style>
+      @font-face {
+        font-family: 'Inter';
+        font-style: normal;
+        font-weight: 400;
+        mso-font-alt: 'Helvetica';
+        src: url(https://fonts.gstatic.com/s/inter/v18/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuLyfAZ9hiA.woff2) format('woff2');
+      }
+
+      * {
+        font-family: 'Inter', Helvetica;
+      }
+    </style>
+    <style>
+      @font-face {
+        font-family: 'Inter';
+        font-style: normal;
+        font-weight: 600;
+        mso-font-alt: 'Helvetica';
+        src: url(https://fonts.gstatic.com/s/inter/v18/UcC73FwrK3iLTeHuS_fjbvMwCp50PDca1ZL7.woff2) format('woff2');
+      }
+
+      * {
+        font-family: 'Inter', Helvetica;
+      }
+    </style>
+    <style>
+      @font-face {
+        font-family: 'Inter';
+        font-style: normal;
+        font-weight: 700;
+        mso-font-alt: 'Helvetica';
+        src: url(https://fonts.gstatic.com/s/inter/v18/UcC73FwrK3iLTeHuS_fjbvMwCp50BTca1ZL7.woff2) format('woff2');
+      }
+
+      * {
+        font-family: 'Inter', Helvetica;
+      }
+    </style>
+  </head>
+  <body>
+    <!--$--><!--html--><!--head--><!--body-->
+    <table
+      border="0"
+      width="100%"
+      cellpadding="0"
+      cellspacing="0"
+      role="presentation"
+      align="center">
+      <tbody>
+        <tr>
+          <td style="margin:0;margin-left:12px;margin-right:12px">
+            <table
+              align="center"
+              width="100%"
+              border="0"
+              cellpadding="0"
+              cellspacing="0"
+              role="presentation"
+              style="max-width:37.5em;margin-left:auto;margin-right:auto;box-sizing:border-box;padding-top:1rem;padding-bottom:1rem;height:100vh">
+              <tbody>
+                <tr style="width:100%">
+                  <td>
+                    <table
+                      align="center"
+                      width="100%"
+                      border="0"
+                      cellpadding="0"
+                      cellspacing="0"
+                      role="presentation"
+                      style="margin-top:16px;margin-bottom:16px">
+                      <tbody>
+                        <tr>
+                          <td>
+                            <img
+                              alt="Herman Miller Chair"
+                              height="320"
+                              src="https://react.email/static/herman-miller-chair.jpg"
+                              style="display:block;outline:none;border:none;text-decoration:none;width:100%;border-radius:12px;object-fit:cover" />
+                            <table
+                              align="center"
+                              width="100%"
+                              border="0"
+                              cellpadding="0"
+                              cellspacing="0"
+                              role="presentation"
+                              style="margin-top:32px;text-align:center">
+                              <tbody>
+                                <tr>
+                                  <td>
+                                    <p
+                                      style="font-size:18px;line-height:28px;margin-top:16px;margin-bottom:16px;font-weight:600;color:rgb(79,70,229)">
+                                      Our new article
+                                    </p>
+                                    <h1
+                                      style="margin:0px;margin-top:8px;font-size:36px;line-height:36px;font-weight:600;color:rgb(17,24,39)">
+                                      Designing with Furniture
+                                    </h1>
+                                    <p
+                                      style="font-size:16px;line-height:24px;color:rgb(107,114,128);margin-top:16px;margin-bottom:16px">
+                                      Unleash your inner designer as we explore
+                                      how furniture plays a vital role in
+                                      creating stunning interiors, offering
+                                      insights into choosing the right pieces,
+                                      arranging them harmoniously, and infusing
+                                      your space with personality.
+                                    </p>
+                                    <a
+                                      href="https://react.email"
+                                      style="line-height:100%;text-decoration:none;display:inline-block;max-width:100%;mso-padding-alt:0px;margin-top:16px;border-radius:8px;background-color:rgb(79,70,229);padding-left:40px;padding-right:40px;padding-top:12px;padding-bottom:12px;font-weight:600;color:rgb(255,255,255)"
+                                      target="_blank"
+                                      ><span
+                                        ><!--[if mso]><i style="mso-font-width:500%;mso-text-raise:18" hidden>&#8202;&#8202;&#8202;&#8202;</i><![endif]--></span
+                                      ><span
+                                        style="max-width:100%;display:inline-block;line-height:120%;mso-padding-alt:0px;mso-text-raise:9px"
+                                        >Read more</span
+                                      ><span
+                                        ><!--[if mso]><i style="mso-font-width:500%" hidden>&#8202;&#8202;&#8202;&#8202;&#8203;</i><![endif]--></span
+                                      ></a
+                                    >
+                                  </td>
+                                </tr>
+                              </tbody>
+                            </table>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <!--/$-->
+  </body>
+</html>
+
+
+    `,
+    design: {},
+  },
 ];
 
 export const getTemplateById = (id: string) => {
