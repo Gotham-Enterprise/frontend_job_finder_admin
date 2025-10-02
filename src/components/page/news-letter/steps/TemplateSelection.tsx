@@ -1,9 +1,20 @@
 import React, { useState, useMemo } from "react";
 import { NewsletterTemplate } from "../types";
-import { newsletterTemplates, templateCategories } from "../templateData";
+import { emailTemplates, getTemplateById } from "../emailTemplates";
 import { useNewsletter } from "../NewsletterContext";
 import TemplatePreview from "../components/TemplatePreview";
-import TemplateThumbnail from "../components/TemplateThumbnail";
+import SimpleTemplateThumbnail from "../components/SimpleTemplateThumbnail";
+
+// Template categories for the new email templates
+const templateCategories = [
+  { id: "all", name: "All Templates" },
+  { id: "welcome", name: "Welcome" },
+  { id: "newsletter", name: "Newsletter" },
+  { id: "product", name: "Product" },
+  { id: "engagement", name: "Engagement" },
+  { id: "event", name: "Event" },
+  { id: "ecommerce", name: "E-commerce" },
+];
 
 const TemplateSelection: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -11,6 +22,28 @@ const TemplateSelection: React.FC = () => {
   const [previewTemplate, setPreviewTemplate] = useState<NewsletterTemplate | null>(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const { selectTemplate, goToStep, completeStep, updateNewsletterData } = useNewsletter();
+
+  // Convert email templates to newsletter template format
+  const newsletterTemplates: NewsletterTemplate[] = [
+    {
+      id: "blank",
+      name: "Start from scratch",
+      category: "newsletter",
+      thumbnail: "/images/templates/blank-template.png",
+      description: "Create your own design from scratch",
+      content: "",
+      isCustom: true,
+    },
+    ...emailTemplates.map((template) => ({
+      id: template.id,
+      name: template.name,
+      category: template.category,
+      thumbnail: template.thumbnail,
+      description: template.description,
+      content: JSON.stringify(template.design), // Store design as content
+      isCustom: false,
+    })),
+  ];
 
   const filteredTemplates = useMemo(() => {
     let filtered = newsletterTemplates;
@@ -33,10 +66,26 @@ const TemplateSelection: React.FC = () => {
   const onSelectTemplate = React.useCallback(
     (template: NewsletterTemplate) => {
       selectTemplate(template.id);
-      updateNewsletterData({
-        content: template.content,
-        subject: template.name === "Start from scratch" ? "" : `${template.name} Newsletter`,
-      });
+
+      if (template.id === "blank") {
+        // For blank template, just set basic data
+        updateNewsletterData({
+          content: "",
+          design: null,
+          subject: "",
+        });
+      } else {
+        // For predefined templates, load the design
+        const emailTemplate = getTemplateById(template.id);
+        if (emailTemplate) {
+          updateNewsletterData({
+            content: "",
+            design: emailTemplate.design,
+            subject: `${template.name} Newsletter`,
+          });
+        }
+      }
+
       completeStep(1);
       goToStep(2);
     },
@@ -95,7 +144,7 @@ const TemplateSelection: React.FC = () => {
               onClick={() => setSelectedCategory(category.id)}
               className={`px-4 py-2 text-sm font-medium rounded-full transition-colors ${
                 selectedCategory === category.id
-                  ? "bg-primary text-white"
+                  ? "bg-blue-600 text-white"
                   : "bg-gray-100 text-gray-700 hover:bg-gray-200"
               }`}
             >
@@ -109,7 +158,7 @@ const TemplateSelection: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {/* Removed xl:grid-cols-4 for larger thumbnails */}
         {filteredTemplates.map((template: NewsletterTemplate) => (
-          <TemplateThumbnail
+          <SimpleTemplateThumbnail
             key={template.id}
             template={template}
             onSelect={() => onSelectTemplate(template)}

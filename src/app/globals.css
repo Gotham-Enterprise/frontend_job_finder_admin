@@ -1,5 +1,5 @@
-@import 'tailwindcss';
-@import '../styles/editor.css';
+@import "tailwindcss";
+@import "../styles/editor.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -45,16 +45,15 @@
   --color-brand-200: #c2d6ff;
   --color-brand-300: #9cb9ff;
   --color-brand-400: #7592ff;
-  --color-brand-500: #006D36;
+  --color-brand-500: #006d36;
   --color-brand-600: #3641f5;
   --color-brand-700: #2a31d8;
   --color-brand-800: #252dae;
   --color-brand-900: #262e89;
-  --color-brand-950: #05396B;
-  --color-primary:#006D36;
-  --color-secondary:#D3EEE9;
-  --color-rates:#F2901F;
- 
+  --color-brand-950: #05396b;
+  --color-primary: #006d36;
+  --color-secondary: #d3eee9;
+  --color-rates: #f2901f;
 
   --color-blue-light-25: #f5fbff;
   --color-blue-light-50: #f0f9ff;
@@ -139,29 +138,17 @@
 
   --color-theme-purple-500: #7a5af8;
 
-  --shadow-theme-md:
-    0px 4px 8px -2px rgba(16, 24, 40, 0.1),
-    0px 2px 4px -2px rgba(16, 24, 40, 0.06);
-  --shadow-theme-lg:
-    0px 12px 16px -4px rgba(16, 24, 40, 0.08),
-    0px 4px 6px -2px rgba(16, 24, 40, 0.03);
-  --shadow-theme-sm:
-    0px 1px 3px 0px rgba(16, 24, 40, 0.1),
-    0px 1px 2px 0px rgba(16, 24, 40, 0.06);
+  --shadow-theme-md: 0px 4px 8px -2px rgba(16, 24, 40, 0.1), 0px 2px 4px -2px rgba(16, 24, 40, 0.06);
+  --shadow-theme-lg: 0px 12px 16px -4px rgba(16, 24, 40, 0.08), 0px 4px 6px -2px rgba(16, 24, 40, 0.03);
+  --shadow-theme-sm: 0px 1px 3px 0px rgba(16, 24, 40, 0.1), 0px 1px 2px 0px rgba(16, 24, 40, 0.06);
   --shadow-theme-xs: 0px 1px 2px 0px rgba(16, 24, 40, 0.05);
-  --shadow-theme-xl:
-    0px 20px 24px -4px rgba(16, 24, 40, 0.08),
-    0px 8px 8px -4px rgba(16, 24, 40, 0.03);
+  --shadow-theme-xl: 0px 20px 24px -4px rgba(16, 24, 40, 0.08), 0px 8px 8px -4px rgba(16, 24, 40, 0.03);
   --shadow-datepicker: -5px 0 0 #262d3c, 5px 0 0 #262d3c;
   --shadow-focus-ring: 0px 0px 0px 4px rgba(70, 95, 255, 0.12);
-  --shadow-slider-navigation:
-    0px 1px 2px 0px rgba(16, 24, 40, 0.1), 0px 1px 3px 0px rgba(16, 24, 40, 0.1);
-  --shadow-tooltip:
-    0px 4px 6px -2px rgba(16, 24, 40, 0.05),
-    -8px 0px 20px 8px rgba(16, 24, 40, 0.05);
+  --shadow-slider-navigation: 0px 1px 2px 0px rgba(16, 24, 40, 0.1), 0px 1px 3px 0px rgba(16, 24, 40, 0.1);
+  --shadow-tooltip: 0px 4px 6px -2px rgba(16, 24, 40, 0.05), -8px 0px 20px 8px rgba(16, 24, 40, 0.05);
 
-  --drop-shadow-4xl:
-    0 35px 35px rgba(0, 0, 0, 0.25), 0 45px 65px rgba(0, 0, 0, 0.15);
+  --drop-shadow-4xl: 0 35px 35px rgba(0, 0, 0, 0.25), 0 45px 65px rgba(0, 0, 0, 0.15);
 
   --z-index-1: 1;
   --z-index-9: 9;
@@ -199,10 +186,7 @@
   --chart-5: 27 87% 67%;
   --radius: 0.3125rem;
   --swiper-navigation-size: 15px !important;
-
 }
-
-
 
 @layer base {
   *,
@@ -221,8 +205,6 @@
     @apply relative font-normal font-outfit z-1 bg-gray-50;
   }
 }
-
-
 
 @utility menu-item {
   @apply relative flex items-center w-full gap-3 px-3 py-2 font-medium rounded-lg text-theme-sm;
@@ -310,8 +292,6 @@
 .dark .custom-scrollbar::-webkit-scrollbar-thumb {
   background-color: #344054;
 }
-
-
 
 @layer utilities {
   /* For Remove Date Icon */
@@ -414,9 +394,7 @@
   background-image: none !important;
   font-weight: 500;
 }
-.flatpickr-month
-.flatpickr-current-month
-.flatpickr-monthDropdown-months:focus {
+.flatpickr-month .flatpickr-current-month .flatpickr-monthDropdown-months:focus {
   outline: none !important;
   border: 0 !important;
 }
@@ -446,7 +424,9 @@ span.flatpickr-weekday,
   @apply !bg-none;
 }
 .flatpickr-day.inRange {
-  box-shadow: -5px 0 0 #f9fafb, 5px 0 0 #f9fafb !important;
+  box-shadow:
+    -5px 0 0 #f9fafb,
+    5px 0 0 #f9fafb !important;
   @apply dark:!shadow-datepicker;
 }
 .flatpickr-day.inRange,
@@ -563,9 +543,7 @@ span.flatpickr-weekday,
 .fc-header-toolbar.fc-toolbar .fc-toolbar-chunk:last-child .fc-button {
   @apply !h-auto !w-auto rounded-md !border-0 bg-transparent !px-5 !py-2 text-sm font-medium text-gray-500 hover:text-gray-700 focus:shadow-none! dark:text-gray-400;
 }
-.fc-header-toolbar.fc-toolbar
-  .fc-toolbar-chunk:last-child
-  .fc-button.fc-button-active {
+.fc-header-toolbar.fc-toolbar .fc-toolbar-chunk:last-child .fc-button.fc-button-active {
   @apply text-gray-900 bg-white dark:bg-gray-800 dark:text-white;
 }
 .fc-theme-standard th {
@@ -765,7 +743,8 @@ span.flatpickr-weekday,
 
 .task {
   border-radius: 0.75rem;
-  box-shadow: 0 1px 3px 0 rgba(16, 24, 40, 0.1),
+  box-shadow:
+    0 1px 3px 0 rgba(16, 24, 40, 0.1),
     0 1px 2px 0 rgba(16, 24, 40, 0.06);
   opacity: 0.8;
   cursor: grabbing; /* Changes the cursor to indicate dragging */
@@ -802,4 +781,8 @@ span.flatpickr-weekday,
     background-color: transparent;
     box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
   }
+}
+
+iframe {
+  height: 100dvh !important;
 }

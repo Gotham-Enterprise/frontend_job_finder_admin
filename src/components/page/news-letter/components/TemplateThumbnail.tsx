@@ -15,11 +15,32 @@ const TemplateThumbnail: React.FC<TemplateThumbnailProps> = ({ template, onClick
   const [thumbnailLoaded, setThumbnailLoaded] = useState(false);
 
   useEffect(() => {
-    if (template.content && iframeRef.current && template.id !== "start-from-scratch") {
+    if (template.content && iframeRef.current && template.id !== "start-from-scratch" && template.id !== "blank") {
       const iframe = iframeRef.current;
       const doc = iframe.contentDocument || iframe.contentWindow?.document;
 
       if (doc) {
+        let htmlContent = template.content;
+
+        // If content is JSON (from new email templates), create a simple preview
+        try {
+          const designData = JSON.parse(template.content);
+          if (designData.body) {
+            // Create a simple HTML preview from the design data
+            htmlContent = `
+              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #fff; padding: 20px;">
+                <h2 style="color: #333; text-align: center; margin-bottom: 20px;">${template.name}</h2>
+                <p style="color: #666; text-align: center; line-height: 1.6;">${template.description}</p>
+                <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-top: 20px; text-align: center;">
+                  <p style="color: #666; margin: 0;">Click "Use Template" to edit this design</p>
+                </div>
+              </div>
+            `;
+          }
+        } catch (e) {
+          // If it's not JSON, treat as HTML
+        }
+
         doc.open();
         doc.write(`
           <!DOCTYPE html>
@@ -46,7 +67,7 @@ const TemplateThumbnail: React.FC<TemplateThumbnailProps> = ({ template, onClick
             </style>
           </head>
           <body>
-            ${template.content}
+            ${htmlContent}
           </body>
           </html>
         `);
@@ -57,10 +78,10 @@ const TemplateThumbnail: React.FC<TemplateThumbnailProps> = ({ template, onClick
         }, 500);
       }
     }
-  }, [template.content, template.id]);
+  }, [template.content, template.id, template.name, template.description]);
 
   const renderThumbnailContent = () => {
-    if (template.id === "start-from-scratch") {
+    if (template.id === "start-from-scratch" || template.id === "blank") {
       return (
         <div className="flex items-center justify-center h-96 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-t-lg">
           <div className="text-center">
@@ -104,7 +125,7 @@ const TemplateThumbnail: React.FC<TemplateThumbnailProps> = ({ template, onClick
         {renderThumbnailContent()}
 
         {/* Overlay with action buttons */}
-        {template.id !== "start-from-scratch" && (
+        {template.id !== "start-from-scratch" && template.id !== "blank" && (
           <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center space-x-2">
             <button
               onClick={(e) => {
@@ -135,10 +156,13 @@ const TemplateThumbnail: React.FC<TemplateThumbnailProps> = ({ template, onClick
 
         {/* Action Buttons */}
         <div className="flex space-x-2">
-          <button onClick={onSelect} className="flex-1 bg-primary text-white py-2 px-3 rounded text-sm font-medium ">
-            {template.id === "start-from-scratch" ? "Start Building" : "Use Template"}
+          <button
+            onClick={onSelect}
+            className="flex-1 bg-blue-600 text-white py-2 px-3 rounded text-sm font-medium hover:bg-blue-700 transition-colors"
+          >
+            {template.id === "start-from-scratch" || template.id === "blank" ? "Start Building" : "Use Template"}
           </button>
-          {template.id !== "start-from-scratch" && (
+          {template.id !== "start-from-scratch" && template.id !== "blank" && (
             <button
               onClick={onPreview}
               className="px-3 py-2 border border-gray-300 text-gray-700 rounded text-sm font-medium hover:bg-gray-50 transition-colors"

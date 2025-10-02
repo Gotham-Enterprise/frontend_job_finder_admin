@@ -1,7 +1,7 @@
 export interface NewsletterTemplate {
   id: string;
   name: string;
-  category: 'engagement' | 'welcome' | 'event' | 'product' | 'newsletter' | 'ecommerce';
+  category: "engagement" | "welcome" | "event" | "product" | "newsletter" | "ecommerce";
   thumbnail: string;
   description: string;
   content: string;
@@ -14,11 +14,12 @@ export interface NewsletterData {
   fromAddress: string;
   sendTo: string[];
   dontSendTo: string[];
-  status: 'DRAFT' | 'SCHEDULED' | 'SENT';
+  status: "DRAFT" | "SCHEDULED" | "SENT";
   scheduledAt?: string;
   scheduledTimezone?: string;
   isTemplate: boolean;
   content: string;
+  design?: any; // Store the email editor design JSON
 }
 
 export interface NewsletterStep {
@@ -29,4 +30,4 @@ export interface NewsletterStep {
   isActive: boolean;
 }
 
-export type NewsletterStepType = 'template' | 'edit' | 'inbox' | 'send' | 'schedule';
+export type NewsletterStepType = "template" | "edit" | "inbox" | "send" | "schedule";
