@@ -30,7 +30,7 @@ export const newsletterTemplates: NewsletterTemplate[] = [
         <table width='600' border='0' cellspacing='0' cellpadding='0' style='background:#ffffff; border-radius:8px; overflow:hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);'>
           <!-- Header -->
           <tr>
-            <td style='background:#007bff; padding:30px; text-align:center;'>
+            <td style='background:#006d36; padding:30px; text-align:center;'>
               <img src='https://gothamenterprisesltd.com/assets/img/full_logo_dark.svg' alt='Gotham Enterprises Logo' style='display:block; margin:0 auto; max-width:200px; filter: brightness(0) invert(1); margin-bottom:20px;'>
               <h1 style='color:#ffffff; font-size:28px; margin:15px 0 5px; font-weight:bold;'>Company Newsletter</h1>
               <p style='color:#ffffff; font-size:16px; margin:0; opacity:0.9;'>Stay updated with our latest news and updates</p>
@@ -47,7 +47,7 @@ export const newsletterTemplates: NewsletterTemplate[] = [
           <!-- Main Content -->
           <tr>
             <td style='padding:40px 30px; text-align:left; color:#333;'>
-              <h2 style='color:#007bff; font-size:24px; margin:0 0 20px; font-weight:bold;'>This Month's Highlights</h2>
+              <h2 style='color:#006d36; font-size:24px; margin:0 0 20px; font-weight:bold;'>This Month's Highlights</h2>
               <p style='font-size:16px; line-height:1.6; margin:0 0 25px; color:#555;'>We're excited to share some incredible updates and achievements from our team this month. From new product launches to company milestones, here's everything you need to know.</p>
               
               <!-- Feature Articles -->
@@ -64,7 +64,7 @@ export const newsletterTemplates: NewsletterTemplate[] = [
               
               <!-- CTA Button -->
               <div style='text-align:center; margin:35px 0;'>
-                <a href='#' style='background:#007bff; color:#ffffff; padding:15px 30px; border-radius:6px; text-decoration:none; font-weight:bold; font-size:16px; display:inline-block; box-shadow: 0 2px 4px rgba(0,123,255,0.3);'>Read Full Newsletter</a>
+                <a href='#' style='background:#006d36; color:#ffffff; padding:15px 30px; border-radius:6px; text-decoration:none; font-weight:bold; font-size:16px; display:inline-block; box-shadow: 0 2px 4px rgba(0,109,54,0.3);'>Read Full Newsletter</a>
               </div>
             </td>
           </tr>
@@ -76,7 +76,7 @@ export const newsletterTemplates: NewsletterTemplate[] = [
               <table width='100%' cellpadding='15' style='margin:0 auto;'>
                 <tr>
                   <td width='33%' style='text-align:center; padding:10px;'>
-                    <div style='background:#007bff; color:white; padding:20px; border-radius:8px; margin-bottom:10px;'>
+                    <div style='background:#006d36; color:white; padding:20px; border-radius:8px; margin-bottom:10px;'>
                       <h4 style='font-size:28px; margin:0; font-weight:bold;'>150+</h4>
                       <p style='font-size:14px; margin:5px 0 0; opacity:0.9;'>New Clients</p>
                     </div>
@@ -101,8 +101,8 @@ export const newsletterTemplates: NewsletterTemplate[] = [
           <!-- Upcoming Events -->
           <tr>
             <td style='padding:30px; text-align:left; color:#333;'>
-              <h3 style='color:#007bff; font-size:20px; margin:0 0 20px; font-weight:bold;'>📅 Upcoming Events</h3>
-              <div style='border-left:4px solid #007bff; padding-left:20px; margin:15px 0;'>
+              <h3 style='color:#006d36; font-size:20px; margin:0 0 20px; font-weight:bold;'>📅 Upcoming Events</h3>
+              <div style='border-left:4px solid #006d36; padding-left:20px; margin:15px 0;'>
                 <h4 style='color:#333; font-size:16px; margin:0 0 5px; font-weight:bold;'>Annual Company Conference</h4>
                 <p style='color:#666; font-size:14px; margin:0;'>December 15-17, 2025 | Virtual & In-Person</p>
               </div>
@@ -119,8 +119,8 @@ export const newsletterTemplates: NewsletterTemplate[] = [
               <p style='font-size:14px; margin:0 0 15px; opacity:0.8;'>Thank you for being part of our community!</p>
               <p style='font-size:12px; margin:0; opacity:0.6;'>You received this email because you subscribed to our newsletter.</p>
               <p style='font-size:12px; margin:10px 0 0; opacity:0.6;'>
-                <a href='#' style='color:#007bff; text-decoration:none;'>Unsubscribe</a> | 
-                <a href='#' style='color:#007bff; text-decoration:none;'>Update Preferences</a>
+                <a href='#' style='color:#006d36; text-decoration:none;'>Unsubscribe</a> | 
+                <a href='#' style='color:#006d36; text-decoration:none;'>Update Preferences</a>
               </p>
             </td>
           </tr>
@@ -151,7 +151,7 @@ export const newsletterTemplates: NewsletterTemplate[] = [
         <table width='600' border='0' cellspacing='0' cellpadding='0' style='background:#ffffff; border-radius:8px; overflow:hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);'>
           <!-- Header -->
           <tr>
-            <td style='background:#28a745; padding:30px; text-align:center; color:#ffffff;'>
+            <td style='background:#006d36; padding:30px; text-align:center; color:#ffffff;'>
               <img src='https://gothamenterprisesltd.com/assets/img/full_logo_dark.svg' alt='Gotham Enterprises Logo' style='display:block; margin:0 auto; max-width:180px; filter: brightness(0) invert(1); margin-bottom:20px;'>
               <h1 style='font-size:32px; margin:0 0 10px; font-weight:bold;'>Weekly Job Opportunities</h1>
               <p style='font-size:18px; margin:0; opacity:0.9;'>Latest Openings</p>
@@ -161,13 +161,13 @@ export const newsletterTemplates: NewsletterTemplate[] = [
           
           <!-- Featured Job -->
           <tr>
-            <td style='padding:30px; text-align:center; background:linear-gradient(135deg, #28a745 0%, #20c997 100%); color:#ffffff;'>
+            <td style='padding:30px; text-align:center; background:linear-gradient(135deg, #006d36 0%, #005a2e 100%); color:#ffffff;'>
               <h2 style='font-size:24px; margin:0 0 15px; font-weight:bold;'>🌟 Featured Job</h2>
               <div style='background:rgba(255,255,255,0.1); padding:25px; border-radius:10px; text-align:left;'>
                 <h3 style='color:#ffffff; font-size:20px; margin:0 0 10px;'>Senior Software Engineer</h3>
                 <p style='color:#ffffff; opacity:0.9; margin:0 0 10px; font-size:16px;'>TechCorp Inc. • Remote • $120,000 - $150,000</p>
                 <p style='color:#ffffff; opacity:0.8; font-size:14px; line-height:1.5; margin:0 0 15px;'>Join our innovative team to build cutting-edge applications using React, Node.js, and cloud technologies. Work with a talented team on products used by millions.</p>
-                <a href='#' style='background:#ffffff; color:#28a745; padding:12px 25px; border-radius:6px; text-decoration:none; font-weight:bold; display:inline-block;'>Apply Now</a>
+                <a href='#' style='background:#ffffff; color:#006d36; padding:12px 25px; border-radius:6px; text-decoration:none; font-weight:bold; display:inline-block;'>Apply Now</a>
               </div>
             </td>
           </tr>
@@ -175,7 +175,7 @@ export const newsletterTemplates: NewsletterTemplate[] = [
           <!-- Job Listings -->
           <tr>
             <td style='padding:30px;'>
-              <h2 style='color:#28a745; font-size:24px; margin:0 0 25px; text-align:center; font-weight:bold;'>Latest Job Openings</h2>
+              <h2 style='color:#006d36; font-size:24px; margin:0 0 25px; text-align:center; font-weight:bold;'>Latest Job Openings</h2>
               
               <!-- Job 1 -->
               <div style='border:1px solid #e9ecef; border-radius:8px; padding:20px; margin:0 0 20px; background:#f8f9fa;'>
@@ -185,13 +185,13 @@ export const newsletterTemplates: NewsletterTemplate[] = [
                     <p style='color:#666; font-size:14px; margin:0 0 10px;'>InnovateLabs • San Francisco, CA • $100,000 - $130,000</p>
                     <p style='color:#555; font-size:14px; line-height:1.5; margin:0 0 15px;'>Lead product strategy and roadmap for our AI-powered analytics platform. Work cross-functionally with engineering, design, and marketing teams.</p>
                     <div style='margin:10px 0 0;'>
-                      <span style='background:#28a745; color:white; padding:4px 8px; border-radius:4px; font-size:12px; margin-right:8px;'>Full-time</span>
+                      <span style='background:#006d36; color:white; padding:4px 8px; border-radius:4px; font-size:12px; margin-right:8px;'>Full-time</span>
                       <span style='background:#17a2b8; color:white; padding:4px 8px; border-radius:4px; font-size:12px; margin-right:8px;'>Product</span>
                       <span style='background:#ffc107; color:white; padding:4px 8px; border-radius:4px; font-size:12px;'>Senior Level</span>
                     </div>
                   </div>
                 </div>
-                <a href='#' style='color:#28a745; text-decoration:none; font-weight:bold; font-size:14px;'>View Details →</a>
+                <a href='#' style='color:#006d36; text-decoration:none; font-weight:bold; font-size:14px;'>View Details →</a>
               </div>
               
               <!-- Job 2 -->
@@ -225,7 +225,7 @@ export const newsletterTemplates: NewsletterTemplate[] = [
           <!-- Career Tips -->
           <tr>
             <td style='background:#f8f9fa; padding:30px;'>
-              <h3 style='color:#28a745; font-size:20px; margin:0 0 20px; text-align:center; font-weight:bold;'>💡 Career Tips This Week</h3>
+              <h3 style='color:#006d36; font-size:20px; margin:0 0 20px; text-align:center; font-weight:bold;'>💡 Career Tips This Week</h3>
               <div style='text-align:left;'>
                 <h4 style='color:#333; font-size:16px; margin:0 0 10px; font-weight:bold;'>1. Optimize Your LinkedIn Profile</h4>
                 <p style='color:#555; font-size:14px; line-height:1.5; margin:0 0 20px;'>Make sure your LinkedIn profile is complete with a professional photo, compelling headline, and detailed work experience.</p>
@@ -244,7 +244,7 @@ export const newsletterTemplates: NewsletterTemplate[] = [
             <td style='padding:30px; text-align:center;'>
               <h3 style='color:#333; font-size:20px; margin:0 0 15px; font-weight:bold;'>Ready to Find Your Dream Job?</h3>
               <p style='color:#666; font-size:16px; margin:0 0 25px;'>Join thousands of professionals who have found their perfect career match</p>
-              <a href='#' style='background:#28a745; color:#ffffff; padding:15px 30px; border-radius:6px; text-decoration:none; font-weight:bold; font-size:16px; display:inline-block; box-shadow: 0 2px 4px rgba(40,167,69,0.3);'>Browse All Jobs</a>
+              <a href='#' style='background:#006d36; color:#ffffff; padding:15px 30px; border-radius:6px; text-decoration:none; font-weight:bold; font-size:16px; display:inline-block; box-shadow: 0 2px 4px rgba(0,109,54,0.3);'>Browse All Jobs</a>
             </td>
           </tr>
           
@@ -253,9 +253,9 @@ export const newsletterTemplates: NewsletterTemplate[] = [
             <td style='background:#333; padding:20px; text-align:center; color:#ffffff;'>
               <p style='font-size:14px; margin:0 0 10px; opacity:0.8;'>Weekly Job Opportunities Newsletter</p>
               <p style='font-size:12px; margin:0; opacity:0.6;'>
-                <a href='#' style='color:#28a745; text-decoration:none;'>Unsubscribe</a> | 
-                <a href='#' style='color:#28a745; text-decoration:none;'>Manage Preferences</a> | 
-                <a href='#' style='color:#28a745; text-decoration:none;'>Contact Us</a>
+                <a href='#' style='color:#006d36; text-decoration:none;'>Unsubscribe</a> | 
+                <a href='#' style='color:#006d36; text-decoration:none;'>Manage Preferences</a> | 
+                <a href='#' style='color:#006d36; text-decoration:none;'>Contact Us</a>
               </p>
             </td>
           </tr>
@@ -285,18 +285,18 @@ export const newsletterTemplates: NewsletterTemplate[] = [
       <td align='center'>
         <table width='600' border='0' cellspacing='0' cellpadding='0' style='background:#ffffff; border-radius:8px; overflow:hidden;'>
           <tr>
-            <td style='background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding:40px; text-align:center;'>
+            <td style='background:linear-gradient(135deg, #006d36 0%, #005a2e 100%); padding:40px; text-align:center;'>
               <h1 style='color:#ffffff; font-size:32px; margin:0;'>Welcome!</h1>
               <p style='color:#ffffff; font-size:18px; margin:10px 0 0;'>We're excited to have you join us</p>
             </td>
           </tr>
           <tr>
             <td style='padding:40px; text-align:center; color:#333;'>
-              <h2 style='color:#667eea; font-size:24px; margin:0 0 20px;'>Thank you for joining our community!</h2>
+              <h2 style='color:#006d36; font-size:24px; margin:0 0 20px;'>Thank you for joining our community!</h2>
               <p style='font-size:16px; line-height:1.6; margin-bottom:30px;'>We're here to help you succeed and make the most of your experience with us. Here's what you can expect:</p>
               
               <div style='text-align:left; margin:30px 0;'>
-                <h3 style='color:#667eea; font-size:20px; margin:0 0 15px;'>What's Next?</h3>
+                <h3 style='color:#006d36; font-size:20px; margin:0 0 15px;'>What's Next?</h3>
                 <ul style='font-size:16px; line-height:1.6; color:#666;'>
                   <li style='margin-bottom:10px;'>Complete your profile to get personalized recommendations</li>
                   <li style='margin-bottom:10px;'>Browse our extensive library of resources</li>
@@ -306,18 +306,18 @@ export const newsletterTemplates: NewsletterTemplate[] = [
               </div>
               
               <div style='background:#f8f9fa; padding:25px; border-radius:8px; margin:30px 0; text-align:left;'>
-                <h3 style='color:#667eea; font-size:18px; margin:0 0 15px;'>Quick Start Guide</h3>
+                <h3 style='color:#006d36; font-size:18px; margin:0 0 15px;'>Quick Start Guide</h3>
                 <p style='font-size:14px; line-height:1.5; color:#666; margin:0;'>Check out our quick start guide to make the most of your membership. Learn about all the features and benefits available to you.</p>
               </div>
               
               <p style='text-align:center; margin:30px 0;'>
-                <a href='#' style='background:#667eea; color:#ffffff; padding:15px 30px; border-radius:6px; text-decoration:none; font-weight:bold; display:inline-block;'>Get Started Now</a>
+                <a href='#' style='background:#006d36; color:#ffffff; padding:15px 30px; border-radius:6px; text-decoration:none; font-weight:bold; display:inline-block;'>Get Started Now</a>
               </p>
               
               <div style='border-top:1px solid #eee; padding-top:30px; margin-top:40px;'>
-                <h3 style='color:#667eea; font-size:18px; margin:0 0 20px;'>Need Help?</h3>
+                <h3 style='color:#006d36; font-size:18px; margin:0 0 20px;'>Need Help?</h3>
                 <p style='font-size:14px; line-height:1.5; color:#666;'>Our support team is here to help you every step of the way. Don't hesitate to reach out if you have any questions.</p>
-                <p style='font-size:14px; line-height:1.5; color:#666;'>Contact us at: <a href='mailto:support@example.com' style='color:#667eea;'>support@example.com</a></p>
+                <p style='font-size:14px; line-height:1.5; color:#666;'>Contact us at: <a href='mailto:support@example.com' style='color:#006d36;'>support@example.com</a></p>
               </div>
             </td>
           </tr>
@@ -353,39 +353,39 @@ export const newsletterTemplates: NewsletterTemplate[] = [
       <td align='center'>
         <table width='600' border='0' cellspacing='0' cellpadding='0' style='background:#ffffff; border-radius:8px; overflow:hidden;'>
           <tr>
-            <td style='background:#ff6b35; padding:30px; text-align:center;'>
+            <td style='background:#006d36; padding:30px; text-align:center;'>
               <h1 style='color:#ffffff; font-size:28px; margin:0;'>You're Invited!</h1>
               <p style='color:#ffffff; font-size:16px; margin:10px 0 0;'>Join us for an exclusive event</p>
             </td>
           </tr>
           <tr>
             <td style='padding:30px; text-align:left; color:#333;'>
-              <h2 style='color:#ff6b35; font-size:22px; margin:0 0 15px;'>Annual Leadership Summit 2024</h2>
+              <h2 style='color:#006d36; font-size:22px; margin:0 0 15px;'>Annual Leadership Summit 2024</h2>
               <p style='font-size:16px; line-height:1.6; margin-bottom:25px;'>We would love to have you attend our upcoming leadership summit where industry experts will share insights on the future of business and innovation.</p>
               
-              <div style='background:#fff5f2; padding:25px; border-radius:8px; margin:25px 0; border-left:4px solid #ff6b35;'>
-                <h3 style='color:#ff6b35; font-size:18px; margin:0 0 15px;'>Event Details</h3>
+              <div style='background:#f0f9f4; padding:25px; border-radius:8px; margin:25px 0; border-left:4px solid #006d36;'>
+                <h3 style='color:#006d36; font-size:18px; margin:0 0 15px;'>Event Details</h3>
                 <table style='width:100%; font-size:14px; line-height:1.6;'>
                   <tr>
-                    <td style='padding:5px 0; font-weight:bold; color:#ff6b35; width:100px;'>Date:</td>
+                    <td style='padding:5px 0; font-weight:bold; color:#006d36; width:100px;'>Date:</td>
                     <td style='padding:5px 0; color:#666;'>November 15, 2024</td>
                   </tr>
                   <tr>
-                    <td style='padding:5px 0; font-weight:bold; color:#ff6b35;'>Time:</td>
+                    <td style='padding:5px 0; font-weight:bold; color:#006d36;'>Time:</td>
                     <td style='padding:5px 0; color:#666;'>9:00 AM - 5:00 PM</td>
                   </tr>
                   <tr>
-                    <td style='padding:5px 0; font-weight:bold; color:#ff6b35;'>Venue:</td>
+                    <td style='padding:5px 0; font-weight:bold; color:#006d36;'>Venue:</td>
                     <td style='padding:5px 0; color:#666;'>Grand Convention Center, Downtown</td>
                   </tr>
                   <tr>
-                    <td style='padding:5px 0; font-weight:bold; color:#ff6b35;'>Dress Code:</td>
+                    <td style='padding:5px 0; font-weight:bold; color:#006d36;'>Dress Code:</td>
                     <td style='padding:5px 0; color:#666;'>Business Professional</td>
                   </tr>
                 </table>
               </div>
               
-              <h3 style='color:#ff6b35; font-size:18px; margin:25px 0 15px;'>What to Expect</h3>
+              <h3 style='color:#006d36; font-size:18px; margin:25px 0 15px;'>What to Expect</h3>
               <ul style='font-size:16px; line-height:1.6; color:#666; margin-bottom:25px;'>
                 <li style='margin-bottom:8px;'>Keynote presentations from industry leaders</li>
                 <li style='margin-bottom:8px;'>Interactive workshops and breakout sessions</li>
@@ -395,8 +395,8 @@ export const newsletterTemplates: NewsletterTemplate[] = [
               </ul>
               
               <div style='text-align:center; margin:30px 0;'>
-                <a href='#' style='background:#ff6b35; color:#ffffff; padding:15px 30px; border-radius:6px; text-decoration:none; font-weight:bold; display:inline-block; margin:0 10px 10px 0;'>Reserve Your Spot</a>
-                <a href='#' style='background:transparent; color:#ff6b35; padding:15px 30px; border:2px solid #ff6b35; border-radius:6px; text-decoration:none; font-weight:bold; display:inline-block;'>Learn More</a>
+                <a href='#' style='background:#006d36; color:#ffffff; padding:15px 30px; border-radius:6px; text-decoration:none; font-weight:bold; display:inline-block; margin:0 10px 10px 0;'>Reserve Your Spot</a>
+                <a href='#' style='background:transparent; color:#006d36; padding:15px 30px; border:2px solid #006d36; border-radius:6px; text-decoration:none; font-weight:bold; display:inline-block;'>Learn More</a>
               </div>
               
               <div style='background:#f8f9fa; padding:20px; border-radius:8px; margin:25px 0;'>
@@ -438,17 +438,17 @@ export const newsletterTemplates: NewsletterTemplate[] = [
       <td align='center'>
         <table width='600' border='0' cellspacing='0' cellpadding='0' style='background:#ffffff; border-radius:8px; overflow:hidden;'>
           <tr>
-            <td style='background:#17a2b8; padding:30px; text-align:center;'>
+            <td style='background:#006d36; padding:30px; text-align:center;'>
               <h1 style='color:#ffffff; font-size:28px; margin:0;'>New Product Launch</h1>
               <p style='color:#ffffff; font-size:16px; margin:10px 0 0;'>Introducing our latest innovation</p>
             </td>
           </tr>
           <tr>
             <td style='padding:30px; text-align:left; color:#333;'>
-              <h2 style='color:#17a2b8; font-size:24px; margin:0 0 20px;'>Meet ProductX Pro - The Future is Here</h2>
+              <h2 style='color:#006d36; font-size:24px; margin:0 0 20px;'>Meet ProductX Pro - The Future is Here</h2>
               <p style='font-size:16px; line-height:1.6; margin-bottom:25px;'>After months of development and testing, we're thrilled to introduce ProductX Pro - our most advanced solution yet. Designed with your needs in mind, it combines cutting-edge technology with intuitive design.</p>
               
-              <div style='background:#e8f6f8; padding:25px; border-radius:8px; margin:25px 0; border-left:4px solid #17a2b8;'>
+              <div style='background:#f0f9f4; padding:25px; border-radius:8px; margin:25px 0; border-left:4px solid #006d36;'>
                 <h3 style='color:#17a2b8; font-size:20px; margin:0 0 15px;'>Key Features</h3>
                 <ul style='font-size:16px; line-height:1.6; color:#666; margin:0; padding-left:20px;'>
                   <li style='margin-bottom:10px;'>Advanced AI-powered analytics</li>
