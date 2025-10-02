@@ -34,13 +34,12 @@ const NewsletterCreatorContent: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="bg-white shadow">
-        <div className="max-w-7xl mx-auto">
+        <div className="mx-auto">
           {/* Header */}
           <div className="px-6 py-4 border-b border-gray-200">
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">Create Newsletter</h1>
-                <p className="text-gray-600 mt-1">Build and send beautiful newsletters to your audience</p>
               </div>
               <button
                 onClick={() => router.push("/admin/news-letter")}
