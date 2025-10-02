@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import { formatDate, formatDateTimeEST } from "@/services/utils/dateUtils";
 import { Table, TableBody, TableCell, TableRow } from "../../../ui/table";
 import Badge from "../../../ui/badge/Badge";
@@ -30,6 +31,7 @@ const EmployerTable: React.FC<EmployerTableProps> = ({
   const [selectedEmployerIdForEdit, setSelectedEmployerIdForEdit] = useState<string | null>(null);
   const { addToast } = useToast();
   const { hasPermission } = usePermissions();
+  const router = useRouter();
 
   // Check if user has permission to add jobs (needed for checkbox selection)
   const canCreateJobs = hasPermission("employers", "add");
@@ -229,8 +231,8 @@ const EmployerTable: React.FC<EmployerTableProps> = ({
                                 label: "Edit Job",
                                 icon: <PencilIcon />,
                                 onClick: () => {
-                                  // Add your edit job logic here
-                                  console.log("Edit job for employer:", employer.id);
+                                  const companyName = encodeURIComponent(employer.companyName);
+                                  router.push(`/admin/jobs?name=${companyName}`);
                                 },
                               },
                             ]
