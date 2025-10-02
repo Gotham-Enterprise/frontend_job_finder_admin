@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import { formatDate, formatDateTimeEST } from "@/services/utils/dateUtils";
 import { Table, TableBody, TableCell, TableRow } from "../../../ui/table";
 import Badge from "../../../ui/badge/Badge";
@@ -12,6 +13,8 @@ import { EditEmployerModal } from "./EditEmployerModal";
 import { useToast } from "@/context/ToastContext";
 import PermissionWrapper from "@/components/common/PermissionWrapper";
 import { usePermissions } from "@/hooks/usePermissions";
+import OptionsDropdown from "../../../ui/OptionsDropdown";
+import type { DropdownOption } from "../../../ui/OptionsDropdown";
 
 const EmployerTable: React.FC<EmployerTableProps> = ({
   data,
@@ -28,6 +31,7 @@ const EmployerTable: React.FC<EmployerTableProps> = ({
   const [selectedEmployerIdForEdit, setSelectedEmployerIdForEdit] = useState<string | null>(null);
   const { addToast } = useToast();
   const { hasPermission } = usePermissions();
+  const router = useRouter();
 
   // Check if user has permission to add jobs (needed for checkbox selection)
   const canCreateJobs = hasPermission("employers", "add");
