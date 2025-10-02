@@ -121,10 +121,7 @@ const navItems: NavItem[] = [
     name: "News Letter",
     path: "/admin/news-letter",
     permissionKey: "newsLetter",
-    subItems: [
-      { name: "Job Seekers", path: "/admin/news-letter/job-seekers", requiredAction: "view" },
-      { name: "Employers", path: "/admin/news-letter/employers", requiredAction: "view" },
-    ],
+    subItems: [{ name: "All News Letter", path: "/admin/news-letter", requiredAction: "view" }],
   },
 ];
 
