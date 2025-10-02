@@ -1,53 +1,62 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNewsletter } from "../NewsletterContext";
+import NewsletterEditor from "../components/NewsletterEditor";
 
 const EditStep: React.FC = () => {
   const { state } = useNewsletter();
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
-        <div className="text-center">
-          <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-blue-100 mb-4">
-            <svg className="h-8 w-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-              />
-            </svg>
+    <div className="h-screen flex flex-col bg-gray-50">
+      {/* Header */}
+      <div className="bg-white border-b border-gray-200 px-4 py-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <button className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">
+              Back
+            </button>
+            <div>
+              <h1 className="text-lg font-medium text-gray-900">New email</h1>
+            </div>
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Newsletter Editor</h2>
-          <p className="text-gray-600 mb-8">Edit and customize your newsletter content. This feature is coming soon.</p>
-
-          {/* Preview of selected template */}
-          {state.selectedTemplateId && (
-            <div className="bg-gray-50 rounded-lg p-6 mb-8">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Selected Template Preview</h3>
-              <div className="bg-white rounded border p-4 max-h-96 overflow-y-auto">
-                <div dangerouslySetInnerHTML={{ __html: state.newsletterData.content }} />
-              </div>
-            </div>
-          )}
-
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-            <div className="flex items-center">
-              <svg className="h-5 w-5 text-yellow-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                <path
-                  fillRule="evenodd"
-                  d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              <span className="text-yellow-800 font-medium">Coming Soon</span>
-            </div>
-            <p className="text-yellow-700 text-sm mt-1">
-              The newsletter editor is currently under development. This will include a drag-and-drop editor, rich text
-              editing, image uploads, and more customization options.
-            </p>
+          <div className="flex items-center space-x-3">
+            <span className="text-sm text-gray-500">Autosaved</span>
+            <button className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">
+              Preview and test
+            </button>
+            <button className="px-4 py-2 text-sm font-medium text-white bg-orange-600 rounded-md hover:bg-orange-700">
+              Review and send
+            </button>
           </div>
         </div>
+      </div>
+
+      {/* Navigation Tabs */}
+      <div className="bg-white border-b border-gray-200">
+        <nav className="flex space-x-8 px-4">
+          <button className="py-3 px-1 border-b-2 border-blue-500 text-sm font-medium text-blue-600">
+            Edit
+          </button>
+          <button className="py-3 px-1 border-b-2 border-transparent text-sm font-medium text-gray-500 hover:text-gray-700">
+            Inbox
+          </button>
+          <button className="py-3 px-1 border-b-2 border-transparent text-sm font-medium text-gray-500 hover:text-gray-700">
+            Send to
+          </button>
+          <button className="py-3 px-1 border-b-2 border-transparent text-sm font-medium text-gray-500 hover:text-gray-700">
+            Schedule
+          </button>
+          <button className="py-3 px-1 border-b-2 border-transparent text-sm font-medium text-gray-500 hover:text-gray-700">
+            Setup
+          </button>
+          <button className="py-3 px-1 border-b-2 border-transparent text-sm font-medium text-gray-500 hover:text-gray-700">
+            Automate
+          </button>
+        </nav>
+      </div>
+
+      {/* Main Editor */}
+      <div className="flex-1 flex overflow-hidden">
+        <NewsletterEditor />
       </div>
     </div>
   );
