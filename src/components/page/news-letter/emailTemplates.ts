@@ -7,360 +7,856 @@ export const emailTemplates = [
     thumbnail: "/images/templates/macbook-template.png",
     description: "Apple MacBook Pro style product showcase",
     content: `
-      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; background: #000000;">
-        <!-- Apple Logo -->
-        <div style="text-align: center; padding: 40px 20px 20px;">
-          <img src="https://logos-world.net/wp-content/uploads/2020/04/Apple-Logo.png" alt="Apple" width="50" height="61" style="width: 50px; height: auto;" />
-        </div>
+      <!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Transitional //EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+<head>
+<!--[if gte mso 9]>
+<xml>
+  <o:OfficeDocumentSettings>
+    <o:AllowPNG/>
+    <o:PixelsPerInch>96</o:PixelsPerInch>
+  </o:OfficeDocumentSettings>
+</xml>
+<![endif]-->
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="x-apple-disable-message-reformatting">
+  <!--[if !mso]><!--><meta http-equiv="X-UA-Compatible" content="IE=edge"><!--<![endif]-->
+  <title></title>
+  
+    <style type="text/css">
+      
+      @media only screen and (min-width: 720px) {
+        .u-row {
+          width: 700px !important;
+        }
+
+        .u-row .u-col {
+          vertical-align: top;
+        }
+
         
-        <!-- Hero Section -->
-        <div style="text-align: center; padding: 20px;">
-          <h1 style="color: #FFFFFF; font-size: 48px; font-weight: 600; margin: 20px 0; letter-spacing: -1px;">MacBook Pro</h1>
-          <p style="color: #86868B; font-size: 24px; margin: 10px 0; font-weight: 400;">Supercharged for pros.</p>
-        </div>
-        
-        <!-- Product Image -->
-        <div style="text-align: center; padding: 40px 20px;">
-          <img src="https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/mbp14-spacegray-select-202110?wid=904&hei=840&fmt=jpeg&qlt=80&.v=1632788574000" alt="MacBook Pro" style="max-width: 100%; height: auto;" />
-        </div>
-        
-        <!-- Features -->
-        <div style="padding: 40px 20px; text-align: center;">
-          <h2 style="color: #FFFFFF; font-size: 32px; font-weight: 600; margin: 0 0 30px; letter-spacing: -0.5px;">Mind-blowing. Head-turning.</h2>
+            .u-row .u-col-50 {
+              width: 350px !important;
+            }
           
-          <div style="margin: 40px 0;">
-            <h3 style="color: #F5F5F7; font-size: 24px; font-weight: 600; margin: 0 0 10px;">M2 Pro and M2 Max</h3>
-            <p style="color: #86868B; font-size: 17px; line-height: 1.5; margin: 0;">Next-generation Apple silicon delivers incredible performance and amazing battery life.</p>
-          </div>
+
+            .u-row .u-col-100 {
+              width: 700px !important;
+            }
           
-          <div style="margin: 40px 0;">
-            <h3 style="color: #F5F5F7; font-size: 24px; font-weight: 600; margin: 0 0 10px;">Liquid Retina XDR display</h3>
-            <p style="color: #86868B; font-size: 17px; line-height: 1.5; margin: 0;">Extreme Dynamic Range brings HDR content to life with true-to-life detail.</p>
-          </div>
-        </div>
+      }
+
+      @media only screen and (max-width: 720px) {
+        .u-row-container {
+          max-width: 100% !important;
+          padding-left: 0px !important;
+          padding-right: 0px !important;
+        }
+
+        .u-row {
+          width: 100% !important;
+        }
+
+        .u-row .u-col {
+          display: block !important;
+          width: 100% !important;
+          min-width: 320px !important;
+          max-width: 100% !important;
+        }
+
+        .u-row .u-col > div {
+          margin: 0 auto;
+        }
+
+
+        .u-row .u-col img {
+          max-width: 100% !important;
+        }
+
+}
+    
+body{margin:0;padding:0}table,td,tr{border-collapse:collapse;vertical-align:top}p{margin:0}.ie-container table,.mso-container table{table-layout:fixed}*{line-height:inherit}a[x-apple-data-detectors=true]{color:inherit!important;text-decoration:none!important}
+
+
+table, td { color: #ffffff; } #u_body a { color: #0071e3; text-decoration: underline; } #u_content_text_17 a { color: #d2d2d7; text-decoration: none; }
+    </style>
+  
+  
+
+</head>
+
+<body class="clean-body u_body" style="margin: 0;padding: 0;-webkit-text-size-adjust: 100%;background-color: #000000;color: #ffffff">
+  <!--[if IE]><div class="ie-container"><![endif]-->
+  <!--[if mso]><div class="mso-container"><![endif]-->
+  <table role="presentation" id="u_body" style="border-collapse: collapse;table-layout: fixed;border-spacing: 0;mso-table-lspace: 0pt;mso-table-rspace: 0pt;vertical-align: top;min-width: 320px;Margin: 0 auto;background-color: #000000;width:100%" cellpadding="0" cellspacing="0">
+  <tbody>
+  <tr style="vertical-align: top">
+    <td style="word-break: break-word;border-collapse: collapse !important;vertical-align: top">
+    <!--[if (mso)|(IE)]><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td align="center" style="background-color: #000000;"><![endif]-->
+    
+  
+  
+<div class="u-row-container" style="padding: 0px;background-color: transparent">
+  <div class="u-row" style="margin: 0 auto;min-width: 320px;max-width: 700px;overflow-wrap: break-word;word-wrap: break-word;word-break: break-word;background-color: transparent;">
+    <div style="border-collapse: collapse;display: table;width: 100%;height: 100%;background-color: transparent;">
+      <!--[if (mso)|(IE)]><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td style="padding: 0px;background-color: transparent;" align="center"><table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:700px;"><tr style="background-color: transparent;"><![endif]-->
+      
+<!--[if (mso)|(IE)]><td align="center" width="700" style="width: 700px;padding: 0px;border-top: 0px solid transparent;border-left: 0px solid transparent;border-right: 0px solid transparent;border-bottom: 0px solid transparent;" valign="top"><![endif]-->
+<div class="u-col u-col-100" style="max-width: 320px;min-width: 700px;display: table-cell;vertical-align: top;">
+  <div style="height: 100%;width: 100% !important;">
+  <!--[if (!mso)&(!IE)]><!--><div style="box-sizing: border-box; height: 100%; padding: 0px;border-top: 0px solid transparent;border-left: 0px solid transparent;border-right: 0px solid transparent;border-bottom: 0px solid transparent;"><!--<![endif]-->
+  
+<table style="font-family:helvetica,sans-serif;" role="presentation" cellpadding="0" cellspacing="0" width="100%" border="0">
+  <tbody>
+    <tr>
+      <td style="overflow-wrap:break-word;word-break:break-word;padding:10px 10px 0px;font-family:helvetica,sans-serif;" align="left">
         
-        <!-- CTA -->
-        <div style="text-align: center; padding: 40px 20px 60px;">
-          <a href="#" style="display: inline-block; background-color: #0071E3; color: #FFFFFF; text-decoration: none; padding: 12px 24px; border-radius: 980px; font-size: 17px; font-weight: 400; min-width: 60px;">Learn more</a>
-          <span style="color: #86868B; margin: 0 20px; font-size: 17px;">or</span>
-          <a href="#" style="display: inline-block; background-color: transparent; color: #0071E3; text-decoration: none; padding: 12px 24px; border: 1px solid #0071E3; border-radius: 980px; font-size: 17px; font-weight: 400; min-width: 60px;">Buy</a>
-        </div>
-      </div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr>
+    <td style="padding-right: 0px;padding-left: 0px;" align="center">
+      
+      <img align="center" border="0" src="https://assets.unlayer.com/projects/139/1676495528722-apple_logo_circle_f5f5f7-000_2x.png" alt="" title="" style="outline: none;text-decoration: none;-ms-interpolation-mode: bicubic;clear: both;display: inline-block !important;border: none;height: auto;float: none;width: 15%;max-width: 102px;" width="102"/>
+      
+    </td>
+  </tr>
+</table>
+
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<table style="font-family:helvetica,sans-serif;" role="presentation" cellpadding="0" cellspacing="0" width="100%" border="0">
+  <tbody>
+    <tr>
+      <td style="overflow-wrap:break-word;word-break:break-word;padding:0px;font-family:helvetica,sans-serif;" align="left">
+        
+  <!--[if mso]><table role="presentation" width="100%"><tr><td><![endif]-->
+    <h1 style="margin: 0px; color: #ffffff; line-height: 140%; text-align: center; word-wrap: break-word; font-size: 48px; font-weight: 400;">MacBook Pro</h1>
+  <!--[if mso]></td></tr></table><![endif]-->
+
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<table style="font-family:helvetica,sans-serif;" role="presentation" cellpadding="0" cellspacing="0" width="100%" border="0">
+  <tbody>
+    <tr>
+      <td style="overflow-wrap:break-word;word-break:break-word;padding:0px;font-family:helvetica,sans-serif;" align="left">
+        
+  <!--[if mso]><table role="presentation" width="100%"><tr><td><![endif]-->
+    <h2 style="margin: 0px; color: #ffffff; line-height: 140%; text-align: center; word-wrap: break-word; font-size: 28px; font-weight: 400;">Mover. Maker. Boundary breaker.</h2>
+  <!--[if mso]></td></tr></table><![endif]-->
+
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<table style="font-family:helvetica,sans-serif;" role="presentation" cellpadding="0" cellspacing="0" width="100%" border="0">
+  <tbody>
+    <tr>
+      <td style="overflow-wrap:break-word;word-break:break-word;padding:10px;font-family:helvetica,sans-serif;" align="left">
+        
+  <div style="font-size: 17px; line-height: 140%; text-align: center; word-wrap: break-word;">
+    <p style="line-height: 140%;">From $1999 or $166.58/mo. for 12 mo.</p>
+  </div>
+
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+  <!--[if (!mso)&(!IE)]><!--></div><!--<![endif]-->
+  </div>
+</div>
+<!--[if (mso)|(IE)]></td><![endif]-->
+      <!--[if (mso)|(IE)]></tr></table></td></tr></table><![endif]-->
+    </div>
+  </div>
+  </div>
+  
+
+
+  
+  
+<div class="u-row-container" style="padding: 0px;background-color: transparent">
+  <div class="u-row" style="margin: 0 auto;min-width: 320px;max-width: 700px;overflow-wrap: break-word;word-wrap: break-word;word-break: break-word;background-color: transparent;">
+    <div style="border-collapse: collapse;display: table;width: 100%;height: 100%;background-color: transparent;">
+      <!--[if (mso)|(IE)]><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td style="padding: 0px;background-color: transparent;" align="center"><table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:700px;"><tr style="background-color: transparent;"><![endif]-->
+      
+<!--[if (mso)|(IE)]><td align="center" width="350" style="width: 350px;padding: 0px;border-top: 0px solid transparent;border-left: 0px solid transparent;border-right: 0px solid transparent;border-bottom: 0px solid transparent;border-radius: 0px;-webkit-border-radius: 0px; -moz-border-radius: 0px;" valign="top"><![endif]-->
+<div class="u-col u-col-50" style="max-width: 320px;min-width: 350px;display: table-cell;vertical-align: top;">
+  <div style="height: 100%;width: 100% !important;border-radius: 0px;-webkit-border-radius: 0px; -moz-border-radius: 0px;">
+  <!--[if (!mso)&(!IE)]><!--><div style="box-sizing: border-box; height: 100%; padding: 0px;border-top: 0px solid transparent;border-left: 0px solid transparent;border-right: 0px solid transparent;border-bottom: 0px solid transparent;border-radius: 0px;-webkit-border-radius: 0px; -moz-border-radius: 0px;"><!--<![endif]-->
+  
+<table style="font-family:helvetica,sans-serif;" role="presentation" cellpadding="0" cellspacing="0" width="100%" border="0">
+  <tbody>
+    <tr>
+      <td style="overflow-wrap:break-word;word-break:break-word;padding:10px;font-family:helvetica,sans-serif;" align="left">
+        
+  <!--[if mso]><style>.v-button {background: transparent !important;}</style><![endif]-->
+<div align="right">
+  <!--[if mso]><v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="" style="height:40px; v-text-anchor:middle; width:69px;" arcsize="62.5%"  stroke="f" fillcolor="#0071e3"><w:anchorlock/><center style="color:#FFFFFF;"><![endif]-->
+    <a href="" target="_blank" class="v-button" style="box-sizing: border-box;display: inline-block;text-decoration: none;-webkit-text-size-adjust: none;text-align: center;color: #FFFFFF; background-color: #0071e3; border-radius: 25px;-webkit-border-radius: 25px; -moz-border-radius: 25px; width:auto; max-width:100%; overflow-wrap: break-word; word-break: break-word; word-wrap:break-word; mso-border-alt: none;font-size: 17px;">
+      <span style="display:block;padding:10px 20px;line-height:120%;"><span style="line-height: 20.4px;">Buy</span></span>
+    </a>
+    <!--[if mso]></center></v:roundrect><![endif]-->
+</div>
+
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+  <!--[if (!mso)&(!IE)]><!--></div><!--<![endif]-->
+  </div>
+</div>
+<!--[if (mso)|(IE)]></td><![endif]-->
+<!--[if (mso)|(IE)]><td align="center" width="350" style="width: 350px;padding: 0px;border-top: 0px solid transparent;border-left: 0px solid transparent;border-right: 0px solid transparent;border-bottom: 0px solid transparent;border-radius: 0px;-webkit-border-radius: 0px; -moz-border-radius: 0px;" valign="top"><![endif]-->
+<div class="u-col u-col-50" style="max-width: 320px;min-width: 350px;display: table-cell;vertical-align: top;">
+  <div style="height: 100%;width: 100% !important;border-radius: 0px;-webkit-border-radius: 0px; -moz-border-radius: 0px;">
+  <!--[if (!mso)&(!IE)]><!--><div style="box-sizing: border-box; height: 100%; padding: 0px;border-top: 0px solid transparent;border-left: 0px solid transparent;border-right: 0px solid transparent;border-bottom: 0px solid transparent;border-radius: 0px;-webkit-border-radius: 0px; -moz-border-radius: 0px;"><!--<![endif]-->
+  
+<table style="font-family:helvetica,sans-serif;" role="presentation" cellpadding="0" cellspacing="0" width="100%" border="0">
+  <tbody>
+    <tr>
+      <td style="overflow-wrap:break-word;word-break:break-word;padding:20px;font-family:helvetica,sans-serif;" align="left">
+        
+  <div style="font-size: 17px; color: #0071e3; line-height: 140%; text-align: left; word-wrap: break-word;">
+    <p style="line-height: 140%;">Learn more </p>
+  </div>
+
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+  <!--[if (!mso)&(!IE)]><!--></div><!--<![endif]-->
+  </div>
+</div>
+<!--[if (mso)|(IE)]></td><![endif]-->
+      <!--[if (mso)|(IE)]></tr></table></td></tr></table><![endif]-->
+    </div>
+  </div>
+  </div>
+  
+
+
+  
+  
+<div class="u-row-container" style="padding: 15px 15px 70px;background-color: transparent">
+  <div class="u-row" style="margin: 0 auto;min-width: 320px;max-width: 700px;overflow-wrap: break-word;word-wrap: break-word;word-break: break-word;background-color: transparent;">
+    <div style="border-collapse: collapse;display: table;width: 100%;height: 100%;background-color: transparent;">
+      <!--[if (mso)|(IE)]><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td style="padding: 15px 15px 70px;background-color: transparent;" align="center"><table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:700px;"><tr style="background-color: transparent;"><![endif]-->
+      
+<!--[if (mso)|(IE)]><td align="center" width="700" style="width: 700px;padding: 0px;border-top: 0px solid transparent;border-left: 0px solid transparent;border-right: 0px solid transparent;border-bottom: 0px solid transparent;border-radius: 0px;-webkit-border-radius: 0px; -moz-border-radius: 0px;" valign="top"><![endif]-->
+<div class="u-col u-col-100" style="max-width: 320px;min-width: 700px;display: table-cell;vertical-align: top;">
+  <div style="height: 100%;width: 100% !important;border-radius: 0px;-webkit-border-radius: 0px; -moz-border-radius: 0px;">
+  <!--[if (!mso)&(!IE)]><!--><div style="box-sizing: border-box; height: 100%; padding: 0px;border-top: 0px solid transparent;border-left: 0px solid transparent;border-right: 0px solid transparent;border-bottom: 0px solid transparent;border-radius: 0px;-webkit-border-radius: 0px; -moz-border-radius: 0px;"><!--<![endif]-->
+  
+<table style="font-family:helvetica,sans-serif;" role="presentation" cellpadding="0" cellspacing="0" width="100%" border="0">
+  <tbody>
+    <tr>
+      <td style="overflow-wrap:break-word;word-break:break-word;padding:0px;font-family:helvetica,sans-serif;" align="left">
+        
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr>
+    <td style="padding-right: 0px;padding-left: 0px;" align="center">
+      
+      <img align="center" border="0" src="https://assets.unlayer.com/projects/139/1676495949571-hero_2x.jpg?w=1400px" alt="" title="" style="outline: none;text-decoration: none;-ms-interpolation-mode: bicubic;clear: both;display: inline-block !important;border: none;height: auto;float: none;width: 100%;max-width: 700px;" width="700"/>
+      
+    </td>
+  </tr>
+</table>
+
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<table style="font-family:helvetica,sans-serif;" role="presentation" cellpadding="0" cellspacing="0" width="100%" border="0">
+  <tbody>
+    <tr>
+      <td style="overflow-wrap:break-word;word-break:break-word;padding:10px;font-family:helvetica,sans-serif;" align="left">
+        
+  <div style="font-size: 21px; font-weight: 700; color: #9d9d9d; line-height: 140%; text-align: center; word-wrap: break-word;">
+    <p style="line-height: 140%;">Supercharged by M2 Pro and M2 Max.</p>
+  </div>
+
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<table style="font-family:helvetica,sans-serif;" role="presentation" cellpadding="0" cellspacing="0" width="100%" border="0">
+  <tbody>
+    <tr>
+      <td style="overflow-wrap:break-word;word-break:break-word;padding:10px;font-family:helvetica,sans-serif;" align="left">
+        
+  <div style="font-size: 21px; font-weight: 700; color: #9d9d9d; line-height: 140%; text-align: center; word-wrap: break-word;">
+    <p style="line-height: 140%;">Up to 22 hours of battery life.</p>
+  </div>
+
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<table style="font-family:helvetica,sans-serif;" role="presentation" cellpadding="0" cellspacing="0" width="100%" border="0">
+  <tbody>
+    <tr>
+      <td style="overflow-wrap:break-word;word-break:break-word;padding:10px;font-family:helvetica,sans-serif;" align="left">
+        
+  <div style="font-size: 21px; font-weight: 700; color: #9d9d9d; line-height: 140%; text-align: center; word-wrap: break-word;">
+    <p style="line-height: 140%;">Stunning Liquid Retina XDR display.</p>
+  </div>
+
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<table style="font-family:helvetica,sans-serif;" role="presentation" cellpadding="0" cellspacing="0" width="100%" border="0">
+  <tbody>
+    <tr>
+      <td style="overflow-wrap:break-word;word-break:break-word;padding:10px;font-family:helvetica,sans-serif;" align="left">
+        
+  <div style="font-size: 21px; font-weight: 700; color: #9d9d9d; line-height: 140%; text-align: center; word-wrap: break-word;">
+    <p style="line-height: 140%;">All the ports you need and faster Wi-Fi 6E.3</p>
+  </div>
+
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+  <!--[if (!mso)&(!IE)]><!--></div><!--<![endif]-->
+  </div>
+</div>
+<!--[if (mso)|(IE)]></td><![endif]-->
+      <!--[if (mso)|(IE)]></tr></table></td></tr></table><![endif]-->
+    </div>
+  </div>
+  </div>
+  
+
+
+  
+  
+<div class="u-row-container" style="padding: 50px;background-color: #1d1d1f">
+  <div class="u-row" style="margin: 0 auto;min-width: 320px;max-width: 700px;overflow-wrap: break-word;word-wrap: break-word;word-break: break-word;background-color: transparent;">
+    <div style="border-collapse: collapse;display: table;width: 100%;height: 100%;background-color: transparent;">
+      <!--[if (mso)|(IE)]><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td style="padding: 50px;background-color: #1d1d1f;" align="center"><table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:700px;"><tr style="background-color: transparent;"><![endif]-->
+      
+<!--[if (mso)|(IE)]><td align="center" width="700" style="width: 700px;padding: 0px;border-top: 0px solid transparent;border-left: 0px solid transparent;border-right: 0px solid transparent;border-bottom: 0px solid transparent;border-radius: 0px;-webkit-border-radius: 0px; -moz-border-radius: 0px;" valign="top"><![endif]-->
+<div class="u-col u-col-100" style="max-width: 320px;min-width: 700px;display: table-cell;vertical-align: top;">
+  <div style="height: 100%;width: 100% !important;border-radius: 0px;-webkit-border-radius: 0px; -moz-border-radius: 0px;">
+  <!--[if (!mso)&(!IE)]><!--><div style="box-sizing: border-box; height: 100%; padding: 0px;border-top: 0px solid transparent;border-left: 0px solid transparent;border-right: 0px solid transparent;border-bottom: 0px solid transparent;border-radius: 0px;-webkit-border-radius: 0px; -moz-border-radius: 0px;"><!--<![endif]-->
+  
+<table style="font-family:helvetica,sans-serif;" role="presentation" cellpadding="0" cellspacing="0" width="100%" border="0">
+  <tbody>
+    <tr>
+      <td style="overflow-wrap:break-word;word-break:break-word;padding:10px;font-family:helvetica,sans-serif;" align="left">
+        
+  <!--[if mso]><table role="presentation" width="100%"><tr><td><![endif]-->
+    <h1 style="margin: 0px; color: #ffffff; line-height: 120%; text-align: center; word-wrap: break-word; font-size: 32px; font-weight: 400;">Why Apple is the best place<br />to buy your new Mac.</h1>
+  <!--[if mso]></td></tr></table><![endif]-->
+
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+  <!--[if (!mso)&(!IE)]><!--></div><!--<![endif]-->
+  </div>
+</div>
+<!--[if (mso)|(IE)]></td><![endif]-->
+      <!--[if (mso)|(IE)]></tr></table></td></tr></table><![endif]-->
+    </div>
+  </div>
+  </div>
+  
+
+
+  
+  
+<div class="u-row-container" style="padding: 5px;background-color: #1d1d1f">
+  <div class="u-row" style="margin: 0 auto;min-width: 320px;max-width: 700px;overflow-wrap: break-word;word-wrap: break-word;word-break: break-word;background-color: #000000;">
+    <div style="border-collapse: collapse;display: table;width: 100%;height: 100%;background-color: transparent;">
+      <!--[if (mso)|(IE)]><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td style="padding: 5px;background-color: #1d1d1f;" align="center"><table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:700px;"><tr style="background-color: #000000;"><![endif]-->
+      
+<!--[if (mso)|(IE)]><td align="center" width="350" style="width: 350px;padding: 33px;border-top: 0px solid transparent;border-left: 0px solid transparent;border-right: 0px solid transparent;border-bottom: 0px solid transparent;border-radius: 0px;-webkit-border-radius: 0px; -moz-border-radius: 0px;" valign="top"><![endif]-->
+<div class="u-col u-col-50" style="max-width: 320px;min-width: 350px;display: table-cell;vertical-align: top;">
+  <div style="height: 100%;width: 100% !important;border-radius: 0px;-webkit-border-radius: 0px; -moz-border-radius: 0px;">
+  <!--[if (!mso)&(!IE)]><!--><div style="box-sizing: border-box; height: 100%; padding: 33px;border-top: 0px solid transparent;border-left: 0px solid transparent;border-right: 0px solid transparent;border-bottom: 0px solid transparent;border-radius: 0px;-webkit-border-radius: 0px; -moz-border-radius: 0px;"><!--<![endif]-->
+  
+<table style="font-family:helvetica,sans-serif;" role="presentation" cellpadding="0" cellspacing="0" width="100%" border="0">
+  <tbody>
+    <tr>
+      <td style="overflow-wrap:break-word;word-break:break-word;padding:10px;font-family:helvetica,sans-serif;" align="left">
+        
+  <div style="font-size: 24px; line-height: 120%; text-align: center; word-wrap: break-word;">
+    <p style="line-height: 120%;">Get credit toward</p>
+<p style="line-height: 120%;">a new Mac.</p>
+  </div>
+
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<table style="font-family:helvetica,sans-serif;" role="presentation" cellpadding="0" cellspacing="0" width="100%" border="0">
+  <tbody>
+    <tr>
+      <td style="overflow-wrap:break-word;word-break:break-word;padding:10px;font-family:helvetica,sans-serif;" align="left">
+        
+  <div style="font-size: 14px; line-height: 150%; text-align: center; word-wrap: break-word;">
+    <p style="line-height: 150%;">With Apple Trade In, just give us your eligible Mac and get credit for a new one. It’s good for you and the planet.</p>
+  </div>
+
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<table style="font-family:helvetica,sans-serif;" role="presentation" cellpadding="0" cellspacing="0" width="100%" border="0">
+  <tbody>
+    <tr>
+      <td style="overflow-wrap:break-word;word-break:break-word;padding:10px;font-family:helvetica,sans-serif;" align="left">
+        
+  <div style="font-size: 14px; color: #0071e3; line-height: 140%; text-align: center; word-wrap: break-word;">
+    <p style="line-height: 140%;">Find your trade-in value</p>
+  </div>
+
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+  <!--[if (!mso)&(!IE)]><!--></div><!--<![endif]-->
+  </div>
+</div>
+<!--[if (mso)|(IE)]></td><![endif]-->
+<!--[if (mso)|(IE)]><td align="center" width="350" style="width: 350px;padding: 0px;border-top: 0px solid transparent;border-left: 0px solid transparent;border-right: 0px solid transparent;border-bottom: 0px solid transparent;border-radius: 0px;-webkit-border-radius: 0px; -moz-border-radius: 0px;" valign="top"><![endif]-->
+<div class="u-col u-col-50" style="max-width: 320px;min-width: 350px;display: table-cell;vertical-align: top;">
+  <div style="height: 100%;width: 100% !important;border-radius: 0px;-webkit-border-radius: 0px; -moz-border-radius: 0px;">
+  <!--[if (!mso)&(!IE)]><!--><div style="box-sizing: border-box; height: 100%; padding: 0px;border-top: 0px solid transparent;border-left: 0px solid transparent;border-right: 0px solid transparent;border-bottom: 0px solid transparent;border-radius: 0px;-webkit-border-radius: 0px; -moz-border-radius: 0px;"><!--<![endif]-->
+  
+<table style="font-family:helvetica,sans-serif;" role="presentation" cellpadding="0" cellspacing="0" width="100%" border="0">
+  <tbody>
+    <tr>
+      <td style="overflow-wrap:break-word;word-break:break-word;padding:0px;font-family:helvetica,sans-serif;" align="left">
+        
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr>
+    <td style="padding-right: 0px;padding-left: 0px;" align="center">
+      
+      <img align="center" border="0" src="https://assets.unlayer.com/projects/139/1676496418898-credit_mac_2x.jpg?w=700px" alt="" title="" style="outline: none;text-decoration: none;-ms-interpolation-mode: bicubic;clear: both;display: inline-block !important;border: none;height: auto;float: none;width: 100%;max-width: 350px;" width="350"/>
+      
+    </td>
+  </tr>
+</table>
+
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+  <!--[if (!mso)&(!IE)]><!--></div><!--<![endif]-->
+  </div>
+</div>
+<!--[if (mso)|(IE)]></td><![endif]-->
+      <!--[if (mso)|(IE)]></tr></table></td></tr></table><![endif]-->
+    </div>
+  </div>
+  </div>
+  
+
+
+  
+  
+<div class="u-row-container" style="padding: 5px;background-color: #1d1d1f">
+  <div class="u-row" style="margin: 0 auto;min-width: 320px;max-width: 700px;overflow-wrap: break-word;word-wrap: break-word;word-break: break-word;background-color: #000000;">
+    <div style="border-collapse: collapse;display: table;width: 100%;height: 100%;background-color: transparent;">
+      <!--[if (mso)|(IE)]><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td style="padding: 5px;background-color: #1d1d1f;" align="center"><table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:700px;"><tr style="background-color: #000000;"><![endif]-->
+      
+<!--[if (mso)|(IE)]><td align="center" width="345" style="width: 345px;padding: 33px 0px 0px;border-top: 0px solid transparent;border-left: 0px solid transparent;border-right: 5px solid #1d1d1f;border-bottom: 0px solid transparent;border-radius: 0px;-webkit-border-radius: 0px; -moz-border-radius: 0px;" valign="top"><![endif]-->
+<div class="u-col u-col-50" style="max-width: 320px;min-width: 350px;display: table-cell;vertical-align: top;">
+  <div style="height: 100%;width: 100% !important;border-radius: 0px;-webkit-border-radius: 0px; -moz-border-radius: 0px;">
+  <!--[if (!mso)&(!IE)]><!--><div style="box-sizing: border-box; height: 100%; padding: 33px 0px 0px;border-top: 0px solid transparent;border-left: 0px solid transparent;border-right: 5px solid #1d1d1f;border-bottom: 0px solid transparent;border-radius: 0px;-webkit-border-radius: 0px; -moz-border-radius: 0px;"><!--<![endif]-->
+  
+<table style="font-family:helvetica,sans-serif;" role="presentation" cellpadding="0" cellspacing="0" width="100%" border="0">
+  <tbody>
+    <tr>
+      <td style="overflow-wrap:break-word;word-break:break-word;padding:10px;font-family:helvetica,sans-serif;" align="left">
+        
+  <div style="font-size: 24px; line-height: 120%; text-align: center; word-wrap: break-word;">
+    <p style="line-height: 120%;">Apple Card Monthly Installments.</p>
+  </div>
+
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<table style="font-family:helvetica,sans-serif;" role="presentation" cellpadding="0" cellspacing="0" width="100%" border="0">
+  <tbody>
+    <tr>
+      <td style="overflow-wrap:break-word;word-break:break-word;padding:10px;font-family:helvetica,sans-serif;" align="left">
+        
+  <div style="font-size: 14px; line-height: 150%; text-align: center; word-wrap: break-word;">
+    <p style="line-height: 150%;">Pay over time, interest-free when you choose to check out with Apple Card Monthly Installments.</p>
+  </div>
+
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<table style="font-family:helvetica,sans-serif;" role="presentation" cellpadding="0" cellspacing="0" width="100%" border="0">
+  <tbody>
+    <tr>
+      <td style="overflow-wrap:break-word;word-break:break-word;padding:10px;font-family:helvetica,sans-serif;" align="left">
+        
+  <div style="font-size: 14px; color: #0071e3; line-height: 140%; text-align: center; word-wrap: break-word;">
+    <p style="line-height: 140%;">Learn more</p>
+  </div>
+
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<table style="font-family:helvetica,sans-serif;" role="presentation" cellpadding="0" cellspacing="0" width="100%" border="0">
+  <tbody>
+    <tr>
+      <td style="overflow-wrap:break-word;word-break:break-word;padding:0px;font-family:helvetica,sans-serif;" align="left">
+        
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr>
+    <td style="padding-right: 0px;padding-left: 0px;" align="center">
+      
+      <img align="center" border="0" src="https://assets.unlayer.com/projects/139/1676497065877-apple_card_2x.jpg" alt="" title="" style="outline: none;text-decoration: none;-ms-interpolation-mode: bicubic;clear: both;display: inline-block !important;border: none;height: auto;float: none;width: 100%;max-width: 350px;" width="350"/>
+      
+    </td>
+  </tr>
+</table>
+
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+  <!--[if (!mso)&(!IE)]><!--></div><!--<![endif]-->
+  </div>
+</div>
+<!--[if (mso)|(IE)]></td><![endif]-->
+<!--[if (mso)|(IE)]><td align="center" width="345" style="width: 345px;padding: 33px 0px 0px;border-top: 0px solid transparent;border-left: 5px solid #1d1d1f;border-right: 0px solid transparent;border-bottom: 0px solid transparent;border-radius: 0px;-webkit-border-radius: 0px; -moz-border-radius: 0px;" valign="top"><![endif]-->
+<div class="u-col u-col-50" style="max-width: 320px;min-width: 350px;display: table-cell;vertical-align: top;">
+  <div style="height: 100%;width: 100% !important;border-radius: 0px;-webkit-border-radius: 0px; -moz-border-radius: 0px;">
+  <!--[if (!mso)&(!IE)]><!--><div style="box-sizing: border-box; height: 100%; padding: 33px 0px 0px;border-top: 0px solid transparent;border-left: 5px solid #1d1d1f;border-right: 0px solid transparent;border-bottom: 0px solid transparent;border-radius: 0px;-webkit-border-radius: 0px; -moz-border-radius: 0px;"><!--<![endif]-->
+  
+<table style="font-family:helvetica,sans-serif;" role="presentation" cellpadding="0" cellspacing="0" width="100%" border="0">
+  <tbody>
+    <tr>
+      <td style="overflow-wrap:break-word;word-break:break-word;padding:10px;font-family:helvetica,sans-serif;" align="left">
+        
+  <div style="font-size: 24px; line-height: 120%; text-align: center; word-wrap: break-word;">
+    <p style="line-height: 120%;">Save on a new</p>
+<p style="line-height: 120%;">Mac with Apple</p>
+<p style="line-height: 120%;">education pricing.</p>
+  </div>
+
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<table style="font-family:helvetica,sans-serif;" role="presentation" cellpadding="0" cellspacing="0" width="100%" border="0">
+  <tbody>
+    <tr>
+      <td style="overflow-wrap:break-word;word-break:break-word;padding:10px;font-family:helvetica,sans-serif;" align="left">
+        
+  <div style="font-size: 14px; color: #0071e3; line-height: 140%; text-align: center; word-wrap: break-word;">
+    <p style="line-height: 140%;">Shop</p>
+  </div>
+
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<table style="font-family:helvetica,sans-serif;" role="presentation" cellpadding="0" cellspacing="0" width="100%" border="0">
+  <tbody>
+    <tr>
+      <td style="overflow-wrap:break-word;word-break:break-word;padding:21px 0px 0px;font-family:helvetica,sans-serif;" align="left">
+        
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr>
+    <td style="padding-right: 0px;padding-left: 0px;" align="center">
+      
+      <img align="center" border="0" src="https://assets.unlayer.com/projects/139/1676497143860-edu_mac_2x.jpg" alt="" title="" style="outline: none;text-decoration: none;-ms-interpolation-mode: bicubic;clear: both;display: inline-block !important;border: none;height: auto;float: none;width: 100%;max-width: 350px;" width="350"/>
+      
+    </td>
+  </tr>
+</table>
+
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+  <!--[if (!mso)&(!IE)]><!--></div><!--<![endif]-->
+  </div>
+</div>
+<!--[if (mso)|(IE)]></td><![endif]-->
+      <!--[if (mso)|(IE)]></tr></table></td></tr></table><![endif]-->
+    </div>
+  </div>
+  </div>
+  
+
+
+  
+  
+<div class="u-row-container" style="padding: 5px;background-color: #1d1d1f">
+  <div class="u-row" style="margin: 0 auto;min-width: 320px;max-width: 700px;overflow-wrap: break-word;word-wrap: break-word;word-break: break-word;background-color: #000000;">
+    <div style="border-collapse: collapse;display: table;width: 100%;height: 100%;background-color: transparent;">
+      <!--[if (mso)|(IE)]><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td style="padding: 5px;background-color: #1d1d1f;" align="center"><table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:700px;"><tr style="background-color: #000000;"><![endif]-->
+      
+<!--[if (mso)|(IE)]><td align="center" width="350" style="width: 350px;padding: 0px;border-top: 0px solid transparent;border-left: 0px solid transparent;border-right: 0px solid transparent;border-bottom: 0px solid transparent;border-radius: 0px;-webkit-border-radius: 0px; -moz-border-radius: 0px;" valign="top"><![endif]-->
+<div class="u-col u-col-50" style="max-width: 320px;min-width: 350px;display: table-cell;vertical-align: top;">
+  <div style="height: 100%;width: 100% !important;border-radius: 0px;-webkit-border-radius: 0px; -moz-border-radius: 0px;">
+  <!--[if (!mso)&(!IE)]><!--><div style="box-sizing: border-box; height: 100%; padding: 0px;border-top: 0px solid transparent;border-left: 0px solid transparent;border-right: 0px solid transparent;border-bottom: 0px solid transparent;border-radius: 0px;-webkit-border-radius: 0px; -moz-border-radius: 0px;"><!--<![endif]-->
+  
+<table style="font-family:helvetica,sans-serif;" role="presentation" cellpadding="0" cellspacing="0" width="100%" border="0">
+  <tbody>
+    <tr>
+      <td style="overflow-wrap:break-word;word-break:break-word;padding:0px;font-family:helvetica,sans-serif;" align="left">
+        
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr>
+    <td style="padding-right: 0px;padding-left: 0px;" align="center">
+      
+      <img align="center" border="0" src="https://assets.unlayer.com/projects/139/1676496501021-specialist_2x.jpg?w=700px" alt="" title="" style="outline: none;text-decoration: none;-ms-interpolation-mode: bicubic;clear: both;display: inline-block !important;border: none;height: auto;float: none;width: 100%;max-width: 350px;" width="350"/>
+      
+    </td>
+  </tr>
+</table>
+
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+  <!--[if (!mso)&(!IE)]><!--></div><!--<![endif]-->
+  </div>
+</div>
+<!--[if (mso)|(IE)]></td><![endif]-->
+<!--[if (mso)|(IE)]><td align="center" width="350" style="width: 350px;padding: 33px;border-top: 0px solid transparent;border-left: 0px solid transparent;border-right: 0px solid transparent;border-bottom: 0px solid transparent;border-radius: 0px;-webkit-border-radius: 0px; -moz-border-radius: 0px;" valign="top"><![endif]-->
+<div class="u-col u-col-50" style="max-width: 320px;min-width: 350px;display: table-cell;vertical-align: top;">
+  <div style="height: 100%;width: 100% !important;border-radius: 0px;-webkit-border-radius: 0px; -moz-border-radius: 0px;">
+  <!--[if (!mso)&(!IE)]><!--><div style="box-sizing: border-box; height: 100%; padding: 33px;border-top: 0px solid transparent;border-left: 0px solid transparent;border-right: 0px solid transparent;border-bottom: 0px solid transparent;border-radius: 0px;-webkit-border-radius: 0px; -moz-border-radius: 0px;"><!--<![endif]-->
+  
+<table style="font-family:helvetica,sans-serif;" role="presentation" cellpadding="0" cellspacing="0" width="100%" border="0">
+  <tbody>
+    <tr>
+      <td style="overflow-wrap:break-word;word-break:break-word;padding:10px;font-family:helvetica,sans-serif;" align="left">
+        
+  <div style="font-size: 24px; line-height: 120%; text-align: center; word-wrap: break-word;">
+    <p style="line-height: 120%;">Shop one on one with</p>
+<p style="line-height: 120%;">a Mac Specialist.</p>
+  </div>
+
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<table style="font-family:helvetica,sans-serif;" role="presentation" cellpadding="0" cellspacing="0" width="100%" border="0">
+  <tbody>
+    <tr>
+      <td style="overflow-wrap:break-word;word-break:break-word;padding:10px;font-family:helvetica,sans-serif;" align="left">
+        
+  <div style="font-size: 14px; line-height: 150%; text-align: center; word-wrap: break-word;">
+    <p style="line-height: 150%;">Our Specialists can help you choose, configure, and buy the perfect Mac.</p>
+  </div>
+
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<table style="font-family:helvetica,sans-serif;" role="presentation" cellpadding="0" cellspacing="0" width="100%" border="0">
+  <tbody>
+    <tr>
+      <td style="overflow-wrap:break-word;word-break:break-word;padding:10px;font-family:helvetica,sans-serif;" align="left">
+        
+  <div style="font-size: 14px; color: #0071e3; line-height: 140%; text-align: center; word-wrap: break-word;">
+    <p style="line-height: 140%;">Find a store</p>
+  </div>
+
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+  <!--[if (!mso)&(!IE)]><!--></div><!--<![endif]-->
+  </div>
+</div>
+<!--[if (mso)|(IE)]></td><![endif]-->
+      <!--[if (mso)|(IE)]></tr></table></td></tr></table><![endif]-->
+    </div>
+  </div>
+  </div>
+  
+
+
+  
+  
+<div class="u-row-container" style="padding: 10px 10px 50px;background-color: #1d1d1f">
+  <div class="u-row" style="margin: 0 auto;min-width: 320px;max-width: 700px;overflow-wrap: break-word;word-wrap: break-word;word-break: break-word;background-color: transparent;">
+    <div style="border-collapse: collapse;display: table;width: 100%;height: 100%;background-color: transparent;">
+      <!--[if (mso)|(IE)]><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td style="padding: 10px 10px 50px;background-color: #1d1d1f;" align="center"><table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:700px;"><tr style="background-color: transparent;"><![endif]-->
+      
+<!--[if (mso)|(IE)]><td align="center" width="700" style="width: 700px;padding: 0px 30px;border-top: 0px solid transparent;border-left: 0px solid transparent;border-right: 0px solid transparent;border-bottom: 0px solid transparent;border-radius: 0px;-webkit-border-radius: 0px; -moz-border-radius: 0px;" valign="top"><![endif]-->
+<div class="u-col u-col-100" style="max-width: 320px;min-width: 700px;display: table-cell;vertical-align: top;">
+  <div style="height: 100%;width: 100% !important;border-radius: 0px;-webkit-border-radius: 0px; -moz-border-radius: 0px;">
+  <!--[if (!mso)&(!IE)]><!--><div style="box-sizing: border-box; height: 100%; padding: 0px 30px;border-top: 0px solid transparent;border-left: 0px solid transparent;border-right: 0px solid transparent;border-bottom: 0px solid transparent;border-radius: 0px;-webkit-border-radius: 0px; -moz-border-radius: 0px;"><!--<![endif]-->
+  
+<table style="font-family:helvetica,sans-serif;" role="presentation" cellpadding="0" cellspacing="0" width="100%" border="0">
+  <tbody>
+    <tr>
+      <td style="overflow-wrap:break-word;word-break:break-word;padding:5px;font-family:helvetica,sans-serif;" align="left">
+        
+<div aria-label="menu" class="menu" style="text-align:center;">
+<!--[if (mso)|(IE)]><table role="presentation" border="0" cellpadding="0" cellspacing="0" align="center" style=""><tr><![endif]-->
+
+  <!--[if (mso)|(IE)]><td style="padding:5px 10px"><![endif]-->
+  
+    <a aria-label="Menu item - Shop Online" href="https://www.apple.com/" target="_self" style="padding:5px 10px;display:inline-block;color:#d2d2d7;font-size:14px;text-decoration:none" >
+      Shop Online
+    </a>
+  
+  <!--[if (mso)|(IE)]></td><![endif]-->
+  
+    <!--[if (mso)|(IE)]><td style="padding:5px 10px"><![endif]-->
+    <span aria-label="menu separator" style="padding:5px 10px;display:inline-block;color:#424245;font-size:14px;">
+      |
+    </span>
+    <!--[if (mso)|(IE)]></td><![endif]-->
+  
+
+  <!--[if (mso)|(IE)]><td style="padding:5px 10px"><![endif]-->
+  
+    <a aria-label="Menu item - Find a Store" href="https://www.apple.com/" target="_self" style="padding:5px 10px;display:inline-block;color:#d2d2d7;font-size:14px;text-decoration:none" >
+      Find a Store
+    </a>
+  
+  <!--[if (mso)|(IE)]></td><![endif]-->
+  
+    <!--[if (mso)|(IE)]><td style="padding:5px 10px"><![endif]-->
+    <span aria-label="menu separator" style="padding:5px 10px;display:inline-block;color:#424245;font-size:14px;">
+      |
+    </span>
+    <!--[if (mso)|(IE)]></td><![endif]-->
+  
+
+  <!--[if (mso)|(IE)]><td style="padding:5px 10px"><![endif]-->
+  
+    <a aria-label="Menu item - 1-800-MY-APPLE" href="https://www.apple.com/" target="_self" style="padding:5px 10px;display:inline-block;color:#d2d2d7;font-size:14px;text-decoration:none" >
+      1-800-MY-APPLE
+    </a>
+  
+  <!--[if (mso)|(IE)]></td><![endif]-->
+  
+    <!--[if (mso)|(IE)]><td style="padding:5px 10px"><![endif]-->
+    <span aria-label="menu separator" style="padding:5px 10px;display:inline-block;color:#424245;font-size:14px;">
+      |
+    </span>
+    <!--[if (mso)|(IE)]></td><![endif]-->
+  
+
+  <!--[if (mso)|(IE)]><td style="padding:5px 10px"><![endif]-->
+  
+    <a aria-label="Menu item - Get the Apple Store App" href="https://www.apple.com/" target="_self" style="padding:5px 10px;display:inline-block;color:#d2d2d7;font-size:14px;text-decoration:none" >
+      Get the Apple Store App
+    </a>
+  
+  <!--[if (mso)|(IE)]></td><![endif]-->
+  
+
+<!--[if (mso)|(IE)]></tr></table><![endif]-->
+</div>
+
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<table style="font-family:helvetica,sans-serif;" role="presentation" cellpadding="0" cellspacing="0" width="100%" border="0">
+  <tbody>
+    <tr>
+      <td style="overflow-wrap:break-word;word-break:break-word;padding:10px;font-family:helvetica,sans-serif;" align="left">
+        
+  <table role="presentation" aria-label="divider" height="0px" align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="border-collapse: collapse;table-layout: fixed;border-spacing: 0;mso-table-lspace: 0pt;mso-table-rspace: 0pt;vertical-align: top;border-top: 1px solid #424245;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%">
+    <tbody>
+      <tr style="vertical-align: top">
+        <td style="word-break: break-word;border-collapse: collapse !important;vertical-align: top;font-size: 0px;line-height: 0px;mso-line-height-rule: exactly;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%">
+          <span>&#160;</span>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<table id="u_content_text_17" style="font-family:helvetica,sans-serif;" role="presentation" cellpadding="0" cellspacing="0" width="100%" border="0">
+  <tbody>
+    <tr>
+      <td style="overflow-wrap:break-word;word-break:break-word;padding:10px;font-family:helvetica,sans-serif;" align="left">
+        
+  <div style="font-size: 12px; color: #86868b; line-height: 200%; text-align: left; word-wrap: break-word;">
+    <p style="line-height: 200%;">If you reside in the U.S. territories, please call Goldman Sachs at 877-255-5923 with questions about Apple Card.</p>
+<p style="line-height: 200%;">TM and © 2023 Apple Inc. One Apple Park Way, MS 96-DM, Cupertino, CA 95014.</p>
+<p style="line-height: 200%;"><a rel="noopener" href="https://www.apple.com/" target="_blank">All Rights Reserved</a>    |   <a rel="noopener" href="https://www.apple.com/" target="_blank">Privacy Policy</a>    |   <a rel="noopener" href="https://www.apple.com/" target="_blank">My Apple ID</a></p>
+<p style="line-height: 200%;">If you prefer not to receive commercial email from Apple, or if you’ve changed your email address, please <a rel="noopener" href="https://www.apple.com/" target="_blank">click here</a>.</p>
+  </div>
+
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+  <!--[if (!mso)&(!IE)]><!--></div><!--<![endif]-->
+  </div>
+</div>
+<!--[if (mso)|(IE)]></td><![endif]-->
+      <!--[if (mso)|(IE)]></tr></table></td></tr></table><![endif]-->
+    </div>
+  </div>
+  </div>
+  
+
+
+    <!--[if (mso)|(IE)]></td></tr></table><![endif]-->
+    </td>
+  </tr>
+  </tbody>
+  </table>
+  <!--[if mso]></div><![endif]-->
+  <!--[if IE]></div><![endif]-->
+</body>
+
+</html>
+
     `,
-    design: {
-      counters: {
-        u_column: 13,
-        u_row: 8,
-        u_content_text: 24,
-        u_content_image: 8,
-        u_content_button: 2,
-        u_content_divider: 1,
-        u_content_heading: 3,
-        u_content_menu: 1,
-      },
-      body: {
-        id: "macbook_pro_template",
-        rows: [
-          {
-            id: "row_header",
-            cells: [1],
-            columns: [
-              {
-                id: "column_header",
-                contents: [
-                  {
-                    id: "apple_logo",
-                    type: "image",
-                    values: {
-                      containerPadding: "10px 10px 0px",
-                      src: {
-                        url: "https://assets.unlayer.com/projects/139/1676495528722-apple_logo_circle_f5f5f7-000_2x.png",
-                        width: 116,
-                        height: 116,
-                        maxWidth: "15%",
-                      },
-                      textAlign: "center",
-                      altText: "Apple Logo",
-                    },
-                  },
-                  {
-                    id: "main_heading",
-                    type: "heading",
-                    values: {
-                      containerPadding: "0px",
-                      text: "MacBook Pro",
-                      color: "#ffffff",
-                      textAlign: "center",
-                      fontSize: "48px",
-                      fontFamily: "helvetica,sans-serif",
-                      fontWeight: 400,
-                      lineHeight: "140%",
-                    },
-                  },
-                  {
-                    id: "sub_heading",
-                    type: "heading",
-                    values: {
-                      containerPadding: "0px",
-                      text: "Mover. Maker. Boundary breaker.",
-                      color: "#ffffff",
-                      textAlign: "center",
-                      fontSize: "28px",
-                      fontFamily: "helvetica,sans-serif",
-                      lineHeight: "140%",
-                    },
-                  },
-                  {
-                    id: "price_text",
-                    type: "text",
-                    values: {
-                      containerPadding: "10px",
-                      text: "<p>From $1999 or $166.58/mo. for 12 mo.</p>",
-                      color: "#ffffff",
-                      textAlign: "center",
-                      fontSize: "17px",
-                      fontFamily: "helvetica,sans-serif",
-                      lineHeight: "140%",
-                    },
-                  },
-                ],
-                values: {
-                  backgroundColor: "#000000",
-                  padding: "0px",
-                },
-              },
-            ],
-            values: {
-              backgroundColor: "#000000",
-              padding: "0px",
-            },
-          },
-          {
-            id: "row_buttons",
-            cells: [1, 1],
-            columns: [
-              {
-                id: "column_buy",
-                contents: [
-                  {
-                    id: "buy_button",
-                    type: "button",
-                    values: {
-                      containerPadding: "10px",
-                      text: "Buy",
-                      color: "#FFFFFF",
-                      backgroundColor: "#0071e3",
-                      textAlign: "right",
-                      fontSize: "17px",
-                      fontFamily: "helvetica,sans-serif",
-                      borderRadius: "25px",
-                      padding: "10px 20px",
-                      href: {
-                        name: "web",
-                        values: {
-                          href: "#",
-                          target: "_blank",
-                        },
-                      },
-                    },
-                  },
-                ],
-                values: {
-                  backgroundColor: "#000000",
-                },
-              },
-              {
-                id: "column_learn",
-                contents: [
-                  {
-                    id: "learn_text",
-                    type: "text",
-                    values: {
-                      containerPadding: "20px",
-                      text: "<p>Learn more</p>",
-                      color: "#0071e3",
-                      textAlign: "left",
-                      fontSize: "17px",
-                      fontFamily: "helvetica,sans-serif",
-                      lineHeight: "140%",
-                    },
-                  },
-                ],
-                values: {
-                  backgroundColor: "#000000",
-                },
-              },
-            ],
-            values: {
-              backgroundColor: "#000000",
-              padding: "0px",
-            },
-          },
-          {
-            id: "row_hero",
-            cells: [1],
-            columns: [
-              {
-                id: "column_hero",
-                contents: [
-                  {
-                    id: "hero_image",
-                    type: "image",
-                    values: {
-                      containerPadding: "0px",
-                      src: {
-                        url: "https://assets.unlayer.com/projects/139/1676495949571-hero_2x.jpg",
-                        width: 1424,
-                        height: 880,
-                      },
-                      textAlign: "center",
-                      altText: "MacBook Pro Hero",
-                    },
-                  },
-                  {
-                    id: "feature_1",
-                    type: "text",
-                    values: {
-                      containerPadding: "10px",
-                      text: "<p>Supercharged by M2 Pro and M2 Max.</p>",
-                      color: "#9d9d9d",
-                      textAlign: "center",
-                      fontSize: "21px",
-                      fontFamily: "helvetica,sans-serif",
-                      fontWeight: 700,
-                      lineHeight: "140%",
-                    },
-                  },
-                  {
-                    id: "feature_2",
-                    type: "text",
-                    values: {
-                      containerPadding: "10px",
-                      text: "<p>Up to 22 hours of battery life.</p>",
-                      color: "#9d9d9d",
-                      textAlign: "center",
-                      fontSize: "21px",
-                      fontFamily: "helvetica,sans-serif",
-                      fontWeight: 700,
-                      lineHeight: "140%",
-                    },
-                  },
-                  {
-                    id: "feature_3",
-                    type: "text",
-                    values: {
-                      containerPadding: "10px",
-                      text: "<p>Stunning Liquid Retina XDR display.</p>",
-                      color: "#9d9d9d",
-                      textAlign: "center",
-                      fontSize: "21px",
-                      fontFamily: "helvetica,sans-serif",
-                      fontWeight: 700,
-                      lineHeight: "140%",
-                    },
-                  },
-                  {
-                    id: "feature_4",
-                    type: "text",
-                    values: {
-                      containerPadding: "10px",
-                      text: "<p>All the ports you need and faster Wi-Fi 6E.</p>",
-                      color: "#9d9d9d",
-                      textAlign: "center",
-                      fontSize: "21px",
-                      fontFamily: "helvetica,sans-serif",
-                      fontWeight: 700,
-                      lineHeight: "140%",
-                    },
-                  },
-                ],
-                values: {
-                  backgroundColor: "#000000",
-                },
-              },
-            ],
-            values: {
-              backgroundColor: "#000000",
-              padding: "15px 15px 70px",
-            },
-          },
-          {
-            id: "row_why_apple",
-            cells: [1],
-            columns: [
-              {
-                id: "column_why_apple",
-                contents: [
-                  {
-                    id: "why_apple_heading",
-                    type: "heading",
-                    values: {
-                      containerPadding: "10px",
-                      text: "Why Apple is the best place<br />to buy your new Mac.",
-                      color: "#ffffff",
-                      textAlign: "center",
-                      fontSize: "32px",
-                      fontFamily: "helvetica,sans-serif",
-                      lineHeight: "120%",
-                    },
-                  },
-                ],
-                values: {
-                  backgroundColor: "#1d1d1f",
-                },
-              },
-            ],
-            values: {
-              backgroundColor: "#1d1d1f",
-              padding: "50px",
-            },
-          },
-        ],
-        headers: [],
-        footers: [],
-        values: {
-          contentWidth: 700,
-          fontFamily: {
-            label: "Helvetica",
-            value: "helvetica,sans-serif",
-          },
-          textColor: "#ffffff",
-          backgroundColor: "#000000",
-          linkStyle: {
-            linkColor: "#0071e3",
-            linkHoverColor: "#0000ee",
-            linkUnderline: true,
-            linkHoverUnderline: true,
-          },
-          popupPosition: "center",
-          popupWidth: "600px",
-          popupHeight: "auto",
-          borderRadius: "10px",
-          contentAlign: "center",
-          contentVerticalAlign: "center",
-          preheaderText: "",
-          backgroundImage: {
-            url: "",
-            fullWidth: true,
-            repeat: "no-repeat",
-            size: "custom",
-            position: "center",
-          },
-          popupBackgroundColor: "#FFFFFF",
-          popupOverlay_backgroundColor: "rgba(0, 0, 0, 0.1)",
-          popupCloseButton_position: "top-right",
-          popupCloseButton_backgroundColor: "#DDDDDD",
-          popupCloseButton_iconColor: "#000000",
-          popupCloseButton_borderRadius: "0px",
-          popupCloseButton_margin: "0px",
-          popupCloseButton_action: {
-            name: "close_popup",
-            values: {},
-          },
-        },
-      },
-      schemaVersion: 16,
-    },
   },
   {
     id: "healthcare-template",
@@ -432,272 +928,6 @@ export const emailTemplates = [
         </tr>
       </table>
     `,
-    design: {
-      counters: {
-        u_column: 3,
-        u_row: 4,
-        u_content_text: 6,
-        u_content_heading: 4,
-        u_content_image: 3,
-        u_content_button: 2,
-      },
-      body: {
-        id: "healthcare_template",
-        rows: [
-          {
-            id: "row_header",
-            cells: [1],
-            columns: [
-              {
-                id: "column_header",
-                contents: [
-                  {
-                    id: "header_image",
-                    type: "image",
-                    values: {
-                      containerPadding: "0px",
-                      src: {
-                        url: "https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=600&h=200&fit=crop",
-                        width: 600,
-                        height: 200,
-                      },
-                      textAlign: "center",
-                      altText: "Healthcare Header",
-                    },
-                  },
-                  {
-                    id: "main_heading",
-                    type: "heading",
-                    values: {
-                      containerPadding: "20px",
-                      text: "Your Health, Our Priority",
-                      color: "#2c5aa0",
-                      textAlign: "center",
-                      fontSize: "32px",
-                      fontFamily: "arial,helvetica,sans-serif",
-                      fontWeight: "bold",
-                      lineHeight: "140%",
-                    },
-                  },
-                ],
-                values: {
-                  backgroundColor: "#ffffff",
-                  padding: "0px",
-                },
-              },
-            ],
-            values: {
-              backgroundColor: "#f8f9fa",
-              padding: "0px",
-            },
-          },
-          {
-            id: "row_content",
-            cells: [1, 1],
-            columns: [
-              {
-                id: "column_text",
-                contents: [
-                  {
-                    id: "sub_heading",
-                    type: "heading",
-                    values: {
-                      containerPadding: "20px 20px 10px 20px",
-                      text: "Comprehensive Care for You & Your Family",
-                      color: "#2c5aa0",
-                      textAlign: "left",
-                      fontSize: "24px",
-                      fontFamily: "arial,helvetica,sans-serif",
-                      fontWeight: "bold",
-                      lineHeight: "130%",
-                    },
-                  },
-                  {
-                    id: "content_text",
-                    type: "text",
-                    values: {
-                      containerPadding: "10px 20px",
-                      text: "<p>Experience world-class healthcare services with our team of experienced professionals. From preventive care to specialized treatments, we're here to support your wellness journey.</p><ul><li>24/7 Emergency Care</li><li>Specialized Medical Services</li><li>Preventive Health Screenings</li><li>Telemedicine Consultations</li></ul>",
-                      color: "#333333",
-                      textAlign: "left",
-                      fontSize: "16px",
-                      fontFamily: "arial,helvetica,sans-serif",
-                      lineHeight: "150%",
-                    },
-                  },
-                  {
-                    id: "cta_button",
-                    type: "button",
-                    values: {
-                      containerPadding: "20px",
-                      text: "Schedule Appointment",
-                      color: "#ffffff",
-                      backgroundColor: "#28a745",
-                      textAlign: "center",
-                      fontSize: "16px",
-                      fontFamily: "arial,helvetica,sans-serif",
-                      fontWeight: "bold",
-                      borderRadius: "6px",
-                      padding: "14px 30px",
-                      href: {
-                        name: "web",
-                        values: {
-                          href: "#",
-                          target: "_blank",
-                        },
-                      },
-                    },
-                  },
-                ],
-                values: {
-                  backgroundColor: "#ffffff",
-                  padding: "0px",
-                },
-              },
-              {
-                id: "column_image",
-                contents: [
-                  {
-                    id: "doctor_image",
-                    type: "image",
-                    values: {
-                      containerPadding: "20px",
-                      src: {
-                        url: "https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=400&h=300&fit=crop",
-                        width: 400,
-                        height: 300,
-                      },
-                      textAlign: "center",
-                      altText: "Healthcare Professional",
-                    },
-                  },
-                ],
-                values: {
-                  backgroundColor: "#ffffff",
-                  padding: "0px",
-                },
-              },
-            ],
-            values: {
-              backgroundColor: "#ffffff",
-              padding: "20px",
-            },
-          },
-          {
-            id: "row_services",
-            cells: [1],
-            columns: [
-              {
-                id: "column_services",
-                contents: [
-                  {
-                    id: "services_heading",
-                    type: "heading",
-                    values: {
-                      containerPadding: "20px 20px 10px 20px",
-                      text: "Special Health Promotion",
-                      color: "#ffffff",
-                      textAlign: "center",
-                      fontSize: "28px",
-                      fontFamily: "arial,helvetica,sans-serif",
-                      fontWeight: "bold",
-                      lineHeight: "130%",
-                    },
-                  },
-                  {
-                    id: "promotion_text",
-                    type: "text",
-                    values: {
-                      containerPadding: "10px 20px",
-                      text: "<p style='text-align: center;'><strong>Limited Time Offer: 20% OFF</strong><br/>Annual Health Check-up Package<br/>Includes comprehensive screenings, lab tests, and consultation</p>",
-                      color: "#ffffff",
-                      textAlign: "center",
-                      fontSize: "18px",
-                      fontFamily: "arial,helvetica,sans-serif",
-                      lineHeight: "140%",
-                    },
-                  },
-                  {
-                    id: "promo_button",
-                    type: "button",
-                    values: {
-                      containerPadding: "20px",
-                      text: "Claim Your Discount",
-                      color: "#2c5aa0",
-                      backgroundColor: "#ffffff",
-                      textAlign: "center",
-                      fontSize: "16px",
-                      fontFamily: "arial,helvetica,sans-serif",
-                      fontWeight: "bold",
-                      borderRadius: "6px",
-                      padding: "14px 30px",
-                      href: {
-                        name: "web",
-                        values: {
-                          href: "#",
-                          target: "_blank",
-                        },
-                      },
-                    },
-                  },
-                ],
-                values: {
-                  backgroundColor: "#2c5aa0",
-                  padding: "0px",
-                },
-              },
-            ],
-            values: {
-              backgroundColor: "#2c5aa0",
-              padding: "20px",
-            },
-          },
-        ],
-        headers: [],
-        footers: [],
-        values: {
-          contentWidth: 600,
-          fontFamily: {
-            label: "Arial",
-            value: "arial,helvetica,sans-serif",
-          },
-          textColor: "#333333",
-          backgroundColor: "#f8f9fa",
-          linkStyle: {
-            linkColor: "#2c5aa0",
-            linkHoverColor: "#1e3a5f",
-            linkUnderline: true,
-            linkHoverUnderline: true,
-          },
-          popupPosition: "center",
-          popupWidth: "600px",
-          popupHeight: "auto",
-          borderRadius: "10px",
-          contentAlign: "center",
-          contentVerticalAlign: "center",
-          preheaderText: "",
-          backgroundImage: {
-            url: "",
-            fullWidth: true,
-            repeat: "no-repeat",
-            size: "custom",
-            position: "center",
-          },
-          popupBackgroundColor: "#FFFFFF",
-          popupOverlay_backgroundColor: "rgba(0, 0, 0, 0.1)",
-          popupCloseButton_position: "top-right",
-          popupCloseButton_backgroundColor: "#DDDDDD",
-          popupCloseButton_iconColor: "#000000",
-          popupCloseButton_borderRadius: "0px",
-          popupCloseButton_margin: "0px",
-          popupCloseButton_action: {
-            name: "close_popup",
-            values: {},
-          },
-        },
-      },
-      schemaVersion: 16,
-    },
   },
 ];
 
