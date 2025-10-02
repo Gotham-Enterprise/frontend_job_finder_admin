@@ -24,6 +24,7 @@ const TemplatePreview: React.FC<TemplatePreviewProps> = ({ template, isOpen, onC
   };
 
   const openInNewWindow = () => {
+    const content = template.content || "<p>No content available for this template.</p>";
     const newWindow = window.open("", "_blank", "width=800,height=600,scrollbars=yes");
     if (newWindow) {
       newWindow.document.write(`
@@ -38,7 +39,7 @@ const TemplatePreview: React.FC<TemplatePreviewProps> = ({ template, isOpen, onC
         </head>
         <body>
           <div class="preview-container">
-            ${template.content}
+            ${content}
           </div>
         </body>
         </html>

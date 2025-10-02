@@ -40,7 +40,7 @@ const TemplateSelection: React.FC = () => {
       category: template.category,
       thumbnail: template.thumbnail,
       description: template.description,
-      content: JSON.stringify(template.design), // Store design as content
+      content: template.content || "", // Use HTML content instead of JSON design
       isCustom: false,
     })),
   ];
