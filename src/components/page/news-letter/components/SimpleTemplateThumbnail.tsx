@@ -14,8 +14,8 @@ const SimpleTemplateThumbnail: React.FC<SimpleTemplateThumbnailProps> = ({ templ
         {template.id === "blank" ? (
           <div className="flex items-center justify-center h-full relative">
             <div className="text-center">
-              <div className="mx-auto h-24 w-24 text-gray-400 mb-6 flex items-center justify-center bg-gray-100 rounded-full">
-                <img src="/images/email-empty.svg" alt="Email icon" className="h-12 w-12" />
+              <div className="mx-auto mb-6 flex items-center justify-center">
+                <img src="/images/email-empty.svg" alt="Email icon" className="h-20 w-20 text-gray-400" />
               </div>
               <h3 className="text-lg font-semibold text-gray-700 mb-2">Start from scratch</h3>
               <p className="text-sm text-gray-500 mb-6">Create your own design from scratch</p>
