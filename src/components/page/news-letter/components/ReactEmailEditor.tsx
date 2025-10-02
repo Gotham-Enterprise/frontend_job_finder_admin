@@ -145,37 +145,173 @@ const ReactEmailEditor: React.FC<ReactEmailEditorProps> = ({ onDesignLoad, onLoa
   };
 
   const showSamplePreview = () => {
-    // Generate preview HTML for the sample template
+    // Generate preview HTML for the Apple MacBook Pro style template
     const sampleHtml = `
-<!DOCTYPE html>
-<html>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Transitional //EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
 <head>
-  <meta charset="UTF-8">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Newsletter Preview</title>
-  <style>
-    body { margin: 0; padding: 20px; font-family: Arial, sans-serif; background-color: #f5f5f5; }
-    .email-container { max-width: 600px; margin: 0 auto; background-color: #ffffff; border: 1px solid #e0e0e0; }
-    .header { text-align: center; padding: 40px 20px; background-color: #ffffff; }
-    .header h1 { color: #000000; font-size: 32px; font-weight: bold; margin: 0 0 20px 0; font-family: Arial, sans-serif; }
-    .content { text-align: center; padding: 0 20px 40px 20px; background-color: #ffffff; }
-    .content p { color: #000000; font-size: 16px; line-height: 1.5; margin: 0; font-family: Arial, sans-serif; }
-    .footer { padding: 20px; text-align: center; background-color: #f8f9fa; border-top: 1px solid #e0e0e0; }
-    .footer p { color: #666; font-size: 14px; margin: 0; }
+  <meta name="x-apple-disable-message-reformatting">
+  <title>MacBook Pro Newsletter</title>
+  <style type="text/css">
+    @media only screen and (min-width: 720px) {
+      .u-row { width: 700px !important; }
+      .u-row .u-col { vertical-align: top; }
+      .u-row .u-col-50 { width: 350px !important; }
+      .u-row .u-col-100 { width: 700px !important; }
+    }
+    
+    @media only screen and (max-width: 720px) {
+      .u-row-container { max-width: 100% !important; padding-left: 0px !important; padding-right: 0px !important; }
+      .u-row { width: 100% !important; }
+      .u-row .u-col { display: block !important; width: 100% !important; min-width: 320px !important; max-width: 100% !important; }
+      .u-row .u-col > div { margin: 0 auto; }
+      .u-row .u-col img { max-width: 100% !important; }
+    }
+    
+    body { margin: 0; padding: 0; -webkit-text-size-adjust: 100%; background-color: #000000; color: #ffffff; }
+    table, td { color: #ffffff; border-collapse: collapse; vertical-align: top; }
+    p { margin: 0; }
+    a { color: #0071e3; text-decoration: underline; }
+    
+    .hero-section { text-align: center; padding: 40px 20px; }
+    .logo-image { max-width: 15%; height: auto; margin-bottom: 20px; }
+    .main-title { font-size: 48px; font-weight: 400; color: #ffffff; margin: 0 0 10px 0; line-height: 1.2; }
+    .subtitle { font-size: 28px; color: #ffffff; margin: 10px 0; line-height: 1.2; }
+    .price-text { font-size: 17px; color: #ffffff; margin: 10px 0; }
+    .cta-buttons { margin: 20px 0; }
+    .buy-button { display: inline-block; background-color: #0071e3; color: #ffffff; padding: 10px 20px; border-radius: 25px; text-decoration: none; font-size: 17px; margin-right: 20px; }
+    .learn-more { color: #0071e3; font-size: 17px; text-decoration: none; }
+    .hero-image { width: 100%; height: auto; margin: 20px 0; }
+    .feature-text { font-size: 21px; font-weight: 700; color: #9d9d9d; margin: 10px 0; text-align: center; }
+    .section-title { font-size: 32px; color: #ffffff; text-align: center; margin: 50px 0; line-height: 1.2; }
+    .two-column { display: table; width: 100%; background-color: #1d1d1f; }
+    .column { display: table-cell; width: 50%; vertical-align: top; padding: 33px; }
+    .column-title { font-size: 24px; color: #ffffff; text-align: center; margin-bottom: 15px; line-height: 1.2; }
+    .column-text { font-size: 14px; color: #ffffff; text-align: center; line-height: 1.5; margin-bottom: 15px; }
+    .column-link { color: #0071e3; font-size: 14px; text-decoration: none; }
+    .column-image { width: 100%; height: auto; }
+    .footer-section { background-color: #1d1d1f; padding: 30px; text-align: center; }
+    .footer-menu { font-size: 14px; color: #d2d2d7; margin-bottom: 20px; }
+    .footer-menu a { color: #d2d2d7; text-decoration: none; margin: 0 10px; }
+    .footer-text { font-size: 12px; color: #86868b; line-height: 2; text-align: left; }
+    .footer-text a { color: #d2d2d7; text-decoration: none; }
+    
+    @media (max-width: 600px) {
+      .main-title { font-size: 36px; }
+      .subtitle { font-size: 20px; }
+      .two-column, .column { display: block; width: 100%; }
+      .cta-buttons { text-align: center; }
+      .buy-button { display: block; margin: 10px auto; }
+      .learn-more { display: block; margin-top: 10px; }
+    }
   </style>
 </head>
+
 <body>
-  <div class="email-container">
-    <div class="header">
-      <h1>Welcome to Our Newsletter!</h1>
-    </div>
-    <div class="content">
-      <p>This is a sample newsletter template. You can edit this content and add more elements like images, buttons, and custom styling.</p>
-    </div>
-    <div class="footer">
-      <p>© 2025 Your Company. All rights reserved.</p>
-    </div>
-  </div>
+  <table role="presentation" style="border-collapse: collapse; table-layout: fixed; border-spacing: 0; vertical-align: top; min-width: 320px; margin: 0 auto; background-color: #000000; width: 100%;" cellpadding="0" cellspacing="0">
+    <tbody>
+      <tr style="vertical-align: top">
+        <td style="word-break: break-word; border-collapse: collapse !important; vertical-align: top">
+          
+          <!-- Header Section -->
+          <div class="hero-section">
+            <img src="https://assets.unlayer.com/projects/139/1676495528722-apple_logo_circle_f5f5f7-000_2x.png" alt="Apple Logo" class="logo-image" />
+            <h1 class="main-title">MacBook Pro</h1>
+            <h2 class="subtitle">Mover. Maker. Boundary breaker.</h2>
+            <p class="price-text">From $1999 or $166.58/mo. for 12 mo.</p>
+            
+            <div class="cta-buttons">
+              <a href="#" class="buy-button">Buy</a>
+              <a href="#" class="learn-more">Learn more</a>
+            </div>
+          </div>
+          
+          <!-- Hero Image -->
+          <div style="text-align: center; margin: 0;">
+            <img src="https://assets.unlayer.com/projects/139/1676495949571-hero_2x.jpg?w=1400px" alt="MacBook Pro" class="hero-image" />
+          </div>
+          
+          <!-- Feature Highlights -->
+          <div style="padding: 15px 15px 70px; text-align: center;">
+            <p class="feature-text">Supercharged by M2 Pro and M2 Max.</p>
+            <p class="feature-text">Up to 22 hours of battery life.</p>
+            <p class="feature-text">Stunning Liquid Retina XDR display.</p>
+            <p class="feature-text">All the ports you need and faster Wi-Fi 6E.</p>
+          </div>
+          
+          <!-- Why Apple Section -->
+          <div style="background-color: #1d1d1f; padding: 50px;">
+            <h2 class="section-title">Why Apple is the best place<br />to buy your new Mac.</h2>
+          </div>
+          
+          <!-- Trade In Section -->
+          <div class="two-column">
+            <div class="column">
+              <h3 class="column-title">Get credit toward<br />a new Mac.</h3>
+              <p class="column-text">With Apple Trade In, just give us your eligible Mac and get credit for a new one. It's good for you and the planet.</p>
+              <a href="#" class="column-link">Find your trade-in value</a>
+            </div>
+            <div class="column" style="padding: 0;">
+              <img src="https://assets.unlayer.com/projects/139/1676496418898-credit_mac_2x.jpg?w=700px" alt="Trade In" class="column-image" />
+            </div>
+          </div>
+          
+          <!-- Apple Card & Education Section -->
+          <div class="two-column">
+            <div class="column" style="border-right: 5px solid #1d1d1f;">
+              <h3 class="column-title">Apple Card Monthly Installments.</h3>
+              <p class="column-text">Pay over time, interest-free when you choose to check out with Apple Card Monthly Installments.</p>
+              <a href="#" class="column-link">Learn more</a>
+              <div style="margin-top: 21px;">
+                <img src="https://assets.unlayer.com/projects/139/1676497065877-apple_card_2x.jpg" alt="Apple Card" class="column-image" />
+              </div>
+            </div>
+            <div class="column" style="border-left: 5px solid #1d1d1f;">
+              <h3 class="column-title">Save on a new<br />Mac with Apple<br />education pricing.</h3>
+              <a href="#" class="column-link">Shop</a>
+              <div style="margin-top: 21px;">
+                <img src="https://assets.unlayer.com/projects/139/1676497143860-edu_mac_2x.jpg" alt="Education" class="column-image" />
+              </div>
+            </div>
+          </div>
+          
+          <!-- Specialist Section -->
+          <div class="two-column">
+            <div class="column" style="padding: 0;">
+              <img src="https://assets.unlayer.com/projects/139/1676496501021-specialist_2x.jpg?w=700px" alt="Mac Specialist" class="column-image" />
+            </div>
+            <div class="column">
+              <h3 class="column-title">Shop one on one with<br />a Mac Specialist.</h3>
+              <p class="column-text">Our Specialists can help you choose, configure, and buy the perfect Mac.</p>
+              <a href="#" class="column-link">Find a store</a>
+            </div>
+          </div>
+          
+          <!-- Footer -->
+          <div class="footer-section">
+            <div class="footer-menu">
+              <a href="#">Shop Online</a> |
+              <a href="#">Find a Store</a> |
+              <a href="#">1-800-MY-APPLE</a> |
+              <a href="#">Get the Apple Store App</a>
+            </div>
+            
+            <hr style="border: 1px solid #424245; margin: 20px 0;" />
+            
+            <div class="footer-text">
+              <p>If you reside in the U.S. territories, please call Goldman Sachs at 877-255-5923 with questions about Apple Card.</p>
+              <p>TM and © 2023 Apple Inc. One Apple Park Way, MS 96-DM, Cupertino, CA 95014.</p>
+              <p><a href="#">All Rights Reserved</a> | <a href="#">Privacy Policy</a> | <a href="#">My Apple ID</a></p>
+              <p>If you prefer not to receive commercial email from Apple, or if you've changed your email address, please <a href="#">click here</a>.</p>
+            </div>
+          </div>
+          
+        </td>
+      </tr>
+    </tbody>
+  </table>
 </body>
 </html>`;
 
@@ -186,102 +322,282 @@ const ReactEmailEditor: React.FC<ReactEmailEditorProps> = ({ onDesignLoad, onLoa
   const handleLoadSampleTemplate = () => {
     const sampleDesign = {
       counters: {
-        u_column: 1,
-        u_row: 1,
-        u_content_text: 1,
-        u_content_heading: 1,
+        u_column: 13,
+        u_row: 8,
+        u_content_text: 24,
+        u_content_image: 8,
+        u_content_button: 2,
+        u_content_divider: 1,
+        u_content_heading: 3,
+        u_content_menu: 1,
       },
       body: {
-        id: "sample_template",
+        id: "macbook_pro_template",
         rows: [
           {
-            id: "row_1",
+            id: "row_header",
             cells: [1],
             columns: [
               {
-                id: "column_1",
+                id: "column_header",
                 contents: [
                   {
-                    id: "heading_1",
-                    type: "heading",
+                    id: "apple_logo",
+                    type: "image",
                     values: {
-                      containerPadding: "10px",
-                      text: "Welcome to Our Newsletter!",
-                      color: "#000000",
+                      containerPadding: "10px 10px 0px",
+                      src: {
+                        url: "https://assets.unlayer.com/projects/139/1676495528722-apple_logo_circle_f5f5f7-000_2x.png",
+                        width: 116,
+                        height: 116,
+                        maxWidth: "15%",
+                      },
                       textAlign: "center",
-                      fontSize: "32px",
-                      fontFamily: "arial,helvetica,sans-serif",
-                      fontWeight: "bold",
+                      altText: "Apple Logo",
                     },
                   },
                   {
-                    id: "text_1",
+                    id: "main_heading",
+                    type: "heading",
+                    values: {
+                      containerPadding: "0px",
+                      text: "MacBook Pro",
+                      color: "#ffffff",
+                      textAlign: "center",
+                      fontSize: "48px",
+                      fontFamily: "helvetica,sans-serif",
+                      fontWeight: 400,
+                      lineHeight: "140%",
+                    },
+                  },
+                  {
+                    id: "sub_heading",
+                    type: "heading",
+                    values: {
+                      containerPadding: "0px",
+                      text: "Mover. Maker. Boundary breaker.",
+                      color: "#ffffff",
+                      textAlign: "center",
+                      fontSize: "28px",
+                      fontFamily: "helvetica,sans-serif",
+                      lineHeight: "140%",
+                    },
+                  },
+                  {
+                    id: "price_text",
                     type: "text",
                     values: {
                       containerPadding: "10px",
-                      text: "This is a sample newsletter template. You can edit this content and add more elements.",
-                      color: "#000000",
+                      text: "<p>From $1999 or $166.58/mo. for 12 mo.</p>",
+                      color: "#ffffff",
                       textAlign: "center",
-                      fontSize: "16px",
-                      fontFamily: "arial,helvetica,sans-serif",
+                      fontSize: "17px",
+                      fontFamily: "helvetica,sans-serif",
+                      lineHeight: "140%",
                     },
                   },
                 ],
                 values: {
-                  backgroundColor: "",
+                  backgroundColor: "#000000",
                   padding: "0px",
-                  border: {},
-                  borderRadius: "0px",
                 },
               },
             ],
             values: {
-              columns: false,
-              backgroundColor: "",
-              columnsBackgroundColor: "#ffffff",
-              backgroundImage: {
-                url: "",
-                fullWidth: true,
-                repeat: false,
-                size: "cover",
-                position: "center",
-              },
+              backgroundColor: "#000000",
               padding: "0px",
-              hideDesktop: false,
+            },
+          },
+          {
+            id: "row_buttons",
+            cells: [1, 1],
+            columns: [
+              {
+                id: "column_buy",
+                contents: [
+                  {
+                    id: "buy_button",
+                    type: "button",
+                    values: {
+                      containerPadding: "10px",
+                      text: "Buy",
+                      color: "#FFFFFF",
+                      backgroundColor: "#0071e3",
+                      textAlign: "right",
+                      fontSize: "17px",
+                      fontFamily: "helvetica,sans-serif",
+                      borderRadius: "25px",
+                      padding: "10px 20px",
+                    },
+                  },
+                ],
+                values: {
+                  backgroundColor: "#000000",
+                },
+              },
+              {
+                id: "column_learn",
+                contents: [
+                  {
+                    id: "learn_text",
+                    type: "text",
+                    values: {
+                      containerPadding: "20px",
+                      text: "<p>Learn more</p>",
+                      color: "#0071e3",
+                      textAlign: "left",
+                      fontSize: "17px",
+                      fontFamily: "helvetica,sans-serif",
+                      lineHeight: "140%",
+                    },
+                  },
+                ],
+                values: {
+                  backgroundColor: "#000000",
+                },
+              },
+            ],
+            values: {
+              backgroundColor: "#000000",
+              padding: "0px",
+            },
+          },
+          {
+            id: "row_hero",
+            cells: [1],
+            columns: [
+              {
+                id: "column_hero",
+                contents: [
+                  {
+                    id: "hero_image",
+                    type: "image",
+                    values: {
+                      containerPadding: "0px",
+                      src: {
+                        url: "https://assets.unlayer.com/projects/139/1676495949571-hero_2x.jpg",
+                        width: 1424,
+                        height: 880,
+                      },
+                      textAlign: "center",
+                      altText: "MacBook Pro Hero",
+                    },
+                  },
+                  {
+                    id: "feature_1",
+                    type: "text",
+                    values: {
+                      containerPadding: "10px",
+                      text: "<p>Supercharged by M2 Pro and M2 Max.</p>",
+                      color: "#9d9d9d",
+                      textAlign: "center",
+                      fontSize: "21px",
+                      fontFamily: "helvetica,sans-serif",
+                      fontWeight: 700,
+                      lineHeight: "140%",
+                    },
+                  },
+                  {
+                    id: "feature_2",
+                    type: "text",
+                    values: {
+                      containerPadding: "10px",
+                      text: "<p>Up to 22 hours of battery life.</p>",
+                      color: "#9d9d9d",
+                      textAlign: "center",
+                      fontSize: "21px",
+                      fontFamily: "helvetica,sans-serif",
+                      fontWeight: 700,
+                      lineHeight: "140%",
+                    },
+                  },
+                  {
+                    id: "feature_3",
+                    type: "text",
+                    values: {
+                      containerPadding: "10px",
+                      text: "<p>Stunning Liquid Retina XDR display.</p>",
+                      color: "#9d9d9d",
+                      textAlign: "center",
+                      fontSize: "21px",
+                      fontFamily: "helvetica,sans-serif",
+                      fontWeight: 700,
+                      lineHeight: "140%",
+                    },
+                  },
+                  {
+                    id: "feature_4",
+                    type: "text",
+                    values: {
+                      containerPadding: "10px",
+                      text: "<p>All the ports you need and faster Wi-Fi 6E.</p>",
+                      color: "#9d9d9d",
+                      textAlign: "center",
+                      fontSize: "21px",
+                      fontFamily: "helvetica,sans-serif",
+                      fontWeight: 700,
+                      lineHeight: "140%",
+                    },
+                  },
+                ],
+                values: {
+                  backgroundColor: "#000000",
+                },
+              },
+            ],
+            values: {
+              backgroundColor: "#000000",
+              padding: "15px 15px 70px",
+            },
+          },
+          {
+            id: "row_why_apple",
+            cells: [1],
+            columns: [
+              {
+                id: "column_why_apple",
+                contents: [
+                  {
+                    id: "why_apple_heading",
+                    type: "heading",
+                    values: {
+                      containerPadding: "10px",
+                      text: "Why Apple is the best place<br />to buy your new Mac.",
+                      color: "#ffffff",
+                      textAlign: "center",
+                      fontSize: "32px",
+                      fontFamily: "helvetica,sans-serif",
+                      lineHeight: "120%",
+                    },
+                  },
+                ],
+                values: {
+                  backgroundColor: "#1d1d1f",
+                },
+              },
+            ],
+            values: {
+              backgroundColor: "#1d1d1f",
+              padding: "50px",
             },
           },
         ],
         headers: [],
         footers: [],
         values: {
-          popupPosition: "center",
-          popupWidth: "600px",
-          popupHeight: "auto",
-          borderRadius: "10px",
-          contentWidth: "600px",
-          contentAlign: "center",
+          contentWidth: 700,
           fontFamily: {
-            label: "Arial",
-            value: "arial,helvetica,sans-serif",
+            label: "Helvetica",
+            value: "helvetica,sans-serif",
           },
-          textColor: "#000000",
-          backgroundColor: "#ffffff",
-          backgroundImage: {
-            url: "",
-            fullWidth: true,
-            repeat: false,
-            size: "cover",
-            position: "center",
-          },
-          preheaderText: "",
+          textColor: "#ffffff",
+          backgroundColor: "#000000",
           linkStyle: {
-            body: true,
-            linkColor: "#0000ee",
+            linkColor: "#0071e3",
             linkHoverColor: "#0000ee",
             linkUnderline: true,
             linkHoverUnderline: true,
           },
-          customCSS: "",
         },
       },
     };
@@ -338,13 +654,18 @@ const ReactEmailEditor: React.FC<ReactEmailEditorProps> = ({ onDesignLoad, onLoa
 
             <div className="flex items-start justify-between">
               <div className="flex-1 mr-4">
-                <h4 className="font-medium text-gray-900 mb-2">Template Features:</h4>
+                <h4 className="font-medium text-gray-900 mb-2">Apple MacBook Pro Template Features:</h4>
                 <ul className="text-sm text-gray-600 space-y-1">
-                  <li>• Clean welcome header with bold title</li>
-                  <li>• Centered content area for your message</li>
-                  <li>• Professional footer with copyright notice</li>
-                  <li>• Fully customizable design and content</li>
-                  <li>• Mobile-responsive layout</li>
+                  <li>• Authentic Apple logo and branding</li>
+                  <li>• Professional black background with Apple aesthetics</li>
+                  <li>• MacBook Pro hero image showcase</li>
+                  <li>• Feature highlights with Apple's signature style</li>
+                  <li>• Two-column layout sections for services</li>
+                  <li>• Apple Card and education pricing sections</li>
+                  <li>• Mac Specialist consultation area</li>
+                  <li>• Complete footer with Apple links and legal text</li>
+                  <li>• Mobile-responsive design optimized for all devices</li>
+                  <li>• Premium product launch newsletter layout</li>
                 </ul>
               </div>
               <div className="flex space-x-3">
@@ -414,7 +735,7 @@ const ReactEmailEditor: React.FC<ReactEmailEditorProps> = ({ onDesignLoad, onLoa
 
               <button
                 onClick={handleSaveAndContinue}
-                className="px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                className="px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary"
               >
                 Save & Continue
               </button>
@@ -443,9 +764,16 @@ const ReactEmailEditor: React.FC<ReactEmailEditorProps> = ({ onDesignLoad, onLoa
                   },
                 },
               },
-              // Custom CSS and JS to hide Send Email action
+              // Custom CSS to hide Send Email action and related options
               customCSS: `
                 .unlayer-button-action-option[data-value="email"] {
+                  display: none !important;
+                }
+                .unlayer-button-action-option[title*="Send Email"],
+                .unlayer-button-action-option[title*="send email"],
+                .unlayer-action-email,
+                [data-action="email"],
+                .email-action-button {
                   display: none !important;
                 }
               `,

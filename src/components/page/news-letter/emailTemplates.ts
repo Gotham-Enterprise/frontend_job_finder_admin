@@ -567,6 +567,327 @@ export const emailTemplates = [
       schemaVersion: 16,
     },
   },
+  {
+    id: "macbook-pro-template",
+    name: "MacBook Pro",
+    category: "product" as const,
+    thumbnail: "/images/templates/macbook-template.png",
+    description: "Apple MacBook Pro style product showcase",
+    design: {
+      counters: {
+        u_column: 13,
+        u_row: 8,
+        u_content_text: 24,
+        u_content_image: 8,
+        u_content_button: 2,
+        u_content_divider: 1,
+        u_content_heading: 3,
+        u_content_menu: 1,
+      },
+      body: {
+        id: "macbook_pro_template",
+        rows: [
+          {
+            id: "row_header",
+            cells: [1],
+            columns: [
+              {
+                id: "column_header",
+                contents: [
+                  {
+                    id: "apple_logo",
+                    type: "image",
+                    values: {
+                      containerPadding: "10px 10px 0px",
+                      src: {
+                        url: "https://assets.unlayer.com/projects/139/1676495528722-apple_logo_circle_f5f5f7-000_2x.png",
+                        width: 116,
+                        height: 116,
+                        maxWidth: "15%",
+                      },
+                      textAlign: "center",
+                      altText: "Apple Logo",
+                    },
+                  },
+                  {
+                    id: "main_heading",
+                    type: "heading",
+                    values: {
+                      containerPadding: "0px",
+                      text: "MacBook Pro",
+                      color: "#ffffff",
+                      textAlign: "center",
+                      fontSize: "48px",
+                      fontFamily: "helvetica,sans-serif",
+                      fontWeight: 400,
+                      lineHeight: "140%",
+                    },
+                  },
+                  {
+                    id: "sub_heading",
+                    type: "heading",
+                    values: {
+                      containerPadding: "0px",
+                      text: "Mover. Maker. Boundary breaker.",
+                      color: "#ffffff",
+                      textAlign: "center",
+                      fontSize: "28px",
+                      fontFamily: "helvetica,sans-serif",
+                      lineHeight: "140%",
+                    },
+                  },
+                  {
+                    id: "price_text",
+                    type: "text",
+                    values: {
+                      containerPadding: "10px",
+                      text: "<p>From $1999 or $166.58/mo. for 12 mo.</p>",
+                      color: "#ffffff",
+                      textAlign: "center",
+                      fontSize: "17px",
+                      fontFamily: "helvetica,sans-serif",
+                      lineHeight: "140%",
+                    },
+                  },
+                ],
+                values: {
+                  backgroundColor: "#000000",
+                  padding: "0px",
+                },
+              },
+            ],
+            values: {
+              backgroundColor: "#000000",
+              padding: "0px",
+            },
+          },
+          {
+            id: "row_buttons",
+            cells: [1, 1],
+            columns: [
+              {
+                id: "column_buy",
+                contents: [
+                  {
+                    id: "buy_button",
+                    type: "button",
+                    values: {
+                      containerPadding: "10px",
+                      text: "Buy",
+                      color: "#FFFFFF",
+                      backgroundColor: "#0071e3",
+                      textAlign: "right",
+                      fontSize: "17px",
+                      fontFamily: "helvetica,sans-serif",
+                      borderRadius: "25px",
+                      padding: "10px 20px",
+                      href: {
+                        name: "web",
+                        values: {
+                          href: "#",
+                          target: "_blank",
+                        },
+                      },
+                    },
+                  },
+                ],
+                values: {
+                  backgroundColor: "#000000",
+                },
+              },
+              {
+                id: "column_learn",
+                contents: [
+                  {
+                    id: "learn_text",
+                    type: "text",
+                    values: {
+                      containerPadding: "20px",
+                      text: "<p>Learn more</p>",
+                      color: "#0071e3",
+                      textAlign: "left",
+                      fontSize: "17px",
+                      fontFamily: "helvetica,sans-serif",
+                      lineHeight: "140%",
+                    },
+                  },
+                ],
+                values: {
+                  backgroundColor: "#000000",
+                },
+              },
+            ],
+            values: {
+              backgroundColor: "#000000",
+              padding: "0px",
+            },
+          },
+          {
+            id: "row_hero",
+            cells: [1],
+            columns: [
+              {
+                id: "column_hero",
+                contents: [
+                  {
+                    id: "hero_image",
+                    type: "image",
+                    values: {
+                      containerPadding: "0px",
+                      src: {
+                        url: "https://assets.unlayer.com/projects/139/1676495949571-hero_2x.jpg",
+                        width: 1424,
+                        height: 880,
+                      },
+                      textAlign: "center",
+                      altText: "MacBook Pro Hero",
+                    },
+                  },
+                  {
+                    id: "feature_1",
+                    type: "text",
+                    values: {
+                      containerPadding: "10px",
+                      text: "<p>Supercharged by M2 Pro and M2 Max.</p>",
+                      color: "#9d9d9d",
+                      textAlign: "center",
+                      fontSize: "21px",
+                      fontFamily: "helvetica,sans-serif",
+                      fontWeight: 700,
+                      lineHeight: "140%",
+                    },
+                  },
+                  {
+                    id: "feature_2",
+                    type: "text",
+                    values: {
+                      containerPadding: "10px",
+                      text: "<p>Up to 22 hours of battery life.</p>",
+                      color: "#9d9d9d",
+                      textAlign: "center",
+                      fontSize: "21px",
+                      fontFamily: "helvetica,sans-serif",
+                      fontWeight: 700,
+                      lineHeight: "140%",
+                    },
+                  },
+                  {
+                    id: "feature_3",
+                    type: "text",
+                    values: {
+                      containerPadding: "10px",
+                      text: "<p>Stunning Liquid Retina XDR display.</p>",
+                      color: "#9d9d9d",
+                      textAlign: "center",
+                      fontSize: "21px",
+                      fontFamily: "helvetica,sans-serif",
+                      fontWeight: 700,
+                      lineHeight: "140%",
+                    },
+                  },
+                  {
+                    id: "feature_4",
+                    type: "text",
+                    values: {
+                      containerPadding: "10px",
+                      text: "<p>All the ports you need and faster Wi-Fi 6E.</p>",
+                      color: "#9d9d9d",
+                      textAlign: "center",
+                      fontSize: "21px",
+                      fontFamily: "helvetica,sans-serif",
+                      fontWeight: 700,
+                      lineHeight: "140%",
+                    },
+                  },
+                ],
+                values: {
+                  backgroundColor: "#000000",
+                },
+              },
+            ],
+            values: {
+              backgroundColor: "#000000",
+              padding: "15px 15px 70px",
+            },
+          },
+          {
+            id: "row_why_apple",
+            cells: [1],
+            columns: [
+              {
+                id: "column_why_apple",
+                contents: [
+                  {
+                    id: "why_apple_heading",
+                    type: "heading",
+                    values: {
+                      containerPadding: "10px",
+                      text: "Why Apple is the best place<br />to buy your new Mac.",
+                      color: "#ffffff",
+                      textAlign: "center",
+                      fontSize: "32px",
+                      fontFamily: "helvetica,sans-serif",
+                      lineHeight: "120%",
+                    },
+                  },
+                ],
+                values: {
+                  backgroundColor: "#1d1d1f",
+                },
+              },
+            ],
+            values: {
+              backgroundColor: "#1d1d1f",
+              padding: "50px",
+            },
+          },
+        ],
+        headers: [],
+        footers: [],
+        values: {
+          contentWidth: 700,
+          fontFamily: {
+            label: "Helvetica",
+            value: "helvetica,sans-serif",
+          },
+          textColor: "#ffffff",
+          backgroundColor: "#000000",
+          linkStyle: {
+            linkColor: "#0071e3",
+            linkHoverColor: "#0000ee",
+            linkUnderline: true,
+            linkHoverUnderline: true,
+          },
+          popupPosition: "center",
+          popupWidth: "600px",
+          popupHeight: "auto",
+          borderRadius: "10px",
+          contentAlign: "center",
+          contentVerticalAlign: "center",
+          preheaderText: "",
+          backgroundImage: {
+            url: "",
+            fullWidth: true,
+            repeat: "no-repeat",
+            size: "custom",
+            position: "center",
+          },
+          popupBackgroundColor: "#FFFFFF",
+          popupOverlay_backgroundColor: "rgba(0, 0, 0, 0.1)",
+          popupCloseButton_position: "top-right",
+          popupCloseButton_backgroundColor: "#DDDDDD",
+          popupCloseButton_iconColor: "#000000",
+          popupCloseButton_borderRadius: "0px",
+          popupCloseButton_margin: "0px",
+          popupCloseButton_action: {
+            name: "close_popup",
+            values: {},
+          },
+        },
+      },
+      schemaVersion: 16,
+    },
+  },
 ];
 
 export const getTemplateById = (id: string) => {

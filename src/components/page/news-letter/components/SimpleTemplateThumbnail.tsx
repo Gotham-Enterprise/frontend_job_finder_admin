@@ -61,6 +61,23 @@ const SimpleTemplateThumbnail: React.FC<SimpleTemplateThumbnailProps> = ({ templ
               </div>
             </div>
           );
+        case "macbook-pro-template":
+          return (
+            <div className="h-48 bg-black rounded-lg border-2 border-gray-800 p-4 flex flex-col">
+              <div className="text-center mb-2">
+                <div className="w-8 h-8 bg-white rounded-full mx-auto mb-2 flex items-center justify-center">
+                  <span className="text-black text-xs">🍎</span>
+                </div>
+                <h3 className="text-sm font-bold text-white">MacBook Pro</h3>
+                <p className="text-xs text-gray-300">Mover. Maker. Boundary breaker.</p>
+              </div>
+              <div className="bg-gray-700 h-16 rounded mb-2"></div>
+              <div className="flex space-x-1">
+                <div className="bg-blue-600 text-white px-2 py-1 rounded text-xs flex-1 text-center">Buy</div>
+                <div className="text-blue-400 px-2 py-1 text-xs flex-1 text-center">Learn more</div>
+              </div>
+            </div>
+          );
         default:
           return (
             <div className="h-48 bg-white rounded-lg border-2 border-gray-200 p-4 flex items-center justify-center">
