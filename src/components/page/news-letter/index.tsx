@@ -1,6 +1,7 @@
 "use client";
 import React from "react";
 import { useRouter } from "next/navigation";
+import { Table, TableBody, TableCell, TableHeader, TableRow } from "../../ui/table";
 
 const NewsLetterComponent = () => {
   const router = useRouter();
@@ -47,74 +48,123 @@ const NewsLetterComponent = () => {
           </div>
 
           {/* Content */}
-          <div className="px-6 py-6">
+          <div className="py-6">
             <div className="mb-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">All News Letter</h3>
+              {/* Newsletter Table */}
+              <div className="overflow-hidden">
+                <div className="max-w-full overflow-x-auto">
+                  <Table>
+                    {/* Table Header */}
+                    <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
+                      <TableRow>
+                        <TableCell
+                          isHeader
+                          className="px-5 py-3 font-medium text-gray-500 text-start text-sm uppercase tracking-wider dark:text-gray-400"
+                        >
+                          Email Name
+                        </TableCell>
+                        <TableCell
+                          isHeader
+                          className="px-5 py-3 font-medium text-gray-500 text-start text-sm uppercase tracking-wider dark:text-gray-400"
+                        >
+                          Delivered
+                        </TableCell>
+                        <TableCell
+                          isHeader
+                          className="px-5 py-3 font-medium text-gray-500 text-start text-sm uppercase tracking-wider dark:text-gray-400"
+                        >
+                          Click Rate
+                        </TableCell>
+                        <TableCell
+                          isHeader
+                          className="px-5 py-3 font-medium text-gray-500 text-start text-sm uppercase tracking-wider dark:text-gray-400"
+                        >
+                          Last Updated
+                        </TableCell>
+                        <TableCell
+                          isHeader
+                          className="px-5 py-3 font-medium text-gray-500 text-start text-sm uppercase tracking-wider dark:text-gray-400"
+                        >
+                          Published / Send Date
+                        </TableCell>
+                        <TableCell
+                          isHeader
+                          className="px-5 py-3 font-medium text-gray-500 text-start text-sm uppercase tracking-wider dark:text-gray-400"
+                        >
+                          Actions
+                        </TableCell>
+                      </TableRow>
+                    </TableHeader>
 
-              {/* Table Header */}
-              <div className="grid grid-cols-6 gap-4 text-sm font-medium text-gray-500 uppercase tracking-wider mb-4">
-                <div>Email Name</div>
-                <div>Delivered</div>
-                <div>Click Rate</div>
-                <div>Last Updated</div>
-                <div>Published / Send Date</div>
-                <div>Actions</div>
-              </div>
-
-              {/* Newsletter Items */}
-              <div className="space-y-3">
-                {[
-                  {
-                    name: "Weekly Job Opportunities",
-                    delivered: "1,500",
-                    clickRate: "12.5%",
-                    lastUpdated: "9/25/2024",
-                    publishDate: "9/20/2024",
-                  },
-                  {
-                    name: "Career Tips Newsletter",
-                    delivered: "2,200",
-                    clickRate: "8.3%",
-                    lastUpdated: "9/24/2024",
-                    publishDate: "9/18/2024",
-                  },
-                  {
-                    name: "Industry Insights",
-                    delivered: "1,800",
-                    clickRate: "15.2%",
-                    lastUpdated: "9/23/2024",
-                    publishDate: "9/15/2024",
-                  },
-                  {
-                    name: "Resume Building Guide",
-                    delivered: "3,200",
-                    clickRate: "22.1%",
-                    lastUpdated: "9/22/2024",
-                    publishDate: "9/10/2024",
-                  },
-                  {
-                    name: "Interview Preparation",
-                    delivered: "2,800",
-                    clickRate: "18.7%",
-                    lastUpdated: "9/21/2024",
-                    publishDate: "9/5/2024",
-                  },
-                ].map((newsletter, index) => (
-                  <div key={index} className="grid grid-cols-6 gap-4 py-4 border-b border-gray-100 text-sm">
-                    <div className="font-medium text-gray-900">{newsletter.name}</div>
-                    <div className="text-gray-600">{newsletter.delivered}</div>
-                    <div className="text-gray-600">{newsletter.clickRate}</div>
-                    <div className="text-gray-600">{newsletter.lastUpdated}</div>
-                    <div className="text-gray-600">{newsletter.publishDate}</div>
-                    <div>
-                      <button className="text-gray-400 hover:text-gray-600">
-                        <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                          <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                    {/* Table Body */}
+                    <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
+                      {[
+                        {
+                          name: "Weekly Job Opportunities",
+                          delivered: "1,500",
+                          clickRate: "12.5%",
+                          lastUpdated: "9/25/2024",
+                          publishDate: "9/20/2024",
+                        },
+                        {
+                          name: "Career Tips Newsletter",
+                          delivered: "2,200",
+                          clickRate: "8.3%",
+                          lastUpdated: "9/24/2024",
+                          publishDate: "9/18/2024",
+                        },
+                        {
+                          name: "Industry Insights",
+                          delivered: "1,800",
+                          clickRate: "15.2%",
+                          lastUpdated: "9/23/2024",
+                          publishDate: "9/15/2024",
+                        },
+                        {
+                          name: "Resume Building Guide",
+                          delivered: "3,200",
+                          clickRate: "22.1%",
+                          lastUpdated: "9/22/2024",
+                          publishDate: "9/10/2024",
+                        },
+                        {
+                          name: "Interview Preparation",
+                          delivered: "2,800",
+                          clickRate: "18.7%",
+                          lastUpdated: "9/21/2024",
+                          publishDate: "9/5/2024",
+                        },
+                      ].map((newsletter, index) => (
+                        <TableRow key={index}>
+                          <TableCell className="px-5 py-4 text-start">
+                            <span className="font-medium text-gray-900 text-sm dark:text-white/90">
+                              {newsletter.name}
+                            </span>
+                          </TableCell>
+                          <TableCell className="px-4 py-3 text-gray-500 text-start text-sm dark:text-gray-400">
+                            {newsletter.delivered}
+                          </TableCell>
+                          <TableCell className="px-4 py-3 text-gray-500 text-start text-sm dark:text-gray-400">
+                            {newsletter.clickRate}
+                          </TableCell>
+                          <TableCell className="px-4 py-3 text-gray-500 text-start text-sm dark:text-gray-400">
+                            {newsletter.lastUpdated}
+                          </TableCell>
+                          <TableCell className="px-4 py-3 text-gray-500 text-start text-sm dark:text-gray-400">
+                            {newsletter.publishDate}
+                          </TableCell>
+                          <TableCell className="px-4 py-3 text-gray-500 text-start text-sm dark:text-gray-400">
+                            <button className="text-gray-400 hover:text-gray-600">
+                              <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                              </svg>
+                            </button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
               </div>
             </div>
           </div>
