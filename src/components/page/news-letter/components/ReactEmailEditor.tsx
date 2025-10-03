@@ -11,6 +11,7 @@ import {
   updateNewsletterData,
 } from "@/store/slices/newsletterSlice";
 import { getTemplateById } from "../emailTemplates";
+import { blogApi } from "@/services/api/blog";
 
 interface ReactEmailEditorProps {
   onDesignLoad?: (design: any) => void;
@@ -107,16 +108,63 @@ const ReactEmailEditor: React.FC<ReactEmailEditorProps> = ({ onDesignLoad, onLoa
     console.log("📧 Email Editor loaded");
     console.log("📋 Current design in Redux:", newsletterData.design);
 
+    const unlayer = emailEditorRef.current?.editor;
+
+    if (!unlayer) {
+      console.error("❌ Email editor not ready");
+      return;
+    }
+
+    // Register custom image upload callback
+    unlayer.registerCallback("selectImage", (data: any, done: (data: { url: string }) => void) => {
+      console.log("🖼️ Custom image upload triggered");
+
+      // Create a file input element
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = "image/*";
+
+      input.onchange = async (e: Event) => {
+        const target = e.target as HTMLInputElement;
+        const file = target.files?.[0];
+
+        if (!file) {
+          console.log("❌ No file selected");
+          return;
+        }
+
+        console.log("📤 Uploading image:", file.name);
+
+        try {
+          // Upload to your server using blog media API
+          const response = await blogApi.uploadMedia({
+            mediaUpload: file,
+            type: "IMAGE",
+          });
+
+          if (response.success && response.data.url) {
+            console.log("✅ Image uploaded successfully:", response.data.url);
+            // Return the URL to Unlayer
+            done({ url: response.data.url });
+          } else {
+            console.error("❌ Upload failed: No URL in response");
+            alert("Failed to upload image. Please try again.");
+          }
+        } catch (error) {
+          console.error("❌ Upload error:", error);
+          alert("Failed to upload image. Please try again.");
+        }
+      };
+
+      // Trigger file selection dialog
+      input.click();
+    });
+
     // Load existing design if available
     if (newsletterData.design) {
-      const unlayer = emailEditorRef.current?.editor;
-      if (unlayer) {
-        console.log("✅ Loading design into editor...");
-        unlayer.loadDesign(newsletterData.design);
-        console.log("✅ Design loaded successfully!");
-      } else {
-        console.error("❌ Email editor not ready");
-      }
+      console.log("✅ Loading design into editor...");
+      unlayer.loadDesign(newsletterData.design);
+      console.log("✅ Design loaded successfully!");
     } else {
       console.log("ℹ️ No design to load (starting blank or design not yet set)");
     }
@@ -501,7 +549,7 @@ const ReactEmailEditor: React.FC<ReactEmailEditorProps> = ({ onDesignLoad, onLoa
                 preview: true,
                 imageEditor: false,
                 svgImageUpload: true,
-                stockImages: false, // Disable stock images to hide image picker
+                stockImages: true, // Disable stock images to hide image picker
                 undoRedo: true,
                 audit: false, // Disable audit feature
                 textEditor: {
