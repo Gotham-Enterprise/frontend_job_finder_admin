@@ -318,6 +318,21 @@ const ReactEmailEditor: React.FC<ReactEmailEditorProps> = ({ onDesignLoad, onLoa
               projectId: 1, // Add project ID to disable dev mode
               // Custom CSS to hide Send Email action and related options
               customCSS: `
+                /* Hide Browser and Inbox tabs */
+                .unlayer-display-mode-tabs,
+                .display-mode-tabs,
+                [class*="display-mode"],
+                [class*="DisplayMode"],
+                .unlayer-tabs-container,
+                [data-testid="display-mode-tabs"],
+                button[aria-label*="Browser"],
+                button[aria-label*="Inbox"],
+                .tab-browser,
+                .tab-inbox,
+                [class*="browser-tab"],
+                [class*="inbox-tab"] {
+                  display: none !important;
+                }
                 .unlayer-button-action-option[data-value="email"] {
                   display: none !important;
                 }
@@ -466,7 +481,13 @@ const ReactEmailEditor: React.FC<ReactEmailEditorProps> = ({ onDesignLoad, onLoa
                   enabled: true,
                 },
                 html: {
-                  enabled: true,
+                  enabled: false, // Disabled HTML tool
+                },
+                menu: {
+                  enabled: false, // Disabled Menu tool
+                },
+                timer: {
+                  enabled: false, // Disabled Timer tool
                 },
               },
               blocks: [],

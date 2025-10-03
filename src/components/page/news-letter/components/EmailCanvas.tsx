@@ -412,31 +412,70 @@ const EmailCanvas: React.FC<EmailCanvasProps> = ({ selectedElement, onSelectElem
       {/* Email Preview */}
       <div className="flex-1 overflow-y-auto p-8">
         <div className="max-w-2xl mx-auto">
-          {/* Email Container */}
-          <div
-            ref={canvasRef}
-            className="bg-white shadow-lg rounded-lg overflow-hidden min-h-96 cursor-pointer"
-            onClick={() => onSelectElement(null)}
-            style={{ backgroundColor: "#EEEEEE" }}
-          >
-            {/* Email Content */}
-            <div className="bg-white mx-auto max-w-xl">
-              {elements.map(renderElement)}
-
-              {/* Add Content Placeholder */}
-              {elements.length === 0 && (
-                <div className="p-12 text-center text-gray-500">
-                  <svg
-                    className="mx-auto h-12 w-12 text-gray-400 mb-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                  </svg>
-                  <p>Drag elements from the sidebar to start building your email</p>
+          {/* Email Container with Email Client Mockup */}
+          <div className="bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden">
+            {/* Email Client Mockup Header */}
+            <div className="bg-gray-100 px-4 py-2 border-b border-gray-200">
+              <div className="flex items-center space-x-2">
+                <div className="flex space-x-1">
+                  <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                  <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
                 </div>
-              )}
+                <div className="flex-1 text-center">
+                  <div className="bg-white rounded px-2 py-1 text-xs text-gray-600 inline-block">Email Preview</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Email Headers */}
+            <div className="bg-white px-4 py-3 border-b border-gray-200 text-sm">
+              <div className="space-y-1">
+                <div className="flex">
+                  <span className="text-gray-500 w-16">From:</span>
+                  <span className="text-gray-900">MyApp Team &lt;newsletter@myapp.com&gt;</span>
+                </div>
+                <div className="flex">
+                  <span className="text-gray-500 w-16">To:</span>
+                  <span className="text-gray-900">recipient@example.com</span>
+                </div>
+                <div className="flex">
+                  <span className="text-gray-500 w-16">Subject:</span>
+                  <span className="text-gray-900 font-medium">MacBook Pro Newsletter</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Email Content */}
+            <div
+              ref={canvasRef}
+              className="bg-white overflow-y-auto cursor-pointer"
+              onClick={() => onSelectElement(null)}
+              style={{ backgroundColor: "#EEEEEE" }}
+            >
+              <div className="bg-white mx-auto max-w-xl">
+                {elements.map(renderElement)}
+
+                {/* Add Content Placeholder */}
+                {elements.length === 0 && (
+                  <div className="p-12 text-center text-gray-500">
+                    <svg
+                      className="mx-auto h-12 w-12 text-gray-400 mb-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                      />
+                    </svg>
+                    <p>Drag elements from the sidebar to start building your email</p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
