@@ -549,7 +549,7 @@ const ReactEmailEditor: React.FC<ReactEmailEditorProps> = ({ onDesignLoad, onLoa
                 preview: true,
                 imageEditor: false,
                 svgImageUpload: true,
-                stockImages: true, // Disable stock images to hide image picker
+                stockImages: false, // Disable stock images to hide image picker
                 undoRedo: true,
                 audit: false, // Disable audit feature
                 textEditor: {
