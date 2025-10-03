@@ -37,23 +37,21 @@ const Select: React.FC<SelectProps> = ({
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   // Filter options based on search term
-  const filteredOptions = searchable 
-    ? options.filter(option => 
-        option.label.toLowerCase().includes(searchTerm.toLowerCase())
-      )
+  const filteredOptions = searchable
+    ? options.filter((option) => option.label.toLowerCase().includes(searchTerm.toLowerCase()))
     : options;
 
   // Get the selected option label for display
-  const selectedOption = options.find(option => option.value === currentValue);
+  const selectedOption = options.find((option) => option.value === currentValue);
   const displayValue = selectedOption ? selectedOption.label : placeholder;
 
   const handleOptionSelect = (optionValue: string) => {
     if (disabled) return;
-    
+
     if (value === undefined) {
       setInternalValue(optionValue);
     }
-    
+
     onChange(optionValue);
     setIsOpen(false);
     setSearchTerm("");
@@ -70,25 +68,24 @@ const Select: React.FC<SelectProps> = ({
     }
   };
 
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-        setSearchTerm("");
-      }
-    };
+  // // Close dropdown when clicking outside
+  // useEffect(() => {
+  //   const handleClickOutside = (event: MouseEvent) => {
+  //     if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+  //       setIsOpen(false);
+  //       setSearchTerm("");
+  //     }
+  //   };
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
+  //   return () => {
+  //     document.removeEventListener("mousedown", handleClickOutside);
+  //   };
+  // }, []);
 
   // Handle keyboard navigation
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (disabled) return;
-    
+
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
       toggleDropdown();
@@ -104,28 +101,20 @@ const Select: React.FC<SelectProps> = ({
       <select
         disabled={disabled}
         className={`h-11 w-full appearance-none rounded-lg border border-gray-300 px-4 py-2.5 pr-11 text-sm shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800 ${
-          disabled 
+          disabled
             ? "opacity-50 cursor-not-allowed bg-gray-100 dark:bg-gray-800"
             : currentValue
-            ? "text-gray-800 dark:text-white/90"
-            : "text-gray-400 dark:text-gray-400"
+              ? "text-gray-800 dark:text-white/90"
+              : "text-gray-400 dark:text-gray-400"
         } ${className}`}
         value={currentValue}
         onChange={(e) => handleOptionSelect(e.target.value)}
       >
-        <option
-          disabled
-          value=""
-          className="text-gray-700 dark:bg-gray-900 dark:text-gray-400"
-        >
+        <option disabled value="" className="text-gray-700 dark:bg-gray-900 dark:text-gray-400">
           {placeholder}
         </option>
         {options.map((option) => (
-          <option
-            key={option.value}
-            value={option.value}
-            className="text-gray-700 dark:bg-gray-900 dark:text-gray-400"
-          >
+          <option key={option.value} value={option.value} className="text-gray-700 dark:bg-gray-900 dark:text-gray-400">
             {option.label}
           </option>
         ))}
@@ -142,11 +131,11 @@ const Select: React.FC<SelectProps> = ({
         onClick={toggleDropdown}
         onKeyDown={handleKeyDown}
         className={`h-11 w-full appearance-none rounded-lg border border-gray-300 px-4 py-2.5 pr-11 text-sm text-left shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:focus:border-brand-800 ${
-          disabled 
+          disabled
             ? "opacity-50 cursor-not-allowed bg-gray-100 dark:bg-gray-800"
             : currentValue
-            ? "text-gray-800 dark:text-white/90 bg-white dark:bg-gray-900"
-            : "text-gray-400 dark:text-gray-400 bg-white dark:bg-gray-900"
+              ? "text-gray-800 dark:text-white/90 bg-white dark:bg-gray-900"
+              : "text-gray-400 dark:text-gray-400 bg-white dark:bg-gray-900"
         }`}
       >
         <span className="block truncate">{displayValue}</span>
@@ -176,7 +165,7 @@ const Select: React.FC<SelectProps> = ({
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          
+
           {/* Options List */}
           <div className="max-h-60 overflow-auto py-1">
             {filteredOptions.length > 0 ? (
@@ -195,9 +184,7 @@ const Select: React.FC<SelectProps> = ({
                 </button>
               ))
             ) : (
-              <div className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
-                No options found
-              </div>
+              <div className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">No options found</div>
             )}
           </div>
         </div>
