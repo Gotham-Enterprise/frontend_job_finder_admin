@@ -108,6 +108,65 @@ const ReactEmailEditor: React.FC<ReactEmailEditorProps> = ({ onDesignLoad, onLoa
       const unlayer = emailEditorRef.current?.editor;
       unlayer?.loadDesign(state.newsletterData.design);
     }
+
+    // Additional script to hide Smart Buttons after editor loads
+    setTimeout(() => {
+      // Try to find and hide Smart Buttons elements using JavaScript
+      const hideSmartButtons = () => {
+        const iframe = document.querySelector('iframe[id*="unlayer"]') as HTMLIFrameElement;
+        if (iframe && iframe.contentDocument) {
+          const doc = iframe.contentDocument;
+          // Find all elements containing "Smart Buttons" text
+          const allElements = doc.querySelectorAll("*");
+          allElements.forEach((el: any) => {
+            if (el.textContent?.includes("Smart Buttons") || el.textContent?.includes("Get Suggestions")) {
+              let parent = el;
+              // Go up 5 levels to find the container
+              for (let i = 0; i < 5; i++) {
+                if (parent.parentElement) {
+                  parent = parent.parentElement;
+                }
+              }
+              if (parent) {
+                (parent as HTMLElement).style.display = "none";
+              }
+            }
+          });
+        }
+      };
+
+      // Run multiple times to catch dynamically loaded content
+      hideSmartButtons();
+      setTimeout(hideSmartButtons, 500);
+      setTimeout(hideSmartButtons, 1000);
+      setTimeout(hideSmartButtons, 2000);
+
+      // Also hide Send Email option
+      const hideSendEmail = () => {
+        const iframe = document.querySelector('iframe[id*="unlayer"]') as HTMLIFrameElement;
+        if (iframe && iframe.contentDocument) {
+          const doc = iframe.contentDocument;
+          // Find all elements containing "Send Email" text
+          const allElements = doc.querySelectorAll("*");
+          allElements.forEach((el: any) => {
+            if (el.textContent?.trim() === "Send Email" || el.getAttribute?.("data-value") === "email") {
+              (el as HTMLElement).style.display = "none";
+              (el as HTMLElement).style.visibility = "hidden";
+              // Hide parent list item if it exists
+              const parentLi = el.closest("li");
+              if (parentLi) {
+                (parentLi as HTMLElement).style.display = "none";
+              }
+            }
+          });
+        }
+      };
+
+      // Run multiple times to catch dynamically loaded content
+      setTimeout(hideSendEmail, 500);
+      setTimeout(hideSendEmail, 1000);
+      setTimeout(hideSendEmail, 2000);
+    }, 500);
   }, [onLoad, state.newsletterData.design]);
 
   // Auto-save functionality
@@ -333,8 +392,27 @@ const ReactEmailEditor: React.FC<ReactEmailEditorProps> = ({ onDesignLoad, onLoa
                 [class*="inbox-tab"] {
                   display: none !important;
                 }
-                .unlayer-button-action-option[data-value="email"] {
+                /* Hide Send Email action option */
+                .unlayer-button-action-option[data-value="email"],
+                button[data-value="email"],
+                [data-value="email"],
+                option[value="email"],
+                li[data-value="email"],
+                div[data-value="email"],
+                /* Hide Send Email in dropdown */
+                [class*="action-option"]:has([data-value="email"]),
+                [class*="dropdown-item"]:has(*:contains("Send Email")),
+                li:has(*:contains("Send Email")),
+                button:has(*:contains("Send Email")),
+                div:has(> *:contains("Send Email")),
+                /* Additional selectors for Send Email option */
+                [aria-label*="Send Email"],
+                [title*="Send Email"],
+                *:contains("Send Email") {
                   display: none !important;
+                  visibility: hidden !important;
+                  opacity: 0 !important;
+                  pointer-events: none !important;
                 }
                 /* Hide audit panel */
                 .unlayer-audit,
@@ -365,6 +443,8 @@ const ReactEmailEditor: React.FC<ReactEmailEditorProps> = ({ onDesignLoad, onLoa
                 .ai-magic,
                 [class*="smart-button"],
                 [class*="ai-magic"],
+                [class*="Smart"],
+                [class*="smart"],
                 .unlayer-smart-buttons,
                 .button-suggestions,
                 [data-testid*="smart-button"],
@@ -410,8 +490,30 @@ const ReactEmailEditor: React.FC<ReactEmailEditorProps> = ({ onDesignLoad, onLoa
                 div[class*="ai"],
                 .panel-suggestion,
                 .suggestion-container,
-                .ai-container {
+                .ai-container,
+                /* Target Smart Buttons section directly */
+                section[class*="smart"],
+                section[class*="Smart"],
+                div[class*="SmartButtons"],
+                [id*="smart-button"],
+                [id*="Smart"],
+                .smart_buttons_panel,
+                #smart_buttons_panel,
+                /* Hide any collapsible panel with Smart Buttons */
+                .unlayer-panel[class*="smart"],
+                .unlayer-section[class*="smart"],
+                div[data-testid*="smart"],
+                div[data-cy*="smart"],
+                /* Hide NEW badge and Smart Buttons header */
+                div:has(> span:contains("Smart Buttons")),
+                div:has(> *:contains("Smart Buttons")),
+                /* Universal approach - hide any direct parent of Smart Buttons text */
+                *:has(> *:contains("Get Suggestions")) {
                   display: none !important;
+                  visibility: hidden !important;
+                  opacity: 0 !important;
+                  height: 0 !important;
+                  overflow: hidden !important;
                 }
                 
               `,
