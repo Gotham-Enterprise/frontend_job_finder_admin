@@ -5,6 +5,7 @@ export interface NewsletterTemplate {
   thumbnail: string;
   description: string;
   content: string;
+  design?: any; // Email editor design JSON for loading into the editor
   isCustom?: boolean;
 }
 

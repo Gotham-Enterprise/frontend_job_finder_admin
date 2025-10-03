@@ -2,7 +2,13 @@ import React, { useState, useMemo } from "react";
 import { NewsletterTemplate } from "../types";
 import { emailTemplates, getTemplateById } from "../emailTemplates";
 import { useAppDispatch } from "@/store";
-import { setSelectedTemplate, setContent, completeStep, setCurrentStep } from "@/store/slices/newsletterSlice";
+import {
+  setSelectedTemplate,
+  setContent,
+  setDesign,
+  completeStep,
+  setCurrentStep,
+} from "@/store/slices/newsletterSlice";
 import TemplatePreview from "../components/TemplatePreview";
 import SimpleTemplateThumbnail from "../components/SimpleTemplateThumbnail";
 
@@ -76,11 +82,17 @@ const TemplateSelection: React.FC = () => {
         dispatch(setContent(""));
         console.log("✅ Redux: setContent('') dispatched for blank template");
       } else {
-        // For predefined templates, load the content
+        // For predefined templates, load both the content AND design
         const emailTemplate = getTemplateById(template.id);
         if (emailTemplate) {
           dispatch(setContent(emailTemplate.content || ""));
           console.log("✅ Redux: setContent dispatched with template content");
+
+          // IMPORTANT: Also dispatch the design JSON so the editor can load it properly
+          if (emailTemplate.design) {
+            dispatch(setDesign(emailTemplate.design));
+            console.log("✅ Redux: setDesign dispatched with template design JSON");
+          }
         }
       }
 
