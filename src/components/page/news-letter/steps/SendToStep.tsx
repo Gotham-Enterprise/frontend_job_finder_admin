@@ -1,12 +1,121 @@
-import React from "react";
+import React, { useState, useMemo } from "react";
+import { useNewsletter } from "../NewsletterContext";
+
+// Sample data for Job Seekers
+const jobSeekers = [
+  { email: "jobseeker1@example.com", name: "John Doe" },
+  { email: "jobseeker2@example.com", name: "Jane Smith" },
+  { email: "jobseeker3@example.com", name: "Mike Johnson" },
+  { email: "jobseeker4@example.com", name: "Sarah Williams" },
+  { email: "jobseeker5@example.com", name: "David Brown" },
+];
+
+// Sample data for Employers
+const employers = [
+  { email: "employer1@example.com", name: "Tech Corp" },
+  { email: "employer2@example.com", name: "Business Solutions Inc" },
+  { email: "employer3@example.com", name: "Creative Agency" },
+  { email: "employer4@example.com", name: "Global Industries" },
+  { email: "employer5@example.com", name: "Startup Ventures" },
+];
 
 const SendToStep: React.FC = () => {
+  const { goToStep, completeStep, updateNewsletterData } = useNewsletter();
+  const [selectedRecipients, setSelectedRecipients] = useState<string[]>([]);
+  const [selectAllJobSeekers, setSelectAllJobSeekers] = useState(false);
+  const [selectAllEmployers, setSelectAllEmployers] = useState(false);
+
+  // Handle individual email selection
+  const handleEmailToggle = (email: string) => {
+    setSelectedRecipients((prev) => {
+      if (prev.includes(email)) {
+        return prev.filter((e) => e !== email);
+      } else {
+        return [...prev, email];
+      }
+    });
+  };
+
+  // Handle "Select All Job Seekers"
+  const handleSelectAllJobSeekers = () => {
+    const newValue = !selectAllJobSeekers;
+    setSelectAllJobSeekers(newValue);
+
+    if (newValue) {
+      // Remove individual job seeker emails and add "jobSeeker" group
+      const withoutJobSeekers = selectedRecipients.filter((email) => !jobSeekers.some((js) => js.email === email));
+      setSelectedRecipients([...withoutJobSeekers, "jobSeeker"]);
+    } else {
+      // Remove "jobSeeker" group
+      setSelectedRecipients((prev) => prev.filter((email) => email !== "jobSeeker"));
+    }
+  };
+
+  // Handle "Select All Employers"
+  const handleSelectAllEmployers = () => {
+    const newValue = !selectAllEmployers;
+    setSelectAllEmployers(newValue);
+
+    if (newValue) {
+      // Remove individual employer emails and add "employer" group
+      const withoutEmployers = selectedRecipients.filter((email) => !employers.some((emp) => emp.email === email));
+      setSelectedRecipients([...withoutEmployers, "employer"]);
+    } else {
+      // Remove "employer" group
+      setSelectedRecipients((prev) => prev.filter((email) => email !== "employer"));
+    }
+  };
+
+  // Check if a job seeker email is selected
+  const isJobSeekerSelected = (email: string) => {
+    return selectedRecipients.includes("jobSeeker") || selectedRecipients.includes(email);
+  };
+
+  // Check if an employer email is selected
+  const isEmployerSelected = (email: string) => {
+    return selectedRecipients.includes("employer") || selectedRecipients.includes(email);
+  };
+
+  // Build the final sendTo array based on selections
+  const buildSendToArray = useMemo(() => {
+    const result: string[] = [];
+
+    // Add employer group or individual employers
+    if (selectAllEmployers) {
+      result.push("employer");
+    } else {
+      const individualEmployers = selectedRecipients.filter((email) => employers.some((emp) => emp.email === email));
+      result.push(...individualEmployers);
+    }
+
+    // Add jobSeeker group or individual job seekers
+    if (selectAllJobSeekers) {
+      result.push("jobSeeker");
+    } else {
+      const individualJobSeekers = selectedRecipients.filter((email) => jobSeekers.some((js) => js.email === email));
+      result.push(...individualJobSeekers);
+    }
+
+    return result;
+  }, [selectedRecipients, selectAllEmployers, selectAllJobSeekers]);
+
+  const handleContinue = () => {
+    // Update newsletter data with selected recipients
+    updateNewsletterData({
+      sendTo: buildSendToArray,
+    });
+    // Mark current step as completed
+    completeStep(4);
+    // Go to Schedule step
+    goToStep(5);
+  };
+
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
-        <div className="text-center">
+        <div className="text-center mb-8">
           <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-purple-100 mb-4">
-            <svg className="h-8 w-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="h-8 w-8 text-purple-600" fill="#006d36" stroke="#006d36" viewBox="0 0 24 24">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -15,24 +124,88 @@ const SendToStep: React.FC = () => {
               />
             </svg>
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Select Recipients</h2>
-          <p className="text-gray-600 mb-8">Choose your audience and manage your contact lists for this newsletter.</p>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Send To</h2>
+          <p className="text-gray-600">Select your audience for this newsletter.</p>
+        </div>
 
-          <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-            <div className="flex items-center">
-              <svg className="h-5 w-5 text-purple-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                <path
-                  fillRule="evenodd"
-                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
-                  clipRule="evenodd"
+        <div className="space-y-6">
+          {/* Employers Group */}
+          <div className="border border-gray-200 rounded-lg overflow-hidden">
+            <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
+              <label className="flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={selectAllEmployers}
+                  onChange={handleSelectAllEmployers}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                 />
-              </svg>
-              <span className="text-purple-800 font-medium">Coming Soon</span>
+                <span className="ml-3 text-sm font-semibold text-gray-900">Employers (Select All)</span>
+              </label>
             </div>
-            <p className="text-purple-700 text-sm mt-1">
-              This feature will include contact list management, segmentation options, audience targeting, and
-              subscriber management tools.
-            </p>
+            <div className="px-4 py-2 space-y-2 max-h-48 overflow-y-auto">
+              {employers.map((employer) => (
+                <label
+                  key={employer.email}
+                  className="flex items-center cursor-pointer py-2 hover:bg-gray-50 px-2 rounded"
+                >
+                  <input
+                    type="checkbox"
+                    checked={isEmployerSelected(employer.email)}
+                    onChange={() => handleEmailToggle(employer.email)}
+                    disabled={selectAllEmployers}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded disabled:opacity-50"
+                  />
+                  <span className="ml-3 text-sm text-gray-700">
+                    {employer.name} <span className="text-gray-500">({employer.email})</span>
+                  </span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* Job Seekers Group */}
+          <div className="border border-gray-200 rounded-lg overflow-hidden">
+            <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
+              <label className="flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={selectAllJobSeekers}
+                  onChange={handleSelectAllJobSeekers}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <span className="ml-3 text-sm font-semibold text-gray-900">Job Seekers (Select All)</span>
+              </label>
+            </div>
+            <div className="px-4 py-2 space-y-2 max-h-48 overflow-y-auto">
+              {jobSeekers.map((jobSeeker) => (
+                <label
+                  key={jobSeeker.email}
+                  className="flex items-center cursor-pointer py-2 hover:bg-gray-50 px-2 rounded"
+                >
+                  <input
+                    type="checkbox"
+                    checked={isJobSeekerSelected(jobSeeker.email)}
+                    onChange={() => handleEmailToggle(jobSeeker.email)}
+                    disabled={selectAllJobSeekers}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded disabled:opacity-50"
+                  />
+                  <span className="ml-3 text-sm text-gray-700">
+                    {jobSeeker.name} <span className="text-gray-500">({jobSeeker.email})</span>
+                  </span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex justify-end pt-4">
+            <button
+              type="button"
+              onClick={handleContinue}
+              disabled={buildSendToArray.length === 0}
+              className="px-6 py-2.5 bg-primary text-white font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Continue
+            </button>
           </div>
         </div>
       </div>
