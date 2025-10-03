@@ -496,9 +496,11 @@ const ReactEmailEditor: React.FC<ReactEmailEditorProps> = ({ onDesignLoad, onLoa
                 }
                 
               `,
+
               features: {
                 preview: true,
-                imageEditor: true,
+                imageEditor: false,
+                svgImageUpload: true,
                 stockImages: false, // Disable stock images to hide image picker
                 undoRedo: true,
                 audit: false, // Disable audit feature
@@ -520,6 +522,7 @@ const ReactEmailEditor: React.FC<ReactEmailEditorProps> = ({ onDesignLoad, onLoa
                     },
                   },
                 },
+
                 button: {
                   enabled: true,
                   properties: {
@@ -576,6 +579,7 @@ const ReactEmailEditor: React.FC<ReactEmailEditorProps> = ({ onDesignLoad, onLoa
               editor: {
                 minRows: 1,
                 maxRows: 20,
+                autoSelectOnDrop: true,
               },
               mergeTags: {
                 first_name: {
