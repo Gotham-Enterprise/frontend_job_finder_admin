@@ -10,7 +10,6 @@ import {
   setCurrentStep,
   updateNewsletterData,
 } from "@/store/slices/newsletterSlice";
-import { getTemplateById } from "../emailTemplates";
 import { blogApi } from "@/services/api/blog";
 
 interface ReactEmailEditorProps {
@@ -23,8 +22,7 @@ const ReactEmailEditor: React.FC<ReactEmailEditorProps> = ({ onDesignLoad, onLoa
   const dispatch = useAppDispatch();
   const newsletterData = useAppSelector((state) => state.newsletter.data);
   const [isLoading, setIsLoading] = useState(true);
-  const [showPreviewModal, setShowPreviewModal] = useState(false);
-  const [previewHtml, setPreviewHtml] = useState("");
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
 
   const exportHtml = useCallback(() => {
     const unlayer = emailEditorRef.current?.editor;
@@ -135,6 +133,9 @@ const ReactEmailEditor: React.FC<ReactEmailEditorProps> = ({ onDesignLoad, onLoa
 
         console.log("📤 Uploading image:", file.name);
 
+        // Show loading indicator
+        setIsUploadingImage(true);
+
         try {
           // Upload to your server using blog media API
           const response = await blogApi.uploadMedia({
@@ -153,6 +154,9 @@ const ReactEmailEditor: React.FC<ReactEmailEditorProps> = ({ onDesignLoad, onLoa
         } catch (error) {
           console.error("❌ Upload error:", error);
           alert("Failed to upload image. Please try again.");
+        } finally {
+          // Hide loading indicator
+          setIsUploadingImage(false);
         }
       };
 
@@ -262,18 +266,6 @@ const ReactEmailEditor: React.FC<ReactEmailEditorProps> = ({ onDesignLoad, onLoa
     });
   };
 
-  const handleLoadSampleTemplate = () => {
-    // Load the MacBook Pro template from emailTemplates.ts
-    const macbookTemplate = getTemplateById("macbook-pro-template");
-
-    if (macbookTemplate?.design) {
-      const unlayer = emailEditorRef.current?.editor;
-      unlayer?.loadDesign(macbookTemplate.design as any);
-    } else {
-      console.error("MacBook Pro template design not found");
-    }
-  };
-
   const handlePreview = () => {
     const unlayer = emailEditorRef.current?.editor;
 
@@ -289,80 +281,22 @@ const ReactEmailEditor: React.FC<ReactEmailEditorProps> = ({ onDesignLoad, onLoa
     });
   };
 
-  // Preview Modal Component
-  const PreviewModal = () => {
-    if (!showPreviewModal) return null;
+  return (
+    <>
 
-    return (
-      <div className="fixed inset-0 z-[60] bg-black bg-opacity-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
-          {/* Modal Header */}
-          <div className="flex items-center justify-between p-6 border-b border-gray-200">
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900">Sample Template Preview</h3>
-              <p className="text-sm text-gray-500 mt-1">Welcome Newsletter Template</p>
-            </div>
-            <button
-              onClick={() => setShowPreviewModal(false)}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-
-          {/* Preview Content */}
-          <div className="p-6">
-            <div className="bg-gray-100 rounded-lg p-4 mb-6">
-              <div className="bg-white rounded shadow-sm border" style={{ maxHeight: "450px", overflow: "auto" }}>
-                <iframe srcDoc={previewHtml} className="w-full h-96 border-0" title="Email Preview" />
-              </div>
-            </div>
-
-            <div className="flex items-start justify-between">
-              <div className="flex-1 mr-4">
-                <h4 className="font-medium text-gray-900 mb-2">Apple MacBook Pro Template Features:</h4>
-                <ul className="text-sm text-gray-600 space-y-1">
-                  <li>• Authentic Apple logo and branding</li>
-                  <li>• Professional black background with Apple aesthetics</li>
-                  <li>• MacBook Pro hero image showcase</li>
-                  <li>• Feature highlights with Apple's signature style</li>
-                  <li>• Two-column layout sections for services</li>
-                  <li>• Apple Card and education pricing sections</li>
-                  <li>• Mac Specialist consultation area</li>
-                  <li>• Complete footer with Apple links and legal text</li>
-                  <li>• Mobile-responsive design optimized for all devices</li>
-                  <li>• Premium product launch newsletter layout</li>
-                </ul>
-              </div>
-              <div className="flex space-x-3">
-                <button
-                  onClick={() => setShowPreviewModal(false)}
-                  className="px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={() => {
-                    handleLoadSampleTemplate();
-                    setShowPreviewModal(false);
-                  }}
-                  className="px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
-                  Use This Template
-                </button>
-              </div>
+      {/* Image Upload Loading Overlay */}
+      {isUploadingImage && (
+        <div className="fixed inset-0 z-[70] bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white rounded-lg shadow-xl p-6 flex flex-col items-center space-y-4">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-blue-600"></div>
+            <div className="text-center">
+              <p className="text-lg font-semibold text-gray-900">Uploading Image...</p>
+              <p className="text-sm text-gray-500 mt-1">Please wait while we upload your image</p>
             </div>
           </div>
         </div>
-      </div>
-    );
-  };
+      )}
 
-  return (
-    <>
-      <PreviewModal />
       <div className="h-screen w-full flex flex-col" style={{ height: "100vh", width: "100vw" }}>
         {/* Compact Toolbar */}
         <div className="bg-white border-b border-gray-200 px-4 py-2 flex-shrink-0" style={{ height: "60px" }}>

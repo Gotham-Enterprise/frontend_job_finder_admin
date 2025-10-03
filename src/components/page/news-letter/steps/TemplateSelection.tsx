@@ -1,6 +1,6 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { NewsletterTemplate } from "../types";
-import { emailTemplates, getTemplateById } from "../emailTemplates";
+import { unlayerApi, UnlayerTemplate } from "@/services/api/unlayer";
 import { useAppDispatch } from "@/store";
 import {
   setSelectedTemplate,
@@ -29,28 +29,75 @@ const TemplateSelection: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [previewTemplate, setPreviewTemplate] = useState<NewsletterTemplate | null>(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [apiTemplates, setApiTemplates] = useState<UnlayerTemplate[]>([]);
+  const [isLoadingTemplates, setIsLoadingTemplates] = useState(true);
+  const [templateError, setTemplateError] = useState<string | null>(null);
 
-  // Convert email templates to newsletter template format
-  const newsletterTemplates: NewsletterTemplate[] = [
-    {
-      id: "blank",
-      name: "Start from scratch",
-      category: "newsletter",
-      thumbnail: "/images/templates/blank-template.png",
-      description: "Create your own design from scratch",
-      content: "",
-      isCustom: true,
-    },
-    ...emailTemplates.map((template) => ({
-      id: template.id,
-      name: template.name,
-      category: template.category,
-      thumbnail: template.thumbnail,
-      description: template.description,
-      content: template.content || "", // Use HTML content instead of JSON design
-      isCustom: false,
-    })),
-  ];
+  // Fetch templates from Unlayer API on mount
+  useEffect(() => {
+    const fetchTemplates = async () => {
+      setIsLoadingTemplates(true);
+      setTemplateError(null);
+      try {
+        console.log("🔄 Starting to fetch templates...");
+        const response = await unlayerApi.getTemplates();
+        console.log("📦 API Response received:", response);
+        
+        if (response.success && response.data && response.data.length > 0) {
+          console.log(`✅ Setting ${response.data.length} templates from Unlayer API`);
+          setApiTemplates(response.data);
+          console.log(`✅ Loaded ${response.data.length} templates from Unlayer API in Step 1`);
+        } else {
+          // Use mock templates as fallback when API fails
+          console.warn("⚠️ Unlayer API returned no templates, using mock templates as fallback");
+          console.warn("Response details:", { success: response.success, dataLength: response.data?.length });
+          const mockResponse = unlayerApi.getMockTemplates();
+          setApiTemplates(mockResponse.data);
+          console.log(`✅ Loaded ${mockResponse.data.length} mock templates as fallback`);
+        }
+      } catch (error) {
+        console.error("❌ Error fetching templates, using mock templates:", error);
+        // Use mock templates as fallback
+        const mockResponse = unlayerApi.getMockTemplates();
+        setApiTemplates(mockResponse.data);
+        console.log(`✅ Loaded ${mockResponse.data.length} mock templates as fallback`);
+      } finally {
+        setIsLoadingTemplates(false);
+      }
+    };
+
+    fetchTemplates();
+  }, []);
+
+  // Convert API templates to newsletter template format
+  const newsletterTemplates: NewsletterTemplate[] = useMemo(() => {
+    console.log(`🔄 Building newsletterTemplates with ${apiTemplates.length} API templates`);
+    
+    const templates = [
+      {
+        id: "blank",
+        name: "Start from scratch",
+        category: "newsletter" as const,
+        thumbnail: "/images/templates/blank-template.png",
+        description: "Create your own design from scratch",
+        content: "",
+        isCustom: true,
+      },
+      ...apiTemplates.map((template) => ({
+        id: template.id,
+        name: template.name,
+        category: "newsletter" as const, // Map all API templates to newsletter category
+        thumbnail: "/images/templates/blank-template.png", // Unlayer doesn't provide thumbnails
+        description: `Template: ${template.name}`,
+        content: "",
+        design: template.design, // Store the design JSON
+        isCustom: false,
+      })),
+    ];
+    
+    console.log(`✅ Built ${templates.length} total templates (1 blank + ${apiTemplates.length} API)`);
+    return templates;
+  }, [apiTemplates]);
 
   const filteredTemplates = useMemo(() => {
     let filtered = newsletterTemplates;
@@ -67,8 +114,9 @@ const TemplateSelection: React.FC = () => {
       );
     }
 
+    console.log(`🔍 Filtered to ${filtered.length} templates (category: ${selectedCategory}, search: "${searchTerm}")`);
     return filtered;
-  }, [selectedCategory, searchTerm]);
+  }, [newsletterTemplates, selectedCategory, searchTerm]);
 
   const onSelectTemplate = React.useCallback(
     (template: NewsletterTemplate) => {
@@ -78,22 +126,28 @@ const TemplateSelection: React.FC = () => {
       console.log("✅ Redux: setSelectedTemplate dispatched");
 
       if (template.id === "blank") {
-        // For blank template, just set basic data
+        // For blank template, set empty content and basic design
         dispatch(setContent(""));
-        console.log("✅ Redux: setContent('') dispatched for blank template");
-      } else {
-        // For predefined templates, load both the content AND design
-        const emailTemplate = getTemplateById(template.id);
-        if (emailTemplate) {
-          dispatch(setContent(emailTemplate.content || ""));
-          console.log("✅ Redux: setContent dispatched with template content");
-
-          // IMPORTANT: Also dispatch the design JSON so the editor can load it properly
-          if (emailTemplate.design) {
-            dispatch(setDesign(emailTemplate.design));
-            console.log("✅ Redux: setDesign dispatched with template design JSON");
-          }
-        }
+        dispatch(
+          setDesign({
+            counters: {},
+            body: {
+              rows: [],
+              values: {
+                backgroundColor: "#ffffff",
+                backgroundImage: { url: "", fullWidth: true, repeat: false, center: true, cover: false },
+                contentWidth: "600px",
+                fontFamily: { label: "Arial", value: "arial,helvetica,sans-serif" },
+                textColor: "#000000",
+              },
+            },
+          })
+        );
+        console.log("✅ Redux: Blank template design dispatched");
+      } else if (template.design) {
+        // For API templates with design JSON
+        dispatch(setDesign(template.design));
+        console.log("✅ Redux: setDesign dispatched with API template design JSON");
       }
 
       dispatch(completeStep(1));
@@ -168,17 +222,61 @@ const TemplateSelection: React.FC = () => {
       </div>
 
       {/* Templates Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {/* Removed xl:grid-cols-4 for larger thumbnails */}
-        {filteredTemplates.map((template: NewsletterTemplate) => (
-          <SimpleTemplateThumbnail
-            key={template.id}
-            template={template}
-            onSelect={() => onSelectTemplate(template)}
-            onPreview={() => onPreviewTemplate(template)}
-          />
-        ))}
-      </div>
+      {isLoadingTemplates ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {/* Skeleton loaders */}
+          {[1, 2, 3, 4, 5, 6].map((index) => (
+            <div key={index} className="bg-white rounded-lg shadow-md overflow-hidden animate-pulse">
+              {/* Thumbnail skeleton */}
+              <div className="w-full h-64 bg-gray-200"></div>
+              
+              {/* Content skeleton */}
+              <div className="p-4 space-y-3">
+                {/* Title skeleton */}
+                <div className="h-5 bg-gray-200 rounded w-3/4"></div>
+                
+                {/* Description skeleton */}
+                <div className="space-y-2">
+                  <div className="h-3 bg-gray-200 rounded w-full"></div>
+                  <div className="h-3 bg-gray-200 rounded w-5/6"></div>
+                </div>
+                
+                {/* Buttons skeleton */}
+                <div className="flex gap-2 pt-2">
+                  <div className="h-9 bg-gray-200 rounded flex-1"></div>
+                  <div className="h-9 bg-gray-200 rounded w-20"></div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : templateError ? (
+        <div className="text-center py-12 max-w-md mx-auto">
+          <svg className="w-16 h-16 text-yellow-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+            />
+          </svg>
+          <p className="text-gray-700 font-medium mb-2">Templates Not Available</p>
+          <p className="text-sm text-gray-500 mb-4">{templateError}</p>
+          <p className="text-xs text-gray-400">You can still use "Start from scratch" option.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {/* Removed xl:grid-cols-4 for larger thumbnails */}
+          {filteredTemplates.map((template: NewsletterTemplate) => (
+            <SimpleTemplateThumbnail
+              key={template.id}
+              template={template}
+              onSelect={() => onSelectTemplate(template)}
+              onPreview={() => onPreviewTemplate(template)}
+            />
+          ))}
+        </div>
+      )}
 
       {/* Empty State */}
       {filteredTemplates.length === 0 && (

@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { NewsletterTemplate } from "../types";
+import { unlayerApi } from "@/services/api/unlayer";
 
 interface TemplatePreviewProps {
   template: NewsletterTemplate;
@@ -15,12 +16,40 @@ const TemplatePreview: React.FC<TemplatePreviewProps> = ({ template, isOpen, onC
 
   if (!isOpen) return null;
 
-  const handleUseTemplate = () => {
+  const handleUseTemplate = async () => {
     setIsLoading(true);
-    setTimeout(() => {
+    try {
+      // For blank template or templates without ID, use as is
+      if (template.id === "blank" || template.id === "start-from-scratch") {
+        console.log("📝 Using blank template");
+        onSelectTemplate(template);
+        return;
+      }
+
+      // Fetch the full template design from Unlayer API by ID
+      console.log(`🔄 Fetching full template details for ID: ${template.id}`);
+      const fullTemplate = await unlayerApi.getTemplateById(template.id);
+
+      if (fullTemplate && fullTemplate.design) {
+        console.log("✅ Full template fetched successfully, using complete design");
+        // Create updated template with the full design
+        const updatedTemplate: NewsletterTemplate = {
+          ...template,
+          design: fullTemplate.design,
+        };
+        onSelectTemplate(updatedTemplate);
+      } else {
+        console.warn("⚠️ Could not fetch full template, using existing design");
+        // Fallback to existing template if fetch fails
+        onSelectTemplate(template);
+      }
+    } catch (error) {
+      console.error("❌ Error fetching template by ID:", error);
+      // Fallback to existing template on error
       onSelectTemplate(template);
+    } finally {
       setIsLoading(false);
-    }, 500);
+    }
   };
 
   const openInNewWindow = () => {
