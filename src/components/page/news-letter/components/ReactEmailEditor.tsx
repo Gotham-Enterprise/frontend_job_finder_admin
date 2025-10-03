@@ -496,52 +496,9 @@ const ReactEmailEditor: React.FC<ReactEmailEditorProps> = ({ onDesignLoad, onLoa
                 .tool-enhancement-badge {
                   display: none !important;
                 }
-                /* Hide Smart Buttons / AI Magic feature */
-                .smart-buttons,
-                .ai-magic,
-                [class*="smart-button"],
-                [class*="ai-magic"],
-                [class*="Smart"],
-                [class*="smart"],
-                .unlayer-smart-buttons,
-                .button-suggestions,
-                [data-testid*="smart-button"],
-                [aria-label*="smart button" i],
-                [aria-label*="ai magic" i],
-                .get-suggestions,
-                .magic-button,
-                .ai-suggestions-panel,
-                .smart-button-panel,
-                /* Specific selectors from DOM inspection */
-                .blockbuilder-suggestions-widget,
-                .blockbuilder-widget,
-                [class*="suggestions-widget"],
-                [class*="blockbuilder-suggestions"],
-                .sc-gntHiG,
-                .sc-fEhPMx,
-                .sc-dnta0f,
-                .sc-bntaOI,
-                [class*="smart_buttons_panel"],
-                .collapsible-content,
-                .collapsible-inner-content,
-                .ai-introduction,
-                [data-variant="ai"],
-                button[aria-label*="Get Suggestions"],
-                span:contains("Get Suggestions"),
-                div:contains("Try out our AI magic"),
                
                
-                /* Hide NEW badge and Smart Buttons header */
-                div:has(> span:contains("Smart Buttons")),
-                div:has(> *:contains("Smart Buttons")),
-                /* Universal approach - hide any direct parent of Smart Buttons text */
-                *:has(> *:contains("Get Suggestions")) {
-                  display: none !important;
-                  visibility: hidden !important;
-                  opacity: 0 !important;
-                  height: 0 !important;
-                  overflow: hidden !important;
-                }
+              
                 
               `,
 
@@ -565,7 +522,7 @@ const ReactEmailEditor: React.FC<ReactEmailEditorProps> = ({ onDesignLoad, onLoa
                   properties: {
                     src: {
                       value: {
-                        url: "https://via.placeholder.com/600x400",
+                        url: "https://gothamenterprisesltd.com/assets/img/full_logo_dark.svg",
                       },
                     },
                   },
@@ -628,28 +585,6 @@ const ReactEmailEditor: React.FC<ReactEmailEditorProps> = ({ onDesignLoad, onLoa
                 minRows: 1,
                 maxRows: 20,
                 autoSelectOnDrop: true,
-              },
-              mergeTags: {
-                first_name: {
-                  name: "First Name",
-                  value: "{{first_name}}",
-                  sample: "John",
-                },
-                last_name: {
-                  name: "Last Name",
-                  value: "{{last_name}}",
-                  sample: "Doe",
-                },
-                email: {
-                  name: "Email",
-                  value: "{{email}}",
-                  sample: "john.doe@example.com",
-                },
-                company: {
-                  name: "Company",
-                  value: "{{company}}",
-                  sample: "Acme Corp",
-                },
               },
             }}
           />
