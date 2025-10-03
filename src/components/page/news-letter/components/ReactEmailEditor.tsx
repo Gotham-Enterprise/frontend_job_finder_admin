@@ -3,7 +3,13 @@
 import React, { useRef, useCallback, useEffect, useState } from "react";
 import EmailEditor, { EditorRef, EmailEditorProps } from "react-email-editor";
 import { useAppDispatch, useAppSelector } from "@/store";
-import { setContent, setDesign, completeStep, setCurrentStep, updateNewsletterData } from "@/store/slices/newsletterSlice";
+import {
+  setContent,
+  setDesign,
+  completeStep,
+  setCurrentStep,
+  updateNewsletterData,
+} from "@/store/slices/newsletterSlice";
 import { getTemplateById } from "../emailTemplates";
 
 interface ReactEmailEditorProps {
@@ -98,10 +104,21 @@ const ReactEmailEditor: React.FC<ReactEmailEditorProps> = ({ onDesignLoad, onLoa
     setIsLoading(false);
     onLoad?.();
 
+    console.log("📧 Email Editor loaded");
+    console.log("📋 Current design in Redux:", newsletterData.design);
+
     // Load existing design if available
     if (newsletterData.design) {
       const unlayer = emailEditorRef.current?.editor;
-      unlayer?.loadDesign(newsletterData.design);
+      if (unlayer) {
+        console.log("✅ Loading design into editor...");
+        unlayer.loadDesign(newsletterData.design);
+        console.log("✅ Design loaded successfully!");
+      } else {
+        console.error("❌ Email editor not ready");
+      }
+    } else {
+      console.log("ℹ️ No design to load (starting blank or design not yet set)");
     }
 
     // Additional script to hide Smart Buttons after editor loads
