@@ -25,11 +25,11 @@ const UNLAYER_API_KEY = "MPp7YAPlxvqw2wnzzDjKbWvbDYJPPtoeAypkgFmXBoH5yCeILDgREQm
  */
 function getAuthHeaders(): Record<string, string> {
   if (!UNLAYER_API_KEY) return {};
-  
+
   // Unlayer requires Basic Auth with format "APIKey:" (with colon, empty password)
   const credentials = `${UNLAYER_API_KEY}:`;
   const base64Credentials = btoa(credentials); // Use btoa for browser compatibility
-  
+
   return {
     Authorization: `Basic ${base64Credentials}`,
   };

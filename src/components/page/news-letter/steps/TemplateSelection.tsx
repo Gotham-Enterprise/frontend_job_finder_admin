@@ -42,7 +42,7 @@ const TemplateSelection: React.FC = () => {
         console.log("🔄 Starting to fetch templates...");
         const response = await unlayerApi.getTemplates();
         console.log("📦 API Response received:", response);
-        
+
         if (response.success && response.data && response.data.length > 0) {
           console.log(`✅ Setting ${response.data.length} templates from Unlayer API`);
           setApiTemplates(response.data);
@@ -72,7 +72,7 @@ const TemplateSelection: React.FC = () => {
   // Convert API templates to newsletter template format
   const newsletterTemplates: NewsletterTemplate[] = useMemo(() => {
     console.log(`🔄 Building newsletterTemplates with ${apiTemplates.length} API templates`);
-    
+
     const templates = [
       {
         id: "blank",
@@ -94,7 +94,7 @@ const TemplateSelection: React.FC = () => {
         isCustom: false,
       })),
     ];
-    
+
     console.log(`✅ Built ${templates.length} total templates (1 blank + ${apiTemplates.length} API)`);
     return templates;
   }, [apiTemplates]);
@@ -229,18 +229,18 @@ const TemplateSelection: React.FC = () => {
             <div key={index} className="bg-white rounded-lg shadow-md overflow-hidden animate-pulse">
               {/* Thumbnail skeleton */}
               <div className="w-full h-64 bg-gray-200"></div>
-              
+
               {/* Content skeleton */}
               <div className="p-4 space-y-3">
                 {/* Title skeleton */}
                 <div className="h-5 bg-gray-200 rounded w-3/4"></div>
-                
+
                 {/* Description skeleton */}
                 <div className="space-y-2">
                   <div className="h-3 bg-gray-200 rounded w-full"></div>
                   <div className="h-3 bg-gray-200 rounded w-5/6"></div>
                 </div>
-                
+
                 {/* Buttons skeleton */}
                 <div className="flex gap-2 pt-2">
                   <div className="h-9 bg-gray-200 rounded flex-1"></div>
