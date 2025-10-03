@@ -308,7 +308,7 @@ const ReactEmailEditor: React.FC<ReactEmailEditorProps> = ({ onDesignLoad, onLoa
               id: "newsletter-editor",
               displayMode: "email",
               appearance: {
-                theme: "light",
+                theme: "modern_light",
                 panels: {
                   tools: {
                     dock: "left",
@@ -358,7 +358,44 @@ const ReactEmailEditor: React.FC<ReactEmailEditorProps> = ({ onDesignLoad, onLoa
                 .get-suggestions,
                 .magic-button,
                 .ai-suggestions-panel,
-                .smart-button-panel {
+                .smart-button-panel,
+                /* Specific selectors from DOM inspection */
+                .blockbuilder-suggestions-widget,
+                .blockbuilder-widget,
+                [class*="suggestions-widget"],
+                [class*="blockbuilder-suggestions"],
+                .sc-gntHiG,
+                .sc-fEhPMx,
+                .sc-dnta0f,
+                .sc-bntaOI,
+                [class*="smart_buttons_panel"],
+                .collapsible-content,
+                .collapsible-inner-content,
+                .ai-introduction,
+                [data-variant="ai"],
+                button[aria-label*="Get Suggestions"],
+                span:contains("Get Suggestions"),
+                div:contains("Try out our AI magic"),
+                /* Additional selectors for AI button features */
+                .ai-button-suggestions,
+                .button-ai-magic,
+                .unlayer-ai-suggestions,
+                .ai-enhancement-panel,
+                [class*="ai-suggestion"],
+                [class*="button-magic"],
+                .suggestion-panel,
+                .ai-powered,
+                [data-ai="true"],
+                [data-suggestion="true"],
+                .enhancement-suggestions,
+                .button-enhancement,
+                .ai-powered-suggestions,
+                /* Try to hide the specific panel shown in screenshot */
+                div[class*="suggestion"],
+                div[class*="ai"],
+                .panel-suggestion,
+                .suggestion-container,
+                .ai-container {
                   display: none !important;
                 }
                 
