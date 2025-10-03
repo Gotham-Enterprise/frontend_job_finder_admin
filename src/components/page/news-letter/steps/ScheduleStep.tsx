@@ -1,10 +1,17 @@
 import React, { useState, useEffect } from "react";
-import { useNewsletter } from "../NewsletterContext";
+import { useRouter } from "next/navigation";
+import { useAppDispatch, useAppSelector } from "@/store";
+import { setScheduleDetails, setSubmitting, setError } from "@/store/slices/newsletterSlice";
+import { createNewsletter } from "@/services/api/newsletterService";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
 const ScheduleStep: React.FC = () => {
-  const { updateNewsletterData, state } = useNewsletter();
+  const dispatch = useAppDispatch();
+  const router = useRouter();
+  const newsletterData = useAppSelector((state) => state.newsletter.data);
+  const isSubmitting = useAppSelector((state) => state.newsletter.isSubmitting);
+  
   const [sendOption, setSendOption] = useState<"now" | "later">("later");
   const [scheduledDate, setScheduledDate] = useState<Date>(new Date());
   const [scheduledTime, setScheduledTime] = useState("");
@@ -22,7 +29,7 @@ const ScheduleStep: React.FC = () => {
     return now;
   };
 
-  const submitNewsletter = () => {
+  const submitNewsletter = async () => {
     let status: "DRAFT" | "SCHEDULED" | "SENT" = "DRAFT";
     let scheduledAt: string | undefined = undefined;
     const scheduledTimezone = "America/New_York";
@@ -37,25 +44,44 @@ const ScheduleStep: React.FC = () => {
       scheduledAt = dateObj.toISOString();
     }
 
-    updateNewsletterData({
-      status,
-      scheduledAt,
-      scheduledTimezone,
-      isTemplate: saveAsTemplate,
-    });
+    // Update Redux state with schedule details
+    dispatch(
+      setScheduleDetails({
+        status,
+        scheduledAt,
+        scheduledTimezone,
+        isTemplate: saveAsTemplate,
+      })
+    );
 
-    console.log("Newsletter Data:", {
-      subject: state.newsletterData.subject,
-      fromName: state.newsletterData.fromName,
-      fromAddress: state.newsletterData.fromAddress,
-      sendTo: state.newsletterData.sendTo,
-      dontSendTo: state.newsletterData.dontSendTo,
-      status,
-      scheduledAt,
-      scheduledTimezone,
-      isTemplate: saveAsTemplate,
-      content: state.newsletterData.content,
-    });
+    // Now submit to API
+    try {
+      dispatch(setSubmitting(true));
+      dispatch(setError(null));
+
+      const finalPayload = {
+        ...newsletterData,
+        status,
+        scheduledAt,
+        scheduledTimezone,
+        isTemplate: saveAsTemplate,
+      };
+
+      console.log("Submitting Newsletter to API:", finalPayload);
+      
+      const response = await createNewsletter(finalPayload);
+      
+      console.log("Newsletter created successfully:", response);
+      
+      // Redirect to newsletter list or show success message
+      router.push("/admin/news-letter");
+    } catch (error: any) {
+      console.error("Failed to create newsletter:", error);
+      dispatch(setError(error.message || "Failed to create newsletter"));
+      alert(error.message || "Failed to create newsletter. Please try again.");
+    } finally {
+      dispatch(setSubmitting(false));
+    }
   };
 
   return (
@@ -184,9 +210,10 @@ const ScheduleStep: React.FC = () => {
               <button
                 type="button"
                 onClick={submitNewsletter}
-                className="px-6 py-2.5 bg-primary text-white font-medium rounded-lg"
+                disabled={isSubmitting}
+                className="px-6 py-2.5 bg-primary text-white font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {sendOption === "now" ? "Send Now" : "Schedule Newsletter"}
+                {isSubmitting ? "Submitting..." : sendOption === "now" ? "Send Now" : "Schedule Newsletter"}
               </button>
             </div>
           </div>

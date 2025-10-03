@@ -1,9 +1,15 @@
 import React from "react";
-import { useNewsletter } from "../NewsletterContext";
+import { useAppDispatch, useAppSelector } from "@/store";
+import { setCurrentStep } from "@/store/slices/newsletterSlice";
 
 const NewsletterSteps: React.FC = () => {
-  const { state, goToStep } = useNewsletter();
-  const { steps, currentStep } = state;
+  const dispatch = useAppDispatch();
+  const steps = useAppSelector((state) => state.newsletter.steps);
+  const currentStep = useAppSelector((state) => state.newsletter.currentStep);
+
+  const handleGoToStep = (stepId: number) => {
+    dispatch(setCurrentStep(stepId));
+  };
 
   return (
     <div className="border-b border-gray-200 bg-white">
@@ -12,7 +18,7 @@ const NewsletterSteps: React.FC = () => {
           {steps.map((step) => (
             <button
               key={step.id}
-              onClick={() => goToStep(step.id)}
+              onClick={() => handleGoToStep(step.id)}
               className={`flex items-center space-x-2 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
                 step.isActive
                   ? "bg-blue-100 text-blue-700 border border-blue-200"

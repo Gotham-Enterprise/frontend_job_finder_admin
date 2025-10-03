@@ -1,8 +1,8 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { NewsletterProvider, useNewsletter } from "./NewsletterContext";
+import { useAppSelector } from "@/store";
 import NewsletterSteps from "./components/NewsletterSteps";
 import TemplateSelection from "./steps/TemplateSelection";
 import EditStep from "./steps/EditStep";
@@ -10,12 +10,23 @@ import InboxStep from "./steps/InboxStep";
 import SendToStep from "./steps/SendToStep";
 import ScheduleStep from "./steps/ScheduleStep";
 
-const NewsletterCreatorContent: React.FC = () => {
-  const { state } = useNewsletter();
+const NewsletterCreator: React.FC = () => {
   const router = useRouter();
+  const currentStep = useAppSelector((state) => state.newsletter.currentStep);
+  const [isClient, setIsClient] = useState(false);
+
+  // Ensure component only fully renders on client side
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const renderCurrentStep = () => {
-    switch (state.currentStep) {
+    // During SSR or before hydration, always show Step 1
+    if (!isClient) {
+      return null;
+    }
+
+    switch (currentStep) {
       case 1:
         return <TemplateSelection />;
       case 2:
@@ -30,6 +41,18 @@ const NewsletterCreatorContent: React.FC = () => {
         return <TemplateSelection />;
     }
   };
+
+  // Show loading state during hydration
+  if (!isClient) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading newsletter creator...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -61,14 +84,6 @@ const NewsletterCreatorContent: React.FC = () => {
       {/* Main Content */}
       <main>{renderCurrentStep()}</main>
     </div>
-  );
-};
-
-const NewsletterCreator: React.FC = () => {
-  return (
-    <NewsletterProvider>
-      <NewsletterCreatorContent />
-    </NewsletterProvider>
   );
 };
 

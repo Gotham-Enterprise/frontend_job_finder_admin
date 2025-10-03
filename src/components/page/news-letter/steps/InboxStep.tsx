@@ -1,12 +1,15 @@
 import React, { useState } from "react";
-import { useNewsletter } from "../NewsletterContext";
+import { useAppDispatch, useAppSelector } from "@/store";
+import { setInboxDetails, completeStep, setCurrentStep } from "@/store/slices/newsletterSlice";
 
 const InboxStep: React.FC = () => {
-  const { goToStep, completeStep, updateNewsletterData } = useNewsletter();
+  const dispatch = useAppDispatch();
+  const currentData = useAppSelector((state) => state.newsletter.data);
+
   const [formData, setFormData] = useState({
-    subject: "",
-    fromName: "",
-    fromAddress: "",
+    subject: currentData.subject || "",
+    fromName: currentData.fromName || "",
+    fromAddress: currentData.fromAddress || "",
   });
 
   const [errors, setErrors] = useState({
@@ -62,16 +65,18 @@ const InboxStep: React.FC = () => {
 
   const handleContinue = () => {
     if (validateForm()) {
-      // Update newsletter data with form values
-      updateNewsletterData({
-        subject: formData.subject,
-        fromName: formData.fromName,
-        fromAddress: formData.fromAddress,
-      });
+      // Update Redux with inbox details
+      dispatch(
+        setInboxDetails({
+          subject: formData.subject,
+          fromName: formData.fromName,
+          fromAddress: formData.fromAddress,
+        })
+      );
       // Mark current step as completed
-      completeStep(3);
+      dispatch(completeStep(3));
       // Go to Send To step
-      goToStep(4);
+      dispatch(setCurrentStep(4));
     }
   };
 

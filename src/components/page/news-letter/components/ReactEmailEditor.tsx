@@ -2,7 +2,8 @@
 
 import React, { useRef, useCallback, useEffect, useState } from "react";
 import EmailEditor, { EditorRef, EmailEditorProps } from "react-email-editor";
-import { useNewsletter } from "../NewsletterContext";
+import { useAppDispatch, useAppSelector } from "@/store";
+import { setContent, setDesign, completeStep, setCurrentStep, updateNewsletterData } from "@/store/slices/newsletterSlice";
 import { getTemplateById } from "../emailTemplates";
 
 interface ReactEmailEditorProps {
@@ -12,7 +13,8 @@ interface ReactEmailEditorProps {
 
 const ReactEmailEditor: React.FC<ReactEmailEditorProps> = ({ onDesignLoad, onLoad }) => {
   const emailEditorRef = useRef<EditorRef>(null);
-  const { state, updateNewsletterData, goToStep, completeStep } = useNewsletter();
+  const dispatch = useAppDispatch();
+  const newsletterData = useAppSelector((state) => state.newsletter.data);
   const [isLoading, setIsLoading] = useState(true);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [previewHtml, setPreviewHtml] = useState("");
@@ -23,16 +25,14 @@ const ReactEmailEditor: React.FC<ReactEmailEditorProps> = ({ onDesignLoad, onLoa
     unlayer?.exportHtml((data) => {
       const { design, html } = data;
 
-      // Update newsletter data with the HTML content and design
-      updateNewsletterData({
-        content: html,
-        design: design, // Store the design JSON for future editing
-      });
+      // Update Redux state with the HTML content and design
+      dispatch(setContent(html));
+      dispatch(setDesign(design));
 
       console.log("Exported HTML:", html);
       console.log("Design JSON:", design);
     });
-  }, [updateNewsletterData]);
+  }, [dispatch]);
 
   // Function to get current content for demonstration
   const getCurrentContent = useCallback(() => {
@@ -70,13 +70,11 @@ const ReactEmailEditor: React.FC<ReactEmailEditorProps> = ({ onDesignLoad, onLoa
         preview.document.close();
       }
 
-      // Also update the newsletter state
-      updateNewsletterData({
-        content: html,
-        design: design,
-      });
+      // Also update Redux state
+      dispatch(setContent(html));
+      dispatch(setDesign(design));
     });
-  }, [updateNewsletterData]);
+  }, [dispatch]);
 
   const exportDesign = useCallback(() => {
     const unlayer = emailEditorRef.current?.editor;
@@ -91,22 +89,19 @@ const ReactEmailEditor: React.FC<ReactEmailEditorProps> = ({ onDesignLoad, onLoa
     const unlayer = emailEditorRef.current?.editor;
 
     unlayer?.saveDesign((design: any) => {
-      updateNewsletterData({
-        design: design,
-      });
-
+      dispatch(setDesign(design));
       console.log("Design saved:", design);
     });
-  }, [updateNewsletterData]);
+  }, [dispatch]);
 
   const onEditorLoad = useCallback(() => {
     setIsLoading(false);
     onLoad?.();
 
     // Load existing design if available
-    if (state.newsletterData.design) {
+    if (newsletterData.design) {
       const unlayer = emailEditorRef.current?.editor;
-      unlayer?.loadDesign(state.newsletterData.design);
+      unlayer?.loadDesign(newsletterData.design);
     }
 
     // Additional script to hide Smart Buttons after editor loads
@@ -167,7 +162,7 @@ const ReactEmailEditor: React.FC<ReactEmailEditorProps> = ({ onDesignLoad, onLoa
       setTimeout(hideSendEmail, 1000);
       setTimeout(hideSendEmail, 2000);
     }, 500);
-  }, [onLoad, state.newsletterData.design]);
+  }, [onLoad, newsletterData.design]);
 
   // Auto-save functionality
   useEffect(() => {
@@ -182,8 +177,8 @@ const ReactEmailEditor: React.FC<ReactEmailEditorProps> = ({ onDesignLoad, onLoa
 
   const handleSaveAndContinue = () => {
     exportHtml();
-    completeStep(2); // Mark edit step as completed
-    goToStep(3); // Go to inbox step
+    dispatch(completeStep(2)); // Mark edit step as completed
+    dispatch(setCurrentStep(3)); // Go to inbox step
   };
 
   const handleSaveTemplate = () => {
@@ -193,11 +188,9 @@ const ReactEmailEditor: React.FC<ReactEmailEditorProps> = ({ onDesignLoad, onLoa
       const { design, html } = data;
 
       // Save as template
-      updateNewsletterData({
-        content: html,
-        design: design,
-        isTemplate: true,
-      });
+      dispatch(setContent(html));
+      dispatch(setDesign(design));
+      dispatch(updateNewsletterData({ isTemplate: true }));
 
       // You can add API call here to save template to backend
       console.log("Template saved:", { design, html });
@@ -311,7 +304,7 @@ const ReactEmailEditor: React.FC<ReactEmailEditorProps> = ({ onDesignLoad, onLoa
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <button
-                onClick={() => goToStep(1)}
+                onClick={() => dispatch(setCurrentStep(1))}
                 className="flex items-center space-x-1 px-3 py-1 text-sm text-gray-600 hover:text-gray-900 transition-colors"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

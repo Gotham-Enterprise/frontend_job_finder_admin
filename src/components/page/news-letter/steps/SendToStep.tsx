@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from "react";
-import { useNewsletter } from "../NewsletterContext";
+import { useAppDispatch } from "@/store";
+import { setSendToDetails, completeStep, setCurrentStep } from "@/store/slices/newsletterSlice";
 
 // Sample data for Job Seekers
 const jobSeekers = [
@@ -20,7 +21,7 @@ const employers = [
 ];
 
 const SendToStep: React.FC = () => {
-  const { goToStep, completeStep, updateNewsletterData } = useNewsletter();
+  const dispatch = useAppDispatch();
   const [selectedRecipients, setSelectedRecipients] = useState<string[]>([]);
   const [selectAllJobSeekers, setSelectAllJobSeekers] = useState(false);
   const [selectAllEmployers, setSelectAllEmployers] = useState(false);
@@ -100,14 +101,16 @@ const SendToStep: React.FC = () => {
   }, [selectedRecipients, selectAllEmployers, selectAllJobSeekers]);
 
   const handleContinue = () => {
-    // Update newsletter data with selected recipients
-    updateNewsletterData({
-      sendTo: buildSendToArray,
-    });
+    // Update Redux with selected recipients
+    dispatch(
+      setSendToDetails({
+        sendTo: buildSendToArray,
+      })
+    );
     // Mark current step as completed
-    completeStep(4);
+    dispatch(completeStep(4));
     // Go to Schedule step
-    goToStep(5);
+    dispatch(setCurrentStep(5));
   };
 
   return (

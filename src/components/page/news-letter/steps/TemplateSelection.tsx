@@ -1,7 +1,8 @@
 import React, { useState, useMemo } from "react";
 import { NewsletterTemplate } from "../types";
 import { emailTemplates, getTemplateById } from "../emailTemplates";
-import { useNewsletter } from "../NewsletterContext";
+import { useAppDispatch } from "@/store";
+import { setSelectedTemplate, setContent, completeStep, setCurrentStep } from "@/store/slices/newsletterSlice";
 import TemplatePreview from "../components/TemplatePreview";
 import SimpleTemplateThumbnail from "../components/SimpleTemplateThumbnail";
 
@@ -17,11 +18,11 @@ const templateCategories = [
 ];
 
 const TemplateSelection: React.FC = () => {
+  const dispatch = useAppDispatch();
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [previewTemplate, setPreviewTemplate] = useState<NewsletterTemplate | null>(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-  const { selectTemplate, goToStep, completeStep, updateNewsletterData } = useNewsletter();
 
   // Convert email templates to newsletter template format
   const newsletterTemplates: NewsletterTemplate[] = [
@@ -65,31 +66,31 @@ const TemplateSelection: React.FC = () => {
 
   const onSelectTemplate = React.useCallback(
     (template: NewsletterTemplate) => {
-      selectTemplate(template.id);
+      console.log("🎯 Template selected:", template.id);
+
+      dispatch(setSelectedTemplate(template.id));
+      console.log("✅ Redux: setSelectedTemplate dispatched");
 
       if (template.id === "blank") {
         // For blank template, just set basic data
-        updateNewsletterData({
-          content: "",
-          design: null,
-          subject: "",
-        });
+        dispatch(setContent(""));
+        console.log("✅ Redux: setContent('') dispatched for blank template");
       } else {
-        // For predefined templates, load the design
+        // For predefined templates, load the content
         const emailTemplate = getTemplateById(template.id);
         if (emailTemplate) {
-          updateNewsletterData({
-            content: "",
-            design: emailTemplate.design,
-            subject: `${template.name} Newsletter`,
-          });
+          dispatch(setContent(emailTemplate.content || ""));
+          console.log("✅ Redux: setContent dispatched with template content");
         }
       }
 
-      completeStep(1);
-      goToStep(2);
+      dispatch(completeStep(1));
+      console.log("✅ Redux: completeStep(1) dispatched");
+
+      dispatch(setCurrentStep(2));
+      console.log("✅ Redux: setCurrentStep(2) dispatched - Should navigate to Edit step now!");
     },
-    [selectTemplate, updateNewsletterData, completeStep, goToStep]
+    [dispatch]
   );
 
   const onPreviewTemplate = React.useCallback((template: NewsletterTemplate) => {
