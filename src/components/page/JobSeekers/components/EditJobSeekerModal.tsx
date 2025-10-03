@@ -281,7 +281,7 @@ export const EditJobSeekerModal: React.FC<EditJobSeekerModalProps> = ({ isOpen, 
       isOpen={isOpen}
       onClose={handleClose}
       isFullscreen={false}
-      className="max-w-2xl mx-auto mt-8 mb-8 rounded-lg shadow-xl max-h-[90vh] overflow-hidden"
+      className="max-w-2xl mx-auto mt-8 mb-8 rounded-lg shadow-xl max-h-[90vh] overflow-y"
     >
       <div className="flex flex-col max-h-[90vh]">
         <div className="p-6 pb-4 border-b border-gray-200 dark:border-gray-700">
