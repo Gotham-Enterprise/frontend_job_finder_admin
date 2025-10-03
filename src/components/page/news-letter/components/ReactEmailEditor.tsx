@@ -481,39 +481,8 @@ const ReactEmailEditor: React.FC<ReactEmailEditorProps> = ({ onDesignLoad, onLoa
                 button[aria-label*="Get Suggestions"],
                 span:contains("Get Suggestions"),
                 div:contains("Try out our AI magic"),
-                /* Additional selectors for AI button features */
-                .ai-button-suggestions,
-                .button-ai-magic,
-                .unlayer-ai-suggestions,
-                .ai-enhancement-panel,
-                [class*="ai-suggestion"],
-                [class*="button-magic"],
-                .suggestion-panel,
-                .ai-powered,
-                [data-ai="true"],
-                [data-suggestion="true"],
-                .enhancement-suggestions,
-                .button-enhancement,
-                .ai-powered-suggestions,
-                /* Try to hide the specific panel shown in screenshot */
-                div[class*="suggestion"],
-                div[class*="ai"],
-                .panel-suggestion,
-                .suggestion-container,
-                .ai-container,
-                /* Target Smart Buttons section directly */
-                section[class*="smart"],
-                section[class*="Smart"],
-                div[class*="SmartButtons"],
-                [id*="smart-button"],
-                [id*="Smart"],
-                .smart_buttons_panel,
-                #smart_buttons_panel,
-                /* Hide any collapsible panel with Smart Buttons */
-                .unlayer-panel[class*="smart"],
-                .unlayer-section[class*="smart"],
-                div[data-testid*="smart"],
-                div[data-cy*="smart"],
+               
+               
                 /* Hide NEW badge and Smart Buttons header */
                 div:has(> span:contains("Smart Buttons")),
                 div:has(> *:contains("Smart Buttons")),
@@ -537,6 +506,7 @@ const ReactEmailEditor: React.FC<ReactEmailEditorProps> = ({ onDesignLoad, onLoa
                   spellChecker: true,
                   emojis: true,
                 },
+                ai: false, // Disable AI features
               },
               tools: {
                 // Customize available tools
