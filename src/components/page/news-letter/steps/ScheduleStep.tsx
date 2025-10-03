@@ -81,7 +81,7 @@ const ScheduleStep: React.FC = () => {
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
           <div className="text-center mb-8">
             <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-indigo-100 mb-4">
-              <svg className="h-8 w-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="h-8 w-8 text-indigo-600" fill="#006d36" stroke="#fff" viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -122,14 +122,13 @@ const ScheduleStep: React.FC = () => {
                 </label>
               </div>
             </div>
-
             {sendOption === "later" && (
               <div className="space-y-4 pl-7 animate-fadeIn">
                 <div>
                   <label htmlFor="scheduledDate" className="block text-sm font-medium text-gray-700 mb-2">
                     Date
                   </label>
-                  <div className="relative">
+                  <div className="relative w-full">
                     <DatePicker
                       selected={scheduledDate}
                       onChange={(date: Date | null) => date && setScheduledDate(date)}
@@ -138,6 +137,7 @@ const ScheduleStep: React.FC = () => {
                       className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 cursor-pointer"
                       calendarClassName="shadow-lg"
                       showPopperArrow={false}
+                      wrapperClassName="w-full"
                     />
                   </div>
                 </div>
@@ -146,7 +146,7 @@ const ScheduleStep: React.FC = () => {
                   <label htmlFor="scheduledTime" className="block text-sm font-medium text-gray-700 mb-2">
                     Time (EDT)
                   </label>
-                  <div className="relative">
+                  <div className="relative w-full">
                     <input
                       type="time"
                       id="scheduledTime"
@@ -159,8 +159,7 @@ const ScheduleStep: React.FC = () => {
                   </div>
                 </div>
               </div>
-            )}
-
+            )}{" "}
             <div className="pt-4 border-t border-gray-200">
               <label className="flex items-center cursor-pointer">
                 <input
@@ -181,12 +180,11 @@ const ScheduleStep: React.FC = () => {
                 </span>
               </label>
             </div>
-
             <div className="flex justify-end pt-4">
               <button
                 type="button"
                 onClick={submitNewsletter}
-                className="px-6 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+                className="px-6 py-2.5 bg-primary text-white font-medium rounded-lg"
               >
                 {sendOption === "now" ? "Send Now" : "Schedule Newsletter"}
               </button>
