@@ -1,6 +1,8 @@
 import React, { useState } from "react";
+import { useNewsletter } from "../NewsletterContext";
 
 const InboxStep: React.FC = () => {
+  const { goToStep, completeStep, updateNewsletterData } = useNewsletter();
   const [formData, setFormData] = useState({
     subject: "",
     fromName: "",
@@ -58,11 +60,18 @@ const InboxStep: React.FC = () => {
     return isValid;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleContinue = () => {
     if (validateForm()) {
-      // Handle form submission
-      console.log("Form submitted:", formData);
+      // Update newsletter data with form values
+      updateNewsletterData({
+        subject: formData.subject,
+        fromName: formData.fromName,
+        fromAddress: formData.fromAddress,
+      });
+      // Mark current step as completed
+      completeStep(3);
+      // Go to Send To step
+      goToStep(4);
     }
   };
 
@@ -86,7 +95,7 @@ const InboxStep: React.FC = () => {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="space-y-6">
           {/* Subject Line */}
           <div>
             <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-2">
@@ -149,7 +158,18 @@ const InboxStep: React.FC = () => {
             />
             {errors.fromAddress && <p className="mt-1 text-sm text-red-600">{errors.fromAddress}</p>}
           </div>
-        </form>
+
+          {/* Continue Button */}
+          <div className="flex justify-end pt-4">
+            <button
+              type="button"
+              onClick={handleContinue}
+              className="px-6 py-2.5 bg-primary text-white font-medium rounded-lg"
+            >
+              Continue
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
