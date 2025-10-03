@@ -11,7 +11,7 @@ interface NewsletterPayload {
   scheduledTimezone?: string;
   isTemplate: boolean;
   content: string;
-  design?: any;
+  useTemplate?: any; // Unlayer design JSON for template
 }
 
 export const createNewsletter = async (data: NewsletterData): Promise<any> => {
@@ -26,7 +26,7 @@ export const createNewsletter = async (data: NewsletterData): Promise<any> => {
     scheduledTimezone: data.scheduledTimezone,
     isTemplate: data.isTemplate,
     content: data.content,
-    design: data.design,
+    useTemplate: data.design, // Map design to useTemplate for API
   };
 
   try {
