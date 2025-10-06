@@ -14,6 +14,7 @@ export interface UserPermissions {
   coupons: Permission;
   blog: Permission;
   careers: Permission;
+  unlockRequest: Permission;
 }
 
 export interface CreateUserFormData {
@@ -39,6 +40,7 @@ export const PERMISSION_MODULES: PermissionModule[] = [
   { key: 'coupons', label: 'Coupons' },
   { key: 'blog', label: 'Blog' },
   { key: 'careers', label: 'Careers' },
+  { key: 'unlockRequest', label: 'Unlock Requests' },
 ];
 
 export const DEFAULT_PERMISSIONS: UserPermissions = {
@@ -50,6 +52,7 @@ export const DEFAULT_PERMISSIONS: UserPermissions = {
   coupons: { view: true, create: false, update: false, delete: false },
   blog: { view: true, create: false, update: false, delete: false },
   careers: { view: true, create: false, update: false, delete: false },
+  unlockRequest: { view: true, create: false, update: false, delete: false },
 };
 
 export const ROLE_OPTIONS = [
