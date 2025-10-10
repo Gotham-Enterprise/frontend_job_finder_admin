@@ -26,7 +26,7 @@ export interface NewsletterData {
   dontSendTo: string[];
 
   // Schedule Step (Step 5)
-  status: "DRAFT" | "SCHEDULED" | "SENT";
+  status: "DRAFT" | "SCHEDULED" | "SENT" | "ARCHIVED";
   scheduledAt?: string;
   scheduledTimezone?: string;
   isTemplate: boolean;
@@ -186,7 +186,7 @@ const newsletterSlice = createSlice({
     setScheduleDetails: (
       state,
       action: PayloadAction<{
-        status: "DRAFT" | "SCHEDULED" | "SENT";
+        status: "DRAFT" | "SCHEDULED" | "SENT" | "ARCHIVED";
         scheduledAt?: string;
         scheduledTimezone?: string;
         isTemplate: boolean;

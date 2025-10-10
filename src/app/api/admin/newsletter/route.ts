@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { newsletterStore } from "./newsletterStore";
 
 interface NewsletterPayload {
   subject: string;
@@ -6,7 +7,7 @@ interface NewsletterPayload {
   fromAddress: string;
   sendTo: string[];
   dontSendTo: string[];
-  status: "DRAFT" | "SCHEDULED" | "SENT";
+  status: "DRAFT" | "SCHEDULED" | "SENT" | "ARCHIVED";
   scheduledAt?: string;
   scheduledTimezone?: string;
   isTemplate: boolean;
@@ -18,6 +19,11 @@ interface NewsletterPayload {
 export async function POST(request: NextRequest) {
   try {
     const body: NewsletterPayload = await request.json();
+
+    console.log("🔍 [BACKEND] Received body.design:", body.design);
+    console.log("🔍 [BACKEND] design type:", typeof body.design);
+    console.log("🔍 [BACKEND] design keys:", body.design ? Object.keys(body.design) : []);
+    console.log("🔍 [BACKEND] design JSON:", JSON.stringify(body.design).substring(0, 200));
 
     if (!body.content || body.content.trim().length === 0) {
       console.warn("⚠️ Validation failed: Content is required");
@@ -45,12 +51,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const newsletterId = `newsletter_${Date.now()}`;
+
     const mockNewsletter = {
-      id: `newsletter_${Date.now()}`,
+      id: newsletterId,
       ...body,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
+
+    // Store in memory with proper JSON design object
+    newsletterStore.create(mockNewsletter);
+
+    console.log("✅ [BACKEND] Newsletter created and stored:", newsletterId);
 
     return NextResponse.json(
       {
@@ -81,20 +94,15 @@ export async function GET(request: NextRequest) {
 
     console.log("📋 Fetching newsletters, status filter:", status);
 
-    // TODO: Replace with actual database call
-    const mockNewsletters = [
-      {
-        id: "newsletter_1",
-        subject: "Welcome Newsletter",
-        status: "DRAFT",
-        createdAt: new Date().toISOString(),
-      },
-    ];
+    // Get newsletters from store
+    const newsletters = newsletterStore.getAll(status as "DRAFT" | "SCHEDULED" | "SENT" | "ARCHIVED" | undefined);
+
+    console.log("✅ [BACKEND] Retrieved newsletters:", newsletters.length);
 
     return NextResponse.json(
       {
         success: true,
-        data: mockNewsletters,
+        data: newsletters,
       },
       { status: 200 }
     );

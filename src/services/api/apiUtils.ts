@@ -36,9 +36,21 @@ export async function apiRequest<T = any>(endpoint: string, options: ApiOptions 
     credentials,
   };
 
+  // Add body for POST, PUT, PATCH requests
   if (body) {
-    requestConfig.body = body instanceof FormData ? body : typeof body === "string" ? body : JSON.stringify(body);
+    if (body instanceof FormData) {
+      requestConfig.body = body;
+    } else {
+      requestConfig.body = JSON.stringify(body);
+    }
   }
+
+  console.log("🌐 [API] Request:", {
+    method,
+    url,
+    hasBody: !!body,
+    bodyType: body instanceof FormData ? "FormData" : typeof body,
+  });
 
   try {
     const response = await fetch(url, requestConfig);

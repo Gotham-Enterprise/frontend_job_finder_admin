@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { newsletterStore } from "../newsletterStore";
 
 interface NewsletterPayload {
   subject?: string;
@@ -6,7 +7,7 @@ interface NewsletterPayload {
   fromAddress?: string;
   sendTo?: string[];
   dontSendTo?: string[];
-  status?: "DRAFT" | "SCHEDULED" | "SENT";
+  status?: "DRAFT" | "SCHEDULED" | "SENT" | "ARCHIVED";
   scheduledAt?: string;
   scheduledTimezone?: string;
   isTemplate?: boolean;
@@ -21,20 +22,26 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 
     console.log("📋 Fetching newsletter:", id);
 
-    // TODO: Replace with actual database call
-    const mockNewsletter = {
-      id: id,
-      subject: "Sample Newsletter",
-      status: "DRAFT",
-      content: "<p>Newsletter content</p>",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+    // Get newsletter from store
+    const newsletter = newsletterStore.get(id);
+
+    if (!newsletter) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Newsletter not found",
+        },
+        { status: 404 }
+      );
+    }
+
+    console.log("✅ [BACKEND] Retrieved newsletter:", id);
+    console.log("✅ [BACKEND] Design type:", typeof newsletter.design);
 
     return NextResponse.json(
       {
         success: true,
-        data: mockNewsletter,
+        data: newsletter,
       },
       { status: 200 }
     );
@@ -57,27 +64,42 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     const { id } = params;
     const body: NewsletterPayload = await request.json();
 
-    console.log("📝 Updating newsletter:", id, {
+    console.log("� [BACKEND UPDATE] Received body.design:", body.design);
+    console.log("🔍 [BACKEND UPDATE] design type:", typeof body.design);
+    console.log("🔍 [BACKEND UPDATE] design keys:", body.design ? Object.keys(body.design) : []);
+    console.log(
+      "🔍 [BACKEND UPDATE] design JSON preview:",
+      body.design ? JSON.stringify(body.design).substring(0, 200) : "null"
+    );
+
+    console.log("�📝 Updating newsletter:", id, {
       subject: body.subject,
       status: body.status,
       contentLength: body.content?.length || 0,
       hasDesign: !!body.design,
     });
 
-    // TODO: Replace with actual database call
-    const mockUpdatedNewsletter = {
-      id: id,
-      ...body,
-      updatedAt: new Date().toISOString(),
-    };
+    // Update newsletter in store
+    const updatedNewsletter = newsletterStore.update(id, body);
 
-    console.log("Newsletter updated successfully:", id);
+    if (!updatedNewsletter) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Newsletter not found",
+        },
+        { status: 404 }
+      );
+    }
+
+    console.log("✅ [BACKEND] Newsletter updated successfully:", id);
+    console.log("✅ [BACKEND] Updated design type:", typeof updatedNewsletter.design);
 
     return NextResponse.json(
       {
         success: true,
         message: "Newsletter updated successfully",
-        data: mockUpdatedNewsletter,
+        data: updatedNewsletter,
       },
       { status: 200 }
     );
@@ -101,7 +123,18 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
 
     console.log("🗑️ Deleting newsletter:", id);
 
-    // TODO: Replace with actual database call
+    // Delete from store
+    const deleted = newsletterStore.delete(id);
+
+    if (!deleted) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Newsletter not found",
+        },
+        { status: 404 }
+      );
+    }
 
     console.log("✅ Newsletter deleted successfully:", id);
 

@@ -15,7 +15,7 @@ export interface NewsletterData {
   fromAddress: string;
   sendTo: string[];
   dontSendTo: string[];
-  status: "DRAFT" | "SCHEDULED" | "SENT";
+  status: "DRAFT" | "SCHEDULED" | "SENT" | "ARCHIVED";
   scheduledAt?: string;
   scheduledTimezone?: string;
   isTemplate: boolean;

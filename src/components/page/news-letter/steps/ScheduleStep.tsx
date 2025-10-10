@@ -32,7 +32,7 @@ const ScheduleStep: React.FC = () => {
   };
 
   const submitNewsletter = async () => {
-    let status: "DRAFT" | "SCHEDULED" | "SENT" = "DRAFT";
+    let status: "DRAFT" | "SCHEDULED" | "SENT" | "ARCHIVED" = "DRAFT";
     let scheduledAt: string | undefined = undefined;
     const scheduledTimezone = "America/New_York";
 
