@@ -1,4 +1,5 @@
 import { NewsletterData } from "@/store/slices/newsletterSlice";
+import { apiPost, apiPatch } from "./apiUtils";
 
 interface NewsletterPayload {
   subject: string;
@@ -11,10 +12,16 @@ interface NewsletterPayload {
   scheduledTimezone?: string;
   isTemplate: boolean;
   content: string;
-  useTemplate?: any; // Unlayer design JSON for template
+  design?: any; // Unlayer design JSON for template
 }
 
-export const createNewsletter = async (data: NewsletterData): Promise<any> => {
+interface NewsletterResponse {
+  success: boolean;
+  message: string;
+  data: any;
+}
+
+export const createNewsletter = async (data: NewsletterData): Promise<NewsletterResponse> => {
   const payload: NewsletterPayload = {
     subject: data.subject,
     fromName: data.fromName,
@@ -26,46 +33,28 @@ export const createNewsletter = async (data: NewsletterData): Promise<any> => {
     scheduledTimezone: data.scheduledTimezone,
     isTemplate: data.isTemplate,
     content: data.content,
-    useTemplate: data.design, // Map design to useTemplate for API
+    design: data.design, // Map design to design for API
   };
 
+  console.log("🚀 Sending to API:", {
+    ...payload,
+    content: payload.content ? `${payload.content.substring(0, 50)}... (${payload.content.length} chars)` : "EMPTY!",
+    design: payload.design ? "{ design object }" : "NO DESIGN",
+  });
+
   try {
-    const response = await fetch("/api/admin/newsletter/", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || "Failed to create newsletter");
-    }
-
-    return await response.json();
+    const response = await apiPost<NewsletterResponse>("/api/admin/newsletter/", payload);
+    return response;
   } catch (error) {
     console.error("Newsletter API Error:", error);
     throw error;
   }
 };
 
-export const updateNewsletter = async (id: string, data: Partial<NewsletterData>): Promise<any> => {
+export const updateNewsletter = async (id: string, data: Partial<NewsletterData>): Promise<NewsletterResponse> => {
   try {
-    const response = await fetch(`/api/admin/newsletter/${id}`, {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || "Failed to update newsletter");
-    }
-
-    return await response.json();
+    const response = await apiPatch<NewsletterResponse>(`/api/admin/newsletter/${id}`, data);
+    return response;
   } catch (error) {
     console.error("Newsletter Update API Error:", error);
     throw error;

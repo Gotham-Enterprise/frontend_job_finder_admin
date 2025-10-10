@@ -11,6 +11,8 @@ import {
   updateNewsletterData,
 } from "@/store/slices/newsletterSlice";
 import { blogApi } from "@/services/api/blog";
+import { createNewsletter, updateNewsletter } from "@/services/api/newsletterService";
+import { useToast } from "@/context/ToastContext";
 
 interface ReactEmailEditorProps {
   onDesignLoad?: (design: any) => void;
@@ -21,8 +23,12 @@ const ReactEmailEditor: React.FC<ReactEmailEditorProps> = ({ onDesignLoad, onLoa
   const emailEditorRef = useRef<EditorRef>(null);
   const dispatch = useAppDispatch();
   const newsletterData = useAppSelector((state) => state.newsletter.data);
+  const { addToast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [newsletterId, setNewsletterId] = useState<string | null>(null);
+  const [saveMessage, setSaveMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   const exportHtml = useCallback(() => {
     const unlayer = emailEditorRef.current?.editor;
@@ -90,14 +96,113 @@ const ReactEmailEditor: React.FC<ReactEmailEditorProps> = ({ onDesignLoad, onLoa
     });
   }, [onDesignLoad]);
 
-  const saveDesign = useCallback(() => {
+  const saveDesign = useCallback(async () => {
     const unlayer = emailEditorRef.current?.editor;
 
-    unlayer?.saveDesign((design: any) => {
-      dispatch(setDesign(design));
-      console.log("Design saved:", design);
+    if (!unlayer) return;
+
+    setIsSaving(true);
+    setSaveMessage(null);
+
+    unlayer.exportHtml(async (data) => {
+      console.log("🔍 RAW Export Data:", data);
+      console.log("🔍 Data keys:", Object.keys(data));
+      console.log("🔍 HTML type:", typeof data.html);
+      console.log("🔍 Design type:", typeof data.design);
+
+      const { design, html } = data;
+
+      console.log("📤 Exported from editor:", {
+        htmlLength: html?.length || 0,
+        htmlPreview: html?.substring(0, 100) || "EMPTY",
+        hasDesign: !!design,
+        htmlValue: html,
+      });
+
+      try {
+        // Update Redux state first
+        dispatch(setContent(html));
+        dispatch(setDesign(design));
+
+        // Prepare newsletter data with fresh content and design
+        const newsletterPayload = {
+          selectedTemplateId: newsletterData.selectedTemplateId,
+          subject: newsletterData.subject || "Untitled Newsletter",
+          fromName: newsletterData.fromName || "",
+          fromAddress: newsletterData.fromAddress || "",
+          sendTo: newsletterData.sendTo || [],
+          dontSendTo: newsletterData.dontSendTo || [],
+          scheduledAt: newsletterData.scheduledAt,
+          scheduledTimezone: newsletterData.scheduledTimezone || "America/New_York",
+          isTemplate: newsletterData.isTemplate || false,
+          status: "DRAFT" as const,
+          // Use the fresh values from the editor
+          content: html,
+          design: design,
+        };
+
+        console.log("📦 Newsletter Payload:", {
+          ...newsletterPayload,
+          content: `${html.substring(0, 100)}... (${html.length} chars)`,
+          design: "{ design object }",
+        });
+
+        // Validate content is not empty
+        if (!html || html.trim().length === 0) {
+          console.warn("⚠️ Warning: HTML content is empty!");
+          addToast({
+            variant: "error",
+            title: "Content Required",
+            message: "Cannot save: Newsletter content is empty. Please add some content to the email editor.",
+          });
+          setIsSaving(false);
+          return;
+        }
+
+        let response;
+        if (newsletterId) {
+          // Update existing newsletter
+          console.log("📝 Updating newsletter:", newsletterId);
+          response = await updateNewsletter(newsletterId, newsletterPayload);
+          console.log("✅ Newsletter updated successfully");
+        } else {
+          // Create new newsletter
+          console.log("📝 Creating new newsletter...");
+          response = await createNewsletter(newsletterPayload);
+          console.log("✅ Newsletter created successfully");
+
+          // Store the newsletter ID for future updates
+          if (response.data?.id) {
+            setNewsletterId(response.data.id);
+          }
+        }
+
+        addToast({
+          variant: "success",
+          title: "Success",
+          message: "Draft saved successfully!",
+        });
+
+        // Clear message after 3 seconds
+        setTimeout(() => setSaveMessage(null), 3000);
+      } catch (error) {
+        console.error("❌ Error saving newsletter:", error);
+
+        const errorMessage = error instanceof Error ? error.message : "Failed to save draft";
+
+        addToast({
+          variant: "error",
+          title: "Save Failed",
+          message: errorMessage,
+        });
+
+        // Clear error message after 5 seconds
+        setTimeout(() => setSaveMessage(null), 5000);
+      } finally {
+        setIsSaving(false);
+      }
     });
-  }, [dispatch]);
+  }, [dispatch, newsletterData, newsletterId]);
 
   const onEditorLoad = useCallback(() => {
     setIsLoading(false);
@@ -245,9 +350,51 @@ const ReactEmailEditor: React.FC<ReactEmailEditorProps> = ({ onDesignLoad, onLoa
   }, [saveDesign, isLoading]);
 
   const handleSaveAndContinue = () => {
-    exportHtml();
-    dispatch(completeStep(2)); // Mark edit step as completed
-    dispatch(setCurrentStep(3)); // Go to inbox step
+    const unlayer = emailEditorRef.current?.editor;
+
+    if (!unlayer) {
+      addToast({
+        variant: "error",
+        title: "Error",
+        message: "Email editor is not ready",
+      });
+      return;
+    }
+
+    unlayer.exportHtml((data) => {
+      const { design, html } = data;
+
+      console.log("📤 Exporting before navigation:", {
+        htmlLength: html?.length || 0,
+        hasDesign: !!design,
+      });
+
+      // Validate content before continuing
+      if (!html || html.trim().length === 0) {
+        addToast({
+          variant: "error",
+          title: "Content Required",
+          message: "Please add some content to the email before continuing",
+        });
+        return;
+      }
+
+      // Save to Redux
+      dispatch(setContent(html));
+      dispatch(setDesign(design));
+
+      console.log("✅ Content and design saved to Redux");
+
+      // Mark step as completed and navigate
+      dispatch(completeStep(2));
+      dispatch(setCurrentStep(3));
+
+      addToast({
+        variant: "success",
+        title: "Success",
+        message: "Email content saved! Moving to next step.",
+      });
+    });
   };
 
   const handleSaveTemplate = () => {
@@ -283,7 +430,6 @@ const ReactEmailEditor: React.FC<ReactEmailEditorProps> = ({ onDesignLoad, onLoa
 
   return (
     <>
-
       {/* Image Upload Loading Overlay */}
       {isUploadingImage && (
         <div className="fixed inset-0 z-[70] bg-black bg-opacity-50 flex items-center justify-center">
@@ -321,6 +467,34 @@ const ReactEmailEditor: React.FC<ReactEmailEditorProps> = ({ onDesignLoad, onLoa
             </div>
 
             <div className="flex items-center space-x-3">
+              {/* Save Status Message */}
+              {saveMessage && (
+                <div
+                  className={`flex items-center space-x-2 px-3 py-1 rounded-md text-sm ${
+                    saveMessage.type === "success" ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"
+                  }`}
+                >
+                  {saveMessage.type === "success" ? (
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path
+                        fillRule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  ) : (
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path
+                        fillRule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  )}
+                  <span>{saveMessage.text}</span>
+                </div>
+              )}
+
               <button
                 onClick={handlePreview}
                 className="px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
@@ -330,9 +504,31 @@ const ReactEmailEditor: React.FC<ReactEmailEditorProps> = ({ onDesignLoad, onLoa
 
               <button
                 onClick={saveDesign}
-                className="px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                disabled={isSaving}
+                className="px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
               >
-                Save Draft
+                {isSaving ? (
+                  <>
+                    <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    <span>Saving...</span>
+                  </>
+                ) : (
+                  <span>Save Draft</span>
+                )}
               </button>
 
               <button

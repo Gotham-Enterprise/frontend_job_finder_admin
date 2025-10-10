@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { NewsletterTemplate } from "../types";
 import { unlayerApi } from "@/services/api/unlayer";
 
@@ -13,6 +13,31 @@ interface TemplatePreviewProps {
 
 const TemplatePreview: React.FC<TemplatePreviewProps> = ({ template, isOpen, onClose, onSelectTemplate }) => {
   const [isLoading, setIsLoading] = useState(false);
+  const [previewHtml, setPreviewHtml] = useState<string>("");
+  const [isLoadingPreview, setIsLoadingPreview] = useState(false);
+
+  // Generate HTML preview when modal opens
+  useEffect(() => {
+    if (isOpen && template.design) {
+      generatePreview();
+    }
+  }, [isOpen, template.design]);
+
+  const generatePreview = async () => {
+    if (!template.design) return;
+
+    setIsLoadingPreview(true);
+    try {
+      const result = await unlayerApi.exportHtml(template.design);
+      if (result && result.html) {
+        setPreviewHtml(result.html);
+      }
+    } catch (error) {
+      console.error("Error generating preview:", error);
+    } finally {
+      setIsLoadingPreview(false);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -53,7 +78,7 @@ const TemplatePreview: React.FC<TemplatePreviewProps> = ({ template, isOpen, onC
   };
 
   const openInNewWindow = () => {
-    const content = template.content || "<p>No content available for this template.</p>";
+    const content = previewHtml || "<p>No preview available for this template.</p>";
     const newWindow = window.open("", "_blank", "width=800,height=600,scrollbars=yes");
     if (newWindow) {
       newWindow.document.write(`
@@ -62,14 +87,11 @@ const TemplatePreview: React.FC<TemplatePreviewProps> = ({ template, isOpen, onC
         <head>
           <title>Preview: ${template.name}</title>
           <style>
-            body { margin: 0; padding: 20px; font-family: Arial, sans-serif; background: #f5f5f5; }
-            .preview-container { max-width: 600px; margin: 0 auto; background: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+            body { margin: 0; padding: 0; font-family: Arial, sans-serif; background: #f5f5f5; }
           </style>
         </head>
         <body>
-          <div class="preview-container">
-            ${content}
-          </div>
+          ${content}
         </body>
         </html>
       `);
@@ -153,7 +175,7 @@ const TemplatePreview: React.FC<TemplatePreviewProps> = ({ template, isOpen, onC
 
               {/* Email Content Preview */}
               <div className="bg-white max-h-96 overflow-y-auto">
-                {template.id === "start-from-scratch" ? (
+                {template.id === "blank" || template.id === "start-from-scratch" ? (
                   <div className="flex items-center justify-center h-64 bg-gray-50">
                     <div className="text-center">
                       <svg
@@ -175,17 +197,40 @@ const TemplatePreview: React.FC<TemplatePreviewProps> = ({ template, isOpen, onC
                       </p>
                     </div>
                   </div>
-                ) : (
-                  <div
-                    className="newsletter-preview"
-                    dangerouslySetInnerHTML={{ __html: template.content }}
-                    style={{
-                      transform: "scale(0.8)",
-                      transformOrigin: "top left",
-                      width: "125%",
-                      height: "125%",
-                    }}
+                ) : isLoadingPreview ? (
+                  <div className="flex items-center justify-center h-64 bg-gray-50">
+                    <div className="text-center">
+                      <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-blue-600 mx-auto mb-4"></div>
+                      <p className="text-gray-600">Loading preview...</p>
+                    </div>
+                  </div>
+                ) : previewHtml ? (
+                  <iframe
+                    srcDoc={previewHtml}
+                    className="w-full h-96 border-0"
+                    title="Email Preview"
+                    sandbox="allow-same-origin"
                   />
+                ) : (
+                  <div className="flex items-center justify-center h-64 bg-gray-50">
+                    <div className="text-center">
+                      <svg
+                        className="mx-auto h-16 w-16 text-gray-400 mb-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={1}
+                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                        />
+                      </svg>
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">Template Preview</h3>
+                      <p className="text-gray-600">{template.description}</p>
+                    </div>
+                  </div>
                 )}
               </div>
             </div>

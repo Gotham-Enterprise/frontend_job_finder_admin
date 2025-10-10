@@ -6,6 +6,7 @@ interface UnlayerTemplate {
   name: string;
   design: any;
   displayMode: string;
+  thumbnail?: string; // Preview image URL
   updatedAt: string;
   createdAt: string;
 }
@@ -264,6 +265,46 @@ export const unlayerApi = {
         console.error("❌ Fallback also failed:", fallbackError);
       }
 
+      return null;
+    }
+  },
+
+  /**
+   * Export template design to HTML
+   * This uses Unlayer's export API to convert design JSON to HTML
+   */
+  async exportHtml(design: any): Promise<{ html: string } | null> {
+    try {
+      console.log("🔄 Exporting design to HTML...");
+
+      const response = await fetch(`${UNLAYER_API_BASE_URL}/export/html`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...getAuthHeaders(),
+        },
+        body: JSON.stringify({
+          displayMode: "email",
+          design: design,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("❌ Export HTML Error Response:", errorText);
+        throw new Error(`Failed to export HTML: ${response.status} ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      console.log("✅ HTML exported successfully");
+
+      if (result.success && result.data) {
+        return { html: result.data.html };
+      }
+
+      return null;
+    } catch (error) {
+      console.error("❌ Error exporting HTML:", error);
       return null;
     }
   },
