@@ -96,6 +96,7 @@ export const GLOBAL_PERMISSION_CONFIG: GlobalPermissionConfig = {
     blog: { view: true, create: false, update: false, delete: false },
     careers: { view: true, create: false, update: false, delete: false },
     unlockRequest: { view: true, create: false, update: false, delete: false },
+
   },
 
   roleBasedPermissions: {
