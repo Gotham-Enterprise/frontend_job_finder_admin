@@ -1,13 +1,13 @@
-"use client";
-import React, { useEffect, useRef, useState,useCallback } from "react";
-import Link from "next/link";
-import Image from "next/image";
-import { usePathname } from "next/navigation";
-import { useSidebar } from "../context/SidebarContext";
-import { useAuthPermissions } from "../hooks/useAuthPermissions";
-import { hasAnyModulePermission, hasPermission } from "../utils/permissionUtils";
-import { authUtils } from "../services/utils/authUtils";
-import SidebarSkeleton from "../components/common/SidebarSkeleton";
+'use client';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
+import { usePathname } from 'next/navigation';
+import { useSidebar } from '../context/SidebarContext';
+import { useAuthPermissions } from '../hooks/useAuthPermissions';
+import { hasAnyModulePermission, hasPermission } from '../utils/permissionUtils';
+import { authUtils } from '../services/utils/authUtils';
+import SidebarSkeleton from '../components/common/SidebarSkeleton';
 import {
   ChevronDownIcon,
   GridIcon,
@@ -16,110 +16,126 @@ import {
   PieChartIcon,
   UserCircleIcon,
   TaskIcon,
-} from "../icons/index";
-import {
-  BriefcaseIcon,
-  CareerLadderIcon,
-  TicketIcon,
-  BlogIcon,
-  CouponIcon,
-} from "../components/ui/icons/index";
-
+  IdCardIcon,
+} from '../icons/index';
+import { BriefcaseIcon, CareerLadderIcon, TicketIcon, BlogIcon, CouponIcon } from '../components/ui/icons/index';
 
 type NavItem = {
   name: string;
   icon: React.ReactNode;
   path?: string;
-  subItems?: { name: string; path: string; pro?: boolean; new?: boolean; requiredAction?: 'view' | 'add' | 'edit' | 'delete' }[];
-  permissionKey?: 'jobSeekers' | 'employers' | 'jobs' | 'applications' | 'careers' | 'tickets' | 'coupons' | 'blog';
+  subItems?: {
+    name: string;
+    path: string;
+    pro?: boolean;
+    new?: boolean;
+    requiredAction?: 'view' | 'add' | 'edit' | 'delete';
+  }[];
+  permissionKey?:
+    | 'jobSeekers'
+    | 'employers'
+    | 'jobs'
+    | 'applications'
+    | 'careers'
+    | 'tickets'
+    | 'coupons'
+    | 'blog'
+    | 'unlockRequest';
   isAccessible?: boolean;
 };
 
 const navItems: NavItem[] = [
   {
     icon: <GridIcon />,
-    name: "Dashboard",
-    path: "/",
+    name: 'Dashboard',
+    path: '/',
     isAccessible: true, // Dashboard is always accessible
     //subItems: [{ name: "Ecommerce", path: "/", pro: false }],
   },
   {
     icon: <GroupIcon />,
-    name: "Job Seekers",
-    path: "/admin/job-seekers",
+    name: 'Job Seekers',
+    path: '/admin/job-seekers',
     permissionKey: 'jobSeekers',
   },
   {
     icon: <UserCircleIcon />,
-    name: "Employers",
-    path: "/admin/employers",
+    name: 'Employers',
+    path: '/admin/employers',
     permissionKey: 'employers',
-  }, 
-   {
+  },
+  {
     icon: <BriefcaseIcon />,
-    name: "Jobs",
-    path: "/admin/jobs",
+    name: 'Jobs',
+    path: '/admin/jobs',
     permissionKey: 'jobs',
-     subItems: [
-      { name: "All Jobs", path: "/admin/jobs", requiredAction: 'view' },
-      { name: "Add New", path: "/admin/jobs/create-job/", requiredAction: 'add' }],
+    subItems: [
+      { name: 'All Jobs', path: '/admin/jobs', requiredAction: 'view' },
+      { name: 'Add New', path: '/admin/jobs/create-job/', requiredAction: 'add' },
+    ],
   },
   {
     icon: <TaskIcon />,
-    name: "Applications",
-    path: "/admin/applications",
+    name: 'Applications',
+    path: '/admin/applications',
     permissionKey: 'applications',
-     //subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
+    //subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
   },
   {
     icon: <CareerLadderIcon />,
-    name: "Careers",
-    path: "/admin/careers", // /admin/careers
+    name: 'Careers',
+    path: '/admin/careers', // /admin/careers
     permissionKey: 'careers',
-     //subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
+    //subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
   },
-  
+
   {
     icon: <TicketIcon />,
-    name: "Tickets",
-    path: "/admin/comming-soon", // /admin/tickets
+    name: 'Tickets',
+    path: '/admin/comming-soon', // /admin/tickets
     permissionKey: 'tickets',
-     //subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
+    //subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
   },
   {
     icon: <CouponIcon />,
-    name: "Coupons",
-    path: "/admin/coupons",
+    name: 'Coupons',
+    path: '/admin/coupons',
     permissionKey: 'coupons',
-     //subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
+    //subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
   },
 
   {
     icon: <BlogIcon />,
-    name: "Blog",
-    path: "/admin/blog",
+    name: 'Blog',
+    path: '/admin/blog',
     permissionKey: 'blog',
-     subItems: [
-      { name: "All Posts", path: "/admin/blog", requiredAction: 'view' },
-      { name: "Add New", path: "/admin/blog/add-new", requiredAction: 'add' },
-      { name: "Categories", path: "/admin/blog/categories", requiredAction: 'view' },
-      { name: "Tags", path: "/admin/blog/tags", requiredAction: 'view' },
-      { name: "Archives", path: "/admin/blog/archives", requiredAction: 'view' },
-     ],
+    subItems: [
+      { name: 'All Posts', path: '/admin/blog', requiredAction: 'view' },
+      { name: 'Add New', path: '/admin/blog/add-new', requiredAction: 'add' },
+      { name: 'Categories', path: '/admin/blog/categories', requiredAction: 'view' },
+      { name: 'Tags', path: '/admin/blog/tags', requiredAction: 'view' },
+      { name: 'Archives', path: '/admin/blog/archives', requiredAction: 'view' },
+    ],
   },
 
+  {
+    icon: <IdCardIcon />,
+    name: 'Unlock Requests',
+    path: '/admin/unlock-requests',
+    permissionKey: 'unlockRequest',
+    //subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
+  },
 ];
 
 const othersItems: NavItem[] = [
   {
     icon: <PieChartIcon />,
-    name: "Charts",
+    name: 'Charts',
     subItems: [
-      { name: "Line Chart", path: "/line-chart", pro: false },
-      { name: "Bar Chart", path: "/bar-chart", pro: false },
+      { name: 'Line Chart', path: '/line-chart', pro: false },
+      { name: 'Bar Chart', path: '/bar-chart', pro: false },
     ],
   },
- 
 ];
 
 const AppSidebar: React.FC = () => {
@@ -129,8 +145,8 @@ const AppSidebar: React.FC = () => {
   const [isInitialMount, setIsInitialMount] = useState(true);
 
   // Check if user is authenticated to show sidebar immediately
-  const isAuthenticated = typeof window !== "undefined" ? authUtils.isAuthenticated() : false;
-  const hasUserData = typeof window !== "undefined" ? !!authUtils.getUser() : false;
+  const isAuthenticated = typeof window !== 'undefined' ? authUtils.isAuthenticated() : false;
+  const hasUserData = typeof window !== 'undefined' ? !!authUtils.getUser() : false;
 
   // Handle initial mount timing
   useEffect(() => {
@@ -148,31 +164,28 @@ const AppSidebar: React.FC = () => {
     if (item.isAccessible !== undefined) {
       return item.isAccessible;
     }
-    
+
     // If item has permissionKey and we have permissions, check permissions
     if (item.permissionKey && permissions) {
       const hasPermission = hasAnyModulePermission(permissions, item.permissionKey);
       return hasPermission;
     }
-    
+
     // If we're authenticated but still loading permissions, show loading state instead of showing all items
     if (isAuthenticated && hasUserData && loading) {
       return false; // Don't show items while loading to avoid false positive access
     }
-    
+
     // If we're authenticated but don't have permissions yet, don't show items
     if (isAuthenticated && hasUserData && !permissions) {
       return false; // Don't show items if we don't have permission data
     }
-    
+
     // Only default to accessible if no permission key is required
     return !item.permissionKey;
   };
 
-  const renderMenuItems = (
-    allNavItems: NavItem[],
-    menuType: "main" | "others"
-  ) => (
+  const renderMenuItems = (allNavItems: NavItem[], menuType: 'main' | 'others') => (
     <ul className="flex flex-col gap-4">
       {allNavItems.map((nav, index) => {
         // Skip rendering if not accessible
@@ -180,7 +193,7 @@ const AppSidebar: React.FC = () => {
         if (!accessible) {
           return null;
         }
-        
+
         return (
           <li key={nav.name}>
             {nav.subItems ? (
@@ -188,33 +201,24 @@ const AppSidebar: React.FC = () => {
                 onClick={() => submenuToggle(index, menuType)}
                 className={`menu-item group  ${
                   openSubmenu?.type === menuType && openSubmenu?.index === index
-                    ? "menu-item-active"
-                    : "menu-item-inactive"
-                } cursor-pointer ${
-                  !isExpanded && !isHovered
-                    ? "lg:justify-center"
-                    : "lg:justify-start"
-                }`}
+                    ? 'menu-item-active'
+                    : 'menu-item-inactive'
+                } cursor-pointer ${!isExpanded && !isHovered ? 'lg:justify-center' : 'lg:justify-start'}`}
               >
                 <span
                   className={` ${
                     openSubmenu?.type === menuType && openSubmenu?.index === index
-                      ? "menu-item-icon-active"
-                      : "menu-item-icon-inactive"
+                      ? 'menu-item-icon-active'
+                      : 'menu-item-icon-inactive'
                   }`}
                 >
                   {nav.icon}
                 </span>
-                {(isExpanded || isHovered || isMobileOpen) && (
-                  <span className={`menu-item-text`}>{nav.name}</span>
-                )}
+                {(isExpanded || isHovered || isMobileOpen) && <span className={`menu-item-text`}>{nav.name}</span>}
                 {(isExpanded || isHovered || isMobileOpen) && (
                   <ChevronDownIcon
                     className={`ml-auto w-5 h-5 transition-transform duration-200  ${
-                      openSubmenu?.type === menuType &&
-                      openSubmenu?.index === index
-                        ? "rotate-180 text-brand-500"
-                        : ""
+                      openSubmenu?.type === menuType && openSubmenu?.index === index ? 'rotate-180 text-brand-500' : ''
                     }`}
                   />
                 )}
@@ -223,22 +227,12 @@ const AppSidebar: React.FC = () => {
               nav.path && (
                 <Link
                   href={nav.path}
-                  className={`menu-item group ${
-                    isActive(nav.path) ? "menu-item-active" : "menu-item-inactive"
-                  }`}
+                  className={`menu-item group ${isActive(nav.path) ? 'menu-item-active' : 'menu-item-inactive'}`}
                 >
-                  <span
-                    className={`${
-                      isActive(nav.path)
-                        ? "menu-item-icon-active"
-                        : "menu-item-icon-inactive"
-                    }`}
-                  >
+                  <span className={`${isActive(nav.path) ? 'menu-item-icon-active' : 'menu-item-icon-inactive'}`}>
                     {nav.icon}
                   </span>
-                  {(isExpanded || isHovered || isMobileOpen) && (
-                    <span className={`menu-item-text`}>{nav.name}</span>
-                  )}
+                  {(isExpanded || isHovered || isMobileOpen) && <span className={`menu-item-text`}>{nav.name}</span>}
                 </Link>
               )
             )}
@@ -252,71 +246,65 @@ const AppSidebar: React.FC = () => {
                   height:
                     openSubmenu?.type === menuType && openSubmenu?.index === index
                       ? `${subMenuHeight[`${menuType}-${index}`]}px`
-                      : "0px",
+                      : '0px',
                 }}
               >
                 <ul className="mt-2 space-y-1">
                   {nav.subItems
-                    .filter(subItem => {
+                    .filter((subItem) => {
                       // Filter submenu items based on required permissions
                       if (subItem.requiredAction && nav.permissionKey && permissions) {
-                        const actionMap: Record<string, keyof typeof permissions[keyof typeof permissions]> = {
-                          'view': 'view',
-                          'add': 'create',
-                          'edit': 'update',
-                          'delete': 'delete'
+                        const actionMap: Record<string, keyof (typeof permissions)[keyof typeof permissions]> = {
+                          view: 'view',
+                          add: 'create',
+                          edit: 'update',
+                          delete: 'delete',
                         };
                         const mappedAction = actionMap[subItem.requiredAction];
                         const hasRequiredPermission = hasPermission(permissions, nav.permissionKey, mappedAction);
                         return hasRequiredPermission;
                       }
-                      
+
                       // If we have permissions loaded but no specific permission requirement, show the item
                       if (permissions && !subItem.requiredAction) {
                         return true;
                       }
-                      
+
                       // If we don't have permissions or are loading, don't show submenu items
                       return false;
                     })
                     .map((subItem) => (
-                    <li key={subItem.name}>
-                      <Link
-                        href={subItem.path}
-                        className={`menu-dropdown-item ${
-                          isActive(subItem.path)
-                            ? "menu-dropdown-item-active"
-                            : "menu-dropdown-item-inactive"
-                        }`}
-                      >
-                        {subItem.name}
-                        <span className="flex items-center gap-1 ml-auto">
-                          {subItem.new && (
-                            <span
-                              className={`ml-auto ${
-                                isActive(subItem.path)
-                                  ? "menu-dropdown-badge-active"
-                                  : "menu-dropdown-badge-inactive"
-                              } menu-dropdown-badge `}
-                            >
-                              new
-                            </span>
-                          )}
-                          {subItem.pro && (
-                            <span
-                              className={`ml-auto ${
-                                isActive(subItem.path)
-                                  ? "menu-dropdown-badge-active"
-                                  : "menu-dropdown-badge-inactive"
-                              } menu-dropdown-badge `}
-                            >
-                              pro
-                            </span>
-                          )}
-                        </span>
-                      </Link>
-                    </li>
-                  ))}
+                      <li key={subItem.name}>
+                        <Link
+                          href={subItem.path}
+                          className={`menu-dropdown-item ${
+                            isActive(subItem.path) ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'
+                          }`}
+                        >
+                          {subItem.name}
+                          <span className="flex items-center gap-1 ml-auto">
+                            {subItem.new && (
+                              <span
+                                className={`ml-auto ${
+                                  isActive(subItem.path) ? 'menu-dropdown-badge-active' : 'menu-dropdown-badge-inactive'
+                                } menu-dropdown-badge `}
+                              >
+                                new
+                              </span>
+                            )}
+                            {subItem.pro && (
+                              <span
+                                className={`ml-auto ${
+                                  isActive(subItem.path) ? 'menu-dropdown-badge-active' : 'menu-dropdown-badge-inactive'
+                                } menu-dropdown-badge `}
+                              >
+                                pro
+                              </span>
+                            )}
+                          </span>
+                        </Link>
+                      </li>
+                    ))}
                 </ul>
               </div>
             )}
@@ -327,28 +315,26 @@ const AppSidebar: React.FC = () => {
   );
 
   const [openSubmenu, setOpenSubmenu] = useState<{
-    type: "main" | "others";
+    type: 'main' | 'others';
     index: number;
   } | null>(null);
-  const [subMenuHeight, setSubMenuHeight] = useState<Record<string, number>>(
-    {}
-  );
+  const [subMenuHeight, setSubMenuHeight] = useState<Record<string, number>>({});
   const subMenuRefs = useRef<Record<string, HTMLDivElement | null>>({});
-   const isActive = useCallback((path: string) => path === pathname, [pathname]);
+  const isActive = useCallback((path: string) => path === pathname, [pathname]);
 
   useEffect(() => {
     let submenuMatched = false;
-    ["main", "others"].forEach((menuType) => {
-      const items = menuType === "main" ? navItems : othersItems;
+    ['main', 'others'].forEach((menuType) => {
+      const items = menuType === 'main' ? navItems : othersItems;
       items.forEach((nav, index) => {
         // Only check accessible items
         if (!isItemAccessible(nav)) return;
-        
+
         if (nav.subItems) {
           nav.subItems.forEach((subItem) => {
             if (isActive(subItem.path)) {
               setOpenSubmenu({
-                type: menuType as "main" | "others",
+                type: menuType as 'main' | 'others',
                 index,
               });
               submenuMatched = true;
@@ -375,52 +361,31 @@ const AppSidebar: React.FC = () => {
     }
   }, [openSubmenu]);
 
-  const submenuToggle = (index: number, menuType: "main" | "others") => {
+  const submenuToggle = (index: number, menuType: 'main' | 'others') => {
     setOpenSubmenu((prevOpenSubmenu) => {
-      if (
-        prevOpenSubmenu &&
-        prevOpenSubmenu.type === menuType &&
-        prevOpenSubmenu.index === index
-      ) {
+      if (prevOpenSubmenu && prevOpenSubmenu.type === menuType && prevOpenSubmenu.index === index) {
         return null;
       }
       return { type: menuType, index };
     });
   };
 
-
   // Show skeleton if we're loading and don't have permissions yet, but only if authenticated
   if (loading && !permissions && isAuthenticated && hasUserData) {
     return (
       <aside
         className={`fixed lex flex-col lg:mt-0 top-0 px-5 left-0 bg-white dark:bg-gray-900 dark:border-gray-800 text-gray-900 h-screen transition-all duration-300 ease-in-out z-50 border-r border-gray-200 
-          ${
-            isExpanded || isMobileOpen
-              ? "w-[290px]"
-              : isHovered
-              ? "w-[290px]"
-              : "w-[90px]"
-          }
-          ${isMobileOpen ? "translate-x-0" : "-translate-x-full"}
+          ${isExpanded || isMobileOpen ? 'w-[290px]' : isHovered ? 'w-[290px]' : 'w-[90px]'}
+          ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'}
           lg:translate-x-0`}
         onMouseEnter={() => !isExpanded && setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        <div
-          className={`py-8 flex  ${
-            !isExpanded && !isHovered ? "lg:justify-center" : "justify-start"
-          }`}
-        >
+        <div className={`py-8 flex  ${!isExpanded && !isHovered ? 'lg:justify-center' : 'justify-start'}`}>
           <Link href="/">
             {isExpanded || isHovered || isMobileOpen ? (
               <>
-                <Image
-                  className="dark:hidden"
-                  src="/images/logo/main-logo.svg"
-                  alt="Logo"
-                  width={150}
-                  height={40}
-                />
+                <Image className="dark:hidden" src="/images/logo/main-logo.svg" alt="Logo" width={150} height={40} />
                 <Image
                   className="hidden dark:block"
                   src="/images/logo/logo-dark.svg"
@@ -430,21 +395,12 @@ const AppSidebar: React.FC = () => {
                 />
               </>
             ) : (
-              <Image
-                src="/images/logo/logo-icon.svg"
-                alt="Logo"
-                width={32}
-                height={32}
-              />
+              <Image src="/images/logo/logo-icon.svg" alt="Logo" width={32} height={32} />
             )}
           </Link>
         </div>
         <div className="flex flex-col overflow-y-auto duration-300 ease-linear no-scrollbar">
-          <SidebarSkeleton 
-            isExpanded={isExpanded || isMobileOpen}
-            isMobileOpen={isMobileOpen}
-            isHovered={isHovered}
-          />
+          <SidebarSkeleton isExpanded={isExpanded || isMobileOpen} isMobileOpen={isMobileOpen} isHovered={isHovered} />
         </div>
       </aside>
     );
@@ -453,33 +409,17 @@ const AppSidebar: React.FC = () => {
   return (
     <aside
       className={`fixed lex flex-col lg:mt-0 top-0 px-5 left-0 bg-white dark:bg-gray-900 dark:border-gray-800 text-gray-900 h-screen transition-all duration-300 ease-in-out z-50 border-r border-gray-200 
-        ${
-          isExpanded || isMobileOpen
-            ? "w-[290px]"
-            : isHovered
-            ? "w-[290px]"
-            : "w-[90px]"
-        }
-        ${isMobileOpen ? "translate-x-0" : "-translate-x-full"}
+        ${isExpanded || isMobileOpen ? 'w-[290px]' : isHovered ? 'w-[290px]' : 'w-[90px]'}
+        ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'}
         lg:translate-x-0`}
       onMouseEnter={() => !isExpanded && setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div
-        className={`py-8 flex  ${
-          !isExpanded && !isHovered ? "lg:justify-center" : "justify-start"
-        }`}
-      >
+      <div className={`py-8 flex  ${!isExpanded && !isHovered ? 'lg:justify-center' : 'justify-start'}`}>
         <Link href="/">
           {isExpanded || isHovered || isMobileOpen ? (
             <>
-              <Image
-                className="dark:hidden"
-                src="/images/logo/main-logo.svg"
-                alt="Logo"
-                width={150}
-                height={40}
-              />
+              <Image className="dark:hidden" src="/images/logo/main-logo.svg" alt="Logo" width={150} height={40} />
               <Image
                 className="hidden dark:block"
                 src="/images/logo/logo-dark.svg"
@@ -489,12 +429,7 @@ const AppSidebar: React.FC = () => {
               />
             </>
           ) : (
-            <Image
-              src="/images/logo/logo-icon.svg"
-              alt="Logo"
-              width={32}
-              height={32}
-            />
+            <Image src="/images/logo/logo-icon.svg" alt="Logo" width={32} height={32} />
           )}
         </Link>
       </div>
@@ -504,22 +439,15 @@ const AppSidebar: React.FC = () => {
             <div>
               <h2
                 className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${
-                  !isExpanded && !isHovered
-                    ? "lg:justify-center"
-                    : "justify-start"
+                  !isExpanded && !isHovered ? 'lg:justify-center' : 'justify-start'
                 }`}
               >
-                {isExpanded || isHovered || isMobileOpen ? (
-                  "Menu"
-                ) : (
-                  <HorizontaLDots />
-                )}
+                {isExpanded || isHovered || isMobileOpen ? 'Menu' : <HorizontaLDots />}
               </h2>
-              {renderMenuItems(navItems, "main")}
+              {renderMenuItems(navItems, 'main')}
             </div>
           </div>
         </nav>
-     
       </div>
     </aside>
   );

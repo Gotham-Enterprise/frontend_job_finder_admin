@@ -95,6 +95,7 @@ export const GLOBAL_PERMISSION_CONFIG: GlobalPermissionConfig = {
     coupons: { view: false, create: false, update: false, delete: false },
     blog: { view: true, create: false, update: false, delete: false },
     careers: { view: true, create: false, update: false, delete: false },
+    unlockRequest: { view: false, create: false, update: false, delete: false },
   },
 
   roleBasedPermissions: {
@@ -107,6 +108,7 @@ export const GLOBAL_PERMISSION_CONFIG: GlobalPermissionConfig = {
       coupons: { view: true, create: true, update: true, delete: true },
       blog: { view: true, create: true, update: true, delete: true },
       careers: { view: true, create: true, update: true, delete: true },
+      unlockRequest: { view: true, create: false, update: false, delete: true },
     },
     'super-admin': {
       tickets: { view: true, create: true, update: true, delete: true },
@@ -117,6 +119,7 @@ export const GLOBAL_PERMISSION_CONFIG: GlobalPermissionConfig = {
       coupons: { view: true, create: true, update: true, delete: true },
       blog: { view: true, create: true, update: true, delete: true },
       careers: { view: true, create: true, update: true, delete: true },
+      unlockRequest: { view: true, create: false, update: false, delete: true },
     },
   },
 };
@@ -126,13 +129,11 @@ export const getPermissionsForRole = (role: string): UserPermissions => {
 };
 
 export const getModuleConfig = (moduleKey: keyof UserPermissions): ModuleConfig | undefined => {
-  return GLOBAL_PERMISSION_CONFIG.modules.find(moduleConfig => moduleConfig.key === moduleKey);
+  return GLOBAL_PERMISSION_CONFIG.modules.find((moduleConfig) => moduleConfig.key === moduleKey);
 };
 
 export const getAllowedModules = (permissions: UserPermissions): ModuleConfig[] => {
-  return GLOBAL_PERMISSION_CONFIG.modules.filter(moduleConfig => 
-    permissions[moduleConfig.key].view
-  );
+  return GLOBAL_PERMISSION_CONFIG.modules.filter((moduleConfig) => permissions[moduleConfig.key].view);
 };
 
 export const canAccessPath = (permissions: UserPermissions, path: string): boolean => {
@@ -140,7 +141,7 @@ export const canAccessPath = (permissions: UserPermissions, path: string): boole
     if (path.startsWith(moduleConfig.path)) {
       return permissions[moduleConfig.key].view;
     }
-    
+
     if (moduleConfig.subItems) {
       for (const subItem of moduleConfig.subItems) {
         if (path === subItem.path) {
