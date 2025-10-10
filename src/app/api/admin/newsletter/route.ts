@@ -19,14 +19,6 @@ export async function POST(request: NextRequest) {
   try {
     const body: NewsletterPayload = await request.json();
 
-    console.log("📬 Creating newsletter:", {
-      subject: body.subject,
-      status: body.status,
-      contentLength: body.content?.length || 0,
-      hasDesign: !!body.design,
-    });
-
-    // Validate required fields
     if (!body.content || body.content.trim().length === 0) {
       console.warn("⚠️ Validation failed: Content is required");
       return NextResponse.json(
@@ -53,16 +45,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // TODO: Replace with actual database call
-    // For now, return mock success response
     const mockNewsletter = {
       id: `newsletter_${Date.now()}`,
       ...body,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
-
-    console.log("✅ Newsletter created successfully:", mockNewsletter.id);
 
     return NextResponse.json(
       {

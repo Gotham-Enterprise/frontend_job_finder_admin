@@ -1,5 +1,5 @@
 import { NewsletterData } from "@/store/slices/newsletterSlice";
-import { apiPost, apiPatch } from "./apiUtils";
+import { apiPost, apiPatch, apiGet } from "./apiUtils";
 
 interface NewsletterPayload {
   subject: string;
@@ -12,13 +12,35 @@ interface NewsletterPayload {
   scheduledTimezone?: string;
   isTemplate: boolean;
   content: string;
-  design?: any; // Unlayer design JSON for template
+  design?: any;
+}
+
+interface Newsletter {
+  id: string;
+  subject: string;
+  fromName: string;
+  fromAddress: string;
+  sendTo: string[];
+  dontSendTo: string[];
+  status: "DRAFT" | "SCHEDULED" | "SENT";
+  scheduledAt?: string;
+  scheduledTimezone?: string;
+  isTemplate: boolean;
+  content: string;
+  design?: any;
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface NewsletterResponse {
   success: boolean;
   message: string;
   data: any;
+}
+
+interface NewslettersListResponse {
+  success: boolean;
+  data: Newsletter[];
 }
 
 export const createNewsletter = async (data: NewsletterData): Promise<NewsletterResponse> => {
@@ -39,8 +61,11 @@ export const createNewsletter = async (data: NewsletterData): Promise<Newsletter
   console.log("🚀 Sending to API:", {
     ...payload,
     content: payload.content ? `${payload.content.substring(0, 50)}... (${payload.content.length} chars)` : "EMPTY!",
-    design: payload.design ? "{ design object }" : "NO DESIGN",
+    design: payload.design ? JSON.stringify(payload.design).substring(0, 100) : "NO DESIGN",
   });
+
+  console.log("🔍 Full design object:", payload.design);
+  console.log("🔍 Design type:", typeof payload.design);
 
   try {
     const response = await apiPost<NewsletterResponse>("/api/admin/newsletter/", payload);
@@ -57,6 +82,17 @@ export const updateNewsletter = async (id: string, data: Partial<NewsletterData>
     return response;
   } catch (error) {
     console.error("Newsletter Update API Error:", error);
+    throw error;
+  }
+};
+
+export const getNewsletters = async (status?: "DRAFT" | "SCHEDULED" | "SENT"): Promise<Newsletter[]> => {
+  try {
+    const url = status ? `/api/admin/newsletter/?status=${status}` : "/api/admin/newsletter/";
+    const response = await apiGet<NewslettersListResponse>(url);
+    return response.data;
+  } catch (error) {
+    console.error("Newsletter Fetch API Error:", error);
     throw error;
   }
 };

@@ -1,11 +1,33 @@
 "use client";
-import React, { useState } from "react";
-import { useRouter } from "next/navigation";
+import React, { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useToast } from "@/context/ToastContext";
 import { NewsLetterTab, SentTab, DraftsTab, ArchivedTab } from "./components/tab";
 
 const NewsLetterComponent = () => {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const { addToast } = useToast();
   const [activeTab, setActiveTab] = useState("newsletter");
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  useEffect(() => {
+    // Check if we were redirected with a success parameter
+    const success = searchParams.get("success");
+    if (success === "created") {
+      addToast({
+        variant: "success",
+        title: "Success",
+        message: "Newsletter created successfully!",
+      });
+
+      // Trigger refresh of the newsletter list
+      setRefreshKey((prev) => prev + 1);
+
+      // Remove the success parameter from URL to prevent showing toast on refresh
+      router.replace("/admin/news-letter", { scroll: false });
+    }
+  }, [searchParams, addToast, router]);
 
   const tabs = [
     { id: "newsletter", label: "News Letter", component: NewsLetterTab },
@@ -18,7 +40,7 @@ const NewsLetterComponent = () => {
     const activeTabData = tabs.find((tab) => tab.id === activeTab);
     if (activeTabData) {
       const Component = activeTabData.component;
-      return <Component />;
+      return <Component key={activeTab === "newsletter" ? refreshKey : activeTab} />;
     }
     return null;
   };

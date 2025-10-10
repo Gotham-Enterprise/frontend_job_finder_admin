@@ -367,7 +367,10 @@ const ReactEmailEditor: React.FC<ReactEmailEditorProps> = ({ onDesignLoad, onLoa
       console.log("📤 Exporting before navigation:", {
         htmlLength: html?.length || 0,
         hasDesign: !!design,
+        designType: typeof design,
+        designKeys: design ? Object.keys(design) : [],
       });
+      console.log("📋 Full design object:", design);
 
       // Validate content before continuing
       if (!html || html.trim().length === 0) {
@@ -383,7 +386,10 @@ const ReactEmailEditor: React.FC<ReactEmailEditorProps> = ({ onDesignLoad, onLoa
       dispatch(setContent(html));
       dispatch(setDesign(design));
 
-      console.log("✅ Content and design saved to Redux");
+      console.log("✅ Content and design saved to Redux", {
+        contentLength: html.length,
+        designSaved: !!design,
+      });
 
       // Mark step as completed and navigate
       dispatch(completeStep(2));

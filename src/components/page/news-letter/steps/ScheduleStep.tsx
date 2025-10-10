@@ -3,15 +3,17 @@ import { useRouter } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { setScheduleDetails, setSubmitting, setError } from "@/store/slices/newsletterSlice";
 import { createNewsletter } from "@/services/api/newsletterService";
+import { useToast } from "@/context/ToastContext";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
 const ScheduleStep: React.FC = () => {
   const dispatch = useAppDispatch();
   const router = useRouter();
+  const { addToast } = useToast();
   const newsletterData = useAppSelector((state) => state.newsletter.data);
   const isSubmitting = useAppSelector((state) => state.newsletter.isSubmitting);
-  
+
   const [sendOption, setSendOption] = useState<"now" | "later">("later");
   const [scheduledDate, setScheduledDate] = useState<Date>(new Date());
   const [scheduledTime, setScheduledTime] = useState("");
@@ -68,17 +70,21 @@ const ScheduleStep: React.FC = () => {
       };
 
       console.log("Submitting Newsletter to API:", finalPayload);
-      
+
       const response = await createNewsletter(finalPayload);
-      
+
       console.log("Newsletter created successfully:", response);
-      
-      // Redirect to newsletter list or show success message
-      router.push("/admin/news-letter");
+
+      // Redirect to newsletter list with success parameter
+      router.push("/admin/news-letter?success=created");
     } catch (error: any) {
       console.error("Failed to create newsletter:", error);
       dispatch(setError(error.message || "Failed to create newsletter"));
-      alert(error.message || "Failed to create newsletter. Please try again.");
+      addToast({
+        variant: "error",
+        title: "Error",
+        message: error.message || "Failed to create newsletter. Please try again.",
+      });
     } finally {
       dispatch(setSubmitting(false));
     }
