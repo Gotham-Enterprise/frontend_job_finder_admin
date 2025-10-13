@@ -21,6 +21,8 @@ import { EditJobSeekerModal } from "./EditJobSeekerModal";
 import { ShareResumeModal } from "./ShareResumeModal";
 import { useToast } from "@/context/ToastContext";
 import PermissionWrapper from "@/components/common/PermissionWrapper";
+import { useConfirmation } from "@/hooks/useConfirmation";
+import ConfirmationDialog from "@/components/ui/ConfirmationDialog";
 
 interface SpecialtyDisplayProps {
   specialties: string[];
@@ -319,9 +321,11 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
   });
   const [loadingLicensesId, setLoadingLicensesId] = useState<string | null>(null);
   const [loadingCertificationsId, setLoadingCertificationsId] = useState<string | null>(null);
+  const [resetPasswordLoadingId, setResetPasswordLoadingId] = useState<string | null>(null);
   const licensesButtonRefs = useRef<{ [key: string]: React.RefObject<HTMLButtonElement | null> }>({});
   const certificationsButtonRefs = useRef<{ [key: string]: React.RefObject<HTMLButtonElement | null> }>({});
   const { addToast } = useToast();
+  const confirmation = useConfirmation();
 
   // Helper functions for popovers
   const openLicensesPopover = async (jobSeekerId: string) => {
@@ -387,6 +391,53 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
   const closeShareModal = () => {
     setShareModalOpen(false);
     setSelectedJobSeekerForShare(null);
+  };
+
+  const handleResetPassword = async (jobSeeker: any) => {
+    if (!jobSeeker.email) {
+      addToast({
+        variant: "error",
+        title: "Error",
+        message: "Job seeker does not have an email address",
+        duration: 5000,
+      });
+      return;
+    }
+
+    // Show confirmation dialog
+    const confirmed = await confirmation.confirm({
+      title: "Reset Password",
+      message: `Are you sure you want to send a password reset email to ${jobSeeker.name} (${jobSeeker.email})?`,
+      confirmText: "Yes, Reset Password",
+      cancelText: "Cancel",
+    });
+
+    if (!confirmed) {
+      return;
+    }
+
+    setResetPasswordLoadingId(jobSeeker.id);
+    try {
+      const { jobSeekerApi } = await import("@/services/api/jobSeeker");
+      await jobSeekerApi.resetPassword(jobSeeker.email);
+
+      addToast({
+        variant: "success",
+        title: "Success",
+        message: `Password reset email has been sent to ${jobSeeker.email}`,
+        duration: 5000,
+      });
+    } catch (error: any) {
+      console.error("Reset password error:", error);
+      addToast({
+        variant: "error",
+        title: "Error",
+        message: error.message || "Failed to send password reset email",
+        duration: 5000,
+      });
+    } finally {
+      setResetPasswordLoadingId(null);
+    }
   };
 
   const hasResume = (jobSeeker: any) => {
@@ -748,6 +799,20 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
                         <PencilIcon /> Edit
                       </button>
                     </PermissionWrapper>
+                    <button
+                      className="flex gap-2 text-brand-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                      onClick={() => handleResetPassword(jobSeeker)}
+                      disabled={resetPasswordLoadingId === jobSeeker.id}
+                    >
+                      {resetPasswordLoadingId === jobSeeker.id ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-brand-400"></div>
+                          Sending...
+                        </>
+                      ) : (
+                        <>Reset password</>
+                      )}
+                    </button>
                   </div>
                 </TableCell>
               </TableRow>
@@ -798,6 +863,19 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
           triggerRef={getCertificationsButtonRef(certificationsPopover.jobSeekerId)}
         />
       )}
+
+      {/* Confirmation Dialog */}
+      <ConfirmationDialog
+        isOpen={confirmation.isOpen}
+        onClose={confirmation.onClose}
+        onConfirm={confirmation.onConfirm}
+        onCancel={confirmation.onCancel}
+        title={confirmation.config?.title || ""}
+        message={confirmation.config?.message || ""}
+        confirmText={confirmation.config?.confirmText}
+        cancelText={confirmation.config?.cancelText}
+        isLoading={resetPasswordLoadingId !== null}
+      />
     </div>
   );
 };
