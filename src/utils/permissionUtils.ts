@@ -1,4 +1,4 @@
-import { UserPermissions } from '@/services/types/permissions';
+import { UserPermissions } from "@/services/types/permissions";
 
 interface ApiRolePermission {
   id: string;
@@ -42,24 +42,26 @@ export function convertApiPermissionsToUserPermissions(userData: ApiUserData): U
   };
 
   const permissionMapping: Record<string, keyof UserPermissions> = {
-    'Job Seekers Management': 'jobSeekers',
-    'Employers Management': 'employers',
-    'Jobs Management': 'jobs',
-    'Applications Management': 'applications',
-    'Blog Management': 'blog',
-    'Careers Management': 'careers',
-    'Tickets Management': 'tickets',
-    'Coupons Management': 'coupons',
+    "Job Seekers Management": "jobSeekers",
+    "Employers Management": "employers",
+    "Jobs Management": "jobs",
+    "Applications Management": "applications",
+    "Blog Management": "blog",
+    "Careers Management": "careers",
+    "Tickets Management": "tickets",
+    "Coupons Management": "coupons",
+    "Unlock Requests Management": "unlockRequest",
     // Also support the old format for backward compatibility
-    'Job Seekers': 'jobSeekers',
-    Employers: 'employers',
-    Jobs: 'jobs',
-    Applications: 'applications',
-    Blog: 'blog',
-    Careers: 'careers',
-    Tickets: 'tickets',
-    Coupons: 'coupons',
-    'Unlock Requests': 'unlockRequest',
+    "Job Seekers": "jobSeekers",
+    Employers: "employers",
+    Jobs: "jobs",
+    Applications: "applications",
+    Blog: "blog",
+    Careers: "careers",
+    Tickets: "tickets",
+    Coupons: "coupons",
+    "Unlock Requests": "unlockRequest",
+    "Unlock Request": "unlockRequest",
   };
 
   // Convert API permissions to our format
@@ -68,7 +70,7 @@ export function convertApiPermissionsToUserPermissions(userData: ApiUserData): U
     const permissionName = apiPermission.name || (apiPermission.permission && apiPermission.permission.name);
 
     if (!permissionName) {
-      console.warn('Permission name is missing for:', apiPermission);
+      console.warn("Permission name is missing for:", apiPermission);
       return;
     }
 
@@ -81,11 +83,18 @@ export function convertApiPermissionsToUserPermissions(userData: ApiUserData): U
         update: apiPermission.edit,
         delete: apiPermission.delete,
       };
+      console.log(`[PermissionUtils] Mapped permission: "${permissionName}" -> ${moduleName}`, {
+        view: apiPermission.view,
+        create: apiPermission.add,
+        update: apiPermission.edit,
+        delete: apiPermission.delete,
+      });
     } else {
-      console.warn('Unknown permission name:', permissionName, 'Available mappings:', Object.keys(permissionMapping));
+      console.warn("Unknown permission name:", permissionName, "Available mappings:", Object.keys(permissionMapping));
     }
   });
 
+  console.log('[PermissionUtils] Final user permissions:', userPermissions);
   return userPermissions;
 }
 

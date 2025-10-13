@@ -1,13 +1,13 @@
-'use client';
-import React, { useEffect, useRef, useState, useCallback } from 'react';
-import Link from 'next/link';
-import Image from 'next/image';
-import { usePathname } from 'next/navigation';
-import { useSidebar } from '../context/SidebarContext';
-import { useAuthPermissions } from '../hooks/useAuthPermissions';
-import { hasAnyModulePermission, hasPermission } from '../utils/permissionUtils';
-import { authUtils } from '../services/utils/authUtils';
-import SidebarSkeleton from '../components/common/SidebarSkeleton';
+"use client";
+import React, { useEffect, useRef, useState, useCallback } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { usePathname } from "next/navigation";
+import { useSidebar } from "../context/SidebarContext";
+import { useAuthPermissions } from "../hooks/useAuthPermissions";
+import { hasAnyModulePermission, hasPermission } from "../utils/permissionUtils";
+import { authUtils } from "../services/utils/authUtils";
+import SidebarSkeleton from "../components/common/SidebarSkeleton";
 import {
   ChevronDownIcon,
   GridIcon,
@@ -17,8 +17,8 @@ import {
   UserCircleIcon,
   TaskIcon,
   IdCardIcon,
-} from '../icons/index';
-import { BriefcaseIcon, CareerLadderIcon, TicketIcon, BlogIcon, CouponIcon } from '../components/ui/icons/index';
+} from "../icons/index";
+import { BriefcaseIcon, CareerLadderIcon, TicketIcon, BlogIcon, CouponIcon } from "../components/ui/icons/index";
 
 type NavItem = {
   name: string;
@@ -29,100 +29,100 @@ type NavItem = {
     path: string;
     pro?: boolean;
     new?: boolean;
-    requiredAction?: 'view' | 'add' | 'edit' | 'delete';
+    requiredAction?: "view" | "add" | "edit" | "delete";
   }[];
   permissionKey?:
-    | 'jobSeekers'
-    | 'employers'
-    | 'jobs'
-    | 'applications'
-    | 'careers'
-    | 'tickets'
-    | 'coupons'
-    | 'blog'
-    | 'unlockRequest';
+    | "jobSeekers"
+    | "employers"
+    | "jobs"
+    | "applications"
+    | "careers"
+    | "tickets"
+    | "coupons"
+    | "blog"
+    | "unlockRequest";
   isAccessible?: boolean;
 };
 
 const navItems: NavItem[] = [
   {
     icon: <GridIcon />,
-    name: 'Dashboard',
-    path: '/',
+    name: "Dashboard",
+    path: "/",
     isAccessible: true, // Dashboard is always accessible
     //subItems: [{ name: "Ecommerce", path: "/", pro: false }],
   },
   {
     icon: <GroupIcon />,
-    name: 'Job Seekers',
-    path: '/admin/job-seekers',
-    permissionKey: 'jobSeekers',
+    name: "Job Seekers",
+    path: "/admin/job-seekers",
+    permissionKey: "jobSeekers",
   },
   {
     icon: <UserCircleIcon />,
-    name: 'Employers',
-    path: '/admin/employers',
-    permissionKey: 'employers',
+    name: "Employers",
+    path: "/admin/employers",
+    permissionKey: "employers",
   },
   {
     icon: <BriefcaseIcon />,
-    name: 'Jobs',
-    path: '/admin/jobs',
-    permissionKey: 'jobs',
+    name: "Jobs",
+    path: "/admin/jobs",
+    permissionKey: "jobs",
     subItems: [
-      { name: 'All Jobs', path: '/admin/jobs', requiredAction: 'view' },
-      { name: 'Add New', path: '/admin/jobs/create-job/', requiredAction: 'add' },
+      { name: "All Jobs", path: "/admin/jobs", requiredAction: "view" },
+      { name: "Add New", path: "/admin/jobs/create-job/", requiredAction: "add" },
     ],
   },
   {
     icon: <TaskIcon />,
-    name: 'Applications',
-    path: '/admin/applications',
-    permissionKey: 'applications',
+    name: "Applications",
+    path: "/admin/applications",
+    permissionKey: "applications",
     //subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
   },
   {
     icon: <CareerLadderIcon />,
-    name: 'Careers',
-    path: '/admin/careers', // /admin/careers
-    permissionKey: 'careers',
+    name: "Careers",
+    path: "/admin/careers", // /admin/careers
+    permissionKey: "careers",
     //subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
   },
 
   {
     icon: <TicketIcon />,
-    name: 'Tickets',
-    path: '/admin/comming-soon', // /admin/tickets
-    permissionKey: 'tickets',
+    name: "Tickets",
+    path: "/admin/comming-soon", // /admin/tickets
+    permissionKey: "tickets",
     //subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
   },
   {
     icon: <CouponIcon />,
-    name: 'Coupons',
-    path: '/admin/coupons',
-    permissionKey: 'coupons',
+    name: "Coupons",
+    path: "/admin/coupons",
+    permissionKey: "coupons",
     //subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
   },
 
   {
     icon: <BlogIcon />,
-    name: 'Blog',
-    path: '/admin/blog',
-    permissionKey: 'blog',
+    name: "Blog",
+    path: "/admin/blog",
+    permissionKey: "blog",
     subItems: [
-      { name: 'All Posts', path: '/admin/blog', requiredAction: 'view' },
-      { name: 'Add New', path: '/admin/blog/add-new', requiredAction: 'add' },
-      { name: 'Categories', path: '/admin/blog/categories', requiredAction: 'view' },
-      { name: 'Tags', path: '/admin/blog/tags', requiredAction: 'view' },
-      { name: 'Archives', path: '/admin/blog/archives', requiredAction: 'view' },
+      { name: "All Posts", path: "/admin/blog", requiredAction: "view" },
+      { name: "Add New", path: "/admin/blog/add-new", requiredAction: "add" },
+      { name: "Categories", path: "/admin/blog/categories", requiredAction: "view" },
+      { name: "Tags", path: "/admin/blog/tags", requiredAction: "view" },
+      { name: "Archives", path: "/admin/blog/archives", requiredAction: "view" },
     ],
   },
 
   {
     icon: <IdCardIcon />,
-    name: 'Unlock Requests',
-    path: '/admin/unlock-requests',
-    permissionKey: 'unlockRequest',
+    name: "Unlock Requests",
+    path: "/admin/unlock-requests",
+    permissionKey: "unlockRequest",
     //subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
   },
 ];
@@ -130,10 +130,10 @@ const navItems: NavItem[] = [
 const othersItems: NavItem[] = [
   {
     icon: <PieChartIcon />,
-    name: 'Charts',
+    name: "Charts",
     subItems: [
-      { name: 'Line Chart', path: '/line-chart', pro: false },
-      { name: 'Bar Chart', path: '/bar-chart', pro: false },
+      { name: "Line Chart", path: "/line-chart", pro: false },
+      { name: "Bar Chart", path: "/bar-chart", pro: false },
     ],
   },
 ];
@@ -143,10 +143,11 @@ const AppSidebar: React.FC = () => {
   const { permissions, loading } = useAuthPermissions();
   const pathname = usePathname();
   const [isInitialMount, setIsInitialMount] = useState(true);
+  const [forceUpdate, setForceUpdate] = useState(0);
 
   // Check if user is authenticated to show sidebar immediately
-  const isAuthenticated = typeof window !== 'undefined' ? authUtils.isAuthenticated() : false;
-  const hasUserData = typeof window !== 'undefined' ? !!authUtils.getUser() : false;
+  const isAuthenticated = typeof window !== "undefined" ? authUtils.isAuthenticated() : false;
+  const hasUserData = typeof window !== "undefined" ? !!authUtils.getUser() : false;
 
   // Handle initial mount timing
   useEffect(() => {
@@ -158,6 +159,34 @@ const AppSidebar: React.FC = () => {
     }
   }, [permissions, isInitialMount]);
 
+  // Force re-render when permissions change
+  useEffect(() => {
+    if (permissions) {
+      setForceUpdate((prev) => prev + 1);
+    }
+  }, [permissions]);
+
+  // Listen for permissions loaded event
+  useEffect(() => {
+    const handlePermissionsLoaded = (event: CustomEvent) => {
+      console.log("[Sidebar] Permissions loaded event received:", event.detail);
+      setForceUpdate((prev) => prev + 1);
+    };
+
+    if (typeof window !== "undefined") {
+      window.addEventListener("permissionsLoaded" as any, handlePermissionsLoaded);
+      window.addEventListener("authUpdate", () => {
+        console.log("[Sidebar] Auth update event received");
+        setForceUpdate((prev) => prev + 1);
+      });
+
+      return () => {
+        window.removeEventListener("permissionsLoaded" as any, handlePermissionsLoaded);
+        window.removeEventListener("authUpdate", () => {});
+      };
+    }
+  }, []);
+
   // Check if item is accessible based on permissions
   const isItemAccessible = (item: NavItem): boolean => {
     // If item has explicit isAccessible, use that
@@ -168,6 +197,24 @@ const AppSidebar: React.FC = () => {
     // If item has permissionKey and we have permissions, check permissions
     if (item.permissionKey && permissions) {
       const hasPermission = hasAnyModulePermission(permissions, item.permissionKey);
+      
+      // Special handling for Unlock Requests - show if user is Super Admin
+      if (item.permissionKey === 'unlockRequest' && !hasPermission) {
+        const user = typeof window !== 'undefined' ? authUtils.getUser() : null;
+        const isSuperAdmin = user?.adminRoleAccess?.roleName?.toLowerCase() === 'super admin';
+        console.log(
+          `[Sidebar] Special check for Unlock Requests - isSuperAdmin: ${isSuperAdmin}, roleName: ${user?.adminRoleAccess?.roleName}`
+        );
+        if (isSuperAdmin) {
+          return true;
+        }
+      }
+      
+      console.log(
+        `[Sidebar] Checking accessibility for "${item.name}" (${item.permissionKey}):`,
+        hasPermission,
+        permissions[item.permissionKey]
+      );
       return hasPermission;
     }
 
@@ -185,7 +232,7 @@ const AppSidebar: React.FC = () => {
     return !item.permissionKey;
   };
 
-  const renderMenuItems = (allNavItems: NavItem[], menuType: 'main' | 'others') => (
+  const renderMenuItems = (allNavItems: NavItem[], menuType: "main" | "others") => (
     <ul className="flex flex-col gap-4">
       {allNavItems.map((nav, index) => {
         // Skip rendering if not accessible
@@ -201,15 +248,15 @@ const AppSidebar: React.FC = () => {
                 onClick={() => submenuToggle(index, menuType)}
                 className={`menu-item group  ${
                   openSubmenu?.type === menuType && openSubmenu?.index === index
-                    ? 'menu-item-active'
-                    : 'menu-item-inactive'
-                } cursor-pointer ${!isExpanded && !isHovered ? 'lg:justify-center' : 'lg:justify-start'}`}
+                    ? "menu-item-active"
+                    : "menu-item-inactive"
+                } cursor-pointer ${!isExpanded && !isHovered ? "lg:justify-center" : "lg:justify-start"}`}
               >
                 <span
                   className={` ${
                     openSubmenu?.type === menuType && openSubmenu?.index === index
-                      ? 'menu-item-icon-active'
-                      : 'menu-item-icon-inactive'
+                      ? "menu-item-icon-active"
+                      : "menu-item-icon-inactive"
                   }`}
                 >
                   {nav.icon}
@@ -218,7 +265,7 @@ const AppSidebar: React.FC = () => {
                 {(isExpanded || isHovered || isMobileOpen) && (
                   <ChevronDownIcon
                     className={`ml-auto w-5 h-5 transition-transform duration-200  ${
-                      openSubmenu?.type === menuType && openSubmenu?.index === index ? 'rotate-180 text-brand-500' : ''
+                      openSubmenu?.type === menuType && openSubmenu?.index === index ? "rotate-180 text-brand-500" : ""
                     }`}
                   />
                 )}
@@ -227,9 +274,9 @@ const AppSidebar: React.FC = () => {
               nav.path && (
                 <Link
                   href={nav.path}
-                  className={`menu-item group ${isActive(nav.path) ? 'menu-item-active' : 'menu-item-inactive'}`}
+                  className={`menu-item group ${isActive(nav.path) ? "menu-item-active" : "menu-item-inactive"}`}
                 >
-                  <span className={`${isActive(nav.path) ? 'menu-item-icon-active' : 'menu-item-icon-inactive'}`}>
+                  <span className={`${isActive(nav.path) ? "menu-item-icon-active" : "menu-item-icon-inactive"}`}>
                     {nav.icon}
                   </span>
                   {(isExpanded || isHovered || isMobileOpen) && <span className={`menu-item-text`}>{nav.name}</span>}
@@ -246,7 +293,7 @@ const AppSidebar: React.FC = () => {
                   height:
                     openSubmenu?.type === menuType && openSubmenu?.index === index
                       ? `${subMenuHeight[`${menuType}-${index}`]}px`
-                      : '0px',
+                      : "0px",
                 }}
               >
                 <ul className="mt-2 space-y-1">
@@ -255,10 +302,10 @@ const AppSidebar: React.FC = () => {
                       // Filter submenu items based on required permissions
                       if (subItem.requiredAction && nav.permissionKey && permissions) {
                         const actionMap: Record<string, keyof (typeof permissions)[keyof typeof permissions]> = {
-                          view: 'view',
-                          add: 'create',
-                          edit: 'update',
-                          delete: 'delete',
+                          view: "view",
+                          add: "create",
+                          edit: "update",
+                          delete: "delete",
                         };
                         const mappedAction = actionMap[subItem.requiredAction];
                         const hasRequiredPermission = hasPermission(permissions, nav.permissionKey, mappedAction);
@@ -278,7 +325,7 @@ const AppSidebar: React.FC = () => {
                         <Link
                           href={subItem.path}
                           className={`menu-dropdown-item ${
-                            isActive(subItem.path) ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'
+                            isActive(subItem.path) ? "menu-dropdown-item-active" : "menu-dropdown-item-inactive"
                           }`}
                         >
                           {subItem.name}
@@ -286,7 +333,7 @@ const AppSidebar: React.FC = () => {
                             {subItem.new && (
                               <span
                                 className={`ml-auto ${
-                                  isActive(subItem.path) ? 'menu-dropdown-badge-active' : 'menu-dropdown-badge-inactive'
+                                  isActive(subItem.path) ? "menu-dropdown-badge-active" : "menu-dropdown-badge-inactive"
                                 } menu-dropdown-badge `}
                               >
                                 new
@@ -295,7 +342,7 @@ const AppSidebar: React.FC = () => {
                             {subItem.pro && (
                               <span
                                 className={`ml-auto ${
-                                  isActive(subItem.path) ? 'menu-dropdown-badge-active' : 'menu-dropdown-badge-inactive'
+                                  isActive(subItem.path) ? "menu-dropdown-badge-active" : "menu-dropdown-badge-inactive"
                                 } menu-dropdown-badge `}
                               >
                                 pro
@@ -315,7 +362,7 @@ const AppSidebar: React.FC = () => {
   );
 
   const [openSubmenu, setOpenSubmenu] = useState<{
-    type: 'main' | 'others';
+    type: "main" | "others";
     index: number;
   } | null>(null);
   const [subMenuHeight, setSubMenuHeight] = useState<Record<string, number>>({});
@@ -324,8 +371,8 @@ const AppSidebar: React.FC = () => {
 
   useEffect(() => {
     let submenuMatched = false;
-    ['main', 'others'].forEach((menuType) => {
-      const items = menuType === 'main' ? navItems : othersItems;
+    ["main", "others"].forEach((menuType) => {
+      const items = menuType === "main" ? navItems : othersItems;
       items.forEach((nav, index) => {
         // Only check accessible items
         if (!isItemAccessible(nav)) return;
@@ -334,7 +381,7 @@ const AppSidebar: React.FC = () => {
           nav.subItems.forEach((subItem) => {
             if (isActive(subItem.path)) {
               setOpenSubmenu({
-                type: menuType as 'main' | 'others',
+                type: menuType as "main" | "others",
                 index,
               });
               submenuMatched = true;
@@ -361,7 +408,7 @@ const AppSidebar: React.FC = () => {
     }
   }, [openSubmenu]);
 
-  const submenuToggle = (index: number, menuType: 'main' | 'others') => {
+  const submenuToggle = (index: number, menuType: "main" | "others") => {
     setOpenSubmenu((prevOpenSubmenu) => {
       if (prevOpenSubmenu && prevOpenSubmenu.type === menuType && prevOpenSubmenu.index === index) {
         return null;
@@ -375,13 +422,13 @@ const AppSidebar: React.FC = () => {
     return (
       <aside
         className={`fixed lex flex-col lg:mt-0 top-0 px-5 left-0 bg-white dark:bg-gray-900 dark:border-gray-800 text-gray-900 h-screen transition-all duration-300 ease-in-out z-50 border-r border-gray-200 
-          ${isExpanded || isMobileOpen ? 'w-[290px]' : isHovered ? 'w-[290px]' : 'w-[90px]'}
-          ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'}
+          ${isExpanded || isMobileOpen ? "w-[290px]" : isHovered ? "w-[290px]" : "w-[90px]"}
+          ${isMobileOpen ? "translate-x-0" : "-translate-x-full"}
           lg:translate-x-0`}
         onMouseEnter={() => !isExpanded && setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        <div className={`py-8 flex  ${!isExpanded && !isHovered ? 'lg:justify-center' : 'justify-start'}`}>
+        <div className={`py-8 flex  ${!isExpanded && !isHovered ? "lg:justify-center" : "justify-start"}`}>
           <Link href="/">
             {isExpanded || isHovered || isMobileOpen ? (
               <>
@@ -409,13 +456,13 @@ const AppSidebar: React.FC = () => {
   return (
     <aside
       className={`fixed lex flex-col lg:mt-0 top-0 px-5 left-0 bg-white dark:bg-gray-900 dark:border-gray-800 text-gray-900 h-screen transition-all duration-300 ease-in-out z-50 border-r border-gray-200 
-        ${isExpanded || isMobileOpen ? 'w-[290px]' : isHovered ? 'w-[290px]' : 'w-[90px]'}
-        ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'}
+        ${isExpanded || isMobileOpen ? "w-[290px]" : isHovered ? "w-[290px]" : "w-[90px]"}
+        ${isMobileOpen ? "translate-x-0" : "-translate-x-full"}
         lg:translate-x-0`}
       onMouseEnter={() => !isExpanded && setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div className={`py-8 flex  ${!isExpanded && !isHovered ? 'lg:justify-center' : 'justify-start'}`}>
+      <div className={`py-8 flex  ${!isExpanded && !isHovered ? "lg:justify-center" : "justify-start"}`}>
         <Link href="/">
           {isExpanded || isHovered || isMobileOpen ? (
             <>
@@ -439,12 +486,12 @@ const AppSidebar: React.FC = () => {
             <div>
               <h2
                 className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${
-                  !isExpanded && !isHovered ? 'lg:justify-center' : 'justify-start'
+                  !isExpanded && !isHovered ? "lg:justify-center" : "justify-start"
                 }`}
               >
-                {isExpanded || isHovered || isMobileOpen ? 'Menu' : <HorizontaLDots />}
+                {isExpanded || isHovered || isMobileOpen ? "Menu" : <HorizontaLDots />}
               </h2>
-              {renderMenuItems(navItems, 'main')}
+              {renderMenuItems(navItems, "main")}
             </div>
           </div>
         </nav>
