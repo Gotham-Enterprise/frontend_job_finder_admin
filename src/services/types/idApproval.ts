@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction } from "react";
+import { Dispatch, SetStateAction } from 'react';
 
 export interface UseIdApprovalLogic {
   data: IdApproval[];
@@ -6,12 +6,12 @@ export interface UseIdApprovalLogic {
   totalCount: number;
   selected: IdApproval | null;
   tableColumns: { key: string; label: string; className?: string }[];
-  metaData: IdApprovals["metaData"];
+  metaData: IdApprovals['metaData'];
   filters: IdApprovalFilters;
   itemsPerPageOptions: { value: string; label: string }[];
   isUpdating: boolean;
   checked: boolean;
-  checkedItems: IdApproval["id"][];
+  checkedItems: IdApproval['id'][];
   isPending: boolean;
   isSaving: boolean;
   showModal: boolean;
@@ -22,18 +22,21 @@ export interface UseIdApprovalLogic {
   } | null;
   setSelected: Dispatch<SetStateAction<IdApproval | null>>;
   onFilterChange: (key: string, value: string | number) => void;
-  onUpdateStatus: (id: IdApprovalStatusUpdate["id"], status: IdApprovalStatusUpdate["status"]) => void;
+  onUpdateStatus: (
+    id: IdApprovalStatusUpdate['id'],
+    status: IdApprovalStatusUpdate['status']
+  ) => void;
   onChangeChecked: (checked: boolean) => void;
-  onChangeCheckedItem: (id: IdApproval["id"]) => void;
-  onBatchUpdate: (status: IdApproval["status"]) => void;
+  onChangeCheckedItem: (id: IdApproval['id']) => void;
+  onBatchUpdate: (status: IdApproval['status']) => void;
   onToggleModal: () => void;
-  onViewDetails: (id: IdApproval["id"]) => void;
+  onViewDetails: (id: IdApproval['id']) => void;
 }
 
 export interface IdApproval {
   id: string;
   userId: string;
-  status: "pending" | "approved" | "declined";
+  status: 'pending' | 'approved' | 'declined';
   front: string;
   back: string;
   isLocked: boolean;
@@ -65,7 +68,7 @@ export interface IdApprovalFilters {
 
 export interface IdApprovalStatusUpdate {
   id: string;
-  status: IdApproval["status"];
+  status: IdApproval['status'];
 }
 
 export interface IdApprovalStatusUpdateResponse {
@@ -75,8 +78,8 @@ export interface IdApprovalStatusUpdateResponse {
 }
 
 export interface IdApprovalBatchUpdate {
-  ids: IdApproval["id"][];
-  status: IdApproval["status"];
+  ids: IdApproval['id'][];
+  status: IdApproval['status'];
 }
 
 export interface IdApprovalBatchUpdateResponse {
@@ -88,10 +91,10 @@ export interface IdApprovalBatchUpdateResponse {
 export interface IdApprovalDetailResponse {
   success: boolean;
   data: {
-    id: IdApproval["id"];
-    status: IdApproval["status"];
+    id: IdApproval['id'];
+    status: IdApproval['status'];
     profile: {
-      isLocked: IdApproval["isLocked"];
+      isLocked: IdApproval['isLocked'];
       name: string;
       email: string;
       degree: string;
@@ -102,6 +105,7 @@ export interface IdApprovalDetailResponse {
       phoneNumber: string;
       front: string;
       back: string;
+      role: string;
     };
     securityQuestions: {
       question: string;
@@ -116,12 +120,12 @@ export interface IdApprovalDetailResponse {
 }
 
 export interface UseIdApprovalDetailLogic {
-  id: IdApprovalDetailResponse["data"]["id"];
-  isLocked: IdApprovalDetailResponse["data"]["profile"]["isLocked"];
-  status: IdApprovalDetailResponse["data"]["status"];
-  profile: IdApprovalDetailResponse["data"]["profile"];
-  securityQuestions: IdApprovalDetailResponse["data"]["securityQuestions"];
-  activityLogs: IdApprovalDetailResponse["data"]["activityLogs"];
+  id: IdApprovalDetailResponse['data']['id'];
+  isLocked: IdApprovalDetailResponse['data']['profile']['isLocked'];
+  status: IdApprovalDetailResponse['data']['status'];
+  profile: IdApprovalDetailResponse['data']['profile'];
+  securityQuestions: IdApprovalDetailResponse['data']['securityQuestions'];
+  activityLogs: IdApprovalDetailResponse['data']['activityLogs'];
   isLoading: boolean;
   isUnlocked: boolean;
   displayReview: boolean;
@@ -129,5 +133,5 @@ export interface UseIdApprovalDetailLogic {
   isStatusUpdated: boolean;
   onUnlockAccount: () => void;
   onToggleReview: () => void;
-  onUpdateStatus: (status: IdApproval["status"]) => void;
+  onUpdateStatus: (status: IdApproval['status']) => void;
 }
