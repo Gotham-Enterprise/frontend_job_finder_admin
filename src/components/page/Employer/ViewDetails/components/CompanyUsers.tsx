@@ -151,7 +151,7 @@ export default function CompanyUsers({ users }: CompanyUsersProps) {
                     </TableCell>
                     <TableCell className="py-4 px-6 text-right">
                       <button
-                        className="flex gap-2 text-brand-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex gap-2 text-brand-400 text-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
                         onClick={() => handleResetPassword(user)}
                         disabled={resetPasswordLoadingId === user.id}
                       >

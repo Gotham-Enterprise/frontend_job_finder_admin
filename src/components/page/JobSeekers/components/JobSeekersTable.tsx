@@ -800,7 +800,7 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
                       </button>
                     </PermissionWrapper>
                     <button
-                      className="flex gap-2 text-brand-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="flex gap-2 text-brand-400 disabled:opacity-50 disabled:cursor-not-allowed text-nowrap"
                       onClick={() => handleResetPassword(jobSeeker)}
                       disabled={resetPasswordLoadingId === jobSeeker.id}
                     >
