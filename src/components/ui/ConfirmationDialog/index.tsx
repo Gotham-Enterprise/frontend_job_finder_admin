@@ -36,9 +36,9 @@ export default function ConfirmationDialog({
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl">
         <div className="px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
           <div className="sm:flex sm:items-start">
-            <div className="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 dark:bg-primary/20 sm:mx-0 sm:h-10 sm:w-10">
+            <div className="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-yellow-100 dark:bg-yellow-900/20 sm:mx-0 sm:h-10 sm:w-10">
               <svg
-                className="h-6 w-6 text-primary dark:text-primary"
+                className="h-6 w-6 text-yellow-600 dark:text-yellow-500"
                 fill="none"
                 viewBox="0 0 24 24"
                 strokeWidth="1.5"
@@ -63,7 +63,7 @@ export default function ConfirmationDialog({
           <Button
             onClick={onConfirm}
             variant="default"
-            className="inline-flex w-full justify-center rounded-md px-3 py-2 text-sm font-semibold sm:ml-3 sm:w-auto !bg-primary hover:!bg-primary/90"
+            className="inline-flex w-full justify-center rounded-md px-3 py-2 text-sm font-semibold sm:ml-3 sm:w-auto !bg-yellow-500 hover:!bg-yellow-600 !text-white"
             disabled={isLoading}
           >
             {isLoading ? "Processing..." : confirmText}

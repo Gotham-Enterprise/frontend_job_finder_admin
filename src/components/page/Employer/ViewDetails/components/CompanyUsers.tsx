@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import TableHeading from "@/components/tables/tableHeader";
 import { useConfirmation } from "@/hooks/useConfirmation";
 import ConfirmationDialog from "@/components/ui/ConfirmationDialog";
+import InputModal from "@/components/ui/InputModal";
 import { useToast } from "@/context/ToastContext";
 import { CompanyUser } from "@/services/types/employer";
 
@@ -38,6 +39,9 @@ const getStatusColor = (status: string): "success" | "warning" | "error" | "prim
 export default function CompanyUsers({ users }: CompanyUsersProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [resetPasswordLoadingId, setResetPasswordLoadingId] = useState<string | null>(null);
+  const [toggleLoadingId, setToggleLoadingId] = useState<string | null>(null);
+  const [reasonModalOpen, setReasonModalOpen] = useState(false);
+  const [pendingUserAction, setPendingUserAction] = useState<{ user: CompanyUser; isActive: boolean } | null>(null);
   const { addToast } = useToast();
   const confirmation = useConfirmation();
 
@@ -100,6 +104,74 @@ export default function CompanyUsers({ users }: CompanyUsersProps) {
     }
   };
 
+  const handleToggleUserStatus = async (user: CompanyUser) => {
+    const userName = `${user.firstName} ${user.lastName}`.trim();
+    const isActive = user.status.toLowerCase() === "active";
+    const action = isActive ? "deactivate" : "reactivate";
+
+    // Show confirmation dialog
+    const confirmed = await confirmation.confirm({
+      title: `${isActive ? "Deactivate" : "Reactivate"} User`,
+      message: `Are you sure you want to ${action} ${userName}?`,
+      confirmText: `Yes, ${isActive ? "Deactivate" : "Reactivate"}`,
+      cancelText: "Cancel",
+    });
+
+    if (!confirmed) {
+      return;
+    }
+
+    // Open reason modal
+    setPendingUserAction({ user, isActive });
+    setReasonModalOpen(true);
+  };
+
+  const handleReasonSubmit = async (reason: string) => {
+    if (!pendingUserAction) return;
+
+    const { user, isActive } = pendingUserAction;
+    const action = isActive ? "deactivate" : "reactivate";
+
+    setReasonModalOpen(false);
+    setToggleLoadingId(user.id);
+
+    try {
+      const { adminUserManagementApi } = await import("@/services/api/adminUserManagement");
+
+      if (isActive) {
+        await adminUserManagementApi.deactivateUser(user.id, { reason });
+      } else {
+        await adminUserManagementApi.reactivateUser(user.id, { reason });
+      }
+
+      addToast({
+        variant: "success",
+        title: "Success",
+        message: `User has been ${isActive ? "deactivated" : "reactivated"} successfully`,
+        duration: 5000,
+      });
+
+      // Refresh the page to get updated user status
+      window.location.reload();
+    } catch (error: any) {
+      console.error(`${action} user error:`, error);
+      addToast({
+        variant: "error",
+        title: "Error",
+        message: error.message || `Failed to ${action} user`,
+        duration: 5000,
+      });
+    } finally {
+      setToggleLoadingId(null);
+      setPendingUserAction(null);
+    }
+  };
+
+  const handleReasonCancel = () => {
+    setReasonModalOpen(false);
+    setPendingUserAction(null);
+  };
+
   const tableColumns = useMemo(
     () => [
       { key: "name", label: "Name" },
@@ -147,20 +219,41 @@ export default function CompanyUsers({ users }: CompanyUsersProps) {
                       <Badge color={getStatusColor(user.status)}>{user.status}</Badge>
                     </TableCell>
                     <TableCell className="py-4 px-6 text-right">
-                      <button
-                        className="flex gap-2 text-brand-400 text-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
-                        onClick={() => handleResetPassword(user)}
-                        disabled={resetPasswordLoadingId === user.id}
-                      >
-                        {resetPasswordLoadingId === user.id ? (
-                          <>
-                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-brand-400"></div>
-                            Sending...
-                          </>
-                        ) : (
-                          <>Reset password</>
-                        )}
-                      </button>
+                      <div className="flex items-center justify-end gap-4">
+                        <button
+                          className="text-brand-400 text-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
+                          onClick={() => handleResetPassword(user)}
+                          disabled={resetPasswordLoadingId === user.id || toggleLoadingId === user.id}
+                        >
+                          {resetPasswordLoadingId === user.id ? (
+                            <span className="flex items-center gap-2">
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-brand-400"></div>
+                              Sending...
+                            </span>
+                          ) : (
+                            <>Reset password</>
+                          )}
+                        </button>
+                        |
+                        <button
+                          className={`text-nowrap disabled:opacity-50 disabled:cursor-not-allowed ${
+                            user.status.toLowerCase() === "active"
+                              ? "text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+                              : "text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300"
+                          }`}
+                          onClick={() => handleToggleUserStatus(user)}
+                          disabled={toggleLoadingId === user.id || resetPasswordLoadingId === user.id}
+                        >
+                          {toggleLoadingId === user.id ? (
+                            <span className="flex items-center gap-2">
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
+                              Processing...
+                            </span>
+                          ) : (
+                            <>{user.status.toLowerCase() === "active" ? "Deactivate" : "Reactivate"}</>
+                          )}
+                        </button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -191,7 +284,23 @@ export default function CompanyUsers({ users }: CompanyUsersProps) {
         message={confirmation.config?.message || ""}
         confirmText={confirmation.config?.confirmText}
         cancelText={confirmation.config?.cancelText}
-        isLoading={resetPasswordLoadingId !== null}
+        isLoading={resetPasswordLoadingId !== null || toggleLoadingId !== null}
+      />
+
+      {/* Reason Input Modal */}
+      <InputModal
+        isOpen={reasonModalOpen}
+        onClose={handleReasonCancel}
+        onConfirm={handleReasonSubmit}
+        onCancel={handleReasonCancel}
+        title={`Provide Reason for ${pendingUserAction?.isActive ? "Deactivation" : "Reactivation"}`}
+        message={`Please provide a reason for ${pendingUserAction?.isActive ? "deactivating" : "reactivating"} this user:`}
+        placeholder="Enter reason here..."
+        confirmText="Submit"
+        cancelText="Cancel"
+        isLoading={toggleLoadingId !== null}
+        inputType="textarea"
+        required={true}
       />
     </div>
   );
