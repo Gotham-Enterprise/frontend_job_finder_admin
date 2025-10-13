@@ -9,14 +9,7 @@ import TableHeading from "@/components/tables/tableHeader";
 import { useConfirmation } from "@/hooks/useConfirmation";
 import ConfirmationDialog from "@/components/ui/ConfirmationDialog";
 import { useToast } from "@/context/ToastContext";
-
-interface CompanyUser {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  status: string;
-}
+import { CompanyUser } from "@/services/types/employer";
 
 interface CompanyUsersProps {
   users: CompanyUser[];
@@ -69,10 +62,12 @@ export default function CompanyUsers({ users }: CompanyUsersProps) {
       return;
     }
 
+    const userName = `${user.firstName} ${user.lastName}`.trim();
+
     // Show confirmation dialog
     const confirmed = await confirmation.confirm({
       title: "Reset Password",
-      message: `Are you sure you want to send a password reset email to ${user.name} (${user.email})?`,
+      message: `Are you sure you want to send a password reset email to ${userName} (${user.email})?`,
       confirmText: "Yes, Reset Password",
       cancelText: "Cancel",
     });
@@ -134,7 +129,9 @@ export default function CompanyUsers({ users }: CompanyUsersProps) {
                     className="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/50"
                   >
                     <TableCell className="py-4 px-6">
-                      <p className="font-medium text-gray-900 dark:text-white">{user.name}</p>
+                      <p className="font-medium text-gray-900 dark:text-white">
+                        {user.firstName} {user.lastName}
+                      </p>
                     </TableCell>
                     <TableCell className="py-4 px-6">
                       <p className="text-sm text-gray-900 dark:text-white">{user.email}</p>

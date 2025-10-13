@@ -127,7 +127,7 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
                 />
                 
                 <CompanyUsers 
-                    users={employer.users || []}
+                    users={employer.companyUsers || []}
                 />
             </div>
         </div>
