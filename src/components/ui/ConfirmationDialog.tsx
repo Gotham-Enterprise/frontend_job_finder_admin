@@ -39,7 +39,7 @@ export default function ConfirmationDialog({
           <div className="flex items-start gap-4">
             <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30">
               <svg
-                className="h-6 w-6 text-red-600 dark:text-red-400"
+                className="h-6 w-6 text-yellow-600 dark:text-red-400"
                 fill="none"
                 viewBox="0 0 24 24"
                 strokeWidth="2"
