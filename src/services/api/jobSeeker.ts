@@ -69,4 +69,8 @@ export const jobSeekerApi = {
     console.log("Share Resume API Call:", { endpoint, resumeId, request });
     return apiPost<ShareResumeResponse>(endpoint, request);
   },
+
+  async resetPassword(email: string): Promise<any> {
+    return apiPost<any>("/api/auth/forgot-password", { email });
+  },
 };
