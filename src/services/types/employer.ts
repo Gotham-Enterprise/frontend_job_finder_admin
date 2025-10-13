@@ -70,6 +70,14 @@ export interface JobPost {
   description?: string;
 }
 
+export interface CompanyUser {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  status: string;
+}
+
 export interface EmployerDetails {
   id: string;
   companyName: string;
@@ -89,6 +97,7 @@ export interface EmployerDetails {
   lastActivity: string;
   status: string;
   jobPost: JobPost[];
+  users?: CompanyUser[];
   avatarUrl?: string;
   profilePicture?: {
     fileName: string;
