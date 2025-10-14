@@ -36,17 +36,20 @@ const NewsLetterTab = () => {
         const data = await getNewsletters();
         console.log("📊 All newsletters from API:", data);
         console.log("📊 Total newsletters:", data.length);
-        console.log(
-          "📊 isTemplate values:",
-          data.map((n) => ({ id: n.id, subject: n.subject, isTemplate: n.isTemplate }))
-        );
 
-        // Filter to show only templates
-        const templates = data.filter((newsletter) => newsletter.isTemplate === true);
-        console.log("📋 Filtered templates (isTemplate === true):", templates);
-        console.log("📋 Total templates:", templates.length);
+        // Log content details
+        data.forEach((n, index) => {
+          console.log(`Newsletter ${index + 1} - ${n.subject}:`, {
+            hasContent: !!n.content,
+            contentLength: n.content?.length || 0,
+            contentPreview: n.content?.substring(0, 100) || "No content",
+            isTemplate: n.isTemplate,
+          });
+        });
 
-        setNewsletters(templates);
+        // Show ALL newsletters in the table (not just templates)
+        // This way you can see all your newsletters
+        setNewsletters(data);
       } catch (err) {
         console.error("❌ Failed to fetch newsletters:", err);
         setError("Failed to load newsletters");
@@ -137,7 +140,12 @@ const NewsLetterTab = () => {
       {viewMode === "grid" && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 px-6">
           {newsletters.map((newsletter) => (
-            <EmailTemplatePreview key={newsletter.id} content={newsletter.content} subject={newsletter.subject} />
+            <EmailTemplatePreview
+              key={newsletter.id}
+              content={newsletter.content}
+              subject={newsletter.subject}
+              design={newsletter.design}
+            />
           ))}
         </div>
       )}
@@ -149,12 +157,6 @@ const NewsLetterTab = () => {
             {/* Table Header */}
             <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
               <TableRow>
-                <TableCell
-                  isHeader
-                  className="px-5 py-3 font-medium text-gray-500 text-start text-sm uppercase tracking-wider dark:text-gray-400"
-                >
-                  Preview
-                </TableCell>
                 <TableCell
                   isHeader
                   className="px-5 py-3 font-medium text-gray-500 text-start text-sm uppercase tracking-wider dark:text-gray-400"
@@ -198,9 +200,6 @@ const NewsLetterTab = () => {
             <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
               {newsletters.map((newsletter) => (
                 <TableRow key={newsletter.id}>
-                  <TableCell className="px-5 py-4 text-start">
-                    <EmailTemplateThumbnail content={newsletter.content} subject={newsletter.subject} />
-                  </TableCell>
                   <TableCell className="px-5 py-4 text-start">
                     <span className="font-medium text-gray-900 text-sm dark:text-white/90">{newsletter.subject}</span>
                   </TableCell>
