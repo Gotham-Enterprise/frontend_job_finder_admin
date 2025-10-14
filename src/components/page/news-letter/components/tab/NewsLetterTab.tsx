@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "../../../../ui/table";
 import { getNewsletters } from "@/services/api/newsletterService";
 import EmailTemplatePreview from "../EmailTemplatePreview";
+import EmailTemplateThumbnail from "../EmailTemplateThumbnail";
 
 interface Newsletter {
   id: string;
@@ -152,6 +153,12 @@ const NewsLetterTab = () => {
                   isHeader
                   className="px-5 py-3 font-medium text-gray-500 text-start text-sm uppercase tracking-wider dark:text-gray-400"
                 >
+                  Preview
+                </TableCell>
+                <TableCell
+                  isHeader
+                  className="px-5 py-3 font-medium text-gray-500 text-start text-sm uppercase tracking-wider dark:text-gray-400"
+                >
                   Email Name
                 </TableCell>
                 <TableCell
@@ -191,6 +198,9 @@ const NewsLetterTab = () => {
             <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
               {newsletters.map((newsletter) => (
                 <TableRow key={newsletter.id}>
+                  <TableCell className="px-5 py-4 text-start">
+                    <EmailTemplateThumbnail content={newsletter.content} subject={newsletter.subject} />
+                  </TableCell>
                   <TableCell className="px-5 py-4 text-start">
                     <span className="font-medium text-gray-900 text-sm dark:text-white/90">{newsletter.subject}</span>
                   </TableCell>

@@ -10,7 +10,6 @@ import {
   completeStep,
   setCurrentStep,
 } from "@/store/slices/newsletterSlice";
-import TemplatePreview from "../components/TemplatePreview";
 import SimpleTemplateThumbnail from "../components/SimpleTemplateThumbnail";
 
 // Template categories for the new email templates
@@ -29,8 +28,6 @@ const TemplateSelection: React.FC = () => {
   const dispatch = useAppDispatch();
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
-  const [previewTemplate, setPreviewTemplate] = useState<NewsletterTemplate | null>(null);
-  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [apiTemplates, setApiTemplates] = useState<UnlayerTemplate[]>([]);
   const [savedTemplates, setSavedTemplates] = useState<any[]>([]);
   const [isLoadingTemplates, setIsLoadingTemplates] = useState(true);
@@ -187,14 +184,91 @@ const TemplateSelection: React.FC = () => {
     [dispatch]
   );
 
-  const onPreviewTemplate = React.useCallback((template: NewsletterTemplate) => {
-    setPreviewTemplate(template);
-    setIsPreviewOpen(true);
-  }, []);
+  const onPreviewTemplate = React.useCallback(async (template: NewsletterTemplate) => {
+    // Open preview in a new window directly
+    let previewContent = "";
 
-  const closePreview = React.useCallback(() => {
-    setIsPreviewOpen(false);
-    setPreviewTemplate(null);
+    // If template has content, use it
+    if (template.content) {
+      previewContent = template.content;
+    } else if (template.design) {
+      // If template has design JSON, try to export HTML
+      try {
+        const result = await unlayerApi.exportHtml(template.design);
+        if (result && result.html) {
+          previewContent = result.html;
+        }
+      } catch (error) {
+        console.error("Error generating preview:", error);
+        previewContent = "<p>Unable to generate preview for this template.</p>";
+      }
+    } else if (template.id === "blank") {
+      previewContent = `
+        <div style="display: flex; align-items: center; justify-content: center; height: 100vh; font-family: Arial, sans-serif;">
+          <div style="text-align: center;">
+            <h2>Blank Canvas</h2>
+            <p>Start building your newsletter from scratch with complete creative control.</p>
+          </div>
+        </div>
+      `;
+    }
+
+    // Open in new window
+    const previewWindow = window.open("", "_blank", "width=800,height=600,scrollbars=yes,resizable=yes");
+    if (previewWindow) {
+      previewWindow.document.write(`
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>${template.name} - Email Preview</title>
+          <style>
+            body {
+              margin: 0;
+              padding: 20px;
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+              background: #f3f4f6;
+            }
+            .preview-header {
+              background: white;
+              padding: 16px 20px;
+              margin: -20px -20px 20px -20px;
+              border-bottom: 1px solid #e5e7eb;
+              box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            }
+            .preview-header h1 {
+              margin: 0;
+              font-size: 18px;
+              color: #111827;
+              font-weight: 600;
+            }
+            .preview-header p {
+              margin: 4px 0 0 0;
+              font-size: 14px;
+              color: #6b7280;
+            }
+            .email-content {
+              background: white;
+              border-radius: 8px;
+              box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+              overflow: hidden;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="preview-header">
+            <h1>${template.name}</h1>
+            <p>Email Template Preview</p>
+          </div>
+          <div class="email-content">
+            ${previewContent}
+          </div>
+        </body>
+        </html>
+      `);
+      previewWindow.document.close();
+    }
   }, []);
 
   return (
@@ -320,16 +394,6 @@ const TemplateSelection: React.FC = () => {
           <h3 className="text-lg font-medium text-gray-900 mb-2">No templates found</h3>
           <p className="text-gray-600">Try adjusting your search or category filter.</p>
         </div>
-      )}
-
-      {/* Template Preview Modal */}
-      {previewTemplate && (
-        <TemplatePreview
-          template={previewTemplate}
-          isOpen={isPreviewOpen}
-          onClose={closePreview}
-          onSelectTemplate={onSelectTemplate}
-        />
       )}
     </div>
   );

@@ -1,12 +1,13 @@
 "use client";
 import React, { useRef, useEffect } from "react";
 
-interface EmailTemplatePreviewProps {
+interface EmailTemplateThumbnailProps {
   content: string;
   subject: string;
+  onClick?: () => void;
 }
 
-const EmailTemplatePreview: React.FC<EmailTemplatePreviewProps> = ({ content, subject }) => {
+const EmailTemplateThumbnail: React.FC<EmailTemplateThumbnailProps> = ({ content, subject, onClick }) => {
   const thumbnailRef = useRef<HTMLIFrameElement>(null);
 
   // Set iframe content when component mounts or content changes
@@ -78,52 +79,43 @@ const EmailTemplatePreview: React.FC<EmailTemplatePreviewProps> = ({ content, su
       `);
       previewWindow.document.close();
     }
+    if (onClick) onClick();
   };
 
   return (
-    <>
-      {/* Thumbnail Preview */}
-      <div
-        className="relative group cursor-pointer bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow duration-200"
-        onClick={openPreviewWindow}
-      >
-        {/* Thumbnail Container */}
-        <div className="relative h-48 overflow-hidden bg-gray-50">
-          <iframe
-            ref={thumbnailRef}
-            title={`Preview: ${subject}`}
-            className="w-full h-full pointer-events-none transform scale-50 origin-top-left"
-            style={{
-              width: "200%",
-              height: "200%",
-            }}
-            sandbox="allow-same-origin"
-          />
-          {/* Overlay on hover */}
-          <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-200 flex items-center justify-center">
-            <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-              <div className="bg-white rounded-full p-3 shadow-lg">
-                <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                  />
-                </svg>
-              </div>
-            </div>
+    <div
+      className="relative group cursor-pointer bg-white border border-gray-200 rounded overflow-hidden hover:shadow-md transition-shadow duration-200 w-20 h-16"
+      onClick={openPreviewWindow}
+      title="Click to preview in new window"
+    >
+      {/* Thumbnail Container */}
+      <div className="relative w-full h-full overflow-hidden bg-gray-50">
+        <iframe
+          ref={thumbnailRef}
+          title={`Thumbnail: ${subject}`}
+          className="w-full h-full pointer-events-none transform scale-[0.25] origin-top-left"
+          style={{
+            width: "400%",
+            height: "400%",
+          }}
+          sandbox="allow-same-origin"
+        />
+        {/* Overlay on hover */}
+        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all duration-200 flex items-center justify-center">
+          <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+              />
+            </svg>
           </div>
         </div>
-
-        {/* Template Info */}
-        <div className="p-3 border-t border-gray-100">
-          <h3 className="text-sm font-medium text-gray-900 truncate">{subject}</h3>
-          <p className="text-xs text-gray-500 mt-1">Click to open preview</p>
-        </div>
       </div>
-    </>
+    </div>
   );
 };
 
-export default EmailTemplatePreview;
+export default EmailTemplateThumbnail;
