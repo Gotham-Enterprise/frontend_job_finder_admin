@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { NewsletterTemplate } from "../types";
 import { unlayerApi, UnlayerTemplate } from "@/services/api/unlayer";
+import { getNewsletters } from "@/services/api/newsletterService";
 import { useAppDispatch } from "@/store";
 import {
   setSelectedTemplate,
@@ -15,6 +16,7 @@ import SimpleTemplateThumbnail from "../components/SimpleTemplateThumbnail";
 // Template categories for the new email templates
 const templateCategories = [
   { id: "all", name: "All Templates" },
+  { id: "saved", name: "Saved Templates" },
   { id: "welcome", name: "Welcome" },
   { id: "newsletter", name: "Newsletter" },
   { id: "product", name: "Product" },
@@ -30,37 +32,45 @@ const TemplateSelection: React.FC = () => {
   const [previewTemplate, setPreviewTemplate] = useState<NewsletterTemplate | null>(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [apiTemplates, setApiTemplates] = useState<UnlayerTemplate[]>([]);
+  const [savedTemplates, setSavedTemplates] = useState<any[]>([]);
   const [isLoadingTemplates, setIsLoadingTemplates] = useState(true);
   const [templateError, setTemplateError] = useState<string | null>(null);
 
-  // Fetch templates from Unlayer API on mount
+  // Fetch templates from both Unlayer API and saved templates on mount
   useEffect(() => {
     const fetchTemplates = async () => {
       setIsLoadingTemplates(true);
       setTemplateError(null);
       try {
         console.log("🔄 Starting to fetch templates...");
-        const response = await unlayerApi.getTemplates();
-        console.log("📦 API Response received:", response);
 
-        if (response.success && response.data && response.data.length > 0) {
-          console.log(`✅ Setting ${response.data.length} templates from Unlayer API`);
-          setApiTemplates(response.data);
-          console.log(`✅ Loaded ${response.data.length} templates from Unlayer API in Step 1`);
+        // Fetch Unlayer templates
+        const unlayerResponse = await unlayerApi.getTemplates();
+        console.log("📦 Unlayer API Response received:", unlayerResponse);
+
+        if (unlayerResponse.success && unlayerResponse.data && unlayerResponse.data.length > 0) {
+          console.log(`✅ Setting ${unlayerResponse.data.length} templates from Unlayer API`);
+          setApiTemplates(unlayerResponse.data);
         } else {
-          // Use mock templates as fallback when API fails
           console.warn("⚠️ Unlayer API returned no templates, using mock templates as fallback");
-          console.warn("Response details:", { success: response.success, dataLength: response.data?.length });
           const mockResponse = unlayerApi.getMockTemplates();
           setApiTemplates(mockResponse.data);
-          console.log(`✅ Loaded ${mockResponse.data.length} mock templates as fallback`);
+        }
+
+        // Fetch saved templates (those with isTemplate === true)
+        try {
+          const newsletters = await getNewsletters();
+          console.log("📧 All newsletters from API:", newsletters);
+          const templates = newsletters.filter((n: any) => n.isTemplate === true);
+          console.log(`✅ Found ${templates.length} saved templates`);
+          setSavedTemplates(templates);
+        } catch (error) {
+          console.error("❌ Error fetching saved templates:", error);
         }
       } catch (error) {
         console.error("❌ Error fetching templates, using mock templates:", error);
-        // Use mock templates as fallback
         const mockResponse = unlayerApi.getMockTemplates();
         setApiTemplates(mockResponse.data);
-        console.log(`✅ Loaded ${mockResponse.data.length} mock templates as fallback`);
       } finally {
         setIsLoadingTemplates(false);
       }
@@ -71,7 +81,9 @@ const TemplateSelection: React.FC = () => {
 
   // Convert API templates to newsletter template format
   const newsletterTemplates: NewsletterTemplate[] = useMemo(() => {
-    console.log(`🔄 Building newsletterTemplates with ${apiTemplates.length} API templates`);
+    console.log(
+      `🔄 Building newsletterTemplates with ${apiTemplates.length} Unlayer templates and ${savedTemplates.length} saved templates`
+    );
 
     const templates = [
       {
@@ -83,21 +95,37 @@ const TemplateSelection: React.FC = () => {
         content: "",
         isCustom: true,
       },
+      // Add saved templates first
+      ...savedTemplates.map((template) => ({
+        id: `saved-${template.id}`,
+        name: template.subject || "Untitled Template",
+        category: "saved" as const,
+        thumbnail: "/images/templates/blank-template.png",
+        description: `Saved template: ${template.subject}`,
+        content: template.content || "",
+        design: template.design,
+        isCustom: false,
+        isSaved: true,
+      })),
+      // Add Unlayer API templates
       ...apiTemplates.map((template) => ({
         id: template.id,
         name: template.name,
-        category: "newsletter" as const, // Map all API templates to newsletter category
-        thumbnail: "/images/templates/blank-template.png", // Unlayer doesn't provide thumbnails
+        category: "newsletter" as const,
+        thumbnail: "/images/templates/blank-template.png",
         description: `Template: ${template.name}`,
         content: "",
-        design: template.design, // Store the design JSON
+        design: template.design,
         isCustom: false,
+        isSaved: false,
       })),
     ];
 
-    console.log(`✅ Built ${templates.length} total templates (1 blank + ${apiTemplates.length} API)`);
+    console.log(
+      `✅ Built ${templates.length} total templates (1 blank + ${savedTemplates.length} saved + ${apiTemplates.length} Unlayer)`
+    );
     return templates;
-  }, [apiTemplates]);
+  }, [apiTemplates, savedTemplates]);
 
   const filteredTemplates = useMemo(() => {
     let filtered = newsletterTemplates;

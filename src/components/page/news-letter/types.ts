@@ -1,12 +1,13 @@
 export interface NewsletterTemplate {
   id: string;
   name: string;
-  category: "engagement" | "welcome" | "event" | "product" | "newsletter" | "ecommerce";
+  category: "engagement" | "welcome" | "event" | "product" | "newsletter" | "ecommerce" | "saved";
   thumbnail: string;
   description: string;
   content: string;
   design?: any; // Email editor design JSON for loading into the editor
   isCustom?: boolean;
+  isSaved?: boolean;
 }
 
 export interface NewsletterData {

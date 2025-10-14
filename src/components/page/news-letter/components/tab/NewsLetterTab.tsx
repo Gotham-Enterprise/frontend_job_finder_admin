@@ -33,11 +33,21 @@ const NewsLetterTab = () => {
         setLoading(true);
         setError(null);
         const data = await getNewsletters();
+        console.log("📊 All newsletters from API:", data);
+        console.log("📊 Total newsletters:", data.length);
+        console.log(
+          "📊 isTemplate values:",
+          data.map((n) => ({ id: n.id, subject: n.subject, isTemplate: n.isTemplate }))
+        );
+
         // Filter to show only templates
         const templates = data.filter((newsletter) => newsletter.isTemplate === true);
+        console.log("📋 Filtered templates (isTemplate === true):", templates);
+        console.log("📋 Total templates:", templates.length);
+
         setNewsletters(templates);
       } catch (err) {
-        console.error("Failed to fetch newsletters:", err);
+        console.error("❌ Failed to fetch newsletters:", err);
         setError("Failed to load newsletters");
       } finally {
         setLoading(false);
