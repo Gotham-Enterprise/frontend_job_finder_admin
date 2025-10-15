@@ -38,9 +38,20 @@ interface NewsletterResponse {
   data: any;
 }
 
+interface PaginationMetaData {
+  page: number;
+  limit: number;
+  totalPages: number;
+  totalCount: number;
+  currentPageTotalItems: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+}
+
 interface NewslettersListResponse {
   success: boolean;
   data: Newsletter[];
+  metaData: PaginationMetaData;
 }
 
 export const createNewsletter = async (data: NewsletterData): Promise<NewsletterResponse> => {
@@ -119,12 +130,22 @@ export const updateNewsletter = async (id: string, data: Partial<NewsletterData>
   }
 };
 
-export const getNewsletters = async (status?: "DRAFT" | "SCHEDULED" | "SENT" | "ARCHIVED"): Promise<Newsletter[]> => {
+export const getNewsletters = async (
+  status?: "DRAFT" | "SCHEDULED" | "SENT" | "ARCHIVED",
+  page: number = 1,
+  limit: number = 10
+): Promise<NewslettersListResponse> => {
   try {
-    const url = status ? `/api/admin/newsletter/?status=${status}` : "/api/admin/newsletter/";
+    const params = new URLSearchParams();
+    if (status) params.append("status", status);
+    params.append("page", page.toString());
+    params.append("limit", limit.toString());
+
+    const url = `/api/admin/newsletter/?${params.toString()}`;
     const response = await apiGet<NewslettersListResponse>(url);
 
     console.log("📥 [GET ALL] Received newsletters:", response.data.length);
+    console.log("📊 [PAGINATION] Metadata:", response.metaData);
 
     // Backend stores design as JSON string, parse it back to object
     const newsletters = response.data.map((newsletter) => {
@@ -140,7 +161,10 @@ export const getNewsletters = async (status?: "DRAFT" | "SCHEDULED" | "SENT" | "
       return newsletter;
     });
 
-    return newsletters;
+    return {
+      ...response,
+      data: newsletters,
+    };
   } catch (error) {
     console.error("❌ [GET ALL] API Error:", error);
     throw error;

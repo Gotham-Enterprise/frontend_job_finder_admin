@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "../../../../ui/table";
 import { getNewsletters } from "@/services/api/newsletterService";
-import EmailTemplateThumbnail from "../EmailTemplateThumbnail";
+import Pagination from "../../../../tables/Pagination";
 
 interface Newsletter {
   id: string;
@@ -26,18 +26,22 @@ const NewsLetterTab = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const itemsPerPage = 5;
 
   useEffect(() => {
     const fetchNewsletters = async () => {
       try {
         setLoading(true);
         setError(null);
-        const data = await getNewsletters();
-        console.log("📊 All newsletters from API:", data);
-        console.log("📊 Total newsletters:", data.length);
+        const response = await getNewsletters(undefined, currentPage, itemsPerPage);
+        console.log("📊 All newsletters from API:", response.data);
+        console.log("📊 Total newsletters:", response.data.length);
+        console.log("📊 Pagination metadata:", response.metaData);
 
         // Log content details
-        data.forEach((n, index) => {
+        response.data.forEach((n, index) => {
           console.log(`Newsletter ${index + 1} - ${n.subject}:`, {
             hasContent: !!n.content,
             contentLength: n.content?.length || 0,
@@ -46,9 +50,8 @@ const NewsLetterTab = () => {
           });
         });
 
-        // Show ALL newsletters in the table (not just templates)
-        // This way you can see all your newsletters
-        setNewsletters(data);
+        setNewsletters(response.data);
+        setTotalPages(response.metaData.totalPages);
       } catch (err) {
         console.error("❌ Failed to fetch newsletters:", err);
         setError("Failed to load newsletters");
@@ -58,15 +61,25 @@ const NewsLetterTab = () => {
     };
 
     fetchNewsletters();
-  }, []);
+  }, [currentPage]);
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      month: "numeric",
-      day: "numeric",
-      year: "numeric",
-    });
+  const formatDate = (dateString: string | undefined) => {
+    if (!dateString) return "N/A";
+
+    try {
+      const date = new Date(dateString);
+      // Check if date is valid
+      if (isNaN(date.getTime())) return "N/A";
+
+      return date.toLocaleDateString("en-US", {
+        month: "numeric",
+        day: "numeric",
+        year: "numeric",
+      });
+    } catch (error) {
+      console.error("Error formatting date:", error);
+      return "N/A";
+    }
   };
 
   const toggleDropdown = (id: string) => {
@@ -283,11 +296,11 @@ const NewsLetterTab = () => {
 
                   {/* Dropdown Menu */}
                   {openDropdownId === newsletter.id && (
-                    <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50">
+                    <div className="absolute right-0 mt-2 w-48 rounded-lg shadow-lg bg-white border border-gray-200 z-50">
                       <div className="py-1" role="menu">
                         <button
                           onClick={() => handleEdit(newsletter.id)}
-                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 flex items-center gap-2"
+                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path
@@ -302,7 +315,7 @@ const NewsLetterTab = () => {
 
                         <button
                           onClick={() => handlePreview(newsletter)}
-                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 flex items-center gap-2"
+                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path
@@ -323,7 +336,7 @@ const NewsLetterTab = () => {
 
                         <button
                           onClick={() => handlePublish(newsletter.id)}
-                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 flex items-center gap-2"
+                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path
@@ -338,7 +351,7 @@ const NewsLetterTab = () => {
 
                         <button
                           onClick={() => handleArchive(newsletter.id)}
-                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 flex items-center gap-2"
+                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path
@@ -359,6 +372,13 @@ const NewsLetterTab = () => {
           ))}
         </TableBody>
       </Table>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="mt-6 flex justify-end pr-3">
+          <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
+        </div>
+      )}
     </div>
   );
 };

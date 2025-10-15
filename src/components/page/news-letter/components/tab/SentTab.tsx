@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "../../../../ui/table";
 import { getNewsletters } from "@/services/api/newsletterService";
+import Pagination from "../../../../tables/Pagination";
 
 interface Newsletter {
   id: string;
@@ -25,17 +26,19 @@ const SentTab = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const itemsPerPage = 5;
 
   useEffect(() => {
     const fetchNewsletters = async () => {
       try {
         setLoading(true);
         setError(null);
-        const data = await getNewsletters();
+        const response = await getNewsletters("SENT", currentPage, itemsPerPage);
 
-        const sentOnly = data.filter((newsletter) => newsletter.status === "SENT");
-
-        setNewsletters(sentOnly);
+        setNewsletters(response.data);
+        setTotalPages(response.metaData.totalPages);
       } catch (err) {
         console.error("❌ Failed to fetch newsletters:", err);
         setError("Failed to load newsletters");
@@ -45,7 +48,7 @@ const SentTab = () => {
     };
 
     fetchNewsletters();
-  }, []);
+  }, [currentPage]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -123,13 +126,23 @@ const SentTab = () => {
     setOpenDropdownId(null);
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      month: "numeric",
-      day: "numeric",
-      year: "numeric",
-    });
+  const formatDate = (dateString: string | undefined) => {
+    if (!dateString) return "N/A";
+
+    try {
+      const date = new Date(dateString);
+      // Check if date is valid
+      if (isNaN(date.getTime())) return "N/A";
+
+      return date.toLocaleDateString("en-US", {
+        month: "numeric",
+        day: "numeric",
+        year: "numeric",
+      });
+    } catch (error) {
+      console.error("Error formatting date:", error);
+      return "N/A";
+    }
   };
 
   if (loading) {
@@ -242,11 +255,11 @@ const SentTab = () => {
 
                   {/* Dropdown Menu */}
                   {openDropdownId === newsletter.id && (
-                    <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50">
+                    <div className="absolute right-0 mt-2 w-48 rounded-lg shadow-lg bg-white border border-gray-200 z-50">
                       <div className="py-1" role="menu">
                         <button
                           onClick={() => handlePreview(newsletter)}
-                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 flex items-center gap-2"
+                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path
@@ -273,6 +286,13 @@ const SentTab = () => {
           ))}
         </TableBody>
       </Table>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="mt-6 flex justify-end pr-3">
+          <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
+        </div>
+      )}
     </div>
   );
 };
