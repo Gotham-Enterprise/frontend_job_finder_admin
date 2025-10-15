@@ -130,6 +130,29 @@ export const updateNewsletter = async (id: string, data: Partial<NewsletterData>
   }
 };
 
+export const getNewsletterById = async (id: string): Promise<NewsletterResponse> => {
+  try {
+    const response = await apiGet<NewsletterResponse>(`/api/admin/newsletter/${id}`);
+    console.log("📥 [GET BY ID] Received newsletter:", id);
+
+    // Backend stores design as JSON string, parse it back to object
+    if (response.data?.design && typeof response.data.design === "string") {
+      try {
+        response.data.design = JSON.parse(response.data.design);
+        console.log(`✅ Parsed design for newsletter: ${id}`);
+      } catch (error) {
+        console.error(`❌ Failed to parse design for newsletter: ${id}`);
+        response.data.design = {};
+      }
+    }
+
+    return response;
+  } catch (error) {
+    console.error("❌ [GET BY ID] API Error:", error);
+    throw error;
+  }
+};
+
 export const getNewsletters = async (
   status?: "DRAFT" | "SCHEDULED" | "SENT" | "ARCHIVED",
   page: number = 1,

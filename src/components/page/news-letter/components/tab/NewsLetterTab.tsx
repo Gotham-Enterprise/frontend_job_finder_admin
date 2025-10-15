@@ -1,5 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "../../../../ui/table";
 import { getNewsletters } from "@/services/api/newsletterService";
 import Pagination from "../../../../tables/Pagination";
@@ -22,6 +23,7 @@ interface Newsletter {
 }
 
 const NewsLetterTab = () => {
+  const router = useRouter();
   const [newsletters, setNewsletters] = useState<Newsletter[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -146,8 +148,7 @@ const NewsLetterTab = () => {
   };
 
   const handleEdit = (id: string) => {
-    // TODO: Navigate to edit page or open edit modal
-    console.log("Edit newsletter:", id);
+    router.push(`/admin/news-letter/edit/${id}`);
     setOpenDropdownId(null);
   };
 
