@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useRef, useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import EmailEditor, { EditorRef, EmailEditorProps } from "react-email-editor";
 import { useAppDispatch, useAppSelector } from "@/store";
 import {
@@ -22,7 +23,10 @@ interface ReactEmailEditorProps {
 const ReactEmailEditor: React.FC<ReactEmailEditorProps> = ({ onDesignLoad, onLoad }) => {
   const emailEditorRef = useRef<EditorRef>(null);
   const dispatch = useAppDispatch();
+  const router = useRouter();
   const newsletterData = useAppSelector((state) => state.newsletter.data);
+  const isEditMode = useAppSelector((state) => state.newsletter.isEditMode);
+  const editingNewsletterId = useAppSelector((state) => state.newsletter.editingNewsletterId);
   const { addToast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
@@ -369,8 +373,9 @@ const ReactEmailEditor: React.FC<ReactEmailEditorProps> = ({ onDesignLoad, onLoa
         hasDesign: !!design,
         designType: typeof design,
         designKeys: design ? Object.keys(design) : [],
+        isEditMode,
+        editingNewsletterId,
       });
-      console.log("📋 Full design object:", design);
 
       // Validate content before continuing
       if (!html || html.trim().length === 0) {
@@ -386,21 +391,63 @@ const ReactEmailEditor: React.FC<ReactEmailEditorProps> = ({ onDesignLoad, onLoa
       dispatch(setContent(html));
       dispatch(setDesign(design));
 
-      console.log("✅ Content and design saved to Redux", {
-        contentLength: html.length,
-        designSaved: !!design,
-      });
+      // If in edit mode, update the newsletter and redirect back to list
+      if (isEditMode && editingNewsletterId) {
+        handleUpdateNewsletter(html, design);
+      } else {
+        // Create mode: Mark step as completed and navigate to next step
+        dispatch(completeStep(2));
+        dispatch(setCurrentStep(3));
 
-      // Mark step as completed and navigate
-      dispatch(completeStep(2));
-      dispatch(setCurrentStep(3));
+        addToast({
+          variant: "success",
+          title: "Success",
+          message: "Email content saved! Moving to next step.",
+        });
+      }
+    });
+  };
+
+  const handleUpdateNewsletter = async (html: string, design: any) => {
+    if (!editingNewsletterId) return;
+
+    try {
+      setIsSaving(true);
+
+      await updateNewsletter(editingNewsletterId, {
+        content: html,
+        design: design,
+        subject: newsletterData.subject,
+        fromName: newsletterData.fromName,
+        fromAddress: newsletterData.fromAddress,
+        sendTo: newsletterData.sendTo,
+        dontSendTo: newsletterData.dontSendTo,
+        status: newsletterData.status,
+        scheduledAt: newsletterData.scheduledAt,
+        scheduledTimezone: newsletterData.scheduledTimezone,
+        isTemplate: newsletterData.isTemplate,
+      });
 
       addToast({
         variant: "success",
         title: "Success",
-        message: "Email content saved! Moving to next step.",
+        message: "Newsletter updated successfully!",
       });
-    });
+
+      // Redirect back to newsletter list
+      setTimeout(() => {
+        router.push("/admin/news-letter");
+      }, 500);
+    } catch (error) {
+      console.error("Error updating newsletter:", error);
+      addToast({
+        variant: "error",
+        title: "Error",
+        message: "Failed to update newsletter",
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleSaveTemplate = () => {

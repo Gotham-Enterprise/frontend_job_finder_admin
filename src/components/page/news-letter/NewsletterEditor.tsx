@@ -3,7 +3,13 @@
 import React, { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useAppDispatch } from "@/store";
-import { updateNewsletterData, setCurrentStep, setDesign, setContent } from "@/store/slices/newsletterSlice";
+import {
+  updateNewsletterData,
+  setCurrentStep,
+  setDesign,
+  setContent,
+  setEditMode,
+} from "@/store/slices/newsletterSlice";
 import { getNewsletterById } from "@/services/api/newsletterService";
 import NewsletterSteps from "./components/NewsletterSteps";
 import EditStep from "./steps/EditStep";
@@ -50,6 +56,9 @@ const NewsletterEditor: React.FC = () => {
 
         // Design is already parsed by the service
         setNewsletter(newsletterData);
+
+        // Set edit mode
+        dispatch(setEditMode({ isEditMode: true, newsletterId: newsletterId }));
 
         // Set newsletter data in Redux store
         dispatch(

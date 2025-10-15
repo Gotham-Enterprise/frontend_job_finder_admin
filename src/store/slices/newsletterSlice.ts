@@ -38,6 +38,8 @@ interface NewsletterState {
   data: NewsletterData;
   isSubmitting: boolean;
   error: string | null;
+  isEditMode: boolean;
+  editingNewsletterId: string | null;
 }
 
 const initialSteps: NewsletterStep[] = [
@@ -97,6 +99,8 @@ const initialState: NewsletterState = {
   data: initialData,
   isSubmitting: false,
   error: null,
+  isEditMode: false,
+  editingNewsletterId: null,
 };
 
 const newsletterSlice = createSlice({
@@ -206,6 +210,12 @@ const newsletterSlice = createSlice({
       };
     },
 
+    // Edit mode actions
+    setEditMode: (state, action: PayloadAction<{ isEditMode: boolean; newsletterId?: string | null }>) => {
+      state.isEditMode = action.payload.isEditMode;
+      state.editingNewsletterId = action.payload.newsletterId || null;
+    },
+
     // Submission states
     setSubmitting: (state, action: PayloadAction<boolean>) => {
       state.isSubmitting = action.payload;
@@ -232,6 +242,7 @@ export const {
   setSendToDetails,
   setScheduleDetails,
   updateNewsletterData,
+  setEditMode,
   setSubmitting,
   setError,
   resetNewsletter,
