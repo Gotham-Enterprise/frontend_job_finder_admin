@@ -1,27 +1,37 @@
-import { useMemo, useCallback, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useCareers, useDeleteCareer, useCreateCareer } from './useCareers';
-import type { Career, CareerTableData, CareerFilters } from '@/services/types/CareersTypes';
+import { useMemo, useCallback, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useCareers, useDeleteCareer, useCreateCareer } from "./useCareers";
+import type { Career, CareerTableData, CareerFilters } from "@/services/types/CareersTypes";
 
 export const useCareersLogic = () => {
   const router = useRouter();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  
+
   const [activeFilters, setActiveFilters] = useState<CareerFilters>({
-  limit: 5,
+    limit: 5,
     page: 1,
-    keywords: '',
+    keywords: "",
     isActive: true,
   });
   const [closedFilters, setClosedFilters] = useState<CareerFilters>({
-  limit: 5,
+    limit: 5,
     page: 1,
-    keywords: '',
+    keywords: "",
     isActive: false,
   });
 
-  const { data: activeResponse, isLoading: loadingActive, error: errorActive, refetch: refetchActive } = useCareers(activeFilters);
-  const { data: closedResponse, isLoading: loadingClosed, error: errorClosed, refetch: refetchClosed } = useCareers(closedFilters);
+  const {
+    data: activeResponse,
+    isLoading: loadingActive,
+    error: errorActive,
+    refetch: refetchActive,
+  } = useCareers(activeFilters);
+  const {
+    data: closedResponse,
+    isLoading: loadingClosed,
+    error: errorClosed,
+    refetch: refetchClosed,
+  } = useCareers(closedFilters);
 
   // Mutation hooks, DELETE and CREATE
   const deleteCareerMutation = useDeleteCareer();
@@ -39,29 +49,31 @@ export const useCareersLogic = () => {
         id: career.id,
         title: career.jobTitle,
         // Always leave pay empty so UI chooses best salary presentation
-        pay: '',
-        payPeriod: '',
+        pay: "",
+        payPeriod: "",
         type: career.jobType,
         location: `${career.city}, ${career.state}`,
         applicantCount: career.applicantsCount ?? (career.applicants ? career.applicants.length : 0),
+        views: career.views ?? 0,
         postedDate: formatPostedDate(career.createdAt),
-        status: career.isActive ? 'active' : 'closed' as 'active' | 'closed' | 'draft',
+        status: career.isActive ? "active" : ("closed" as "active" | "closed" | "draft"),
         salaryRangeStart: rawStart > 0 ? rawStart : undefined,
         salaryRangeEnd: rawEnd > 0 ? rawEnd : undefined,
-        salaryRange: hasRange ? (career.salaryRange || `${rawStart}-${rawEnd}`) : undefined,
-  createdAtISO: career.createdAt,
-  createdAtTs: Date.parse(career.createdAt),
+        salaryRange: hasRange ? career.salaryRange || `${rawStart}-${rawEnd}` : undefined,
+        createdAtISO: career.createdAt,
+        createdAtTs: Date.parse(career.createdAt),
       };
     };
 
-    const active = activeList.map(transformCareer)
+    const active = activeList
+      .map(transformCareer)
       .sort((a: CareerTableData, b: CareerTableData) => (b.createdAtTs || 0) - (a.createdAtTs || 0));
-    const closed = closedList.map(transformCareer)
+    const closed = closedList
+      .map(transformCareer)
       .sort((a: CareerTableData, b: CareerTableData) => (b.createdAtTs || 0) - (a.createdAtTs || 0));
 
     return { activeJobs: active, closedJobs: closed };
   }, [activeResponse, closedResponse]);
-
 
   // Open modal instead of navigating to a new page
   const createJob = useCallback(() => {
@@ -72,32 +84,45 @@ export const useCareersLogic = () => {
     setIsCreateModalOpen(false);
   }, []);
 
-  const viewJobDetails = useCallback((jobId: string) => {
-    router.push(`/admin/careers/job-details/${jobId}`);
-  }, [router]);
+  const viewJobDetails = useCallback(
+    (jobId: string) => {
+      router.push(`/admin/careers/job-details/${jobId}`);
+    },
+    [router]
+  );
 
-  const editJob = useCallback((jobId: string) => {
-    router.push(`/admin/careers/${jobId}/edit`);
-  }, [router]);
+  const editJob = useCallback(
+    (jobId: string) => {
+      router.push(`/admin/careers/${jobId}/edit`);
+    },
+    [router]
+  );
 
-  const deleteJob = useCallback(async (jobId: string) => {
-    if (confirm('Are you sure you want to delete this job?')) {
-      try {
-        await deleteCareerMutation.mutateAsync(jobId);
-        //TODO: after deleting make 
-        // Call to invalidate cached data...
-      } catch (err) {
-        console.error('Failed to delete job:', err);
-        // Error handling is done in the mutation hook
+  const deleteJob = useCallback(
+    async (jobId: string) => {
+      if (confirm("Are you sure you want to delete this job?")) {
+        try {
+          await deleteCareerMutation.mutateAsync(jobId);
+          //TODO: after deleting make
+          // Call to invalidate cached data...
+        } catch (err) {
+          console.error("Failed to delete job:", err);
+          // Error handling is done in the mutation hook
+        }
       }
-    }
-  }, [deleteCareerMutation]);
+    },
+    [deleteCareerMutation]
+  );
 
-  const viewApplicants = useCallback((jobId: string) => {
-    router.push(`/admin/careers/job-details/${jobId}`);
-  }, [router]);
+  const viewApplicants = useCallback(
+    (jobId: string) => {
+      router.push(`/admin/careers/job-details/${jobId}`);
+    },
+    [router]
+  );
 
-  const isLoadingState = loadingActive || loadingClosed || deleteCareerMutation.isPending || createCareerMutation.isPending;
+  const isLoadingState =
+    loadingActive || loadingClosed || deleteCareerMutation.isPending || createCareerMutation.isPending;
 
   const onSearch = useCallback((q: string) => {
     setActiveFilters((prev) => ({ ...prev, keywords: q, page: 1 }));
@@ -137,8 +162,11 @@ export const useCareersLogic = () => {
     activeJobs,
     closedJobs,
     isLoading: isLoadingState,
-  error: errorActive || errorClosed,
-  refetch: () => { refetchActive(); refetchClosed(); },
+    error: errorActive || errorClosed,
+    refetch: () => {
+      refetchActive();
+      refetchClosed();
+    },
     createJob,
     isCreateModalOpen,
     closeCreateModal,
@@ -147,19 +175,19 @@ export const useCareersLogic = () => {
     deleteJob,
     viewApplicants,
     onSearch,
-  onPageSizeChange,
-  // pagination controls and meta
-  activeMeta: activeResponse?.metaData,
-  closedMeta: closedResponse?.metaData,
-  nextActivePage,
-  prevActivePage,
-  nextClosedPage,
-  prevClosedPage,
+    onPageSizeChange,
+    // pagination controls and meta
+    activeMeta: activeResponse?.metaData,
+    closedMeta: closedResponse?.metaData,
+    nextActivePage,
+    prevActivePage,
+    nextClosedPage,
+    prevClosedPage,
     // Additional state for UI feedback
     isDeleting: deleteCareerMutation.isPending,
     isCreating: createCareerMutation.isPending,
     // Expose metadata for pagination if needed
-  metaData: undefined,
+    metaData: undefined,
   };
 };
 
@@ -172,11 +200,11 @@ function formatPostedDate(dateString: string): string {
   const diffInDays = Math.floor(diffInHours / 24);
 
   if (diffInHours < 1) {
-    return 'few minutes ago';
+    return "few minutes ago";
   } else if (diffInHours < 24) {
-    return `${diffInHours} hour${diffInHours > 1 ? 's' : ''} ago`;
+    return `${diffInHours} hour${diffInHours > 1 ? "s" : ""} ago`;
   } else if (diffInDays < 7) {
-    return `${diffInDays} day${diffInDays > 1 ? 's' : ''} ago`;
+    return `${diffInDays} day${diffInDays > 1 ? "s" : ""} ago`;
   } else {
     return date.toLocaleDateString();
   }

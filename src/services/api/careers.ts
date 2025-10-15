@@ -1,4 +1,4 @@
-import { apiGet, apiPost, apiPut, apiPatch, apiDelete } from './apiUtils';
+import { apiGet, apiPost, apiPut, apiPatch, apiDelete } from "./apiUtils";
 
 // Career interfaces based on backend structure
 export interface Career {
@@ -23,7 +23,7 @@ export interface Career {
   description?: string; // legacy
   requirements?: string[];
   benefits?: string[];
-  status: 'active' | 'closed' | 'draft';
+  status: "active" | "closed" | "draft";
   isActive: boolean;
   postedDate: string;
   applicantCount: number;
@@ -48,7 +48,7 @@ export interface CareerFilters {
   limit?: number;
   keywords?: string;
   department?: string;
-  status?: 'active' | 'closed' | 'draft';
+  status?: "active" | "closed" | "draft";
   isActive?: boolean; // backend expects boolean flag
 }
 
@@ -113,37 +113,47 @@ export const careersApi = {
   // GET /api/admin/careers - Get all careers with filtering
   async getCareers(filters: CareerFilters = {}): Promise<CareerResponse> {
     const queryParams = new URLSearchParams();
-    
-    if (filters.page) queryParams.append('page', filters.page.toString());
-    if (filters.limit) queryParams.append('limit', filters.limit.toString());
-    if (filters.keywords) queryParams.append('keywords', filters.keywords);
-    if (filters.department) queryParams.append('department', filters.department);
-    if (filters.status) queryParams.append('status', filters.status);
-  if (typeof filters.isActive === 'boolean') queryParams.append('isActive', String(filters.isActive));
+
+    if (filters.page) queryParams.append("page", filters.page.toString());
+    if (filters.limit) queryParams.append("limit", filters.limit.toString());
+    if (filters.keywords) queryParams.append("keywords", filters.keywords);
+    if (filters.department) queryParams.append("department", filters.department);
+    if (filters.status) queryParams.append("status", filters.status);
+    if (typeof filters.isActive === "boolean") queryParams.append("isActive", String(filters.isActive));
 
     const endpoint = `/api/admin/careers?${queryParams.toString()}`;
-    
+
     return apiGet<CareerResponse>(endpoint);
   },
 
   // GET /api/admin/careers/:id - Get career by ID (includes applicants)
-  async getCareerById(id: string, page: number = 1, limit: number = 10, keywords: string = ''): Promise<CareerDetailsResponse> {
+  async getCareerById(
+    id: string,
+    page: number = 1,
+    limit: number = 10,
+    keywords: string = "",
+    dontCountView: string = "true"
+  ): Promise<CareerDetailsResponse> {
     const params = new URLSearchParams();
-    if (page > 1) params.append('page', page.toString());
-    if (limit !== 10) params.append('limit', limit.toString());
-    if (keywords) params.append('keywords', keywords);
-    
-    const query = params.toString() ? `?${params.toString()}` : '';
+    if (page > 1) params.append("page", page.toString());
+    if (limit !== 10) params.append("limit", limit.toString());
+    if (keywords) params.append("keywords", keywords);
+    if (dontCountView) params.append("dontCountView", dontCountView);
+
+    const query = params.toString() ? `?${params.toString()}` : "";
     return apiGet<CareerDetailsResponse>(`/api/admin/careers/${id}${query}`);
   },
 
   // POST /api/admin/careers - Create new career
   async createCareer(payload: CreateCareerPayload): Promise<{ success: boolean; data: Career; message?: string }> {
-    return apiPost<{ success: boolean; data: Career; message?: string }>('/api/admin/careers', payload);
+    return apiPost<{ success: boolean; data: Career; message?: string }>("/api/admin/careers", payload);
   },
 
   // PUT /api/admin/careers/:id - Update career
-  async updateCareer(id: string, payload: UpdateCareerPayload): Promise<{ success: boolean; data: Career; message?: string }> {
+  async updateCareer(
+    id: string,
+    payload: UpdateCareerPayload
+  ): Promise<{ success: boolean; data: Career; message?: string }> {
     return apiPut<{ success: boolean; data: Career; message?: string }>(`/api/admin/careers/${id}`, payload);
   },
 
@@ -168,29 +178,45 @@ export const careersApi = {
   },
 
   // PATCH /api/admin/careers/:id/status - Update career status
-  async updateCareerStatus(id: string, status: 'active' | 'closed' | 'draft'): Promise<{ success: boolean; data: Career; message?: string }> {
-    return apiPatch<{ success: boolean; data: Career; message?: string }>(`/api/admin/careers/${id}/status`, { status });
+  async updateCareerStatus(
+    id: string,
+    status: "active" | "closed" | "draft"
+  ): Promise<{ success: boolean; data: Career; message?: string }> {
+    return apiPatch<{ success: boolean; data: Career; message?: string }>(`/api/admin/careers/${id}/status`, {
+      status,
+    });
   },
 
   // PATCH /api/admin/careers/:applicantId/status - Update applicant status
-  async updateApplicantStatus(applicantId: string, status: 'PENDING' | 'QUALIFIED' | 'NOT_QUALIFIED'): Promise<{ success: boolean; data: any; message?: string }> {
-    return apiPatch<{ success: boolean; data: any; message?: string }>(`/api/admin/careers/${applicantId}/status`, { status });
+  async updateApplicantStatus(
+    applicantId: string,
+    status: "PENDING" | "QUALIFIED" | "NOT_QUALIFIED"
+  ): Promise<{ success: boolean; data: any; message?: string }> {
+    return apiPatch<{ success: boolean; data: any; message?: string }>(`/api/admin/careers/${applicantId}/status`, {
+      status,
+    });
   },
 
   // Get dropdown options (if needed)
-  async getDepartments(): Promise<{ success: boolean; data: Array<{ id: string; name: string; units?: Array<{ id: string; name: string }> }> }> {
-    return apiGet<{ success: boolean; data: Array<{ id: string; name: string; units?: Array<{ id: string; name: string }> }> }>('/api/careers/department');
+  async getDepartments(): Promise<{
+    success: boolean;
+    data: Array<{ id: string; name: string; units?: Array<{ id: string; name: string }> }>;
+  }> {
+    return apiGet<{
+      success: boolean;
+      data: Array<{ id: string; name: string; units?: Array<{ id: string; name: string }> }>;
+    }>("/api/careers/department");
   },
 
   async getLocations(): Promise<{ success: boolean; data: Array<{ id: string; name: string }> }> {
-    return apiGet<{ success: boolean; data: Array<{ id: string; name: string }> }>('/api/careers/location');
+    return apiGet<{ success: boolean; data: Array<{ id: string; name: string }> }>("/api/careers/location");
   },
 
   async getJobTypes(): Promise<{ success: boolean; data: Array<{ id: string; name: string }> }> {
-    return apiGet<{ success: boolean; data: Array<{ id: string; name: string }> }>('/api/careers/jobType');
+    return apiGet<{ success: boolean; data: Array<{ id: string; name: string }> }>("/api/careers/jobType");
   },
 
   async getWorkPlaceTypes(): Promise<{ success: boolean; data: Array<{ id: string; name: string }> }> {
-    return apiGet<{ success: boolean; data: Array<{ id: string; name: string }> }>('/api/careers/workPlaceType');
+    return apiGet<{ success: boolean; data: Array<{ id: string; name: string }> }>("/api/careers/workPlaceType");
   },
 };

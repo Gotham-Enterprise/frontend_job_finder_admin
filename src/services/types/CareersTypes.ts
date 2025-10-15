@@ -6,7 +6,7 @@ import type {
   CreateCareerPayload,
   UpdateCareerPayload,
   CareerApplicantResponse,
-} from '../api/careers';
+} from "../api/careers";
 
 export type {
   Career,
@@ -37,14 +37,15 @@ export interface CareerTableData {
   type: string;
   location: string;
   applicantCount: number;
+  views: number;
   postedDate: string;
-  status: 'active' | 'closed' | 'draft';
+  status: "active" | "closed" | "draft";
   // Optional salary range fields (added for displaying when pay/payPeriod not set)
   salaryRangeStart?: number;
   salaryRangeEnd?: number;
   salaryRange?: string; // combined string from backend if present
   createdAtISO?: string; // raw ISO date for sorting
-  createdAtTs?: number;  // timestamp for efficient sorting
+  createdAtTs?: number; // timestamp for efficient sorting
 }
 
 export type CareerFormData = CreateCareerPayload & {
