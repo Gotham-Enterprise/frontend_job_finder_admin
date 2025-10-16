@@ -67,13 +67,63 @@ const SimpleTemplateThumbnail: React.FC<SimpleTemplateThumbnailProps> = ({ templ
               </button>
             </div>
           </div>
-        ) : (
+        ) : isLoadingThumbnail ? (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-10 w-10 border-b-4 border-primary mx-auto mb-2"></div>
+              <p className="text-xs text-gray-500">Loading preview...</p>
+            </div>
+          </div>
+        ) : thumbnailHtml ? (
           <>
             <div
-              className="h-full w-full transform scale-75 origin-top-left"
-              dangerouslySetInnerHTML={{ __html: template.content }}
-              style={{ width: "133%", height: "133%", fontSize: "12px", lineHeight: "1.2" }}
+              className="h-full w-full transform scale-[0.15] origin-top-left"
+              dangerouslySetInnerHTML={{ __html: thumbnailHtml }}
+              style={{
+                width: "667%",
+                height: "667%",
+                pointerEvents: "none",
+              }}
             />
+
+            {/* Hover overlay with both buttons */}
+            <div className="absolute inset-0 bg-black bg-opacity-10 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
+              <div className="flex space-x-3">
+                <button
+                  onClick={onSelect}
+                  className="bg-primary text-white px-4 py-2 rounded-lg font-medium hover:bg-primary/90 transition-colors transform translate-y-2 group-hover:translate-y-0 duration-200"
+                >
+                  Use Template
+                </button>
+                <button
+                  onClick={onPreview}
+                  className="bg-white text-gray-800 px-4 py-2 rounded-lg font-medium hover:bg-gray-100 transition-colors transform translate-y-2 group-hover:translate-y-0 duration-200"
+                >
+                  Preview
+                </button>
+              </div>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="flex items-center justify-center h-full bg-gradient-to-br from-gray-100 to-gray-200">
+              <div className="text-center p-4">
+                <svg
+                  className="w-12 h-12 text-gray-400 mx-auto mb-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                  />
+                </svg>
+                <p className="text-xs text-gray-500">No preview available</p>
+              </div>
+            </div>
 
             {/* Hover overlay with both buttons */}
             <div className="absolute inset-0 bg-black bg-opacity-10 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">

@@ -213,61 +213,37 @@ const TemplateSelection: React.FC = () => {
       `;
     }
 
-    // Open in new window
-    const previewWindow = window.open("", "_blank", "width=800,height=600,scrollbars=yes,resizable=yes");
+    // Create full HTML document
+    const fullHtml = `
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Email Preview</title>
+        <style>
+          body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f3f4f6;
+          }
+        </style>
+      </head>
+      <body>
+        ${previewContent}
+      </body>
+      </html>
+    `;
+
+    // Create a Blob and open it in a new window
+    const blob = new Blob([fullHtml], { type: "text/html" });
+    const url = URL.createObjectURL(blob);
+    const previewWindow = window.open(url, "_blank", "width=800,height=600,scrollbars=yes,resizable=yes");
+
+    // Clean up the URL after a short delay
     if (previewWindow) {
-      previewWindow.document.write(`
-        <!DOCTYPE html>
-        <html lang="en">
-        <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>${template.name} - Email Preview</title>
-          <style>
-            body {
-              margin: 0;
-              padding: 20px;
-              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-              background: #f3f4f6;
-            }
-            .preview-header {
-              background: white;
-              padding: 16px 20px;
-              margin: -20px -20px 20px -20px;
-              border-bottom: 1px solid #e5e7eb;
-              box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            }
-            .preview-header h1 {
-              margin: 0;
-              font-size: 18px;
-              color: #111827;
-              font-weight: 600;
-            }
-            .preview-header p {
-              margin: 4px 0 0 0;
-              font-size: 14px;
-              color: #6b7280;
-            }
-            .email-content {
-              background: white;
-              border-radius: 8px;
-              box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-              overflow: hidden;
-            }
-          </style>
-        </head>
-        <body>
-          <div class="preview-header">
-            <h1>${template.name}</h1>
-            <p>Email Template Preview</p>
-          </div>
-          <div class="email-content">
-            ${previewContent}
-          </div>
-        </body>
-        </html>
-      `);
-      previewWindow.document.close();
+      setTimeout(() => URL.revokeObjectURL(url), 100);
     }
   }, []);
 
