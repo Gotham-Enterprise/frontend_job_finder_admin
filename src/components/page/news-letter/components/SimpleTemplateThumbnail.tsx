@@ -1,5 +1,6 @@
-﻿import React from "react";
+﻿import React, { useState, useEffect } from "react";
 import { NewsletterTemplate } from "../types";
+import { unlayerApi } from "@/services/api/unlayer";
 
 interface SimpleTemplateThumbnailProps {
   template: NewsletterTemplate;
@@ -8,6 +9,41 @@ interface SimpleTemplateThumbnailProps {
 }
 
 const SimpleTemplateThumbnail: React.FC<SimpleTemplateThumbnailProps> = ({ template, onSelect, onPreview }) => {
+  const [thumbnailHtml, setThumbnailHtml] = useState<string>("");
+  const [isLoadingThumbnail, setIsLoadingThumbnail] = useState(false);
+
+  // Generate HTML thumbnail when component mounts or template changes
+  useEffect(() => {
+    const generateThumbnail = async () => {
+      // Skip for blank template
+      if (template.id === "blank") {
+        return;
+      }
+
+      // Use existing content if available
+      if (template.content) {
+        setThumbnailHtml(template.content);
+        return;
+      }
+
+      // Generate HTML from design JSON
+      if (template.design) {
+        setIsLoadingThumbnail(true);
+        try {
+          const result = await unlayerApi.exportHtml(template.design);
+          if (result && result.html) {
+            setThumbnailHtml(result.html);
+          }
+        } catch (error) {
+          console.error("Error generating thumbnail HTML:", error);
+        } finally {
+          setIsLoadingThumbnail(false);
+        }
+      }
+    };
+
+    generateThumbnail();
+  }, [template.id, template.content, template.design]);
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 hover:shadow-lg transition-all duration-200 group">
       <div className="h-80 overflow-hidden bg-gray-50 relative">

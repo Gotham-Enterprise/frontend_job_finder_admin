@@ -56,9 +56,9 @@ const TemplateSelection: React.FC = () => {
 
         // Fetch saved templates (those with isTemplate === true)
         try {
-          const newsletters = await getNewsletters();
-          console.log("📧 All newsletters from API:", newsletters);
-          const templates = newsletters.filter((n: any) => n.isTemplate === true);
+          const newsletterResponse = await getNewsletters();
+          console.log("📧 All newsletters from API:", newsletterResponse);
+          const templates = newsletterResponse.data.filter((n: any) => n.isTemplate === true);
           console.log(`✅ Found ${templates.length} saved templates`);
           setSavedTemplates(templates);
         } catch (error) {
