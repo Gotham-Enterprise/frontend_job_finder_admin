@@ -41,6 +41,12 @@ const NewsletterEditor: React.FC = () => {
 
   const newsletterId = params?.id as string;
 
+  const handleBackToList = () => {
+    // Reset edit mode before navigating back
+    dispatch(setEditMode({ isEditMode: false, newsletterId: null }));
+    router.push("/admin/news-letter");
+  };
+
   useEffect(() => {
     const fetchNewsletter = async () => {
       if (!newsletterId) {
@@ -120,7 +126,7 @@ const NewsletterEditor: React.FC = () => {
           <h3 className="text-lg font-medium text-gray-900 mb-2">Failed to load newsletter</h3>
           <p className="text-gray-600 mb-4">{error}</p>
           <button
-            onClick={() => router.push("/admin/news-letter")}
+            onClick={handleBackToList}
             className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
           >
             Back to Newsletter List
@@ -142,7 +148,7 @@ const NewsletterEditor: React.FC = () => {
                 <p className="mt-1 text-sm text-gray-600">{newsletter.subject}</p>
               </div>
               <button
-                onClick={() => router.push("/admin/news-letter")}
+                onClick={handleBackToList}
                 className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               >
                 <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

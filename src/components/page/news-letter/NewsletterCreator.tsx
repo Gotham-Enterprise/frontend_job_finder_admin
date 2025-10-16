@@ -2,7 +2,8 @@
 
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAppSelector } from "@/store";
+import { useAppSelector, useAppDispatch } from "@/store";
+import { setEditMode } from "@/store/slices/newsletterSlice";
 import NewsletterSteps from "./components/NewsletterSteps";
 import TemplateSelection from "./steps/TemplateSelection";
 import EditStep from "./steps/EditStep";
@@ -12,13 +13,16 @@ import ScheduleStep from "./steps/ScheduleStep";
 
 const NewsletterCreator: React.FC = () => {
   const router = useRouter();
+  const dispatch = useAppDispatch();
   const currentStep = useAppSelector((state) => state.newsletter.currentStep);
   const [isClient, setIsClient] = useState(false);
 
   // Ensure component only fully renders on client side
   useEffect(() => {
     setIsClient(true);
-  }, []);
+    // Reset edit mode when entering create flow
+    dispatch(setEditMode({ isEditMode: false, newsletterId: null }));
+  }, [dispatch]);
 
   const renderCurrentStep = () => {
     // During SSR or before hydration, always show Step 1
