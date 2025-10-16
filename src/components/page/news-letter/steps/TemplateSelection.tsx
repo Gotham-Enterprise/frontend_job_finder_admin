@@ -252,14 +252,14 @@ const TemplateSelection: React.FC = () => {
       {/* Header */}
       <div className="text-center mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-4">Select a Template</h1>
-        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+        <p className="text-lg text-gray-600 text-center mx-auto">
           Choose from our professionally designed templates or start from scratch to create your perfect newsletter.
         </p>
       </div>
 
       {/* Search Bar */}
       <div className="mb-6">
-        <div className="relative max-w-md mx-auto">
+        <div className="relative  mx-auto">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
@@ -277,25 +277,6 @@ const TemplateSelection: React.FC = () => {
             onChange={(e) => setSearchTerm(e.target.value)}
             className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
           />
-        </div>
-      </div>
-
-      {/* Category Filters */}
-      <div className="mb-8">
-        <div className="flex flex-wrap justify-center gap-2">
-          {templateCategories.map((category: any) => (
-            <button
-              key={category.id}
-              onClick={() => setSelectedCategory(category.id)}
-              className={`px-4 py-2 text-sm font-medium rounded-full transition-colors ${
-                selectedCategory === category.id
-                  ? "bg-primary text-white"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-              }`}
-            >
-              {category.name}
-            </button>
-          ))}
         </div>
       </div>
 
