@@ -77,11 +77,11 @@ const SimpleTemplateThumbnail: React.FC<SimpleTemplateThumbnailProps> = ({ templ
         ) : thumbnailHtml ? (
           <>
             <div
-              className="h-full w-full transform scale-[0.15] origin-top-left"
+              className="h-full w-full transform scale-[0.25] origin-top-left"
               dangerouslySetInnerHTML={{ __html: thumbnailHtml }}
               style={{
-                width: "667%",
-                height: "667%",
+                width: "400%",
+                height: "400%",
                 pointerEvents: "none",
               }}
             />
