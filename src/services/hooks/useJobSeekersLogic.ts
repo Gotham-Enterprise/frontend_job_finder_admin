@@ -3,6 +3,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useJobSeekers } from "@/services/hooks/useJobSeekers";
 import { useOccupations } from "@/services/hooks/useOccupations";
 import { useStates } from "@/services/hooks/useStates";
+import { useLicenses, useLicenseIssuingStates } from "@/services/hooks/useLicenses";
 import { jobApplicationApi } from "@/services/api/jobApplication";
 import { JobSeekerFilters } from "@/services/types/jobSeeker";
 
@@ -25,6 +26,8 @@ export const useJobSeekersLogic = () => {
       const urlCity = searchParams.get("city");
       const urlRadius = searchParams.get("radius");
       const urlOccupationId = searchParams.get("occupationId");
+      const urlLicenseName = searchParams.get("licenseName");
+      const urlLicenseIssuingState = searchParams.get("licenseIssuingState");
 
       const urlFilters = {
         page: Math.max(1, parseInt(urlPage || "1", 10)),
@@ -35,6 +38,8 @@ export const useJobSeekersLogic = () => {
         location: urlLocation || "",
         occupationId: urlOccupationId ? parseInt(urlOccupationId, 10) : undefined,
         status: validStatus,
+        licenseName: urlLicenseName || "",
+        licenseIssuingState: urlLicenseIssuingState || "",
       };
       const isSimpleNavigation =
         (!urlPage || urlPage === "1") &&
@@ -43,7 +48,9 @@ export const useJobSeekersLogic = () => {
         !urlRadius &&
         !urlLocation &&
         !urlOccupationId &&
-        !validStatus;
+        !validStatus &&
+        !urlLicenseName &&
+        !urlLicenseIssuingState;
 
       if (isSimpleNavigation && typeof window !== "undefined") {
         localStorage.removeItem("jobseeker-search-state");
@@ -72,6 +79,8 @@ export const useJobSeekersLogic = () => {
               location: parsed.location || "",
               occupationId: parsed.occupationId || undefined,
               status: parsed.status || undefined,
+              licenseName: parsed.licenseName || "",
+              licenseIssuingState: parsed.licenseIssuingState || "",
             };
             return restoredFilters;
           } catch (error) {
@@ -93,6 +102,8 @@ export const useJobSeekersLogic = () => {
       location: "",
       occupationId: undefined,
       status: undefined,
+      licenseName: "",
+      licenseIssuingState: "",
     };
     return defaultFilters;
   };
@@ -130,6 +141,8 @@ export const useJobSeekersLogic = () => {
     if (filters.location) params.set("location", filters.location);
     if (filters.occupationId) params.set("occupationId", filters.occupationId.toString());
     if (filters.status) params.set("status", filters.status);
+    if (filters.licenseName) params.set("licenseName", filters.licenseName);
+    if (filters.licenseIssuingState) params.set("licenseIssuingState", filters.licenseIssuingState);
 
     const newURL = params.toString() ? `?${params.toString()}` : "";
     const currentURL = window.location.search;
@@ -215,6 +228,8 @@ export const useJobSeekersLogic = () => {
   const { data, isLoading, error, refetch } = useJobSeekers(filters);
   const { data: occupationsData, isLoading: isOccupationsLoading } = useOccupations();
   const { data: statesData, isLoading: isStatesLoading } = useStates();
+  const { data: licensesData, isLoading: isLicensesLoading } = useLicenses();
+  const { data: licenseStatesData, isLoading: isLicenseStatesLoading } = useLicenseIssuingStates();
   const tableColumns = useMemo(
     () => [
       { key: "name", label: "Name" },
@@ -276,6 +291,34 @@ export const useJobSeekersLogic = () => {
 
     return baseOptions;
   }, [statesData]);
+
+  const licenseOptions = useMemo(() => {
+    const baseOptions = [{ value: "", label: "All Licenses" }];
+
+    if (licensesData?.success && licensesData.data) {
+      const dynamicOptions = licensesData.data.map((license) => ({
+        value: license.name,
+        label: license.name,
+      }));
+      return [...baseOptions, ...dynamicOptions];
+    }
+
+    return baseOptions;
+  }, [licensesData]);
+
+  const licenseStateOptions = useMemo(() => {
+    const baseOptions = [{ value: "", label: "All Issuing States" }];
+
+    if (licenseStatesData?.success && licenseStatesData.data) {
+      const dynamicOptions = licenseStatesData.data.map((state) => ({
+        value: state.name,
+        label: state.name,
+      }));
+      return [...baseOptions, ...dynamicOptions];
+    }
+
+    return baseOptions;
+  }, [licenseStatesData]);
 
   const itemsPerPageOptions = useMemo(
     () => [
@@ -364,6 +407,8 @@ export const useJobSeekersLogic = () => {
       location: "",
       occupationId: undefined,
       status: undefined,
+      licenseName: "",
+      licenseIssuingState: "",
     };
     setFilters(newFilters);
     setSearchInput("");
@@ -391,6 +436,12 @@ export const useJobSeekersLogic = () => {
         case "status":
           filterChange("status", undefined);
           break;
+        case "licenseName":
+          filterChange("licenseName", "");
+          break;
+        case "licenseIssuingState":
+          filterChange("licenseIssuingState", "");
+          break;
         default:
           break;
       }
@@ -405,7 +456,9 @@ export const useJobSeekersLogic = () => {
       filters.radius ||
       filters.location ||
       filters.occupationId ||
-      filters.status
+      filters.status ||
+      filters.licenseName ||
+      filters.licenseIssuingState
     );
   }, [searchInput, filters.city, filters.radius, filters.location, filters.occupationId, filters.status]);
 
@@ -496,6 +549,8 @@ export const useJobSeekersLogic = () => {
     statusOptions,
     occupationOptions,
     stateOptions,
+    licenseOptions,
+    licenseStateOptions,
     itemsPerPageOptions,
 
     filterChange,

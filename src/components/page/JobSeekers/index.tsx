@@ -38,6 +38,8 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
     statusOptions,
     occupationOptions,
     stateOptions,
+    licenseOptions,
+    licenseStateOptions,
     itemsPerPageOptions,
     filterChange,
     initPageChange,
@@ -80,6 +82,8 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
             occupationOptions={occupationOptions}
             stateOptions={stateOptions}
             statusOptions={statusOptions}
+            licenseOptions={licenseOptions}
+            licenseStateOptions={licenseStateOptions}
             hasActiveFilters={hasActiveFilters}
             clearIndividualFilter={clearIndividualFilter}
           />

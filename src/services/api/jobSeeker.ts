@@ -21,6 +21,8 @@ export const jobSeekerApi = {
     if (filters.specialty) queryParams.append("specialty", filters.specialty);
     if (filters.occupationId) queryParams.append("occupationId", filters.occupationId.toString());
     if (filters.status) queryParams.append("status", filters.status);
+    if (filters.licenseName) queryParams.append("licenseName", filters.licenseName);
+    if (filters.licenseIssuingState) queryParams.append("licenseIssuingState", filters.licenseIssuingState);
 
     const endpoint = `/api/admin/jobseekers?${queryParams.toString()}`;
 

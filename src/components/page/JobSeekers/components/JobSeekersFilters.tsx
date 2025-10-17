@@ -10,6 +10,8 @@ const JobSeekersFilters: React.FC<JobSeekersFiltersProps> = ({
   occupationOptions,
   stateOptions,
   statusOptions,
+  licenseOptions,
+  licenseStateOptions,
   hasActiveFilters,
   clearIndividualFilter,
 }) => {
@@ -49,7 +51,7 @@ const JobSeekersFilters: React.FC<JobSeekersFiltersProps> = ({
   }, [isRadiusDisabled, filters.radius, onFilterChange]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-h-[500px] overflow-y-auto pr-2 pl-1">
       <div className="grid grid-cols-1 gap-6">
         <div className="space-y-2">
           <div className="flex items-center justify-between">
@@ -166,6 +168,56 @@ const JobSeekersFilters: React.FC<JobSeekersFiltersProps> = ({
             options={statusOptions}
             placeholder="Select status..."
             searchPlaceholder="Search statuses..."
+            className="w-full"
+          />
+        </div>
+
+        {/* License Name Filter */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              License Name
+            </Label>
+            {filters.licenseName && (
+              <button
+                onClick={() => clearIndividualFilter('licenseName')}
+                className="text-xs text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100 font-medium cursor-pointer hover:underline"
+              >
+                Clear
+              </button>
+            )}
+          </div>
+          <SearchableSelect
+            value={filters.licenseName || ''}
+            onChange={(value: string) => onFilterChange('licenseName', value)}
+            options={licenseOptions}
+            placeholder="Select license..."
+            searchPlaceholder="Search licenses..."
+            className="w-full"
+          />
+        </div>
+
+        {/* License Issuing State Filter */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              License Issuing State
+            </Label>
+            {filters.licenseIssuingState && (
+              <button
+                onClick={() => clearIndividualFilter('licenseIssuingState')}
+                className="text-xs text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100 font-medium cursor-pointer hover:underline"
+              >
+                Clear
+              </button>
+            )}
+          </div>
+          <SearchableSelect
+            value={filters.licenseIssuingState || ''}
+            onChange={(value: string) => onFilterChange('licenseIssuingState', value)}
+            options={licenseStateOptions}
+            placeholder="Select issuing state..."
+            searchPlaceholder="Search issuing states..."
             className="w-full"
           />
         </div>
