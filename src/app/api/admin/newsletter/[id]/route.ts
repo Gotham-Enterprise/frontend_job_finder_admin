@@ -20,8 +20,6 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
   try {
     const { id } = params;
 
-    console.log("📋 Fetching newsletter:", id);
-
     // Get newsletter from store
     const newsletter = newsletterStore.get(id);
 
@@ -34,9 +32,6 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
         { status: 404 }
       );
     }
-
-    console.log("✅ [BACKEND] Retrieved newsletter:", id);
-    console.log("✅ [BACKEND] Design type:", typeof newsletter.design);
 
     return NextResponse.json(
       {

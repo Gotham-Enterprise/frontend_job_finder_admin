@@ -12,7 +12,7 @@ import {
   updateNewsletterData,
 } from "@/store/slices/newsletterSlice";
 import { blogApi } from "@/services/api/blog";
-import { createNewsletter, updateNewsletter } from "@/services/api/newsletterService";
+import { createNewsletter, updateNewsletter } from "@/services/api/newsLetter";
 import { useToast } from "@/context/ToastContext";
 
 interface ReactEmailEditorProps {
@@ -49,57 +49,6 @@ const ReactEmailEditor: React.FC<ReactEmailEditorProps> = ({ onDesignLoad, onLoa
     });
   }, [dispatch]);
 
-  // Function to get current content for demonstration
-  const getCurrentContent = useCallback(() => {
-    const unlayer = emailEditorRef.current?.editor;
-
-    unlayer?.exportHtml((data) => {
-      const { design, html } = data;
-
-      console.log("=== CURRENT CONTENT ===");
-      console.log("HTML Email Content:", html);
-      console.log("Design JSON:", design);
-      console.log("Content Length:", html.length);
-
-      // Show a preview in a new window
-      const preview = window.open("", "_blank", "width=800,height=600");
-      if (preview) {
-        preview.document.write(`
-          <html>
-            <head>
-              <title>Email Preview</title>
-              <style>
-                body { font-family: Arial, sans-serif; padding: 20px; }
-                .content { border: 1px solid #ddd; padding: 20px; margin: 20px 0; }
-                .json { background: #f5f5f5; padding: 10px; margin: 10px 0; font-family: monospace; white-space: pre-wrap; max-height: 300px; overflow-y: auto; }
-              </style>
-            </head>
-            <body>
-              <h2>Email HTML Content</h2>
-              <div class="content">${html}</div>
-              <h2>Design JSON (for editing)</h2>
-              <div class="json">${JSON.stringify(design, null, 2)}</div>
-            </body>
-          </html>
-        `);
-        preview.document.close();
-      }
-
-      // Also update Redux state
-      dispatch(setContent(html));
-      dispatch(setDesign(design));
-    });
-  }, [dispatch]);
-
-  const exportDesign = useCallback(() => {
-    const unlayer = emailEditorRef.current?.editor;
-
-    unlayer?.exportHtml((data) => {
-      const { design } = data;
-      onDesignLoad?.(design);
-    });
-  }, [onDesignLoad]);
-
   const saveDesign = useCallback(async () => {
     const unlayer = emailEditorRef.current?.editor;
 
@@ -109,19 +58,7 @@ const ReactEmailEditor: React.FC<ReactEmailEditorProps> = ({ onDesignLoad, onLoa
     setSaveMessage(null);
 
     unlayer.exportHtml(async (data) => {
-      console.log("🔍 RAW Export Data:", data);
-      console.log("🔍 Data keys:", Object.keys(data));
-      console.log("🔍 HTML type:", typeof data.html);
-      console.log("🔍 Design type:", typeof data.design);
-
       const { design, html } = data;
-
-      console.log("📤 Exported from editor:", {
-        htmlLength: html?.length || 0,
-        htmlPreview: html?.substring(0, 100) || "EMPTY",
-        hasDesign: !!design,
-        htmlValue: html,
-      });
 
       try {
         // Update Redux state first
@@ -236,11 +173,8 @@ const ReactEmailEditor: React.FC<ReactEmailEditorProps> = ({ onDesignLoad, onLoa
         const file = target.files?.[0];
 
         if (!file) {
-          console.log("❌ No file selected");
           return;
         }
-
-        console.log("📤 Uploading image:", file.name);
 
         // Show loading indicator
         setIsUploadingImage(true);
@@ -253,15 +187,11 @@ const ReactEmailEditor: React.FC<ReactEmailEditorProps> = ({ onDesignLoad, onLoa
           });
 
           if (response.success && response.data.url) {
-            console.log("✅ Image uploaded successfully:", response.data.url);
-            // Return the URL to Unlayer
             done({ url: response.data.url });
           } else {
-            console.error("❌ Upload failed: No URL in response");
             alert("Failed to upload image. Please try again.");
           }
         } catch (error) {
-          console.error("❌ Upload error:", error);
           alert("Failed to upload image. Please try again.");
         } finally {
           // Hide loading indicator

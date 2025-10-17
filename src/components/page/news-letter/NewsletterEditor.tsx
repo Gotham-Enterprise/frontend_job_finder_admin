@@ -10,7 +10,7 @@ import {
   setContent,
   setEditMode,
 } from "@/store/slices/newsletterSlice";
-import { getNewsletterById } from "@/services/api/newsletterService";
+import { getNewsletterById } from "@/services/api/newsLetter";
 import NewsletterSteps from "./components/NewsletterSteps";
 import EditStep from "./steps/EditStep";
 

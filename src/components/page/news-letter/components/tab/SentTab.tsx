@@ -1,25 +1,8 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "../../../../ui/table";
-import { getNewsletters } from "@/services/api/newsletterService";
+import { getNewsletters, Newsletter } from "@/services/api/newsLetter";
 import Pagination from "../../../../tables/Pagination";
-
-interface Newsletter {
-  id: string;
-  subject: string;
-  fromName: string;
-  fromAddress: string;
-  sendTo: string[];
-  dontSendTo: string[];
-  status: "DRAFT" | "SCHEDULED" | "SENT" | "ARCHIVED";
-  scheduledAt?: string;
-  scheduledTimezone?: string;
-  isTemplate: boolean;
-  content: string;
-  design?: any;
-  createdAt: string;
-  updatedAt: string;
-}
 
 const SentTab = () => {
   const [newsletters, setNewsletters] = useState<Newsletter[]>([]);

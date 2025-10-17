@@ -1,10 +1,10 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "../../../../ui/table";
-import { newsletterApi, ArchivedNewsletter } from "../../../../../services/api/newsLetter";
+import { newsletterApi, Newsletter } from "../../../../../services/api/newsLetter";
 
 const ArchivedTab = () => {
-  const [newsletters, setNewsletters] = useState<ArchivedNewsletter[]>([]);
+  const [newsletters, setNewsletters] = useState<Newsletter[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
@@ -38,8 +38,14 @@ const ArchivedTab = () => {
   };
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", { month: "2-digit", day: "2-digit", year: "numeric" });
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return "N/A";
+      return date.toLocaleDateString("en-US", { month: "2-digit", day: "2-digit", year: "numeric" });
+    } catch (error) {
+      console.error("Error formatting date:", error);
+      return "N/A";
+    }
   };
 
   if (loading) {
@@ -75,13 +81,13 @@ const ArchivedTab = () => {
                 isHeader
                 className="px-5 py-3 font-medium text-gray-500 text-start text-sm uppercase tracking-wider dark:text-gray-400"
               >
-                Delivered
+                Status
               </TableCell>
               <TableCell
                 isHeader
                 className="px-5 py-3 font-medium text-gray-500 text-start text-sm uppercase tracking-wider dark:text-gray-400"
               >
-                Click Rate
+                From Name
               </TableCell>
               <TableCell
                 isHeader
@@ -93,7 +99,7 @@ const ArchivedTab = () => {
                 isHeader
                 className="px-5 py-3 font-medium text-gray-500 text-start text-sm uppercase tracking-wider dark:text-gray-400"
               >
-                Published / Send Date
+                Created Date
               </TableCell>
               <TableCell
                 isHeader
@@ -116,19 +122,35 @@ const ArchivedTab = () => {
               newsletters.map((newsletter) => (
                 <TableRow key={newsletter.id}>
                   <TableCell className="px-5 py-4 text-start">
-                    <span className="font-medium text-gray-900 text-sm dark:text-white/90">{newsletter.emailName}</span>
+                    <span className="font-medium text-gray-900 text-sm dark:text-white/90">
+                      {newsletter.subject || "N/A"}
+                    </span>
+                  </TableCell>
+                  <TableCell className="px-4 py-3 text-start text-sm">
+                    <span
+                      className={`rounded-sm px-2 py-1 text-xs font-medium uppercase ${
+                        newsletter.status === "SENT"
+                          ? "bg-green-100 text-green-600 dark:bg-green-600/20 dark:text-green-400"
+                          : newsletter.status === "SCHEDULED"
+                            ? "bg-blue-100 text-blue-600 dark:bg-blue-600/20 dark:text-blue-400"
+                            : "bg-gray-100 text-gray-600 dark:bg-gray-600/20 dark:text-gray-400"
+                      }`}
+                    >
+                      {newsletter.status}
+                    </span>
                   </TableCell>
                   <TableCell className="px-4 py-3 text-gray-500 text-start text-sm dark:text-gray-400">
-                    {newsletter.delivered.toLocaleString()}
+                    {newsletter.fromName || "N/A"}
                   </TableCell>
                   <TableCell className="px-4 py-3 text-gray-500 text-start text-sm dark:text-gray-400">
-                    {newsletter.clickRate}
+                    {newsletter.updatedAt
+                      ? formatDate(newsletter.updatedAt)
+                      : newsletter.createdAt
+                        ? formatDate(newsletter.createdAt)
+                        : "N/A"}
                   </TableCell>
                   <TableCell className="px-4 py-3 text-gray-500 text-start text-sm dark:text-gray-400">
-                    {formatDate(newsletter.lastUpdated)}
-                  </TableCell>
-                  <TableCell className="px-4 py-3 text-gray-500 text-start text-sm dark:text-gray-400">
-                    {formatDate(newsletter.publishedDate)}
+                    {newsletter.createdAt ? formatDate(newsletter.createdAt) : "N/A"}
                   </TableCell>
                   <TableCell className="px-4 py-3 text-gray-500 text-start text-sm dark:text-gray-400">
                     <button className="text-gray-400 hover:text-gray-600">Restore</button>

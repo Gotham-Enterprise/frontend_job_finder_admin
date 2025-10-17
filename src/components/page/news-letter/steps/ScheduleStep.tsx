@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { setScheduleDetails, setSubmitting, setError } from "@/store/slices/newsletterSlice";
-import { createNewsletter } from "@/services/api/newsletterService";
+import { createNewsletter } from "@/services/api/newsLetter";
 import { useToast } from "@/context/ToastContext";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";

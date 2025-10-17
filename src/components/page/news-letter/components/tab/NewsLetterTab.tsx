@@ -2,28 +2,14 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "../../../../ui/table";
-import { getNewsletters } from "@/services/api/newsletterService";
+import { getNewsletters, deleteNewsletters, Newsletter } from "@/services/api/newsLetter";
 import Pagination from "../../../../tables/Pagination";
-
-interface Newsletter {
-  id: string;
-  subject: string;
-  fromName: string;
-  fromAddress: string;
-  sendTo: string[];
-  dontSendTo: string[];
-  status: "DRAFT" | "SCHEDULED" | "SENT" | "ARCHIVED";
-  scheduledAt?: string;
-  scheduledTimezone?: string;
-  isTemplate: boolean;
-  content: string;
-  design?: any;
-  createdAt: string;
-  updatedAt: string;
-}
+import ConfirmationDialog from "@/components/ui/ConfirmationDialog";
+import { useToast } from "@/context/ToastContext";
 
 const NewsLetterTab = () => {
   const router = useRouter();
+  const { addToast } = useToast();
   const [newsletters, setNewsletters] = useState<Newsletter[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -31,6 +17,13 @@ const NewsLetterTab = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const itemsPerPage = 5;
+
+  // Confirmation dialog state
+  const [confirmDialog, setConfirmDialog] = useState({
+    isOpen: false,
+    newsletterId: "",
+    isDeleting: false,
+  });
 
   useEffect(() => {
     const fetchNewsletters = async () => {
@@ -129,9 +122,48 @@ const NewsLetterTab = () => {
   };
 
   const handleArchive = (id: string) => {
-    // TODO: Implement archive functionality
-    console.log("Archive newsletter:", id);
+    setConfirmDialog({
+      isOpen: true,
+      newsletterId: id,
+      isDeleting: false,
+    });
     setOpenDropdownId(null);
+  };
+
+  const confirmArchive = async () => {
+    setConfirmDialog((prev) => ({ ...prev, isDeleting: true }));
+
+    try {
+      await deleteNewsletters([confirmDialog.newsletterId]);
+      console.log("✅ Newsletter archived successfully:", confirmDialog.newsletterId);
+
+      // Refresh the list
+      const response = await getNewsletters(undefined, currentPage, itemsPerPage);
+      setNewsletters(response.data);
+      setTotalPages(response.metaData.totalPages);
+
+      // Show success message
+      addToast({
+        variant: "success",
+        title: "Success",
+        message: "Newsletter archived successfully",
+      });
+
+      // Close dialog
+      setConfirmDialog({ isOpen: false, newsletterId: "", isDeleting: false });
+    } catch (err) {
+      console.error("❌ Failed to archive newsletter:", err);
+      addToast({
+        variant: "error",
+        title: "Error",
+        message: "Failed to archive newsletter. Please try again.",
+      });
+      setConfirmDialog((prev) => ({ ...prev, isDeleting: false }));
+    }
+  };
+
+  const cancelArchive = () => {
+    setConfirmDialog({ isOpen: false, newsletterId: "", isDeleting: false });
   };
 
   const handlePublish = (id: string) => {
@@ -356,6 +388,19 @@ const NewsLetterTab = () => {
           <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
         </div>
       )}
+
+      {/* Confirmation Dialog */}
+      <ConfirmationDialog
+        isOpen={confirmDialog.isOpen}
+        onClose={cancelArchive}
+        onConfirm={confirmArchive}
+        onCancel={cancelArchive}
+        title="Archive Newsletter"
+        message="Are you sure you want to archive (delete) this newsletter? This action cannot be undone."
+        confirmText="Archive"
+        cancelText="Cancel"
+        isLoading={confirmDialog.isDeleting}
+      />
     </div>
   );
 };

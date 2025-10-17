@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { NewsletterTemplate } from "../types";
 import { unlayerApi, UnlayerTemplate } from "@/services/api/unlayer";
-import { getNewsletters } from "@/services/api/newsletterService";
+import { getNewsletters } from "@/services/api/newsLetter";
 import { useAppDispatch } from "@/store";
 import {
   setSelectedTemplate,
