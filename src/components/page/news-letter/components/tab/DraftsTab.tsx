@@ -2,10 +2,11 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "../../../../ui/table";
-import { getNewsletters, Newsletter, updateNewsletter } from "@/services/api/newsLetter";
+import { getNewsletters, Newsletter, updateNewsletter, bulkPublishNewsletters } from "@/services/api/newsLetter";
 import Pagination from "../../../../tables/Pagination";
 import { useToast } from "@/context/ToastContext";
 import ConfirmationDialog from "@/components/ui/ConfirmationDialog";
+import Checkbox from "@/components/form/input/Checkbox";
 
 const DraftsTab = () => {
   const router = useRouter();
@@ -17,6 +18,10 @@ const DraftsTab = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const itemsPerPage = 5;
+
+  // Bulk selection state
+  const [selectedNewsletters, setSelectedNewsletters] = useState<string[]>([]);
+  const [isBulkActionLoading, setIsBulkActionLoading] = useState(false);
 
   // Publish confirmation dialog state
   const [publishDialog, setPublishDialog] = useState({
@@ -31,6 +36,33 @@ const DraftsTab = () => {
     newsletter: null as Newsletter | null,
     isArchiving: false,
   });
+
+  // Bulk publish confirmation dialog state
+  const [bulkPublishDialog, setBulkPublishDialog] = useState({
+    isOpen: false,
+    isPublishing: false,
+  });
+
+  // Computed values for checkbox state
+  const allSelected = newsletters.length > 0 && selectedNewsletters.length === newsletters.length;
+  const someSelected = selectedNewsletters.length > 0 && !allSelected;
+
+  // Handle bulk selection
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedNewsletters(newsletters.map((n) => n.id));
+    } else {
+      setSelectedNewsletters([]);
+    }
+  };
+
+  const handleSelectNewsletter = (newsletterId: string, checked: boolean) => {
+    if (checked) {
+      setSelectedNewsletters([...selectedNewsletters, newsletterId]);
+    } else {
+      setSelectedNewsletters(selectedNewsletters.filter((id) => id !== newsletterId));
+    }
+  };
 
   useEffect(() => {
     const fetchNewsletters = async () => {
@@ -151,8 +183,6 @@ const DraftsTab = () => {
         status: "ARCHIVED",
       });
 
-      console.log("✅ Newsletter archived successfully:", archiveDialog.newsletter.id);
-
       // Refresh the list
       const response = await getNewsletters("DRAFT", currentPage, itemsPerPage);
       setNewsletters(response.data);
@@ -180,6 +210,73 @@ const DraftsTab = () => {
 
   const cancelArchive = () => {
     setArchiveDialog({ isOpen: false, newsletter: null, isArchiving: false });
+  };
+
+  // Bulk publish handlers
+  const handleBulkPublishClick = () => {
+    if (selectedNewsletters.length === 0) return;
+    setBulkPublishDialog({ isOpen: true, isPublishing: false });
+  };
+
+  const confirmBulkPublish = async () => {
+    if (selectedNewsletters.length === 0) return;
+
+    const publishCount = selectedNewsletters.length;
+    const idsToPublish = [...selectedNewsletters]; // Store IDs before clearing
+    setBulkPublishDialog((prev) => ({ ...prev, isPublishing: true }));
+
+    try {
+      console.log("📤 [BULK PUBLISH] Sending request for IDs:", idsToPublish);
+      const result = await bulkPublishNewsletters(idsToPublish);
+      console.log("✅ [BULK PUBLISH] API Response:", result);
+
+      // Clear selection
+      setSelectedNewsletters([]);
+
+      // Wait longer for the backend to update (1.5 seconds)
+      console.log("⏳ [BULK PUBLISH] Waiting for backend to process...");
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+
+      // Refresh the list with force reload
+      console.log("🔄 [BULK PUBLISH] Fetching updated draft list...");
+      const response = await getNewsletters("DRAFT", currentPage, itemsPerPage);
+      console.log("📋 [BULK PUBLISH] Refreshed draft list:", response);
+      console.log("📊 [BULK PUBLISH] Draft count after publish:", response.data.length);
+
+      // Check if any of the published newsletters are still in the draft list
+      const stillDraft = response.data.filter((n: Newsletter) => idsToPublish.includes(n.id));
+      if (stillDraft.length > 0) {
+        console.warn(
+          "⚠️ [BULK PUBLISH] These newsletters are still DRAFT after publish:",
+          stillDraft.map((n: Newsletter) => ({ id: n.id, subject: n.subject, status: n.status }))
+        );
+      }
+
+      setNewsletters(response.data);
+      setTotalPages(response.metaData.totalPages);
+
+      // Close dialog
+      setBulkPublishDialog({ isOpen: false, isPublishing: false });
+
+      // Show success message
+      addToast({
+        variant: "success",
+        title: "Success",
+        message: `Successfully published ${publishCount} newsletter(s)`,
+      });
+    } catch (error: any) {
+      console.error("❌ [BULK PUBLISH] Error:", error);
+      addToast({
+        variant: "error",
+        title: "Error",
+        message: error.message || "Failed to publish newsletters",
+      });
+      setBulkPublishDialog((prev) => ({ ...prev, isPublishing: false }));
+    }
+  };
+
+  const cancelBulkPublish = () => {
+    setBulkPublishDialog({ isOpen: false, isPublishing: false });
   };
 
   const handlePreview = (newsletter: Newsletter) => {
@@ -295,10 +392,26 @@ const DraftsTab = () => {
 
   return (
     <div className="max-w-full">
+      {/* Bulk Action Bar */}
+      {selectedNewsletters.length > 0 && (
+        <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg flex items-center justify-end">
+          <button
+            onClick={handleBulkPublishClick}
+            disabled={isBulkActionLoading}
+            className="px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg  disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {isBulkActionLoading ? "Publishing..." : "Publish Selected"}
+          </button>
+        </div>
+      )}
+
       <Table>
         {/* Table Header */}
         <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
           <TableRow>
+            <TableCell isHeader className="w-12 px-5 py-3">
+              <Checkbox checked={allSelected} onChange={(checked) => handleSelectAll(checked)} />
+            </TableCell>
             <TableCell
               isHeader
               className="px-5 py-3 font-medium text-gray-500 text-start text-sm uppercase tracking-wider dark:text-gray-400"
@@ -309,25 +422,13 @@ const DraftsTab = () => {
               isHeader
               className="px-5 py-3 font-medium text-gray-500 text-start text-sm uppercase tracking-wider dark:text-gray-400"
             >
-              Delivered
-            </TableCell>
-            <TableCell
-              isHeader
-              className="px-5 py-3 font-medium text-gray-500 text-start text-sm uppercase tracking-wider dark:text-gray-400"
-            >
-              Click Rate
+              From Name
             </TableCell>
             <TableCell
               isHeader
               className="px-5 py-3 font-medium text-gray-500 text-start text-sm uppercase tracking-wider dark:text-gray-400"
             >
               Last Updated
-            </TableCell>
-            <TableCell
-              isHeader
-              className="px-5 py-3 font-medium text-gray-500 text-start text-sm uppercase tracking-wider dark:text-gray-400"
-            >
-              Published / Send Date
             </TableCell>
             <TableCell
               isHeader
@@ -342,16 +443,20 @@ const DraftsTab = () => {
         <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
           {newsletters.map((newsletter) => (
             <TableRow key={newsletter.id}>
+              <TableCell className="w-12 px-5 py-4">
+                <Checkbox
+                  checked={selectedNewsletters.includes(newsletter.id)}
+                  onChange={(checked) => handleSelectNewsletter(newsletter.id, checked)}
+                />
+              </TableCell>
               <TableCell className="px-5 py-4 text-start">
                 <span className="font-medium text-gray-900 text-sm dark:text-white/90">{newsletter.subject}</span>
               </TableCell>
-              <TableCell className="px-4 py-3 text-gray-500 text-start text-sm dark:text-gray-400">Draft</TableCell>
-              <TableCell className="px-4 py-3 text-gray-500 text-start text-sm dark:text-gray-400">-</TableCell>
               <TableCell className="px-4 py-3 text-gray-500 text-start text-sm dark:text-gray-400">
-                {formatDate(newsletter.updatedAt)}
+                {newsletter.fromName || "N/A"}
               </TableCell>
               <TableCell className="px-4 py-3 text-gray-500 text-start text-sm dark:text-gray-400">
-                Not Published
+                {formatDate(newsletter.updatedAt)}
               </TableCell>
               <TableCell className="px-4 py-3 text-gray-500 text-start text-sm dark:text-gray-400">
                 <div className="relative dropdown-container">
@@ -471,6 +576,19 @@ const DraftsTab = () => {
         onConfirm={confirmArchive}
         onCancel={cancelArchive}
         isLoading={archiveDialog.isArchiving}
+      />
+
+      {/* Bulk Publish Confirmation Dialog */}
+      <ConfirmationDialog
+        isOpen={bulkPublishDialog.isOpen}
+        onClose={cancelBulkPublish}
+        title="Publish Newsletters"
+        message={`Are you sure you want to publish ${selectedNewsletters.length} newsletter(s)? This will make them available to your audience.`}
+        confirmText={bulkPublishDialog.isPublishing ? "Publishing..." : "Publish All"}
+        cancelText="Cancel"
+        onConfirm={confirmBulkPublish}
+        onCancel={cancelBulkPublish}
+        isLoading={bulkPublishDialog.isPublishing}
       />
     </div>
   );

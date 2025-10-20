@@ -4,7 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useToast } from "@/context/ToastContext";
 import { useAppDispatch } from "@/store";
 import { resetNewsletter } from "@/store/slices/newsletterSlice";
-import { NewsLetterTab, SentTab, DraftsTab, ArchivedTab } from "./components/tab";
+import { NewsLetterTab, ScheduleTab, SentTab, DraftsTab, ArchivedTab } from "./components/tab";
 import BulkActionDropdown from "@/components/ui/BulkActionDropdown";
 
 const NewsLetterComponent = () => {
@@ -47,6 +47,7 @@ const NewsLetterComponent = () => {
 
   const tabs = [
     { id: "newsletter", label: "News Letter", component: NewsLetterTab },
+    { id: "schedule", label: "Schedule", component: ScheduleTab },
     { id: "sent", label: "Sent", component: SentTab },
     { id: "drafts", label: "Drafts", component: DraftsTab },
     { id: "archived", label: "Archived", component: ArchivedTab },
