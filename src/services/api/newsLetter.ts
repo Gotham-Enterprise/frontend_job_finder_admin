@@ -290,6 +290,20 @@ export const bulkScheduleNewsletters = async (
   }
 };
 
+export const bulkRestoreNewsletters = async (newsLetterIds: string[]): Promise<BulkActionResponse> => {
+  try {
+    console.log("♻️ [BULK RESTORE] Restoring newsletters:", newsLetterIds);
+    const response = await apiPut<BulkActionResponse>("/api/admin/newsletter/restore/all", {
+      newsLetterIds,
+    });
+    console.log("✅ [BULK RESTORE] Success:", response);
+    return response;
+  } catch (error) {
+    console.error("❌ [BULK RESTORE] API Error:", error);
+    throw error;
+  }
+};
+
 // API object for organized access
 export const newsletterApi = {
   create: createNewsletter,
@@ -299,7 +313,7 @@ export const newsletterApi = {
   delete: deleteNewsletters,
 
   async getNewsletterEmails(): Promise<NewsletterEmailResponse> {
-    return apiGet<NewsletterEmailResponse>("/email");
+    return apiGet<NewsletterEmailResponse>("/api/admin/newsletter/email/list");
   },
 
   async getArchivedNewsletters(filters: NewsletterFilters = {}): Promise<ArchivedNewsletterResponse> {
