@@ -3,6 +3,7 @@ import { useAppDispatch } from "@/store";
 import { setSendToDetails, completeStep, setCurrentStep } from "@/store/slices/newsletterSlice";
 import { newsletterApi, NewsletterEmailUser, NewsletterEmailGroup } from "@/services/api/newsLetter";
 import { useToast } from "@/context/ToastContext";
+import Checkbox from "@/components/form/input/Checkbox";
 
 const SendToStep: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -159,73 +160,61 @@ const SendToStep: React.FC = () => {
         ) : (
           <div className="space-y-6">
             {/* Employers Group */}
-            <div className="border border-gray-200 rounded-lg overflow-hidden">
-              <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
-                <label className="flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={selectAllEmployers}
-                    onChange={handleSelectAllEmployers}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                  />
-                  <span className="ml-3 text-sm font-semibold text-gray-900">
+            <div className="border border-gray-200 rounded-lg overflow-hidden dark:border-gray-700">
+              <div className="bg-gray-50 px-4 py-3 border-b border-gray-200 dark:bg-gray-800 dark:border-gray-700">
+                <div className="flex items-center">
+                  <Checkbox checked={selectAllEmployers} onChange={handleSelectAllEmployers} label="" />
+                  <span className="ml-3 text-sm font-semibold text-gray-900 dark:text-white">
                     Employers (Select All) - {employers.length} {employers.length === 1 ? "user" : "users"}
                   </span>
-                </label>
+                </div>
               </div>
               <div className="px-4 py-2 space-y-2 max-h-48 overflow-y-auto">
                 {employers.map((employer) => (
-                  <label
+                  <div
                     key={employer.email}
-                    className="flex items-center cursor-pointer py-2 hover:bg-gray-50 px-2 rounded"
+                    className="flex items-center py-2 hover:bg-gray-50 dark:hover:bg-gray-700 px-2 rounded"
                   >
-                    <input
-                      type="checkbox"
+                    <Checkbox
                       checked={isEmployerSelected(employer.email)}
                       onChange={() => handleEmailToggle(employer.email)}
                       disabled={selectAllEmployers}
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded disabled:opacity-50"
+                      label=""
                     />
-                    <span className="ml-3 text-sm text-gray-700">
-                      {employer.name} <span className="text-gray-500">({employer.email})</span>
+                    <span className="ml-3 text-sm text-gray-700 dark:text-gray-300">
+                      {employer.name} <span className="text-gray-500 dark:text-gray-400">({employer.email})</span>
                     </span>
-                  </label>
+                  </div>
                 ))}
               </div>
             </div>
 
             {/* Job Seekers Group */}
-            <div className="border border-gray-200 rounded-lg overflow-hidden">
-              <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
-                <label className="flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={selectAllJobSeekers}
-                    onChange={handleSelectAllJobSeekers}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                  />
-                  <span className="ml-3 text-sm font-semibold text-gray-900">
+            <div className="border border-gray-200 rounded-lg overflow-hidden dark:border-gray-700">
+              <div className="bg-gray-50 px-4 py-3 border-b border-gray-200 dark:bg-gray-800 dark:border-gray-700">
+                <div className="flex items-center">
+                  <Checkbox checked={selectAllJobSeekers} onChange={handleSelectAllJobSeekers} label="" />
+                  <span className="ml-3 text-sm font-semibold text-gray-900 dark:text-white">
                     Job Seekers (Select All) - {jobSeekers.length} {jobSeekers.length === 1 ? "user" : "users"}
                   </span>
-                </label>
+                </div>
               </div>
               <div className="px-4 py-2 space-y-2 max-h-48 overflow-y-auto">
                 {jobSeekers.map((jobSeeker) => (
-                  <label
+                  <div
                     key={jobSeeker.email}
-                    className="flex items-center cursor-pointer py-2 hover:bg-gray-50 px-2 rounded"
+                    className="flex items-center py-2 hover:bg-gray-50 dark:hover:bg-gray-700 px-2 rounded"
                   >
-                    <input
-                      type="checkbox"
+                    <Checkbox
                       checked={isJobSeekerSelected(jobSeeker.email)}
                       onChange={() => handleEmailToggle(jobSeeker.email)}
                       disabled={selectAllJobSeekers}
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded disabled:opacity-50"
+                      label=""
                     />
-                    <span className="ml-3 text-sm text-gray-700">
-                      {jobSeeker.name} <span className="text-gray-500">({jobSeeker.email})</span>
+                    <span className="ml-3 text-sm text-gray-700 dark:text-gray-300">
+                      {jobSeeker.name} <span className="text-gray-500 dark:text-gray-400">({jobSeeker.email})</span>
                     </span>
-                  </label>
+                  </div>
                 ))}
               </div>
             </div>
