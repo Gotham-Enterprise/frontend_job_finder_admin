@@ -106,29 +106,31 @@ const NewsLetterComponent = () => {
                 </svg>
                 <span className="whitespace-nowrap">Create News Letter</span>
               </button>
-              {activeTab === "newsletter" && selectedNewsletters.length > 0 && (() => {
-                // Check statuses of selected newsletters
-                const hasSent = selectedNewslettersData.some((n: any) => n.status === "SENT");
-                const allDraft = selectedNewslettersData.every((n: any) => n.status === "DRAFT");
+              {activeTab === "newsletter" &&
+                selectedNewsletters.length > 0 &&
+                (() => {
+                  // Check statuses of selected newsletters
+                  const hasSent = selectedNewslettersData.some((n: any) => n.status === "SENT");
+                  const allDraft = selectedNewslettersData.every((n: any) => n.status === "DRAFT");
 
-                return (
-                  <BulkActionDropdown
-                    selectedItems={selectedNewsletters}
-                    itemType="newsletters"
-                    onBulkDelete={bulkActionHandlers.onBulkDelete || (() => {})}
-                    onBulkPublish={!hasSent ? bulkActionHandlers.onBulkPublish : undefined}
-                    onBulkSchedule={allDraft ? bulkActionHandlers.onBulkSchedule : undefined}
-                    onClearSelection={() => setSelectedNewsletters([])}
-                    isDeleting={bulkActionHandlers.isBulkActionLoading}
-                    isUpdatingStatus={bulkActionHandlers.isBulkActionLoading}
-                    permissions={{
-                      create: true,
-                      update: true,
-                      delete: true,
-                    }}
-                  />
-                );
-              })()}
+                  return (
+                    <BulkActionDropdown
+                      selectedItems={selectedNewsletters}
+                      itemType="newsletters"
+                      onBulkDelete={bulkActionHandlers.onBulkDelete || (() => {})}
+                      onBulkPublish={!hasSent ? bulkActionHandlers.onBulkPublish : undefined}
+                      onBulkSchedule={allDraft ? bulkActionHandlers.onBulkSchedule : undefined}
+                      onClearSelection={() => setSelectedNewsletters([])}
+                      isDeleting={bulkActionHandlers.isBulkActionLoading}
+                      isUpdatingStatus={bulkActionHandlers.isBulkActionLoading}
+                      permissions={{
+                        create: true,
+                        update: true,
+                        delete: true,
+                      }}
+                    />
+                  );
+                })()}
             </div>
           </div>
           {/* Tabs */}
