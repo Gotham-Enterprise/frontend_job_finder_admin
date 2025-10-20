@@ -31,12 +31,14 @@ const ScheduleStep: React.FC = () => {
     return now;
   };
 
-  const submitNewsletter = async () => {
+  const submitNewsletter = async (isDraft: boolean = false) => {
     let status: "DRAFT" | "SCHEDULED" | "SENT" | "ARCHIVED" = "DRAFT";
     let scheduledAt: string | undefined = undefined;
     const scheduledTimezone = "America/New_York";
 
-    if (sendOption === "now") {
+    if (isDraft) {
+      status = "DRAFT";
+    } else if (sendOption === "now") {
       status = "SENT";
     } else {
       status = "SCHEDULED";
@@ -46,7 +48,6 @@ const ScheduleStep: React.FC = () => {
       scheduledAt = dateObj.toISOString();
     }
 
-    // Update Redux state with schedule details
     dispatch(
       setScheduleDetails({
         status,
@@ -122,8 +123,12 @@ const ScheduleStep: React.FC = () => {
                 />
               </svg>
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Schedule</h2>
-            <p className="text-gray-600">Choose when to send your newsletter.</p>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+              {sendOption === "now" ? "Send Newsletter" : "Schedule"}
+            </h2>
+            <p className="text-gray-600">
+              {sendOption === "now" ? "Send your newsletter immediately." : "Choose when to send your newsletter."}
+            </p>
           </div>
 
           <div className="space-y-6">
@@ -150,7 +155,7 @@ const ScheduleStep: React.FC = () => {
                     onChange={() => setSendOption("later")}
                     className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
                   />
-                  <span className="ml-3 text-sm text-gray-700">Schedule for later</span>
+                  <span className="ml-3 text-sm text-gray-700">Schedule</span>
                 </label>
               </div>
             </div>
@@ -212,10 +217,18 @@ const ScheduleStep: React.FC = () => {
                 </span>
               </label>
             </div>
-            <div className="flex justify-end pt-4">
+            <div className="flex justify-end gap-3 pt-4">
               <button
                 type="button"
-                onClick={submitNewsletter}
+                onClick={() => submitNewsletter(true)}
+                disabled={isSubmitting}
+                className="px-6 py-2.5 bg-white text-gray-700 font-medium rounded-lg border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isSubmitting ? "Saving..." : "Save Draft"}
+              </button>
+              <button
+                type="button"
+                onClick={() => submitNewsletter(false)}
                 disabled={isSubmitting}
                 className="px-6 py-2.5 bg-primary text-white font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
               >

@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useToast } from "@/context/ToastContext";
 import { NewsLetterTab, SentTab, DraftsTab, ArchivedTab } from "./components/tab";
@@ -10,13 +10,13 @@ const NewsLetterComponent = () => {
   const { addToast } = useToast();
   const [activeTab, setActiveTab] = useState("newsletter");
   const [refreshKey, setRefreshKey] = useState(0);
-  const [hasShownToast, setHasShownToast] = useState(false);
+  const toastShownRef = useRef(false);
 
   useEffect(() => {
     // Check if we were redirected with a success parameter
     const success = searchParams.get("success");
-    if (success === "created" && !hasShownToast) {
-      setHasShownToast(true);
+    if (success === "created" && !toastShownRef.current) {
+      toastShownRef.current = true;
       addToast({
         variant: "success",
         title: "Success",
@@ -29,7 +29,7 @@ const NewsLetterComponent = () => {
       // Remove the success parameter from URL to prevent showing toast on refresh
       router.replace("/admin/news-letter", { scroll: false });
     }
-  }, [searchParams, addToast, router, hasShownToast]);
+  }, [searchParams, addToast, router]);
 
   const tabs = [
     { id: "newsletter", label: "News Letter", component: NewsLetterTab },
