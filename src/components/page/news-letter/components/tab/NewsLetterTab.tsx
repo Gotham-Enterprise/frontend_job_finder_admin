@@ -25,6 +25,13 @@ const NewsLetterTab = () => {
     isDeleting: false,
   });
 
+  // Publish confirmation dialog state
+  const [publishDialog, setPublishDialog] = useState({
+    isOpen: false,
+    newsletter: null as Newsletter | null,
+    isPublishing: false,
+  });
+
   useEffect(() => {
     const fetchNewsletters = async () => {
       try {
@@ -164,9 +171,65 @@ const NewsLetterTab = () => {
   };
 
   const handlePublish = (id: string) => {
-    // TODO: Implement publish functionality
-    console.log("Publish newsletter:", id);
+    const newsletter = newsletters.find((n) => n.id === id);
+    if (!newsletter) return;
+
+    // Show confirmation dialog for scheduled newsletters
+    if (newsletter.status === "SCHEDULED") {
+      setPublishDialog({
+        isOpen: true,
+        newsletter: newsletter,
+        isPublishing: false,
+      });
+    } else {
+      // For DRAFT newsletters, publish immediately
+      confirmPublish(newsletter);
+    }
     setOpenDropdownId(null);
+  };
+
+  const confirmPublish = async (newsletter: Newsletter) => {
+    setPublishDialog((prev) => ({ ...prev, isPublishing: true }));
+
+    try {
+      // Import updateNewsletter from API
+      const { updateNewsletter } = await import("@/services/api/newsLetter");
+
+      // Update newsletter status to SENT
+      await updateNewsletter(newsletter.id, {
+        ...newsletter,
+        status: "SENT",
+      });
+
+      console.log("✅ Newsletter published successfully:", newsletter.id);
+
+      // Refresh the list
+      const response = await getNewsletters(undefined, currentPage, itemsPerPage);
+      setNewsletters(response.data);
+      setTotalPages(response.metaData.totalPages);
+
+      // Show success message
+      addToast({
+        variant: "success",
+        title: "Success",
+        message: "Newsletter published successfully!",
+      });
+
+      // Close dialog
+      setPublishDialog({ isOpen: false, newsletter: null, isPublishing: false });
+    } catch (err) {
+      console.error("❌ Failed to publish newsletter:", err);
+      addToast({
+        variant: "error",
+        title: "Error",
+        message: "Failed to publish newsletter. Please try again.",
+      });
+      setPublishDialog((prev) => ({ ...prev, isPublishing: false }));
+    }
+  };
+
+  const cancelPublish = () => {
+    setPublishDialog({ isOpen: false, newsletter: null, isPublishing: false });
   };
 
   // Close dropdown when clicking outside
@@ -318,7 +381,7 @@ const NewsLetterTab = () => {
                                 d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
                               />
                             </svg>
-                            Edit
+                            Edit Template
                           </button>
                         )}
 
@@ -403,6 +466,27 @@ const NewsLetterTab = () => {
         confirmText="Archive"
         cancelText="Cancel"
         isLoading={confirmDialog.isDeleting}
+      />
+
+      {/* Publish Confirmation Dialog */}
+      <ConfirmationDialog
+        isOpen={publishDialog.isOpen}
+        onClose={cancelPublish}
+        onConfirm={() => publishDialog.newsletter && confirmPublish(publishDialog.newsletter)}
+        onCancel={cancelPublish}
+        title="Publish Newsletter Now?"
+        message={
+          publishDialog.newsletter?.status === "SCHEDULED"
+            ? `This newsletter is scheduled to be sent on ${
+                publishDialog.newsletter?.scheduledAt
+                  ? new Date(publishDialog.newsletter.scheduledAt).toLocaleString()
+                  : "a scheduled date"
+              }. Do you want to send it immediately instead?`
+            : "Are you sure you want to publish this newsletter now?"
+        }
+        confirmText="Send Now"
+        cancelText="Cancel"
+        isLoading={publishDialog.isPublishing}
       />
     </div>
   );
