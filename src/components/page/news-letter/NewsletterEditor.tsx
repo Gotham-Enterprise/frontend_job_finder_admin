@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { useAppDispatch } from "@/store";
+import { useAppDispatch, useAppSelector } from "@/store";
 import {
   updateNewsletterData,
   setCurrentStep,
@@ -13,6 +13,7 @@ import {
 import { getNewsletterById } from "@/services/api/newsLetter";
 import NewsletterSteps from "./components/NewsletterSteps";
 import EditStep from "./steps/EditStep";
+import { Modal } from "@/components/ui/modal";
 
 interface Newsletter {
   id: string;
@@ -38,13 +39,57 @@ const NewsletterEditor: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [newsletter, setNewsletter] = useState<Newsletter | null>(null);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+
+  // Get current newsletter data from Redux store
+  const currentNewsletterData = useAppSelector((state) => state.newsletter.data);
+
+  // Store initial data to compare for changes
+  const initialDataRef = useRef<string>("");
 
   const newsletterId = params?.id as string;
 
+  // Check if there are unsaved changes
+  const hasUnsavedChanges = (): boolean => {
+    if (!initialDataRef.current) return false;
+
+    const currentData = JSON.stringify({
+      subject: currentNewsletterData.subject,
+      fromName: currentNewsletterData.fromName,
+      fromAddress: currentNewsletterData.fromAddress,
+      sendTo: currentNewsletterData.sendTo,
+      dontSendTo: currentNewsletterData.dontSendTo,
+      content: currentNewsletterData.content,
+      design: currentNewsletterData.design,
+      scheduledAt: currentNewsletterData.scheduledAt,
+      scheduledTimezone: currentNewsletterData.scheduledTimezone,
+      isTemplate: currentNewsletterData.isTemplate,
+    });
+
+    return initialDataRef.current !== currentData;
+  };
+
   const handleBackToList = () => {
+    if (hasUnsavedChanges()) {
+      setShowConfirmDialog(true);
+    } else {
+      navigateBack();
+    }
+  };
+
+  const navigateBack = () => {
     // Reset edit mode before navigating back
     dispatch(setEditMode({ isEditMode: false, newsletterId: null }));
     router.push("/admin/news-letter");
+  };
+
+  const handleConfirmDiscard = () => {
+    setShowConfirmDialog(false);
+    navigateBack();
+  };
+
+  const handleCancelDiscard = () => {
+    setShowConfirmDialog(false);
   };
 
   useEffect(() => {
@@ -85,6 +130,20 @@ const NewsletterEditor: React.FC = () => {
 
         // Set to Edit step (step 2)
         dispatch(setCurrentStep(2));
+
+        // Store initial data for change detection
+        initialDataRef.current = JSON.stringify({
+          subject: newsletterData.subject,
+          fromName: newsletterData.fromName,
+          fromAddress: newsletterData.fromAddress,
+          sendTo: newsletterData.sendTo,
+          dontSendTo: newsletterData.dontSendTo,
+          content: newsletterData.content,
+          design: newsletterData.design,
+          scheduledAt: newsletterData.scheduledAt,
+          scheduledTimezone: newsletterData.scheduledTimezone,
+          isTemplate: newsletterData.isTemplate,
+        });
 
         setError(null);
       } catch (err) {
@@ -168,6 +227,49 @@ const NewsletterEditor: React.FC = () => {
       <main>
         <EditStep />
       </main>
+
+      {/* Unsaved Changes Confirmation Dialog */}
+      <Modal
+        isOpen={showConfirmDialog}
+        onClose={handleCancelDiscard}
+        isFullscreen={false}
+        opacity={0.5}
+        className="max-w-md"
+      >
+        <div className="p-6">
+          <div className="flex items-center justify-center w-12 h-12 mx-auto mb-4 rounded-full bg-yellow-100">
+            <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+              />
+            </svg>
+          </div>
+
+          <h3 className="text-lg font-semibold text-gray-900 text-center mb-2">Unsaved Changes</h3>
+
+          <p className="text-sm text-gray-600 text-center mb-6">
+            You have unsaved changes that will be lost. Are you sure you want to leave this page?
+          </p>
+
+          <div className="flex gap-3">
+            <button
+              onClick={handleCancelDiscard}
+              className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            >
+              Stay and Continue Editing
+            </button>
+            <button
+              onClick={handleConfirmDiscard}
+              className="flex-1 px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+            >
+              Discard Changes
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

@@ -23,7 +23,7 @@ const SentTab = () => {
         setNewsletters(response.data);
         setTotalPages(response.metaData.totalPages);
       } catch (err) {
-        console.error("❌ Failed to fetch newsletters:", err);
+        console.error("Failed to fetch newsletters:", err);
         setError("Failed to load newsletters");
       } finally {
         setLoading(false);

@@ -146,7 +146,7 @@ export const updateNewsletter = async (id: string, data: Partial<NewsletterData>
   }
 
   try {
-    const response = await apiPatch<NewsletterResponse>(`/api/admin/newsletter/${id}`, cleanedData);
+    const response = await apiPut<NewsletterResponse>(`/api/admin/newsletter/${id}`, cleanedData);
 
     return response;
   } catch (error) {

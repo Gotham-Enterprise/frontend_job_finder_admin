@@ -344,19 +344,22 @@ const ReactEmailEditor: React.FC<ReactEmailEditorProps> = ({ onDesignLoad, onLoa
     try {
       setIsSaving(true);
 
-      await updateNewsletter(editingNewsletterId, {
+      // Prepare payload matching the create newsletter structure
+      const updatePayload = {
+        subject: newsletterData.subject || "Untitled Newsletter",
+        fromName: newsletterData.fromName || "",
+        fromAddress: newsletterData.fromAddress || "",
+        sendTo: newsletterData.sendTo || [],
+        dontSendTo: newsletterData.dontSendTo || [],
+        scheduledAt: newsletterData.scheduledAt,
+        scheduledTimezone: newsletterData.scheduledTimezone || "America/New_York",
+        isTemplate: newsletterData.isTemplate || false,
+        status: "DRAFT" as const, // Force DRAFT status for editing
         content: html,
         design: design,
-        subject: newsletterData.subject,
-        fromName: newsletterData.fromName,
-        fromAddress: newsletterData.fromAddress,
-        sendTo: newsletterData.sendTo,
-        dontSendTo: newsletterData.dontSendTo,
-        status: newsletterData.status,
-        scheduledAt: newsletterData.scheduledAt,
-        scheduledTimezone: newsletterData.scheduledTimezone,
-        isTemplate: newsletterData.isTemplate,
-      });
+      };
+
+      await updateNewsletter(editingNewsletterId, updatePayload);
 
       addToast({
         variant: "success",
@@ -483,35 +486,6 @@ const ReactEmailEditor: React.FC<ReactEmailEditorProps> = ({ onDesignLoad, onLoa
                 className="px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               >
                 Preview
-              </button>
-
-              <button
-                onClick={saveDesign}
-                disabled={isSaving}
-                className="px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
-              >
-                {isSaving ? (
-                  <>
-                    <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      ></path>
-                    </svg>
-                    <span>Saving...</span>
-                  </>
-                ) : (
-                  <span>Save Draft</span>
-                )}
               </button>
 
               <button
