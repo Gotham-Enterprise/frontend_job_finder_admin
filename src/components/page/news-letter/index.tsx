@@ -2,12 +2,15 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useToast } from "@/context/ToastContext";
+import { useAppDispatch } from "@/store";
+import { resetNewsletter } from "@/store/slices/newsletterSlice";
 import { NewsLetterTab, SentTab, DraftsTab, ArchivedTab } from "./components/tab";
 
 const NewsLetterComponent = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { addToast } = useToast();
+  const dispatch = useAppDispatch();
   const [activeTab, setActiveTab] = useState("newsletter");
   const [refreshKey, setRefreshKey] = useState(0);
   const toastShownRef = useRef(false);
@@ -38,6 +41,11 @@ const NewsLetterComponent = () => {
     { id: "archived", label: "Archived", component: ArchivedTab },
   ];
 
+  const handleCreateNewsletter = () => {
+    dispatch(resetNewsletter());
+    router.push("/admin/news-letter/create");
+  };
+
   const renderTabContent = () => {
     const activeTabData = tabs.find((tab) => tab.id === activeTab);
     if (activeTabData) {
@@ -60,7 +68,7 @@ const NewsLetterComponent = () => {
             </div>
             <div className="flex space-x-3">
               <button
-                onClick={() => router.push("/admin/news-letter/create")}
+                onClick={handleCreateNewsletter}
                 className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary"
               >
                 <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

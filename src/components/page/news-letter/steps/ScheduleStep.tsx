@@ -6,6 +6,9 @@ import { createNewsletter } from "@/services/api/newsLetter";
 import { useToast } from "@/context/ToastContext";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import TimePicker from "react-time-picker";
+import "react-time-picker/dist/TimePicker.css";
+import "react-clock/dist/Clock.css";
 
 const ScheduleStep: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -14,16 +17,17 @@ const ScheduleStep: React.FC = () => {
   const newsletterData = useAppSelector((state) => state.newsletter.data);
   const isSubmitting = useAppSelector((state) => state.newsletter.isSubmitting);
 
-  const [sendOption, setSendOption] = useState<"now" | "later">("later");
+  const [sendOption, setSendOption] = useState<"now" | "later">("now");
   const [scheduledDate, setScheduledDate] = useState<Date>(new Date());
   const [scheduledTime, setScheduledTime] = useState("");
   const [saveAsTemplate, setSaveAsTemplate] = useState(false);
 
-  useEffect(() => {
-    const now = new Date();
-    const timeStr = now.toTimeString().slice(0, 5);
-    setScheduledTime(timeStr);
-  }, []);
+  // Remove the useEffect that sets default time
+  // useEffect(() => {
+  //   const now = new Date();
+  //   const timeStr = now.toTimeString().slice(0, 5);
+  //   setScheduledTime(timeStr);
+  // }, []);
 
   const getTodayDate = () => {
     const now = new Date();
@@ -108,9 +112,55 @@ const ScheduleStep: React.FC = () => {
             color: #d1d5db !important;
             opacity: 0.4 !important;
           }
+          
+          /* Time Picker Styling */
+          .react-time-picker {
+            width: 100%;
+          }
+          .react-time-picker__wrapper {
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            padding: 0.625rem 1rem;
+            width: 100%;
+            display: flex;
+            align-items: center;
+          }
+          .react-time-picker__wrapper:hover {
+            border-color: #9ca3af;
+          }
+          .react-time-picker__wrapper:focus-within {
+            outline: 2px solid #3b82f6;
+            outline-offset: 2px;
+            border-color: #3b82f6;
+          }
+          .react-time-picker__inputGroup {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+          }
+          .react-time-picker__inputGroup__input {
+            border: none;
+            outline: none;
+            font-size: 0.875rem;
+            padding: 0.125rem;
+          }
+          .react-time-picker__inputGroup__divider,
+          .react-time-picker__inputGroup__leadingZero {
+            font-size: 0.875rem;
+          }
+          .react-time-picker__button {
+            border: none;
+            background: none;
+            padding: 0.25rem;
+          }
+          .react-time-picker__button svg {
+            width: 1.25rem;
+            height: 1.25rem;
+            stroke: #6b7280;
+          }
         `}
       </style>
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max- mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
           <div className="text-center mb-8">
             <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-indigo-100 mb-4">
@@ -184,14 +234,14 @@ const ScheduleStep: React.FC = () => {
                     Time (EDT)
                   </label>
                   <div className="relative w-full">
-                    <input
-                      type="time"
-                      id="scheduledTime"
+                    <TimePicker
+                      onChange={(value) => setScheduledTime(value || "")}
                       value={scheduledTime}
-                      onChange={(e) => setScheduledTime(e.target.value)}
+                      disableClock={true}
+                      clearIcon={null}
+                      format="h:mm a"
+                      className="w-full"
                       required
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 cursor-pointer"
-                      style={{ colorScheme: "light" }}
                     />
                   </div>
                 </div>
