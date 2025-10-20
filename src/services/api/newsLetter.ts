@@ -126,10 +126,8 @@ export const createNewsletter = async (data: NewsletterData): Promise<Newsletter
 
   try {
     const response = await apiPost<NewsletterResponse>("/api/admin/newsletter/", payload);
-    console.log("✅ [CREATE] Success:", response);
     return response;
   } catch (error) {
-    console.error("❌ [CREATE] API Error:", error);
     throw error;
   }
 };
