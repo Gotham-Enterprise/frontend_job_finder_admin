@@ -96,6 +96,38 @@ export interface DeleteNewsletterResponse {
   data: any[];
 }
 
+export interface BulkPublishRequest {
+  newsLetterIds: string[];
+}
+
+export interface BulkScheduleRequest {
+  newsLetterIds: string[];
+  scheduledAt: string;
+  scheduledTimezone: string;
+}
+
+export interface BulkActionResponse {
+  success: boolean;
+  message: string;
+  data: any[];
+}
+
+export interface NewsletterEmailUser {
+  email: string;
+  name: string;
+}
+
+export interface NewsletterEmailGroup {
+  role: "employer" | "job-seeker";
+  users: NewsletterEmailUser[];
+  count: number;
+}
+
+export interface NewsletterEmailResponse {
+  success: boolean;
+  data: NewsletterEmailGroup[];
+}
+
 export const createNewsletter = async (data: NewsletterData): Promise<NewsletterResponse> => {
   let designString: string;
   if (data.design && typeof data.design === "object") {
@@ -224,6 +256,40 @@ export const deleteNewsletters = async (newsLetterIds: string[]): Promise<Delete
   }
 };
 
+export const bulkPublishNewsletters = async (newsLetterIds: string[]): Promise<BulkActionResponse> => {
+  try {
+    console.log("📤 [BULK PUBLISH] Publishing newsletters:", newsLetterIds);
+    const response = await apiPut<BulkActionResponse>("/api/admin/newsletter/publish/all", {
+      newsLetterIds,
+    });
+    console.log("✅ [BULK PUBLISH] Success:", response);
+    return response;
+  } catch (error) {
+    console.error("❌ [BULK PUBLISH] API Error:", error);
+    throw error;
+  }
+};
+
+export const bulkScheduleNewsletters = async (
+  newsLetterIds: string[],
+  scheduledAt: string,
+  scheduledTimezone: string
+): Promise<BulkActionResponse> => {
+  try {
+    console.log("📅 [BULK SCHEDULE] Scheduling newsletters:", newsLetterIds);
+    const response = await apiPut<BulkActionResponse>("/api/admin/newsletter/schedule/all", {
+      newsLetterIds,
+      scheduledAt,
+      scheduledTimezone,
+    });
+    console.log("✅ [BULK SCHEDULE] Success:", response);
+    return response;
+  } catch (error) {
+    console.error("❌ [BULK SCHEDULE] API Error:", error);
+    throw error;
+  }
+};
+
 // API object for organized access
 export const newsletterApi = {
   create: createNewsletter,
@@ -231,6 +297,10 @@ export const newsletterApi = {
   getById: getNewsletterById,
   getAll: getNewsletters,
   delete: deleteNewsletters,
+
+  async getNewsletterEmails(): Promise<NewsletterEmailResponse> {
+    return apiGet<NewsletterEmailResponse>("/email");
+  },
 
   async getArchivedNewsletters(filters: NewsletterFilters = {}): Promise<ArchivedNewsletterResponse> {
     const queryParams = new URLSearchParams();

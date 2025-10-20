@@ -5,6 +5,7 @@ import { useToast } from "@/context/ToastContext";
 import { useAppDispatch } from "@/store";
 import { resetNewsletter } from "@/store/slices/newsletterSlice";
 import { NewsLetterTab, SentTab, DraftsTab, ArchivedTab } from "./components/tab";
+import BulkActionDropdown from "@/components/ui/BulkActionDropdown";
 
 const NewsLetterComponent = () => {
   const router = useRouter();
@@ -14,6 +15,19 @@ const NewsLetterComponent = () => {
   const [activeTab, setActiveTab] = useState("newsletter");
   const [refreshKey, setRefreshKey] = useState(0);
   const toastShownRef = useRef(false);
+
+  // Bulk actions state for NewsLetterTab
+  const [selectedNewsletters, setSelectedNewsletters] = useState<string[]>([]);
+  const [bulkActionHandlers, setBulkActionHandlers] = useState<{
+    onBulkPublish?: () => void;
+    onBulkDelete?: () => void;
+    isBulkActionLoading?: boolean;
+  }>({});
+
+  // Debug: Log when selectedNewsletters changes
+  useEffect(() => {
+    console.log("Parent - selectedNewsletters changed:", selectedNewsletters);
+  }, [selectedNewsletters]);
 
   useEffect(() => {
     // Check if we were redirected with a success parameter
@@ -41,6 +55,11 @@ const NewsLetterComponent = () => {
     { id: "archived", label: "Archived", component: ArchivedTab },
   ];
 
+  // Clear selections when switching tabs
+  useEffect(() => {
+    setSelectedNewsletters([]);
+  }, [activeTab]);
+
   const handleCreateNewsletter = () => {
     dispatch(resetNewsletter());
     router.push("/admin/news-letter/create");
@@ -50,7 +69,20 @@ const NewsLetterComponent = () => {
     const activeTabData = tabs.find((tab) => tab.id === activeTab);
     if (activeTabData) {
       const Component = activeTabData.component;
-      return <Component key={activeTab === "newsletter" ? refreshKey : activeTab} />;
+
+      // Pass props to NewsLetterTab for bulk actions
+      if (activeTab === "newsletter") {
+        return (
+          <Component
+            key={refreshKey}
+            selectedNewsletters={selectedNewsletters}
+            setSelectedNewsletters={setSelectedNewsletters}
+            setBulkActionHandlers={setBulkActionHandlers}
+          />
+        );
+      }
+
+      return <Component key={activeTab} />;
     }
     return null;
   };
@@ -66,16 +98,36 @@ const NewsLetterComponent = () => {
               <h1 className="text-3xl font-bold text-gray-900">News Letter Management</h1>
               <p className="mt-2 text-gray-600">Create, manage, and send news letter to your audience</p>
             </div>
-            <div className="flex space-x-3">
+            <div className="flex items-center gap-2">
               <button
                 onClick={handleCreateNewsletter}
-                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary"
+                className="flex items-center gap-2 px-4 py-3 text-sm font-medium rounded-sm border bg-white border-gray-200 text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors"
               >
-                <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                 </svg>
-                Create News Letter
+                <span className="whitespace-nowrap">Create News Letter</span>
               </button>
+              {activeTab === "newsletter" && selectedNewsletters.length > 0 && (
+                <BulkActionDropdown
+                  selectedItems={selectedNewsletters}
+                  itemType="newsletters"
+                  onBulkDelete={bulkActionHandlers.onBulkDelete || (() => {})}
+                  onBulkPublish={bulkActionHandlers.onBulkPublish || (() => {})}
+                  onClearSelection={() => setSelectedNewsletters([])}
+                  isDeleting={bulkActionHandlers.isBulkActionLoading}
+                  isUpdatingStatus={bulkActionHandlers.isBulkActionLoading}
+                  permissions={{
+                    create: true,
+                    update: true,
+                    delete: true,
+                  }}
+                />
+              )}
+              {/* Debug info */}
+              {activeTab === "newsletter" && selectedNewsletters.length > 0 && (
+                <div className="text-xs text-gray-500">Selected: {selectedNewsletters.length}</div>
+              )}
             </div>
           </div>
           {/* Tabs */}

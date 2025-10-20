@@ -74,13 +74,8 @@ const ScheduleStep: React.FC = () => {
         isTemplate: saveAsTemplate,
       };
 
-      console.log("Submitting Newsletter to API:", finalPayload);
-
       const response = await createNewsletter(finalPayload);
 
-      console.log("Newsletter created successfully:", response);
-
-      // Redirect to newsletter list with success parameter
       router.push("/admin/news-letter?success=created");
     } catch (error: any) {
       console.error("Failed to create newsletter:", error);

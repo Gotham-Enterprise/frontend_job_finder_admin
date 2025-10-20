@@ -1,30 +1,51 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useAppDispatch } from "@/store";
 import { setSendToDetails, completeStep, setCurrentStep } from "@/store/slices/newsletterSlice";
-
-// Sample data for Job Seekers
-const jobSeekers = [
-  { email: "jobseeker1@example.com", name: "John Doe" },
-  { email: "jobseeker2@example.com", name: "Jane Smith" },
-  { email: "jobseeker3@example.com", name: "Mike Johnson" },
-  { email: "jobseeker4@example.com", name: "Sarah Williams" },
-  { email: "jobseeker5@example.com", name: "David Brown" },
-];
-
-// Sample data for Employers
-const employers = [
-  { email: "employer1@example.com", name: "Tech Corp" },
-  { email: "employer2@example.com", name: "Business Solutions Inc" },
-  { email: "employer3@example.com", name: "Creative Agency" },
-  { email: "employer4@example.com", name: "Global Industries" },
-  { email: "employer5@example.com", name: "Startup Ventures" },
-];
+import { newsletterApi, NewsletterEmailUser, NewsletterEmailGroup } from "@/services/api/newsLetter";
+import { useToast } from "@/context/ToastContext";
 
 const SendToStep: React.FC = () => {
   const dispatch = useAppDispatch();
+  const { addToast } = useToast();
   const [selectedRecipients, setSelectedRecipients] = useState<string[]>([]);
   const [selectAllJobSeekers, setSelectAllJobSeekers] = useState(false);
   const [selectAllEmployers, setSelectAllEmployers] = useState(false);
+  const [jobSeekers, setJobSeekers] = useState<NewsletterEmailUser[]>([]);
+  const [employers, setEmployers] = useState<NewsletterEmailUser[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Fetch email lists on component mount
+  useEffect(() => {
+    const fetchEmails = async () => {
+      try {
+        setIsLoading(true);
+        const response = await newsletterApi.getNewsletterEmails();
+
+        if (response.success && response.data) {
+          const employerGroup = response.data.find((group) => group.role === "employer");
+          const jobSeekerGroup = response.data.find((group) => group.role === "job-seeker");
+
+          if (employerGroup) {
+            setEmployers(employerGroup.users);
+          }
+          if (jobSeekerGroup) {
+            setJobSeekers(jobSeekerGroup.users);
+          }
+        }
+      } catch (error: any) {
+        console.error("Failed to fetch newsletter emails:", error);
+        addToast({
+          variant: "error",
+          title: "Error",
+          message: error.message || "Failed to load recipients. Please try again.",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchEmails();
+  }, [addToast]);
 
   // Handle individual email selection
   const handleEmailToggle = (email: string) => {
@@ -131,86 +152,96 @@ const SendToStep: React.FC = () => {
           <p className="text-gray-600">Select your audience for this newsletter.</p>
         </div>
 
-        <div className="space-y-6">
-          {/* Employers Group */}
-          <div className="border border-gray-200 rounded-lg overflow-hidden">
-            <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
-              <label className="flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={selectAllEmployers}
-                  onChange={handleSelectAllEmployers}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                />
-                <span className="ml-3 text-sm font-semibold text-gray-900">Employers (Select All)</span>
-              </label>
-            </div>
-            <div className="px-4 py-2 space-y-2 max-h-48 overflow-y-auto">
-              {employers.map((employer) => (
-                <label
-                  key={employer.email}
-                  className="flex items-center cursor-pointer py-2 hover:bg-gray-50 px-2 rounded"
-                >
+        {isLoading ? (
+          <div className="flex justify-center items-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {/* Employers Group */}
+            <div className="border border-gray-200 rounded-lg overflow-hidden">
+              <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
+                <label className="flex items-center cursor-pointer">
                   <input
                     type="checkbox"
-                    checked={isEmployerSelected(employer.email)}
-                    onChange={() => handleEmailToggle(employer.email)}
-                    disabled={selectAllEmployers}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded disabled:opacity-50"
+                    checked={selectAllEmployers}
+                    onChange={handleSelectAllEmployers}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                   />
-                  <span className="ml-3 text-sm text-gray-700">
-                    {employer.name} <span className="text-gray-500">({employer.email})</span>
+                  <span className="ml-3 text-sm font-semibold text-gray-900">
+                    Employers (Select All) - {employers.length} {employers.length === 1 ? "user" : "users"}
                   </span>
                 </label>
-              ))}
+              </div>
+              <div className="px-4 py-2 space-y-2 max-h-48 overflow-y-auto">
+                {employers.map((employer) => (
+                  <label
+                    key={employer.email}
+                    className="flex items-center cursor-pointer py-2 hover:bg-gray-50 px-2 rounded"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={isEmployerSelected(employer.email)}
+                      onChange={() => handleEmailToggle(employer.email)}
+                      disabled={selectAllEmployers}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded disabled:opacity-50"
+                    />
+                    <span className="ml-3 text-sm text-gray-700">
+                      {employer.name} <span className="text-gray-500">({employer.email})</span>
+                    </span>
+                  </label>
+                ))}
+              </div>
             </div>
-          </div>
 
-          {/* Job Seekers Group */}
-          <div className="border border-gray-200 rounded-lg overflow-hidden">
-            <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
-              <label className="flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={selectAllJobSeekers}
-                  onChange={handleSelectAllJobSeekers}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                />
-                <span className="ml-3 text-sm font-semibold text-gray-900">Job Seekers (Select All)</span>
-              </label>
-            </div>
-            <div className="px-4 py-2 space-y-2 max-h-48 overflow-y-auto">
-              {jobSeekers.map((jobSeeker) => (
-                <label
-                  key={jobSeeker.email}
-                  className="flex items-center cursor-pointer py-2 hover:bg-gray-50 px-2 rounded"
-                >
+            {/* Job Seekers Group */}
+            <div className="border border-gray-200 rounded-lg overflow-hidden">
+              <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
+                <label className="flex items-center cursor-pointer">
                   <input
                     type="checkbox"
-                    checked={isJobSeekerSelected(jobSeeker.email)}
-                    onChange={() => handleEmailToggle(jobSeeker.email)}
-                    disabled={selectAllJobSeekers}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded disabled:opacity-50"
+                    checked={selectAllJobSeekers}
+                    onChange={handleSelectAllJobSeekers}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                   />
-                  <span className="ml-3 text-sm text-gray-700">
-                    {jobSeeker.name} <span className="text-gray-500">({jobSeeker.email})</span>
+                  <span className="ml-3 text-sm font-semibold text-gray-900">
+                    Job Seekers (Select All) - {jobSeekers.length} {jobSeekers.length === 1 ? "user" : "users"}
                   </span>
                 </label>
-              ))}
+              </div>
+              <div className="px-4 py-2 space-y-2 max-h-48 overflow-y-auto">
+                {jobSeekers.map((jobSeeker) => (
+                  <label
+                    key={jobSeeker.email}
+                    className="flex items-center cursor-pointer py-2 hover:bg-gray-50 px-2 rounded"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={isJobSeekerSelected(jobSeeker.email)}
+                      onChange={() => handleEmailToggle(jobSeeker.email)}
+                      disabled={selectAllJobSeekers}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded disabled:opacity-50"
+                    />
+                    <span className="ml-3 text-sm text-gray-700">
+                      {jobSeeker.name} <span className="text-gray-500">({jobSeeker.email})</span>
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-4">
+              <button
+                type="button"
+                onClick={handleContinue}
+                disabled={buildSendToArray.length === 0}
+                className="px-6 py-2.5 bg-primary text-white font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Continue
+              </button>
             </div>
           </div>
-
-          <div className="flex justify-end pt-4">
-            <button
-              type="button"
-              onClick={handleContinue}
-              disabled={buildSendToArray.length === 0}
-              className="px-6 py-2.5 bg-primary text-white font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Continue
-            </button>
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );

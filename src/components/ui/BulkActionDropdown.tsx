@@ -55,9 +55,17 @@ const BulkActionDropdown: React.FC<BulkActionDropdownProps> = ({
   // Check permissions for different actions based on item type
   const modulePermission =
     itemType === "posts" || itemType === "categories" || itemType === "tags" ? "blog" : "general";
-  const canPublish = hasPermission(modulePermission, "edit") && onBulkPublish;
-  const canDraft = hasPermission(modulePermission, "edit") && onBulkDraft;
-  const canArchive = hasPermission(modulePermission, "delete") && onBulkDelete;
+  
+  // If permissions prop is provided, use it; otherwise use hasPermission hook
+  const canPublish = permissions 
+    ? (permissions.update && onBulkPublish) 
+    : (hasPermission(modulePermission, "edit") && onBulkPublish);
+  const canDraft = permissions 
+    ? (permissions.update && onBulkDraft) 
+    : (hasPermission(modulePermission, "edit") && onBulkDraft);
+  const canArchive = permissions 
+    ? (permissions.delete && onBulkDelete) 
+    : (hasPermission(modulePermission, "delete") && onBulkDelete);
 
   // Check if there are any available actions based on permissions
   const hasAvailableActions: boolean = !!(canPublish || canDraft || canArchive);
@@ -94,11 +102,11 @@ const BulkActionDropdown: React.FC<BulkActionDropdownProps> = ({
           style={{ boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)" }}
         >
           <div className="py-2">
-            {/* Status Update Options - only show for posts */}
-            {itemType === "posts" && canPublish && (
+            {/* Status Update Options - show for posts and newsletters */}
+            {(itemType === "posts" || itemType === "newsletters") && canPublish && onBulkPublish && (
               <button
                 onClick={() => {
-                  onBulkPublish();
+                  onBulkPublish?.();
                   setIsOpen(false);
                 }}
                 disabled={isUpdatingStatus}
@@ -115,10 +123,10 @@ const BulkActionDropdown: React.FC<BulkActionDropdownProps> = ({
               <div className="border-t border-gray-100 dark:border-gray-700 mx-2"></div>
             )}
 
-            {itemType === "posts" && canDraft && (
+            {itemType === "posts" && canDraft && onBulkDraft && (
               <button
                 onClick={() => {
-                  onBulkDraft();
+                  onBulkDraft?.();
                   setIsOpen(false);
                 }}
                 disabled={isUpdatingStatus}
@@ -132,7 +140,7 @@ const BulkActionDropdown: React.FC<BulkActionDropdownProps> = ({
             )}
 
             {/* Add separator if status options are shown */}
-            {itemType === "posts" && (canPublish || canDraft) && canArchive && (
+            {((itemType === "posts" && (canPublish || canDraft)) || (itemType === "newsletters" && canPublish)) && canArchive && (
               <div className="border-t border-gray-100 dark:border-gray-700 mx-2"></div>
             )}
 
