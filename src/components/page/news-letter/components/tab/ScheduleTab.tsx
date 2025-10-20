@@ -5,6 +5,7 @@ import { getNewsletters, Newsletter, updateNewsletter } from "@/services/api/new
 import Pagination from "../../../../tables/Pagination";
 import { Modal } from "@/components/ui/modal";
 import { useToast } from "@/context/ToastContext";
+import ConfirmationDialog from "@/components/ui/ConfirmationDialog";
 
 const ScheduleTab = () => {
   const { addToast } = useToast();
@@ -23,6 +24,13 @@ const ScheduleTab = () => {
     scheduledDate: "",
     scheduledTime: "",
     isUpdating: false,
+  });
+
+  // Publish confirmation dialog state
+  const [publishDialog, setPublishDialog] = useState({
+    isOpen: false,
+    newsletter: null as Newsletter | null,
+    isPublishing: false,
   });
 
   useEffect(() => {
@@ -156,6 +164,63 @@ const ScheduleTab = () => {
       scheduledDate: "",
       scheduledTime: "",
       isUpdating: false,
+    });
+  };
+
+  const handlePublishClick = (newsletter: Newsletter) => {
+    setPublishDialog({
+      isOpen: true,
+      newsletter: newsletter,
+      isPublishing: false,
+    });
+    setOpenDropdownId(null);
+  };
+
+  const confirmPublish = async () => {
+    if (!publishDialog.newsletter) return;
+
+    setPublishDialog((prev) => ({ ...prev, isPublishing: true }));
+
+    try {
+      await updateNewsletter(publishDialog.newsletter.id, {
+        ...publishDialog.newsletter,
+        status: "SENT",
+        scheduledAt: undefined, // Clear scheduled time when publishing immediately
+      });
+
+      addToast({
+        variant: "success",
+        title: "Success",
+        message: "Newsletter published successfully!",
+      });
+
+      // Refresh the list
+      const response = await getNewsletters("SCHEDULED", currentPage, itemsPerPage);
+      setNewsletters(response.data);
+      setTotalPages(response.metaData.totalPages);
+
+      // Close dialog
+      setPublishDialog({
+        isOpen: false,
+        newsletter: null,
+        isPublishing: false,
+      });
+    } catch (err) {
+      console.error("❌ Failed to publish newsletter:", err);
+      addToast({
+        variant: "error",
+        title: "Error",
+        message: "Failed to publish newsletter. Please try again.",
+      });
+      setPublishDialog((prev) => ({ ...prev, isPublishing: false }));
+    }
+  };
+
+  const cancelPublish = () => {
+    setPublishDialog({
+      isOpen: false,
+      newsletter: null,
+      isPublishing: false,
     });
   };
 
@@ -388,6 +453,20 @@ const ScheduleTab = () => {
                           Edit Schedule
                         </button>
                         <button
+                          onClick={() => handlePublishClick(newsletter)}
+                          className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                            />
+                          </svg>
+                          Publish Now
+                        </button>
+                        <button
                           onClick={() => handlePreview(newsletter)}
                           className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2"
                         >
@@ -497,6 +576,27 @@ const ScheduleTab = () => {
           </div>
         </div>
       </Modal>
+
+      {/* Publish Confirmation Dialog */}
+      <ConfirmationDialog
+        isOpen={publishDialog.isOpen}
+        onClose={cancelPublish}
+        onConfirm={confirmPublish}
+        onCancel={cancelPublish}
+        title="Publish Newsletter Now?"
+        message={
+          publishDialog.newsletter
+            ? `This newsletter is scheduled for ${
+                publishDialog.newsletter.scheduledAt
+                  ? new Date(publishDialog.newsletter.scheduledAt).toLocaleString()
+                  : "later"
+              }. Do you want to publish it immediately instead?`
+            : "Are you sure you want to publish this newsletter now?"
+        }
+        confirmText="Publish Now"
+        cancelText="Cancel"
+        isLoading={publishDialog.isPublishing}
+      />
     </div>
   );
 };
