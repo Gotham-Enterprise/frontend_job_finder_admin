@@ -18,16 +18,13 @@ const NewsLetterComponent = () => {
 
   // Bulk actions state for NewsLetterTab
   const [selectedNewsletters, setSelectedNewsletters] = useState<string[]>([]);
+  const [selectedNewslettersData, setSelectedNewslettersData] = useState<any[]>([]);
   const [bulkActionHandlers, setBulkActionHandlers] = useState<{
     onBulkPublish?: () => void;
     onBulkDelete?: () => void;
+    onBulkSchedule?: () => void;
     isBulkActionLoading?: boolean;
   }>({});
-
-  // Debug: Log when selectedNewsletters changes
-  useEffect(() => {
-    console.log("Parent - selectedNewsletters changed:", selectedNewsletters);
-  }, [selectedNewsletters]);
 
   useEffect(() => {
     // Check if we were redirected with a success parameter
@@ -78,6 +75,7 @@ const NewsLetterComponent = () => {
             selectedNewsletters={selectedNewsletters}
             setSelectedNewsletters={setSelectedNewsletters}
             setBulkActionHandlers={setBulkActionHandlers}
+            setSelectedNewslettersData={setSelectedNewslettersData}
           />
         );
       }
@@ -108,26 +106,29 @@ const NewsLetterComponent = () => {
                 </svg>
                 <span className="whitespace-nowrap">Create News Letter</span>
               </button>
-              {activeTab === "newsletter" && selectedNewsletters.length > 0 && (
-                <BulkActionDropdown
-                  selectedItems={selectedNewsletters}
-                  itemType="newsletters"
-                  onBulkDelete={bulkActionHandlers.onBulkDelete || (() => {})}
-                  onBulkPublish={bulkActionHandlers.onBulkPublish || (() => {})}
-                  onClearSelection={() => setSelectedNewsletters([])}
-                  isDeleting={bulkActionHandlers.isBulkActionLoading}
-                  isUpdatingStatus={bulkActionHandlers.isBulkActionLoading}
-                  permissions={{
-                    create: true,
-                    update: true,
-                    delete: true,
-                  }}
-                />
-              )}
-              {/* Debug info */}
-              {activeTab === "newsletter" && selectedNewsletters.length > 0 && (
-                <div className="text-xs text-gray-500">Selected: {selectedNewsletters.length}</div>
-              )}
+              {activeTab === "newsletter" && selectedNewsletters.length > 0 && (() => {
+                // Check statuses of selected newsletters
+                const hasSent = selectedNewslettersData.some((n: any) => n.status === "SENT");
+                const allDraft = selectedNewslettersData.every((n: any) => n.status === "DRAFT");
+
+                return (
+                  <BulkActionDropdown
+                    selectedItems={selectedNewsletters}
+                    itemType="newsletters"
+                    onBulkDelete={bulkActionHandlers.onBulkDelete || (() => {})}
+                    onBulkPublish={!hasSent ? bulkActionHandlers.onBulkPublish : undefined}
+                    onBulkSchedule={allDraft ? bulkActionHandlers.onBulkSchedule : undefined}
+                    onClearSelection={() => setSelectedNewsletters([])}
+                    isDeleting={bulkActionHandlers.isBulkActionLoading}
+                    isUpdatingStatus={bulkActionHandlers.isBulkActionLoading}
+                    permissions={{
+                      create: true,
+                      update: true,
+                      delete: true,
+                    }}
+                  />
+                );
+              })()}
             </div>
           </div>
           {/* Tabs */}

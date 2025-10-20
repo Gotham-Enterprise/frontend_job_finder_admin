@@ -10,6 +10,7 @@ interface BulkActionDropdownProps {
   onClearSelection: () => void;
   onBulkPublish?: () => void;
   onBulkDraft?: () => void;
+  onBulkSchedule?: () => void;
   isDeleting?: boolean;
   isUpdatingStatus?: boolean;
   className?: string;
@@ -27,6 +28,7 @@ const BulkActionDropdown: React.FC<BulkActionDropdownProps> = ({
   onClearSelection,
   onBulkPublish,
   onBulkDraft,
+  onBulkSchedule,
   isDeleting = false,
   isUpdatingStatus = false,
   className = "",
@@ -55,20 +57,23 @@ const BulkActionDropdown: React.FC<BulkActionDropdownProps> = ({
   // Check permissions for different actions based on item type
   const modulePermission =
     itemType === "posts" || itemType === "categories" || itemType === "tags" ? "blog" : "general";
-  
+
   // If permissions prop is provided, use it; otherwise use hasPermission hook
-  const canPublish = permissions 
-    ? (permissions.update && onBulkPublish) 
-    : (hasPermission(modulePermission, "edit") && onBulkPublish);
-  const canDraft = permissions 
-    ? (permissions.update && onBulkDraft) 
-    : (hasPermission(modulePermission, "edit") && onBulkDraft);
-  const canArchive = permissions 
-    ? (permissions.delete && onBulkDelete) 
-    : (hasPermission(modulePermission, "delete") && onBulkDelete);
+  const canPublish = permissions
+    ? permissions.update && onBulkPublish
+    : hasPermission(modulePermission, "edit") && onBulkPublish;
+  const canDraft = permissions
+    ? permissions.update && onBulkDraft
+    : hasPermission(modulePermission, "edit") && onBulkDraft;
+  const canSchedule = permissions
+    ? permissions.update && onBulkSchedule
+    : hasPermission(modulePermission, "edit") && onBulkSchedule;
+  const canArchive = permissions
+    ? permissions.delete && onBulkDelete
+    : hasPermission(modulePermission, "delete") && onBulkDelete;
 
   // Check if there are any available actions based on permissions
-  const hasAvailableActions: boolean = !!(canPublish || canDraft || canArchive);
+  const hasAvailableActions: boolean = !!(canPublish || canDraft || canSchedule || canArchive);
 
   // Only show the dropdown if there are selected items and at least some actions are available
   if (!hasSelectedItems) {
@@ -139,10 +144,27 @@ const BulkActionDropdown: React.FC<BulkActionDropdownProps> = ({
               </button>
             )}
 
-            {/* Add separator if status options are shown */}
-            {((itemType === "posts" && (canPublish || canDraft)) || (itemType === "newsletters" && canPublish)) && canArchive && (
-              <div className="border-t border-gray-100 dark:border-gray-700 mx-2"></div>
+            {/* Schedule option for newsletters */}
+            {itemType === "newsletters" && canSchedule && onBulkSchedule && (
+              <button
+                onClick={() => {
+                  onBulkSchedule?.();
+                  setIsOpen(false);
+                }}
+                disabled={isUpdatingStatus}
+                className="flex w-full items-start px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/20 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-left"
+              >
+                <div className="flex-1">
+                  <div className="font-medium text-gray-900 dark:text-white">Schedule</div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">Schedule selected {itemType} for later</div>
+                </div>
+              </button>
             )}
+
+            {/* Add separator if status options are shown */}
+            {((itemType === "posts" && (canPublish || canDraft)) ||
+              (itemType === "newsletters" && (canPublish || canSchedule))) &&
+              canArchive && <div className="border-t border-gray-100 dark:border-gray-700 mx-2"></div>}
 
             {/* Only show Archive if user has delete permission */}
             {canArchive && (

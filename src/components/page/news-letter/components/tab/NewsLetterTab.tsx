@@ -12,6 +12,7 @@ import {
 import Pagination from "../../../../tables/Pagination";
 import ConfirmationDialog from "@/components/ui/ConfirmationDialog";
 import Checkbox from "@/components/form/input/Checkbox";
+import { Modal } from "@/components/ui/modal";
 import { useToast } from "@/context/ToastContext";
 
 interface NewsLetterTabProps {
@@ -21,15 +22,18 @@ interface NewsLetterTabProps {
     React.SetStateAction<{
       onBulkPublish?: () => void;
       onBulkDelete?: () => void;
+      onBulkSchedule?: () => void;
       isBulkActionLoading?: boolean;
     }>
   >;
+  setSelectedNewslettersData?: React.Dispatch<React.SetStateAction<any[]>>;
 }
 
 const NewsLetterTab: React.FC<NewsLetterTabProps> = ({
   selectedNewsletters: externalSelectedNewsletters,
   setSelectedNewsletters: externalSetSelectedNewsletters,
   setBulkActionHandlers,
+  setSelectedNewslettersData,
 }) => {
   const router = useRouter();
   const { addToast } = useToast();
@@ -108,25 +112,17 @@ const NewsLetterTab: React.FC<NewsLetterTabProps> = ({
   // Handle bulk selection
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      const ids = newsletters.map((n) => n.id);
-      console.log("Selecting all newsletters:", ids);
-      setSelectedNewsletters(ids);
+      setSelectedNewsletters(newsletters.map((n) => n.id));
     } else {
-      console.log("Clearing all selections");
       setSelectedNewsletters([]);
     }
   };
 
   const handleSelectNewsletter = (newsletterId: string, checked: boolean) => {
-    console.log("Newsletter selection changed:", newsletterId, checked);
     if (checked) {
-      const newSelection = [...selectedNewsletters, newsletterId];
-      console.log("New selection:", newSelection);
-      setSelectedNewsletters(newSelection);
+      setSelectedNewsletters([...selectedNewsletters, newsletterId]);
     } else {
-      const newSelection = selectedNewsletters.filter((id) => id !== newsletterId);
-      console.log("New selection:", newSelection);
-      setSelectedNewsletters(newSelection);
+      setSelectedNewsletters(selectedNewsletters.filter((id) => id !== newsletterId));
     }
   };
 
@@ -136,10 +132,24 @@ const NewsLetterTab: React.FC<NewsLetterTabProps> = ({
       setBulkActionHandlers({
         onBulkPublish: handleBulkPublish,
         onBulkDelete: handleBulkDelete,
+        onBulkSchedule: () => setScheduleDialog({ ...scheduleDialog, isOpen: true }),
         isBulkActionLoading,
       });
     }
-  }, [setBulkActionHandlers, isBulkActionLoading, selectedNewsletters]);
+
+    // Pass selected newsletters data to parent
+    if (setSelectedNewslettersData) {
+      const selectedData = newsletters.filter((n) => selectedNewsletters.includes(n.id));
+      setSelectedNewslettersData(selectedData);
+    }
+  }, [
+    setBulkActionHandlers,
+    setSelectedNewslettersData,
+    isBulkActionLoading,
+    selectedNewsletters,
+    newsletters,
+    scheduleDialog,
+  ]);
 
   // Bulk action handlers
   const handleBulkAction = async (action: string) => {
@@ -691,83 +701,70 @@ const NewsLetterTab: React.FC<NewsLetterTabProps> = ({
       />
 
       {/* Schedule Dialog for Bulk Action */}
-      {scheduleDialog.isOpen && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-            <div
-              className="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75"
-              onClick={() => setScheduleDialog({ ...scheduleDialog, isOpen: false })}
-            />
+      <Modal
+        isOpen={scheduleDialog.isOpen}
+        onClose={() =>
+          setScheduleDialog({
+            isOpen: false,
+            scheduledAt: "",
+            scheduledTimezone: "America/New_York",
+            isScheduling: false,
+          })
+        }
+        isFullscreen={false}
+        showCloseButton={true}
+        className="max-w-lg rounded-lg shadow-xl"
+      >
+        <div className="p-6">
+          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Schedule Newsletters</h3>
 
-            <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-              <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Schedule Newsletters</h3>
-
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Scheduled Date & Time</label>
-                    <input
-                      type="datetime-local"
-                      value={
-                        scheduleDialog.scheduledAt
-                          ? new Date(scheduleDialog.scheduledAt).toISOString().slice(0, 16)
-                          : ""
-                      }
-                      onChange={(e) => {
-                        const localDate = new Date(e.target.value);
-                        const utcDate = new Date(localDate.getTime() - localDate.getTimezoneOffset() * 60000);
-                        setScheduleDialog({ ...scheduleDialog, scheduledAt: utcDate.toISOString() });
-                      }}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Timezone</label>
-                    <select
-                      value={scheduleDialog.scheduledTimezone}
-                      onChange={(e) => setScheduleDialog({ ...scheduleDialog, scheduledTimezone: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="America/New_York">America/New_York (EDT)</option>
-                      <option value="America/Chicago">America/Chicago (CDT)</option>
-                      <option value="America/Denver">America/Denver (MDT)</option>
-                      <option value="America/Los_Angeles">America/Los_Angeles (PDT)</option>
-                      <option value="Asia/Manila">Asia/Manila</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                <button
-                  type="button"
-                  onClick={handleBulkSchedule}
-                  disabled={scheduleDialog.isScheduling || !scheduleDialog.scheduledAt}
-                  className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary text-base font-medium text-white hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {scheduleDialog.isScheduling ? "Scheduling..." : "Schedule"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() =>
-                    setScheduleDialog({
-                      isOpen: false,
-                      scheduledAt: "",
-                      scheduledTimezone: "America/New_York",
-                      isScheduling: false,
-                    })
-                  }
-                  disabled={scheduleDialog.isScheduling}
-                  className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Cancel
-                </button>
-              </div>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Scheduled Date & Time
+              </label>
+              <input
+                type="datetime-local"
+                value={
+                  scheduleDialog.scheduledAt ? new Date(scheduleDialog.scheduledAt).toISOString().slice(0, 16) : ""
+                }
+                onChange={(e) => {
+                  const localDate = new Date(e.target.value);
+                  const utcDate = new Date(localDate.getTime() - localDate.getTimezoneOffset() * 60000);
+                  setScheduleDialog({ ...scheduleDialog, scheduledAt: utcDate.toISOString() });
+                }}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white"
+              />
             </div>
           </div>
+
+          <div className="mt-6 flex justify-end gap-3">
+            <button
+              type="button"
+              onClick={() =>
+                setScheduleDialog({
+                  isOpen: false,
+                  scheduledAt: "",
+                  scheduledTimezone: "America/New_York",
+                  isScheduling: false,
+                })
+              }
+              disabled={scheduleDialog.isScheduling}
+              className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleBulkSchedule}
+              disabled={scheduleDialog.isScheduling || !scheduleDialog.scheduledAt}
+              className="px-4 py-2 text-sm font-medium text-white bg-primary hover:bg-primary/90 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {scheduleDialog.isScheduling ? "Scheduling..." : "Schedule Newsletter"}
+            </button>
+          </div>
         </div>
-      )}
+      </Modal>
     </div>
   );
 };
