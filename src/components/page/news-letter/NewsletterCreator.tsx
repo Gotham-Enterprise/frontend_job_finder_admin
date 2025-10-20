@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAppSelector, useAppDispatch } from "@/store";
-import { setEditMode } from "@/store/slices/newsletterSlice";
+import { setEditMode, setCurrentStep } from "@/store/slices/newsletterSlice";
 import NewsletterSteps from "./components/NewsletterSteps";
 import TemplateSelection from "./steps/TemplateSelection";
 import EditStep from "./steps/EditStep";
@@ -20,8 +20,9 @@ const NewsletterCreator: React.FC = () => {
   // Ensure component only fully renders on client side
   useEffect(() => {
     setIsClient(true);
-    // Reset edit mode when entering create flow
+    // Reset edit mode and set to step 1 when entering create flow
     dispatch(setEditMode({ isEditMode: false, newsletterId: null }));
+    dispatch(setCurrentStep(1));
   }, [dispatch]);
 
   const renderCurrentStep = () => {

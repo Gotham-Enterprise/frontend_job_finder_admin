@@ -272,17 +272,6 @@ const ReactEmailEditor: React.FC<ReactEmailEditorProps> = ({ onDesignLoad, onLoa
     }, 500);
   }, [onLoad, newsletterData.design]);
 
-  // Auto-save functionality
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (!isLoading) {
-        saveDesign();
-      }
-    }, 30000); // Auto-save every 30 seconds
-
-    return () => clearInterval(interval);
-  }, [saveDesign, isLoading]);
-
   const handleSaveAndContinue = () => {
     const unlayer = emailEditorRef.current?.editor;
 
