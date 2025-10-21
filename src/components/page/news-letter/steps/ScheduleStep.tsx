@@ -9,6 +9,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import TimePicker from "react-time-picker";
 import "react-time-picker/dist/TimePicker.css";
 import "react-clock/dist/Clock.css";
+import Checkbox from "@/components/form/input/Checkbox";
 
 const ScheduleStep: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -155,7 +156,7 @@ const ScheduleStep: React.FC = () => {
           }
         `}
       </style>
-      <div className="max- mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
           <div className="text-center mb-8">
             <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-indigo-100 mb-4">
@@ -241,17 +242,12 @@ const ScheduleStep: React.FC = () => {
                   </div>
                 </div>
               </div>
-            )}{" "}
+            )}
             <div className="pt-4 border-t border-gray-200">
-              <label className="flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={saveAsTemplate}
-                  onChange={(e) => setSaveAsTemplate(e.target.checked)}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                />
-                <span className="ml-3 text-sm text-gray-700">Save as template</span>
-                <span className="ml-2 text-gray-400">
+              <div className="flex items-center">
+                <Checkbox checked={saveAsTemplate} onChange={(checked) => setSaveAsTemplate(checked)} label="" />
+                <span className="ml-3 text-sm text-gray-700 dark:text-gray-300">Save as template</span>
+                <span className="ml-2 text-gray-400 dark:text-gray-500">
                   <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
                     <path
                       fillRule="evenodd"
@@ -260,7 +256,7 @@ const ScheduleStep: React.FC = () => {
                     />
                   </svg>
                 </span>
-              </label>
+              </div>
             </div>
             <div className="flex justify-end gap-3 pt-4">
               <button

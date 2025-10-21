@@ -5,6 +5,7 @@ import { newsletterApi, Newsletter, bulkRestoreNewsletters } from "../../../../.
 import Checkbox from "@/components/form/input/Checkbox";
 import ConfirmationDialog from "@/components/ui/ConfirmationDialog";
 import { useToast } from "@/context/ToastContext";
+import { RotateCcw } from "lucide-react";
 
 const ArchivedTab = () => {
   const { addToast } = useToast();
@@ -225,14 +226,11 @@ const ArchivedTab = () => {
     <div className="overflow-hidden">
       {/* Bulk Action Bar */}
       {selectedNewsletters.length > 0 && (
-        <div className="mb-4 flex items-center justify-between rounded-lg bg-blue-50 px-4 py-3 dark:bg-blue-900/20">
-          <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
-            {selectedNewsletters.length} newsletter{selectedNewsletters.length > 1 ? "s" : ""} selected
-          </span>
+        <div className="mb-4 flex items-center justify-end rounded-lg bg-blue-50 px-4 py-3 dark:bg-blue-900/20">
           <button
             onClick={handleBulkRestoreClick}
             disabled={isBulkActionLoading}
-            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isBulkActionLoading ? "Restoring..." : "Restore Selected"}
           </button>
@@ -345,8 +343,9 @@ const ArchivedTab = () => {
                   <TableCell className="px-4 py-3 text-gray-500 text-start text-sm dark:text-gray-400">
                     <button
                       onClick={() => handleRestoreClick(newsletter)}
-                      className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 font-medium"
+                      className="text-primary dark:text-blue-400 dark:hover:text-blue-300 font-medium inline-flex items-center gap-1.5"
                     >
+                      <RotateCcw size={16} />
                       Restore
                     </button>
                   </TableCell>

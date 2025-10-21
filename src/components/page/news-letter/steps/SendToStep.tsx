@@ -15,6 +15,41 @@ const SendToStep: React.FC = () => {
   const [employers, setEmployers] = useState<NewsletterEmailUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Search states for filtering
+  const [employerSearch, setEmployerSearch] = useState("");
+  const [jobSeekerSearch, setJobSeekerSearch] = useState("");
+
+  // Expanded states to show/hide lists
+  const [employersExpanded, setEmployersExpanded] = useState(false);
+  const [jobSeekersExpanded, setJobSeekersExpanded] = useState(false);
+
+  // Pagination states - render only subset at a time
+  const [employerDisplayLimit, setEmployerDisplayLimit] = useState(50);
+  const [jobSeekerDisplayLimit, setJobSeekerDisplayLimit] = useState(50);
+  const LOAD_MORE_INCREMENT = 50;
+
+  // Reset display limits when search changes
+  useEffect(() => {
+    setEmployerDisplayLimit(50);
+  }, [employerSearch]);
+
+  useEffect(() => {
+    setJobSeekerDisplayLimit(50);
+  }, [jobSeekerSearch]);
+
+  // Reset display limits when collapsing
+  useEffect(() => {
+    if (!employersExpanded) {
+      setEmployerDisplayLimit(50);
+    }
+  }, [employersExpanded]);
+
+  useEffect(() => {
+    if (!jobSeekersExpanded) {
+      setJobSeekerDisplayLimit(50);
+    }
+  }, [jobSeekersExpanded]);
+
   // Fetch email lists on component mount
   useEffect(() => {
     const fetchEmails = async () => {
@@ -99,6 +134,30 @@ const SendToStep: React.FC = () => {
     return selectedRecipients.includes("employer") || selectedRecipients.includes(email);
   };
 
+  // Filtered lists based on search
+  const filteredEmployers = useMemo(() => {
+    if (!employerSearch.trim()) return employers;
+    const search = employerSearch.toLowerCase();
+    return employers.filter(
+      (emp) => emp.name.toLowerCase().includes(search) || emp.email.toLowerCase().includes(search)
+    );
+  }, [employers, employerSearch]);
+
+  const filteredJobSeekers = useMemo(() => {
+    if (!jobSeekerSearch.trim()) return jobSeekers;
+    const search = jobSeekerSearch.toLowerCase();
+    return jobSeekers.filter((js) => js.name.toLowerCase().includes(search) || js.email.toLowerCase().includes(search));
+  }, [jobSeekers, jobSeekerSearch]);
+
+  // Limited display lists (only render subset for performance)
+  const displayedEmployers = useMemo(() => {
+    return filteredEmployers.slice(0, employerDisplayLimit);
+  }, [filteredEmployers, employerDisplayLimit]);
+
+  const displayedJobSeekers = useMemo(() => {
+    return filteredJobSeekers.slice(0, jobSeekerDisplayLimit);
+  }, [filteredJobSeekers, jobSeekerDisplayLimit]);
+
   // Build the final sendTo array based on selections
   const buildSendToArray = useMemo(() => {
     const result: string[] = [];
@@ -120,7 +179,7 @@ const SendToStep: React.FC = () => {
     }
 
     return result;
-  }, [selectedRecipients, selectAllEmployers, selectAllJobSeekers]);
+  }, [selectedRecipients, selectAllEmployers, selectAllJobSeekers, employers, jobSeekers]);
 
   const handleContinue = () => {
     // Update Redux with selected recipients
@@ -161,70 +220,200 @@ const SendToStep: React.FC = () => {
           <div className="space-y-6">
             {/* Employers Group */}
             <div className="border border-gray-200 rounded-lg overflow-hidden dark:border-gray-700">
-              <div className="bg-gray-50 px-4 py-3 border-b border-gray-200 dark:bg-gray-800 dark:border-gray-700">
-                <div className="flex items-center">
-                  <Checkbox checked={selectAllEmployers} onChange={handleSelectAllEmployers} label="" />
-                  <span className="ml-3 text-sm font-semibold text-gray-900 dark:text-white">
-                    Employers (Select All) - {employers.length} {employers.length === 1 ? "user" : "users"}
-                  </span>
-                </div>
-              </div>
-              <div className="px-4 py-2 space-y-2 max-h-48 overflow-y-auto">
-                {employers.map((employer) => (
-                  <div
-                    key={employer.email}
-                    className="flex items-center py-2 hover:bg-gray-50 dark:hover:bg-gray-700 px-2 rounded"
-                  >
-                    <Checkbox
-                      checked={isEmployerSelected(employer.email)}
-                      onChange={() => handleEmailToggle(employer.email)}
-                      disabled={selectAllEmployers}
-                      label=""
-                    />
-                    <span className="ml-3 text-sm text-gray-700 dark:text-gray-300">
-                      {employer.name} <span className="text-gray-500 dark:text-gray-400">({employer.email})</span>
+              <div className="bg-gray-50 px-4 py-3 dark:bg-gray-800">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center flex-1">
+                    <Checkbox checked={selectAllEmployers} onChange={handleSelectAllEmployers} label="" />
+                    <span className="ml-3 text-sm font-semibold text-gray-900 dark:text-white">
+                      Employers (Select All) - {employers.length} {employers.length === 1 ? "user" : "users"}
                     </span>
                   </div>
-                ))}
+                  <button
+                    type="button"
+                    onClick={() => setEmployersExpanded(!employersExpanded)}
+                    className="ml-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                  >
+                    <svg
+                      className={`h-5 w-5 transform transition-transform ${employersExpanded ? "rotate-180" : ""}`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                </div>
+
+                {/* Search box - only show when expanded */}
+                {employersExpanded && !selectAllEmployers && (
+                  <div className="mt-3">
+                    <input
+                      type="text"
+                      placeholder="Search employers..."
+                      value={employerSearch}
+                      onChange={(e) => setEmployerSearch(e.target.value)}
+                      className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                    />
+                  </div>
+                )}
               </div>
+
+              {/* Only render list when expanded */}
+              {employersExpanded && (
+                <div className="px-4 py-2 space-y-2 max-h-64 overflow-y-auto">
+                  {filteredEmployers.length === 0 ? (
+                    <p className="text-sm text-gray-500 dark:text-gray-400 py-4 text-center">
+                      {employerSearch ? "No employers found matching your search" : "No employers available"}
+                    </p>
+                  ) : (
+                    <>
+                      {displayedEmployers.map((employer) => (
+                        <div
+                          key={employer.email}
+                          className="flex items-center py-2 hover:bg-gray-50 dark:hover:bg-gray-700 px-2 rounded"
+                        >
+                          <Checkbox
+                            checked={isEmployerSelected(employer.email)}
+                            onChange={() => handleEmailToggle(employer.email)}
+                            disabled={selectAllEmployers}
+                            label=""
+                          />
+                          <span className="ml-3 text-sm text-gray-700 dark:text-gray-300">
+                            {employer.name} <span className="text-gray-500 dark:text-gray-400">({employer.email})</span>
+                          </span>
+                        </div>
+                      ))}
+
+                      {/* Load More button */}
+                      {displayedEmployers.length < filteredEmployers.length && (
+                        <button
+                          type="button"
+                          onClick={() => setEmployerDisplayLimit((prev) => prev + LOAD_MORE_INCREMENT)}
+                          className="w-full py-2 text-sm text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg font-medium"
+                        >
+                          Load More ({filteredEmployers.length - displayedEmployers.length} remaining)
+                        </button>
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Job Seekers Group */}
             <div className="border border-gray-200 rounded-lg overflow-hidden dark:border-gray-700">
-              <div className="bg-gray-50 px-4 py-3 border-b border-gray-200 dark:bg-gray-800 dark:border-gray-700">
-                <div className="flex items-center">
-                  <Checkbox checked={selectAllJobSeekers} onChange={handleSelectAllJobSeekers} label="" />
-                  <span className="ml-3 text-sm font-semibold text-gray-900 dark:text-white">
-                    Job Seekers (Select All) - {jobSeekers.length} {jobSeekers.length === 1 ? "user" : "users"}
-                  </span>
-                </div>
-              </div>
-              <div className="px-4 py-2 space-y-2 max-h-48 overflow-y-auto">
-                {jobSeekers.map((jobSeeker) => (
-                  <div
-                    key={jobSeeker.email}
-                    className="flex items-center py-2 hover:bg-gray-50 dark:hover:bg-gray-700 px-2 rounded"
-                  >
-                    <Checkbox
-                      checked={isJobSeekerSelected(jobSeeker.email)}
-                      onChange={() => handleEmailToggle(jobSeeker.email)}
-                      disabled={selectAllJobSeekers}
-                      label=""
-                    />
-                    <span className="ml-3 text-sm text-gray-700 dark:text-gray-300">
-                      {jobSeeker.name} <span className="text-gray-500 dark:text-gray-400">({jobSeeker.email})</span>
+              <div className="bg-gray-50 px-4 py-3 dark:bg-gray-800">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center flex-1">
+                    <Checkbox checked={selectAllJobSeekers} onChange={handleSelectAllJobSeekers} label="" />
+                    <span className="ml-3 text-sm font-semibold text-gray-900 dark:text-white">
+                      Job Seekers (Select All) - {jobSeekers.length} {jobSeekers.length === 1 ? "user" : "users"}
                     </span>
                   </div>
-                ))}
+                  <button
+                    type="button"
+                    onClick={() => setJobSeekersExpanded(!jobSeekersExpanded)}
+                    className="ml-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                  >
+                    <svg
+                      className={`h-5 w-5 transform transition-transform ${jobSeekersExpanded ? "rotate-180" : ""}`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                </div>
+
+                {/* Search box - only show when expanded */}
+                {jobSeekersExpanded && !selectAllJobSeekers && (
+                  <div className="mt-3">
+                    <input
+                      type="text"
+                      placeholder="Search job seekers..."
+                      value={jobSeekerSearch}
+                      onChange={(e) => setJobSeekerSearch(e.target.value)}
+                      className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                    />
+                  </div>
+                )}
               </div>
+
+              {/* Only render list when expanded */}
+              {jobSeekersExpanded && (
+                <div className="px-4 py-2 space-y-2 max-h-64 overflow-y-auto">
+                  {filteredJobSeekers.length === 0 ? (
+                    <p className="text-sm text-gray-500 dark:text-gray-400 py-4 text-center">
+                      {jobSeekerSearch ? "No job seekers found matching your search" : "No job seekers available"}
+                    </p>
+                  ) : (
+                    <>
+                      {displayedJobSeekers.map((jobSeeker) => (
+                        <div
+                          key={jobSeeker.email}
+                          className="flex items-center py-2 hover:bg-gray-50 dark:hover:bg-gray-700 px-2 rounded"
+                        >
+                          <Checkbox
+                            checked={isJobSeekerSelected(jobSeeker.email)}
+                            onChange={() => handleEmailToggle(jobSeeker.email)}
+                            disabled={selectAllJobSeekers}
+                            label=""
+                          />
+                          <span className="ml-3 text-sm text-gray-700 dark:text-gray-300">
+                            {jobSeeker.name}{" "}
+                            <span className="text-gray-500 dark:text-gray-400">({jobSeeker.email})</span>
+                          </span>
+                        </div>
+                      ))}
+
+                      {/* Load More button */}
+                      {displayedJobSeekers.length < filteredJobSeekers.length && (
+                        <button
+                          type="button"
+                          onClick={() => setJobSeekerDisplayLimit((prev) => prev + LOAD_MORE_INCREMENT)}
+                          className="w-full py-2 text-sm text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg font-medium"
+                        >
+                          Load More ({filteredJobSeekers.length - displayedJobSeekers.length} remaining)
+                        </button>
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
             </div>
+
+            {/* Selection Summary */}
+            {buildSendToArray.length > 0 && (
+              <div className="bg-primary border  rounded-lg p-4">
+                <div className="flex items-start">
+                  <svg className="h-5 w-5 text-white mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fillRule="evenodd"
+                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  <div className="ml-3 flex-1">
+                    <h3 className="text-sm font-medium text-white">Selected Recipients</h3>
+                    <div className="mt-2 text-sm text-white">
+                      {selectAllEmployers && <p>✓ All Employers ({employers.length} users)</p>}
+                      {selectAllJobSeekers && <p>✓ All Job Seekers ({jobSeekers.length} users)</p>}
+                      {!selectAllEmployers && !selectAllJobSeekers && (
+                        <p>✓ {buildSendToArray.length} individual recipient(s) selected</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="flex justify-end pt-4">
               <button
                 type="button"
                 onClick={handleContinue}
                 disabled={buildSendToArray.length === 0}
-                className="px-6 py-2.5 bg-primary text-white font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-6 py-2.5 bg-primary text-white font-medium rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 Continue
               </button>

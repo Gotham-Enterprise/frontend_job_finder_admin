@@ -14,6 +14,7 @@ import {
 import { blogApi } from "@/services/api/blog";
 import { createNewsletter, updateNewsletter } from "@/services/api/newsLetter";
 import { useToast } from "@/context/ToastContext";
+import FullScreenSpinner from "@/components/ui/FullScreenSpinner";
 
 interface ReactEmailEditorProps {
   onDesignLoad?: (design: any) => void;
@@ -406,17 +407,7 @@ const ReactEmailEditor: React.FC<ReactEmailEditorProps> = ({ onDesignLoad, onLoa
   return (
     <>
       {/* Image Upload Loading Overlay */}
-      {isUploadingImage && (
-        <div className="fixed inset-0 z-[70] bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white rounded-lg shadow-xl p-6 flex flex-col items-center space-y-4">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-blue-600"></div>
-            <div className="text-center">
-              <p className="text-lg font-semibold text-gray-900">Uploading Image...</p>
-              <p className="text-sm text-gray-500 mt-1">Please wait while we upload your image</p>
-            </div>
-          </div>
-        </div>
-      )}
+      <FullScreenSpinner isVisible={isUploadingImage} message="Uploading Image..." />
 
       <div className="h-screen w-full flex flex-col" style={{ height: "100vh", width: "100vw" }}>
         {/* Compact Toolbar */}
