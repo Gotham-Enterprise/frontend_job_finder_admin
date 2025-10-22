@@ -16,9 +16,9 @@ interface NewsletterPayload {
 }
 
 // GET /api/admin/newsletter/[id] - Get single newsletter
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const { id } = params;
+    const { id } = await params;
 
     // Get newsletter from store
     const newsletter = newsletterStore.get(id);
@@ -54,25 +54,10 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 }
 
 // PATCH /api/admin/newsletter/[id] - Update newsletter
-export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const body: NewsletterPayload = await request.json();
-
-    console.log("� [BACKEND UPDATE] Received body.design:", body.design);
-    console.log("🔍 [BACKEND UPDATE] design type:", typeof body.design);
-    console.log("🔍 [BACKEND UPDATE] design keys:", body.design ? Object.keys(body.design) : []);
-    console.log(
-      "🔍 [BACKEND UPDATE] design JSON preview:",
-      body.design ? JSON.stringify(body.design).substring(0, 200) : "null"
-    );
-
-    console.log("�📝 Updating newsletter:", id, {
-      subject: body.subject,
-      status: body.status,
-      contentLength: body.content?.length || 0,
-      hasDesign: !!body.design,
-    });
 
     // Update newsletter in store
     const updatedNewsletter = newsletterStore.update(id, body);
@@ -86,9 +71,6 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
         { status: 404 }
       );
     }
-
-    console.log("✅ [BACKEND] Newsletter updated successfully:", id);
-    console.log("✅ [BACKEND] Updated design type:", typeof updatedNewsletter.design);
 
     return NextResponse.json(
       {
@@ -112,11 +94,9 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
 }
 
 // DELETE /api/admin/newsletter/[id] - Delete newsletter
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const { id } = params;
-
-    console.log("🗑️ Deleting newsletter:", id);
+    const { id } = await params;
 
     // Delete from store
     const deleted = newsletterStore.delete(id);
