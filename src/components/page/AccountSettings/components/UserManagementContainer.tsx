@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import React from 'react';
-import UserTable from './UserTable';
-import PermissionProvider from '@/context/PermissionContext';
+import React from "react";
+import UserTable from "./UserTable";
+import PermissionProvider from "@/context/PermissionContext";
 
 const MOCK_CURRENT_USER_PERMISSIONS = {
   tickets: { view: true, create: true, update: true, delete: true },
