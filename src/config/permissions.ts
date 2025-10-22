@@ -96,6 +96,8 @@ export const GLOBAL_PERMISSION_CONFIG: GlobalPermissionConfig = {
     blog: { view: true, create: false, update: false, delete: false },
     careers: { view: true, create: false, update: false, delete: false },
     newsLetter: { view: true, create: true, update: true, delete: true },
+    unlockRequest: { view: true, create: false, update: false, delete: false },
+
   },
 
   roleBasedPermissions: {
@@ -109,6 +111,7 @@ export const GLOBAL_PERMISSION_CONFIG: GlobalPermissionConfig = {
       blog: { view: true, create: true, update: true, delete: true },
       careers: { view: true, create: true, update: true, delete: true },
       newsLetter: { view: true, create: true, update: true, delete: true },
+      unlockRequest: { view: true, create: false, update: false, delete: true },
     },
     "super-admin": {
       tickets: { view: true, create: true, update: true, delete: true },
@@ -120,6 +123,7 @@ export const GLOBAL_PERMISSION_CONFIG: GlobalPermissionConfig = {
       blog: { view: true, create: true, update: true, delete: true },
       careers: { view: true, create: true, update: true, delete: true },
       newsLetter: { view: true, create: true, update: true, delete: true },
+      unlockRequest: { view: true, create: false, update: false, delete: true },
     },
   },
 };

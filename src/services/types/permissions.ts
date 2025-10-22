@@ -15,6 +15,7 @@ export interface UserPermissions {
   blog: Permission;
   careers: Permission;
   newsLetter: Permission;
+  unlockRequest: Permission;
 }
 
 export interface CreateUserFormData {
@@ -41,6 +42,15 @@ export const PERMISSION_MODULES: PermissionModule[] = [
   { key: "blog", label: "Blog" },
   { key: "careers", label: "Careers" },
   { key: "newsLetter", label: "News Letter" },
+  { key: 'tickets', label: 'Tickets' },
+  { key: 'jobSeekers', label: 'Job Seekers' },
+  { key: 'employers', label: 'Employers' },
+  { key: 'jobs', label: 'Jobs' },
+  { key: 'applications', label: 'Applications' },
+  { key: 'coupons', label: 'Coupons' },
+  { key: 'blog', label: 'Blog' },
+  { key: 'careers', label: 'Careers' },
+  { key: 'unlockRequest', label: 'Unlock Requests' },
 ];
 
 export const DEFAULT_PERMISSIONS: UserPermissions = {
@@ -53,6 +63,7 @@ export const DEFAULT_PERMISSIONS: UserPermissions = {
   blog: { view: true, create: false, update: false, delete: false },
   careers: { view: true, create: false, update: false, delete: false },
   newsLetter: { view: true, create: true, update: true, delete: true },
+  unlockRequest: { view: true, create: false, update: false, delete: false },
 };
 
 export const ROLE_OPTIONS = [

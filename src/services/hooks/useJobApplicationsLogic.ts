@@ -87,8 +87,9 @@ export const useJobApplicationsLogic = () => {
     return initialFilters;
   });
   const [searchInput, setSearchInput] = useState(() => {
-    const initial = initialFilters.name || '';
-    return initial;
+    // Always initialize with empty search input for cleaner UI
+    // The actual filtering will be handled by the filters state
+    return '';
   });
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -97,13 +98,21 @@ export const useJobApplicationsLogic = () => {
   );
   const [isInitialized, setIsInitialized] = useState(false);
   const [hasRestoredFromState, setHasRestoredFromState] = useState(false);
+  const [isFromJobSeeker, setIsFromJobSeeker] = useState(false);
 
   useEffect(() => {
     setIsInitialized(true);
     if (initialFilters.name || (initialFilters.page && initialFilters.page > 1)) {
       setHasRestoredFromState(true);
     }
-  }, [initialFilters.name, initialFilters.page]);
+    
+    // Check if user came from JobSeeker page (has name parameter in URL)
+    const hasUrlParams = Array.from(searchParams.keys()).length > 0;
+    const nameParam = searchParams.get('name');
+    if (hasUrlParams && nameParam) {
+      setIsFromJobSeeker(true);
+    }
+  }, [initialFilters.name, initialFilters.page, searchParams]);
 
 
   useEffect(() => {
@@ -323,6 +332,7 @@ export const useJobApplicationsLogic = () => {
     setFilters(newFilters);
     setSearchInput('');
     setSelectedStatuses([]);
+    setIsFromJobSeeker(false); // Reset JobSeeker flag when manually clearing
     if (typeof window !== 'undefined') {
       localStorage.removeItem('jobApplications-scroll-position');
       localStorage.removeItem('jobApplications-search-state');
@@ -345,12 +355,12 @@ export const useJobApplicationsLogic = () => {
 
   const hasActiveFilters = useMemo(() => {
     return !!(
-      searchInput ||
+      filters.name ||
       filters.location ||
       filters.companyName ||
       selectedStatuses.length > 0
     );
-  }, [searchInput, filters.location, filters.companyName, selectedStatuses]);
+  }, [filters.name, filters.location, filters.companyName, selectedStatuses]);
 
   useEffect(() => {
     if (data && !isLoading) {
@@ -391,7 +401,26 @@ export const useJobApplicationsLogic = () => {
   useEffect(() => {
     if (!isInitialized) return;
 
+    // If user came from JobSeeker page, ensure the filter is set but don't update searchInput
+    if (isFromJobSeeker && initialFilters.name) {
+      startTransition(() => {
+        setFilters(prev => ({ 
+          ...prev, 
+          name: initialFilters.name, 
+          page: 1 
+        }));
+        setIsFromJobSeeker(false); // Reset the flag after triggering
+      });
+      return;
+    }
+
+    // Only handle search input changes for manual searches (not from JobSeeker navigation)
     if (hasRestoredFromState && searchInput === initialFilters.name) return;
+    
+    // Don't clear filters if searchInput is empty and we have an active filter from JobSeeker
+    if (!searchInput && filters.name && initialFilters.name) {
+      return; // Keep the existing filter, don't clear it
+    }
     
     const timeoutId = setTimeout(() => {
       startTransition(() => {
@@ -408,7 +437,7 @@ export const useJobApplicationsLogic = () => {
     }, 500);
 
     return () => clearTimeout(timeoutId);
-  }, [searchInput, isInitialized, filters.name, hasRestoredFromState, initialFilters.name]);
+  }, [searchInput, isInitialized, filters.name, hasRestoredFromState, initialFilters.name, isFromJobSeeker]);
 
   return {
     filters,

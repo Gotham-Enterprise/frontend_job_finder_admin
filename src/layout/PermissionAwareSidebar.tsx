@@ -16,6 +16,7 @@ import {
   PieChartIcon,
   UserCircleIcon,
   TaskIcon,
+  IdCardIcon,
 } from "../icons/index";
 import { BriefcaseIcon, CareerLadderIcon, TicketIcon, BlogIcon, CouponIcon } from "../components/ui/icons/index";
 
@@ -40,6 +41,7 @@ type NavItem = {
     | "coupons"
     | "blog"
     | "newsLetter";
+    | "unlockRequest";
   isAccessible?: boolean;
 };
 
@@ -123,6 +125,15 @@ const navItems: NavItem[] = [
     permissionKey: "newsLetter",
     subItems: [{ name: "All News Letter", path: "/admin/news-letter", requiredAction: "view" }],
   },
+  },
+
+  {
+    icon: <IdCardIcon />,
+    name: "Unlock Requests",
+    path: "/admin/unlock-requests",
+    permissionKey: "unlockRequest",
+    //subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
+  },
 ];
 
 const othersItems: NavItem[] = [
@@ -141,6 +152,7 @@ const AppSidebar: React.FC = () => {
   const { permissions, loading } = useAuthPermissions();
   const pathname = usePathname();
   const [isInitialMount, setIsInitialMount] = useState(true);
+  const [forceUpdate, setForceUpdate] = useState(0);
 
   // Check if user is authenticated to show sidebar immediately
   const isAuthenticated = typeof window !== "undefined" ? authUtils.isAuthenticated() : false;
@@ -156,6 +168,34 @@ const AppSidebar: React.FC = () => {
     }
   }, [permissions, isInitialMount]);
 
+  // Force re-render when permissions change
+  useEffect(() => {
+    if (permissions) {
+      setForceUpdate((prev) => prev + 1);
+    }
+  }, [permissions]);
+
+  // Listen for permissions loaded event
+  useEffect(() => {
+    const handlePermissionsLoaded = (event: CustomEvent) => {
+      console.log("[Sidebar] Permissions loaded event received:", event.detail);
+      setForceUpdate((prev) => prev + 1);
+    };
+
+    if (typeof window !== "undefined") {
+      window.addEventListener("permissionsLoaded" as any, handlePermissionsLoaded);
+      window.addEventListener("authUpdate", () => {
+        console.log("[Sidebar] Auth update event received");
+        setForceUpdate((prev) => prev + 1);
+      });
+
+      return () => {
+        window.removeEventListener("permissionsLoaded" as any, handlePermissionsLoaded);
+        window.removeEventListener("authUpdate", () => {});
+      };
+    }
+  }, []);
+
   // Check if item is accessible based on permissions
   const isItemAccessible = (item: NavItem): boolean => {
     // If item has explicit isAccessible, use that
@@ -166,6 +206,24 @@ const AppSidebar: React.FC = () => {
     // If item has permissionKey and we have permissions, check permissions
     if (item.permissionKey && permissions) {
       const hasPermission = hasAnyModulePermission(permissions, item.permissionKey);
+      
+      // Special handling for Unlock Requests - show if user is Super Admin
+      if (item.permissionKey === 'unlockRequest' && !hasPermission) {
+        const user = typeof window !== 'undefined' ? authUtils.getUser() : null;
+        const isSuperAdmin = user?.adminRoleAccess?.roleName?.toLowerCase() === 'super admin';
+        console.log(
+          `[Sidebar] Special check for Unlock Requests - isSuperAdmin: ${isSuperAdmin}, roleName: ${user?.adminRoleAccess?.roleName}`
+        );
+        if (isSuperAdmin) {
+          return true;
+        }
+      }
+      
+      console.log(
+        `[Sidebar] Checking accessibility for "${item.name}" (${item.permissionKey}):`,
+        hasPermission,
+        permissions[item.permissionKey]
+      );
       return hasPermission;
     }
 

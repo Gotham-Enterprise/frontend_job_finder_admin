@@ -1,4 +1,4 @@
-import { JobSeekerFilters } from '@/services/types/jobSeeker';
+import { JobSeekerFilters } from "@/services/types/jobSeeker";
 
 export interface JobSeekersProps {
   className?: string;
@@ -23,6 +23,8 @@ export interface JobSeekersFiltersProps {
   occupationOptions: Array<{ value: string; label: string }>;
   stateOptions: Array<{ value: string; label: string }>;
   statusOptions: Array<{ value: string; label: string }>;
+  licenseOptions: Array<{ value: string; label: string }>;
+  licenseStateOptions: Array<{ value: string; label: string }>;
   hasActiveFilters: boolean;
   clearIndividualFilter: (filterType: string) => void;
 }
@@ -31,7 +33,7 @@ export interface JobSeekersTableProps {
   data: any;
   isLoading: boolean;
   tableColumns: Array<{ key: string; label: string; className?: string }>;
-  getStatusVariant: (status: string) => 'light' | 'solid';
+  getStatusVariant: (status: string) => "light" | "solid";
   onViewJobSeeker: (jobSeekerId: string) => void;
   onViewResume: (objectKey: string | null, fileName?: string) => void;
   isViewingResume: boolean;

@@ -21,6 +21,8 @@ import { EditJobSeekerModal } from "./EditJobSeekerModal";
 import { ShareResumeModal } from "./ShareResumeModal";
 import { useToast } from "@/context/ToastContext";
 import PermissionWrapper from "@/components/common/PermissionWrapper";
+import { useConfirmation } from "@/hooks/useConfirmation";
+import ConfirmationDialog from "@/components/ui/ConfirmationDialog";
 
 interface SpecialtyDisplayProps {
   specialties: string[];
@@ -80,6 +82,17 @@ interface LicensesPopoverProps {
 const LicensesPopover: React.FC<LicensesPopoverProps> = ({ licenses, isOpen, onClose, triggerRef }) => {
   const popoverRef = useRef<HTMLDivElement>(null);
 
+  // Calculate optimal height based on number of licenses
+  const calculateOptimalHeight = () => {
+    const baseHeight = 120; // Header + padding
+    const itemHeight = 140; // Height per license item
+    const maxHeight = 400; // Maximum height
+    const minHeight = 200; // Minimum height
+    
+    const calculatedHeight = baseHeight + (licenses.length * itemHeight);
+    return Math.min(maxHeight, Math.max(minHeight, calculatedHeight));
+  };
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -92,12 +105,71 @@ const LicensesPopover: React.FC<LicensesPopoverProps> = ({ licenses, isOpen, onC
       }
     };
 
+    const handleScroll = () => {
+      if (popoverRef.current && triggerRef.current) {
+        const triggerRect = triggerRef.current.getBoundingClientRect();
+        const viewportHeight = window.innerHeight;
+        const viewportWidth = window.innerWidth;
+        
+        // Calculate optimal height based on content
+        const optimalHeight = calculateOptimalHeight();
+        const popoverHeight = Math.min(optimalHeight, viewportHeight - 40); // Leave 40px margin
+        const popoverWidth = 384; // Fixed width
+        
+        const spaceBelow = viewportHeight - triggerRect.bottom;
+        const spaceAbove = triggerRect.top;
+        const spaceRight = viewportWidth - triggerRect.left;
+        const spaceLeft = triggerRect.right;
+        
+        let topPosition: number;
+        let leftPosition: number;
+        
+        // Determine vertical position
+        if (spaceBelow >= popoverHeight + 20) {
+          // Enough space below - position below
+          topPosition = triggerRect.bottom + 5;
+        } else if (spaceAbove >= popoverHeight + 20) {
+          // Not enough space below but enough above - position above
+          topPosition = triggerRect.top - popoverHeight - 5;
+        } else {
+          // Not enough space in either direction - center vertically
+          topPosition = Math.max(10, (viewportHeight - popoverHeight) / 2);
+        }
+        
+        // Determine horizontal position
+        if (spaceRight >= popoverWidth + 20) {
+          // Enough space to the right - position to the right
+          leftPosition = triggerRect.left + 5;
+        } else if (spaceLeft >= popoverWidth + 20) {
+          // Not enough space to the right but enough to the left - position to the left
+          leftPosition = triggerRect.right - popoverWidth - 5;
+        } else {
+          // Not enough space on either side - center horizontally
+          leftPosition = Math.max(10, (viewportWidth - popoverWidth) / 2);
+        }
+        
+        // Ensure popover stays within viewport bounds
+        topPosition = Math.max(10, Math.min(topPosition, viewportHeight - popoverHeight - 10));
+        leftPosition = Math.max(10, Math.min(leftPosition, viewportWidth - popoverWidth - 10));
+        
+        popoverRef.current.style.top = `${topPosition}px`;
+        popoverRef.current.style.left = `${leftPosition}px`;
+        popoverRef.current.style.height = `${popoverHeight}px`;
+      }
+    };
+
     if (isOpen) {
       document.addEventListener("mousedown", handleClickOutside);
+      window.addEventListener("scroll", handleScroll, true);
+      window.addEventListener("resize", handleScroll);
+      // Initial positioning
+      handleScroll();
     }
 
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
+      window.removeEventListener("scroll", handleScroll, true);
+      window.removeEventListener("resize", handleScroll);
     };
   }, [isOpen, onClose, triggerRef]);
 
@@ -110,8 +182,48 @@ const LicensesPopover: React.FC<LicensesPopoverProps> = ({ licenses, isOpen, onC
         ref={popoverRef}
         className="absolute bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-4 max-w-lg w-96 z-10"
         style={{
-          top: triggerRef.current ? triggerRef.current.getBoundingClientRect().bottom + 5 : 0,
-          left: triggerRef.current ? Math.max(10, triggerRef.current.getBoundingClientRect().left - 180) : 0,
+          top: triggerRef.current ? (() => {
+            const triggerRect = triggerRef.current.getBoundingClientRect();
+            const viewportHeight = window.innerHeight;
+            const viewportWidth = window.innerWidth;
+            const popoverHeight = 300; // Initial estimate
+            const popoverWidth = 384; // Initial estimate
+            
+            const spaceBelow = viewportHeight - triggerRect.bottom;
+            const spaceAbove = triggerRect.top;
+            
+            let topPosition: number;
+            
+            if (spaceBelow >= popoverHeight + 20) {
+              topPosition = triggerRect.bottom + 5;
+            } else if (spaceAbove >= popoverHeight + 20) {
+              topPosition = triggerRect.top - popoverHeight - 5;
+            } else {
+              topPosition = Math.max(10, (viewportHeight - popoverHeight) / 2);
+            }
+            
+            return Math.max(10, Math.min(topPosition, viewportHeight - popoverHeight - 10));
+          })() : 0,
+          left: triggerRef.current ? (() => {
+            const triggerRect = triggerRef.current.getBoundingClientRect();
+            const viewportWidth = window.innerWidth;
+            const popoverWidth = 384;
+            
+            const spaceRight = viewportWidth - triggerRect.left;
+            const spaceLeft = triggerRect.right;
+            
+            let leftPosition: number;
+            
+            if (spaceRight >= popoverWidth + 20) {
+              leftPosition = triggerRect.left + 5;
+            } else if (spaceLeft >= popoverWidth + 20) {
+              leftPosition = triggerRect.right - popoverWidth - 5;
+            } else {
+              leftPosition = Math.max(10, (viewportWidth - popoverWidth) / 2);
+            }
+            
+            return Math.max(10, Math.min(leftPosition, viewportWidth - popoverWidth - 10));
+          })() : 0,
         }}
       >
         <div className="flex items-center justify-between mb-4">
@@ -195,6 +307,17 @@ const CertificationsPopover: React.FC<CertificationsPopoverProps> = ({
 }) => {
   const popoverRef = useRef<HTMLDivElement>(null);
 
+  // Calculate optimal height based on number of certifications
+  const calculateOptimalHeight = () => {
+    const baseHeight = 120; // Header + padding
+    const itemHeight = 140; // Height per certification item
+    const maxHeight = 400; // Maximum height
+    const minHeight = 200; // Minimum height
+    
+    const calculatedHeight = baseHeight + (certifications.length * itemHeight);
+    return Math.min(maxHeight, Math.max(minHeight, calculatedHeight));
+  };
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -207,12 +330,71 @@ const CertificationsPopover: React.FC<CertificationsPopoverProps> = ({
       }
     };
 
+    const handleScroll = () => {
+      if (popoverRef.current && triggerRef.current) {
+        const triggerRect = triggerRef.current.getBoundingClientRect();
+        const viewportHeight = window.innerHeight;
+        const viewportWidth = window.innerWidth;
+        
+        // Calculate optimal height based on content
+        const optimalHeight = calculateOptimalHeight();
+        const popoverHeight = Math.min(optimalHeight, viewportHeight - 40); // Leave 40px margin
+        const popoverWidth = 384; // Fixed width
+        
+        const spaceBelow = viewportHeight - triggerRect.bottom;
+        const spaceAbove = triggerRect.top;
+        const spaceRight = viewportWidth - triggerRect.left;
+        const spaceLeft = triggerRect.right;
+        
+        let topPosition: number;
+        let leftPosition: number;
+        
+        // Determine vertical position
+        if (spaceBelow >= popoverHeight + 20) {
+          // Enough space below - position below
+          topPosition = triggerRect.bottom + 5;
+        } else if (spaceAbove >= popoverHeight + 20) {
+          // Not enough space below but enough above - position above
+          topPosition = triggerRect.top - popoverHeight - 5;
+        } else {
+          // Not enough space in either direction - center vertically
+          topPosition = Math.max(10, (viewportHeight - popoverHeight) / 2);
+        }
+        
+        // Determine horizontal position
+        if (spaceRight >= popoverWidth + 20) {
+          // Enough space to the right - position to the right
+          leftPosition = triggerRect.left + 5;
+        } else if (spaceLeft >= popoverWidth + 20) {
+          // Not enough space to the right but enough to the left - position to the left
+          leftPosition = triggerRect.right - popoverWidth - 5;
+        } else {
+          // Not enough space on either side - center horizontally
+          leftPosition = Math.max(10, (viewportWidth - popoverWidth) / 2);
+        }
+        
+        // Ensure popover stays within viewport bounds
+        topPosition = Math.max(10, Math.min(topPosition, viewportHeight - popoverHeight - 10));
+        leftPosition = Math.max(10, Math.min(leftPosition, viewportWidth - popoverWidth - 10));
+        
+        popoverRef.current.style.top = `${topPosition}px`;
+        popoverRef.current.style.left = `${leftPosition}px`;
+        popoverRef.current.style.height = `${popoverHeight}px`;
+      }
+    };
+
     if (isOpen) {
       document.addEventListener("mousedown", handleClickOutside);
+      window.addEventListener("scroll", handleScroll, true);
+      window.addEventListener("resize", handleScroll);
+      // Initial positioning
+      handleScroll();
     }
 
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
+      window.removeEventListener("scroll", handleScroll, true);
+      window.removeEventListener("resize", handleScroll);
     };
   }, [isOpen, onClose, triggerRef]);
 
@@ -225,8 +407,48 @@ const CertificationsPopover: React.FC<CertificationsPopoverProps> = ({
         ref={popoverRef}
         className="absolute bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-4 max-w-lg w-96 z-10"
         style={{
-          top: triggerRef.current ? triggerRef.current.getBoundingClientRect().bottom + 5 : 0,
-          left: triggerRef.current ? Math.max(10, triggerRef.current.getBoundingClientRect().left - 180) : 0,
+          top: triggerRef.current ? (() => {
+            const triggerRect = triggerRef.current.getBoundingClientRect();
+            const viewportHeight = window.innerHeight;
+            const viewportWidth = window.innerWidth;
+            const popoverHeight = 300; // Initial estimate
+            const popoverWidth = 384; // Initial estimate
+            
+            const spaceBelow = viewportHeight - triggerRect.bottom;
+            const spaceAbove = triggerRect.top;
+            
+            let topPosition: number;
+            
+            if (spaceBelow >= popoverHeight + 20) {
+              topPosition = triggerRect.bottom + 5;
+            } else if (spaceAbove >= popoverHeight + 20) {
+              topPosition = triggerRect.top - popoverHeight - 5;
+            } else {
+              topPosition = Math.max(10, (viewportHeight - popoverHeight) / 2);
+            }
+            
+            return Math.max(10, Math.min(topPosition, viewportHeight - popoverHeight - 10));
+          })() : 0,
+          left: triggerRef.current ? (() => {
+            const triggerRect = triggerRef.current.getBoundingClientRect();
+            const viewportWidth = window.innerWidth;
+            const popoverWidth = 384;
+            
+            const spaceRight = viewportWidth - triggerRect.left;
+            const spaceLeft = triggerRect.right;
+            
+            let leftPosition: number;
+            
+            if (spaceRight >= popoverWidth + 20) {
+              leftPosition = triggerRect.left + 5;
+            } else if (spaceLeft >= popoverWidth + 20) {
+              leftPosition = triggerRect.right - popoverWidth - 5;
+            } else {
+              leftPosition = Math.max(10, (viewportWidth - popoverWidth) / 2);
+            }
+            
+            return Math.max(10, Math.min(leftPosition, viewportWidth - popoverWidth - 10));
+          })() : 0,
         }}
       >
         <div className="flex items-center justify-between mb-4">
@@ -319,9 +541,11 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
   });
   const [loadingLicensesId, setLoadingLicensesId] = useState<string | null>(null);
   const [loadingCertificationsId, setLoadingCertificationsId] = useState<string | null>(null);
+  const [resetPasswordLoadingId, setResetPasswordLoadingId] = useState<string | null>(null);
   const licensesButtonRefs = useRef<{ [key: string]: React.RefObject<HTMLButtonElement | null> }>({});
   const certificationsButtonRefs = useRef<{ [key: string]: React.RefObject<HTMLButtonElement | null> }>({});
   const { addToast } = useToast();
+  const confirmation = useConfirmation();
 
   // Helper functions for popovers
   const openLicensesPopover = async (jobSeekerId: string) => {
@@ -379,14 +603,58 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
     setSelectedJobSeekerId(null);
   };
 
-  const openShareModal = (jobSeeker: any) => {
-    setSelectedJobSeekerForShare(jobSeeker);
-    setShareModalOpen(true);
-  };
+
 
   const closeShareModal = () => {
     setShareModalOpen(false);
     setSelectedJobSeekerForShare(null);
+  };
+
+  const handleResetPassword = async (jobSeeker: any) => {
+    if (!jobSeeker.email) {
+      addToast({
+        variant: "error",
+        title: "Error",
+        message: "Job seeker does not have an email address",
+        duration: 5000,
+      });
+      return;
+    }
+
+    // Show confirmation dialog
+    const confirmed = await confirmation.confirm({
+      title: "Reset Password",
+      message: `Are you sure you want to send a password reset email to ${jobSeeker.name} (${jobSeeker.email})?`,
+      confirmText: "Yes, Reset Password",
+      cancelText: "Cancel",
+    });
+
+    if (!confirmed) {
+      return;
+    }
+
+    setResetPasswordLoadingId(jobSeeker.id);
+    try {
+      const { jobSeekerApi } = await import("@/services/api/jobSeeker");
+      await jobSeekerApi.resetPassword(jobSeeker.email);
+
+      addToast({
+        variant: "success",
+        title: "Success",
+        message: `Password reset email has been sent to ${jobSeeker.email}`,
+        duration: 5000,
+      });
+    } catch (error: any) {
+      console.error("Reset password error:", error);
+      addToast({
+        variant: "error",
+        title: "Error",
+        message: error.message || "Failed to send password reset email",
+        duration: 5000,
+      });
+    } finally {
+      setResetPasswordLoadingId(null);
+    }
   };
 
   const hasResume = (jobSeeker: any) => {
@@ -604,7 +872,7 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
                         <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{jobSeeker.email}</p>
                       )}
                       <Link
-                        href={`/admin/applications?name=${encodeURIComponent(jobSeeker.name.split(" ")[0])}`}
+                        href={`/admin/applications?name=${jobSeeker.id}`}
                         className="text-sm text-blue-500 dark:text-blue-500 hover:text-brand-500 dark:hover:text-brand-400 cursor-pointer transition-colors duration-200"
                       >
                         {jobSeeker.jobApplications} applications
@@ -748,6 +1016,20 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
                         <PencilIcon /> Edit
                       </button>
                     </PermissionWrapper>
+                    <button
+                      className="flex gap-2 text-brand-400 disabled:opacity-50 disabled:cursor-not-allowed text-nowrap"
+                      onClick={() => handleResetPassword(jobSeeker)}
+                      disabled={resetPasswordLoadingId === jobSeeker.id}
+                    >
+                      {resetPasswordLoadingId === jobSeeker.id ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-brand-400"></div>
+                          Sending...
+                        </>
+                      ) : (
+                        <>Reset password</>
+                      )}
+                    </button>
                   </div>
                 </TableCell>
               </TableRow>
@@ -798,6 +1080,19 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
           triggerRef={getCertificationsButtonRef(certificationsPopover.jobSeekerId)}
         />
       )}
+
+      {/* Confirmation Dialog */}
+      <ConfirmationDialog
+        isOpen={confirmation.isOpen}
+        onClose={confirmation.onClose}
+        onConfirm={confirmation.onConfirm}
+        onCancel={confirmation.onCancel}
+        title={confirmation.config?.title || ""}
+        message={confirmation.config?.message || ""}
+        confirmText={confirmation.config?.confirmText}
+        cancelText={confirmation.config?.cancelText}
+        isLoading={resetPasswordLoadingId !== null}
+      />
     </div>
   );
 };

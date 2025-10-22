@@ -39,6 +39,7 @@ export function convertApiPermissionsToUserPermissions(userData: ApiUserData): U
     blog: { view: false, create: false, update: false, delete: false },
     careers: { view: false, create: false, update: false, delete: false },
     newsLetter: { view: true, create: true, update: true, delete: true },
+    unlockRequest: { view: false, create: false, update: false, delete: false },
   };
 
   const permissionMapping: Record<string, keyof UserPermissions> = {
@@ -50,6 +51,7 @@ export function convertApiPermissionsToUserPermissions(userData: ApiUserData): U
     "Careers Management": "careers",
     "Tickets Management": "tickets",
     "Coupons Management": "coupons",
+    "Unlock Requests Management": "unlockRequest",
     // Also support the old format for backward compatibility
     "Job Seekers": "jobSeekers",
     Employers: "employers",
@@ -60,6 +62,7 @@ export function convertApiPermissionsToUserPermissions(userData: ApiUserData): U
     Tickets: "tickets",
     Coupons: "coupons",
     "News Letter": "newsLetter",
+    "Unlock Requests": "unlockRequest",
   };
 
   // Convert API permissions to our format
@@ -81,8 +84,7 @@ export function convertApiPermissionsToUserPermissions(userData: ApiUserData): U
         update: apiPermission.edit,
         delete: apiPermission.delete,
       };
-    } else {
-      console.warn("Unknown permission name:", permissionName, "Available mappings:", Object.keys(permissionMapping));
+    
     }
   });
 

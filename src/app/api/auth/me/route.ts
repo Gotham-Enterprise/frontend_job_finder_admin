@@ -150,6 +150,20 @@ const mockUserData: UserData = {
           description: 'Manage career listings',
         },
       },
+      {
+        id: '9',
+        roleId: 1,
+        permissionId: 'unlock-requests',
+        add: false,
+        view: true,
+        edit: false,
+        delete: true,
+        permission: {
+          id: 'unlock-requests',
+          name: 'Unlock Requests',
+          description: 'Manage unlock requests',
+        },
+      },
     ],
   },
 };

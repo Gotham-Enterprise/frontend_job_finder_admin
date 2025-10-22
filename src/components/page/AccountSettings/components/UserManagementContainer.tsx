@@ -14,6 +14,7 @@ const MOCK_CURRENT_USER_PERMISSIONS = {
   blog: { view: true, create: true, update: true, delete: false },
   careers: { view: true, create: false, update: false, delete: false },
   newsLetter: { view: true, create: true, update: true, delete: true },
+  unlockRequest: { view: true, create: false, update: false, delete: false },
 };
 
 const UserManagementContainer: React.FC = () => {

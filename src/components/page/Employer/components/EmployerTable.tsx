@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import { formatDate, formatDateTimeEST } from "@/services/utils/dateUtils";
 import { Table, TableBody, TableCell, TableRow } from "../../../ui/table";
 import Badge from "../../../ui/badge/Badge";
@@ -12,6 +13,8 @@ import { EditEmployerModal } from "./EditEmployerModal";
 import { useToast } from "@/context/ToastContext";
 import PermissionWrapper from "@/components/common/PermissionWrapper";
 import { usePermissions } from "@/hooks/usePermissions";
+import OptionsDropdown from "../../../ui/OptionsDropdown";
+import type { DropdownOption } from "../../../ui/OptionsDropdown";
 
 const EmployerTable: React.FC<EmployerTableProps> = ({
   data,
@@ -28,6 +31,7 @@ const EmployerTable: React.FC<EmployerTableProps> = ({
   const [selectedEmployerIdForEdit, setSelectedEmployerIdForEdit] = useState<string | null>(null);
   const { addToast } = useToast();
   const { hasPermission } = usePermissions();
+  const router = useRouter();
 
   // Check if user has permission to add jobs (needed for checkbox selection)
   const canCreateJobs = hasPermission("employers", "add");
@@ -65,7 +69,7 @@ const EmployerTable: React.FC<EmployerTableProps> = ({
         <TableBody>
           {isLoading ? (
             <TableRow>
-              <TableCell className="text-center py-8 px-6" colSpan={canCreateJobs ? 10 : 9}>
+              <TableCell className="text-center py-8 px-6" colSpan={canCreateJobs ? 12 : 11}>
                 <div className="flex items-center justify-center gap-3">
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-brand-500"></div>
                   <p className="text-gray-500 dark:text-gray-400">Loading...</p>
@@ -74,7 +78,7 @@ const EmployerTable: React.FC<EmployerTableProps> = ({
             </TableRow>
           ) : !data?.success || !data?.data?.length ? (
             <TableRow>
-              <TableCell className="text-center py-8 px-6" colSpan={canCreateJobs ? 10 : 9}>
+              <TableCell className="text-center py-8 px-6" colSpan={canCreateJobs ? 12 : 11}>
                 <p className="text-gray-500 dark:text-gray-400">No employers found</p>
               </TableCell>
             </TableRow>
@@ -112,6 +116,7 @@ const EmployerTable: React.FC<EmployerTableProps> = ({
                     </div>
                   </div>
                 </TableCell>
+
                 <TableCell className="py-4 px-6">
                   <p className="text-sm text-gray-900 dark:text-white">{employer.email}</p>
                 </TableCell>
@@ -125,6 +130,20 @@ const EmployerTable: React.FC<EmployerTableProps> = ({
                 <TableCell className="py-4 px-6">
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-medium text-gray-900 dark:text-white">{employer.jobPostCount}</span>
+                  </div>
+                </TableCell>
+                <TableCell className="py-4 px-6 text-sm max-w-xs">
+                  <div className="flex items-center gap-3">
+                    <div className="min-w-0 flex-1 max-w-48">
+                      <p className="text-sm font-medium text-gray-900 dark:text-white">{employer.totalJobViews}</p>
+                    </div>
+                  </div>
+                </TableCell>
+                <TableCell className="py-4 px-6 text-sm max-w-xs">
+                  <div className="flex items-center gap-3">
+                    <div className="min-w-0 flex-1 max-w-48">
+                      <p className="text-sm font-medium text-gray-900 dark:text-white">{employer.totalApplications}</p>
+                    </div>
                   </div>
                 </TableCell>
                 <TableCell className="py-4 px-6 whitespace-nowrap">

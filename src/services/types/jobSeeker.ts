@@ -46,6 +46,8 @@ export interface JobSeekerFilters {
   specialty?: string;
   occupationId?: number;
   status?: "active" | "inactive" | "suspended" | "pending";
+  licenseName?: string;
+  licenseIssuingState?: string;
 }
 
 export interface JobSeekersResponse {

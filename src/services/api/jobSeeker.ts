@@ -21,6 +21,8 @@ export const jobSeekerApi = {
     if (filters.specialty) queryParams.append("specialty", filters.specialty);
     if (filters.occupationId) queryParams.append("occupationId", filters.occupationId.toString());
     if (filters.status) queryParams.append("status", filters.status);
+    if (filters.licenseName) queryParams.append("licenseName", filters.licenseName);
+    if (filters.licenseIssuingState) queryParams.append("licenseIssuingState", filters.licenseIssuingState);
 
     const endpoint = `/api/admin/jobseekers?${queryParams.toString()}`;
 
@@ -68,5 +70,9 @@ export const jobSeekerApi = {
     const endpoint = `/api/admin/jobseekers/share/${resumeId}/send-email`;
     console.log("Share Resume API Call:", { endpoint, resumeId, request });
     return apiPost<ShareResumeResponse>(endpoint, request);
+  },
+
+  async resetPassword(email: string): Promise<any> {
+    return apiPost<any>("/api/auth/forgot-password", { email });
   },
 };

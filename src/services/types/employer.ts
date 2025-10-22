@@ -20,6 +20,8 @@ export interface Employer {
   zipCode?: string;
   country?: string;
   jobPostCount: number;
+  totalApplications: number;
+  totalJobViews: number;
   dateJoined: string;
   lastActivity: string;
   status: string;
@@ -70,6 +72,16 @@ export interface JobPost {
   description?: string;
 }
 
+export interface CompanyUser {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  role: string;
+  status: string;
+  profilePictureUrl?: string;
+}
+
 export interface EmployerDetails {
   id: string;
   companyName: string;
@@ -89,6 +101,7 @@ export interface EmployerDetails {
   lastActivity: string;
   status: string;
   jobPost: JobPost[];
+  companyUsers?: CompanyUser[];
   avatarUrl?: string;
   profilePicture?: {
     fileName: string;

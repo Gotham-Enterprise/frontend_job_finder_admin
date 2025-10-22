@@ -25,6 +25,21 @@ export const EditJobSeekerModal: React.FC<EditJobSeekerModalProps> = ({ isOpen, 
     }
     setCurrentProfilePicture(null);
     setError(null);
+
+    // Reset form data to prevent state persistence issues
+    setFormData({
+      firstName: "",
+      lastName: "",
+      address: "",
+      city: "",
+      state: "",
+      country: "US",
+      zipCode: "",
+      phoneNumber: "",
+      occupationId: 0,
+      specialtyId: undefined,
+    });
+
     onClose();
   };
 
@@ -57,7 +72,6 @@ export const EditJobSeekerModal: React.FC<EditJobSeekerModalProps> = ({ isOpen, 
   const { data: occupationsData, isLoading: isOccupationsLoading } = useOccupationsWithSpecialties();
 
   const stateOptions = [
-    { value: "", label: "Select state" },
     ...(statesData?.success && statesData.data
       ? statesData.data.states.map((state) => ({
           value: state.abbreviation,
@@ -194,11 +208,47 @@ export const EditJobSeekerModal: React.FC<EditJobSeekerModalProps> = ({ isOpen, 
   }, [jobSeekerId]);
 
   useEffect(() => {
-    if (isOpen && jobSeekerId && statesData?.success && occupationsData?.success) {
+    if (isOpen && jobSeekerId) {
       setError(null); // Clear any previous errors
       loadJobSeekerData();
     }
-  }, [isOpen, jobSeekerId, loadJobSeekerData, statesData, occupationsData]);
+  }, [isOpen, jobSeekerId, loadJobSeekerData]);
+
+  // Separate effect to ensure state dropdown works correctly when states data loads
+  useEffect(() => {
+    if (statesData?.success && formData.state && stateOptions.length > 0) {
+      // Debug logging for state matching
+      if (process.env.NODE_ENV === "development") {
+        console.log("State Matching Debug:", {
+          formDataState: formData.state,
+          availableOptions: stateOptions.map((opt) => ({ value: opt.value, label: opt.label })),
+        });
+      }
+
+      // Check if current state value exists in options, if not try to find a match
+      const currentStateExists = stateOptions.find((option) => option.value === formData.state);
+      if (!currentStateExists && formData.state) {
+        // Try to find state by name or partial match
+        const stateByName = stateOptions.find(
+          (option) =>
+            option.label.toLowerCase() === formData.state.toLowerCase() ||
+            option.label.toLowerCase().includes(formData.state.toLowerCase())
+        );
+        if (stateByName) {
+          if (process.env.NODE_ENV === "development") {
+            console.log("State Match Found:", {
+              original: formData.state,
+              matched: stateByName.value,
+              matchedLabel: stateByName.label,
+            });
+          }
+          setFormData((prev) => ({ ...prev, state: stateByName.value }));
+        } else if (process.env.NODE_ENV === "development") {
+          console.warn("No state match found for:", formData.state);
+        }
+      }
+    }
+  }, [statesData, formData.state, stateOptions]);
 
   const updateField = (field: keyof JobSeekerUpdateData, value: string | number | undefined) => {
     setFormData((prev) => ({
@@ -281,7 +331,7 @@ export const EditJobSeekerModal: React.FC<EditJobSeekerModalProps> = ({ isOpen, 
       isOpen={isOpen}
       onClose={handleClose}
       isFullscreen={false}
-      className="max-w-2xl mx-auto mt-8 mb-8 rounded-lg shadow-xl max-h-[90vh] overflow-hidden"
+      className="max-w-2xl mx-auto mt-8 mb-8 rounded-lg shadow-xl max-h-[90vh] overflow-y"
     >
       <div className="flex flex-col max-h-[90vh]">
         <div className="p-6 pb-4 border-b border-gray-200 dark:border-gray-700">
@@ -439,7 +489,7 @@ export const EditJobSeekerModal: React.FC<EditJobSeekerModalProps> = ({ isOpen, 
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">State</label>
                   <Select
                     options={stateOptions}
-                    value={formData.state}
+                    value={formData.state || ""}
                     onChange={(value: string) => updateField("state", value)}
                     placeholder="Select state"
                     disabled={isStatesLoading}
