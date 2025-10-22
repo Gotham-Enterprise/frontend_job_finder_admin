@@ -6,6 +6,11 @@ import Pagination from "../../../../tables/Pagination";
 import { Modal } from "@/components/ui/modal";
 import { useToast } from "@/context/ToastContext";
 import ConfirmationDialog from "@/components/ui/ConfirmationDialog";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import TimePicker from "react-time-picker";
+import "react-time-picker/dist/TimePicker.css";
+import "react-clock/dist/Clock.css";
 
 const ScheduleTab = () => {
   const { addToast } = useToast();
@@ -21,7 +26,7 @@ const ScheduleTab = () => {
   const [editScheduleDialog, setEditScheduleDialog] = useState({
     isOpen: false,
     newsletter: null as Newsletter | null,
-    scheduledDate: "",
+    scheduledDate: new Date(),
     scheduledTime: "",
     isUpdating: false,
   });
@@ -74,13 +79,16 @@ const ScheduleTab = () => {
     // Parse the existing scheduled date and time
     if (newsletter.scheduledAt) {
       const scheduledDate = new Date(newsletter.scheduledAt);
-      const dateStr = scheduledDate.toISOString().split("T")[0]; // YYYY-MM-DD
-      const timeStr = scheduledDate.toTimeString().slice(0, 5); // HH:MM
+
+      // Extract time in HH:MM format for TimePicker
+      const hours = scheduledDate.getHours().toString().padStart(2, "0");
+      const minutes = scheduledDate.getMinutes().toString().padStart(2, "0");
+      const timeStr = `${hours}:${minutes}`;
 
       setEditScheduleDialog({
         isOpen: true,
         newsletter: newsletter,
-        scheduledDate: dateStr,
+        scheduledDate: scheduledDate,
         scheduledTime: timeStr,
         isUpdating: false,
       });
@@ -88,7 +96,7 @@ const ScheduleTab = () => {
       setEditScheduleDialog({
         isOpen: true,
         newsletter: newsletter,
-        scheduledDate: "",
+        scheduledDate: new Date(),
         scheduledTime: "",
         isUpdating: false,
       });
@@ -107,7 +115,9 @@ const ScheduleTab = () => {
     }
 
     // Combine date and time into ISO string
-    const scheduledDateTime = new Date(`${editScheduleDialog.scheduledDate}T${editScheduleDialog.scheduledTime}`);
+    const [hours, minutes] = editScheduleDialog.scheduledTime.split(":");
+    const scheduledDateTime = new Date(editScheduleDialog.scheduledDate);
+    scheduledDateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
     const now = new Date();
 
     if (scheduledDateTime <= now) {
@@ -142,7 +152,7 @@ const ScheduleTab = () => {
       setEditScheduleDialog({
         isOpen: false,
         newsletter: null,
-        scheduledDate: "",
+        scheduledDate: new Date(),
         scheduledTime: "",
         isUpdating: false,
       });
@@ -161,7 +171,7 @@ const ScheduleTab = () => {
     setEditScheduleDialog({
       isOpen: false,
       newsletter: null,
-      scheduledDate: "",
+      scheduledDate: new Date(),
       scheduledTime: "",
       isUpdating: false,
     });
@@ -511,11 +521,78 @@ const ScheduleTab = () => {
         showCloseButton={true}
         className="max-w-lg rounded-lg shadow-xl"
       >
+        <style>
+          {`
+            /* Time Picker Styling for Edit Schedule Modal */
+            .react-time-picker {
+              width: 100%;
+            }
+            .react-time-picker__wrapper {
+              border: 1px solid #d1d5db;
+              border-radius: 0.5rem;
+              padding: 0.625rem 1rem;
+              width: 100%;
+              display: flex;
+              align-items: center;
+            }
+            .react-time-picker__wrapper:hover {
+              border-color: #9ca3af;
+            }
+            .react-time-picker__wrapper:focus-within {
+              outline: 2px solid #3b82f6;
+              outline-offset: 2px;
+              border-color: #3b82f6;
+            }
+            .react-time-picker__inputGroup {
+              display: flex;
+              align-items: center;
+              gap: 0.25rem;
+            }
+            .react-time-picker__inputGroup__input {
+              border: none;
+              outline: none;
+              font-size: 0.875rem;
+              padding: 0.125rem;
+            }
+            .react-time-picker__inputGroup__divider,
+            .react-time-picker__inputGroup__leadingZero {
+              font-size: 0.875rem;
+            }
+            .react-time-picker__button {
+              border: none;
+              background: none;
+              padding: 0.25rem;
+            }
+            .react-time-picker__button svg {
+              width: 1.25rem;
+              height: 1.25rem;
+              stroke: #6b7280;
+            }
+            
+            /* DatePicker Styling */
+            .react-datepicker-popper {
+              z-index: 9999 !important;
+            }
+            .react-datepicker__day--disabled {
+              color: #d1d5db !important;
+              cursor: not-allowed !important;
+              pointer-events: none !important;
+              opacity: 0.4 !important;
+            }
+            .react-datepicker__day--disabled:hover {
+              background-color: transparent !important;
+            }
+            .react-datepicker__day--outside-month {
+              color: #d1d5db !important;
+              opacity: 0.4 !important;
+            }
+          `}
+        </style>
         <div className="p-6">
           <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Edit Schedule</h3>
           {editScheduleDialog.newsletter && (
             <p className="mb-6 text-sm text-gray-600 dark:text-gray-400">
-              Update the scheduled date and time for "{editScheduleDialog.newsletter.subject}"
+              Update the scheduled date and time for &quot;{editScheduleDialog.newsletter.subject}&quot;
             </p>
           )}
 
@@ -523,16 +600,23 @@ const ScheduleTab = () => {
             {/* Date Input */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Date</label>
-              <input
-                type="date"
-                value={editScheduleDialog.scheduledDate}
-                onChange={(e) =>
-                  setEditScheduleDialog((prev) => ({
-                    ...prev,
-                    scheduledDate: e.target.value,
-                  }))
-                }
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white"
+              <DatePicker
+                selected={editScheduleDialog.scheduledDate}
+                onChange={(date: Date | null) => {
+                  if (date) {
+                    setEditScheduleDialog((prev) => ({
+                      ...prev,
+                      scheduledDate: date,
+                    }));
+                  }
+                }}
+                minDate={new Date()}
+                dateFormat="MM/dd/yyyy"
+                className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 cursor-pointer dark:bg-gray-800 dark:text-white"
+                calendarClassName="shadow-lg"
+                showPopperArrow={false}
+                wrapperClassName="w-full"
+                popperPlacement="bottom-start"
                 disabled={editScheduleDialog.isUpdating}
               />
             </div>
@@ -540,17 +624,20 @@ const ScheduleTab = () => {
             {/* Time Input */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Time</label>
-              <input
-                type="time"
-                value={editScheduleDialog.scheduledTime}
-                onChange={(e) =>
+              <TimePicker
+                onChange={(value) => {
                   setEditScheduleDialog((prev) => ({
                     ...prev,
-                    scheduledTime: e.target.value,
-                  }))
-                }
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white"
+                    scheduledTime: value || "",
+                  }));
+                }}
+                value={editScheduleDialog.scheduledTime}
+                disableClock={true}
+                clearIcon={null}
+                format="h:mm a"
+                className="w-full"
                 disabled={editScheduleDialog.isUpdating}
+                required
               />
             </div>
           </div>
