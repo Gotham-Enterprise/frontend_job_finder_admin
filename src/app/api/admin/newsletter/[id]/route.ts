@@ -111,8 +111,6 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
       );
     }
 
-    console.log("✅ Newsletter deleted successfully:", id);
-
     return NextResponse.json(
       {
         success: true,
@@ -121,7 +119,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
       { status: 200 }
     );
   } catch (error) {
-    console.error("❌ Error deleting newsletter:", error);
+    console.error("Error deleting newsletter:", error);
 
     return NextResponse.json(
       {
