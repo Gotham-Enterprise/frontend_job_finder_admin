@@ -40,7 +40,7 @@ type NavItem = {
     | "tickets"
     | "coupons"
     | "blog"
-    | "newsLetter";
+    | "newsLetter"
     | "unlockRequest";
   isAccessible?: boolean;
 };
@@ -125,7 +125,6 @@ const navItems: NavItem[] = [
     permissionKey: "newsLetter",
     subItems: [{ name: "All News Letter", path: "/admin/news-letter", requiredAction: "view" }],
   },
-  },
 
   {
     icon: <IdCardIcon />,
@@ -206,11 +205,11 @@ const AppSidebar: React.FC = () => {
     // If item has permissionKey and we have permissions, check permissions
     if (item.permissionKey && permissions) {
       const hasPermission = hasAnyModulePermission(permissions, item.permissionKey);
-      
+
       // Special handling for Unlock Requests - show if user is Super Admin
-      if (item.permissionKey === 'unlockRequest' && !hasPermission) {
-        const user = typeof window !== 'undefined' ? authUtils.getUser() : null;
-        const isSuperAdmin = user?.adminRoleAccess?.roleName?.toLowerCase() === 'super admin';
+      if (item.permissionKey === "unlockRequest" && !hasPermission) {
+        const user = typeof window !== "undefined" ? authUtils.getUser() : null;
+        const isSuperAdmin = user?.adminRoleAccess?.roleName?.toLowerCase() === "super admin";
         console.log(
           `[Sidebar] Special check for Unlock Requests - isSuperAdmin: ${isSuperAdmin}, roleName: ${user?.adminRoleAccess?.roleName}`
         );
@@ -218,7 +217,7 @@ const AppSidebar: React.FC = () => {
           return true;
         }
       }
-      
+
       console.log(
         `[Sidebar] Checking accessibility for "${item.name}" (${item.permissionKey}):`,
         hasPermission,
