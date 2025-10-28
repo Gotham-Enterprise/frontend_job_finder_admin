@@ -146,11 +146,6 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
 
   const contactInfo = [
     {
-      label: "Experience",
-      value: `${jobSeeker.professionalBackground?.length || 0} ${jobSeeker.professionalBackground?.length === 1 ? "Year" : "Year(s)"}`,
-      className: "text-gray-900 dark:text-white",
-    },
-    {
       label: "Phone",
       value: jobSeeker.phoneNumber || "Not provided",
       className: "text-gray-900 dark:text-white",
@@ -164,6 +159,11 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
       label: "Location",
       value: [jobSeeker.city, jobSeeker.state].filter(Boolean).join(", ") || "Not specified",
       className: "text-gray-900 dark:text-white text-right",
+    },
+    {
+      label: "Experience",
+      value: `${jobSeeker.professionalBackground?.length || 0} ${jobSeeker.professionalBackground?.length === 1 ? "Year" : "Year(s)"}`,
+      className: "text-gray-900 dark:text-white",
     },
     {
       label: "Joined",
