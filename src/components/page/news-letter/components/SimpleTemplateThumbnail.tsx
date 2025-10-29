@@ -49,19 +49,17 @@ const SimpleTemplateThumbnail: React.FC<SimpleTemplateThumbnailProps> = ({ templ
       <div className="h-80 overflow-hidden bg-gray-50 relative">
         {template.id === "blank" ? (
           <div className="flex items-center justify-center h-full relative">
-            <div className="text-center">
+            <div className="text-center px-6">
               <div className="mx-auto mb-6 flex items-center justify-center">
                 <img src="/images/email-empty.svg" alt="Email icon" className="h-20 w-20 text-gray-400" />
               </div>
               <h3 className="text-lg font-semibold text-gray-700 mb-2">Start from scratch</h3>
               <p className="text-sm text-gray-500 mb-6">Create your own design from scratch</p>
-            </div>
 
-            {/* Hover overlay with start building button */}
-            <div className="absolute inset-0 bg-red  bg-red opacity-0 group-hover:opacity-25 transition-opacity duration-200 flex items-center justify-center">
+              {/* Always visible button */}
               <button
                 onClick={onSelect}
-                className="bg-primary text-white px-6 py-3 rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors transform translate-y-2 group-hover:translate-y-0 duration-200"
+                className="bg-primary text-white px-8 py-3 rounded-lg text-base font-semibold hover:bg-primary/90 hover:shadow-lg transition-all duration-200 transform hover:scale-105"
               >
                 Start Building
               </button>
