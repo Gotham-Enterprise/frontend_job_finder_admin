@@ -11,6 +11,7 @@ import {
   setCurrentStep,
   updateNewsletterData,
 } from "@/store/slices/newsletterSlice";
+import { Modal } from "@/components/ui/modal";
 import { blogApi } from "@/services/api/blog";
 import { createNewsletter, updateNewsletter } from "@/services/api/newsLetter";
 import { useToast } from "@/context/ToastContext";
@@ -383,9 +384,6 @@ const ReactEmailEditor: React.FC<ReactEmailEditorProps> = ({ onDesignLoad, onLoa
       dispatch(setContent(html));
       dispatch(setDesign(design));
       dispatch(updateNewsletterData({ isTemplate: true }));
-
-      // You can add API call here to save template to backend
-      console.log("Template saved:", { design, html });
     });
   };
 
@@ -404,6 +402,72 @@ const ReactEmailEditor: React.FC<ReactEmailEditorProps> = ({ onDesignLoad, onLoa
     });
   };
 
+  // Navigate back helper (create flow vs edit flow)
+  const navigateBack = () => {
+    if (isEditMode) {
+      router.push("/admin/news-letter");
+    } else {
+      dispatch(setCurrentStep(1));
+    }
+  };
+
+  const [showUnsavedConfirm, setShowUnsavedConfirm] = useState(false);
+
+  // Compare current editor content/design with Redux state to detect unsaved changes
+  const checkEditorForUnsavedChanges = async (): Promise<boolean> => {
+    const unlayer = emailEditorRef.current?.editor;
+    if (!unlayer) return false;
+
+    try {
+      const data: any = await new Promise((resolve) => {
+        unlayer.exportHtml((d: any) => resolve(d));
+      });
+
+      const currentHtml = (data?.html || "").trim();
+      const currentDesign = data?.design || null;
+
+      const savedHtml = (newsletterData.content || "").trim();
+      const savedDesign = newsletterData.design || null;
+
+      // Check if both are essentially empty (no real content)
+      const currentIsEmpty = !currentHtml || currentHtml.length === 0;
+      const savedIsEmpty = !savedHtml || savedHtml.length === 0;
+
+      // If both are empty, no changes
+      if (currentIsEmpty && savedIsEmpty) {
+        return false;
+      }
+
+      // Check if current design has any rows (actual content)
+      const currentHasContent = currentDesign?.body?.rows?.length > 0;
+      const savedHasContent = savedDesign?.body?.rows?.length > 0;
+
+      // If neither has content, no changes
+      if (!currentHasContent && !savedHasContent) {
+        return false;
+      }
+
+      // Now check for actual changes
+      const htmlChanged = currentHtml !== savedHtml;
+      const designChanged = JSON.stringify(currentDesign) !== JSON.stringify(savedDesign);
+
+      return htmlChanged || designChanged;
+    } catch (err) {
+      // If anything goes wrong, assume no unsaved changes to avoid blocking navigation
+      console.error("Error checking editor for unsaved changes:", err);
+      return false;
+    }
+  };
+
+  const handleBackClick = async () => {
+    const hasChanges = await checkEditorForUnsavedChanges();
+    if (hasChanges) {
+      setShowUnsavedConfirm(true);
+    } else {
+      navigateBack();
+    }
+  };
+
   return (
     <>
       {/* Image Upload Loading Overlay */}
@@ -415,13 +479,7 @@ const ReactEmailEditor: React.FC<ReactEmailEditorProps> = ({ onDesignLoad, onLoa
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <button
-                onClick={() => {
-                  if (isEditMode) {
-                    router.push("/admin/news-letter");
-                  } else {
-                    dispatch(setCurrentStep(1));
-                  }
-                }}
+                onClick={handleBackClick}
                 className="flex items-center space-x-1 px-3 py-1 text-sm text-gray-600 hover:text-gray-900 transition-colors"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -646,7 +704,7 @@ const ReactEmailEditor: React.FC<ReactEmailEditorProps> = ({ onDesignLoad, onLoa
                   enabled: true,
                   properties: {
                     text: {
-                      value: "Enter your text here...",
+                      value: "Type here...",
                     },
                   },
                 },
@@ -685,6 +743,51 @@ const ReactEmailEditor: React.FC<ReactEmailEditorProps> = ({ onDesignLoad, onLoa
           />
         </div>
       </div>
+      {/* Unsaved changes confirmation modal for Back action */}
+      <Modal
+        isOpen={showUnsavedConfirm}
+        onClose={() => setShowUnsavedConfirm(false)}
+        isFullscreen={false}
+        className="max-w-md"
+      >
+        <div className="p-6">
+          <div className="flex items-center justify-center w-12 h-12 mx-auto mb-4 rounded-full bg-yellow-100">
+            <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+              />
+            </svg>
+          </div>
+
+          <h3 className="text-lg font-semibold text-gray-900 text-center mb-2">Unsaved Changes</h3>
+
+          <p className="text-sm text-gray-600 text-center mb-6">
+            You have unsaved changes in the editor. If you go back, these changes will be lost. Do you want to discard
+            them?
+          </p>
+
+          <div className="flex gap-3">
+            <button
+              onClick={() => setShowUnsavedConfirm(false)}
+              className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            >
+              Stay and Continue Editing
+            </button>
+            <button
+              onClick={() => {
+                setShowUnsavedConfirm(false);
+                navigateBack();
+              }}
+              className="flex-1 px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+            >
+              Discard Changes
+            </button>
+          </div>
+        </div>
+      </Modal>
     </>
   );
 };
