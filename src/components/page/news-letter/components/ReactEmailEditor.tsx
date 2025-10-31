@@ -564,8 +564,8 @@ const ReactEmailEditor: React.FC<ReactEmailEditorProps> = ({ onDesignLoad, onLoa
           </div>
         </div>
 
-        {/* Email Editor - Full Height */}
-        <div className="flex-1 overflow-hidden" style={{ height: "calc(100vh - 60px)", width: "100%" }}>
+        {/* Email Editor - Full Height with scroll */}
+        <div className="flex-1 overflow-auto" style={{ height: "calc(100vh - 60px)", width: "100%" }}>
           <EmailEditor
             ref={emailEditorRef}
             onLoad={onEditorLoad}
