@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, ReactNode } from "react";
+import React, { createContext, useContext, ReactNode, useEffect } from "react";
 import { useUnlockRequestCount } from "@/hooks/useUnlockRequestCount";
 
 interface UnlockRequestContextType {
@@ -24,7 +24,10 @@ interface UnlockRequestProviderProps {
 }
 
 export const UnlockRequestProvider: React.FC<UnlockRequestProviderProps> = ({ children }) => {
-  const { data: pendingCount = 0, isLoading, refetch } = useUnlockRequestCount();
+  const { data, isLoading, refetch } = useUnlockRequestCount();
+
+  // Ensure we always have a valid number, not undefined
+  const pendingCount = typeof data === "number" ? data : 0;
 
   return (
     <UnlockRequestContext.Provider value={{ pendingCount, isLoading, refetch }}>

@@ -110,7 +110,10 @@ export const useIdApprovalLogic = (): UseIdApprovalLogic => {
           onSuccess: (data) => {
             setSelected(null);
             refetch();
-            refetchUnlockCount(); // Refetch unlock request count
+            // Refetch unlock request count with a small delay to ensure backend is updated
+            setTimeout(() => {
+              refetchUnlockCount();
+            }, 500);
 
             const title = status === "approved" ? "Unlock Request Approved" : "Unlock Request Declined";
 
@@ -152,7 +155,10 @@ export const useIdApprovalLogic = (): UseIdApprovalLogic => {
           {
             onSuccess: (data) => {
               refetch();
-              refetchUnlockCount(); // Refetch unlock request count
+              // Refetch unlock request count with a small delay to ensure backend is updated
+              setTimeout(() => {
+                refetchUnlockCount();
+              }, 500);
               setCheckedItems([]);
               setChecked(false);
               setModalData({
