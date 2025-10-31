@@ -125,7 +125,7 @@ const InboxStep: React.FC = () => {
           {/* From Name */}
           <div>
             <label htmlFor="fromName" className="block text-sm font-medium text-gray-700 mb-2">
-              From name <span className="text-red-500">*</span>
+              Sender's Name <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
@@ -146,7 +146,7 @@ const InboxStep: React.FC = () => {
           {/* From Address */}
           <div>
             <label htmlFor="fromAddress" className="block text-sm font-medium text-gray-700 mb-2">
-              From address <span className="text-red-500">*</span>
+              Sender's Email Address <span className="text-red-500">*</span>
             </label>
             <input
               type="email"
