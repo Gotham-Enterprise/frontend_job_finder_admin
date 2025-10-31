@@ -2,6 +2,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { showToast } from "@/services/utils/toast";
+import { useUnlockRequestContext } from "@/context/UnlockRequestContext";
 
 import { IdApproval, IdApprovalFilters, IdApprovalStatusUpdate, UseIdApprovalLogic } from "../types/idApproval";
 import { useGetIdApprovals, useIdApprovalUpdateStatus, useIdApprovalBatchUpdateStatus } from "./useIdApproval";
@@ -9,6 +10,7 @@ import { useGetIdApprovals, useIdApprovalUpdateStatus, useIdApprovalBatchUpdateS
 export const useIdApprovalLogic = (): UseIdApprovalLogic => {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { refetch: refetchUnlockCount } = useUnlockRequestContext();
 
   const getInitialFilters = (): IdApprovalFilters => {
     const search = searchParams.get("search") || "";
@@ -108,6 +110,7 @@ export const useIdApprovalLogic = (): UseIdApprovalLogic => {
           onSuccess: (data) => {
             setSelected(null);
             refetch();
+            refetchUnlockCount(); // Refetch unlock request count
 
             const title = status === "approved" ? "Unlock Request Approved" : "Unlock Request Declined";
 
@@ -116,7 +119,7 @@ export const useIdApprovalLogic = (): UseIdApprovalLogic => {
         }
       );
     },
-    [mutate, refetch, setSelected]
+    [mutate, refetch, refetchUnlockCount, setSelected]
   );
   const onChangeChecked = useCallback(
     (checked: boolean) => {
@@ -149,6 +152,7 @@ export const useIdApprovalLogic = (): UseIdApprovalLogic => {
           {
             onSuccess: (data) => {
               refetch();
+              refetchUnlockCount(); // Refetch unlock request count
               setCheckedItems([]);
               setChecked(false);
               setModalData({
@@ -165,7 +169,7 @@ export const useIdApprovalLogic = (): UseIdApprovalLogic => {
         );
       }
     },
-    [checkedItems, batchUpdate, refetch]
+    [checkedItems, batchUpdate, refetch, refetchUnlockCount]
   );
   const onToggleModal = useCallback(() => {
     setShowModal((prev) => !prev);
