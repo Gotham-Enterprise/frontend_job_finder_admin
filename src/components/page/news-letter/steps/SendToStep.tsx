@@ -52,12 +52,13 @@ const SendToStep: React.FC = () => {
 
   // Fetch email lists on component mount
   useEffect(() => {
+    let isMounted = true;
     const fetchEmails = async () => {
       try {
         setIsLoading(true);
         const response = await newsletterApi.getNewsletterEmails();
 
-        if (response.success && response.data) {
+        if (isMounted && response.success && response.data) {
           const employerGroup = response.data.find((group) => group.role === "employer");
           const jobSeekerGroup = response.data.find((group) => group.role === "job-seeker");
 
@@ -70,17 +71,26 @@ const SendToStep: React.FC = () => {
         }
       } catch (error: any) {
         console.error("Failed to fetch newsletter emails:", error);
-        addToast({
-          variant: "error",
-          title: "Error",
-          message: error.message || "Failed to load recipients. Please try again.",
-        });
+        // Only show toast if component is still mounted
+        if (isMounted) {
+          addToast({
+            variant: "error",
+            title: "Error",
+            message: error.message || "Failed to load recipients. Please try again.",
+          });
+        }
       } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     };
 
     fetchEmails();
+
+    return () => {
+      isMounted = false;
+    };
   }, [addToast]);
 
   // Handle individual email selection
