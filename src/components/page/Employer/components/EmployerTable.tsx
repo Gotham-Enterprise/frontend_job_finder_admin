@@ -208,7 +208,7 @@ const EmployerTable: React.FC<EmployerTableProps> = ({
                       variant="light"
                       className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-700"
                     >
-                      {employer.currentPlan}
+                      {employer.currentPlan === 'Free Plan' ? 'No Active Subscription' : employer.currentPlan}
                     </Badge>
                   </span>
                 </TableCell>
