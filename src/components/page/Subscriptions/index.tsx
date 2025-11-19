@@ -187,7 +187,7 @@ export default function SubscriptionsPage() {
   };
 
   const formatCredit = (credit: number | null) => {
-    if (credit === null || credit === 9999999) return 'Unlimited';
+    if (!credit || credit === 9999999) return 'Unlimited';
     return credit.toLocaleString();
   };
 
@@ -240,11 +240,11 @@ export default function SubscriptionsPage() {
                   <Badge variant="solid" color={getStatusColor(subscriptionData.status)} size="md">
                     {subscriptionData.status}
                   </Badge>
-                  {/* {subscriptionData.currentPlan.isTrialPlan && (
+                  {subscriptionData.currentPlan.isTrialPlan && (
                     <Badge variant="light" color="info" size="md">
                       Trial Plan
                     </Badge>
-                  )} */}
+                  )}
                   {subscriptionData.isFeaturedEmployer && (
                     <Badge variant="solid" color="warning" size="md">
                       Featured Employer
@@ -256,10 +256,10 @@ export default function SubscriptionsPage() {
                 onClick={navigateToUpgradePlan}
                 className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 flex items-center gap-2"
               >
-                {/* <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
-                </svg> */}
-                Manage Plan
+                </svg>
+                Upgrade Plan
               </Button>
             </div>
           </div>
@@ -270,8 +270,11 @@ export default function SubscriptionsPage() {
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                    {subscriptionData.currentPlan.name === 'Free Plan' ? 'No Active Subscription' : subscriptionData.currentPlan.name}
+                    {subscriptionData.currentPlan.name}
                   </h2>
+                  <p className="text-gray-600 dark:text-gray-400 mb-3">
+                    {subscriptionData.currentPlan.description}
+                  </p>
                   <div className="flex items-center space-x-4">
                     <span className="text-3xl font-bold text-blue-600 dark:text-blue-400">
                       {formatPrice(subscriptionData.currentPlan.priceInCents)}
@@ -739,8 +742,11 @@ export default function SubscriptionsPage() {
         <div className="p-6">
           <div className="mb-6">
             <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-2">
-              {subscriptionData.currentPlan.name === 'Free Plan' ? 'No Active Plan' : subscriptionData.currentPlan.name}
+              {subscriptionData.currentPlan.name}
             </h2>
+            <p className="text-gray-600 dark:text-gray-400">
+              {subscriptionData.currentPlan.description}
+            </p>
           </div>
 
           <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg p-6 mb-6 border border-blue-100 dark:border-blue-800">
@@ -754,6 +760,9 @@ export default function SubscriptionsPage() {
                 </span>
               </div>
               <div className="space-x-2">
+                {subscriptionData.currentPlan.isTrialPlan && (
+                  <Badge variant="light" color="info">Trial Plan</Badge>
+                )}
                 {subscriptionData.currentPlan.isActive && (
                   <Badge variant="solid" color="success">Active</Badge>
                 )}
@@ -766,39 +775,39 @@ export default function SubscriptionsPage() {
               <h4 className="font-semibold text-gray-900 dark:text-white">Plan Features</h4>
               <div className="space-y-2">
                 <div className="flex items-center gap-3">
-                  {/* <CheckLineIcon className="w-5 h-5 text-green-500" /> */}
+                  <CheckLineIcon className="w-5 h-5 text-green-500" />
                   <span className="text-sm text-gray-700 dark:text-gray-300">
-                    {formatCredit(subscriptionData.currentPlan.jobPostCredit)} - Job Posts
+                    {formatCredit(subscriptionData.currentPlan.jobPostCredit)} Job Posts
                   </span>
                 </div>
                 <div className="flex items-center gap-3">
-                  {/* <CheckLineIcon className="w-5 h-5 text-green-500" /> */}
+                  <CheckLineIcon className="w-5 h-5 text-green-500" />
                   <span className="text-sm text-gray-700 dark:text-gray-300">
-                    {formatCredit(subscriptionData.currentPlan.resumeSearchCredit)} - Resume Searches
+                    {formatCredit(subscriptionData.currentPlan.resumeSearchCredit)} Resume Searches
                   </span>
                 </div>
                 <div className="flex items-center gap-3">
-                  {/* <CheckLineIcon className="w-5 h-5 text-green-500" /> */}
+                  <CheckLineIcon className="w-5 h-5 text-green-500" />
                   <span className="text-sm text-gray-700 dark:text-gray-300">
-                    {formatCredit(subscriptionData.currentPlan.profileViewsCredit)} - Profile Views
+                    {formatCredit(subscriptionData.currentPlan.profileViewsCredit)} Profile Views
                   </span>
                 </div>
                 <div className="flex items-center gap-3">
-                  {/* <CheckLineIcon className="w-5 h-5 text-green-500" /> */}
+                  <CheckLineIcon className="w-5 h-5 text-green-500" />
                   <span className="text-sm text-gray-700 dark:text-gray-300">
-                    {formatCredit(subscriptionData.currentPlan.emailSendingCredit)} - Email Sends
+                    {formatCredit(subscriptionData.currentPlan.emailSendingCredit)} Email Sends
                   </span>
                 </div>
                 <div className="flex items-center gap-3">
-                  {/* <CheckLineIcon className="w-5 h-5 text-green-500" /> */}
+                  <CheckLineIcon className="w-5 h-5 text-green-500" />
                   <span className="text-sm text-gray-700 dark:text-gray-300">
-                    {formatCredit(subscriptionData.currentPlan.resumeDownloadCredit)} - Resume Downloads
+                    {formatCredit(subscriptionData.currentPlan.resumeDownloadCredit)} Resume Downloads
                   </span>
                 </div>
                 <div className="flex items-center gap-3">
-                  {/* <CheckLineIcon className="w-5 h-5 text-green-500" /> */}
+                  <CheckLineIcon className="w-5 h-5 text-green-500" />
                   <span className="text-sm text-gray-700 dark:text-gray-300">
-                    {formatCredit(subscriptionData.currentPlan.employeesSeatsCredit)} - Employee Seats
+                    {formatCredit(subscriptionData.currentPlan.employeesSeatsCredit)} Employee Seats
                   </span>
                 </div>
               </div>

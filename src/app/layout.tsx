@@ -1,14 +1,13 @@
-import { Outfit } from "next/font/google";
-import "./globals.css";
+import { Outfit } from 'next/font/google';
+import './globals.css';
 
-import { SidebarProvider } from "@/context/SidebarContext";
-import { ThemeProvider } from "@/context/ThemeContext";
-import { ToastProvider } from "@/context/ToastContext";
-import { SubscriptionProvider } from "@/context/SubscriptionContext";
-import { UnlockRequestProvider } from "@/context/UnlockRequestContext";
-import { ReduxProvider } from "@/store/ReduxProvider";
-import QueryProvider from "@/services/providers/QueryProvider";
-import ToastContainer from "@/components/ui/toast/ToastContainer";
+import { SidebarProvider } from '@/context/SidebarContext';
+import { ThemeProvider } from '@/context/ThemeContext';
+import { ToastProvider } from '@/context/ToastContext';
+import { SubscriptionProvider } from '@/context/SubscriptionContext';
+import { ReduxProvider } from '@/store/ReduxProvider';
+import QueryProvider from '@/services/providers/QueryProvider';
+import ToastContainer from '@/components/ui/toast/ToastContainer';
 
 const outfit = Outfit({
   subsets: ["latin"],
@@ -18,8 +17,7 @@ export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
-}>) {
-  return (
+}>) {  return (
     <html lang="en">
       <body className={`${outfit.className} dark:bg-gray-900`}>
         <ReduxProvider>
@@ -27,9 +25,7 @@ export default function RootLayout({
             <ThemeProvider>
               <ToastProvider>
                 <SubscriptionProvider>
-                  <UnlockRequestProvider>
-                    <SidebarProvider>{children}</SidebarProvider>
-                  </UnlockRequestProvider>
+                  <SidebarProvider>{children}</SidebarProvider>
                 </SubscriptionProvider>
                 <ToastContainer />
               </ToastProvider>

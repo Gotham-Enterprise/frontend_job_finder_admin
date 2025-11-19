@@ -5,7 +5,6 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useSidebar } from "../context/SidebarContext";
 import { useAuthPermissions } from "../hooks/useAuthPermissions";
-import { useUnlockRequestContext } from "../context/UnlockRequestContext";
 import { hasAnyModulePermission, hasPermission } from "../utils/permissionUtils";
 import { authUtils } from "../services/utils/authUtils";
 import SidebarSkeleton from "../components/common/SidebarSkeleton";
@@ -142,17 +141,6 @@ const othersItems: NavItem[] = [
 const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
   const { permissions, loading } = useAuthPermissions();
-
-  // Safely get unlock request context (may not be available during initial render)
-  let pendingCount = 0;
-  try {
-    const unlockContext = useUnlockRequestContext();
-    pendingCount = unlockContext.pendingCount;
-  } catch (error) {
-    // Context not available, use default value
-    console.debug("[Sidebar] UnlockRequestContext not available");
-  }
-
   const pathname = usePathname();
   const [isInitialMount, setIsInitialMount] = useState(true);
   const [forceUpdate, setForceUpdate] = useState(0);
@@ -209,11 +197,11 @@ const AppSidebar: React.FC = () => {
     // If item has permissionKey and we have permissions, check permissions
     if (item.permissionKey && permissions) {
       const hasPermission = hasAnyModulePermission(permissions, item.permissionKey);
-
+      
       // Special handling for Unlock Requests - show if user is Super Admin
-      if (item.permissionKey === "unlockRequest" && !hasPermission) {
-        const user = typeof window !== "undefined" ? authUtils.getUser() : null;
-        const isSuperAdmin = user?.adminRoleAccess?.roleName?.toLowerCase() === "super admin";
+      if (item.permissionKey === 'unlockRequest' && !hasPermission) {
+        const user = typeof window !== 'undefined' ? authUtils.getUser() : null;
+        const isSuperAdmin = user?.adminRoleAccess?.roleName?.toLowerCase() === 'super admin';
         console.log(
           `[Sidebar] Special check for Unlock Requests - isSuperAdmin: ${isSuperAdmin}, roleName: ${user?.adminRoleAccess?.roleName}`
         );
@@ -221,7 +209,7 @@ const AppSidebar: React.FC = () => {
           return true;
         }
       }
-
+      
       console.log(
         `[Sidebar] Checking accessibility for "${item.name}" (${item.permissionKey}):`,
         hasPermission,
@@ -286,48 +274,12 @@ const AppSidebar: React.FC = () => {
               nav.path && (
                 <Link
                   href={nav.path}
-                  className={`menu-item group relative ${
-                    isActive(nav.path) ? "menu-item-active" : "menu-item-inactive"
-                  } ${
-                    nav.permissionKey === "unlockRequest" && pendingCount > 0
-                      ? "!bg-[#006D36]/10 dark:!bg-[#006D36]/20 border-l-4 !border-[#006D36]"
-                      : ""
-                  }`}
+                  className={`menu-item group ${isActive(nav.path) ? "menu-item-active" : "menu-item-inactive"}`}
                 >
-                  <span
-                    className={`${isActive(nav.path) ? "menu-item-icon-active" : "menu-item-icon-inactive"} ${
-                      nav.permissionKey === "unlockRequest" && pendingCount > 0 ? "!text-[#006D36]" : ""
-                    }`}
-                  >
+                  <span className={`${isActive(nav.path) ? "menu-item-icon-active" : "menu-item-icon-inactive"}`}>
                     {nav.icon}
                   </span>
-                  {(isExpanded || isHovered || isMobileOpen) && (
-                    <span
-                      className={`menu-item-text ${
-                        nav.permissionKey === "unlockRequest" && pendingCount > 0
-                          ? "!text-[#006D36] !font-semibold"
-                          : ""
-                      }`}
-                    >
-                      {nav.name}
-                    </span>
-                  )}
-                  {nav.permissionKey === "unlockRequest" &&
-                    pendingCount > 0 &&
-                    (isExpanded || isHovered || isMobileOpen) && (
-                      <span className="ml-auto bg-[#006D36] text-white text-xs font-bold rounded-full px-2 py-0.5 min-w-[24px] text-center">
-                        {pendingCount}
-                      </span>
-                    )}
-                  {nav.permissionKey === "unlockRequest" &&
-                    pendingCount > 0 &&
-                    !isExpanded &&
-                    !isHovered &&
-                    !isMobileOpen && (
-                      <span className="absolute -top-1 -right-1 bg-[#006D36] text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
-                        {pendingCount > 9 ? "9+" : pendingCount}
-                      </span>
-                    )}
+                  {(isExpanded || isHovered || isMobileOpen) && <span className={`menu-item-text`}>{nav.name}</span>}
                 </Link>
               )
             )}
