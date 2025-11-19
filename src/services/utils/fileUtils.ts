@@ -1,41 +1,38 @@
-
 export const getFileExtension = (fileName: string | undefined | null): string => {
-  if (!fileName || typeof fileName !== 'string') return '';
-  
+  if (!fileName || typeof fileName !== "string") return "";
+
   try {
     let fileNameOnly = fileName;
-    
-    if (fileName.includes('://')) {
+
+    if (fileName.includes("://")) {
       try {
         const url = new URL(fileName);
-        fileNameOnly = url.pathname.split('/').pop() || '';
+        fileNameOnly = url.pathname.split("/").pop() || "";
       } catch {
-       
-        fileNameOnly = fileName.split('/').pop() || '';
+        fileNameOnly = fileName.split("/").pop() || "";
       }
-    } else if (fileName.includes('/')) {
-      fileNameOnly = fileName.split('/').pop() || '';
+    } else if (fileName.includes("/")) {
+      fileNameOnly = fileName.split("/").pop() || "";
     }
 
-    fileNameOnly = fileNameOnly.split('?')[0].split('#')[0];
-    
-    const parts = fileNameOnly.split('.');
-    if (parts.length < 2) return '';
-    
+    fileNameOnly = fileNameOnly.split("?")[0].split("#")[0];
+
+    const parts = fileNameOnly.split(".");
+    if (parts.length < 2) return "";
+
     const extension = parts.pop();
-    return extension ? extension.toUpperCase() : '';
+    return extension ? extension.toUpperCase() : "";
   } catch (error) {
-    console.error('Error extracting file extension:', error);
-    return '';
+    console.error("Error extracting file extension:", error);
+    return "";
   }
 };
 
-
 export const shouldOpenInNewTab = (fileName: string | undefined | null): boolean => {
   const extension = getFileExtension(fileName);
-  
-  const viewableTypes = ['PDF', 'DOC', 'DOCX', 'JPEG', 'JPG', 'PNG', 'GIF', 'TXT'];
-  
+
+  const viewableTypes = ["PDF", "DOC", "DOCX", "JPEG", "JPG", "PNG", "GIF", "TXT"];
+
   return viewableTypes.includes(extension);
 };
 
@@ -50,24 +47,24 @@ export const isValidUrl = (url: string): boolean => {
 
 export const isDocumentType = (fileName?: string): boolean => {
   const extension = getFileExtension(fileName);
-  return ['DOC', 'DOCX', 'PDF'].includes(extension);
+  return ["DOC", "DOCX", "PDF"].includes(extension);
 };
 
 // Helper function to get appropriate viewer URL for document types
 export const getViewerUrl = (fileUrl: string, fileName?: string): string => {
   const extension = getFileExtension(fileName || fileUrl);
-  
-  if (['DOC', 'DOCX'].includes(extension)) {
+
+  if (["DOC", "DOCX"].includes(extension)) {
     return `https://docs.google.com/viewer?url=${encodeURIComponent(fileUrl)}`;
   }
-  
+
   return fileUrl;
 };
 
 // Enhanced file opening with retry logic and better error handling
 export const openFileWithRetry = async (
-  fileUrl: string, 
-  fileName?: string, 
+  fileUrl: string,
+  fileName?: string,
   options: {
     maxRetries?: number;
     retryDelay?: number;
@@ -75,20 +72,20 @@ export const openFileWithRetry = async (
   } = {}
 ): Promise<void> => {
   const { maxRetries = 2, retryDelay = 1000, forceDownload = false } = options;
-  
+
   if (!isValidUrl(fileUrl)) {
-    throw new Error('Invalid file URL provided');
+    throw new Error("Invalid file URL provided");
   }
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
       if (forceDownload) {
         // Force download instead of viewing
-        const link = document.createElement('a');
+        const link = document.createElement("a");
         link.href = fileUrl;
-        link.download = fileName || 'download';
-        link.target = '_blank';
-        link.rel = 'noopener noreferrer';
+        link.download = fileName || "download";
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -96,49 +93,68 @@ export const openFileWithRetry = async (
       }
 
       const extension = getFileExtension(fileName || fileUrl);
-      
-      if (['DOC', 'DOCX'].includes(extension)) {
-        // For Word documents, try Google Viewer first
-        const viewerUrl = getViewerUrl(fileUrl, fileName);
-        const newWindow = window.open(viewerUrl, '_blank', 'width=1200,height=800,toolbar=yes,location=yes,status=yes,menubar=yes,scrollbars=yes,resizable=yes');
-        
+
+      if (extension === "DOC") {
+        // For .doc files, open directly without Google Viewer (remove query params)
+        const urlObj = new URL(fileUrl);
+        const cleanUrl = `${urlObj.origin}${urlObj.pathname}`;
+        const newWindow = window.open(cleanUrl, "_blank", "noopener,noreferrer");
+
         if (!newWindow) {
-          throw new Error('Popup blocked or failed to open Google Viewer');
+          throw new Error("Popup blocked or failed to open .doc file");
         }
-        
+
+        return;
+      } else if (extension === "DOCX") {
+        // For .docx files, try Google Viewer first
+        const viewerUrl = getViewerUrl(fileUrl, fileName);
+        const newWindow = window.open(
+          viewerUrl,
+          "_blank",
+          "width=1200,height=800,toolbar=yes,location=yes,status=yes,menubar=yes,scrollbars=yes,resizable=yes"
+        );
+
+        if (!newWindow) {
+          throw new Error("Popup blocked or failed to open Google Viewer");
+        }
+
         return;
       } else {
         // For other files, open directly
-        const newWindow = window.open(fileUrl, '_blank', 'width=1200,height=800,toolbar=yes,location=yes,status=yes,menubar=yes,scrollbars=yes,resizable=yes');
-        
+        const newWindow = window.open(
+          fileUrl,
+          "_blank",
+          "width=1200,height=800,toolbar=yes,location=yes,status=yes,menubar=yes,scrollbars=yes,resizable=yes"
+        );
+
         if (!newWindow) {
-          throw new Error('Popup blocked or failed to open file');
+          throw new Error("Popup blocked or failed to open file");
         }
-        
+
         return;
       }
     } catch (error) {
       console.warn(`Attempt ${attempt + 1} failed:`, error);
-      
+
       if (attempt === maxRetries) {
         try {
-          const link = document.createElement('a');
+          const link = document.createElement("a");
           link.href = fileUrl;
-          link.target = '_blank';
-          link.rel = 'noopener noreferrer';
+          link.target = "_blank";
+          link.rel = "noopener noreferrer";
           document.body.appendChild(link);
           link.click();
           document.body.removeChild(link);
           return;
         } catch (fallbackError) {
-          console.error('All attempts failed:', fallbackError);
+          console.error("All attempts failed:", fallbackError);
           throw new Error(`Failed to open file after ${maxRetries + 1} attempts`);
         }
       }
-      
+
       // Wait before retrying
       if (attempt < maxRetries) {
-        await new Promise(resolve => setTimeout(resolve, retryDelay));
+        await new Promise((resolve) => setTimeout(resolve, retryDelay));
       }
     }
   }
@@ -146,7 +162,7 @@ export const openFileWithRetry = async (
 
 export const openFileInNewTab = (fileUrl: string, fileName?: string): void => {
   if (!fileUrl) {
-    console.error('No file URL provided');
+    console.error("No file URL provided");
     return;
   }
 
@@ -154,85 +170,99 @@ export const openFileInNewTab = (fileUrl: string, fileName?: string): void => {
   try {
     new URL(fileUrl);
   } catch (error) {
-    console.error('Invalid file URL:', fileUrl);
+    console.error("Invalid file URL:", fileUrl);
     return;
   }
 
   try {
     const extension = getFileExtension(fileName || fileUrl);
-    
-    if (['DOC', 'DOCX'].includes(extension)) {
 
+    // Special handling for .doc files - open directly without Google Viewer
+    if (extension === "DOC") {
+      // Remove query parameters from the URL while preserving URL encoding
+      const urlObj = new URL(fileUrl);
+      const cleanUrl = `${urlObj.origin}${urlObj.pathname}`;
+
+      // Open in new tab for direct download
+      window.open(cleanUrl, "_blank", "noopener,noreferrer");
+
+      return;
+    }
+
+    // For .docx files, try Google Viewer
+    if (extension === "DOCX") {
       const tryOpenWithGoogleViewer = () => {
         try {
-          const googleViewerUrl = `https://docs.google.com/viewer?url=${fileUrl}`;
+          const googleViewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(fileUrl)}`;
 
-          
-          const newWindow = window.open(googleViewerUrl, '_blank', 'width=1200,height=800,toolbar=yes,location=yes,status=yes,menubar=yes,scrollbars=yes,resizable=yes');
-          
+          const newWindow = window.open(
+            googleViewerUrl,
+            "_blank",
+            "width=1200,height=800,toolbar=yes,location=yes,status=yes,menubar=yes,scrollbars=yes,resizable=yes"
+          );
+
           if (!newWindow) {
-            throw new Error('Popup blocked or failed to open');
+            throw new Error("Popup blocked or failed to open");
           }
-          
-        
+
           return true;
         } catch (error) {
-          console.warn('Google Viewer failed:', error);
+          console.warn("Google Viewer failed:", error);
           return false;
         }
       };
 
       const openDirectDownload = (url: string, name?: string) => {
-     
-        const link = document.createElement('a');
+        const link = document.createElement("a");
         link.href = url;
-        link.download = name || 'document';
-        link.target = '_blank';
-        link.rel = 'noopener noreferrer';
-        
+        link.download = name || "document";
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
       };
+
       if (!tryOpenWithGoogleViewer()) {
         openDirectDownload(fileUrl, fileName);
       }
-      
+
       return;
     }
-    
 
-    const newWindow = window.open(fileUrl, '_blank', 'width=1200,height=800,toolbar=yes,location=yes,status=yes,menubar=yes,scrollbars=yes,resizable=yes');
-    
+    const newWindow = window.open(
+      fileUrl,
+      "_blank",
+      "width=1200,height=800,toolbar=yes,location=yes,status=yes,menubar=yes,scrollbars=yes,resizable=yes"
+    );
+
     if (!newWindow) {
- 
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = fileUrl;
-      link.target = '_blank';
-      link.rel = 'noopener noreferrer';
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
     }
-    
   } catch (error) {
-    console.error('Error opening file:', error);
+    console.error("Error opening file:", error);
     // Ultimate fallback
     try {
-      window.open(fileUrl, '_blank');
+      window.open(fileUrl, "_blank");
     } catch (fallbackError) {
-      console.error('Fallback also failed:', fallbackError);
-      const link = document.createElement('a');
+      console.error("Fallback also failed:", fallbackError);
+      const link = document.createElement("a");
       link.href = fileUrl;
-      link.target = '_blank';
-      link.rel = 'noopener noreferrer';
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
     }
   }
 };
-
 
 export const openFileWithEnhancedHandling = async (
   fileUrl: string,
@@ -245,14 +275,13 @@ export const openFileWithEnhancedHandling = async (
       try {
         const response = await apiCallback();
         if (response.success && response.data?.fileUrl) {
-      
           openFileInNewTab(response.data.fileUrl, fileName);
           return;
         } else {
-          console.warn('API callback did not return a valid file URL:', response);
+          console.warn("API callback did not return a valid file URL:", response);
         }
       } catch (apiError) {
-        console.error('API callback failed:', apiError);
+        console.error("API callback failed:", apiError);
         // Continue to fallback
       }
     }
@@ -261,31 +290,29 @@ export const openFileWithEnhancedHandling = async (
     if (fileUrl) {
       openFileInNewTab(fileUrl, fileName);
     } else {
-    
-      throw new Error('No file URL available');
+      throw new Error("No file URL available");
     }
   } catch (error) {
-    console.error('Enhanced file handling failed:', error);
-    
+    console.error("Enhanced file handling failed:", error);
+
     // Last resort: try direct URL opening
     if (fileUrl) {
       try {
-        console.log('Last resort: trying direct URL opening');
+        console.log("Last resort: trying direct URL opening");
         openFileInNewTab(fileUrl, fileName);
       } catch (finalError) {
-        console.error('All file opening methods failed:', finalError);
+        console.error("All file opening methods failed:", finalError);
         throw finalError;
       }
     } else {
-      throw new Error('No file URL available for opening');
+      throw new Error("No file URL available for opening");
     }
   }
 };
 
-
 export const openInFullTab = (fileUrl: string, fileName?: string): void => {
   if (!fileUrl) {
-    console.error('No file URL provided');
+    console.error("No file URL provided");
     return;
   }
 
@@ -293,7 +320,7 @@ export const openInFullTab = (fileUrl: string, fileName?: string): void => {
   try {
     new URL(fileUrl);
   } catch (error) {
-    console.error('Invalid file URL:', fileUrl);
+    console.error("Invalid file URL:", fileUrl);
     return;
   }
 
@@ -301,11 +328,11 @@ export const openInFullTab = (fileUrl: string, fileName?: string): void => {
     // Method 1: Direct window.open with full screen dimensions
     const openFullWindow = () => {
       const newWindow = window.open(
-        fileUrl, 
-        '_blank', 
+        fileUrl,
+        "_blank",
         `width=${screen.availWidth},height=${screen.availHeight},toolbar=yes,location=yes,directories=no,status=yes,menubar=yes,scrollbars=yes,copyhistory=no,resizable=yes,left=0,top=0`
       );
-      
+
       if (newWindow) {
         newWindow.focus();
         return true;
@@ -316,46 +343,41 @@ export const openInFullTab = (fileUrl: string, fileName?: string): void => {
     // Method 2: Form-based opening (alternative approach)
     const openWithForm = () => {
       try {
-        const form = document.createElement('form');
-        form.method = 'GET';
+        const form = document.createElement("form");
+        form.method = "GET";
         form.action = fileUrl;
-        form.target = '_blank';
-        form.style.display = 'none';
-        
+        form.target = "_blank";
+        form.style.display = "none";
+
         document.body.appendChild(form);
         form.submit();
         document.body.removeChild(form);
         return true;
       } catch (error) {
-        console.error('Form-based opening failed:', error);
+        console.error("Form-based opening failed:", error);
         return false;
       }
     };
 
     if (!openFullWindow()) {
-
-      
       if (!openWithForm()) {
-     
-      
-        const link = document.createElement('a');
+        const link = document.createElement("a");
         link.href = fileUrl;
-        link.target = '_blank';
-        link.rel = 'noopener noreferrer';
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
       }
     }
-    
   } catch (error) {
-    console.error('Error opening file in full tab:', error);
-    
+    console.error("Error opening file in full tab:", error);
+
     // Ultimate fallback
     try {
-      window.open(fileUrl, '_blank');
+      window.open(fileUrl, "_blank");
     } catch (fallbackError) {
-      console.error('Ultimate fallback failed:', fallbackError);
+      console.error("Ultimate fallback failed:", fallbackError);
     }
   }
 };
