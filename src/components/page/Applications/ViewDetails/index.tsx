@@ -1,14 +1,14 @@
 "use client";
-import React from 'react';
-import { useParams } from 'next/navigation';
-import { useJobApplicationDetails } from '@/services/hooks/useJobApplications';
-import { formatDateTimeEST } from '@/services/utils/dateUtils';
-import { openFileInNewTab } from '@/services/utils/fileUtils';
-import FullScreenSpinner from '@/components/ui/FullScreenSpinner';
-import ErrorState from '@/components/common/ErrorState';
-import BackToListButton from '@/components/ui/BackToListButton';
-import ProfileCard from '@/components/ui/ProfileCard';
-import { Accordion } from '@/components/ui/accordion';
+import React from "react";
+import { useParams } from "next/navigation";
+import { useJobApplicationDetails } from "@/services/hooks/useJobApplications";
+import { formatDateTimeEST } from "@/services/utils/dateUtils";
+import { openFileInNewTab } from "@/services/utils/fileUtils";
+import FullScreenSpinner from "@/components/ui/FullScreenSpinner";
+import ErrorState from "@/components/common/ErrorState";
+import BackToListButton from "@/components/ui/BackToListButton";
+import ProfileCard from "@/components/ui/ProfileCard";
+import { Accordion } from "@/components/ui/accordion";
 
 interface ViewDetailsProps {
   id?: string;
@@ -30,9 +30,7 @@ export default function JobApplicationDetails({ id }: ViewDetailsProps) {
         <BackToListButton href="/admin/applications" className="mb-6" preserveState={true}>
           Back to Applications
         </BackToListButton>
-        <ErrorState 
-          message={`Error loading application details: ${error.message}`}
-        />
+        <ErrorState message={`Error loading application details: ${error.message}`} />
       </div>
     );
   }
@@ -49,7 +47,7 @@ export default function JobApplicationDetails({ id }: ViewDetailsProps) {
       </div>
     );
   }
-  
+
   const application = data.data;
 
   const handleViewResume = () => {
@@ -60,44 +58,45 @@ export default function JobApplicationDetails({ id }: ViewDetailsProps) {
 
   const contactInfo = [
     {
-      label: 'Company',
+      label: "Company",
       value: application.companyName,
-      className: 'text-gray-900 dark:text-white'
+      className: "text-gray-900 dark:text-white",
     },
     {
-      label: 'Job Title',
+      label: "Job Title",
       value: application.jobTitle,
-      className: 'text-gray-900 dark:text-white'
+      className: "text-gray-900 dark:text-white",
     },
     {
-      label: 'Location',
+      label: "Location",
       value: `${application.jobLocationCity}, ${application.jobLocationState}`,
-      className: 'text-gray-900 dark:text-white'
+      className: "text-gray-900 dark:text-white",
     },
     {
-      label: 'Application Date',
+      label: "Application Date",
       value: (() => {
         const applicationDate = formatDateTimeEST(application.applicationDate);
-        if (typeof applicationDate === 'string') {
+        if (typeof applicationDate === "string") {
           return applicationDate;
         }
         return `${applicationDate.date} ${applicationDate.time}`;
       })(),
-      className: 'text-gray-900 dark:text-white'
-    }
+      className: "text-gray-900 dark:text-white",
+    },
   ];
+
+  console.log({ application });
 
   const profileData = {
     name: application.name,
     title: application.jobTitle,
     status: application.status,
     avatarUrl: application.avatarUrl,
-    resumeUrl: application.resumeUrl,
-    resumeFilename: application.resumeFilename,
-    hasResume: application.hasResume,
+    email: application.email,
+    documents: application.documents,
   };
 
-  return (        
+  return (
     <>
       <div className="px-4 pt-4 pb-2">
         <BackToListButton href="/admin/applications" preserveState={true}>
@@ -107,12 +106,9 @@ export default function JobApplicationDetails({ id }: ViewDetailsProps) {
 
       <div className="grid grid-cols-1 px-4 pt-6 xl:grid-cols-3 xl:gap-6">
         <div className="col-span-full xl:col-auto">
-          <ProfileCard 
-            profileData={profileData} 
-            contactInfo={contactInfo}
-          />
-        </div>            
-        
+          <ProfileCard profileData={profileData} contactInfo={contactInfo} />
+        </div>
+
         <div className="col-span-2 space-y-6">
           <div className="rounded-xl bg-white shadow-lg border border-gray-100 dark:bg-gray-800 dark:border-gray-700 p-6">
             <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Application Details</h2>
@@ -140,25 +136,6 @@ export default function JobApplicationDetails({ id }: ViewDetailsProps) {
                   </div>
                 </div>
               </div>
-              
-              <div>
-                <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Resume</h3>
-                {application.hasResume && application.resumeUrl ? (
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm text-gray-700 dark:text-gray-300">
-                      {application.resumeFilename}
-                    </span>
-                    <button
-                      onClick={handleViewResume}
-                      className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
-                    >
-                      View Resume
-                    </button>
-                  </div>
-                ) : (
-                  <p className="text-sm text-gray-500 dark:text-gray-400">No resume uploaded</p>
-                )}
-              </div>
             </div>
           </div>
 
@@ -172,32 +149,28 @@ export default function JobApplicationDetails({ id }: ViewDetailsProps) {
                     const dateRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z?$/;
                     if (dateRegex.test(answer)) {
                       const formattedDate = formatDateTimeEST(answer);
-                      if (typeof formattedDate === 'string') {
-                        return { type: 'text' as const, content: formattedDate };
+                      if (typeof formattedDate === "string") {
+                        return { type: "text" as const, content: formattedDate };
                       }
-                      return { 
-                        type: 'date' as const, 
+                      return {
+                        type: "date" as const,
                         content: {
                           date: formattedDate.date,
-                          time: formattedDate.time
-                        }
+                          time: formattedDate.time,
+                        },
                       };
                     }
-                    return { type: 'text' as const, content: answer };
+                    return { type: "text" as const, content: answer };
                   };
 
                   const formattedAnswer = formatAnswer(item.answers);
 
                   return {
                     id: `question-${index}`,
-                    trigger: (
-                      <span className="font-medium text-gray-900 dark:text-white">
-                        {item.question}
-                      </span>
-                    ),
+                    trigger: <span className="font-medium text-gray-900 dark:text-white">{item.question}</span>,
                     content: (
                       <div className="text-gray-700 dark:text-gray-300 mt-2">
-                        {formattedAnswer.type === 'date' ? (
+                        {formattedAnswer.type === "date" ? (
                           <>
                             <div>{(formattedAnswer.content as { date: string; time: string }).date}</div>
                             <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
@@ -205,7 +178,7 @@ export default function JobApplicationDetails({ id }: ViewDetailsProps) {
                             </div>
                           </>
                         ) : (
-                          formattedAnswer.content as string
+                          (formattedAnswer.content as string)
                         )}
                       </div>
                     ),
