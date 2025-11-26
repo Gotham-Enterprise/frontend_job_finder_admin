@@ -186,7 +186,8 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
   const updateBlock = useCallback((blockId: string, updates: Partial<LayoutBlock>) => {
     setBlocks(prev => prev.map(block => {
       if (block.id === blockId) {
-        return { ...block, ...updates };
+        const updated = { ...block, ...updates };
+        return updated;
       }
       return block;
     }));
