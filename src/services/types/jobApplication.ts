@@ -44,6 +44,13 @@ export interface EmployerQuestion {
   answers: string;
 }
 
+export interface Documents {
+  type: string;
+  fileName: string;
+  url: string;
+  objectKey?: string;
+  expiresAt?: string;
+}
 export interface JobApplicationDetails {
   id: string;
   name: string;
@@ -60,6 +67,8 @@ export interface JobApplicationDetails {
   resumeObjectKey: string;
   hasResume: boolean;
   employerQuestion?: EmployerQuestion[];
+  documents: Documents[];
+  email: string;
 }
 
 export interface JobApplicationDetailsResponse {
