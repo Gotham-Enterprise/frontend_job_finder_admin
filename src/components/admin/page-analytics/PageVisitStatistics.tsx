@@ -12,11 +12,15 @@ export default function PageVisitStatistics() {
   const [selectedPage, setSelectedPage] = useState('')
   const [topPagesLimit, setTopPagesLimit] = useState(10)
   const [topPagesSortOrder, setTopPagesSortOrder] = useState<'desc' | 'asc'>('desc')
+  const [topPagesTimeRange, setTopPagesTimeRange] = useState<'all' | 24 | 7 | 1>('all')
+  const [shouldFetchTopPages, setShouldFetchTopPages] = useState(false)
 
-  const { data: topPagesData } = useQuery({
-    queryKey: ['top-pages', selectedHours, topPagesLimit],
-    queryFn: () => pageVisitAPI.getTopPages(topPagesLimit, selectedHours),
-    refetchInterval: 30000,
+  const { data: topPagesData, isLoading: isLoadingTopPages, refetch: refetchTopPages } = useQuery({
+    queryKey: ['top-pages', topPagesTimeRange, topPagesLimit],
+    queryFn: () => pageVisitAPI.getTopPages(topPagesLimit, topPagesTimeRange === 'all' ? undefined : topPagesTimeRange),
+    enabled: shouldFetchTopPages,
+    refetchOnWindowFocus: false,
+    staleTime: 10 * 60 * 1000, // 10 minutes
   })
 
   const { data: alertHistoryData } = useQuery({
@@ -61,6 +65,12 @@ export default function PageVisitStatistics() {
   const sortedTopPages = [...topPages].sort((a, b) => {
     return topPagesSortOrder === 'desc' ? b.count - a.count : a.count - b.count
   })
+
+  // Handle loading top pages
+  const handleLoadTopPages = () => {
+    setShouldFetchTopPages(true)
+    refetchTopPages()
+  }
 
   // Prepare chart data with real statistics
   const chartData = {
@@ -201,11 +211,30 @@ export default function PageVisitStatistics() {
 
       {/* Top Pages Table */}
       <div className="rounded-lg bg-white p-6 shadow dark:bg-gray-800">
-        <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+        <div className="mb-4">
+          <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
             Top Visited Pages
           </h3>
-          <div className="flex items-center space-x-4">
+          
+          {/* Controls Row */}
+          <div className="mb-4 flex flex-wrap items-center gap-3">
+            {/* Time Range Selector */}
+            <div className="flex items-center space-x-2">
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Time Range:
+              </label>
+              <select
+                value={topPagesTimeRange}
+                onChange={(e) => setTopPagesTimeRange(e.target.value as 'all' | 24 | 7 | 1)}
+                className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+              >
+                <option value="all">All Time</option>
+                <option value={24}>Last 24 Hours</option>
+                <option value={7}>Last 7 Hours</option>
+                <option value={1}>Last 1 Hour</option>
+              </select>
+            </div>
+
             {/* Limit Selector */}
             <div className="flex items-center space-x-2">
               <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -233,6 +262,30 @@ export default function PageVisitStatistics() {
               <span className="font-semibold">
                 {topPagesSortOrder === 'desc' ? '↓ High to Low' : '↑ Low to High'}
               </span>
+            </button>
+
+            {/* Load Button */}
+            <button
+              onClick={handleLoadTopPages}
+              disabled={isLoadingTopPages}
+              className="ml-auto flex items-center space-x-2 rounded-lg bg-blue-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-blue-500 dark:hover:bg-blue-600"
+            >
+              {isLoadingTopPages ? (
+                <>
+                  <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  </svg>
+                  <span>Loading...</span>
+                </>
+              ) : (
+                <>
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  <span>Load Top Pages</span>
+                </>
+              )}
             </button>
           </div>
         </div>
@@ -267,6 +320,46 @@ export default function PageVisitStatistics() {
               ))}
             </tbody>
           </table>
+          
+          {/* Empty State - Before Load */}
+          {!shouldFetchTopPages && sortedTopPages.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <svg className="mb-4 h-16 w-16 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+              <p className="text-lg font-medium text-gray-900 dark:text-white">
+                Click "Load Top Pages" to view statistics
+              </p>
+              <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                Select your preferred time range and limit, then click the button above
+              </p>
+            </div>
+          )}
+          
+          {/* Loading State */}
+          {isLoadingTopPages && (
+            <div className="flex items-center justify-center py-12">
+              <svg className="h-8 w-8 animate-spin text-blue-600" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+              </svg>
+            </div>
+          )}
+          
+          {/* No Results After Loading */}
+          {shouldFetchTopPages && !isLoadingTopPages && sortedTopPages.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <svg className="mb-4 h-16 w-16 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+              </svg>
+              <p className="text-lg font-medium text-gray-900 dark:text-white">
+                No pages found
+              </p>
+              <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                There are no page visits recorded for the selected time range
+              </p>
+            </div>
+          )}
         </div>
       </div>
 
