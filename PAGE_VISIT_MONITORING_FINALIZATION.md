@@ -250,6 +250,21 @@ model PageVisitAlert {
   @@index([alertSentAt])
   @@map("page_visit_alerts")
 }
+
+model PageVisitEmailRecipient {
+  id        String   @id @default(uuid())
+  name      String   // Recipient name
+  email     String   @unique // Email address
+  enabled   Boolean  @default(true) // Send alerts?
+  createdBy String?  // Admin user ID
+  updatedBy String?  // Admin user ID
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([enabled])
+  @@index([email])
+  @@map("page_visit_email_recipients")
+}
 ```
 
 ### Redis Key Patterns
@@ -464,6 +479,103 @@ Force memory cleanup (removes old visits).
 }
 ```
 
+#### GET `/api/admin/page-visits/email-recipients`
+
+Get all email recipients.
+
+**Response:** `200 OK`
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "uuid",
+      "name": "John Doe",
+      "email": "john@example.com",
+      "enabled": true,
+      "createdBy": "admin-uuid",
+      "updatedBy": "admin-uuid",
+      "createdAt": "2025-12-12T10:00:00Z",
+      "updatedAt": "2025-12-12T10:00:00Z"
+    }
+  ]
+}
+```
+
+#### POST `/api/admin/page-visits/email-recipients`
+
+Create a new email recipient.
+
+**Request Body:**
+
+```json
+{
+  "name": "Jane Smith",
+  "email": "jane@example.com",
+  "enabled": true
+}
+```
+
+**Response:** `201 Created`
+
+```json
+{
+  "success": true,
+  "message": "Email recipient created successfully",
+  "data": {
+    "id": "uuid",
+    "name": "Jane Smith",
+    "email": "jane@example.com",
+    "enabled": true,
+    "createdAt": "2025-12-12T11:00:00Z"
+  }
+}
+```
+
+#### PUT `/api/admin/page-visits/email-recipients/:id`
+
+Update an email recipient.
+
+**Request Body:**
+
+```json
+{
+  "name": "Jane Doe",
+  "email": "jane.doe@example.com",
+  "enabled": false
+}
+```
+
+**Response:** `200 OK`
+
+```json
+{
+  "success": true,
+  "message": "Email recipient updated successfully",
+  "data": {
+    "id": "uuid",
+    "name": "Jane Doe",
+    "email": "jane.doe@example.com",
+    "enabled": false,
+    "updatedAt": "2025-12-12T12:00:00Z"
+  }
+}
+```
+
+#### DELETE `/api/admin/page-visits/email-recipients/:id`
+
+Delete an email recipient.
+
+**Response:** `200 OK`
+
+```json
+{
+  "success": true,
+  "message": "Email recipient deleted successfully"
+}
+```
+
 ---
 
 ## Admin UI Components
@@ -472,14 +584,15 @@ Force memory cleanup (removes old visits).
 
 ```
 src/app/admin/analytics/page-visits/
-  └── page.tsx                      # Main page with tab navigation
+  └── page.tsx                         # Main page with tab navigation
 
 src/components/admin/page-analytics/
-  ├── PageVisitThresholdsTable.tsx  # CRUD for thresholds
-  ├── AddThresholdModal.tsx         # Create threshold modal
-  ├── EditThresholdModal.tsx        # Edit threshold modal
-  ├── PageVisitStatistics.tsx       # Charts & tables
-  └── SystemHealth.tsx              # Health monitoring
+  ├── PageVisitThresholdsTable.tsx     # CRUD for thresholds
+  ├── AddThresholdModal.tsx            # Create threshold modal
+  ├── EditThresholdModal.tsx           # Edit threshold modal
+  ├── PageVisitStatistics.tsx          # Charts & tables
+  ├── SystemHealth.tsx                 # Health monitoring
+  └── EmailRecipientsManager.tsx       # Email recipient management
 ```
 
 ### Key Features
@@ -511,6 +624,16 @@ src/components/admin/page-analytics/
 - **Quick Actions**: Force cleanup, reset circuit, update retention
 - **Health Indicators**: OK (green), Warning (yellow), Critical (red)
 
+**4. Email Recipients Manager**
+
+- **Recipients Table**: Name, email, status, created date
+- **Add/Edit Modal**: Form validation with name and email fields
+- **Enable/Disable Toggle**: Click-to-toggle active status
+- **Delete Action**: Confirmation before deletion
+- **Real-time Updates**: 30s refresh interval
+- **Database Storage**: Recipients stored in PostgreSQL
+- **Fallback Support**: Env variables as fallback if no DB recipients
+
 ---
 
 ## Configuration
@@ -528,7 +651,7 @@ REDIS_URL="redis://localhost:6379"
 REDIS_PASSWORD="your-redis-password"
 
 # Page Visit Tracking
-PAGE_VISIT_ALERT_EMAILS="admin@example.com,alerts@example.com"
+PAGE_VISIT_ALERT_EMAILS="admin@example.com,alerts@example.com"  # Fallback only
 PAGE_VISIT_RETENTION_DAYS=30
 REDIS_MAXMEMORY=256mb
 REDIS_MAXMEMORY_POLICY=allkeys-lru
@@ -611,10 +734,13 @@ cp .env.example .env
 npx prisma generate
 npx prisma migrate deploy
 
-# 5. Start Redis with Docker
+# 5. (Optional) Seed initial email recipients
+# Via Admin UI or manually insert into PageVisitEmailRecipient table
+
+# 6. Start Redis with Docker
 docker-compose up -d redis
 
-# 6. Start backend with PM2
+# 7. Start backend with PM2
 pm2 start ecosystem.config.js
 pm2 save
 pm2 startup
@@ -642,11 +768,13 @@ pm2 start npm --name "job-finder-admin" -- start
 - [ ] Frontend can connect to backend API
 - [ ] Redis accessible and configured with maxmemory
 - [ ] PostgreSQL migrations applied
+- [ ] Email recipients configured in Admin UI
 - [ ] Cron jobs running (check logs)
 - [ ] Test email alerts sent successfully
 - [ ] Admin dashboard accessible
 - [ ] Page visits being tracked (check Redis)
 - [ ] Thresholds can be created/edited
+- [ ] Email recipients can be added/removed
 - [ ] Statistics displaying real data
 
 ---
@@ -872,7 +1000,7 @@ psql -d jobfinder -c "SELECT COUNT(*) FROM page_visit_alerts WHERE alert_sent_at
 
 1. **Admin Endpoints**: Require JWT token + admin role
 2. **Public Tracking**: Rate-limited, no authentication required
-3. **Email Recipients**: Configured via env variables only
+3. **Email Recipients**: Managed via Admin Panel UI (database-stored)
 
 ### Data Privacy
 
@@ -880,6 +1008,7 @@ psql -d jobfinder -c "SELECT COUNT(*) FROM page_visit_alerts WHERE alert_sent_at
 2. **Session IDs**: Random, not linked to user accounts
 3. **Anonymization**: No IP addresses or personal data
 4. **Retention**: 30-day limit on visit data
+5. **Email Recipients**: Names and emails stored securely in PostgreSQL
 
 ### Rate Limiting
 
