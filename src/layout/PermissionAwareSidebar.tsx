@@ -126,6 +126,13 @@ const navItems: NavItem[] = [
     permissionKey: "unlockRequest",
     //subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
   },
+  {
+    icon: <PieChartIcon />,
+    name: "Analytics",
+    subItems: [
+      { name: "Traffic Analytics", path: "/admin/analytics/page-visits", pro: false },
+    ],
+  },
 ];
 
 const othersItems: NavItem[] = [
