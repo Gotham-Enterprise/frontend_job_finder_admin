@@ -78,3 +78,14 @@ export interface MemoryRecommendation {
   impact: string;
   priority: "High" | "Medium" | "Low";
 }
+
+export interface PageVisitEmailRecipient {
+  id: string;
+  name: string;
+  email: string;
+  enabled: boolean;
+  createdBy: string | null;
+  updatedBy: string | null;
+  createdAt: string;
+  updatedAt: string;
+}

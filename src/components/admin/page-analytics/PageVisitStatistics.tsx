@@ -10,10 +10,12 @@ const ApexChart = dynamic(() => import('react-apexcharts'), { ssr: false })
 export default function PageVisitStatistics() {
   const [selectedHours, setSelectedHours] = useState(24)
   const [selectedPage, setSelectedPage] = useState('')
+  const [topPagesLimit, setTopPagesLimit] = useState(10)
+  const [topPagesSortOrder, setTopPagesSortOrder] = useState<'desc' | 'asc'>('desc')
 
   const { data: topPagesData } = useQuery({
-    queryKey: ['top-pages', selectedHours],
-    queryFn: () => pageVisitAPI.getTopPages(10, selectedHours),
+    queryKey: ['top-pages', selectedHours, topPagesLimit],
+    queryFn: () => pageVisitAPI.getTopPages(topPagesLimit, selectedHours),
     refetchInterval: 30000,
   })
 
@@ -54,6 +56,11 @@ export default function PageVisitStatistics() {
   const alerts = alertHistoryData?.data || []
   const thresholds = thresholdsData?.data || []
   const statistics = statisticsData || []
+
+  // Sort top pages based on selected order
+  const sortedTopPages = [...topPages].sort((a, b) => {
+    return topPagesSortOrder === 'desc' ? b.count - a.count : a.count - b.count
+  })
 
   // Prepare chart data with real statistics
   const chartData = {
@@ -194,9 +201,41 @@ export default function PageVisitStatistics() {
 
       {/* Top Pages Table */}
       <div className="rounded-lg bg-white p-6 shadow dark:bg-gray-800">
-        <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
-          Top Visited Pages
-        </h3>
+        <div className="mb-4 flex items-center justify-between">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+            Top Visited Pages
+          </h3>
+          <div className="flex items-center space-x-4">
+            {/* Limit Selector */}
+            <div className="flex items-center space-x-2">
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Show:
+              </label>
+              <select
+                value={topPagesLimit}
+                onChange={(e) => setTopPagesLimit(Number(e.target.value))}
+                className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+              >
+                <option value={10}>10</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+                <option value={500}>500</option>
+                <option value={1000}>1000</option>
+              </select>
+            </div>
+
+            {/* Sort Order Toggle */}
+            <button
+              onClick={() => setTopPagesSortOrder(topPagesSortOrder === 'desc' ? 'asc' : 'desc')}
+              className="flex items-center space-x-2 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600"
+            >
+              <span>Sort:</span>
+              <span className="font-semibold">
+                {topPagesSortOrder === 'desc' ? '↓ High to Low' : '↑ Low to High'}
+              </span>
+            </button>
+          </div>
+        </div>
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <thead>
@@ -213,7 +252,7 @@ export default function PageVisitStatistics() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-              {topPages.map((page, index) => (
+              {sortedTopPages.map((page, index) => (
                 <tr key={index} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                   <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
                     #{index + 1}

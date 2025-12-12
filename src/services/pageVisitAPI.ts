@@ -5,6 +5,7 @@ import {
   TopPage,
   SystemHealthMetrics,
   MemoryRecommendation,
+  PageVisitEmailRecipient,
 } from "@/types/page-visit";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL + "/" || "http://localhost:5000/";
@@ -148,6 +149,46 @@ class PageVisitAPI {
   async resetCircuit(): Promise<{ success: boolean; message: string }> {
     return this.fetchWithAuth("api/admin/page-visits/circuit/reset", {
       method: "POST",
+    });
+  }
+
+  // Email Recipients
+  async getEmailRecipients(): Promise<{ success: boolean; data: PageVisitEmailRecipient[] }> {
+    return this.fetchWithAuth("api/admin/page-visits/email-recipients");
+  }
+
+  async getEmailRecipient(id: string): Promise<{ success: boolean; data: PageVisitEmailRecipient }> {
+    return this.fetchWithAuth(`api/admin/page-visits/email-recipients/${id}`);
+  }
+
+  async createEmailRecipient(data: {
+    name: string;
+    email: string;
+    enabled?: boolean;
+  }): Promise<{ success: boolean; data: PageVisitEmailRecipient; message: string }> {
+    return this.fetchWithAuth("api/admin/page-visits/email-recipients", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateEmailRecipient(
+    id: string,
+    data: {
+      name?: string;
+      email?: string;
+      enabled?: boolean;
+    }
+  ): Promise<{ success: boolean; data: PageVisitEmailRecipient; message: string }> {
+    return this.fetchWithAuth(`api/admin/page-visits/email-recipients/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteEmailRecipient(id: string): Promise<{ success: boolean; message: string }> {
+    return this.fetchWithAuth(`api/admin/page-visits/email-recipients/${id}`, {
+      method: "DELETE",
     });
   }
 }
