@@ -88,8 +88,8 @@ const LicensesPopover: React.FC<LicensesPopoverProps> = ({ licenses, isOpen, onC
     const itemHeight = 140; // Height per license item
     const maxHeight = 400; // Maximum height
     const minHeight = 200; // Minimum height
-    
-    const calculatedHeight = baseHeight + (licenses.length * itemHeight);
+
+    const calculatedHeight = baseHeight + licenses.length * itemHeight;
     return Math.min(maxHeight, Math.max(minHeight, calculatedHeight));
   };
 
@@ -110,20 +110,20 @@ const LicensesPopover: React.FC<LicensesPopoverProps> = ({ licenses, isOpen, onC
         const triggerRect = triggerRef.current.getBoundingClientRect();
         const viewportHeight = window.innerHeight;
         const viewportWidth = window.innerWidth;
-        
+
         // Calculate optimal height based on content
         const optimalHeight = calculateOptimalHeight();
         const popoverHeight = Math.min(optimalHeight, viewportHeight - 40); // Leave 40px margin
         const popoverWidth = 384; // Fixed width
-        
+
         const spaceBelow = viewportHeight - triggerRect.bottom;
         const spaceAbove = triggerRect.top;
         const spaceRight = viewportWidth - triggerRect.left;
         const spaceLeft = triggerRect.right;
-        
+
         let topPosition: number;
         let leftPosition: number;
-        
+
         // Determine vertical position
         if (spaceBelow >= popoverHeight + 20) {
           // Enough space below - position below
@@ -135,7 +135,7 @@ const LicensesPopover: React.FC<LicensesPopoverProps> = ({ licenses, isOpen, onC
           // Not enough space in either direction - center vertically
           topPosition = Math.max(10, (viewportHeight - popoverHeight) / 2);
         }
-        
+
         // Determine horizontal position
         if (spaceRight >= popoverWidth + 20) {
           // Enough space to the right - position to the right
@@ -147,11 +147,11 @@ const LicensesPopover: React.FC<LicensesPopoverProps> = ({ licenses, isOpen, onC
           // Not enough space on either side - center horizontally
           leftPosition = Math.max(10, (viewportWidth - popoverWidth) / 2);
         }
-        
+
         // Ensure popover stays within viewport bounds
         topPosition = Math.max(10, Math.min(topPosition, viewportHeight - popoverHeight - 10));
         leftPosition = Math.max(10, Math.min(leftPosition, viewportWidth - popoverWidth - 10));
-        
+
         popoverRef.current.style.top = `${topPosition}px`;
         popoverRef.current.style.left = `${leftPosition}px`;
         popoverRef.current.style.height = `${popoverHeight}px`;
@@ -182,48 +182,52 @@ const LicensesPopover: React.FC<LicensesPopoverProps> = ({ licenses, isOpen, onC
         ref={popoverRef}
         className="absolute bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-4 max-w-lg w-96 z-10"
         style={{
-          top: triggerRef.current ? (() => {
-            const triggerRect = triggerRef.current.getBoundingClientRect();
-            const viewportHeight = window.innerHeight;
-            const viewportWidth = window.innerWidth;
-            const popoverHeight = 300; // Initial estimate
-            const popoverWidth = 384; // Initial estimate
-            
-            const spaceBelow = viewportHeight - triggerRect.bottom;
-            const spaceAbove = triggerRect.top;
-            
-            let topPosition: number;
-            
-            if (spaceBelow >= popoverHeight + 20) {
-              topPosition = triggerRect.bottom + 5;
-            } else if (spaceAbove >= popoverHeight + 20) {
-              topPosition = triggerRect.top - popoverHeight - 5;
-            } else {
-              topPosition = Math.max(10, (viewportHeight - popoverHeight) / 2);
-            }
-            
-            return Math.max(10, Math.min(topPosition, viewportHeight - popoverHeight - 10));
-          })() : 0,
-          left: triggerRef.current ? (() => {
-            const triggerRect = triggerRef.current.getBoundingClientRect();
-            const viewportWidth = window.innerWidth;
-            const popoverWidth = 384;
-            
-            const spaceRight = viewportWidth - triggerRect.left;
-            const spaceLeft = triggerRect.right;
-            
-            let leftPosition: number;
-            
-            if (spaceRight >= popoverWidth + 20) {
-              leftPosition = triggerRect.left + 5;
-            } else if (spaceLeft >= popoverWidth + 20) {
-              leftPosition = triggerRect.right - popoverWidth - 5;
-            } else {
-              leftPosition = Math.max(10, (viewportWidth - popoverWidth) / 2);
-            }
-            
-            return Math.max(10, Math.min(leftPosition, viewportWidth - popoverWidth - 10));
-          })() : 0,
+          top: triggerRef.current
+            ? (() => {
+                const triggerRect = triggerRef.current.getBoundingClientRect();
+                const viewportHeight = window.innerHeight;
+                const viewportWidth = window.innerWidth;
+                const popoverHeight = 300; // Initial estimate
+                const popoverWidth = 384; // Initial estimate
+
+                const spaceBelow = viewportHeight - triggerRect.bottom;
+                const spaceAbove = triggerRect.top;
+
+                let topPosition: number;
+
+                if (spaceBelow >= popoverHeight + 20) {
+                  topPosition = triggerRect.bottom + 5;
+                } else if (spaceAbove >= popoverHeight + 20) {
+                  topPosition = triggerRect.top - popoverHeight - 5;
+                } else {
+                  topPosition = Math.max(10, (viewportHeight - popoverHeight) / 2);
+                }
+
+                return Math.max(10, Math.min(topPosition, viewportHeight - popoverHeight - 10));
+              })()
+            : 0,
+          left: triggerRef.current
+            ? (() => {
+                const triggerRect = triggerRef.current.getBoundingClientRect();
+                const viewportWidth = window.innerWidth;
+                const popoverWidth = 384;
+
+                const spaceRight = viewportWidth - triggerRect.left;
+                const spaceLeft = triggerRect.right;
+
+                let leftPosition: number;
+
+                if (spaceRight >= popoverWidth + 20) {
+                  leftPosition = triggerRect.left + 5;
+                } else if (spaceLeft >= popoverWidth + 20) {
+                  leftPosition = triggerRect.right - popoverWidth - 5;
+                } else {
+                  leftPosition = Math.max(10, (viewportWidth - popoverWidth) / 2);
+                }
+
+                return Math.max(10, Math.min(leftPosition, viewportWidth - popoverWidth - 10));
+              })()
+            : 0,
         }}
       >
         <div className="flex items-center justify-between mb-4">
@@ -313,8 +317,8 @@ const CertificationsPopover: React.FC<CertificationsPopoverProps> = ({
     const itemHeight = 140; // Height per certification item
     const maxHeight = 400; // Maximum height
     const minHeight = 200; // Minimum height
-    
-    const calculatedHeight = baseHeight + (certifications.length * itemHeight);
+
+    const calculatedHeight = baseHeight + certifications.length * itemHeight;
     return Math.min(maxHeight, Math.max(minHeight, calculatedHeight));
   };
 
@@ -335,20 +339,20 @@ const CertificationsPopover: React.FC<CertificationsPopoverProps> = ({
         const triggerRect = triggerRef.current.getBoundingClientRect();
         const viewportHeight = window.innerHeight;
         const viewportWidth = window.innerWidth;
-        
+
         // Calculate optimal height based on content
         const optimalHeight = calculateOptimalHeight();
         const popoverHeight = Math.min(optimalHeight, viewportHeight - 40); // Leave 40px margin
         const popoverWidth = 384; // Fixed width
-        
+
         const spaceBelow = viewportHeight - triggerRect.bottom;
         const spaceAbove = triggerRect.top;
         const spaceRight = viewportWidth - triggerRect.left;
         const spaceLeft = triggerRect.right;
-        
+
         let topPosition: number;
         let leftPosition: number;
-        
+
         // Determine vertical position
         if (spaceBelow >= popoverHeight + 20) {
           // Enough space below - position below
@@ -360,7 +364,7 @@ const CertificationsPopover: React.FC<CertificationsPopoverProps> = ({
           // Not enough space in either direction - center vertically
           topPosition = Math.max(10, (viewportHeight - popoverHeight) / 2);
         }
-        
+
         // Determine horizontal position
         if (spaceRight >= popoverWidth + 20) {
           // Enough space to the right - position to the right
@@ -372,11 +376,11 @@ const CertificationsPopover: React.FC<CertificationsPopoverProps> = ({
           // Not enough space on either side - center horizontally
           leftPosition = Math.max(10, (viewportWidth - popoverWidth) / 2);
         }
-        
+
         // Ensure popover stays within viewport bounds
         topPosition = Math.max(10, Math.min(topPosition, viewportHeight - popoverHeight - 10));
         leftPosition = Math.max(10, Math.min(leftPosition, viewportWidth - popoverWidth - 10));
-        
+
         popoverRef.current.style.top = `${topPosition}px`;
         popoverRef.current.style.left = `${leftPosition}px`;
         popoverRef.current.style.height = `${popoverHeight}px`;
@@ -407,48 +411,52 @@ const CertificationsPopover: React.FC<CertificationsPopoverProps> = ({
         ref={popoverRef}
         className="absolute bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-4 max-w-lg w-96 z-10"
         style={{
-          top: triggerRef.current ? (() => {
-            const triggerRect = triggerRef.current.getBoundingClientRect();
-            const viewportHeight = window.innerHeight;
-            const viewportWidth = window.innerWidth;
-            const popoverHeight = 300; // Initial estimate
-            const popoverWidth = 384; // Initial estimate
-            
-            const spaceBelow = viewportHeight - triggerRect.bottom;
-            const spaceAbove = triggerRect.top;
-            
-            let topPosition: number;
-            
-            if (spaceBelow >= popoverHeight + 20) {
-              topPosition = triggerRect.bottom + 5;
-            } else if (spaceAbove >= popoverHeight + 20) {
-              topPosition = triggerRect.top - popoverHeight - 5;
-            } else {
-              topPosition = Math.max(10, (viewportHeight - popoverHeight) / 2);
-            }
-            
-            return Math.max(10, Math.min(topPosition, viewportHeight - popoverHeight - 10));
-          })() : 0,
-          left: triggerRef.current ? (() => {
-            const triggerRect = triggerRef.current.getBoundingClientRect();
-            const viewportWidth = window.innerWidth;
-            const popoverWidth = 384;
-            
-            const spaceRight = viewportWidth - triggerRect.left;
-            const spaceLeft = triggerRect.right;
-            
-            let leftPosition: number;
-            
-            if (spaceRight >= popoverWidth + 20) {
-              leftPosition = triggerRect.left + 5;
-            } else if (spaceLeft >= popoverWidth + 20) {
-              leftPosition = triggerRect.right - popoverWidth - 5;
-            } else {
-              leftPosition = Math.max(10, (viewportWidth - popoverWidth) / 2);
-            }
-            
-            return Math.max(10, Math.min(leftPosition, viewportWidth - popoverWidth - 10));
-          })() : 0,
+          top: triggerRef.current
+            ? (() => {
+                const triggerRect = triggerRef.current.getBoundingClientRect();
+                const viewportHeight = window.innerHeight;
+                const viewportWidth = window.innerWidth;
+                const popoverHeight = 300; // Initial estimate
+                const popoverWidth = 384; // Initial estimate
+
+                const spaceBelow = viewportHeight - triggerRect.bottom;
+                const spaceAbove = triggerRect.top;
+
+                let topPosition: number;
+
+                if (spaceBelow >= popoverHeight + 20) {
+                  topPosition = triggerRect.bottom + 5;
+                } else if (spaceAbove >= popoverHeight + 20) {
+                  topPosition = triggerRect.top - popoverHeight - 5;
+                } else {
+                  topPosition = Math.max(10, (viewportHeight - popoverHeight) / 2);
+                }
+
+                return Math.max(10, Math.min(topPosition, viewportHeight - popoverHeight - 10));
+              })()
+            : 0,
+          left: triggerRef.current
+            ? (() => {
+                const triggerRect = triggerRef.current.getBoundingClientRect();
+                const viewportWidth = window.innerWidth;
+                const popoverWidth = 384;
+
+                const spaceRight = viewportWidth - triggerRect.left;
+                const spaceLeft = triggerRect.right;
+
+                let leftPosition: number;
+
+                if (spaceRight >= popoverWidth + 20) {
+                  leftPosition = triggerRect.left + 5;
+                } else if (spaceLeft >= popoverWidth + 20) {
+                  leftPosition = triggerRect.right - popoverWidth - 5;
+                } else {
+                  leftPosition = Math.max(10, (viewportWidth - popoverWidth) / 2);
+                }
+
+                return Math.max(10, Math.min(leftPosition, viewportWidth - popoverWidth - 10));
+              })()
+            : 0,
         }}
       >
         <div className="flex items-center justify-between mb-4">
@@ -602,8 +610,6 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
     setEditModalOpen(false);
     setSelectedJobSeekerId(null);
   };
-
-
 
   const closeShareModal = () => {
     setShareModalOpen(false);
@@ -850,190 +856,202 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
               </TableCell>
             </TableRow>
           ) : (
-            data.data.map((jobSeeker: any) => (
-              <TableRow
-                key={jobSeeker.id}
-                data-item-id={jobSeeker.id}
-                data-jobseeker-id={jobSeeker.id}
-                className="border-b text-sm border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50"
-              >
-                <TableCell className="py-4 px-6">
-                  <div className="flex items-center gap-3">
-                    <Avatar
-                      src={jobSeeker.profilePicture?.url}
-                      alt={jobSeeker.name}
-                      name={jobSeeker.name}
-                      size="medium"
-                      className="flex-shrink-0"
-                    />
-                    <div>
-                      <p className="font-medium text-gray-900 dark:text-white">{jobSeeker.name}</p>
-                      {jobSeeker.email && (
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{jobSeeker.email}</p>
-                      )}
-                      <Link
-                        href={`/admin/applications?name=${jobSeeker.id}`}
-                        className="text-sm text-blue-500 dark:text-blue-500 hover:text-brand-500 dark:hover:text-brand-400 cursor-pointer transition-colors duration-200"
-                      >
-                        {jobSeeker.jobApplications} applications
-                      </Link>
-                    </div>
-                  </div>
-                </TableCell>
-                <TableCell className="py-4 px-6">
-                  <p className="text-sm text-gray-900 dark:text-white">{jobSeeker.occupation || "Not specified"}</p>
-                </TableCell>
-                <TableCell className="py-4 px-6">
-                  <SpecialtyDisplay
-                    specialties={
-                      Array.isArray(jobSeeker.specialty)
-                        ? jobSeeker.specialty
-                        : jobSeeker.specialty
-                          ? [jobSeeker.specialty]
-                          : []
-                    }
-                    jobSeekerId={jobSeeker.id}
-                    expandedRows={expandedRows}
-                    onToggleExpanded={toggleExpanded}
-                  />
-                </TableCell>
-                <TableCell className="py-4 px-6">
-                  <p className="text-sm text-gray-900 dark:text-white">
-                    {jobSeeker.city && jobSeeker.state
-                      ? `${jobSeeker.city}, ${jobSeeker.state}`
-                      : jobSeeker.city || jobSeeker.state || "Not specified"}
-                  </p>
-                </TableCell>
-                <TableCell className="py-4 px-6">
-                  <div className="text-sm text-gray-900 dark:text-white">
-                    {jobSeeker.licenses && jobSeeker.licenses.length > 0 ? (
-                      <div className="space-y-2">
-                        <button
-                          ref={getLicensesButtonRef(jobSeeker.id)}
-                          onClick={() => openLicensesPopover(jobSeeker.id)}
-                          disabled={loadingLicensesId === jobSeeker.id}
-                          className="inline-flex items-center justify-center font-medium gap-2 transition bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 disabled:cursor-not-allowed text-white px-3 py-1.5 text-xs font-medium rounded-md shadow-sm hover:shadow-md transition-all duration-200 flex items-center gap-1.5 h-[45px] w-[100px] rounded-sm px-3 text-xs bg-primary text-primary-foreground text-white shadow hover:bg-primary/90 disabled:bg-primary/50 [&>svg]:text-primary-foreground"
+            data.data.map((jobSeeker: any) => {
+              const stateOfLicensure = jobSeeker.licenses?.map((license: any) => license.issuingState).join(", ") || "";
+
+              return (
+                <TableRow
+                  key={jobSeeker.id}
+                  data-item-id={jobSeeker.id}
+                  data-jobseeker-id={jobSeeker.id}
+                  className="border-b text-sm border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                >
+                  <TableCell className="py-4 px-6">
+                    <div className="flex items-center gap-3">
+                      <Avatar
+                        src={jobSeeker.profilePicture?.url}
+                        alt={jobSeeker.name}
+                        name={jobSeeker.name}
+                        size="medium"
+                        className="flex-shrink-0"
+                      />
+                      <div>
+                        <p className="font-medium text-gray-900 dark:text-white">{jobSeeker.name}</p>
+                        {jobSeeker.email && (
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{jobSeeker.email}</p>
+                        )}
+                        <Link
+                          href={`/admin/applications?name=${jobSeeker.id}`}
+                          className="text-sm text-blue-500 dark:text-blue-500 hover:text-brand-500 dark:hover:text-brand-400 cursor-pointer transition-colors duration-200"
                         >
-                          {loadingLicensesId === jobSeeker.id ? (
-                            <>
-                              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
-                            </>
-                          ) : (
-                            <>Licenses</>
-                          )}
-                        </button>
+                          {jobSeeker.jobApplications} applications
+                        </Link>
                       </div>
-                    ) : (
+                    </div>
+                  </TableCell>
+                  <TableCell className="py-4 px-6">
+                    <p className="text-sm text-gray-900 dark:text-white">{jobSeeker.occupation || "Not specified"}</p>
+                  </TableCell>
+                  <TableCell className="py-4 px-6">
+                    <SpecialtyDisplay
+                      specialties={
+                        Array.isArray(jobSeeker.specialty)
+                          ? jobSeeker.specialty
+                          : jobSeeker.specialty
+                            ? [jobSeeker.specialty]
+                            : []
+                      }
+                      jobSeekerId={jobSeeker.id}
+                      expandedRows={expandedRows}
+                      onToggleExpanded={toggleExpanded}
+                    />
+                  </TableCell>
+                  <TableCell className="py-4 px-6">
+                    <p className="text-sm text-gray-900 dark:text-white">
+                      {jobSeeker.city && jobSeeker.state
+                        ? `${jobSeeker.city}, ${jobSeeker.state}`
+                        : jobSeeker.city || jobSeeker.state || "Not specified"}
+                    </p>
+                  </TableCell>
+                  <TableCell className="py-4 px-6 min-w-[170px] max-w-[170px]">
+                    {stateOfLicensure || (
                       <div className="flex items-center gap-2 text-gray-400 dark:text-gray-500 text-sm italic">
                         <IdCardIcon className="opacity-50" />
                         <span>N/A</span>
                       </div>
                     )}
-                  </div>
-                </TableCell>
-                <TableCell className="py-4 px-6">
-                  <div className="text-sm text-gray-900 dark:text-white">
-                    {jobSeeker.certifications && jobSeeker.certifications.length > 0 ? (
-                      <div className="space-y-2">
-                        <button
-                          ref={getCertificationsButtonRef(jobSeeker.id)}
-                          onClick={() => openCertificationsPopover(jobSeeker.id)}
-                          disabled={loadingCertificationsId === jobSeeker.id}
-                          className="inline-flex items-center justify-center font-medium gap-2 transition bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 disabled:cursor-not-allowed text-white px-3 py-1.5 text-xs font-medium rounded-md shadow-sm hover:shadow-md transition-all duration-200 flex items-center gap-1.5 h-[45px] w-[100px] rounded-sm px-3 text-xs bg-primary text-primary-foreground text-white shadow hover:bg-primary/90 disabled:bg-primary/50 [&>svg]:text-primary-foreground"
-                        >
-                          {loadingCertificationsId === jobSeeker.id ? (
-                            <>
-                              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
-                            </>
-                          ) : (
-                            <>Certifications</>
-                          )}
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-2 text-gray-400 dark:text-gray-500 text-sm italic">
-                        <CheckCircleIcon className="opacity-50" />
-                        <span>N/A</span>
-                      </div>
-                    )}
-                  </div>
-                </TableCell>
-                <TableCell className="py-4 px-6 text-left">{renderResumeButton(jobSeeker)}</TableCell>
-                <TableCell className="py-4 px-6 whitespace-nowrap">
-                  {jobSeeker.dateJoined ? (
-                    (() => {
-                      const dateJoined = formatDateTimeEST(jobSeeker.dateJoined);
-                      if (typeof dateJoined === "string") {
-                        return <p className="text-sm text-gray-900 dark:text-white">{dateJoined}</p>;
-                      }
-                      return (
-                        <div className="text-sm text-gray-900 dark:text-white">
-                          <div>{dateJoined.date}</div>
-                          <div className="flex items-center mt-1">
-                            <TimeIcon className="mr-1" />
-                            <span>{dateJoined.time}</span>
-                          </div>
+                  </TableCell>
+                  <TableCell className="py-4 px-6">
+                    <div className="text-sm text-gray-900 dark:text-white">
+                      {jobSeeker.licenses && jobSeeker.licenses.length > 0 ? (
+                        <div className="space-y-2">
+                          <button
+                            ref={getLicensesButtonRef(jobSeeker.id)}
+                            onClick={() => openLicensesPopover(jobSeeker.id)}
+                            disabled={loadingLicensesId === jobSeeker.id}
+                            className="inline-flex items-center justify-center font-medium gap-2 transition bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 disabled:cursor-not-allowed text-white px-3 py-1.5 text-xs font-medium rounded-md shadow-sm hover:shadow-md transition-all duration-200 flex items-center gap-1.5 h-[45px] w-[100px] rounded-sm px-3 text-xs bg-primary text-primary-foreground text-white shadow hover:bg-primary/90 disabled:bg-primary/50 [&>svg]:text-primary-foreground"
+                          >
+                            {loadingLicensesId === jobSeeker.id ? (
+                              <>
+                                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
+                              </>
+                            ) : (
+                              <>Licenses</>
+                            )}
+                          </button>
                         </div>
-                      );
-                    })()
-                  ) : (
-                    <span className="text-gray-400 dark:text-gray-500 italic">Not specified</span>
-                  )}
-                </TableCell>
-                <TableCell className="py-4 px-6 whitespace-nowrap">
-                  {jobSeeker.lastActivity ? (
-                    (() => {
-                      const lastActivity = formatDateTimeEST(jobSeeker.lastActivity);
-                      if (typeof lastActivity === "string") {
-                        return <p className="text-sm text-gray-900 dark:text-white">{lastActivity}</p>;
-                      }
-                      return (
-                        <div className="text-sm text-gray-900 dark:text-white">
-                          <div>{lastActivity.date}</div>
-                          <div className="flex items-center mt-1">
-                            <TimeIcon className="mr-1" />
-                            <span>{lastActivity.time}</span>
-                          </div>
-                        </div>
-                      );
-                    })()
-                  ) : (
-                    <span className="text-gray-400 dark:text-gray-500 italic">No activity</span>
-                  )}
-                </TableCell>
-                <TableCell className="py-4 px-6">
-                  <Badge variant={getStatusVariant(jobSeeker.status)}>{jobSeeker.status}</Badge>
-                </TableCell>
-                <TableCell className="py-4 px-6 text-right">
-                  <div className="flex items-center gap-4">
-                    <PermissionWrapper module="jobseekers" action="view">
-                      <button className="flex gap-2 text-brand-400" onClick={() => onViewJobSeeker(jobSeeker.id)}>
-                        <EyeIcon /> View
-                      </button>
-                    </PermissionWrapper>
-                    <PermissionWrapper module="jobseekers" action="edit">
-                      <button className="flex gap-2 text-brand-400" onClick={() => openEditModal(jobSeeker.id)}>
-                        <PencilIcon /> Edit
-                      </button>
-                    </PermissionWrapper>
-                    <button
-                      className="flex gap-2 text-brand-400 disabled:opacity-50 disabled:cursor-not-allowed text-nowrap"
-                      onClick={() => handleResetPassword(jobSeeker)}
-                      disabled={resetPasswordLoadingId === jobSeeker.id}
-                    >
-                      {resetPasswordLoadingId === jobSeeker.id ? (
-                        <>
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-brand-400"></div>
-                          Sending...
-                        </>
                       ) : (
-                        <>Reset password</>
+                        <div className="flex items-center gap-2 text-gray-400 dark:text-gray-500 text-sm italic">
+                          <IdCardIcon className="opacity-50" />
+                          <span>N/A</span>
+                        </div>
                       )}
-                    </button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))
+                    </div>
+                  </TableCell>
+                  <TableCell className="py-4 px-6">
+                    <div className="text-sm text-gray-900 dark:text-white">
+                      {jobSeeker.certifications && jobSeeker.certifications.length > 0 ? (
+                        <div className="space-y-2">
+                          <button
+                            ref={getCertificationsButtonRef(jobSeeker.id)}
+                            onClick={() => openCertificationsPopover(jobSeeker.id)}
+                            disabled={loadingCertificationsId === jobSeeker.id}
+                            className="inline-flex items-center justify-center font-medium gap-2 transition bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 disabled:cursor-not-allowed text-white px-3 py-1.5 text-xs font-medium rounded-md shadow-sm hover:shadow-md transition-all duration-200 flex items-center gap-1.5 h-[45px] w-[100px] rounded-sm px-3 text-xs bg-primary text-primary-foreground text-white shadow hover:bg-primary/90 disabled:bg-primary/50 [&>svg]:text-primary-foreground"
+                          >
+                            {loadingCertificationsId === jobSeeker.id ? (
+                              <>
+                                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
+                              </>
+                            ) : (
+                              <>Certifications</>
+                            )}
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2 text-gray-400 dark:text-gray-500 text-sm italic">
+                          <CheckCircleIcon className="opacity-50" />
+                          <span>N/A</span>
+                        </div>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell className="py-4 px-6 text-left">{renderResumeButton(jobSeeker)}</TableCell>
+                  <TableCell className="py-4 px-6 whitespace-nowrap">
+                    {jobSeeker.dateJoined ? (
+                      (() => {
+                        const dateJoined = formatDateTimeEST(jobSeeker.dateJoined);
+                        if (typeof dateJoined === "string") {
+                          return <p className="text-sm text-gray-900 dark:text-white">{dateJoined}</p>;
+                        }
+                        return (
+                          <div className="text-sm text-gray-900 dark:text-white">
+                            <div>{dateJoined.date}</div>
+                            <div className="flex items-center mt-1">
+                              <TimeIcon className="mr-1" />
+                              <span>{dateJoined.time}</span>
+                            </div>
+                          </div>
+                        );
+                      })()
+                    ) : (
+                      <span className="text-gray-400 dark:text-gray-500 italic">Not specified</span>
+                    )}
+                  </TableCell>
+                  <TableCell className="py-4 px-6 whitespace-nowrap">
+                    {jobSeeker.lastActivity ? (
+                      (() => {
+                        const lastActivity = formatDateTimeEST(jobSeeker.lastActivity);
+                        if (typeof lastActivity === "string") {
+                          return <p className="text-sm text-gray-900 dark:text-white">{lastActivity}</p>;
+                        }
+                        return (
+                          <div className="text-sm text-gray-900 dark:text-white">
+                            <div>{lastActivity.date}</div>
+                            <div className="flex items-center mt-1">
+                              <TimeIcon className="mr-1" />
+                              <span>{lastActivity.time}</span>
+                            </div>
+                          </div>
+                        );
+                      })()
+                    ) : (
+                      <span className="text-gray-400 dark:text-gray-500 italic">No activity</span>
+                    )}
+                  </TableCell>
+                  <TableCell className="py-4 px-6">
+                    <Badge variant={getStatusVariant(jobSeeker.status)}>{jobSeeker.status}</Badge>
+                  </TableCell>
+                  <TableCell className="py-4 px-6 text-right">
+                    <div className="flex items-center gap-4">
+                      <PermissionWrapper module="jobseekers" action="view">
+                        <button className="flex gap-2 text-brand-400" onClick={() => onViewJobSeeker(jobSeeker.id)}>
+                          <EyeIcon /> View
+                        </button>
+                      </PermissionWrapper>
+                      <PermissionWrapper module="jobseekers" action="edit">
+                        <button className="flex gap-2 text-brand-400" onClick={() => openEditModal(jobSeeker.id)}>
+                          <PencilIcon /> Edit
+                        </button>
+                      </PermissionWrapper>
+                      <button
+                        className="flex gap-2 text-brand-400 disabled:opacity-50 disabled:cursor-not-allowed text-nowrap"
+                        onClick={() => handleResetPassword(jobSeeker)}
+                        disabled={resetPasswordLoadingId === jobSeeker.id}
+                      >
+                        {resetPasswordLoadingId === jobSeeker.id ? (
+                          <>
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-brand-400"></div>
+                            Sending...
+                          </>
+                        ) : (
+                          <>Reset password</>
+                        )}
+                      </button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              );
+            })
           )}
         </TableBody>
       </Table>
