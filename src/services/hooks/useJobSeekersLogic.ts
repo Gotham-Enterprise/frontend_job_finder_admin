@@ -236,6 +236,7 @@ export const useJobSeekersLogic = () => {
       { key: "occupation", label: "Occupation" },
       { key: "specialty", label: "Specialty" },
       { key: "state", label: "Location" },
+      { key: "stateOfLicensure", label: "State of Licensure", className: "min-w-[200px] max-w-[200px]" },
       { key: "licenses", label: "Licenses" },
       { key: "certifications", label: "Certifications" },
       { key: "resume", label: "Resume" },
