@@ -95,8 +95,8 @@ export const GLOBAL_PERMISSION_CONFIG: GlobalPermissionConfig = {
     coupons: { view: false, create: false, update: false, delete: false },
     blog: { view: true, create: false, update: false, delete: false },
     careers: { view: true, create: false, update: false, delete: false },
+    // forum: { view: true, create: false, update: false, delete: false },
     unlockRequest: { view: true, create: false, update: false, delete: false },
-
   },
 
   roleBasedPermissions: {
@@ -109,6 +109,7 @@ export const GLOBAL_PERMISSION_CONFIG: GlobalPermissionConfig = {
       coupons: { view: true, create: true, update: true, delete: true },
       blog: { view: true, create: true, update: true, delete: true },
       careers: { view: true, create: true, update: true, delete: true },
+      // forum: { view: true, create: false, update: true, delete: true },
       unlockRequest: { view: true, create: false, update: false, delete: true },
     },
     "super-admin": {
@@ -120,6 +121,7 @@ export const GLOBAL_PERMISSION_CONFIG: GlobalPermissionConfig = {
       coupons: { view: true, create: true, update: true, delete: true },
       blog: { view: true, create: true, update: true, delete: true },
       careers: { view: true, create: true, update: true, delete: true },
+      // forum: { view: true, create: false, update: true, delete: true },
       unlockRequest: { view: true, create: false, update: false, delete: true },
     },
   },
