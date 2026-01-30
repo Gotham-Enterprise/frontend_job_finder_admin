@@ -6,6 +6,7 @@ import { getAllForumUsers, blockUser, unblockUser } from '@/services/api/forumMo
 import type { BlockedUser, PaginationMeta } from '@/services/api/forumModerationApi'
 import { Shield, Unlock, Search, X } from 'lucide-react'
 import BlockUserModal from './BlockUserModal'
+import UnblockUserModal from './UnblockUserModal'
 
 interface AllUsersTabProps {
   onStatsUpdate: () => void
@@ -21,6 +22,9 @@ export default function AllUsersTab({ onStatsUpdate }: AllUsersTabProps) {
   const [blockedFilter, setBlockedFilter] = useState<'all' | 'blocked' | 'active'>('all')
   const [isBlockModalOpen, setIsBlockModalOpen] = useState(false)
   const [selectedUserForBlock, setSelectedUserForBlock] = useState<string | null>(null)
+  const [isUnblockModalOpen, setIsUnblockModalOpen] = useState(false)
+  const [selectedUserForUnblock, setSelectedUserForUnblock] = useState<BlockedUser | null>(null)
+  const [isUnblocking, setIsUnblocking] = useState(false)
 
   useEffect(() => {
     loadUsers()
@@ -84,16 +88,26 @@ export default function AllUsersTab({ onStatsUpdate }: AllUsersTabProps) {
   }
 
   const handleUnblock = async (user: BlockedUser) => {
+    setSelectedUserForUnblock(user)
+    setIsUnblockModalOpen(true)
+  }
+
+  const confirmUnblock = async () => {
+    if (!selectedUserForUnblock) return
     const token = authUtils.getToken()
     if (!token) return
-    if (!confirm(`Unblock ${user.displayName}?`)) return
     try {
-      await unblockUser(token, user.id)
+      setIsUnblocking(true)
+      await unblockUser(token, selectedUserForUnblock.id)
+      setIsUnblockModalOpen(false)
+      setSelectedUserForUnblock(null)
       loadUsers()
       onStatsUpdate()
     } catch (error) {
       console.error('Failed to unblock user:', error)
       alert('Failed to unblock user')
+    } finally {
+      setIsUnblocking(false)
     }
   }
 
@@ -300,6 +314,18 @@ export default function AllUsersTab({ onStatsUpdate }: AllUsersTabProps) {
           setSelectedUserForBlock(null)
         }}
         onSubmit={(userId, reason) => handleBlockSubmit(userId, reason)}
+      />
+
+      {/* Unblock User Modal */}
+      <UnblockUserModal
+        isOpen={isUnblockModalOpen}
+        userName={selectedUserForUnblock?.displayName || ''}
+        isUnblocking={isUnblocking}
+        onClose={() => {
+          setIsUnblockModalOpen(false)
+          setSelectedUserForUnblock(null)
+        }}
+        onConfirm={confirmUnblock}
       />
     </>
   )

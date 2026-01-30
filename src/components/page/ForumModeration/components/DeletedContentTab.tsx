@@ -6,6 +6,7 @@ import { getDeletedContent, restoreContent } from '@/services/api/forumModeratio
 import type { FlaggedContent, PaginationMeta } from '@/services/api/forumModerationApi'
 import { ExternalLink, RotateCcw, FileText } from 'lucide-react'
 import ViewContentModal from './ViewContentModal'
+import RestoreContentModal from './RestoreContentModal'
 
 interface DeletedContentTabProps {
   onStatsUpdate: () => void
@@ -20,6 +21,8 @@ export default function DeletedContentTab({ onStatsUpdate }: DeletedContentTabPr
   const [viewContentItem, setViewContentItem] = useState<FlaggedContent | null>(null)
   const [showViewContentModal, setShowViewContentModal] = useState(false)
   const [restoringIds, setRestoringIds] = useState<string[]>([])
+  const [showRestoreModal, setShowRestoreModal] = useState(false)
+  const [selectedContentForRestore, setSelectedContentForRestore] = useState<FlaggedContent | null>(null)
 
   useEffect(() => {
     loadContent()
@@ -44,19 +47,26 @@ export default function DeletedContentTab({ onStatsUpdate }: DeletedContentTabPr
   }
 
   const handleRestore = async (item: FlaggedContent) => {
+    setSelectedContentForRestore(item)
+    setShowRestoreModal(true)
+  }
+
+  const confirmRestore = async () => {
+    if (!selectedContentForRestore) return
     const token = authUtils.getToken()
     if (!token) return
-    if (!confirm(`Are you sure you want to restore this ${item.type}?`)) return
     try {
-      setRestoringIds(prev => [...prev, item.id])
-      await restoreContent(token, item.type, item.id)
+      setRestoringIds(prev => [...prev, selectedContentForRestore.id])
+      await restoreContent(token, selectedContentForRestore.type, selectedContentForRestore.id)
+      setShowRestoreModal(false)
+      setSelectedContentForRestore(null)
       loadContent()
       onStatsUpdate()
     } catch (error) {
       console.error('Failed to restore content:', error)
       alert('Failed to restore content')
     } finally {
-      setRestoringIds(prev => prev.filter(id => id !== item.id))
+      setRestoringIds(prev => prev.filter(id => id !== selectedContentForRestore.id))
     }
   }
 
@@ -183,6 +193,19 @@ export default function DeletedContentTab({ onStatsUpdate }: DeletedContentTabPr
           }}
         />
       )}
+
+      {/* Restore Content Modal */}
+      <RestoreContentModal
+        isOpen={showRestoreModal}
+        contentType={selectedContentForRestore?.type || ''}
+        contentTitle={selectedContentForRestore?.title}
+        isRestoring={restoringIds.includes(selectedContentForRestore?.id || '')}
+        onClose={() => {
+          setShowRestoreModal(false)
+          setSelectedContentForRestore(null)
+        }}
+        onConfirm={confirmRestore}
+      />
     </>
   )
 }
