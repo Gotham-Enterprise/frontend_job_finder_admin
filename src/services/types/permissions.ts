@@ -14,6 +14,7 @@ export interface UserPermissions {
   coupons: Permission;
   blog: Permission;
   careers: Permission;
+  // forum: Permission;
   unlockRequest: Permission;
 }
 
@@ -32,15 +33,16 @@ export interface PermissionModule {
 }
 
 export const PERMISSION_MODULES: PermissionModule[] = [
-  { key: 'tickets', label: 'Tickets' },
-  { key: 'jobSeekers', label: 'Job Seekers' },
-  { key: 'employers', label: 'Employers' },
-  { key: 'jobs', label: 'Jobs' },
-  { key: 'applications', label: 'Applications' },
-  { key: 'coupons', label: 'Coupons' },
-  { key: 'blog', label: 'Blog' },
-  { key: 'careers', label: 'Careers' },
-  { key: 'unlockRequest', label: 'Unlock Requests' },
+  { key: "tickets", label: "Tickets" },
+  { key: "jobSeekers", label: "Job Seekers" },
+  { key: "employers", label: "Employers" },
+  { key: "jobs", label: "Jobs" },
+  { key: "applications", label: "Applications" },
+  { key: "coupons", label: "Coupons" },
+  // { key: "forum", label: "Forum" },
+  { key: "blog", label: "Blog" },
+  { key: "careers", label: "Careers" },
+  { key: "unlockRequest", label: "Unlock Requests" },
 ];
 
 export const DEFAULT_PERMISSIONS: UserPermissions = {
@@ -52,12 +54,13 @@ export const DEFAULT_PERMISSIONS: UserPermissions = {
   coupons: { view: true, create: false, update: false, delete: false },
   blog: { view: true, create: false, update: false, delete: false },
   careers: { view: true, create: false, update: false, delete: false },
+  // forum: { view: true, create: false, update: false, delete: false },
   unlockRequest: { view: true, create: false, update: false, delete: false },
 };
 
 export const ROLE_OPTIONS = [
-  { value: 'manager', label: 'Manager' },
-  { value: 'user', label: 'User' },
-  { value: 'content-manager', label: 'Content Creator' },
-  { value: 'viewer', label: 'Viewer' },
+  { value: "manager", label: "Manager" },
+  { value: "user", label: "User" },
+  { value: "content-manager", label: "Content Creator" },
+  { value: "viewer", label: "Viewer" },
 ];

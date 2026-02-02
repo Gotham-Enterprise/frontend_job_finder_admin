@@ -41,6 +41,7 @@ type NavItem = {
     | "tickets"
     | "coupons"
     | "blog"
+    // | "forum"
     | "unlockRequest";
   isAccessible?: boolean;
 };
@@ -117,6 +118,13 @@ const navItems: NavItem[] = [
       { name: "Tags", path: "/admin/blog/tags", requiredAction: "view" },
       { name: "Archives", path: "/admin/blog/archives", requiredAction: "view" },
     ],
+  },
+
+  {
+    icon: <PieChartIcon />,
+    name: "Forum Moderation",
+    path: "/admin/forum-moderation",
+    // permissionKey: "forum",
   },
 
   {
