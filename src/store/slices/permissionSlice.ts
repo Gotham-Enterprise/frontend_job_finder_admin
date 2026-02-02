@@ -1,5 +1,5 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { RolePermission } from './authSlice';
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { RolePermission } from "./authSlice";
 
 export interface PermissionState {
   permissions: Record<string, PermissionDetail>;
@@ -22,18 +22,19 @@ const initialState: PermissionState = {
 
 // Permission name mapping to match API response
 const PERMISSION_NAME_MAP: Record<string, string> = {
-  'Job Seekers': 'jobSeekers',
-  'Employers': 'employers',
-  'Jobs': 'jobs',
-  'Applications': 'applications',
-  'Blog': 'blog',
-  'Careers': 'careers',
-  'Tickets': 'tickets',
-  'Coupons': 'coupons',
+  "Job Seekers": "jobSeekers",
+  Employers: "employers",
+  Jobs: "jobs",
+  Applications: "applications",
+  Blog: "blog",
+  Careers: "careers",
+  Tickets: "tickets",
+  Coupons: "coupons",
+  Forum: "forum",
 };
 
 const permissionSlice = createSlice({
-  name: 'permission',
+  name: "permission",
   initialState,
   reducers: {
     setLoading: (state, action: PayloadAction<boolean>) => {
@@ -41,11 +42,17 @@ const permissionSlice = createSlice({
     },
     setPermissions: (state, action: PayloadAction<RolePermission[]>) => {
       const permissions: Record<string, PermissionDetail> = {};
-      
+
       action.payload.forEach((rolePermission) => {
-        const permissionKey = PERMISSION_NAME_MAP[rolePermission.permission.name] || 
-          rolePermission.permission.name.toLowerCase().replace(/\s+/g, '');
-        
+        // Add null check to prevent 'Cannot read properties of undefined' error
+        if (!rolePermission || !rolePermission.permission) {
+          return;
+        }
+
+        const permissionKey =
+          PERMISSION_NAME_MAP[rolePermission.permission.name] ||
+          rolePermission.permission.name.toLowerCase().replace(/\s+/g, "");
+
         permissions[permissionKey] = {
           add: rolePermission.add,
           view: rolePermission.view,
@@ -55,7 +62,7 @@ const permissionSlice = createSlice({
           description: rolePermission.permission.description,
         };
       });
-      
+
       state.permissions = permissions;
     },
     clearPermissions: (state) => {

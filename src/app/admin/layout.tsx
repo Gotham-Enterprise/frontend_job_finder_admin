@@ -42,7 +42,7 @@ export default function AdminLayout({
           <PermissionAwareSidebar />
           <Backdrop />       
            <div
-            className={`flex-1 transition-all  duration-300 ease-in-out ${mainContentMargin}`}
+            className={`flex-1 transition-all duration-300 ease-in-out overflow-x-hidden ${mainContentMargin}`}
           >
             <AppHeader />
             <InactivityStatus 
@@ -50,7 +50,7 @@ export default function AdminLayout({
               showWarning={true}
               warningThreshold={0.25}
             />
-            <div className="p-4 mx-auto md:p-6">
+            <div className="p-4 mx-auto md:p-6 w-full max-w-full overflow-x-hidden box-border">
               <PermissionGuard showFallback={true}>
                 {children}
               </PermissionGuard>

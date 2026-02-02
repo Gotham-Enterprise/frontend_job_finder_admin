@@ -38,6 +38,7 @@ export function convertApiPermissionsToUserPermissions(userData: ApiUserData): U
     coupons: { view: false, create: false, update: false, delete: false },
     blog: { view: false, create: false, update: false, delete: false },
     careers: { view: false, create: false, update: false, delete: false },
+    // forum: { view: false, create: false, update: false, delete: false },
     unlockRequest: { view: false, create: false, update: false, delete: false },
   };
 
@@ -94,12 +95,15 @@ export function convertApiPermissionsToUserPermissions(userData: ApiUserData): U
     }
   });
 
-  console.log('[PermissionUtils] Final user permissions:', userPermissions);
+  console.log("[PermissionUtils] Final user permissions:", userPermissions);
   return userPermissions;
 }
 
 export function hasAnyModulePermission(permissions: UserPermissions, module: keyof UserPermissions): boolean {
   const modulePermissions = permissions[module];
+  if (!modulePermissions) {
+    return false;
+  }
   return Object.values(modulePermissions).some((permission) => permission);
 }
 
@@ -108,6 +112,9 @@ export function hasPermission(
   module: keyof UserPermissions,
   action: keyof UserPermissions[keyof UserPermissions]
 ): boolean {
+  if (!permissions[module]) {
+    return false;
+  }
   return permissions[module][action];
 }
 
