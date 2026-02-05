@@ -9,11 +9,11 @@ const ReactApexChart = dynamic(() => import("react-apexcharts"), {
   ssr: false,
 });
 
-interface JobApplicationTrendsProps {
+interface JobseekerTrendsProps {
   refreshKey?: number;
 }
 
-export default function JobApplicationTrends({ refreshKey }: JobApplicationTrendsProps) {
+export default function JobseekerTrends({ refreshKey }: JobseekerTrendsProps) {
   const [period, setPeriod] = useState<Period>("7d");
   const [categories, setCategories] = useState<string[]>([]);
   const [data, setData] = useState<number[]>([]);
@@ -21,30 +21,21 @@ export default function JobApplicationTrends({ refreshKey }: JobApplicationTrend
   const [isLoading, setIsLoading] = useState(true);
 
   const options: ApexOptions = {
-    colors: ["#465fff"],
+    colors: ["#10B981"],
     chart: {
       fontFamily: "Outfit, sans-serif",
-      type: "bar",
+      type: "area",
       height: 180,
       toolbar: {
         show: false,
-      },
-    },
-    plotOptions: {
-      bar: {
-        horizontal: false,
-        columnWidth: "39%",
-        borderRadius: 5,
-        borderRadiusApplication: "end",
       },
     },
     dataLabels: {
       enabled: false,
     },
     stroke: {
-      show: true,
-      width: 4,
-      colors: ["transparent"],
+      curve: "smooth",
+      width: 2,
     },
     xaxis: {
       categories: categories,
@@ -74,7 +65,13 @@ export default function JobApplicationTrends({ refreshKey }: JobApplicationTrend
       },
     },
     fill: {
-      opacity: 1,
+      type: "gradient",
+      gradient: {
+        shadeIntensity: 1,
+        opacityFrom: 0.4,
+        opacityTo: 0.1,
+        stops: [0, 90, 100],
+      },
     },
     tooltip: {
       x: {
@@ -88,7 +85,7 @@ export default function JobApplicationTrends({ refreshKey }: JobApplicationTrend
 
   const series = [
     {
-      name: "Applications",
+      name: "New Jobseekers",
       data: data,
     },
   ];
@@ -97,14 +94,14 @@ export default function JobApplicationTrends({ refreshKey }: JobApplicationTrend
     const fetchTrends = async () => {
       try {
         setIsLoading(true);
-        const response = await adminAnalyticsService.getApplicationTrends(period);
+        const response = await adminAnalyticsService.getJobseekerTrends(period);
         if (response.success && response.data) {
           setCategories(response.data.categories);
           setData(response.data.data);
           setTotal(response.data.total || 0);
         }
       } catch (error) {
-        console.error("Error fetching application trends:", error);
+        console.error("Error fetching jobseeker trends:", error);
       } finally {
         setIsLoading(false);
       }
@@ -124,10 +121,10 @@ export default function JobApplicationTrends({ refreshKey }: JobApplicationTrend
     <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white px-5 pt-5 dark:border-gray-800 dark:bg-white/[0.03] sm:px-6 sm:pt-6">
       <div className="mb-4">
         <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
-          Job Application Trends
+          New Jobseeker Registrations
         </h3>
         <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-          Total Job Applications: <span className="font-semibold text-gray-800 dark:text-white/90">{total.toLocaleString()}</span>
+          Total New Jobseekers: <span className="font-semibold text-gray-800 dark:text-white/90">{total.toLocaleString()}</span>
         </p>
       </div>
 
@@ -158,7 +155,7 @@ export default function JobApplicationTrends({ refreshKey }: JobApplicationTrend
             <ReactApexChart
               options={options}
               series={series}
-              type="bar"
+              type="area"
               height={719}
             />
           </div>
