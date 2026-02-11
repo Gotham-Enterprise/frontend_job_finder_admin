@@ -1,0 +1,233 @@
+import { apiGet, apiPost, apiPut, apiDelete, apiRequest } from "./apiUtils";
+
+// Type definitions for affiliate partners
+export interface AffiliatePartner {
+  id: string;
+  name: string;
+  email: string;
+  apiKey: string;
+  status: "active" | "inactive" | "suspended";
+  contactPerson?: string;
+  contactPhone?: string;
+  websiteUrl?: string;
+  feedUrl?: string;
+  syncEnabled?: boolean;
+  syncIntervalHours?: number;
+  lastSyncAt?: string;
+  lastSyncStatus?: string;
+  lastSyncError?: string;
+  lastSyncBatchId?: string;
+  consecutiveFailures?: number;
+  isRunning?: boolean; // Real-time sync status from getSyncStatus
+  activeBatch?: AffiliateBatch; // Current processing batch
+  commissionRate?: number;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AffiliateBatch {
+  id: string;
+  affiliateId: string;
+  fileName: string;
+  s3Key: string;
+  parserVersion: string;
+  status: "pending" | "processing" | "completed" | "failed" | "partial";
+  totalJobs: number;
+  processedJobs: number;
+  duplicateJobs: number;
+  failedJobs: number;
+  errorLog?: string;
+  retryCount: number;
+  uploadedBy?: string; // Admin user ID - null for auto-synced batches
+  createdAt: string;
+  updatedAt: string;
+  affiliate: {
+    id: string;
+    name: string;
+  };
+}
+
+export interface AffiliateBatchJob {
+  id: string;
+  title: string;
+  location: string;
+  companyName: string;
+  isPublished: boolean;
+  externalJobPostGuid: string;
+  datePosted: string;
+  expiresAt: string;
+  views: number;
+  clickCount?: number;
+}
+
+export interface BatchStatus {
+  id: string;
+  status: string;
+  totalJobs: number;
+  processedJobs: number;
+  duplicateJobs: number;
+  failedJobs: number;
+  errorLog?: string;
+  progress: number; // 0-100
+}
+
+export interface AffiliateAnalytics {
+  totalClicks: number;
+  uniqueCandidates: number;
+  uniqueIpAddresses: number;
+  topJobs: Array<{
+    jobId: string;
+    id: string;
+    title: string;
+    externalJobPostCompanyName: string;
+    locationCity: string;
+    locationState: string;
+    clicks: number;
+    affiliate: {
+      id: string;
+      name: string;
+    } | null;
+  }>;
+  clicksOverTime: Array<{
+    date: string;
+    clicks: number;
+  }>;
+}
+
+export interface CreatePartnerData {
+  name: string;
+  email: string;
+  contactPerson?: string;
+  contactPhone?: string;
+  websiteUrl?: string;
+  feedUrl?: string;
+  syncEnabled?: boolean;
+  syncIntervalHours?: number;
+  commissionRate?: number;
+  notes?: string;
+}
+
+export interface UpdatePartnerData {
+  name?: string;
+  email?: string;
+  status?: "active" | "inactive" | "suspended";
+  contactPerson?: string;
+  contactPhone?: string;
+  websiteUrl?: string;
+  feedUrl?: string;
+  syncEnabled?: boolean;
+  syncIntervalHours?: number;
+  commissionRate?: number;
+  notes?: string;
+}
+
+// Partner Management APIs
+export const getAffiliatePartners = async (params?: {
+  page?: number;
+  limit?: number;
+  status?: string;
+}): Promise<{ data: AffiliatePartner[]; total: number; page: number; totalPages: number }> => {
+  const queryParams = new URLSearchParams();
+  if (params?.page) queryParams.append("page", params.page.toString());
+  if (params?.limit) queryParams.append("limit", params.limit.toString());
+  if (params?.status) queryParams.append("status", params.status);
+  const queryString = queryParams.toString();
+  return apiGet(`/api/admin/affiliates/partners${queryString ? `?${queryString}` : ""}`);
+};
+
+export const getAffiliatePartner = async (id: string): Promise<AffiliatePartner> => {
+  return apiGet(`/api/admin/affiliates/partners/${id}`);
+};
+
+export const createAffiliatePartner = async (data: CreatePartnerData): Promise<AffiliatePartner> => {
+  return apiPost("/api/admin/affiliates/partners", data);
+};
+
+export const updateAffiliatePartner = async (id: string, data: UpdatePartnerData): Promise<AffiliatePartner> => {
+  return apiPut(`/api/admin/affiliates/partners/${id}`, data);
+};
+
+export const deleteAffiliatePartner = async (id: string): Promise<void> => {
+  return apiDelete(`/api/admin/affiliates/partners/${id}`);
+};
+
+// Upload & Batch Management APIs
+export const uploadAffiliateXML = async (
+  file: File,
+  partnerId: string
+): Promise<{ batchId: string; message: string }> => {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("partnerId", partnerId);
+
+  return apiRequest("/api/admin/affiliates/upload", {
+    method: "POST",
+    body: formData,
+    // Don't set Content-Type, let browser set it with boundary
+  });
+};
+
+export const getAffiliateBatches = async (params?: {
+  page?: number;
+  limit?: number;
+  affiliateId?: string;
+  status?: string;
+}): Promise<{ data: AffiliateBatch[]; total: number; page: number; totalPages: number }> => {
+  const queryParams = new URLSearchParams();
+  if (params?.page) queryParams.append("page", params.page.toString());
+  if (params?.limit) queryParams.append("limit", params.limit.toString());
+  if (params?.affiliateId) queryParams.append("affiliateId", params.affiliateId);
+  if (params?.status) queryParams.append("status", params.status);
+  const queryString = queryParams.toString();
+  return apiGet(`/api/admin/affiliates/batches${queryString ? `?${queryString}` : ""}`);
+};
+
+export const getAffiliateBatchStatus = async (batchId: string): Promise<BatchStatus> => {
+  return apiGet(`/api/admin/affiliates/batches/${batchId}/status`);
+};
+
+export const getAffiliateBatchJobs = async (
+  batchId: string,
+  params?: {
+    page?: number;
+    limit?: number;
+  }
+): Promise<{ data: AffiliateBatchJob[]; total: number; page: number; totalPages: number }> => {
+  const queryParams = new URLSearchParams();
+  if (params?.page) queryParams.append("page", params.page.toString());
+  if (params?.limit) queryParams.append("limit", params.limit.toString());
+  const queryString = queryParams.toString();
+  return apiGet(`/api/admin/affiliates/batches/${batchId}/jobs${queryString ? `?${queryString}` : ""}`);
+};
+
+export const reprocessAffiliateBatch = async (batchId: string): Promise<{ message: string; batchId: string }> => {
+  return apiPost(`/api/admin/affiliates/batches/${batchId}/reprocess`, {});
+};
+
+// Sync Management APIs
+export const triggerAffiliateSync = async (partnerId: string): Promise<{ batchId: string; message: string }> => {
+  return apiPost(`/api/admin/affiliates/partners/${partnerId}/sync`, {});
+};
+
+export const getAffiliateSyncStatus = async (): Promise<any[]> => {
+  const response = await apiGet<{ success: boolean; data: any[] }>("/api/admin/affiliates/sync-status");
+  return response.data || [];
+};
+
+// Analytics APIs
+export const getAffiliateAnalytics = async (params?: {
+  affiliateId?: string;
+  startDate?: string;
+  endDate?: string;
+}): Promise<AffiliateAnalytics> => {
+  const queryParams = new URLSearchParams();
+  if (params?.affiliateId) queryParams.append("affiliateId", params.affiliateId);
+  if (params?.startDate) queryParams.append("startDate", params.startDate);
+  if (params?.endDate) queryParams.append("endDate", params.endDate);
+  const queryString = queryParams.toString();
+  const response = await apiGet<{ success: boolean; data: AffiliateAnalytics }>(
+    `/api/admin/affiliates/analytics${queryString ? `?${queryString}` : ""}`
+  );
+  return response.data;
+};
