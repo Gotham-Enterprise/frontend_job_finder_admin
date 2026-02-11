@@ -126,7 +126,11 @@ const navItems: NavItem[] = [
     path: "/admin/forum-moderation",
     // permissionKey: "forum",
   },
-
+  {
+    icon: <HorizontaLDots />,
+    name: "Affiliates",
+    path: "/admin/affiliates"
+  },
   {
     icon: <IdCardIcon />,
     name: "Unlock Requests",
@@ -173,8 +177,15 @@ const AppSidebar: React.FC = () => {
   const [forceUpdate, setForceUpdate] = useState(0);
 
   // Check if user is authenticated to show sidebar immediately
-  const isAuthenticated = typeof window !== "undefined" ? authUtils.isAuthenticated() : false;
-  const hasUserData = typeof window !== "undefined" ? !!authUtils.getUser() : false;
+  // Use state to avoid hydration mismatch
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [hasUserData, setHasUserData] = useState(false);
+
+  // Initialize auth state on client side only
+  useEffect(() => {
+    setIsAuthenticated(authUtils.isAuthenticated());
+    setHasUserData(!!authUtils.getUser());
+  }, []);
 
   // Handle initial mount timing
   useEffect(() => {
