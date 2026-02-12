@@ -205,8 +205,11 @@ export const getAffiliateBatchJobs = async (
   if (params?.page) queryParams.append("page", params.page.toString());
   if (params?.limit) queryParams.append("limit", params.limit.toString());
   const queryString = queryParams.toString();
-  const response = await apiGet<{ data: AffiliateBatchJob[]; pagination: { page: number; limit: number; total: number; totalPages: number } }>(`/api/admin/affiliates/batches/${batchId}/jobs${queryString ? `?${queryString}` : ""}`);
-  
+  const response = await apiGet<{
+    data: AffiliateBatchJob[];
+    pagination: { page: number; limit: number; total: number; totalPages: number };
+  }>(`/api/admin/affiliates/batches/${batchId}/jobs${queryString ? `?${queryString}` : ""}`);
+
   // Transform response to match expected format
   return {
     data: response.data,
