@@ -69,6 +69,24 @@ const navItems: NavItem[] = [
     permissionKey: "employers",
   },
   {
+    icon: <TaskIcon />,
+    name: "Applications",
+    path: "/admin/applications",
+    permissionKey: "applications",
+    //subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
+  },
+  {
+    icon: <HandShake />,
+    name: "Affiliate Partners",
+    path: "/admin/affiliates"
+  },
+   {
+    icon: <PieChartIcon />,
+    name: "Forum Moderation",
+    path: "/admin/forum-moderation",
+    // permissionKey: "forum",
+  },
+  {
     icon: <BriefcaseIcon />,
     name: "Jobs",
     path: "/admin/jobs",
@@ -79,11 +97,24 @@ const navItems: NavItem[] = [
     ],
   },
   {
-    icon: <TaskIcon />,
-    name: "Applications",
-    path: "/admin/applications",
-    permissionKey: "applications",
-    //subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
+    icon: <BlogIcon />,
+    name: "Blog",
+    path: "/admin/blog",
+    permissionKey: "blog",
+    subItems: [
+      { name: "All Posts", path: "/admin/blog", requiredAction: "view" },
+      { name: "Add New", path: "/admin/blog/add-new", requiredAction: "add" },
+      { name: "Categories", path: "/admin/blog/categories", requiredAction: "view" },
+      { name: "Tags", path: "/admin/blog/tags", requiredAction: "view" },
+      { name: "Archives", path: "/admin/blog/archives", requiredAction: "view" },
+    ],
+  },
+  {
+    icon: <PieChartIcon />,
+    name: "Analytics",
+    subItems: [
+      { name: "Traffic Analytics", path: "/admin/analytics/page-visits", pro: false },
+    ],
   },
   {
     icon: <CareerLadderIcon />,
@@ -92,7 +123,6 @@ const navItems: NavItem[] = [
     permissionKey: "careers",
     //subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
   },
-
   {
     icon: <TicketIcon />,
     name: "Tickets",
@@ -107,32 +137,6 @@ const navItems: NavItem[] = [
     permissionKey: "coupons",
     //subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
   },
-
-  {
-    icon: <BlogIcon />,
-    name: "Blog",
-    path: "/admin/blog",
-    permissionKey: "blog",
-    subItems: [
-      { name: "All Posts", path: "/admin/blog", requiredAction: "view" },
-      { name: "Add New", path: "/admin/blog/add-new", requiredAction: "add" },
-      { name: "Categories", path: "/admin/blog/categories", requiredAction: "view" },
-      { name: "Tags", path: "/admin/blog/tags", requiredAction: "view" },
-      { name: "Archives", path: "/admin/blog/archives", requiredAction: "view" },
-    ],
-  },
-
-  {
-    icon: <PieChartIcon />,
-    name: "Forum Moderation",
-    path: "/admin/forum-moderation",
-    // permissionKey: "forum",
-  },
-  {
-    icon: <HandShake />,
-    name: "Affiliate Partners",
-    path: "/admin/affiliates"
-  },
   {
     icon: <IdCardIcon />,
     name: "Unlock Requests",
@@ -140,13 +144,7 @@ const navItems: NavItem[] = [
     permissionKey: "unlockRequest",
     //subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
   },
-  {
-    icon: <PieChartIcon />,
-    name: "Analytics",
-    subItems: [
-      { name: "Traffic Analytics", path: "/admin/analytics/page-visits", pro: false },
-    ],
-  },
+  
 ];
 
 const othersItems: NavItem[] = [
