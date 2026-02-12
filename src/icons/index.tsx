@@ -71,6 +71,7 @@ import AccountLocked from "./account-locked.svg";
 import AccountUnlocked from "./account-unlocked.svg";
 import IdCardIcon from "./id-card.svg";
 import AccountCheckCircleIcon from "./account-check-circle";
+import HandShake from "./hand-shake.svg";
 
 export {
   DownloadIcon,
@@ -146,4 +147,5 @@ export {
   AccountUnlocked,
   IdCardIcon,
   AccountCheckCircleIcon,
+  HandShake,
 };
