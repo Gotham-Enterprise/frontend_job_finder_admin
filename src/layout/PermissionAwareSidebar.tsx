@@ -130,7 +130,7 @@ const navItems: NavItem[] = [
   },
   {
     icon: <HandShake />,
-    name: "Affiliates",
+    name: "Affiliate Partners",
     path: "/admin/affiliates"
   },
   {
