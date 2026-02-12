@@ -13,7 +13,7 @@ export default function AffiliatePartners() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const tabFromUrl = searchParams.get('tab') as TabType | null
-  const [activeTab, setActiveTab] = useState<TabType>(tabFromUrl || 'partners')
+  const [activeTab, setActiveTab] = useState<TabType>(tabFromUrl || 'analytics')
 
   useEffect(() => {
     // Update state if URL changes
