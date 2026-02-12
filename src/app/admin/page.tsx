@@ -53,7 +53,7 @@ export default function Admin() {
       <div className="grid grid-cols-12 gap-4 md:gap-6">
         <div className="col-span-12 space-y-6 xl:col-span-7">
           <JobMetrics key={`metrics-${refreshKey}`} refreshKey={refreshKey} />
-<JobseekerTrends key={`jobseeker-trends-${refreshKey}`} refreshKey={refreshKey} />
+          <JobseekerTrends key={`jobseeker-trends-${refreshKey}`} refreshKey={refreshKey} />
           
         </div>
 
