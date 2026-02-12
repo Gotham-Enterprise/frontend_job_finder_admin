@@ -84,6 +84,7 @@ export interface AffiliateAnalytics {
     locationCity: string;
     locationState: string;
     clicks: number;
+    uniqueIpAddresses: number;
     affiliate: {
       id: string;
       name: string;
@@ -92,6 +93,7 @@ export interface AffiliateAnalytics {
   clicksOverTime: Array<{
     date: string;
     clicks: number;
+    uniqueIpAddresses: number;
   }>;
 }
 

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Building2, FolderOpen, BarChart3,Handshake } from 'lucide-react'
+import { FolderOpen, BarChart3,Handshake } from 'lucide-react'
 import PartnersTab from './components/PartnersTab'
 import BatchesTab from './components/BatchesTab'
 import AnalyticsTab from './components/AnalyticsTab'
