@@ -152,7 +152,7 @@ export default function FlaggedContentTab({ onStatsUpdate }: FlaggedContentTabPr
                     {item.title && <h3 className="font-semibold text-gray-900 dark:text-white mb-2 break-words overflow-hidden">{item.title}</h3>}
                     <div className="w-full max-w-full overflow-x-auto box-border">
                       <div 
-                        className="flagged-content-html text-sm text-gray-600 dark:text-gray-400 max-h-[4.5rem] overflow-hidden"
+                        className="flagged-content-html text-sm text-gray-600 dark:text-gray-400 max-h-[4.5rem] overflow-y-auto"
                         dangerouslySetInnerHTML={{ __html: item.content }}
                       />
                     </div>
