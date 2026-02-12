@@ -74,6 +74,8 @@ export interface BatchStatus {
 
 export interface AffiliateAnalytics {
   totalClicks: number;
+  authenticatedClicks: number;
+  guestClicks: number;
   uniqueCandidates: number;
   uniqueIpAddresses: number;
   topJobs: Array<{
@@ -94,6 +96,8 @@ export interface AffiliateAnalytics {
     date: string;
     clicks: number;
     uniqueIpAddresses: number;
+    authenticatedClicks: number;
+    guestClicks: number;
   }>;
 }
 
