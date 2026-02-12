@@ -241,7 +241,7 @@ export default function BatchesTab() {
                                     </div>
                                     <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">
                                       Posted: {new Date(job.datePosted).toLocaleDateString()}
-                                      {job.occupation && <> • {job.occupation.name}</>}
+                                      {/* {job.occupation && <> • {job.occupation.name}</>} */}
                                     </div>
                                   </div>
                                 </div>
