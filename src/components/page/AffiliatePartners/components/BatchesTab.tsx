@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   useAffiliateBatches,
   useAffiliateBatchJobs,
@@ -13,6 +13,8 @@ export default function BatchesTab() {
   const [page, setPage] = useState(1)
   const [expandedBatchId, setExpandedBatchId] = useState<string | null>(null)
   const [jobsPage, setJobsPage] = useState(1)
+  const [allLoadedJobs, setAllLoadedJobs] = useState<any[]>([])
+  const [isLoadingMore, setIsLoadingMore] = useState(false)
 
   const { data: batchesData, isLoading } = useAffiliateBatches({ page, limit: 10 })
   const { data: jobsData, isLoading: isLoadingJobs } = useAffiliateBatchJobs(
@@ -21,6 +23,26 @@ export default function BatchesTab() {
   )
   
   const reprocessMutation = useReprocessAffiliateBatch()
+
+  // Reset jobs when batch changes
+  useEffect(() => {
+    if (expandedBatchId) {
+      setAllLoadedJobs([])
+      setJobsPage(1)
+    }
+  }, [expandedBatchId])
+
+  // Append new jobs when data loads
+  useEffect(() => {
+    if (jobsData && jobsData.data.length > 0) {
+      setAllLoadedJobs(prev => {
+        const existingIds = new Set(prev.map(job => job.id))
+        const newJobs = jobsData.data.filter(job => !existingIds.has(job.id))
+        return [...prev, ...newJobs]
+      })
+      setIsLoadingMore(false)
+    }
+  }, [jobsData])
 
   const getStatusBadge = (status: string) => {
     const styles = {
@@ -46,13 +68,20 @@ export default function BatchesTab() {
     }
   }
 
+  const handleLoadMore = () => {
+    setIsLoadingMore(true)
+    setJobsPage(prev => prev + 1)
+  }
+
   const toggleExpand = (batchId: string) => {
     if (expandedBatchId === batchId) {
       setExpandedBatchId(null)
       setJobsPage(1)
+      setAllLoadedJobs([])
     } else {
       setExpandedBatchId(batchId)
       setJobsPage(1)
+      setAllLoadedJobs([])
     }
   }
 
@@ -134,7 +163,7 @@ export default function BatchesTab() {
                     </div>
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
-                    {new Date(batch.createdAt).toLocaleString()}
+                    {new Date(batch.uploadedAt).toLocaleString()}
                   </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end gap-2">
@@ -178,14 +207,14 @@ export default function BatchesTab() {
                           </div>
                         )}
 
-                        {isLoadingJobs ? (
+                        {isLoadingJobs && allLoadedJobs.length === 0 ? (
                           <div className="flex justify-center py-8">
                             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
                           </div>
-                        ) : jobsData && jobsData.data.length > 0 ? (
+                        ) : allLoadedJobs.length > 0 ? (
                           <>
-                            <div className="space-y-2">
-                              {jobsData.data.map((job) => (
+                            <div className="space-y-2 max-h-[500px] overflow-y-auto">
+                              {allLoadedJobs.map((job) => (
                                 <div
                                   key={job.id}
                                   className="flex items-center justify-between p-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg"
@@ -208,38 +237,40 @@ export default function BatchesTab() {
                                       )}
                                     </div>
                                     <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                      {job.companyName} • {job.location}
+                                      {job.externalJobPostCompanyName} • {job.locationCity}, {job.locationState}
                                     </div>
                                     <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                                      Posted: {new Date(job.datePosted).toLocaleDateString()} • 
-                                      Expires: {new Date(job.expiresAt).toLocaleDateString()} • 
-                                      Views: {job.views}
+                                      Posted: {new Date(job.datePosted).toLocaleDateString()}
+                                      {job.occupation && <> • {job.occupation.name}</>}
                                     </div>
                                   </div>
                                 </div>
                               ))}
                             </div>
 
-                            {/* Jobs Pagination */}
-                            {jobsData.totalPages > 1 && (
-                              <div className="flex justify-center gap-2 mt-4">
+                            {/* Load More Button */}
+                            {jobsData && jobsData.page < jobsData.totalPages && (
+                              <div className="flex flex-col items-center gap-2 mt-4">
                                 <button
-                                  onClick={() => setJobsPage((p) => p - 1)}
-                                  disabled={jobsPage === 1}
-                                  className="px-3 py-1 text-sm border border-gray-300 dark:border-gray-700 rounded hover:bg-gray-50 dark:hover:bg-gray-900 disabled:opacity-50"
+                                  onClick={handleLoadMore}
+                                  disabled={isLoadingMore}
+                                  className="px-4 py-2 text-sm bg-primary text-white rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                                 >
-                                  Previous
+                                  {isLoadingMore ? (
+                                    <span className="flex items-center gap-2">
+                                      <RefreshCw className="w-4 h-4 animate-spin" />
+                                      Loading...
+                                    </span>
+                                  ) : (
+                                    `Load More (${allLoadedJobs.length} of ${jobsData.total})`
+                                  )}
                                 </button>
-                                <span className="px-3 py-1 text-sm text-gray-600 dark:text-gray-400">
-                                  Page {jobsPage} of {jobsData.totalPages}
-                                </span>
-                                <button
-                                  onClick={() => setJobsPage((p) => p + 1)}
-                                  disabled={jobsPage === jobsData.totalPages}
-                                  className="px-3 py-1 text-sm border border-gray-300 dark:border-gray-700 rounded hover:bg-gray-50 dark:hover:bg-gray-900 disabled:opacity-50"
-                                >
-                                  Next
-                                </button>
+                              </div>
+                            )}
+                            
+                            {jobsData && jobsData.page >= jobsData.totalPages && (
+                              <div className="text-center mt-4 text-sm text-gray-500 dark:text-gray-400">
+                                Showing all {allLoadedJobs.length} jobs
                               </div>
                             )}
                           </>

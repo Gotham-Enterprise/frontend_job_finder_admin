@@ -40,7 +40,7 @@ export interface AffiliateBatch {
   errorLog?: string;
   retryCount: number;
   uploadedBy?: string; // Admin user ID - null for auto-synced batches
-  createdAt: string;
+  uploadedAt: string;
   updatedAt: string;
   affiliate: {
     id: string;
@@ -51,14 +51,15 @@ export interface AffiliateBatch {
 export interface AffiliateBatchJob {
   id: string;
   title: string;
-  location: string;
-  companyName: string;
+  externalJobPostCompanyName: string;
+  locationCity: string;
+  locationState: string;
   isPublished: boolean;
-  externalJobPostGuid: string;
   datePosted: string;
-  expiresAt: string;
-  views: number;
-  clickCount?: number;
+  occupation: {
+    id: string;
+    name: string;
+  };
 }
 
 export interface BatchStatus {
@@ -204,7 +205,18 @@ export const getAffiliateBatchJobs = async (
   if (params?.page) queryParams.append("page", params.page.toString());
   if (params?.limit) queryParams.append("limit", params.limit.toString());
   const queryString = queryParams.toString();
-  return apiGet(`/api/admin/affiliates/batches/${batchId}/jobs${queryString ? `?${queryString}` : ""}`);
+  const response = await apiGet<{
+    data: AffiliateBatchJob[];
+    pagination: { page: number; limit: number; total: number; totalPages: number };
+  }>(`/api/admin/affiliates/batches/${batchId}/jobs${queryString ? `?${queryString}` : ""}`);
+
+  // Transform response to match expected format
+  return {
+    data: response.data,
+    total: response.pagination.total,
+    page: response.pagination.page,
+    totalPages: response.pagination.totalPages,
+  };
 };
 
 export const reprocessAffiliateBatch = async (batchId: string): Promise<{ message: string; batchId: string }> => {

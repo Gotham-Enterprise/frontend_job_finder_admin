@@ -149,9 +149,6 @@ export default function PartnersTab() {
                 Status
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                Commission
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 Created
               </th>
               {/* <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
@@ -265,16 +262,6 @@ export default function PartnersTab() {
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">{getStatusBadge(partner.status)}</td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  {partner.commissionRate ? (
-                    <div className="flex items-center gap-1 text-sm text-gray-700 dark:text-gray-300">
-                      <DollarSign className="w-3 h-3" />
-                      <span>{partner.commissionRate}%</span>
-                    </div>
-                  ) : (
-                    <span className="text-sm text-gray-400">N/A</span>
-                  )}
-                </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                   {new Date(partner.createdAt).toLocaleDateString()}
                 </td>
