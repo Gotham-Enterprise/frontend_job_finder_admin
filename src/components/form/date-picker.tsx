@@ -27,36 +27,11 @@ export default function DatePicker({
     const flatPickr = flatpickr(`#${id}`, {
       mode: mode || "single",
       static: false,
-      position: "auto right",
-      monthSelectorType: "static",
+      position: "auto",
+      monthSelectorType: "dropdown",
       dateFormat: "Y-m-d",
       defaultDate,
       onChange,
-      onOpen: function() {
-      
-        const calendar = document.querySelector('.flatpickr-calendar') as HTMLElement;
-        if (calendar) {
-          calendar.style.zIndex = '999999';
-          calendar.style.position = 'fixed';
-          
-         
-          const input = document.getElementById(id);
-          if (input) {
-            const rect = input.getBoundingClientRect();
-            const calendarWidth = 280;
-            const viewportWidth = window.innerWidth;
-            
-         
-            if (rect.right + calendarWidth > viewportWidth) {
-              calendar.style.left = `${Math.max(10, rect.left - calendarWidth + rect.width)}px`;
-            } else {
-              calendar.style.left = `${rect.left + 124}px`; 
-            }
-            
-            calendar.style.top = `${rect.bottom + 5}px`;
-          }
-        }
-      }
     });
 
     if (defaultDate && flatPickr && !Array.isArray(flatPickr)) {
@@ -78,7 +53,8 @@ export default function DatePicker({
         <input
           id={id}
           placeholder={placeholder}
-          className="h-11 w-full rounded-lg border appearance-none px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:outline-hidden focus:ring-3  dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30  bg-transparent text-gray-800 border-gray-300 focus:border-brand-300 focus:ring-brand-500/20 dark:border-gray-700  dark:focus:border-brand-800"
+          readOnly
+          className="h-11 w-full rounded-lg border appearance-none px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:outline-hidden focus:ring-3 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-500 bg-white text-gray-900 border-gray-300 focus:border-brand-300 focus:ring-brand-500/20 dark:border-gray-700 dark:focus:border-brand-800 cursor-pointer"
         />
 
         <span className="absolute text-gray-500 -translate-y-1/2 pointer-events-none right-3 top-1/2 dark:text-gray-400">
@@ -99,6 +75,13 @@ export default function DatePicker({
         .flatpickr-calendar .flatpickr-month {
           background-color: #1f2937 !important;
           color: #f3f4f6 !important;
+        }
+        .flatpickr-calendar .flatpickr-current-month {
+          color: #f3f4f6 !important;
+        }
+        .flatpickr-calendar .flatpickr-current-month .flatpickr-monthDropdown-months,
+        .flatpickr-calendar .flatpickr-current-month .cur-year {
+          font-weight: 600 !important;
         }
         .flatpickr-calendar .flatpickr-weekdays {
           background-color: #374151 !important;

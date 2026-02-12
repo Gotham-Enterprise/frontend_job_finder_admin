@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Building2, FolderOpen, BarChart3 } from 'lucide-react'
+import { FolderOpen, BarChart3,Handshake } from 'lucide-react'
 import PartnersTab from './components/PartnersTab'
 import BatchesTab from './components/BatchesTab'
 import AnalyticsTab from './components/AnalyticsTab'
@@ -13,7 +13,7 @@ export default function AffiliatePartners() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const tabFromUrl = searchParams.get('tab') as TabType | null
-  const [activeTab, setActiveTab] = useState<TabType>(tabFromUrl || 'partners')
+  const [activeTab, setActiveTab] = useState<TabType>(tabFromUrl || 'analytics')
 
   useEffect(() => {
     // Update state if URL changes
@@ -30,20 +30,20 @@ export default function AffiliatePartners() {
 
   const tabs = [
     {
+      id: 'analytics' as TabType,
+      label: 'Analytics',
+      icon: BarChart3,
+    },
+    {
       id: 'partners' as TabType,
       label: 'Partners',
-      icon: Building2,
+      icon: Handshake,
     },
     {
       id: 'batches' as TabType,
       label: 'Batches',
       icon: FolderOpen,
-    },
-    {
-      id: 'analytics' as TabType,
-      label: 'Analytics',
-      icon: BarChart3,
-    },
+    }
   ]
 
   const renderTabContent = () => {
@@ -64,7 +64,7 @@ export default function AffiliatePartners() {
       {/* Header */}
       <div className="border-b border-gray-200 dark:border-gray-800 p-6">
         <div className="flex items-center gap-3 mb-4">
-          <Building2 className="w-6 h-6 text-primary" />
+          <Handshake className="w-6 h-6 text-primary" />
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Affiliate Partners</h1>
         </div>
 
