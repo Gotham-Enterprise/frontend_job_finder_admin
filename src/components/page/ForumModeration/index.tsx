@@ -159,7 +159,7 @@ export default function ForumModeration() {
       </div>
 
       {/* Tab Content */}
-      <div className="p-6 w-full max-w-full overflow-hidden">
+      <div className="p-6 w-full max-w-full overflow-y-auto max-h-[calc(100vh-400px)]">
         {activeTab === 'reports' && <ReportsTab onStatsUpdate={loadStats} />}
         {activeTab === 'flagged' && <FlaggedContentTab onStatsUpdate={loadStats} />}
         {activeTab === 'users' && <AllUsersTab onStatsUpdate={loadStats} />}
