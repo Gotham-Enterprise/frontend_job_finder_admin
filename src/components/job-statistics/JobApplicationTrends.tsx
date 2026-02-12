@@ -14,7 +14,7 @@ interface JobApplicationTrendsProps {
 }
 
 export default function JobApplicationTrends({ refreshKey }: JobApplicationTrendsProps) {
-  const [period, setPeriod] = useState<Period>("7d");
+  const [period, setPeriod] = useState<Period>("28d");
   const [categories, setCategories] = useState<string[]>([]);
   const [data, setData] = useState<number[]>([]);
   const [total, setTotal] = useState<number>(0);

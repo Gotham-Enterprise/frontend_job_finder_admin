@@ -14,7 +14,7 @@ interface JobseekerTrendsProps {
 }
 
 export default function JobseekerTrends({ refreshKey }: JobseekerTrendsProps) {
-  const [period, setPeriod] = useState<Period>("7d");
+  const [period, setPeriod] = useState<Period>("3m");
   const [categories, setCategories] = useState<string[]>([]);
   const [data, setData] = useState<number[]>([]);
   const [total, setTotal] = useState<number>(0);

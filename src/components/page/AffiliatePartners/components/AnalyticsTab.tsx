@@ -4,6 +4,7 @@ import React, { useState } from 'react'
 import { useAffiliateAnalytics, useAffiliatePartners } from '@/services/hooks/useAffiliates'
 import dynamic from 'next/dynamic'
 import { TrendingUp, Users, MousePointerClick, Trophy } from 'lucide-react'
+import DatePicker from '@/components/form/date-picker'
 
 // Dynamically import ApexCharts to avoid SSR issues
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false })
@@ -81,14 +82,78 @@ export default function AnalyticsTab() {
       x: {
         format: 'dd MMM yyyy',
       },
+      y: {
+        formatter: function(value) {
+          return value !== undefined && value !== null ? value.toString() : '0';
+        }
+      },
+      style: {
+        fontSize: '13px',
+        fontFamily: 'inherit',
+      },
+      marker: {
+        show: true,
+      },
+      custom: function({ series, seriesIndex, dataPointIndex, w }) {
+        const date = w.globals.categoryLabels[dataPointIndex];
+        const seriesNames = ['Total Clicks', 'Unique IP Addresses', 'Logged In Users', 'Guest Users'];
+        const colors = ['#3b82f6', '#8b5cf6', '#10b981', '#f97316'];
+        
+        let tooltipHtml = `
+          <div style="background: #1f2937; border: 1px solid #374151; border-radius: 8px; padding: 12px; min-width: 200px;">
+            <div style="color: #f3f4f6; font-weight: 600; margin-bottom: 8px; font-size: 13px;">
+              ${date}
+            </div>
+        `;
+        
+        series.forEach((s: number[], idx: number) => {
+          const value = s[dataPointIndex];
+          tooltipHtml += `
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <span style="width: 10px; height: 10px; background: ${colors[idx]}; border-radius: 2px; display: inline-block;"></span>
+                <span style="color: #e5e7eb; font-size: 13px;">${seriesNames[idx]}:</span>
+              </div>
+              <span style="color: #ffffff; font-weight: 600; font-size: 13px; margin-left: 12px;">${value !== undefined && value !== null ? value : 0}</span>
+            </div>
+          `;
+        });
+        
+        tooltipHtml += `</div>`;
+        return tooltipHtml;
+      }
     },
-    colors: ['#3b82f6'],
+    colors: ['#3b82f6', '#8b5cf6', '#10b981', '#f97316'],
+    legend: {
+      show: true,
+      position: 'top',
+      horizontalAlign: 'left',
+      labels: {
+        colors: '#9ca3af',
+      },
+      markers: {
+        size: 6,
+        offsetX: -2,
+      },
+    },
   }
 
   const chartSeries = [
     {
-      name: 'Clicks',
+      name: 'Total Clicks',
       data: analytics?.clicksOverTime?.map((d) => d.clicks) || [],
+    },
+    {
+      name: 'Unique IP Addresses',
+      data: analytics?.clicksOverTime?.map((d) => d.uniqueIpAddresses) || [],
+    },
+    {
+      name: 'Logged In Users',
+      data: analytics?.clicksOverTime?.map((d) => d.authenticatedClicks) || [],
+    },
+    {
+      name: 'Guest Users',
+      data: analytics?.clicksOverTime?.map((d) => d.guestClicks) || [],
     },
   ]
 
@@ -121,33 +186,61 @@ export default function AnalyticsTab() {
 
         {/* Start Date */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Start Date
-          </label>
-          <input
-            type="date"
-            value={dateRange.startDate}
-            onChange={(e) => setDateRange({ ...dateRange, startDate: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-800 dark:text-white"
+          <DatePicker
+            key={`start-${dateRange.startDate}`}
+            id="analytics-start-date"
+            label="Start Date"
+            placeholder="Select start date"
+            mode="single"
+            defaultDate={dateRange.startDate}
+            onChange={(selectedDates) => {
+              if (selectedDates && selectedDates.length > 0) {
+                // Use the dateString directly from flatpickr to avoid timezone issues
+                const dateStr = selectedDates[0] as any
+                if (typeof dateStr === 'string') {
+                  setDateRange({ ...dateRange, startDate: dateStr })
+                } else {
+                  // If it's a Date object, format it in local time
+                  const year = dateStr.getFullYear()
+                  const month = String(dateStr.getMonth() + 1).padStart(2, '0')
+                  const day = String(dateStr.getDate()).padStart(2, '0')
+                  setDateRange({ ...dateRange, startDate: `${year}-${month}-${day}` })
+                }
+              }
+            }}
           />
         </div>
 
         {/* End Date */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            End Date
-          </label>
-          <input
-            type="date"
-            value={dateRange.endDate}
-            onChange={(e) => setDateRange({ ...dateRange, endDate: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-800 dark:text-white"
+          <DatePicker
+            key={`end-${dateRange.endDate}`}
+            id="analytics-end-date"
+            label="End Date"
+            placeholder="Select end date"
+            mode="single"
+            defaultDate={dateRange.endDate}
+            onChange={(selectedDates) => {
+              if (selectedDates && selectedDates.length > 0) {
+                // Use the dateString directly from flatpickr to avoid timezone issues
+                const dateStr = selectedDates[0] as any
+                if (typeof dateStr === 'string') {
+                  setDateRange({ ...dateRange, endDate: dateStr })
+                } else {
+                  // If it's a Date object, format it in local time
+                  const year = dateStr.getFullYear()
+                  const month = String(dateStr.getMonth() + 1).padStart(2, '0')
+                  const day = String(dateStr.getDate()).padStart(2, '0')
+                  setDateRange({ ...dateRange, endDate: `${year}-${month}-${day}` })
+                }
+              }
+            }}
           />
         </div>
       </div>
 
       {/* Metrics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
           <div className="flex items-center justify-between">
             <div>
@@ -164,13 +257,27 @@ export default function AnalyticsTab() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-green-700 dark:text-green-400 font-medium">
-                Unique Candidates
+                Logged In User Clicks
               </p>
               <p className="text-3xl font-bold text-green-900 dark:text-green-300 mt-2">
-                {analytics?.uniqueCandidates?.toLocaleString() || 0}
+                {analytics?.authenticatedClicks?.toLocaleString() || 0}
               </p>
             </div>
-            <Users className="w-12 h-12 text-green-600 dark:text-green-500" />
+            <MousePointerClick className="w-12 h-12 text-green-600 dark:text-green-500" />
+          </div>
+        </div>
+
+        <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-orange-700 dark:text-orange-400 font-medium">
+                Guest User Clicks
+              </p>
+              <p className="text-3xl font-bold text-orange-900 dark:text-orange-300 mt-2">
+                {analytics?.guestClicks?.toLocaleString() || 0}
+              </p>
+            </div>
+            <MousePointerClick className="w-12 h-12 text-orange-600 dark:text-orange-500" />
           </div>
         </div>
 
@@ -178,7 +285,7 @@ export default function AnalyticsTab() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-purple-700 dark:text-purple-400 font-medium">
-                Unique IP Addresses
+                Unique IP Address Clicks
               </p>
               <p className="text-3xl font-bold text-purple-900 dark:text-purple-300 mt-2">
                 {analytics?.uniqueIpAddresses?.toLocaleString() || 0}
@@ -233,7 +340,10 @@ export default function AnalyticsTab() {
                   Partner
                 </th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  Clicks
+                  Total Clicks
+                </th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Unique IPs
                 </th>
               </tr>
             </thead>
@@ -278,11 +388,17 @@ export default function AnalyticsTab() {
                         {job.clicks}
                       </span>
                     </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right">
+                      <span className="inline-flex items-center gap-1 px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 rounded-full text-sm font-medium">
+                        <MousePointerClick className="w-3 h-3" />
+                        {job.uniqueIpAddresses || 0}
+                      </span>
+                    </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan={4} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                  <td colSpan={5} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
                     No data available
                   </td>
                 </tr>

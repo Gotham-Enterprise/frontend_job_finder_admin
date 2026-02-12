@@ -15,7 +15,7 @@ interface CategoryDistributionProps {
 }
 
 export default function CategoryDistribution({ refreshKey }: CategoryDistributionProps) {
-  const [period, setPeriod] = useState<Period>("7d");
+  const [period, setPeriod] = useState<Period>("3m");
   const [categories, setCategories] = useState<string[]>([]);
   const [series, setSeries] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);

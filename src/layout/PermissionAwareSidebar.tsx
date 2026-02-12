@@ -18,8 +18,10 @@ import {
   UserCircleIcon,
   TaskIcon,
   IdCardIcon,
+  HandShake
 } from "../icons/index";
 import { BriefcaseIcon, CareerLadderIcon, TicketIcon, BlogIcon, CouponIcon } from "../components/ui/icons/index";
+
 
 type NavItem = {
   name: string;
@@ -67,6 +69,24 @@ const navItems: NavItem[] = [
     permissionKey: "employers",
   },
   {
+    icon: <TaskIcon />,
+    name: "Applications",
+    path: "/admin/applications",
+    permissionKey: "applications",
+    //subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
+  },
+  {
+    icon: <HandShake />,
+    name: "Affiliate Partners",
+    path: "/admin/affiliates"
+  },
+   {
+    icon: <PieChartIcon />,
+    name: "Forum Moderation",
+    path: "/admin/forum-moderation",
+    // permissionKey: "forum",
+  },
+  {
     icon: <BriefcaseIcon />,
     name: "Jobs",
     path: "/admin/jobs",
@@ -77,11 +97,24 @@ const navItems: NavItem[] = [
     ],
   },
   {
-    icon: <TaskIcon />,
-    name: "Applications",
-    path: "/admin/applications",
-    permissionKey: "applications",
-    //subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
+    icon: <BlogIcon />,
+    name: "Blog",
+    path: "/admin/blog",
+    permissionKey: "blog",
+    subItems: [
+      { name: "All Posts", path: "/admin/blog", requiredAction: "view" },
+      { name: "Add New", path: "/admin/blog/add-new", requiredAction: "add" },
+      { name: "Categories", path: "/admin/blog/categories", requiredAction: "view" },
+      { name: "Tags", path: "/admin/blog/tags", requiredAction: "view" },
+      { name: "Archives", path: "/admin/blog/archives", requiredAction: "view" },
+    ],
+  },
+  {
+    icon: <PieChartIcon />,
+    name: "Analytics",
+    subItems: [
+      { name: "Traffic Analytics", path: "/admin/analytics/page-visits", pro: false },
+    ],
   },
   {
     icon: <CareerLadderIcon />,
@@ -90,7 +123,6 @@ const navItems: NavItem[] = [
     permissionKey: "careers",
     //subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
   },
-
   {
     icon: <TicketIcon />,
     name: "Tickets",
@@ -105,32 +137,6 @@ const navItems: NavItem[] = [
     permissionKey: "coupons",
     //subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
   },
-
-  {
-    icon: <BlogIcon />,
-    name: "Blog",
-    path: "/admin/blog",
-    permissionKey: "blog",
-    subItems: [
-      { name: "All Posts", path: "/admin/blog", requiredAction: "view" },
-      { name: "Add New", path: "/admin/blog/add-new", requiredAction: "add" },
-      { name: "Categories", path: "/admin/blog/categories", requiredAction: "view" },
-      { name: "Tags", path: "/admin/blog/tags", requiredAction: "view" },
-      { name: "Archives", path: "/admin/blog/archives", requiredAction: "view" },
-    ],
-  },
-
-  {
-    icon: <PieChartIcon />,
-    name: "Forum Moderation",
-    path: "/admin/forum-moderation",
-    // permissionKey: "forum",
-  },
-  {
-    icon: <HorizontaLDots />,
-    name: "Affiliates",
-    path: "/admin/affiliates"
-  },
   {
     icon: <IdCardIcon />,
     name: "Unlock Requests",
@@ -138,13 +144,7 @@ const navItems: NavItem[] = [
     permissionKey: "unlockRequest",
     //subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
   },
-  {
-    icon: <PieChartIcon />,
-    name: "Analytics",
-    subItems: [
-      { name: "Traffic Analytics", path: "/admin/analytics/page-visits", pro: false },
-    ],
-  },
+  
 ];
 
 const othersItems: NavItem[] = [
@@ -495,14 +495,14 @@ const AppSidebar: React.FC = () => {
   if (loading && !permissions && isAuthenticated && hasUserData) {
     return (
       <aside
-        className={`fixed lex flex-col lg:mt-0 top-0 px-5 left-0 bg-white dark:bg-gray-900 dark:border-gray-800 text-gray-900 h-screen transition-all duration-300 ease-in-out z-50 border-r border-gray-200 
+        className={`fixed flex flex-col lg:mt-0 top-0 px-5 left-0 bg-white dark:bg-gray-900 dark:border-gray-800 text-gray-900 h-screen transition-all duration-300 ease-in-out z-50 border-r border-gray-200 
           ${isExpanded || isMobileOpen ? "w-[290px]" : isHovered ? "w-[290px]" : "w-[90px]"}
           ${isMobileOpen ? "translate-x-0" : "-translate-x-full"}
           lg:translate-x-0`}
         onMouseEnter={() => !isExpanded && setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        <div className={`py-8 flex  ${!isExpanded && !isHovered ? "lg:justify-center" : "justify-start"}`}>
+        <div className={`py-8 flex flex-shrink-0 ${!isExpanded && !isHovered ? "lg:justify-center" : "justify-start"}`}>
           <Link href="/">
             {isExpanded || isHovered || isMobileOpen ? (
               <>
@@ -520,7 +520,7 @@ const AppSidebar: React.FC = () => {
             )}
           </Link>
         </div>
-        <div className="flex flex-col overflow-y-auto duration-300 ease-linear no-scrollbar">
+        <div className="flex flex-col flex-1 overflow-y-auto duration-300 ease-linear min-h-0">
           <SidebarSkeleton isExpanded={isExpanded || isMobileOpen} isMobileOpen={isMobileOpen} isHovered={isHovered} />
         </div>
       </aside>
@@ -529,14 +529,14 @@ const AppSidebar: React.FC = () => {
 
   return (
     <aside
-      className={`fixed lex flex-col lg:mt-0 top-0 px-5 left-0 bg-white dark:bg-gray-900 dark:border-gray-800 text-gray-900 h-screen transition-all duration-300 ease-in-out z-50 border-r border-gray-200 
+      className={`fixed flex flex-col lg:mt-0 top-0 px-5 left-0 bg-white dark:bg-gray-900 dark:border-gray-800 text-gray-900 h-screen transition-all duration-300 ease-in-out z-50 border-r border-gray-200 
         ${isExpanded || isMobileOpen ? "w-[290px]" : isHovered ? "w-[290px]" : "w-[90px]"}
         ${isMobileOpen ? "translate-x-0" : "-translate-x-full"}
         lg:translate-x-0`}
       onMouseEnter={() => !isExpanded && setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div className={`py-8 flex  ${!isExpanded && !isHovered ? "lg:justify-center" : "justify-start"}`}>
+      <div className={`py-8 flex flex-shrink-0 ${!isExpanded && !isHovered ? "lg:justify-center" : "justify-start"}`}>
         <Link href="/">
           {isExpanded || isHovered || isMobileOpen ? (
             <>
@@ -554,7 +554,7 @@ const AppSidebar: React.FC = () => {
           )}
         </Link>
       </div>
-      <div className="flex flex-col overflow-y-auto duration-300 ease-linear no-scrollbar">
+      <div className="flex flex-col flex-1 overflow-y-auto duration-300 ease-linear min-h-0">
         <nav className="mb-6">
           <div className="flex flex-col gap-4">
             <div>
