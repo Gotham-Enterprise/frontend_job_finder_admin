@@ -296,6 +296,39 @@ export default function AnalyticsTab() {
         </div>
       </div>
 
+      {/* Redirect Metrics Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-indigo-700 dark:text-indigo-400 font-medium">Auto-Redirects</p>
+              <p className="text-3xl font-bold text-indigo-900 dark:text-indigo-300 mt-2">
+                {analytics?.autoRedirectClicks?.toLocaleString() || 0}
+              </p>
+              <p className="text-xs text-indigo-600 dark:text-indigo-500 mt-1">
+                Automated job redirects
+              </p>
+            </div>
+            <TrendingUp className="w-12 h-12 text-indigo-600 dark:text-indigo-500" />
+          </div>
+        </div>
+
+        <div className="bg-cyan-50 dark:bg-cyan-900/20 border border-cyan-200 dark:border-cyan-800 rounded-lg p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-cyan-700 dark:text-cyan-400 font-medium">Manual Clicks</p>
+              <p className="text-3xl font-bold text-cyan-900 dark:text-cyan-300 mt-2">
+                {analytics?.manualClicks?.toLocaleString() || 0}
+              </p>
+              <p className="text-xs text-cyan-600 dark:text-cyan-500 mt-1">
+                User-initiated clicks
+              </p>
+            </div>
+            <MousePointerClick className="w-12 h-12 text-cyan-600 dark:text-cyan-500" />
+          </div>
+        </div>
+      </div>
+
       {/* Clicks Over Time Chart */}
       <div className="border border-gray-200 dark:border-gray-800 rounded-lg p-6">
         <div className="flex items-center gap-2 mb-4">
@@ -407,6 +440,72 @@ export default function AnalyticsTab() {
           </table>
         </div>
       </div>
+
+      {/* Redirects by Job Title */}
+      {analytics?.redirectsByJobTitle && analytics.redirectsByJobTitle.length > 0 && (
+        <div className="border border-gray-200 dark:border-gray-800 rounded-lg">
+          <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-800">
+            <div className="flex items-center gap-2">
+              <Users className="w-5 h-5 text-indigo-500" />
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                Auto-Redirects by Job Title
+              </h3>
+            </div>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50 dark:bg-gray-900/50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    Rank
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    Job Title
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    Auto-Redirects
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    % of Total Auto-Redirects
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white dark:bg-transparent divide-y divide-gray-200 dark:divide-gray-800">
+                {analytics.redirectsByJobTitle.map((item, index) => (
+                  <tr
+                    key={item.jobTitle}
+                    className="hover:bg-gray-50 dark:hover:bg-gray-900/30 transition-colors"
+                  >
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="text-gray-700 dark:text-gray-300 font-medium">
+                        {index + 1}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-sm font-medium text-gray-900 dark:text-white">
+                        {item.jobTitle}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right">
+                      <span className="inline-flex items-center gap-1 px-2 py-1 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 rounded-full text-sm font-medium">
+                        <TrendingUp className="w-3 h-3" />
+                        {item.count}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right">
+                      <span className="text-sm text-gray-700 dark:text-gray-300 font-medium">
+                        {analytics.autoRedirectClicks
+                          ? ((item.count / analytics.autoRedirectClicks) * 100).toFixed(1)
+                          : 0}%
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
