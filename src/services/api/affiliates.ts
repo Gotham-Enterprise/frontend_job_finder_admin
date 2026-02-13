@@ -77,6 +77,8 @@ export interface AffiliateAnalytics {
   totalClicks: number;
   authenticatedClicks: number;
   guestClicks: number;
+  autoRedirectClicks: number;
+  manualClicks: number;
   uniqueCandidates: number;
   uniqueIpAddresses: number;
   topJobs: Array<{
@@ -99,6 +101,10 @@ export interface AffiliateAnalytics {
     uniqueIpAddresses: number;
     authenticatedClicks: number;
     guestClicks: number;
+  }>;
+  redirectsByJobTitle: Array<{
+    jobTitle: string;
+    count: number;
   }>;
 }
 
