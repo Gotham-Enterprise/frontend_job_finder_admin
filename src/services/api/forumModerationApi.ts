@@ -3,7 +3,7 @@ import { apiGet, apiPost, apiPut, apiDelete, apiRequest } from "./apiUtils";
 // Type definitions for forum moderation
 export interface ReportItem {
   id: string;
-  reporterId: string;
+  reporterId: string | null;
   targetType: "question" | "answer";
   targetId: string;
   reason: string;
@@ -11,13 +11,15 @@ export interface ReportItem {
   status: "pending" | "resolved" | "dismissed";
   createdAt: string;
   updatedAt: string;
+  isAiGenerated?: boolean;
+  aiConfidenceScore?: number;
   reporter: {
     id: string;
     displayName: string;
     user: {
       username: string;
     };
-  };
+  } | null;
   question?: {
     id: string;
     title: string;
