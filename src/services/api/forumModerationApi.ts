@@ -99,6 +99,38 @@ export interface ModerationLog {
   };
 }
 
+export interface ForumContentItem {
+  id: string;
+  type: "question" | "answer";
+  title?: string; // Only for questions
+  slug?: string; // Only for questions
+  content: string;
+  viewCount: number | null; // null for answers
+  upvotes: number;
+  downvotes: number;
+  moderationStatus: "pending" | "approved" | "rejected";
+  status?: "open" | "closed" | "deleted"; // Only for questions
+  isAccepted?: boolean; // Only for answers
+  createdAt: string;
+  user: {
+    id: string;
+    displayName: string;
+    reputation: number;
+    user: {
+      username: string;
+    };
+  };
+  topic?: {
+    name: string;
+    slug: string;
+  }; // Only for questions
+  question?: {
+    id: string;
+    title: string;
+    slug: string;
+  }; // Only for answers
+}
+
 export interface ModerationStats {
   pendingReports: number;
   resolvedReports: number;
@@ -358,3 +390,31 @@ export async function bulkModerate(
   );
   return { processed: response.processed, failed: response.failed, results: response.results };
 }
+
+/**
+ * Get forum content (questions or answers) with pagination and filters
+ */
+export async function getForumContent(
+  token: string,
+  params?: {
+    type?: "question" | "answer";
+    search?: string;
+    sortBy?: "recent" | "upvotes" | "views";
+    page?: number;
+    limit?: number;
+  }
+): Promise<{ content: ForumContentItem[]; pagination: PaginationMeta }> {
+  const cleanParams: any = {};
+  if (params?.type) cleanParams.type = params.type;
+  if (params?.search && params.search.trim()) cleanParams.search = params.search.trim();
+  if (params?.sortBy) cleanParams.sortBy = params.sortBy;
+  if (params?.page) cleanParams.page = params.page;
+  if (params?.limit) cleanParams.limit = params.limit;
+
+  const queryString = Object.keys(cleanParams).length > 0 ? "?" + new URLSearchParams(cleanParams).toString() : "";
+  const response = await apiGet<{ success: boolean; content: ForumContentItem[]; pagination: PaginationMeta }>(
+    `/api/admin/forum/content${queryString}`
+  );
+  return { content: response.content, pagination: response.pagination };
+}
+
