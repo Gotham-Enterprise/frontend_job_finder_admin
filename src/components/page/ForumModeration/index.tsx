@@ -4,17 +4,18 @@ import React, { useState, useEffect } from 'react'
 import { authUtils } from '@/services/utils/authUtils'
 import { getModerationStats } from '@/services/api/forumModerationApi'
 import type { ModerationStats } from '@/services/api/forumModerationApi'
-import { Shield, AlertTriangle, Flag, FileText, Users, Trash2 } from 'lucide-react'
+import { Shield, AlertTriangle, Flag, FileText, Users, Trash2, List } from 'lucide-react'
 import ReportsTab from './components/ReportsTab'
+import ContentsTab from './components/ContentsTab'
 import FlaggedContentTab from './components/FlaggedContentTab'
 import ModerationLogsTab from './components/ModerationLogsTab'
 import AllUsersTab from './components/AllUsersTab'
 import DeletedContentTab from './components/DeletedContentTab'
 
-type TabType = 'reports' | 'flagged' | 'users' | 'deleted' | 'logs'
+type TabType = 'reports' | 'contents' | 'flagged' | 'users' | 'deleted' | 'logs'
 
 export default function ForumModeration() {
-  const [activeTab, setActiveTab] = useState<TabType>('reports')
+  const [activeTab, setActiveTab] = useState<TabType>('contents')
   const [stats, setStats] = useState<ModerationStats | null>(null)
   const [isLoadingStats, setIsLoadingStats] = useState(true)
 
@@ -38,6 +39,18 @@ export default function ForumModeration() {
 
   const tabs = [
     {
+      id: 'contents' as TabType,
+      label: 'Contents',
+      icon: List,
+      count: undefined,
+    },
+    {
+      id: 'users' as TabType,
+      label: 'All Users',
+      icon: Users,
+      count: undefined,
+    },
+    {
       id: 'reports' as TabType,
       label: 'Reports',
       icon: Flag,
@@ -48,12 +61,6 @@ export default function ForumModeration() {
       label: 'Flagged Content',
       icon: AlertTriangle,
       count: stats?.flaggedContent || 0,
-    },
-    {
-      id: 'users' as TabType,
-      label: 'All Users',
-      icon: Users,
-      count: undefined,
     },
     {
       id: 'deleted' as TabType,
@@ -161,6 +168,7 @@ export default function ForumModeration() {
       {/* Tab Content */}
       <div className="p-6 w-full max-w-full overflow-y-auto max-h-[calc(100vh-400px)]">
         {activeTab === 'reports' && <ReportsTab onStatsUpdate={loadStats} />}
+        {activeTab === 'contents' && <ContentsTab onStatsUpdate={loadStats} />}
         {activeTab === 'flagged' && <FlaggedContentTab onStatsUpdate={loadStats} />}
         {activeTab === 'users' && <AllUsersTab onStatsUpdate={loadStats} />}
         {activeTab === 'deleted' && <DeletedContentTab onStatsUpdate={loadStats} />}
