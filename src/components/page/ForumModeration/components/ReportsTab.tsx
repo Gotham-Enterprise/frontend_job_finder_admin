@@ -20,6 +20,7 @@ export default function ReportsTab({ onStatsUpdate }: ReportsTabProps) {
     'pending',
   )
   const [typeFilter, setTypeFilter] = useState<'question' | 'answer' | 'all'>('all')
+  const [sourceFilter, setSourceFilter] = useState<'user' | 'ai' | 'all'>('all')
   const [currentPage, setCurrentPage] = useState(1)
   const [selectedReport, setSelectedReport] = useState<ReportItem | null>(null)
   const [showResolveModal, setShowResolveModal] = useState(false)
@@ -28,7 +29,7 @@ export default function ReportsTab({ onStatsUpdate }: ReportsTabProps) {
 
   useEffect(() => {
     loadReports()
-  }, [statusFilter, typeFilter, currentPage])
+  }, [statusFilter, typeFilter, sourceFilter, currentPage])
 
   const loadReports = async () => {
     const token = authUtils.getToken()
@@ -41,9 +42,19 @@ export default function ReportsTab({ onStatsUpdate }: ReportsTabProps) {
       }
       if (statusFilter !== 'all') params.status = statusFilter
       if (typeFilter !== 'all') params.targetType = typeFilter
-
+      
+      // Apply AI source filter locally after fetching
       const data = await getReports(token, params)
-      setReports(data.reports)
+      
+      // Filter by source (user vs AI)
+      let filteredReports = data.reports
+      if (sourceFilter === 'ai') {
+        filteredReports = data.reports.filter(report => report.isAiGenerated)
+      } else if (sourceFilter === 'user') {
+        filteredReports = data.reports.filter(report => !report.isAiGenerated)
+      }
+      
+      setReports(filteredReports)
       setPagination(data.pagination)
     } catch (error) {
       console.error('Failed to load reports:', error)
@@ -142,6 +153,24 @@ export default function ReportsTab({ onStatsUpdate }: ReportsTabProps) {
             <option value="answer">Answers</option>
           </select>
         </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Source
+          </label>
+          <select
+            value={sourceFilter}
+            onChange={(e) => {
+              setSourceFilter(e.target.value as any)
+              setCurrentPage(1)
+            }}
+            className="border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+          >
+            <option value="all">All Sources</option>
+            <option value="user">👤 User Reports</option>
+            <option value="ai">🤖 AI Detected</option>
+          </select>
+        </div>
       </div>
 
       {/* Reports Table */}
@@ -220,12 +249,29 @@ export default function ReportsTab({ onStatsUpdate }: ReportsTabProps) {
                     </td>
                     <td className="px-4 py-4">
                       <div className="text-sm">
-                        <div className="font-medium text-gray-900 dark:text-white">
-                          {report.reporter.displayName}
-                        </div>
-                        <div className="text-gray-500 dark:text-gray-400">
-                          @{report.reporter.user.username}
-                        </div>
+                        {report.reporter ? (
+                          <>
+                            <div className="font-medium text-gray-900 dark:text-white">
+                              {report.reporter.displayName}
+                            </div>
+                            <div className="text-gray-500 dark:text-gray-400">
+                              @{report.reporter.user.username}
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <div className="font-medium text-gray-900 dark:text-white flex items-center gap-2">
+                              <span className="px-2 py-1 text-xs font-medium rounded bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300">
+                                🤖 AI System
+                              </span>
+                            </div>
+                            {report.aiConfidenceScore && (
+                              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                Confidence: {(report.aiConfidenceScore * 100).toFixed(1)}%
+                              </div>
+                            )}
+                          </>
+                        )}
                       </div>
                     </td>
                     <td className="px-4 py-4">
