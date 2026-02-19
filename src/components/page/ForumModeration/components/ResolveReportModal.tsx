@@ -65,7 +65,20 @@ export default function ResolveReportModal({ report, onClose, onResolve }: Resol
               <div className="flex gap-2">
                 <span className="font-medium text-gray-700 dark:text-gray-300 w-24">Reporter:</span>
                 <span className="text-gray-900 dark:text-white">
-                  {report.reporter.displayName} (@{report.reporter.user.username})
+                  {report.reporter ? (
+                    `${report.reporter.displayName} (@${report.reporter.user.username})`
+                  ) : (
+                    <span className="inline-flex items-center gap-2">
+                      <span className="px-2 py-1 text-xs font-medium rounded bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300">
+                        🤖 AI System
+                      </span>
+                      {report.aiConfidenceScore && (
+                        <span className="text-xs text-gray-500">
+                          ({(report.aiConfidenceScore * 100).toFixed(1)}% confidence)
+                        </span>
+                      )}
+                    </span>
+                  )}
                 </span>
               </div>
               <div className="flex gap-2">
