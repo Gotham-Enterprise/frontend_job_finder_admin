@@ -4,21 +4,19 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import PageVisitThresholdsTable from '@/components/admin/page-analytics/PageVisitThresholdsTable'
 import PageVisitStatistics from '@/components/admin/page-analytics/PageVisitStatistics'
-import SystemHealth from '@/components/admin/page-analytics/SystemHealth'
 import EmailRecipientsManager from '@/components/admin/page-analytics/EmailRecipientsManager'
 import AddThresholdModal from '@/components/admin/page-analytics/AddThresholdModal'
 import EditThresholdModal from '@/components/admin/page-analytics/EditThresholdModal'
 import { PageVisitThreshold } from '@/types/page-visit'
 
 export default function PageVisitsPage() {
-  const [activeTab, setActiveTab] = useState<'thresholds' | 'statistics' | 'health' | 'emails'>('thresholds')
+  const [activeTab, setActiveTab] = useState<'thresholds' | 'statistics' | 'emails'>('thresholds')
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [editingThreshold, setEditingThreshold] = useState<PageVisitThreshold | null>(null)
 
   const tabs = [
     { id: 'thresholds' as const, label: 'Thresholds', icon: '⚙️' },
     { id: 'statistics' as const, label: 'Statistics', icon: '📊' },
-    { id: 'health' as const, label: 'System Health', icon: '🔧' },
     { id: 'emails' as const, label: 'Email Recipients', icon: '✉️' }
   ]
 
@@ -68,10 +66,6 @@ export default function PageVisitsPage() {
         
         {activeTab === 'statistics' && (
           <PageVisitStatistics />
-        )}
-        
-        {activeTab === 'health' && (
-          <SystemHealth />
         )}
         
         {activeTab === 'emails' && (
