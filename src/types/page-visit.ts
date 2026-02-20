@@ -42,36 +42,6 @@ export interface TopPage {
   count: number;
 }
 
-export interface SystemHealthMetrics {
-  memory: {
-    used_memory: number;
-    used_memory_human: string;
-    maxmemory: number;
-    maxmemory_human: string;
-    evicted_keys: number;
-    health: {
-      status: "OK" | "WARNING" | "CRITICAL" | "UNKNOWN";
-      usagePercent: string;
-      message?: string;
-    };
-  };
-  tracking: {
-    pagesTracked: number;
-    totalEntries: number;
-    estimatedBytes: number;
-    estimatedMB: string;
-  };
-  circuit: {
-    state: "CLOSED" | "OPEN" | "HALF_OPEN";
-    failures: number;
-    lastFailure: number | null;
-  };
-  oldestData: string | null;
-  tracksToday: number;
-  alertsToday?: number;
-  activeAlerts?: number;
-}
-
 export interface MemoryRecommendation {
   action: string;
   description: string;
