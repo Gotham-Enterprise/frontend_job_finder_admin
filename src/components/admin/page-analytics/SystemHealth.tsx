@@ -11,7 +11,7 @@ export default function SystemHealth() {
   const { data: healthData, isLoading } = useQuery({
     queryKey: ['system-health'],
     queryFn: () => pageVisitAPI.getSystemHealth(),
-    refetchInterval: 30000,
+    refetchInterval: 5 * 60 * 1000, // 5 minutes instead of 30 seconds
   })
 
   const retentionMutation = useMutation({
