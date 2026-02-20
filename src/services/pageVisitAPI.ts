@@ -3,7 +3,6 @@ import {
   PageVisitAlert,
   PageVisitStatistics,
   TopPage,
-  SystemHealthMetrics,
   MemoryRecommendation,
   PageVisitEmailRecipient,
 } from "@/types/page-visit";
@@ -113,11 +112,7 @@ class PageVisitAPI {
     return this.fetchWithAuth(`api/admin/page-visits/alerts${query ? `?${query}` : ""}`);
   }
 
-  // System Health
-  async getSystemHealth(): Promise<{ success: boolean; data: SystemHealthMetrics }> {
-    return this.fetchWithAuth("api/admin/page-visits/health");
-  }
-
+  // Memory Stats
   async getMemoryStats(): Promise<{
     success: boolean;
     data: {
