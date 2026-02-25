@@ -8,15 +8,17 @@ import {
 } from '@/services/hooks/useAffiliates'
 import type { AffiliateBatch } from '@/services/api/affiliates'
 import { ChevronDown, ChevronRight, RefreshCw, Clock, CheckCircle, XCircle, AlertTriangle, Zap, Eye, EyeOff } from 'lucide-react'
+import Pagination from '@/components/tables/Pagination'
 
 export default function BatchesTab() {
   const [page, setPage] = useState(1)
+  const [limit, setLimit] = useState(10)
   const [expandedBatchId, setExpandedBatchId] = useState<string | null>(null)
   const [jobsPage, setJobsPage] = useState(1)
   const [allLoadedJobs, setAllLoadedJobs] = useState<any[]>([])
   const [isLoadingMore, setIsLoadingMore] = useState(false)
 
-  const { data: batchesData, isLoading } = useAffiliateBatches({ page, limit: 10 })
+  const { data: batchesData, isLoading } = useAffiliateBatches({ page, limit })
   const { data: jobsData, isLoading: isLoadingJobs } = useAffiliateBatchJobs(
     expandedBatchId || '',
     { page: jobsPage, limit: 20 }
@@ -97,7 +99,33 @@ export default function BatchesTab() {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Batch History</h2>
+        <div className="flex items-center gap-4">
+          {/* Items per page selector */}
+          <div className="flex items-center gap-2">
+            <label className="text-sm text-gray-700 dark:text-gray-300">Show:</label>
+            <select
+              value={limit}
+              onChange={(e) => {
+                setLimit(Number(e.target.value))
+                setPage(1)
+              }}
+              className="border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-1.5 text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300"
+            >
+              <option value={5}>5</option>
+              <option value={10}>10</option>
+              <option value={20}>20</option>
+              <option value={50}>50</option>
+            </select>
+          </div>
+        </div>
       </div>
+
+      {/* Total results info */}
+      {batchesData && batchesData.total > 0 && (
+        <div className="text-sm text-gray-600 dark:text-gray-400">
+          Showing {(page - 1) * limit + 1} to {Math.min(page * limit, batchesData.total)} of {batchesData.total} batches
+        </div>
+      )}
 
       {/* Batches Table */}
       <div className="border border-gray-200 dark:border-gray-800 rounded-lg overflow-hidden">
@@ -293,32 +321,21 @@ export default function BatchesTab() {
             <p className="text-gray-500 dark:text-gray-400">No batches found</p>
           </div>
         )}
-      </div>
 
-      {/* Pagination */}
-      {batchesData && batchesData.totalPages > 1 && (
-        <div className="flex items-center justify-between px-4 py-3">
-          <div className="text-sm text-gray-700 dark:text-gray-300">
-            Showing page {batchesData.page} of {batchesData.totalPages}
+        {/* Enhanced Pagination */}
+        {batchesData && batchesData.data && batchesData.data.length > 0 && (
+          <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/30">
+            <div className="text-sm text-gray-700 dark:text-gray-300">
+              Page {batchesData.page} of {batchesData.totalPages} ({batchesData.total} total batches)
+            </div>
+            <Pagination
+              currentPage={page}
+              totalPages={batchesData.totalPages}
+              onPageChange={setPage}
+            />
           </div>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setPage(page - 1)}
-              disabled={page === 1}
-              className="px-3 py-1 text-sm border border-gray-300 dark:border-gray-700 rounded hover:bg-gray-50 dark:hover:bg-gray-900 disabled:opacity-50"
-            >
-              Previous
-            </button>
-            <button
-              onClick={() => setPage(page + 1)}
-              disabled={page === batchesData.totalPages}
-              className="px-3 py-1 text-sm border border-gray-300 dark:border-gray-700 rounded hover:bg-gray-50 dark:hover:bg-gray-900 disabled:opacity-50"
-            >
-              Next
-            </button>
-          </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   )
 }
