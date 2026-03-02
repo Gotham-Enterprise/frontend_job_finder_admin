@@ -19,9 +19,10 @@ export interface JobApplicationFilters {
   page?: number;
   limit?: number;
   name?: string;
-  location?: string;
   companyName?: string;
   status?: string;
+  city?: string;
+  state?: string;
 }
 
 export interface JobApplicationsResponse {

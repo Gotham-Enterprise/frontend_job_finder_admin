@@ -1,8 +1,9 @@
-import React from 'react';
-import SearchableSelect from '../../../ui/SearchableSelect';
-import StatusToggleFilter from '../../../ui/StatusToggleFilter';
-import Label from '../../../form/Label';
-import { JobApplicationsFiltersProps } from '@/services/types/JobApplicationsTypes';
+import React from "react";
+import SearchableSelect from "../../../ui/SearchableSelect";
+import StatusToggleFilter from "../../../ui/StatusToggleFilter";
+import Label from "../../../form/Label";
+import { JobApplicationsFiltersProps } from "@/services/types/JobApplicationsTypes";
+import Input from "@/components/ui/input/Input";
 
 const JobApplicationsFilters: React.FC<JobApplicationsFiltersProps> = ({
   isOpen,
@@ -22,12 +23,10 @@ const JobApplicationsFilters: React.FC<JobApplicationsFiltersProps> = ({
       <div className="grid grid-cols-1 gap-6">
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Location
-            </Label>
-            {filters.location && (
+            <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">State</Label>
+            {filters.state && (
               <button
-                onClick={() => clearIndividualFilter('location')}
+                onClick={() => clearIndividualFilter("state")}
                 className="text-xs text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100 font-medium cursor-pointer hover:underline"
               >
                 Clear
@@ -35,22 +34,40 @@ const JobApplicationsFilters: React.FC<JobApplicationsFiltersProps> = ({
             )}
           </div>
           <SearchableSelect
-            value={filters.location || ''}
-            onChange={(value: string) => onFilterChange('location', value)}
+            value={filters.state || ""}
+            onChange={(value: string) => onFilterChange("state", value)}
             options={stateOptions}
-            placeholder="Select location..."
-            searchPlaceholder="Search locations..."
+            placeholder="Select state..."
+            searchPlaceholder="Search state..."
             className="w-full"
           />
         </div>
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Status
-            </Label>
+            <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">City</Label>
+            {filters.city && (
+              <button
+                onClick={() => clearIndividualFilter("city")}
+                className="text-xs text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100 font-medium cursor-pointer hover:underline"
+              >
+                Clear
+              </button>
+            )}
+          </div>
+          <Input
+            type="text"
+            value={filters.city || ""}
+            onChange={(e) => onFilterChange("city", e.target.value)}
+            placeholder="Enter city"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Status</Label>
             {selectedStatuses.length > 0 && (
               <button
-                onClick={() => clearIndividualFilter('status')}
+                onClick={() => clearIndividualFilter("status")}
                 className="text-xs text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100 font-medium cursor-pointer hover:underline"
               >
                 Clear
@@ -60,9 +77,9 @@ const JobApplicationsFilters: React.FC<JobApplicationsFiltersProps> = ({
           <StatusToggleFilter
             selectedStatuses={selectedStatuses}
             onChange={onStatusToggle}
-            options={statusOptions.map(option => ({
+            options={statusOptions.map((option) => ({
               value: option.value,
-              label: option.label
+              label: option.label,
             }))}
           />
         </div>
