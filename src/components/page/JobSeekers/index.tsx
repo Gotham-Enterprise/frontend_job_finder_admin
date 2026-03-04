@@ -2,6 +2,7 @@
 import React from 'react';
 import { BoltIcon } from '@/icons';
 import ErrorState from '../../common/ErrorState';
+import FullScreenSpinner from '../../ui/FullScreenSpinner';
 import { useJobSeekersLogic } from '@/services/hooks/useJobSeekersLogic';
 import { usePreservedNavigation } from '@/hooks/usePreservedNavigation';
 import { JobSeekersProps } from '@/services/types/JobSeekersTypes';
@@ -65,54 +66,62 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
   }
 
   return (
-    <div className={`rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] ${className}`}>
-      <JobSeekersHeader
-        totalCount={data?.metaData?.totalCount || 0}
-        isPending={isPending}
-        isLoading={isLoading}
-        searchInput={searchInput}
-        setSearchInput={setSearchInput}
-        isFilterOpen={isFilterOpen}
-        setIsFilterOpen={setIsFilterOpen}
-        onRefetch={refetch}
-        onClearFilters={clearAllFilters}
-        hasActiveFilters={hasActiveFilters}
-        onExport={handleExport}
-        isExporting={isExporting}
-        filterDropdownContent={
-          <JobSeekersFilters
-            filters={filters}
-            onFilterChange={filterChange}
-            occupationOptions={occupationOptions}
-            stateOptions={stateOptions}
-            statusOptions={statusOptions}
-            licenseOptions={licenseOptions}
-            licenseStateOptions={licenseStateOptions}
-            hasActiveFilters={hasActiveFilters}
-            clearIndividualFilter={clearIndividualFilter}
-          />
-        }
-      />
+    <>
+      <div className={`rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] ${className}`}>
+        <JobSeekersHeader
+          totalCount={data?.metaData?.totalCount || 0}
+          isPending={isPending}
+          isLoading={isLoading}
+          searchInput={searchInput}
+          setSearchInput={setSearchInput}
+          isFilterOpen={isFilterOpen}
+          setIsFilterOpen={setIsFilterOpen}
+          onRefetch={refetch}
+          onClearFilters={clearAllFilters}
+          hasActiveFilters={hasActiveFilters}
+          onExport={handleExport}
+          isExporting={isExporting}
+          filterDropdownContent={
+            <JobSeekersFilters
+              filters={filters}
+              onFilterChange={filterChange}
+              occupationOptions={occupationOptions}
+              stateOptions={stateOptions}
+              statusOptions={statusOptions}
+              licenseOptions={licenseOptions}
+              licenseStateOptions={licenseStateOptions}
+              hasActiveFilters={hasActiveFilters}
+              clearIndividualFilter={clearIndividualFilter}
+            />
+          }
+        />
 
-      <JobSeekersTable
-        data={data}
-        isLoading={isLoading}
-        tableColumns={tableColumns}
-        getStatusVariant={getStatusVariant}
-        onViewJobSeeker={viewJobSeeker}
-        onViewResume={initViewResume}
-        isViewingResume={isViewingResume}
-        onRefresh={refetch}
-      />
+        <JobSeekersTable
+          data={data}
+          isLoading={isLoading}
+          tableColumns={tableColumns}
+          getStatusVariant={getStatusVariant}
+          onViewJobSeeker={viewJobSeeker}
+          onViewResume={initViewResume}
+          isViewingResume={isViewingResume}
+          onRefresh={refetch}
+        />
 
-      <JobSeekersTablePagination
-        data={data}
-        filters={filters}
-        onPageChange={initPageChange}
-        itemsPerPageOptions={itemsPerPageOptions}
-        onFilterChange={filterChange}
+        <JobSeekersTablePagination
+          data={data}
+          filters={filters}
+          onPageChange={initPageChange}
+          itemsPerPageOptions={itemsPerPageOptions}
+          onFilterChange={filterChange}
+        />
+      </div>
+      
+      {/* Export Loading Overlay */}
+      <FullScreenSpinner 
+        isVisible={isExporting} 
+        message="Exporting Job Seekers" 
       />
-    </div>
+    </>
   );
 };
 
