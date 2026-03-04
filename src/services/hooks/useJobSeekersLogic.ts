@@ -5,7 +5,9 @@ import { useOccupations } from "@/services/hooks/useOccupations";
 import { useStates } from "@/services/hooks/useStates";
 import { useLicenses, useLicenseIssuingStates } from "@/services/hooks/useLicenses";
 import { jobApplicationApi } from "@/services/api/jobApplication";
+import { jobSeekerApi } from "@/services/api/jobSeeker";
 import { JobSeekerFilters } from "@/services/types/jobSeeker";
+import { showToast } from "@/services/utils/toast";
 
 export const useJobSeekersLogic = () => {
   const router = useRouter();
@@ -122,6 +124,7 @@ export const useJobSeekersLogic = () => {
   const [isViewingResume, setIsViewingResume] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const [hasRestoredFromState, setHasRestoredFromState] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
   useEffect(() => {
     setIsInitialized(true);
@@ -463,6 +466,33 @@ export const useJobSeekersLogic = () => {
     );
   }, [searchInput, filters.city, filters.radius, filters.location, filters.occupationId, filters.status]);
 
+  const handleExport = useCallback(async () => {
+    if (isExporting) return;
+
+    setIsExporting(true);
+    try {
+      // Create export filters (excluding pagination)
+      const exportFilters: JobSeekerFilters = {
+        search: filters.search,
+        city: filters.city,
+        radius: filters.radius,
+        location: filters.location,
+        occupationId: filters.occupationId,
+        status: filters.status,
+        licenseName: filters.licenseName,
+        licenseIssuingState: filters.licenseIssuingState,
+      };
+
+      await jobSeekerApi.exportJobSeekers(exportFilters);
+      showToast.success("Export Successful", "Job seekers data has been exported to CSV");
+    } catch (error) {
+      console.error("Error exporting job seekers:", error);
+      showToast.error("Export Failed", "Failed to export job seekers. Please try again.");
+    } finally {
+      setIsExporting(false);
+    }
+  }, [filters, isExporting]);
+
   useEffect(() => {
     if (!isInitialized) return;
 
@@ -545,6 +575,7 @@ export const useJobSeekersLogic = () => {
     statesData,
     isStatesLoading,
     isViewingResume,
+    isExporting,
 
     tableColumns,
     statusOptions,
@@ -565,5 +596,6 @@ export const useJobSeekersLogic = () => {
     saveScrollPosition,
     restoreScrollPosition,
     saveSearchState,
+    handleExport,
   };
 };

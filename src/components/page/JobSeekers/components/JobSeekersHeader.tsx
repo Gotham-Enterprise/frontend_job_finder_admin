@@ -3,13 +3,15 @@ import Link from "next/link";
 import Input from "../../../ui/input/Input";
 import FilterDropdown from "../../../ui/FilterDropdown";
 import { SearchIcon, FilterIcon } from "../../../ui/icons";
-import { TrashBinIcon } from "@/icons";
+import { TrashBinIcon, DownloadIcon } from "@/icons";
 import { JobSeekersHeaderProps } from "@/services/types/JobSeekersTypes";
 import { MdOutlineLock } from "react-icons/md";
 import PermissionWrapper from "@/components/common/PermissionWrapper";
 
 interface JobSeekersHeaderWithDropdownProps extends JobSeekersHeaderProps {
   filterDropdownContent?: React.ReactNode;
+  onExport?: () => void;
+  isExporting?: boolean;
 }
 
 const JobSeekersHeader: React.FC<JobSeekersHeaderWithDropdownProps> = ({
@@ -24,6 +26,8 @@ const JobSeekersHeader: React.FC<JobSeekersHeaderWithDropdownProps> = ({
   onClearFilters,
   hasActiveFilters,
   filterDropdownContent,
+  onExport,
+  isExporting = false,
 }) => {
   const filterButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -40,6 +44,18 @@ const JobSeekersHeader: React.FC<JobSeekersHeaderWithDropdownProps> = ({
           </div>
 
           <div className="flex items-center gap-2">
+            <PermissionWrapper module="jobseekers" action="view">
+              <button
+                onClick={onExport}
+                disabled={isExporting || isLoading}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Export job seekers to CSV"
+              >
+                <DownloadIcon className="w-5 h-5" />
+                <span>{isExporting ? "Exporting..." : "Export"}</span>
+              </button>
+            </PermissionWrapper>
+
             <PermissionWrapper module="jobseekers" action="edit">
               <Link
                 href="/admin/job-seekers/deactivated"
