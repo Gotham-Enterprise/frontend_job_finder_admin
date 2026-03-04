@@ -33,6 +33,7 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
     error,
     refetch,
     isViewingResume,
+    isExporting,
     
     tableColumns,
     statusOptions,
@@ -49,6 +50,7 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
     clearAllFilters,
     clearIndividualFilter,
     hasActiveFilters,
+    handleExport,
   } = useJobSeekersLogic();
 
   if (error && !isPending) {
@@ -75,6 +77,8 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
         onRefetch={refetch}
         onClearFilters={clearAllFilters}
         hasActiveFilters={hasActiveFilters}
+        onExport={handleExport}
+        isExporting={isExporting}
         filterDropdownContent={
           <JobSeekersFilters
             filters={filters}
