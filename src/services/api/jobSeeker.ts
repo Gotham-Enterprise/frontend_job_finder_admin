@@ -75,4 +75,63 @@ export const jobSeekerApi = {
   async resetPassword(email: string): Promise<any> {
     return apiPost<any>("/api/auth/forgot-password", { email });
   },
+
+  async exportJobSeekers(filters: JobSeekerFilters = {}): Promise<void> {
+    const queryParams = new URLSearchParams();
+
+    if (filters.search) queryParams.append("name", filters.search);
+    if (filters.city) queryParams.append("city", filters.city);
+    if (filters.radius) queryParams.append("radius", filters.radius.toString());
+    if (filters.location) queryParams.append("location", filters.location);
+    if (filters.specialty) queryParams.append("specialty", filters.specialty);
+    if (filters.occupationId) queryParams.append("occupationId", filters.occupationId.toString());
+    if (filters.status) queryParams.append("status", filters.status);
+    if (filters.licenseName) queryParams.append("licenseName", filters.licenseName);
+    if (filters.licenseIssuingState) queryParams.append("licenseIssuingState", filters.licenseIssuingState);
+
+    const endpoint = `/api/admin/jobseekers/export?${queryParams.toString()}`;
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+    const fullUrl = `${baseUrl}${endpoint}`;
+
+    // Get auth token from localStorage
+    const token = localStorage.getItem("token");
+
+    // Fetch the CSV file
+    const response = await fetch(fullUrl, {
+      method: "GET",
+      credentials: "include",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to export: ${response.statusText}`);
+    }
+
+    // Get the blob from response
+    const blob = await response.blob();
+
+    // Extract filename from Content-Disposition header or use default
+    const contentDisposition = response.headers.get("Content-Disposition");
+    let filename = "job-seekers-export.csv";
+    if (contentDisposition) {
+      const filenameMatch = contentDisposition.match(/filename="?(.+)"?/);
+      if (filenameMatch && filenameMatch[1]) {
+        filename = filenameMatch[1];
+      }
+    }
+
+    // Create a download link and trigger download
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+
+    // Cleanup
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  },
 };
