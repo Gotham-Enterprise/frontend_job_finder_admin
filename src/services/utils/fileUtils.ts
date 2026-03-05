@@ -55,7 +55,7 @@ export const getViewerUrl = (fileUrl: string, fileName?: string): string => {
   const extension = getFileExtension(fileName || fileUrl);
 
   if (["DOC", "DOCX"].includes(extension)) {
-    return `https://docs.google.com/viewer?url=${encodeURIComponent(fileUrl)}`;
+    return `https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(fileUrl)}`;
   }
 
   return fileUrl;
@@ -106,7 +106,7 @@ export const openFileWithRetry = async (
 
         return;
       } else if (extension === "DOCX") {
-        // For .docx files, try Google Viewer first
+        // For .docx files, try Office Online Viewer first
         const viewerUrl = getViewerUrl(fileUrl, fileName);
         const newWindow = window.open(
           viewerUrl,
@@ -115,7 +115,7 @@ export const openFileWithRetry = async (
         );
 
         if (!newWindow) {
-          throw new Error("Popup blocked or failed to open Google Viewer");
+          throw new Error("Popup blocked or failed to open Office Online Viewer");
         }
 
         return;
@@ -189,14 +189,14 @@ export const openFileInNewTab = (fileUrl: string, fileName?: string): void => {
       return;
     }
 
-    // For .docx files, try Google Viewer
+    // For .docx files, try Office Online Viewer
     if (extension === "DOCX") {
-      const tryOpenWithGoogleViewer = () => {
+      const tryOpenWithOfficeViewer = () => {
         try {
-          const googleViewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(fileUrl)}`;
+          const officeViewerUrl = `https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(fileUrl)}`;
 
           const newWindow = window.open(
-            googleViewerUrl,
+            officeViewerUrl,
             "_blank",
             "width=1200,height=800,toolbar=yes,location=yes,status=yes,menubar=yes,scrollbars=yes,resizable=yes"
           );
@@ -207,7 +207,7 @@ export const openFileInNewTab = (fileUrl: string, fileName?: string): void => {
 
           return true;
         } catch (error) {
-          console.warn("Google Viewer failed:", error);
+          console.warn("Office Viewer failed:", error);
           return false;
         }
       };
@@ -224,7 +224,7 @@ export const openFileInNewTab = (fileUrl: string, fileName?: string): void => {
         document.body.removeChild(link);
       };
 
-      if (!tryOpenWithGoogleViewer()) {
+      if (!tryOpenWithOfficeViewer()) {
         openDirectDownload(fileUrl, fileName);
       }
 
