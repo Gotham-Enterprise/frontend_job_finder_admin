@@ -26,6 +26,10 @@ export const jobSeekerApi = {
     if (filters.registrationStartDate) queryParams.append("registrationStartDate", filters.registrationStartDate);
     if (filters.registrationEndDate) queryParams.append("registrationEndDate", filters.registrationEndDate);
 
+    // Add timezone offset in minutes (e.g., -480 for UTC+8 Philippine time)
+    const timezoneOffset = new Date().getTimezoneOffset();
+    queryParams.append("timezoneOffset", timezoneOffset.toString());
+
     const endpoint = `/api/admin/jobseekers?${queryParams.toString()}`;
 
     return apiGet<JobSeekersResponse>(endpoint);
@@ -92,6 +96,10 @@ export const jobSeekerApi = {
     if (filters.licenseIssuingState) queryParams.append("licenseIssuingState", filters.licenseIssuingState);
     if (filters.registrationStartDate) queryParams.append("registrationStartDate", filters.registrationStartDate);
     if (filters.registrationEndDate) queryParams.append("registrationEndDate", filters.registrationEndDate);
+
+    // Add timezone offset in minutes (e.g., -480 for UTC+8 Philippine time)
+    const timezoneOffset = new Date().getTimezoneOffset();
+    queryParams.append("timezoneOffset", timezoneOffset.toString());
 
     const endpoint = `/api/admin/jobseekers/export?${queryParams.toString()}`;
     const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
