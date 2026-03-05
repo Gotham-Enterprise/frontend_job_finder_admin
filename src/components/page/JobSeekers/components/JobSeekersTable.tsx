@@ -1000,7 +1000,7 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
                   <TableCell className="py-4 px-6 whitespace-nowrap">
                     {jobSeeker.lastActivity ? (
                       (() => {
-                        const lastActivity = formatDateTimeEST(jobSeeker.lastActivity);
+                        const lastActivity = formatDateTimeLocal(jobSeeker.lastActivity);
                         if (typeof lastActivity === "string") {
                           return <p className="text-sm text-gray-900 dark:text-white">{lastActivity}</p>;
                         }
