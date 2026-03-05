@@ -24,11 +24,19 @@ const FilterDropdown: React.FC<FilterDropdownProps> = ({
 
   useEffect(() => {
     const clickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+      
+      // Check if click is inside a flatpickr calendar
+      const isDatePickerClick = 
+        (target as HTMLElement).closest?.('.flatpickr-calendar') ||
+        (target as HTMLElement).hasAttribute?.('data-filter-datepicker');
+      
       if (
+        !isDatePickerClick &&
         dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node) &&
+        !dropdownRef.current.contains(target) &&
         triggerRef.current &&
-        !triggerRef.current.contains(event.target as Node)
+        !triggerRef.current.contains(target)
       ) {
         onClose();
       }

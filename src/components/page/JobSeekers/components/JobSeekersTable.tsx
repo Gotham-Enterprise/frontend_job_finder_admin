@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { formatDateTimeEST } from "@/services/utils/dateUtils";
+import { formatDateTimeEST, formatDateTimeLocal } from "@/services/utils/dateUtils";
 import { Table, TableBody, TableCell, TableRow } from "../../../ui/table";
 import Badge from "../../../ui/badge/Badge";
 import Button from "../../../ui/button/Button";
@@ -979,7 +979,7 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
                   <TableCell className="py-4 px-6 whitespace-nowrap">
                     {jobSeeker.dateJoined ? (
                       (() => {
-                        const dateJoined = formatDateTimeEST(jobSeeker.dateJoined);
+                        const dateJoined = formatDateTimeLocal(jobSeeker.dateJoined);
                         if (typeof dateJoined === "string") {
                           return <p className="text-sm text-gray-900 dark:text-white">{dateJoined}</p>;
                         }
