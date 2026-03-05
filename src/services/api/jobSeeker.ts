@@ -23,6 +23,8 @@ export const jobSeekerApi = {
     if (filters.status) queryParams.append("status", filters.status);
     if (filters.licenseName) queryParams.append("licenseName", filters.licenseName);
     if (filters.licenseIssuingState) queryParams.append("licenseIssuingState", filters.licenseIssuingState);
+    if (filters.registrationStartDate) queryParams.append("registrationStartDate", filters.registrationStartDate);
+    if (filters.registrationEndDate) queryParams.append("registrationEndDate", filters.registrationEndDate);
 
     const endpoint = `/api/admin/jobseekers?${queryParams.toString()}`;
 
@@ -88,6 +90,8 @@ export const jobSeekerApi = {
     if (filters.status) queryParams.append("status", filters.status);
     if (filters.licenseName) queryParams.append("licenseName", filters.licenseName);
     if (filters.licenseIssuingState) queryParams.append("licenseIssuingState", filters.licenseIssuingState);
+    if (filters.registrationStartDate) queryParams.append("registrationStartDate", filters.registrationStartDate);
+    if (filters.registrationEndDate) queryParams.append("registrationEndDate", filters.registrationEndDate);
 
     const endpoint = `/api/admin/jobseekers/export?${queryParams.toString()}`;
     const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";

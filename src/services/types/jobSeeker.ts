@@ -48,6 +48,8 @@ export interface JobSeekerFilters {
   status?: "active" | "inactive" | "suspended" | "pending";
   licenseName?: string;
   licenseIssuingState?: string;
+  registrationStartDate?: string;
+  registrationEndDate?: string;
 }
 
 export interface JobSeekersResponse {
