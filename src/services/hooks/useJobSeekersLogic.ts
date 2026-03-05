@@ -30,6 +30,8 @@ export const useJobSeekersLogic = () => {
       const urlOccupationId = searchParams.get("occupationId");
       const urlLicenseName = searchParams.get("licenseName");
       const urlLicenseIssuingState = searchParams.get("licenseIssuingState");
+      const urlRegistrationStartDate = searchParams.get("registrationStartDate");
+      const urlRegistrationEndDate = searchParams.get("registrationEndDate");
 
       const urlFilters = {
         page: Math.max(1, parseInt(urlPage || "1", 10)),
@@ -42,6 +44,8 @@ export const useJobSeekersLogic = () => {
         status: validStatus,
         licenseName: urlLicenseName || "",
         licenseIssuingState: urlLicenseIssuingState || "",
+        registrationStartDate: urlRegistrationStartDate || "",
+        registrationEndDate: urlRegistrationEndDate || "",
       };
       const isSimpleNavigation =
         (!urlPage || urlPage === "1") &&
@@ -52,7 +56,9 @@ export const useJobSeekersLogic = () => {
         !urlOccupationId &&
         !validStatus &&
         !urlLicenseName &&
-        !urlLicenseIssuingState;
+        !urlLicenseIssuingState &&
+        !urlRegistrationStartDate &&
+        !urlRegistrationEndDate;
 
       if (isSimpleNavigation && typeof window !== "undefined") {
         localStorage.removeItem("jobseeker-search-state");
@@ -83,6 +89,8 @@ export const useJobSeekersLogic = () => {
               status: parsed.status || undefined,
               licenseName: parsed.licenseName || "",
               licenseIssuingState: parsed.licenseIssuingState || "",
+              registrationStartDate: parsed.registrationStartDate || "",
+              registrationEndDate: parsed.registrationEndDate || "",
             };
             return restoredFilters;
           } catch (error) {
@@ -106,6 +114,8 @@ export const useJobSeekersLogic = () => {
       status: undefined,
       licenseName: "",
       licenseIssuingState: "",
+      registrationStartDate: "",
+      registrationEndDate: "",
     };
     return defaultFilters;
   };
@@ -146,6 +156,8 @@ export const useJobSeekersLogic = () => {
     if (filters.status) params.set("status", filters.status);
     if (filters.licenseName) params.set("licenseName", filters.licenseName);
     if (filters.licenseIssuingState) params.set("licenseIssuingState", filters.licenseIssuingState);
+    if (filters.registrationStartDate) params.set("registrationStartDate", filters.registrationStartDate);
+    if (filters.registrationEndDate) params.set("registrationEndDate", filters.registrationEndDate);
 
     const newURL = params.toString() ? `?${params.toString()}` : "";
     const currentURL = window.location.search;
@@ -413,6 +425,8 @@ export const useJobSeekersLogic = () => {
       status: undefined,
       licenseName: "",
       licenseIssuingState: "",
+      registrationStartDate: "",
+      registrationEndDate: "",
     };
     setFilters(newFilters);
     setSearchInput("");
@@ -445,6 +459,12 @@ export const useJobSeekersLogic = () => {
           break;
         case "licenseIssuingState":
           filterChange("licenseIssuingState", "");
+          break;
+        case "registrationStartDate":
+          filterChange("registrationStartDate", "");
+          break;
+        case "registrationEndDate":
+          filterChange("registrationEndDate", "");
           break;
         default:
           break;
@@ -481,6 +501,8 @@ export const useJobSeekersLogic = () => {
         status: filters.status,
         licenseName: filters.licenseName,
         licenseIssuingState: filters.licenseIssuingState,
+        registrationStartDate: filters.registrationStartDate,
+        registrationEndDate: filters.registrationEndDate,
       };
 
       await jobSeekerApi.exportJobSeekers(exportFilters);
