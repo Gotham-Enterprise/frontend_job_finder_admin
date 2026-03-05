@@ -22,6 +22,7 @@ export interface JobsAdminFilters {
   limit?: number;
   name?: string; 
   state?: string; 
+  city?: string;
   jobStatus?: 'Draft' | 'Published';
   datePosted?: string;
   occupationId?: number;

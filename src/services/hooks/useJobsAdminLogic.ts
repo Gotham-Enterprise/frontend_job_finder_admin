@@ -2,6 +2,7 @@ import { useState, useMemo, useTransition, useEffect, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useJobsAdmin, useJobsAdminOccupations } from '@/services/hooks/useJobsAdmin';
 import { useStates } from '@/services/hooks/useStates';
+import { useCitiesByState } from '@/lib/useStatesCities';
 import { JobsAdminFilters, Specialty } from '@/services/types/jobsAdmin';
 
 export const useJobsAdminLogic = () => {
@@ -15,6 +16,7 @@ export const useJobsAdminLogic = () => {
       const urlLimit = searchParams.get('limit');
       const urlName = searchParams.get('name');
       const urlState = searchParams.get('state');
+      const urlCity = searchParams.get('city');
       const urlJobStatus = searchParams.get('jobStatus');
       const urlDatePosted = searchParams.get('datePosted');
       const urlOccupationId = searchParams.get('occupationId');
@@ -25,6 +27,7 @@ export const useJobsAdminLogic = () => {
         limit: urlLimit ? parseInt(urlLimit, 10) : 100,
         name: urlName || '',
         state: urlState || '',
+        city: urlCity || '',
         jobStatus: (urlJobStatus === 'Draft' || urlJobStatus === 'Published') ? urlJobStatus as 'Draft' | 'Published' : undefined,
         datePosted: urlDatePosted || '',
         occupationId: urlOccupationId ? parseInt(urlOccupationId) : undefined,
@@ -35,6 +38,7 @@ export const useJobsAdminLogic = () => {
         (!urlPage || urlPage === '1') &&
         !urlName &&
         !urlState &&
+        !urlCity &&
         !urlDatePosted &&
         !urlOccupationId &&
         !urlSpecialtyId;
@@ -62,6 +66,7 @@ export const useJobsAdminLogic = () => {
               limit: parsed.limit || 100,
               name: parsed.name || '',
               state: parsed.state || '',
+              city: parsed.city || '',
               jobStatus: parsed.jobStatus || undefined,
               datePosted: parsed.datePosted || '',
               occupationId: parsed.occupationId || undefined,
@@ -83,6 +88,7 @@ export const useJobsAdminLogic = () => {
       limit: 100,
       name: '',
       state: '',
+      city: '',
       jobStatus: undefined,
       datePosted: '',
       occupationId: undefined,
@@ -174,6 +180,7 @@ export const useJobsAdminLogic = () => {
     if (filters.limit && filters.limit !== 100) params.set('limit', filters.limit.toString());
     if (filters.name) params.set('name', filters.name);
     if (filters.state) params.set('state', filters.state);
+    if (filters.city) params.set('city', filters.city);
     if (filters.jobStatus) params.set('jobStatus', filters.jobStatus);
     if (filters.datePosted) params.set('datePosted', filters.datePosted);
     if (filters.occupationId) params.set('occupationId', filters.occupationId.toString());
@@ -213,6 +220,7 @@ export const useJobsAdminLogic = () => {
         limit: filters.limit,
         name: filters.name,
         state: filters.state,
+        city: filters.city,
         jobStatus: filters.jobStatus,
         datePosted: filters.datePosted,
         occupationId: filters.occupationId,
@@ -225,6 +233,18 @@ export const useJobsAdminLogic = () => {
   const { data, isLoading, error, refetch } = useJobsAdmin(filters);
   const { data: occupationsData, isLoading: isOccupationsLoading } = useJobsAdminOccupations();
   const { data: statesData, isLoading: isStatesLoading } = useStates();
+
+  const getStateAbbreviation = (formattedState: string) => {
+    const match = formattedState.match(/\(([^)]+)\)$/);
+    return match ? match[1] : formattedState;
+  };
+  const stateAbbr = filters.state ? getStateAbbreviation(filters.state) : '';
+  const { data: cities, isLoading: isLoadingCities } = useCitiesByState(stateAbbr);
+
+  const cityOptions = useMemo(() => {
+    if (!cities || !filters.state) return [];
+    return cities.map((city) => ({ value: city, label: city }));
+  }, [cities, filters.state]);
 
   const tableColumns = useMemo(() => [
     { key: 'title', label: 'Job Title' },
@@ -332,7 +352,8 @@ export const useJobsAdminLogic = () => {
         ...filters, 
         [key]: processedValue,
         ...(key !== 'page' && key !== 'limit' && { page: 1 }),
-        ...(key === 'occupationId' && { specialtyId: undefined })
+        ...(key === 'occupationId' && { specialtyId: undefined }),
+        ...(key === 'state' && { city: '' })
       };
       setFilters(newFilters);
       
@@ -400,6 +421,7 @@ export const useJobsAdminLogic = () => {
       limit: 100,
       name: '',
       state: '',
+      city: '',
       jobStatus: undefined,
       datePosted: '',
       occupationId: undefined,
@@ -426,6 +448,10 @@ export const useJobsAdminLogic = () => {
           break;
         case 'state':
           updatedFilters.state = '';
+          updatedFilters.city = '';
+          break;
+        case 'city':
+          updatedFilters.city = '';
           break;
         case 'jobStatus':
           updatedFilters.jobStatus = undefined;
@@ -455,13 +481,14 @@ export const useJobsAdminLogic = () => {
     return !!(
       searchInput ||
       filters.state ||
+      filters.city ||
       filters.jobStatus ||
       filters.datePosted ||
       filters.occupationId ||
       filters.specialtyId ||
       selectedJobStatuses.length > 0
     );
-  }, [searchInput, filters.state, filters.jobStatus, filters.datePosted, filters.occupationId, filters.specialtyId, selectedJobStatuses]);
+  }, [searchInput, filters.state, filters.city, filters.jobStatus, filters.datePosted, filters.occupationId, filters.specialtyId, selectedJobStatuses]);
 
   useEffect(() => {
     if (data && !isLoading) {
@@ -486,6 +513,7 @@ export const useJobsAdminLogic = () => {
       filters.page === 1 &&
       !filters.name &&
       !filters.state &&
+      !filters.city &&
       !filters.jobStatus &&
       !filters.datePosted &&
       !filters.occupationId &&
@@ -496,7 +524,7 @@ export const useJobsAdminLogic = () => {
         localStorage.removeItem('jobsAdmin-search-state');
         localStorage.removeItem('jobsAdmin-scroll-position');
       }
-    } else if (filters.name || filters.state || filters.jobStatus || filters.datePosted || filters.occupationId || filters.specialtyId || (filters.page && filters.page > 1)) {
+    } else if (filters.name || filters.state || filters.city || filters.jobStatus || filters.datePosted || filters.occupationId || filters.specialtyId || (filters.page && filters.page > 1)) {
       saveSearchState();
     }
   }, [filters, saveSearchState, isInitialized]);
@@ -551,6 +579,8 @@ export const useJobsAdminLogic = () => {
     occupationOptions,
     specialtyOptions,
     stateOptions,
+    cityOptions,
+    isLoadingCities,
     itemsPerPageOptions,
 
     filterChange,
