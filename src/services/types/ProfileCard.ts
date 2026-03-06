@@ -5,6 +5,8 @@ export interface ContactInfo {
     value: string;
     className?: string;
     icon?: ReactNode;
+    /** When provided, renders the value as a link to this URL */
+    href?: string;
 }
 
 export interface Document {

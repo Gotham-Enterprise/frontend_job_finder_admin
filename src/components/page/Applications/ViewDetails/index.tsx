@@ -4,11 +4,14 @@ import { useParams } from "next/navigation";
 import { useJobApplicationDetails } from "@/services/hooks/useJobApplications";
 import { formatDateTimeEST } from "@/services/utils/dateUtils";
 import { openFileInNewTab } from "@/services/utils/fileUtils";
+import { sanitizeJobDescriptionHtml } from "@/services/utils/htmlUtils";
+import { getEmployerJobUrl } from "@/services/utils/employerUtils";
 import FullScreenSpinner from "@/components/ui/FullScreenSpinner";
 import ErrorState from "@/components/common/ErrorState";
 import BackToListButton from "@/components/ui/BackToListButton";
 import ProfileCard from "@/components/ui/ProfileCard";
 import { Accordion } from "@/components/ui/accordion";
+import Link from "next/link";
 
 interface ViewDetailsProps {
   id?: string;
@@ -66,6 +69,7 @@ export default function JobApplicationDetails({ id }: ViewDetailsProps) {
       label: "Job Title",
       value: application.jobTitle,
       className: "text-gray-900 dark:text-white",
+      href: application.jobId ? getEmployerJobUrl(application.jobId) : undefined,
     },
     {
       label: "Location",
@@ -109,7 +113,7 @@ export default function JobApplicationDetails({ id }: ViewDetailsProps) {
           <ProfileCard profileData={profileData} contactInfo={contactInfo} />
         </div>
 
-        <div className="col-span-2 space-y-6">
+        <div className="col-span-2 min-w-0 space-y-6">
           <div className="rounded-xl bg-white shadow-lg border border-gray-100 dark:bg-gray-800 dark:border-gray-700 p-6">
             <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Application Details</h2>
             <div className="space-y-4">
@@ -120,9 +124,20 @@ export default function JobApplicationDetails({ id }: ViewDetailsProps) {
                     <span className="font-medium text-gray-700 dark:text-gray-300">Company:</span>
                     <p className="text-gray-900 dark:text-white">{application.companyName}</p>
                   </div>
-                  <div>
+                  <div className="flex flex-col">
                     <span className="font-medium text-gray-700 dark:text-gray-300">Job Title:</span>
-                    <p className="text-gray-900 dark:text-white">{application.jobTitle}</p>
+                    {application.jobId ? (
+                      <Link
+                        href={getEmployerJobUrl(application.jobId)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-primary"
+                      >
+                        {application.jobTitle}
+                      </Link>
+                    ) : (
+                      <p className="text-gray-900 dark:text-white">{application.jobTitle}</p>
+                    )}
                   </div>
                   <div>
                     <span className="font-medium text-gray-700 dark:text-gray-300">Location:</span>
@@ -188,6 +203,19 @@ export default function JobApplicationDetails({ id }: ViewDetailsProps) {
                 collapsible={true}
                 defaultValue="question-0"
                 className="mt-4"
+              />
+            </div>
+          )}
+
+          {/* Job Description Section */}
+          {application.jobDescription && (
+            <div className="rounded-xl bg-white shadow-lg border border-gray-100 dark:bg-gray-800 dark:border-gray-700 p-6">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Job Description</h2>
+              <div
+                className="prose prose-sm dark:prose-invert max-w-none text-gray-700 dark:text-gray-300 break-words [&_a]:text-blue-600 [&_a]:underline [&_a:hover]:text-blue-800"
+                dangerouslySetInnerHTML={{
+                  __html: sanitizeJobDescriptionHtml(application.jobDescription),
+                }}
               />
             </div>
           )}

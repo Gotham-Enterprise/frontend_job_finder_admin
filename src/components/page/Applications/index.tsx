@@ -37,6 +37,8 @@ const JobApplications: React.FC<JobApplicationsProps> = ({ className = "" }) => 
     tableColumns,
     statusOptions,
     stateOptions,
+    cityOptions,
+    isLoadingCities,
     itemsPerPageOptions,
     filterChange,
     handleStatusToggle,
@@ -80,6 +82,8 @@ const JobApplications: React.FC<JobApplicationsProps> = ({ className = "" }) => 
             filters={filters}
             onFilterChange={filterChange}
             stateOptions={stateOptions}
+            cityOptions={cityOptions}
+            isLoadingCities={isLoadingCities}
             statusOptions={statusOptions}
             selectedStatuses={selectedStatuses}
             onStatusToggle={handleStatusToggle}

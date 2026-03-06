@@ -1,9 +1,9 @@
-import React from 'react';
-import SearchableSelect from '../../../ui/SearchableSelect';
-import StatusToggleFilter from '../../../ui/StatusToggleFilter';
-import Label from '../../../form/Label';
-import DatePicker from '../../../form/date-picker';
-import { JobsAdminFiltersProps } from '@/services/types/JobsAdminTypes';
+import React from "react";
+import SearchableSelect from "../../../ui/SearchableSelect";
+import StatusToggleFilter from "../../../ui/StatusToggleFilter";
+import Label from "../../../form/Label";
+import DatePicker from "../../../form/date-picker";
+import { JobsAdminFiltersProps } from "@/services/types/JobsAdminTypes";
 
 const JobsAdminFilters: React.FC<JobsAdminFiltersProps> = ({
   filters,
@@ -12,6 +12,8 @@ const JobsAdminFilters: React.FC<JobsAdminFiltersProps> = ({
   occupationOptions,
   specialtyOptions,
   stateOptions,
+  cityOptions,
+  isLoadingCities,
   jobStatusOptions,
   selectedOccupationId,
   hasActiveFilters,
@@ -20,42 +22,14 @@ const JobsAdminFilters: React.FC<JobsAdminFiltersProps> = ({
 }) => {
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 gap-6">
-      
+      <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Date Posted
-            </Label>
-         
-            {filters.datePosted && (
-              <button
-                onClick={() => onClearIndividualFilter('datePosted')}
-                className="text-xs text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100 font-medium cursor-pointer hover:underline"
-              >
-                Clear
-              </button>
-            )}
-          </div>
-          <DatePicker
-            key={filters.datePosted || 'date-picker'}
-            id="jobs-date-posted-filter"
-            placeholder="Select date posted"
-            defaultDate={filters.datePosted || undefined}
-            onChange={(dates, currentDateString) => {
-              onFilterChange('datePosted', currentDateString || '');
-            }}
-          />
-        </div>
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Occupation
-            </Label>
-          
+            <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Occupation</Label>
+
             {filters.occupationId && (
               <button
-                onClick={() => onClearIndividualFilter('occupationId')}
+                onClick={() => onClearIndividualFilter("occupationId")}
                 className="text-xs text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100 font-medium cursor-pointer hover:underline"
               >
                 Clear
@@ -63,8 +37,8 @@ const JobsAdminFilters: React.FC<JobsAdminFiltersProps> = ({
             )}
           </div>
           <SearchableSelect
-            value={filters.occupationId?.toString() || ''}
-            onChange={(value: string) => onFilterChange('occupationId', value === '' ? undefined : parseInt(value))}
+            value={filters.occupationId?.toString() || ""}
+            onChange={(value: string) => onFilterChange("occupationId", value === "" ? undefined : parseInt(value))}
             options={occupationOptions}
             placeholder="Select Occupation..."
             searchPlaceholder="Search occupations..."
@@ -74,13 +48,11 @@ const JobsAdminFilters: React.FC<JobsAdminFiltersProps> = ({
 
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Specialty
-            </Label>
-          
+            <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Specialty</Label>
+
             {filters.specialtyId && (
               <button
-                onClick={() => onClearIndividualFilter('specialtyId')}
+                onClick={() => onClearIndividualFilter("specialtyId")}
                 className="text-xs text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100 font-medium cursor-pointer hover:underline"
               >
                 Clear
@@ -88,8 +60,8 @@ const JobsAdminFilters: React.FC<JobsAdminFiltersProps> = ({
             )}
           </div>
           <SearchableSelect
-            value={filters.specialtyId?.toString() || ''}
-            onChange={(value: string) => onFilterChange('specialtyId', value === '' ? undefined : parseInt(value))}
+            value={filters.specialtyId?.toString() || ""}
+            onChange={(value: string) => onFilterChange("specialtyId", value === "" ? undefined : parseInt(value))}
             options={specialtyOptions}
             disabled={!selectedOccupationId}
             placeholder="Select Specialty..."
@@ -99,13 +71,11 @@ const JobsAdminFilters: React.FC<JobsAdminFiltersProps> = ({
         </div>
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              State
-            </Label>
-           
+            <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">State</Label>
+
             {filters.state && (
               <button
-                onClick={() => onClearIndividualFilter('state')}
+                onClick={() => onClearIndividualFilter("state")}
                 className="text-xs text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100 font-medium cursor-pointer hover:underline"
               >
                 Clear
@@ -113,8 +83,8 @@ const JobsAdminFilters: React.FC<JobsAdminFiltersProps> = ({
             )}
           </div>
           <SearchableSelect
-            value={filters.state || ''}
-            onChange={(value: string) => onFilterChange('state', value)}
+            value={filters.state || ""}
+            onChange={(value: string) => onFilterChange("state", value)}
             options={stateOptions}
             placeholder="Select state..."
             searchPlaceholder="Search states..."
@@ -123,13 +93,58 @@ const JobsAdminFilters: React.FC<JobsAdminFiltersProps> = ({
         </div>
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Job Status
-            </Label>
-           
+            <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">City</Label>
+            {filters.city && (
+              <button
+                onClick={() => onClearIndividualFilter("city")}
+                className="text-xs text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100 font-medium cursor-pointer hover:underline"
+              >
+                Clear
+              </button>
+            )}
+          </div>
+          <SearchableSelect
+            value={filters.city || ""}
+            onChange={(value: string) => onFilterChange("city", value)}
+            options={cityOptions}
+            placeholder={
+              filters.state ? (isLoadingCities ? "Loading cities..." : "Select city...") : "Select state first"
+            }
+            searchPlaceholder="Search city..."
+            className="w-full"
+            disabled={!filters.state || isLoadingCities}
+          />
+        </div>
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Date Posted</Label>
+
+            {filters.datePosted && (
+              <button
+                onClick={() => onClearIndividualFilter("datePosted")}
+                className="text-xs text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100 font-medium cursor-pointer hover:underline"
+              >
+                Clear
+              </button>
+            )}
+          </div>
+          <DatePicker
+            key={filters.datePosted || "date-picker"}
+            id="jobs-date-posted-filter"
+            placeholder="Select date posted"
+            defaultDate={filters.datePosted || undefined}
+            onChange={(dates, currentDateString) => {
+              onFilterChange("datePosted", currentDateString || "");
+            }}
+          />
+        </div>
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Job Status</Label>
+
             {selectedJobStatuses.length > 0 && (
               <button
-                onClick={() => onClearIndividualFilter('jobStatus')}
+                onClick={() => onClearIndividualFilter("jobStatus")}
                 className="text-xs text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100 font-medium cursor-pointer hover:underline"
               >
                 Clear
@@ -139,9 +154,9 @@ const JobsAdminFilters: React.FC<JobsAdminFiltersProps> = ({
           <StatusToggleFilter
             selectedStatuses={selectedJobStatuses}
             onChange={onJobStatusToggle}
-            options={jobStatusOptions.map(option => ({
+            options={jobStatusOptions.map((option) => ({
               value: option.value,
-              label: option.label
+              label: option.label,
             }))}
           />
         </div>

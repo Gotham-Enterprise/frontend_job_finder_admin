@@ -8,6 +8,7 @@ import { jobApplicationApi } from "@/services/api/jobApplication";
 import { openFileInNewTab } from "@/services/utils/fileUtils";
 import Button from "../button/Button";
 import FullScreenSpinner from "../FullScreenSpinner";
+import Link from "next/link";
 
 export type { ContactInfo, Document, ProfileData, ProfileCardProps } from "@/services/types/ProfileCard";
 
@@ -165,14 +166,28 @@ export default function ProfileCard({
         {showContactInfo && contactInfo.length > 0 && (
           <div className={`w-full space-y-4 ${variant === "compact" ? "mb-4" : "mb-6"}`}>
             {contactInfo.map((info, index) => (
-              <div key={index} className="flex gap-2 items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+              <div
+                key={index}
+                className="flex gap-2 items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
+              >
                 <div className="flex items-center gap-2">
                   {info.icon}
                   <span className="text-sm font-medium text-gray-600 dark:text-gray-300">{info.label}</span>
                 </div>
-                <span className={`text-sm font-semibold ${info.className || "text-gray-900 dark:text-white"}`}>
-                  {info.value}
-                </span>
+                {info.href ? (
+                  <Link
+                    href={info.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`text-sm font-semibold text-primary ${info.className || ""}`}
+                  >
+                    {info.value}
+                  </Link>
+                ) : (
+                  <span className={`text-sm font-semibold ${info.className || "text-gray-900 dark:text-white"}`}>
+                    {info.value}
+                  </span>
+                )}
               </div>
             ))}
           </div>

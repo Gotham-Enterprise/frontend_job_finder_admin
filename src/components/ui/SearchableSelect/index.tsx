@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { SearchIcon } from '../icons';
 
 interface SearchableSelectOption {
@@ -30,8 +31,10 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [focusedIndex, setFocusedIndex] = useState(-1);
   const containerRef = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const optionsRef = useRef<HTMLDivElement>(null);
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
 
   const selectedOption = useMemo(() => {
     return options.find(option => option.value === value);
@@ -53,7 +56,11 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
 
   useEffect(() => {
     const clickOutside = (event: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+      const target = event.target as Node;
+      const isOutside =
+        (!containerRef.current || !containerRef.current.contains(target)) &&
+        (!dropdownRef.current || !dropdownRef.current.contains(target));
+      if (isOutside) {
         setIsOpen(false);
         setSearchQuery('');
         setFocusedIndex(-1);
@@ -63,6 +70,17 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
     document.addEventListener('mousedown', clickOutside);
     return () => document.removeEventListener('mousedown', clickOutside);
   }, []);
+
+  useEffect(() => {
+    if (isOpen && containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      setDropdownPosition({
+        top: rect.bottom + 4,
+        left: rect.left,
+        width: rect.width,
+      });
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     if (isOpen && searchInputRef.current) {
@@ -107,7 +125,8 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
 
   useEffect(() => {
     if (isOpen && focusedIndex >= 0 && optionsRef.current) {
-      const focusedElement = optionsRef.current.children[focusedIndex + 1] as HTMLElement;
+      const optionsContainer = optionsRef.current.children[1] as HTMLElement;
+      const focusedElement = optionsContainer?.children[focusedIndex] as HTMLElement;
       if (focusedElement) {
         focusedElement.scrollIntoView({
           block: 'nearest',
@@ -170,11 +189,20 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
         </svg>
       </button>
 
-      {isOpen && (
-        <div className="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-64 overflow-hidden">
-          <div ref={optionsRef} className="flex flex-col">
-        
-            <div className="p-3 border-b border-gray-200 dark:border-gray-700">
+      {isOpen &&
+        createPortal(
+          <div
+            ref={dropdownRef}
+            data-filter-nested-dropdown
+            className="fixed z-[9999] bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-64 overflow-hidden"
+            style={{
+              top: dropdownPosition.top,
+              left: dropdownPosition.left,
+              width: dropdownPosition.width,
+            }}
+          >
+            <div ref={optionsRef} className="flex flex-col">
+              <div className="p-3 border-b border-gray-200 dark:border-gray-700">
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <SearchIcon className="h-4 w-4 text-gray-400" />
@@ -232,8 +260,9 @@ const SearchableSelect: React.FC<SearchableSelectProps> = ({
               )}
             </div>
           </div>
-        </div>
-      )}
+        </div>,
+          document.body
+        )}
     </div>
   );
 };

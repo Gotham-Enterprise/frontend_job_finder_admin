@@ -27,6 +27,7 @@ export const jobsAdminApi = {
     if (filters.limit) queryParams.append('limit', filters.limit.toString());
     if (filters.name) queryParams.append('name', filters.name);
     if (filters.state) queryParams.append('state', filters.state);
+    if (filters.city) queryParams.append('city', filters.city);
     if (filters.jobStatus) queryParams.append('jobStatus', filters.jobStatus);
     if (filters.datePosted) queryParams.append('datePosted', filters.datePosted);
     if (filters.occupationId) queryParams.append('occupationId', filters.occupationId.toString());
