@@ -23,6 +23,8 @@ export interface JobApplicationsFiltersProps {
   filters: JobApplicationFilters;
   onFilterChange: (key: keyof JobApplicationFilters, value: any) => void;
   stateOptions: Array<{ value: string; label: string }>;
+  cityOptions: Array<{ value: string; label: string }>;
+  isLoadingCities: boolean;
   statusOptions: Array<{ value: string; label: string }>;
   selectedStatuses: string[];
   onStatusToggle: (statuses: string[]) => void;

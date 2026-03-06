@@ -23,6 +23,8 @@ export interface JobsAdminFiltersProps {
   occupationOptions: Array<{ value: string; label: string }>;
   specialtyOptions: Array<{ value: string; label: string }>;
   stateOptions: Array<{ value: string; label: string }>;
+  cityOptions: Array<{ value: string; label: string }>;
+  isLoadingCities: boolean;
   jobStatusOptions: Array<{ value: string; label: string }>;
   selectedOccupationId?: number;
   hasActiveFilters: boolean;

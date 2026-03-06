@@ -19,9 +19,10 @@ export interface JobApplicationFilters {
   page?: number;
   limit?: number;
   name?: string;
-  location?: string;
   companyName?: string;
   status?: string;
+  city?: string;
+  state?: string;
 }
 
 export interface JobApplicationsResponse {
@@ -69,6 +70,8 @@ export interface JobApplicationDetails {
   employerQuestion?: EmployerQuestion[];
   documents: Documents[];
   email: string;
+  jobDescription: string;
+  jobId: string;
 }
 
 export interface JobApplicationDetailsResponse {
