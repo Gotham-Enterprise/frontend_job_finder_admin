@@ -3,7 +3,7 @@
 import React, { useState } from 'react'
 import { useAffiliateAnalytics, useAffiliatePartners } from '@/services/hooks/useAffiliates'
 import dynamic from 'next/dynamic'
-import { TrendingUp, Users, MousePointerClick, Trophy } from 'lucide-react'
+import { TrendingUp, Users, MousePointerClick, Trophy, DollarSign, CheckCircle, BarChart2 } from 'lucide-react'
 import DatePicker from '@/components/form/date-picker'
 
 // Dynamically import ApexCharts to avoid SSR issues
@@ -329,6 +329,48 @@ export default function AnalyticsTab() {
         </div>
       </div>
 
+      {/* Conversion Metrics Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-emerald-700 dark:text-emerald-400 font-medium">Total Conversions</p>
+              <p className="text-3xl font-bold text-emerald-900 dark:text-emerald-300 mt-2">
+                {analytics?.totalConversions?.toLocaleString() ?? 0}
+              </p>
+              <p className="text-xs text-emerald-600 dark:text-emerald-500 mt-1">S2S postback receipts</p>
+            </div>
+            <CheckCircle className="w-12 h-12 text-emerald-600 dark:text-emerald-500" />
+          </div>
+        </div>
+
+        <div className="bg-teal-50 dark:bg-teal-900/20 border border-teal-200 dark:border-teal-800 rounded-lg p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-teal-700 dark:text-teal-400 font-medium">Conversion Rate</p>
+              <p className="text-3xl font-bold text-teal-900 dark:text-teal-300 mt-2">
+                {analytics?.conversionRate ?? 0}%
+              </p>
+              <p className="text-xs text-teal-600 dark:text-teal-500 mt-1">Conversions / Clicks</p>
+            </div>
+            <BarChart2 className="w-12 h-12 text-teal-600 dark:text-teal-500" />
+          </div>
+        </div>
+
+        <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-yellow-700 dark:text-yellow-400 font-medium">Total Payout</p>
+              <p className="text-3xl font-bold text-yellow-900 dark:text-yellow-300 mt-2">
+                ${(analytics?.totalPayout ?? 0).toFixed(2)}
+              </p>
+              <p className="text-xs text-yellow-600 dark:text-yellow-500 mt-1">Earned from conversions</p>
+            </div>
+            <DollarSign className="w-12 h-12 text-yellow-600 dark:text-yellow-500" />
+          </div>
+        </div>
+      </div>
+
       {/* Clicks Over Time Chart */}
       <div className="border border-gray-200 dark:border-gray-800 rounded-lg p-6">
         <div className="flex items-center gap-2 mb-4">
@@ -506,6 +548,70 @@ export default function AnalyticsTab() {
           </div>
         </div>
       )}
+
+      {/* Conversions Table */}
+      <div className="border border-gray-200 dark:border-gray-800 rounded-lg">
+        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-800">
+          <div className="flex items-center gap-2">
+            <CheckCircle className="w-5 h-5 text-emerald-500" />
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Conversions</h3>
+            <span className="ml-auto text-sm text-gray-500 dark:text-gray-400">Latest 100</span>
+          </div>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50 dark:bg-gray-900/50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Job Title</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Partner</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Payout</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Partner Conv. ID</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Converted At</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white dark:bg-transparent divide-y divide-gray-200 dark:divide-gray-800">
+              {analytics?.conversions && analytics.conversions.length > 0 ? (
+                analytics.conversions.map((c) => (
+                  <tr key={c.id} className="hover:bg-gray-50 dark:hover:bg-gray-900/30 transition-colors">
+                    <td className="px-6 py-4">
+                      <span className="text-sm font-medium text-gray-900 dark:text-white">{c.jobTitle}</span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="text-sm text-gray-700 dark:text-gray-300 capitalize">{c.partner}</span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right">
+                      {c.payout != null ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 rounded-full text-sm font-medium">
+                          <DollarSign className="w-3 h-3" />
+                          {c.payout.toFixed(2)}
+                        </span>
+                      ) : (
+                        <span className="text-sm text-gray-400 dark:text-gray-600">&mdash;</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="text-sm text-gray-500 dark:text-gray-400 font-mono">
+                        {c.partnerConversionId ?? <span className="text-gray-400">&mdash;</span>}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="text-sm text-gray-700 dark:text-gray-300">
+                        {new Date(c.convertedAt).toLocaleString()}
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={5} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                    No conversions recorded yet
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   )
 }

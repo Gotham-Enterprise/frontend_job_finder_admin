@@ -106,6 +106,18 @@ export interface AffiliateAnalytics {
     jobTitle: string;
     count: number;
   }>;
+  // Conversion metrics
+  totalConversions: number;
+  conversionRate: number; // percentage: conversions/clicks * 100
+  totalPayout: number;
+  conversions: Array<{
+    id: string;
+    jobTitle: string;
+    partner: string;
+    payout: number | null;
+    partnerConversionId: string | null;
+    convertedAt: string;
+  }>;
 }
 
 export interface CreatePartnerData {
