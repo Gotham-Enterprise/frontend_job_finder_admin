@@ -3,7 +3,7 @@
 import React, { useState } from 'react'
 import { useAffiliateAnalytics, useAffiliatePartners } from '@/services/hooks/useAffiliates'
 import dynamic from 'next/dynamic'
-import { TrendingUp, Users, MousePointerClick, Trophy, DollarSign, CheckCircle, BarChart2 } from 'lucide-react'
+import { TrendingUp, Users, MousePointerClick, Trophy, DollarSign, CheckCircle, BarChart2, Briefcase } from 'lucide-react'
 import DatePicker from '@/components/form/date-picker'
 
 // Dynamically import ApexCharts to avoid SSR issues
@@ -236,6 +236,24 @@ export default function AnalyticsTab() {
               }
             }}
           />
+        </div>
+      </div>
+
+      {/* Job Count Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
+        <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-green-700 dark:text-green-400 font-medium">Active Jobs</p>
+              <p className="text-3xl font-bold text-green-900 dark:text-green-300 mt-2">
+                {analytics?.publishedAffiliateJobs?.toLocaleString() ?? 0}
+              </p>
+              <p className="text-xs text-green-600 dark:text-green-500 mt-1">
+                {selectedPartnerId ? 'Live jobs from this partner' : 'Live jobs across all partners'}
+              </p>
+            </div>
+            <Briefcase className="w-12 h-12 text-green-600 dark:text-green-500" />
+          </div>
         </div>
       </div>
 
