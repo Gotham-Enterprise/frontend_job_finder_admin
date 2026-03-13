@@ -74,6 +74,8 @@ export interface BatchStatus {
 }
 
 export interface AffiliateAnalytics {
+  totalAffiliateJobs: number;
+  publishedAffiliateJobs: number;
   totalClicks: number;
   authenticatedClicks: number;
   guestClicks: number;
