@@ -16,6 +16,7 @@ const JobApplicationsHeader: React.FC<JobApplicationsHeaderProps> = ({
   onClearFilters,
   hasActiveFilters,
   filterContent,
+  onCreateApplication,
 }) => {
   const filterButtonRef = useRef<HTMLButtonElement>(null);
   return (
@@ -34,6 +35,17 @@ const JobApplicationsHeader: React.FC<JobApplicationsHeaderProps> = ({
         </div>
         
         <div className="flex items-center gap-2">
+          {onCreateApplication && (
+            <button
+              onClick={onCreateApplication}
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary hover:bg-primary/90 rounded-lg transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Create Application
+            </button>
+          )}
           <button
             ref={filterButtonRef}
             onClick={() => setIsFilterOpen(!isFilterOpen)}
