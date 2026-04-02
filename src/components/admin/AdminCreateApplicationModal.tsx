@@ -60,6 +60,7 @@ export default function AdminCreateApplicationModal({
   // Questions & answers
   const [questions, setQuestions] = useState<JobQuestion[]>([]);
   const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [answerFileMap, setAnswerFileMap] = useState<Record<string, File>>({});
   const [isLoadingQuestions, setIsLoadingQuestions] = useState(false);
 
   // Submission
@@ -83,6 +84,7 @@ export default function AdminCreateApplicationModal({
       setJobResults([]);
       setQuestions([]);
       setAnswers({});
+      setAnswerFileMap({});
       setError("");
       setIsCandidateDropdownOpen(false);
       setIsJobDropdownOpen(false);
@@ -98,6 +100,7 @@ export default function AdminCreateApplicationModal({
         .then((res) => {
           setQuestions(res.data || []);
           setAnswers({});
+          setAnswerFileMap({});
         })
         .catch(() => {
           setQuestions([]);
@@ -169,6 +172,7 @@ export default function AdminCreateApplicationModal({
         setSelectedJob(null);
         setQuestions([]);
         setAnswers({});
+        setAnswerFileMap({});
       }
       if (jobDebounceRef.current) clearTimeout(jobDebounceRef.current);
 
@@ -358,12 +362,39 @@ export default function AdminCreateApplicationModal({
       );
     }
 
-    // File — Not supported
+    // File — File input
     if (typeName === "File") {
+      const selectedFile = answerFileMap[q.id];
       return (
-        <p className="text-sm text-gray-500 dark:text-gray-400 italic">
-          File upload questions are not supported for admin-created applications.
-        </p>
+        <div className="flex flex-col gap-1">
+          <input
+            type="file"
+            id={`q-file-${q.id}`}
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) {
+                setAnswerFileMap((prev) => ({ ...prev, [q.id]: file }));
+              } else {
+                setAnswerFileMap((prev) => {
+                  const next = { ...prev };
+                  delete next[q.id];
+                  return next;
+                });
+              }
+            }}
+            className="block w-full text-sm text-gray-700 dark:text-gray-300
+              file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0
+              file:text-sm file:font-medium file:bg-primary/10 file:text-primary
+              hover:file:bg-primary/20 cursor-pointer
+              border border-gray-300 dark:border-gray-600 rounded-lg p-1
+              bg-white dark:bg-gray-700"
+          />
+          {selectedFile && (
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              Selected: {selectedFile.name}
+            </p>
+          )}
+        </div>
       );
     }
 
@@ -395,9 +426,11 @@ export default function AdminCreateApplicationModal({
     }
 
     // Check required questions
-    const requiredUnanswered = questions.filter(
-      (q) => q.required && !answers[q.id]?.trim(),
-    );
+    const requiredUnanswered = questions.filter((q) => {
+      if (!q.required) return false;
+      if (q.questionType?.id === 4) return !answerFileMap[q.id];
+      return !answers[q.id]?.trim();
+    });
     if (requiredUnanswered.length > 0) {
       setError("Please answer all required questions.");
       return;
@@ -410,13 +443,41 @@ export default function AdminCreateApplicationModal({
         answerText: answerText.trim(),
       }));
 
+    // Add placeholder entries for file answers so the backend knows which
+    // questions have file uploads (the actual file content comes via FormData).
+    const fileQuestionIds = Object.keys(answerFileMap);
+    fileQuestionIds.forEach((qId) => {
+      if (!answerPayload.find((a) => a.questionId === qId)) {
+        answerPayload.push({ questionId: qId, answerText: "" });
+      }
+    });
+
     setIsSubmitting(true);
     try {
-      await adminApplicationApi.createApplicationOnBehalf({
-        candidateId: selectedCandidate.id,
-        jobId: selectedJob.id,
-        answers: answerPayload.length > 0 ? answerPayload : undefined,
-      });
+      let payload: FormData | { candidateId: string; jobId: string; answers?: { questionId: string; answerText: string }[] };
+
+      if (fileQuestionIds.length > 0) {
+        const fd = new FormData();
+        fd.append("candidateId", selectedCandidate.id);
+        fd.append("jobId", selectedJob.id);
+        if (answerPayload.length > 0) {
+          fd.append("answers", JSON.stringify(answerPayload));
+        }
+        fileQuestionIds.forEach((qId) => {
+          const file = answerFileMap[qId];
+          // Name encodes the questionId so the backend can map file → question
+          fd.append("answerFiles", file, `${qId}_|_${file.name}`);
+        });
+        payload = fd;
+      } else {
+        payload = {
+          candidateId: selectedCandidate.id,
+          jobId: selectedJob.id,
+          answers: answerPayload.length > 0 ? answerPayload : undefined,
+        };
+      }
+
+      await adminApplicationApi.createApplicationOnBehalf(payload);
       onSuccess();
       onClose();
     } catch (err: unknown) {
@@ -592,11 +653,12 @@ export default function AdminCreateApplicationModal({
                   type="button"
                   onClick={() => {
                     setSelectedJob(null);
-                    setJobSearch("");
-                    setJobResults([]);
-                    setQuestions([]);
-                    setAnswers({});
-                  }}
+        setJobSearch("");
+        setJobResults([]);
+        setQuestions([]);
+        setAnswers({});
+        setAnswerFileMap({});
+      }}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                 >
                   <svg

@@ -64,7 +64,7 @@ export const adminApplicationApi = {
   },
 
   async createApplicationOnBehalf(
-    payload: CreateApplicationOnBehalfPayload
+    payload: FormData | CreateApplicationOnBehalfPayload
   ): Promise<{ success: boolean; data: unknown }> {
     return apiPost<{ success: boolean; data: unknown }>(`/api/admin/applications/create-on-behalf`, payload);
   },
