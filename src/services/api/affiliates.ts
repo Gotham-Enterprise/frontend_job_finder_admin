@@ -269,3 +269,50 @@ export const getAffiliateAnalytics = async (params?: {
   );
   return response.data;
 };
+
+// ===== Adzuna Co-Registration APIs =====
+
+export interface AdzunaCoRegRecord {
+  id: string;
+  email: string;
+  what: string | null;
+  where: string | null;
+  status: "success" | "failed";
+  responseCode: number | null;
+  attempts: number;
+  errorMessage: string | null;
+  sentAt: string;
+  updatedAt: string;
+}
+
+export interface AdzunaCoRegListResponse {
+  success: boolean;
+  records: AdzunaCoRegRecord[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+  summary: {
+    successCount: number;
+    failedCount: number;
+  };
+}
+
+export const getAdzunaCoRegs = async (params?: {
+  page?: number;
+  limit?: number;
+  status?: string;
+  startDate?: string;
+  endDate?: string;
+}): Promise<AdzunaCoRegListResponse> => {
+  const queryParams = new URLSearchParams();
+  if (params?.page) queryParams.append("page", params.page.toString());
+  if (params?.limit) queryParams.append("limit", params.limit.toString());
+  if (params?.status && params.status !== "all") queryParams.append("status", params.status);
+  if (params?.startDate) queryParams.append("startDate", params.startDate);
+  if (params?.endDate) queryParams.append("endDate", params.endDate);
+  const queryString = queryParams.toString();
+  return apiGet<AdzunaCoRegListResponse>(`/api/admin/affiliates/coreg${queryString ? `?${queryString}` : ""}`);
+};
