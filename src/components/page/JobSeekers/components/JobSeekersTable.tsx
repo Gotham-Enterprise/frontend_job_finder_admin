@@ -884,7 +884,8 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
                           href={`/admin/applications?name=${jobSeeker.id}`}
                           className="text-sm text-blue-500 dark:text-blue-500 hover:text-brand-500 dark:hover:text-brand-400 cursor-pointer transition-colors duration-200"
                         >
-                          {jobSeeker.jobApplications} applications
+                          {jobSeeker.jobApplications}{" "}
+                          {jobSeeker.jobApplications === 1 ? "application" : "applications"}
                         </Link>
                       </div>
                     </div>
