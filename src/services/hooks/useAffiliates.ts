@@ -13,6 +13,7 @@ import {
   getAffiliateAnalytics,
   triggerAffiliateSync,
   getAffiliateSyncStatus,
+  getAdzunaCoRegs,
   CreatePartnerData,
   UpdatePartnerData,
 } from "../api/affiliates";
@@ -27,6 +28,7 @@ export const affiliateQueryKeys = {
   batchStatus: (id: string) => [...affiliateQueryKeys.batches(), id, "status"] as const,
   batchJobs: (id: string, page: number) => [...affiliateQueryKeys.batches(), id, "jobs", page] as const,
   analytics: (filters: any) => [...affiliateQueryKeys.all, "analytics", filters] as const,
+  coReg: (filters: any) => [...affiliateQueryKeys.all, "coreg", filters] as const,
 };
 
 // Partner Management Hooks
@@ -198,5 +200,21 @@ export const useAffiliateAnalytics = (params?: { affiliateId?: string; startDate
     queryFn: () => getAffiliateAnalytics(params),
     staleTime: 1000 * 60 * 5, // 5 minutes
     gcTime: 1000 * 60 * 10,
+  });
+};
+
+// Co-Registration Hooks
+export const useAdzunaCoRegs = (params?: {
+  page?: number;
+  limit?: number;
+  status?: string;
+  startDate?: string;
+  endDate?: string;
+}) => {
+  return useQuery({
+    queryKey: affiliateQueryKeys.coReg(params || {}),
+    queryFn: () => getAdzunaCoRegs(params),
+    staleTime: 1000 * 60 * 2, // 2 minutes
+    gcTime: 1000 * 60 * 5,
   });
 };
