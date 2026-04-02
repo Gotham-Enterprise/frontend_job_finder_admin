@@ -10,6 +10,8 @@ export interface JobsAdminHeaderProps {
   isLoading: boolean;
   searchInput: string;
   setSearchInput: (value: string) => void;
+  companyNameInput: string;
+  setCompanyNameInput: (value: string) => void;
   isFilterOpen: boolean;
   setIsFilterOpen: (value: boolean) => void;
   onRefetch: () => void;
@@ -30,8 +32,6 @@ export interface JobsAdminFiltersProps {
   hasActiveFilters: boolean;
   selectedJobStatuses: string[];
   onJobStatusToggle: (statuses: string[]) => void;
-  companyNameInput: string;
-  setCompanyNameInput: (value: string) => void;
 }
 
 export interface JobsAdminTableProps {

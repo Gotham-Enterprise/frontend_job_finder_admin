@@ -3,7 +3,6 @@ import SearchableSelect from "../../../ui/SearchableSelect";
 import StatusToggleFilter from "../../../ui/StatusToggleFilter";
 import Label from "../../../form/Label";
 import DatePicker from "../../../form/date-picker";
-import Input from "../../../ui/input/Input";
 import { JobsAdminFiltersProps } from "@/services/types/JobsAdminTypes";
 
 const JobsAdminFilters: React.FC<JobsAdminFiltersProps> = ({
@@ -20,32 +19,10 @@ const JobsAdminFilters: React.FC<JobsAdminFiltersProps> = ({
   hasActiveFilters,
   selectedJobStatuses,
   onJobStatusToggle,
-  companyNameInput,
-  setCompanyNameInput,
 }) => {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Company Name</Label>
-            {filters.companyName && (
-              <button
-                onClick={() => onClearIndividualFilter("companyName")}
-                className="text-xs text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100 font-medium cursor-pointer hover:underline"
-              >
-                Clear
-              </button>
-            )}
-          </div>
-          <Input
-            type="text"
-            placeholder="Filter by company name..."
-            value={companyNameInput}
-            onChange={(e) => setCompanyNameInput(e.target.value)}
-            className="w-full"
-          />
-        </div>
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Occupation</Label>
