@@ -71,7 +71,7 @@ const JobsAdminHeader: React.FC<JobsAdminHeaderWithDropdownProps> = ({
           </div>
           <Input
             type="text"
-            placeholder="Search jobs by title or representative..."
+            placeholder="Search jobs by job title or job ID..."
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             className={`w-full pl-10 ${searchInput ? 'pr-10' : ''}`}
