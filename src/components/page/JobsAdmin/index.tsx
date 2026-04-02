@@ -52,6 +52,8 @@ const JobsAdmin: React.FC<JobsAdminProps> = ({ className = "" }) => {
     clearIndividualFilter,
     hasActiveFilters,
     selectedJobStatuses,
+    companyNameInput,
+    setCompanyNameInput,
   } = useJobsAdminLogic();
 
   if (error && !isPending) {
@@ -92,8 +94,8 @@ const JobsAdmin: React.FC<JobsAdminProps> = ({ className = "" }) => {
             selectedOccupationId={selectedOccupationId}
             hasActiveFilters={hasActiveFilters}
             selectedJobStatuses={selectedJobStatuses}
-            onJobStatusToggle={jobStatusToggle}
-          />
+            onJobStatusToggle={jobStatusToggle}            companyNameInput={companyNameInput}
+            setCompanyNameInput={setCompanyNameInput}          />
         }
       />
 

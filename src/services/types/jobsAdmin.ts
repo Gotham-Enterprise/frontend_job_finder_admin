@@ -2,13 +2,13 @@ export interface JobsAdmin {
   id: string;
   title: string;
   datePosted: string;
-  status: 'OPEN' | 'CLOSED' | 'PAUSED';
+  status: "OPEN" | "CLOSED" | "PAUSED";
   occupation: string;
   specialty?: string;
   location: string;
   locationState: string;
   companyName: string;
-  jobStatus: 'Draft' | 'Published';
+  jobStatus: "Draft" | "Published";
   salaryRangeStart?: number;
   salaryRangeEnd?: number;
   salaryCurrency?: string;
@@ -20,13 +20,14 @@ export interface JobsAdmin {
 export interface JobsAdminFilters {
   page?: number;
   limit?: number;
-  name?: string; 
-  state?: string; 
+  name?: string;
+  state?: string;
   city?: string;
-  jobStatus?: 'Draft' | 'Published';
+  jobStatus?: "Draft" | "Published";
   datePosted?: string;
   occupationId?: number;
   specialtyId?: number;
+  companyName?: string;
 }
 
 export interface JobsAdminResponse {
