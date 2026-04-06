@@ -274,7 +274,7 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
       <AdminCreateApplicationModal
         isOpen={isCreateAppModalOpen}
         onClose={() => setIsCreateAppModalOpen(false)}
-        onSuccess={() => window.location.reload()}
+        onSuccess={() => setIsCreateAppModalOpen(false)}
         preSelectedCandidate={{ id: jobSeeker.id, name: jobSeeker.name }}
       />
     </>

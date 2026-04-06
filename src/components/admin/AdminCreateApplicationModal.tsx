@@ -13,6 +13,7 @@ import {
   SearchJobResult,
   JobQuestion,
 } from "@/services/api/adminApplication";
+import { showToast } from "@/services/utils/toast";
 
 interface PreSelectedCandidate {
   id: string;
@@ -478,6 +479,7 @@ export default function AdminCreateApplicationModal({
       }
 
       await adminApplicationApi.createApplicationOnBehalf(payload);
+      showToast.success("Application Created", "The application has been successfully created.");
       onSuccess();
       onClose();
     } catch (err: unknown) {
