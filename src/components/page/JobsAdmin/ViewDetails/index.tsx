@@ -138,10 +138,10 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
                         <div className="flex items-center mb-6">
                             <h3 className="text-xl font-bold text-gray-900 dark:text-white">Job Description</h3>
                         </div>
-                        
                         <div className="prose prose-sm flex flex-col gap-10 max-w-none dark:prose-invert">
-                            <div 
-                                className="text-gray-700 dark:text-gray-300 leading-relaxed"
+                            <div
+                                className="text-gray-700 dark:text-gray-300 leading-relaxed break-words overflow-wrap break-word"
+                                style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}
                                 dangerouslySetInnerHTML={{ __html: job.jobDescription || 'No job description provided' }}
                             />
                         </div>
