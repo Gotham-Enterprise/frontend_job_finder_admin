@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import { useJobsAdminDetails } from "@/services/hooks/useJobsAdmin";
 import { formatDate } from "@/services/utils/dateUtils";
 import ErrorState from "../../../common/ErrorState";
@@ -7,6 +7,7 @@ import FullScreenSpinner from "../../../ui/FullScreenSpinner";
 import ProfileCard from "@/components/ui/ProfileCard";
 import { ProfileData, ContactInfo } from "@/services/types/ProfileCard";
 import BackToListButton from '@/components/ui/BackToListButton';
+import AdminCreateApplicationModal from "@/components/admin/AdminCreateApplicationModal";
 
 interface ViewDetailsProps {
     id: string;
@@ -14,6 +15,7 @@ interface ViewDetailsProps {
 
 export default function ViewDetails({ id }: ViewDetailsProps) {
     const { data, isLoading, error } = useJobsAdminDetails(id);
+    const [isCreateAppModalOpen, setIsCreateAppModalOpen] = useState(false);
 
     if (isLoading) {
         return <FullScreenSpinner isVisible={true} message="Loading job details..." />;
@@ -104,9 +106,17 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
     return (
         <>
             <div className="px-4 pt-4 pb-2">
-                <BackToListButton href="/admin/jobs" preserveState={true}>
-                    Back to Jobs
-                </BackToListButton>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <BackToListButton href="/admin/jobs" preserveState={true}>
+                        Back to Jobs
+                    </BackToListButton>
+                    <button
+                        onClick={() => setIsCreateAppModalOpen(true)}
+                        className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-primary bg-primary/10 hover:bg-primary/20 dark:bg-primary/20 dark:text-primary dark:hover:bg-primary/30 rounded-lg transition-colors"
+                    >
+                        Create Application
+                    </button>
+                </div>
             </div>
 
             <div className="grid grid-cols-1 px-4 pt-6 xl:grid-cols-3 xl:gap-6">
@@ -128,10 +138,10 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
                         <div className="flex items-center mb-6">
                             <h3 className="text-xl font-bold text-gray-900 dark:text-white">Job Description</h3>
                         </div>
-                        
                         <div className="prose prose-sm flex flex-col gap-10 max-w-none dark:prose-invert">
-                            <div 
-                                className="text-gray-700 dark:text-gray-300 leading-relaxed"
+                            <div
+                                className="text-gray-700 dark:text-gray-300 leading-relaxed break-words overflow-wrap break-word"
+                                style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}
                                 dangerouslySetInnerHTML={{ __html: job.jobDescription || 'No job description provided' }}
                             />
                         </div>
@@ -153,6 +163,13 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
                     )}
                 </div>
             </div>
+
+            <AdminCreateApplicationModal
+                isOpen={isCreateAppModalOpen}
+                onClose={() => setIsCreateAppModalOpen(false)}
+                onSuccess={() => setIsCreateAppModalOpen(false)}
+                preSelectedJob={{ id: job.id, title: job.title }}
+            />
         </>
     );
 }
