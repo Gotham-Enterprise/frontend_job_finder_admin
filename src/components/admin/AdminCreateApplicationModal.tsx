@@ -136,6 +136,7 @@ export default function AdminCreateApplicationModal({
   // Debounced candidate search
   const handleCandidateSearchChange = useCallback(
     (value: string) => {
+      setError("");
       setCandidateSearch(value);
       if (selectedCandidate) {
         setSelectedCandidate(null);
@@ -168,6 +169,7 @@ export default function AdminCreateApplicationModal({
   // Debounced job search
   const handleJobSearchChange = useCallback(
     (value: string) => {
+      setError("");
       setJobSearch(value);
       if (selectedJob) {
         setSelectedJob(null);
@@ -214,10 +216,12 @@ export default function AdminCreateApplicationModal({
   };
 
   const handleAnswerChange = (questionId: string, value: string) => {
+    setError("");
     setAnswers((prev) => ({ ...prev, [questionId]: value }));
   };
 
   const handleCheckboxToggle = (questionId: string, optionText: string) => {
+    setError("");
     setAnswers((prev) => {
       const current = prev[questionId] || "";
       const selected = current.split(",").filter(Boolean);
@@ -372,6 +376,7 @@ export default function AdminCreateApplicationModal({
             type="file"
             id={`q-file-${q.id}`}
             onChange={(e) => {
+              setError("");
               const file = e.target.files?.[0];
               if (file) {
                 setAnswerFileMap((prev) => ({ ...prev, [q.id]: file }));
@@ -529,11 +534,6 @@ export default function AdminCreateApplicationModal({
 
         {/* Body */}
         <div className="px-6 py-4 overflow-y-auto flex-1 space-y-5">
-          {error && (
-            <div className="p-3 text-sm text-red-600 bg-red-50 dark:bg-red-900/20 dark:text-red-400 border border-red-200 dark:border-red-800 rounded-lg">
-              {error}
-            </div>
-          )}
 
           {/* Candidate Search */}
           <div ref={candidateDropdownRef} className="relative">
@@ -747,32 +747,39 @@ export default function AdminCreateApplicationModal({
               )}
             </div>
           )}
-
           {/* Info about default resume */}
           <div className="p-3 text-sm text-blue-600 bg-blue-50 dark:bg-blue-900/20 dark:text-blue-400 border border-blue-200 dark:border-blue-800 rounded-lg">
             The candidate&apos;s default resume will be automatically attached
             to this application.
           </div>
+          
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
-          <Button
-            variant="ghost"
-            onClick={onClose}
-            disabled={isSubmitting}
-            className="px-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg"
-          >
-            Cancel
-          </Button>
-          <Button
-            variant="default"
-            onClick={handleSubmit}
-            disabled={isSubmitting || !selectedCandidate || !selectedJob}
-            className="px-4 py-2 text-sm rounded-lg"
-          >
-            {isSubmitting ? "Creating..." : "Create Application"}
-          </Button>
+        <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex flex-col gap-3">
+          {error && (
+            <div className="mb-2 p-3 text-sm text-red-600 bg-red-50 dark:bg-red-900/20 dark:text-red-400 border border-red-200 dark:border-red-800 rounded-lg">
+              {error}
+            </div>
+          )}
+          <div className="flex justify-end gap-3">
+            <Button
+              variant="ghost"
+              onClick={onClose}
+              disabled={isSubmitting}
+              className="px-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg"
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="default"
+              onClick={handleSubmit}
+              disabled={isSubmitting || !selectedCandidate || !selectedJob}
+              className="px-4 py-2 text-sm rounded-lg"
+            >
+              {isSubmitting ? "Creating..." : "Create Application"}
+            </Button>
+          </div>
         </div>
       </div>
     </Modal>
