@@ -1,4 +1,5 @@
-import React from 'react';
+"use client";
+import React, { useState } from 'react';
 import { formatDate, formatDateTimeEST } from '@/services/utils/dateUtils';
 import {
   Table,
@@ -12,6 +13,7 @@ import TableHeading from '../../../tables/tableHeader';
 import { EyeIcon, PencilIcon, TimeIcon } from '@/icons';
 import { JobsAdminTableProps } from '@/services/types/JobsAdminTypes';
 import PermissionWrapper from '@/components/common/PermissionWrapper';
+import { showToast } from '@/services/utils/toast';
 
 const JobsAdminTable: React.FC<JobsAdminTableProps> = ({
   data,
@@ -22,6 +24,14 @@ const JobsAdminTable: React.FC<JobsAdminTableProps> = ({
   onViewJobDetails,
   onEditJobPost,
 }) => {
+  const [copiedJobId, setCopiedJobId] = useState<string | null>(null);
+
+  const handleCopyJobId = (jobId: string) => {
+    navigator.clipboard.writeText(jobId);
+    setCopiedJobId(jobId);
+    showToast.success('Copied', 'Job ID copied to clipboard');
+    setTimeout(() => setCopiedJobId(null), 2000);
+  };
   return (
     <div className="overflow-x-auto">
       <Table>
@@ -29,7 +39,7 @@ const JobsAdminTable: React.FC<JobsAdminTableProps> = ({
         <TableBody>
           {isLoading ? (
             <TableRow>
-              <TableCell className="text-center py-8 px-6" colSpan={8}>
+              <TableCell className="text-center py-8 px-6" colSpan={9}>
                 <div className="flex items-center justify-center gap-3">
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-brand-500"></div>
                   <p className="text-gray-500 dark:text-gray-400">Loading...</p>
@@ -38,7 +48,7 @@ const JobsAdminTable: React.FC<JobsAdminTableProps> = ({
             </TableRow>
           ) : !data?.data?.length ? (
             <TableRow>
-              <TableCell className="text-center py-8 px-6" colSpan={8}>
+              <TableCell className="text-center py-8 px-6" colSpan={9}>
                 <p className="text-gray-500 dark:text-gray-400">No jobs found</p>
               </TableCell>
             </TableRow>          
@@ -50,6 +60,26 @@ const JobsAdminTable: React.FC<JobsAdminTableProps> = ({
                 data-job-id={job.id}
                 className="border-b text-sm border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50"
               >
+                <TableCell className="py-4 px-6">
+                  <button
+                    title="Click to copy Job ID"
+                    onClick={() => handleCopyJobId(job.id)}
+                    className="flex items-center gap-1.5 cursor-pointer group"
+                  >
+                    <span className="font-mono text-xs text-gray-500 dark:text-gray-400 group-hover:text-brand-500 transition-colors">
+                      {job.id.slice(0, 8)}...
+                    </span>
+                    {copiedJobId === job.id ? (
+                      <svg className="w-3.5 h-3.5 text-green-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                    ) : (
+                      <svg className="w-3.5 h-3.5 text-gray-400 group-hover:text-brand-500 shrink-0 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                      </svg>
+                    )}
+                  </button>
+                </TableCell>
                 <TableCell className="py-4 px-6">
                   <div className="flex flex-col gap-2">
                     <p className="font-medium text-gray-900 dark:text-white">

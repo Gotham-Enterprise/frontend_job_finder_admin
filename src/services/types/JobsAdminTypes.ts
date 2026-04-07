@@ -1,4 +1,4 @@
-import { JobsAdminFilters } from '@/services/types/jobsAdmin';
+import { JobsAdminFilters } from "@/services/types/jobsAdmin";
 
 export interface JobsAdminProps {
   className?: string;
@@ -10,6 +10,8 @@ export interface JobsAdminHeaderProps {
   isLoading: boolean;
   searchInput: string;
   setSearchInput: (value: string) => void;
+  companyNameInput: string;
+  setCompanyNameInput: (value: string) => void;
   isFilterOpen: boolean;
   setIsFilterOpen: (value: boolean) => void;
   onRefetch: () => void;
@@ -36,8 +38,8 @@ export interface JobsAdminTableProps {
   data: any;
   isLoading: boolean;
   tableColumns: Array<{ key: string; label: string; className?: string }>;
-  getStatusVariant: (status: string) => 'light' | 'solid';
-  getJobStatusVariant: (jobStatus: string) => 'light' | 'solid';
+  getStatusVariant: (status: string) => "light" | "solid";
+  getJobStatusVariant: (jobStatus: string) => "light" | "solid";
   onViewJobDetails: (jobId: string) => void;
   onEditJobPost: (jobId: string) => void;
 }

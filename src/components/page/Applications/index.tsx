@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { BoltIcon } from '@/icons';
 import ErrorState from '../../common/ErrorState';
 import FullScreenSpinner from '../../ui/FullScreenSpinner';
@@ -12,8 +12,11 @@ import {
   JobApplicationsTable,
   JobApplicationsTablePagination,
 } from './components';
+import AdminCreateApplicationModal from '@/components/admin/AdminCreateApplicationModal';
 
 const JobApplications: React.FC<JobApplicationsProps> = ({ className = "" }) => {
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+
   usePreservedNavigation({
     statePath: 'jobApplications-search-state',
     scrollPath: 'jobApplications-scroll-position',
@@ -76,6 +79,7 @@ const JobApplications: React.FC<JobApplicationsProps> = ({ className = "" }) => 
         onRefetch={refetch}
         onClearFilters={clearAllFilters}
         hasActiveFilters={hasActiveFilters}
+        onCreateApplication={() => setIsCreateModalOpen(true)}
         filterContent={
           <JobApplicationsFilters
             isOpen={isFilterOpen}
@@ -114,6 +118,12 @@ const JobApplications: React.FC<JobApplicationsProps> = ({ className = "" }) => 
       <FullScreenSpinner 
         isVisible={isViewingResume} 
         message="Opening resume..." 
+      />
+
+      <AdminCreateApplicationModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSuccess={() => refetch()}
       />
     </div>
   );

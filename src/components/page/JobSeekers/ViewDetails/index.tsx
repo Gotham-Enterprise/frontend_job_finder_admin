@@ -19,6 +19,7 @@ import BackToListButton from "@/components/ui/BackToListButton";
 import { DocsIcon } from "@/icons";
 import { MdOutlineLock } from "react-icons/md";
 import PermissionWrapper from "@/components/common/PermissionWrapper";
+import AdminCreateApplicationModal from "@/components/admin/AdminCreateApplicationModal";
 interface ViewDetailsProps {
   id: string;
 }
@@ -45,6 +46,8 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
     userId: "",
     userName: "",
   });
+
+  const [isCreateAppModalOpen, setIsCreateAppModalOpen] = useState(false);
 
   const openDeactivateModal = () => {
     if (data?.data) {
@@ -201,6 +204,13 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
               View History
             </button> */}
 
+            <button
+              onClick={() => setIsCreateAppModalOpen(true)}
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-primary bg-primary/10 hover:bg-primary/20 dark:bg-primary/20 dark:text-primary dark:hover:bg-primary/30 rounded-lg transition-colors"
+            >
+              Create Application
+            </button>
+
             {jobSeeker.status === "active" && (
               <PermissionWrapper module="jobseekers" action="edit">
                 <button
@@ -259,6 +269,13 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
         onClose={closeHistoryModal}
         userId={historyModal.userId}
         userName={historyModal.userName}
+      />
+
+      <AdminCreateApplicationModal
+        isOpen={isCreateAppModalOpen}
+        onClose={() => setIsCreateAppModalOpen(false)}
+        onSuccess={() => setIsCreateAppModalOpen(false)}
+        preSelectedCandidate={{ id: jobSeeker.id, name: jobSeeker.name }}
       />
     </>
   );
