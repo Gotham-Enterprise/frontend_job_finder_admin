@@ -67,6 +67,7 @@ export default function AdminCreateApplicationModal({
   // Submission
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   // Refs for debouncing and click-outside
   const candidateDebounceRef = useRef<NodeJS.Timeout | null>(null);
@@ -87,6 +88,7 @@ export default function AdminCreateApplicationModal({
       setAnswers({});
       setAnswerFileMap({});
       setError("");
+      setFieldErrors({});
       setIsCandidateDropdownOpen(false);
       setIsJobDropdownOpen(false);
     }
@@ -217,6 +219,13 @@ export default function AdminCreateApplicationModal({
 
   const handleAnswerChange = (questionId: string, value: string) => {
     setError("");
+    if (fieldErrors[questionId]) {
+      setFieldErrors((prev) => {
+        const next = { ...prev };
+        delete next[questionId];
+        return next;
+      });
+    }
     setAnswers((prev) => ({ ...prev, [questionId]: value }));
   };
 
@@ -301,21 +310,28 @@ export default function AdminCreateApplicationModal({
     // Text — Short Answer → Input with type based on questionSubTypeValue
     if (typeName === "Text" && subTypeName === "Short Answer") {
       const inputType = getInputTypeFromSubTypeValue(q.questionSubTypeValue?.value);
+      const fieldError = fieldErrors[q.id];
       return (
-        <input
-          type={inputType}
-          value={answers[q.id] || ""}
-          onChange={(e) => handleAnswerChange(q.id, e.target.value)}
-          placeholder={
-            q.questionSubTypeValue?.value
-              ? `Enter ${q.questionSubTypeValue.value.toLowerCase()}...`
-              : "Enter your answer..."
-          }
-          className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg
-            bg-white dark:bg-gray-700 text-gray-900 dark:text-white
-            placeholder-gray-500 dark:placeholder-gray-400
-            focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30"
-        />
+        <div className="flex flex-col gap-1">
+          <input
+            type={inputType}
+            value={answers[q.id] || ""}
+            onChange={(e) => handleAnswerChange(q.id, e.target.value)}
+            placeholder={
+              q.questionSubTypeValue?.value
+                ? `Enter ${q.questionSubTypeValue.value.toLowerCase()}...`
+                : "Enter your answer..."
+            }
+            className={`w-full px-3 py-2 text-sm border rounded-lg
+              bg-white dark:bg-gray-700 text-gray-900 dark:text-white
+              placeholder-gray-500 dark:placeholder-gray-400
+              focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30
+              ${fieldError ? "border-red-400 dark:border-red-500" : "border-gray-300 dark:border-gray-600"}`}
+          />
+          {fieldError && (
+            <p className="text-xs text-red-500 dark:text-red-400">{fieldError}</p>
+          )}
+        </div>
       );
     }
 
@@ -439,6 +455,36 @@ export default function AdminCreateApplicationModal({
     });
     if (requiredUnanswered.length > 0) {
       setError("Please answer all required questions.");
+      return;
+    }
+
+    // Validate format of Text — Short Answer fields
+    const newFieldErrors: Record<string, string> = {};
+    questions.forEach((q) => {
+      if (q.questionType?.name !== "Text" || q.questionSubType?.name !== "Short Answer") return;
+      const val = answers[q.id]?.trim();
+      if (!val) return; // empty non-required fields are fine
+      const subTypeValue = q.questionSubTypeValue?.value;
+      if (subTypeValue === "Email") {
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) {
+          newFieldErrors[q.id] = "Please enter a valid email address.";
+        }
+      } else if (subTypeValue === "URL") {
+        try {
+          new URL(val);
+        } catch {
+          newFieldErrors[q.id] = "Please enter a valid URL (e.g., https://example.com).";
+        }
+      } else if (subTypeValue === "Phone Number") {
+        // Accepts US formats: (555) 123-4567, 555-123-4567, 5551234567, +1 555 123 4567, etc.
+        if (!/^(\+1[\s\-.]?)?\(?\d{3}\)?[\s\-.]?\d{3}[\s\-.]?\d{4}$/.test(val)) {
+          newFieldErrors[q.id] = "Please enter a valid US phone number (e.g., (555) 123-4567).";
+        }
+      }
+    });
+    if (Object.keys(newFieldErrors).length > 0) {
+      setFieldErrors(newFieldErrors);
+      setError("Please fix the validation errors below.");
       return;
     }
 
