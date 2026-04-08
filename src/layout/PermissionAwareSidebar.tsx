@@ -18,7 +18,8 @@ import {
   UserCircleIcon,
   TaskIcon,
   IdCardIcon,
-  HandShake
+  HandShake,
+  MailIcon
 } from "../icons/index";
 import { BriefcaseIcon, CareerLadderIcon, TicketIcon, BlogIcon, CouponIcon } from "../components/ui/icons/index";
 
@@ -137,6 +138,16 @@ const navItems: NavItem[] = [
     path: "/admin/coupons",
     permissionKey: "coupons",
     //subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
+  },
+  {
+    icon: <MailIcon />,
+    name: "Newsletters",
+    path: "/admin/newsletters",
+    isAccessible: true,
+    subItems: [
+      { name: "All Newsletters", path: "/admin/newsletters" },
+      { name: "Create New", path: "/admin/newsletters/create" },
+    ],
   },
   {
     icon: <IdCardIcon />,
