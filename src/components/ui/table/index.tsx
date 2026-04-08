@@ -1,4 +1,5 @@
 import React, { ReactNode } from "react";
+import { twMerge } from "tailwind-merge";
 
 
 interface TableProps {
@@ -33,7 +34,9 @@ interface TableCellProps {
 
 
 const Table: React.FC<TableProps> = ({ children, className }) => {
-  return <table className={`min-w-full ${className || ''}`}>{children}</table>;
+  return (
+    <table className={twMerge("min-w-full", className)}>{children}</table>
+  );
 };
 
 const TableHeader: React.FC<TableHeaderProps> = ({ children, className }) => {
@@ -59,3 +62,12 @@ const TableCell: React.FC<TableCellProps> = ({
 };
 
 export { Table, TableHeader, TableBody, TableRow, TableCell };
+export {
+  dataTableTableClass,
+  dataTableScrollWrapClass,
+  dataTableHeaderRowClass,
+  dataTableHeaderCellClass,
+  dataTableBodyRowClass,
+  dataTableCellClass,
+  dataTableTruncatedTextClass,
+} from './dataTable';

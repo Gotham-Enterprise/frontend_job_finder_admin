@@ -6,7 +6,20 @@ import { useCareerDetails, useUpdateApplicantStatus, useDuplicateCareer, useTogg
 import Button from '@/components/ui/button/Button';
 import Input from '@/components/ui/input/Input';
 import Badge from '@/components/ui/badge/Badge';
-import { Table, TableBody, TableCell, TableHeader, TableRow } from '@/components/ui/table';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHeader,
+  TableRow,
+  dataTableBodyRowClass,
+  dataTableCellClass,
+  dataTableHeaderCellClass,
+  dataTableHeaderRowClass,
+  dataTableScrollWrapClass,
+  dataTableTableClass,
+  dataTableTruncatedTextClass,
+} from '@/components/ui/table';
 import { Briefcase, MapPin, DollarSign, Building, Users, Calendar as CalendarIcon, Search, Edit, Copy, Trash2, Eye, MoreVertical, FileText, XCircle, CheckCircle } from 'lucide-react';
 import DateRangePicker, { DateRange } from '@/components/ui/date-range/DateRangePicker';
 import EditJobPostModal from './components/EditJobPostModal';
@@ -27,6 +40,8 @@ const JobDetailsView: React.FC<JobDetailsViewProps> = ({ jobId }) => {
   const [isViewApplicantModalOpen, setViewApplicantModalOpen] = useState(false);
   const [selectedApplicant, setSelectedApplicant] = useState<any>(null);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  /** Kebab anchor for Floating UI portaled menu (escapes table overflow clipping). */
+  const [applicantMenuAnchor, setApplicantMenuAnchor] = useState<HTMLElement | null>(null);
   const [updatingApplicantId, setUpdatingApplicantId] = useState<string | null>(null);
   const [isDuplicating, setIsDuplicating] = useState(false);
   const [isToggling, setIsToggling] = useState(false);
@@ -180,14 +195,24 @@ const JobDetailsView: React.FC<JobDetailsViewProps> = ({ jobId }) => {
     }
   };
 
-  const handleDropdownToggle = (applicantId: string) => {
-    setOpenDropdown(openDropdown === applicantId ? null : applicantId);
+  const closeApplicantMenu = () => {
+    setOpenDropdown(null);
+    setApplicantMenuAnchor(null);
+  };
+
+  const handleDropdownToggle = (applicantId: string, anchorEl: HTMLElement) => {
+    if (openDropdown === applicantId) {
+      closeApplicantMenu();
+    } else {
+      setOpenDropdown(applicantId);
+      setApplicantMenuAnchor(anchorEl);
+    }
   };
 
   const handleViewApplicant = (applicant: any) => {
     setSelectedApplicant(applicant);
     setViewApplicantModalOpen(true);
-    setOpenDropdown(null);
+    closeApplicantMenu();
   };
 
   const handleStatusChange = async (applicantId: string, newStatus: string) => {
@@ -198,7 +223,7 @@ const JobDetailsView: React.FC<JobDetailsViewProps> = ({ jobId }) => {
         status: newStatus as 'PENDING' | 'QUALIFIED' | 'NOT_QUALIFIED'
       });
       
-      setOpenDropdown(null);
+      closeApplicantMenu();
     } catch (error) {
       console.error('Error updating applicant status:', error);
     } finally {
@@ -208,7 +233,7 @@ const JobDetailsView: React.FC<JobDetailsViewProps> = ({ jobId }) => {
 
   const handleViewResume = (resumeUrl: string) => {
     window.open(resumeUrl, '_blank');
-    setOpenDropdown(null);
+    closeApplicantMenu();
   };
 
   if (!jobId) {
@@ -239,7 +264,7 @@ const JobDetailsView: React.FC<JobDetailsViewProps> = ({ jobId }) => {
             &larr; Back to Careers
           </Button>
         </div>
-        <div className="  ">
+        <div className="flex flex-wrap items-center justify-end gap-2">
           <Button variant="outline" onClick={openEditModal}>
             <Edit className="w-4 h-4 mr-2" />
             Edit Job Post
@@ -266,7 +291,7 @@ const JobDetailsView: React.FC<JobDetailsViewProps> = ({ jobId }) => {
       <div className="bg-white p-6 rounded-lg shadow-sm mb-6 border">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold">Job Information</h2>
-          <Badge 
+          <Badge
             variant="light"
             color={job.isActive ? 'success' : 'error'}
             className="text-sm px-3 py-1"
@@ -274,23 +299,38 @@ const JobDetailsView: React.FC<JobDetailsViewProps> = ({ jobId }) => {
             {job.isActive ? 'ACTIVE' : 'INACTIVE'}
           </Badge>
         </div>
-        
+
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 text-sm">
-          <div className="flex items-center gap-2"><Briefcase className="w-4 h-4 text-gray-500" /><h2 className='font-semibold'>{job.jobTitle}</h2></div>
-          <div className="flex items-center gap-2"><Briefcase className="w-4 h-4 text-gray-500" /><span>{job.jobType}</span></div>
-          <div className="flex items-center gap-2"><MapPin className="w-4 h-4 text-gray-500" /><span>{job.city}</span></div>
-          <div className="flex items-center gap-2"><DollarSign className="w-4 h-4 text-gray-500" /><span>{formatCurrency(job.salaryRange)}</span></div>
-          {job.department &&
-            <div className="flex items-center gap-2"><Building className="w-4 h-4 text-gray-500" /><span>{job.department}</span></div>
-          }
+          <div className="flex items-center gap-2">
+            <Briefcase className="w-4 h-4 text-gray-500" />
+            <h2 className="font-semibold">{job.jobTitle}</h2>
+          </div>
+          <div className="flex items-center gap-2">
+            <Briefcase className="w-4 h-4 text-gray-500" />
+            <span>{job.jobType}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <MapPin className="w-4 h-4 text-gray-500" />
+            <span>{job.city}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <DollarSign className="w-4 h-4 text-gray-500" />
+            <span>{formatCurrency(job.salaryRange)}</span>
+          </div>
+          {job.department && (
+            <div className="flex items-center gap-2">
+              <Building className="w-4 h-4 text-gray-500" />
+              <span>{job.department}</span>
+            </div>
+          )}
         </div>
       </div>
 
-      <div className="flex gap-6 mb-6">
-        {/* Job Description Section */}
-        <div className="bg-white p-6 rounded-lg shadow-sm border flex-1">
+      <div className="mb-6 flex flex-col gap-6 lg:flex-row lg:items-start lg:gap-6">
+        {/* Job Description — narrower column (~38%) */}
+        <div className="bg-white p-6 rounded-lg shadow-sm border lg:min-w-0 lg:max-w-[40%] lg:flex-[0_0_38%] xl:flex-[0_0_36%]">
           <h3 className="text-lg font-medium mb-4">Job Description</h3>
-          
+
           <div className="prose max-w-none">
             <div
               dangerouslySetInnerHTML={{ __html: job.jobDescription || job.description || '' }}
@@ -298,14 +338,14 @@ const JobDetailsView: React.FC<JobDetailsViewProps> = ({ jobId }) => {
           </div>
         </div>
 
-        {/* Applicants Section */}
-        <div className="bg-white p-6 rounded-lg shadow-sm border flex-1">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold">Applicants ({statusCounts.All})</h2>
-            <div className="flex items-center gap-2">
+        {/* Applicants — takes remaining width (~62%+) */}
+        <div className="bg-white p-6 rounded-lg shadow-sm border min-w-0 flex-1">
+          <div className="mb-4 flex min-w-0 flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <h2 className="text-xl font-semibold shrink-0">Applicants ({statusCounts.All})</h2>
+            <div className="flex min-w-0 flex-wrap items-center gap-2 sm:justify-end">
               <Input 
                 placeholder="Search applicants..." 
-                className="w-64"
+                className="w-full min-w-[200px] sm:w-64"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -313,8 +353,8 @@ const JobDetailsView: React.FC<JobDetailsViewProps> = ({ jobId }) => {
             </div>
           </div>
 
-          <div className="border-b mb-4">
-            <nav className="-mb-px flex space-x-8">
+          <div className="mb-4 border-b overflow-x-auto overscroll-x-contain">
+            <nav className="-mb-px flex min-w-max gap-6 sm:gap-8 px-0.5">
               {Object.entries(statusCounts).map(([status, count]) => (
                 <button
                   key={status}
@@ -331,62 +371,133 @@ const JobDetailsView: React.FC<JobDetailsViewProps> = ({ jobId }) => {
             </nav>
           </div>
 
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableCell isHeader={true}>Name</TableCell>
-                <TableCell isHeader={true}>Email</TableCell>
-                <TableCell isHeader={true}>Phone</TableCell>
-                <TableCell isHeader={true}>Applied On</TableCell>
-                <TableCell isHeader={true}>Status</TableCell>
-                <TableCell isHeader={true}>Actions</TableCell>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
+          <div className={dataTableScrollWrapClass}>
+            <Table className={`${dataTableTableClass} min-w-[720px]`}>
+              <colgroup>
+                <col style={{ width: '24%' }} />
+                <col style={{ width: '24%' }} />
+                <col style={{ width: '14%' }} />
+                <col style={{ width: '11%' }} />
+                <col style={{ width: '9%' }} />
+                <col style={{ width: '64px' }} />
+              </colgroup>
+              <TableHeader>
+                <TableRow className={dataTableHeaderRowClass}>
+                  <TableCell isHeader className={dataTableHeaderCellClass}>
+                    Name
+                  </TableCell>
+                  <TableCell isHeader className={dataTableHeaderCellClass}>
+                    Email
+                  </TableCell>
+                  <TableCell isHeader className={`${dataTableHeaderCellClass} whitespace-nowrap`}>
+                    Phone
+                  </TableCell>
+                  <TableCell
+                    isHeader
+                    className={`${dataTableHeaderCellClass} whitespace-nowrap text-center`}
+                  >
+                    Applied On
+                  </TableCell>
+                  <TableCell
+                    isHeader
+                    className={`${dataTableHeaderCellClass} whitespace-nowrap text-center`}
+                  >
+                    Status
+                  </TableCell>
+                  <TableCell
+                    isHeader
+                    className={`${dataTableHeaderCellClass} w-14 max-w-14 whitespace-nowrap text-right pr-4`}
+                  >
+                    Actions
+                  </TableCell>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
               {filteredApplicants.length > 0 ? (
                 filteredApplicants.map((applicant: any) => (
-                  <TableRow key={applicant.id} className={updatingApplicantId === applicant.id ? 'opacity-60 pointer-events-none' : ''}>
-                    <TableCell>{applicant.fullName}</TableCell>
-                    <TableCell>{applicant.email}</TableCell>
-                    <TableCell>{applicant.phoneNumber || 'N/A'}</TableCell>
-                    <TableCell>
-                      <div className="flex justify-center">
-                        {new Date(applicant.applicationDate).toLocaleDateString()}
-                      </div>
+                  <TableRow
+                    key={applicant.id}
+                    className={`${dataTableBodyRowClass} ${
+                      updatingApplicantId === applicant.id ? 'opacity-60 pointer-events-none' : ''
+                    }`}
+                  >
+                    <TableCell className={`${dataTableCellClass} min-w-0`}>
+                      <span
+                        className={dataTableTruncatedTextClass}
+                        title={applicant.fullName}
+                      >
+                        {applicant.fullName}
+                      </span>
                     </TableCell>
-                    <TableCell>
-                      <div className="flex justify-center items-center gap-2">
-                        <Badge 
+                    <TableCell className={`${dataTableCellClass} min-w-0`}>
+                      <span
+                        className={dataTableTruncatedTextClass}
+                        title={applicant.email}
+                      >
+                        {applicant.email}
+                      </span>
+                    </TableCell>
+                    <TableCell className={`${dataTableCellClass} whitespace-nowrap text-gray-700 dark:text-gray-300`}>
+                      {applicant.phoneNumber || 'N/A'}
+                    </TableCell>
+                    <TableCell
+                      className={`${dataTableCellClass} whitespace-nowrap text-center tabular-nums text-gray-700 dark:text-gray-300`}
+                    >
+                      {new Date(applicant.applicationDate).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell className={`${dataTableCellClass} text-center`}>
+                      <span className="inline-flex items-center justify-center gap-2 align-middle">
+                        <Badge
                           variant="light"
                           color={
-                            applicant.status === 'PENDING' ? 'warning' : 
-                            applicant.status === 'QUALIFIED' ? 'success' : 
-                            'error'
+                            applicant.status === 'PENDING'
+                              ? 'warning'
+                              : applicant.status === 'QUALIFIED'
+                                ? 'success'
+                                : 'error'
                           }
-                          className="text-xs px-2 py-1"
+                          className="shrink-0 text-xs px-2.5 py-1"
                         >
                           {formatStatusDisplay(applicant.status)}
                         </Badge>
                         {updatingApplicantId === applicant.id && (
-                          <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-primary"></div>
+                          <span
+                            className="inline-block h-3 w-3 shrink-0 animate-spin rounded-full border-2 border-primary border-t-transparent"
+                            aria-hidden
+                          />
                         )}
-                      </div>
+                      </span>
                     </TableCell>
-                    <TableCell className="w-12 relative">
-                      <div className="flex justify-center items-center">
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="!h-8 !w-8 dropdown-toggle"
-                          onClick={() => handleDropdownToggle(applicant.id)}
+                    <TableCell className={`${dataTableCellClass} relative w-14 max-w-14 whitespace-nowrap pl-2 pr-3 text-right`}>
+                      <div className="flex justify-end">
+                        <span
+                          id={`applicant-menu-trigger-${applicant.id}`}
+                          className="dropdown-toggle inline-flex"
                         >
-                          <MoreVertical className="w-4 h-4" />
-                        </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="!h-8 !w-8 shrink-0"
+                            onClick={() => {
+                              const el = document.getElementById(
+                                `applicant-menu-trigger-${applicant.id}`,
+                              );
+                              if (el instanceof HTMLElement) {
+                                handleDropdownToggle(applicant.id, el);
+                              }
+                            }}
+                          >
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </span>
                       </div>
                       
                       <Dropdown 
                         isOpen={openDropdown === applicant.id} 
-                        onClose={() => setOpenDropdown(null)}
+                        onClose={closeApplicantMenu}
+                        referenceElement={
+                          openDropdown === applicant.id ? applicantMenuAnchor : null
+                        }
                         className="min-w-48"
                       >
                         <DropdownItem 
@@ -454,17 +565,22 @@ const JobDetailsView: React.FC<JobDetailsViewProps> = ({ jobId }) => {
                   </TableRow>
                 ))
               ) : (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                <TableRow className={dataTableBodyRowClass}>
+                  <TableCell
+                    colSpan={6}
+                    className={`${dataTableCellClass} py-10 text-center text-gray-500 dark:text-gray-400`}
+                  >
                     {getEmptyStateMessage()}
                   </TableCell>
                 </TableRow>
               )}
-            </TableBody>
-          </Table>
+              </TableBody>
+            </Table>
+          </div>
           {/* Pagination would go here */}
         </div>
       </div>
+
       <EditJobPostModal
         isOpen={isEditModalOpen}
         onClose={closeEditModal}
