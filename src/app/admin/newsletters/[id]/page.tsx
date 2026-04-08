@@ -7,6 +7,7 @@ import {
   useNewsletterLogs,
   useSendNewsletterNow,
   useCancelSchedule,
+  useDuplicateNewsletter,
 } from "@/services/hooks/useNewsletter";
 import Badge from "@/components/ui/badge/Badge";
 import Button from "@/components/ui/button/Button";
@@ -75,6 +76,7 @@ export default function NewsletterDetailPage() {
   );
   const sendNowMutation = useSendNewsletterNow();
   const cancelScheduleMutation = useCancelSchedule();
+  const duplicateMutation = useDuplicateNewsletter();
 
   const newsletter = newsletterData?.data;
   const logs = logsData?.data ?? [];
@@ -173,6 +175,19 @@ export default function NewsletterDetailPage() {
                 Cancel Schedule
               </Button>
             )}
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                duplicateMutation.mutateAsync(id).then((res) => {
+                  router.push(`/admin/newsletters/${res.data.id}`);
+                });
+              }}
+              disabled={duplicateMutation.isPending}
+            >
+              {duplicateMutation.isPending ? "Duplicating..." : "Duplicate"}
+            </Button>
           </div>
         </div>
 

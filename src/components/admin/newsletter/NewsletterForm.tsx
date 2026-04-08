@@ -32,6 +32,8 @@ export interface NewsletterFormValues {
   filters: { country: string; state: string };
   scheduledAt: string;
   sendMode: SendMode;
+  showHeader: boolean;
+  showFooter: boolean;
 }
 
 interface NewsletterFormProps {
@@ -76,6 +78,12 @@ const NewsletterForm: React.FC<NewsletterFormProps> = ({
       ? new Date(initialValues.scheduledAt).toISOString().slice(0, 16)
       : ""
   );
+  const [showHeader, setShowHeader] = useState(
+    initialValues?.showHeader !== undefined ? initialValues.showHeader : true
+  );
+  const [showFooter, setShowFooter] = useState(
+    initialValues?.showFooter !== undefined ? initialValues.showFooter : true
+  );
 
   const filters = { country: country || undefined, state: state || undefined };
   const { data: countData } = useRecipientCount(targetAudience, filters);
@@ -118,6 +126,8 @@ const NewsletterForm: React.FC<NewsletterFormProps> = ({
       filters: { country: country.trim(), state: state.trim() },
       scheduledAt,
       sendMode: mode,
+      showHeader,
+      showFooter,
     });
   };
 
@@ -230,9 +240,14 @@ const NewsletterForm: React.FC<NewsletterFormProps> = ({
         <p className="text-xs text-gray-400 dark:text-gray-500 mb-3">
           Drag blocks from the left panel onto the canvas. Click any block to edit its properties on the right.
         </p>
+
         <EmailBuilder
           initialBlocks={builderBlocks}
           subject={subject}
+          showHeader={showHeader}
+          showFooter={showFooter}
+          onShowHeaderChange={(v) => setShowHeader(v)}
+          onShowFooterChange={(v) => setShowFooter(v)}
           onChange={(blocks, html) => {
             setBuilderBlocks(blocks);
             setContent(html);

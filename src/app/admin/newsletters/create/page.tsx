@@ -24,7 +24,7 @@ export default function CreateNewsletterPage() {
 
   const handleSubmit = async (values: NewsletterFormValues) => {
     try {
-      const { sendMode, scheduledAt, filters, builderBlocks, ...rest } = values;
+      const { sendMode, scheduledAt, filters, builderBlocks, showHeader, showFooter, ...rest } = values;
 
       const response = await createMutation.mutateAsync({
         ...rest,
@@ -33,6 +33,8 @@ export default function CreateNewsletterPage() {
           ...(filters.state ? { state: filters.state } : {}),
         },
         builderBlocks,
+        showHeader,
+        showFooter,
       });
 
       const newsletterId = response.data.id;

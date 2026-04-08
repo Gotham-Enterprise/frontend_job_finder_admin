@@ -23,9 +23,13 @@ interface EmailBuilderProps {
   initialBlocks?: EmailBlock[];
   onChange: (blocks: EmailBlock[], html: string) => void;
   subject?: string;
+  showHeader?: boolean;
+  showFooter?: boolean;
+  onShowHeaderChange?: (val: boolean) => void;
+  onShowFooterChange?: (val: boolean) => void;
 }
 
-export function EmailBuilder({ initialBlocks = [], onChange, subject = "" }: EmailBuilderProps) {
+export function EmailBuilder({ initialBlocks = [], onChange, subject = "", showHeader = true, showFooter = true, onShowHeaderChange, onShowFooterChange }: EmailBuilderProps) {
   const [blocks, setBlocks] = useState<EmailBlock[]>(initialBlocks);
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
@@ -188,70 +192,121 @@ export function EmailBuilder({ initialBlocks = [], onChange, subject = "" }: Ema
           </svg>
           <span style={{ fontSize: "12px", color: "#94a3b8", fontWeight: 500 }}>Email Builder</span>
         </div>
-        <button
-          type="button"
-          onClick={() => setPreviewOpen(true)}
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "6px",
-            padding: "5px 14px",
-            background: blocks.length === 0 ? "#334155" : "#3b82f6",
-            color: blocks.length === 0 ? "#64748b" : "#fff",
-            border: "none",
-            borderRadius: "6px",
-            fontSize: "12px",
-            fontWeight: 600,
-            cursor: blocks.length === 0 ? "not-allowed" : "pointer",
-            transition: "background 0.15s",
-          }}
-          disabled={blocks.length === 0}
-          title={blocks.length === 0 ? "Add blocks to preview" : "Preview email"}
-        >
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-            <circle cx="12" cy="12" r="3" />
-          </svg>
-          Preview
-        </button>
-        <button
-          type="button"
-          onClick={() => setIsFullscreen((prev) => !prev)}
-          title={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            justifyContent: "center",
-            width: "30px",
-            height: "30px",
-            background: "#334155",
-            color: "#94a3b8",
-            border: "none",
-            borderRadius: "6px",
-            cursor: "pointer",
-            transition: "background 0.15s, color 0.15s",
-          }}
-          onMouseEnter={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.background = "#475569";
-            (e.currentTarget as HTMLButtonElement).style.color = "#e2e8f0";
-          }}
-          onMouseLeave={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.background = "#334155";
-            (e.currentTarget as HTMLButtonElement).style.color = "#94a3b8";
-          }}
-        >
-          {isFullscreen ? (
-            // Compress / exit fullscreen icon
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M8 3v3a2 2 0 0 1-2 2H3M21 8h-3a2 2 0 0 1-2-2V3M3 16h3a2 2 0 0 1 2 2v3M16 21v-3a2 2 0 0 1 2-2h3" />
+        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+          {/* Header toggle */}
+          <button
+            type="button"
+            onClick={() => onShowHeaderChange?.(!showHeader)}
+            title={showHeader ? "Disable default header" : "Enable default header"}
+            style={{
+              display: "inline-flex", alignItems: "center", gap: "4px",
+              padding: "4px 8px",
+              background: showHeader ? "rgba(59,130,246,0.18)" : "#334155",
+              color: showHeader ? "#93c5fd" : "#94a3b8",
+              border: showHeader ? "1px solid rgba(59,130,246,0.35)" : "1px solid transparent",
+              borderRadius: "5px",
+              fontSize: "11px",
+              fontWeight: 600,
+              cursor: "pointer",
+              transition: "all 0.15s",
+            }}
+          >
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" />
+              <path d="M3 9h18" />
             </svg>
-          ) : (
-            // Expand / enter fullscreen icon
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3" />
+            Enable Default Header
+          </button>
+          {/* Footer toggle */}
+          <button
+            type="button"
+            onClick={() => onShowFooterChange?.(!showFooter)}
+            title={showFooter ? "Disable default footer" : "Enable default footer"}
+            style={{
+              display: "inline-flex", alignItems: "center", gap: "4px",
+              padding: "4px 8px",
+              background: showFooter ? "rgba(59,130,246,0.18)" : "#334155",
+              color: showFooter ? "#93c5fd" : "#94a3b8",
+              border: showFooter ? "1px solid rgba(59,130,246,0.35)" : "1px solid transparent",
+              borderRadius: "5px",
+              fontSize: "11px",
+              fontWeight: 600,
+              cursor: "pointer",
+              transition: "all 0.15s",
+            }}
+          >
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" />
+              <path d="M3 15h18" />
             </svg>
-          )}
-        </button>
+            Enable Default Footer
+          </button>
+          <div style={{ width: "1px", height: "20px", background: "#334155", margin: "0 2px" }} />
+          <button
+            type="button"
+            onClick={() => setPreviewOpen(true)}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "6px",
+              padding: "5px 14px",
+              background: blocks.length === 0 ? "#334155" : "#3b82f6",
+              color: blocks.length === 0 ? "#64748b" : "#fff",
+              border: "none",
+              borderRadius: "6px",
+              fontSize: "12px",
+              fontWeight: 600,
+              cursor: blocks.length === 0 ? "not-allowed" : "pointer",
+              transition: "background 0.15s",
+            }}
+            disabled={blocks.length === 0}
+            title={blocks.length === 0 ? "Add blocks to preview" : "Preview email"}
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+              <circle cx="12" cy="12" r="3" />
+            </svg>
+            Preview
+          </button>
+          <button
+            type="button"
+            onClick={() => setIsFullscreen((prev) => !prev)}
+            title={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: "30px",
+              height: "30px",
+              background: "#334155",
+              color: "#94a3b8",
+              border: "none",
+              borderRadius: "6px",
+              cursor: "pointer",
+              transition: "background 0.15s, color 0.15s",
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.background = "#475569";
+              (e.currentTarget as HTMLButtonElement).style.color = "#e2e8f0";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.background = "#334155";
+              (e.currentTarget as HTMLButtonElement).style.color = "#94a3b8";
+            }}
+          >
+            {isFullscreen ? (
+              // Compress / exit fullscreen icon
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M8 3v3a2 2 0 0 1-2 2H3M21 8h-3a2 2 0 0 1-2-2V3M3 16h3a2 2 0 0 1 2 2v3M16 21v-3a2 2 0 0 1 2-2h3" />
+              </svg>
+            ) : (
+              // Expand / enter fullscreen icon
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3" />
+              </svg>
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Three-panel layout */}
@@ -274,6 +329,9 @@ export function EmailBuilder({ initialBlocks = [], onChange, subject = "" }: Ema
           onDuplicateBlock={handleDuplicateBlock}
           onPropsChange={handlePropsChange}
           onCanvasClick={() => setSelectedBlockId(null)}
+          showHeader={showHeader}
+          showFooter={showFooter}
+          subject={subject}
         />
 
         {/* Right: Properties panel */}
@@ -330,6 +388,8 @@ export function EmailBuilder({ initialBlocks = [], onChange, subject = "" }: Ema
       onClose={() => setPreviewOpen(false)}
       blocks={blocks}
       subject={subject}
+      showHeader={showHeader}
+      showFooter={showFooter}
     />
     </>
   );

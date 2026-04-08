@@ -7,6 +7,7 @@ import {
   useDeleteNewsletter,
   useSendNewsletterNow,
   useCancelSchedule,
+  useDuplicateNewsletter,
 } from "@/services/hooks/useNewsletter";
 import { PreviewModal } from "@/components/admin/newsletter/builder/PreviewModal";
 import type { EmailBlock } from "@/components/admin/newsletter/builder/utils/blockTypes";
@@ -92,6 +93,7 @@ export default function NewslettersPage() {
   const deleteMutation = useDeleteNewsletter();
   const sendNowMutation = useSendNewsletterNow();
   const cancelScheduleMutation = useCancelSchedule();
+  const duplicateMutation = useDuplicateNewsletter();
 
   const newsletters = data?.data ?? [];
   const meta = data?.metaData;
@@ -125,6 +127,10 @@ export default function NewslettersPage() {
     if (!confirm(`Cancel the scheduled send for "${newsletter.title}"?`))
       return;
     await cancelScheduleMutation.mutateAsync(newsletter.id);
+  };
+
+  const handleDuplicate = async (newsletter: Newsletter) => {
+    await duplicateMutation.mutateAsync(newsletter.id);
   };
 
   return (
@@ -306,6 +312,16 @@ export default function NewslettersPage() {
                             Delete
                           </Button>
                         )}
+
+                        {/* Duplicate all statuses */}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDuplicate(newsletter)}
+                          disabled={duplicateMutation.isPending}
+                        >
+                          Duplicate
+                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -351,6 +367,8 @@ export default function NewslettersPage() {
         onClose={() => setPreviewNewsletter(null)}
         blocks={(previewNewsletter?.builderBlocks as EmailBlock[]) ?? []}
         subject={previewNewsletter?.subject ?? ""}
+        showHeader={previewNewsletter?.showHeader ?? true}
+        showFooter={previewNewsletter?.showFooter ?? true}
       />
     </div>
   );

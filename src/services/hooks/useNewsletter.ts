@@ -127,3 +127,17 @@ export const useCancelSchedule = () => {
     },
   });
 };
+
+export const useDuplicateNewsletter = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => newsletterApi.duplicateNewsletter(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["newsletters"] });
+      showToast.success("Duplicated", "Newsletter duplicated and saved as a draft");
+    },
+    onError: (error: any) => {
+      showToast.error("Error", error?.message || "Failed to duplicate newsletter");
+    },
+  });
+};

@@ -8,11 +8,13 @@ interface PreviewModalProps {
   onClose: () => void;
   blocks: EmailBlock[];
   subject: string;
+  showHeader?: boolean;
+  showFooter?: boolean;
 }
 
 type DeviceMode = "desktop" | "mobile";
 
-function buildPreviewDocument(contentHtml: string, subject: string): string {
+function buildPreviewDocument(contentHtml: string, subject: string, showHeader = true, showFooter = true): string {
   const safeSubject = subject
     ? subject.replace(/</g, "&lt;").replace(/>/g, "&gt;")
     : "Newsletter Preview";
@@ -95,7 +97,6 @@ function buildPreviewDocument(contentHtml: string, subject: string): string {
       font-size: 22px;
       font-weight: 700;
       color: #ffffff;
-      background: rgba(0,0,0,0.4);
       padding: 10px 20px;
       text-align: center;
       line-height: 1.3;
@@ -158,9 +159,10 @@ function buildPreviewDocument(contentHtml: string, subject: string): string {
     </div>-->
 
     <!-- Hero -->
+    ${showHeader ? `
     <div class="email-hero">
       <div class="email-hero-subject">${safeSubject}</div>
-    </div>
+    </div>` : ''}
 
     <!-- Greeting + Content -->
     <div class="email-body">
@@ -170,6 +172,7 @@ function buildPreviewDocument(contentHtml: string, subject: string): string {
     </div>
 
     <!-- Footer -->
+    ${showFooter ? `
     <div class="email-footer">
       <table width="250" align="center" style="margin:0 auto 10px;">
         <tr>
@@ -182,7 +185,7 @@ function buildPreviewDocument(contentHtml: string, subject: string): string {
       <p class="email-footer-note">
         You are receiving this newsletter because you have an account with Gotham Enterprises.
       </p>
-    </div>
+    </div>` : ''}
 
   </div>
 </body>
@@ -194,13 +197,13 @@ const DEVICE_WIDTHS: Record<DeviceMode, number> = {
   mobile: 400,
 };
 
-export function PreviewModal({ isOpen, onClose, blocks, subject }: PreviewModalProps) {
+export function PreviewModal({ isOpen, onClose, blocks, subject, showHeader = true, showFooter = true }: PreviewModalProps) {
   const [device, setDevice] = useState<DeviceMode>("desktop");
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [iframeHeight, setIframeHeight] = useState(600);
 
   const contentHtml = generateEmailHTML(blocks);
-  const doc = buildPreviewDocument(contentHtml, subject);
+  const doc = buildPreviewDocument(contentHtml, subject, showHeader, showFooter);
 
   // Resize iframe to fit content after load
   const handleIframeLoad = useCallback(() => {

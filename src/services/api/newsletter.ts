@@ -9,6 +9,8 @@ export interface Newsletter {
   targetAudience: "all" | "job-seeker" | "employer";
   filters: { country?: string; state?: string } | null;
   builderBlocks: import("@/components/admin/newsletter/builder/utils/blockTypes").EmailBlock[] | null;
+  showHeader: boolean;
+  showFooter: boolean;
   scheduledAt: string | null;
   sentAt: string | null;
   recipientCount: number | null;
@@ -67,6 +69,8 @@ export interface CreateNewsletterRequest {
   targetAudience?: "all" | "job-seeker" | "employer";
   filters?: { country?: string; state?: string };
   builderBlocks?: import("@/components/admin/newsletter/builder/utils/blockTypes").EmailBlock[];
+  showHeader?: boolean;
+  showFooter?: boolean;
 }
 
 export interface UpdateNewsletterRequest {
@@ -76,6 +80,8 @@ export interface UpdateNewsletterRequest {
   targetAudience?: "all" | "job-seeker" | "employer";
   filters?: { country?: string; state?: string };
   builderBlocks?: import("@/components/admin/newsletter/builder/utils/blockTypes").EmailBlock[];
+  showHeader?: boolean;
+  showFooter?: boolean;
 }
 
 const BASE = "/api/admin/newsletters";
@@ -116,4 +122,6 @@ export const newsletterApi = {
     const params = new URLSearchParams({ page: String(page), limit: String(limit) });
     return apiGet<NewsletterLogsResponse>(`${BASE}/${id}/logs?${params.toString()}`);
   },
+
+  duplicateNewsletter: (id: string) => apiPut<NewsletterResponse>(`${BASE}/${id}/duplicate`),
 };
