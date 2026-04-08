@@ -153,9 +153,9 @@ function buildPreviewDocument(contentHtml: string, subject: string): string {
   <div class="email-wrapper">
 
     <!-- Logo -->
-    <div class="email-logo-bar">
+    <!--<div class="email-logo-bar">
       <img src="${base}/gotham_logo.png" alt="Gotham Enterprises Ltd" />
-    </div>
+    </div>-->
 
     <!-- Hero -->
     <div class="email-hero">
@@ -164,7 +164,6 @@ function buildPreviewDocument(contentHtml: string, subject: string): string {
 
     <!-- Greeting + Content -->
     <div class="email-body">
-      <p class="email-greeting">Hi there,</p>
       <div class="newsletter-content">
         ${contentHtml}
       </div>

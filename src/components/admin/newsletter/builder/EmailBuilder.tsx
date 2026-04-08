@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { nanoid } from "nanoid";
 import {
   DndContext,
@@ -31,6 +31,28 @@ export function EmailBuilder({ initialBlocks = [], onChange, subject = "" }: Ema
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
   const [activeDragType, setActiveDragType] = useState<string | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  useEffect(() => {
+    if (isFullscreen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [isFullscreen]);
+
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape" && isFullscreen) {
+        setIsFullscreen(false);
+      }
+    }
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isFullscreen]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
@@ -129,7 +151,16 @@ export function EmailBuilder({ initialBlocks = [], onChange, subject = "" }: Ema
   return (
     <>
     <div
-      style={{
+      style={isFullscreen ? {
+        position: "fixed",
+        inset: 0,
+        zIndex: 99998,
+        display: "flex",
+        flexDirection: "column",
+        overflow: "hidden",
+        background: "#f9fafb",
+        borderRadius: 0,
+      } : {
         display: "flex",
         flexDirection: "column",
         border: "1px solid #e5e7eb",
@@ -183,10 +214,48 @@ export function EmailBuilder({ initialBlocks = [], onChange, subject = "" }: Ema
           </svg>
           Preview
         </button>
+        <button
+          type="button"
+          onClick={() => setIsFullscreen((prev) => !prev)}
+          title={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: "30px",
+            height: "30px",
+            background: "#334155",
+            color: "#94a3b8",
+            border: "none",
+            borderRadius: "6px",
+            cursor: "pointer",
+            transition: "background 0.15s, color 0.15s",
+          }}
+          onMouseEnter={(e) => {
+            (e.currentTarget as HTMLButtonElement).style.background = "#475569";
+            (e.currentTarget as HTMLButtonElement).style.color = "#e2e8f0";
+          }}
+          onMouseLeave={(e) => {
+            (e.currentTarget as HTMLButtonElement).style.background = "#334155";
+            (e.currentTarget as HTMLButtonElement).style.color = "#94a3b8";
+          }}
+        >
+          {isFullscreen ? (
+            // Compress / exit fullscreen icon
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M8 3v3a2 2 0 0 1-2 2H3M21 8h-3a2 2 0 0 1-2-2V3M3 16h3a2 2 0 0 1 2 2v3M16 21v-3a2 2 0 0 1 2-2h3" />
+            </svg>
+          ) : (
+            // Expand / enter fullscreen icon
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3" />
+            </svg>
+          )}
+        </button>
       </div>
 
       {/* Three-panel layout */}
-      <div style={{ display: "flex", height: "700px", overflow: "hidden" }}>
+      <div style={{ display: "flex", height: isFullscreen ? "calc(100vh - 42px)" : "700px", overflow: "hidden" }}>
       <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
         {/* Left: Palette */}
         <div
