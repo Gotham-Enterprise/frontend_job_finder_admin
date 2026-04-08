@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { MoreVertical } from "lucide-react";
 import {
   useNewsletters,
   useDeleteNewsletter,
@@ -16,6 +16,8 @@ import Badge from "@/components/ui/badge/Badge";
 import Button from "@/components/ui/button/Button";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import TableHeading from "@/components/tables/tableHeader";
+import { Dropdown } from "@/components/ui/dropdown/Dropdown";
+import { DropdownItem } from "@/components/ui/dropdown/DropdownItem";
 
 const STATUS_TABS = [
   { label: "All", value: undefined },
@@ -77,12 +79,12 @@ const formatDate = (dateStr: string | null) => {
 };
 
 export default function NewslettersPage() {
-  const router = useRouter();
   const [activeStatus, setActiveStatus] = useState<string | undefined>(
     undefined
   );
   const [page, setPage] = useState(1);
   const [previewNewsletter, setPreviewNewsletter] = useState<Newsletter | null>(null);
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const limit = 10;
 
   const { data, isLoading, refetch } = useNewsletters(
@@ -227,101 +229,133 @@ export default function NewslettersPage() {
                       {newsletter.recipientCount ?? "—"}
                     </TableCell>
                     <TableCell className="px-4 py-3">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        {/* Preview is available for all statuses */}
+                      <div className="relative inline-block">
                         <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setPreviewNewsletter(newsletter)}
+                          variant="ghost"
+                          size="icon"
+                          className="!h-8 !w-8 dropdown-toggle"
+                          onClick={() =>
+                            setOpenDropdown(
+                              openDropdown === newsletter.id
+                                ? null
+                                : newsletter.id
+                            )
+                          }
                         >
-                          Preview
+                          <MoreVertical className="w-4 h-4" />
                         </Button>
-
-                        {/* View/detail is always available for sent */}
-                        {["sent", "failed", "sending"].includes(
-                          newsletter.status
-                        ) && (
-                          <Link href={`/admin/newsletters/${newsletter.id}`}>
-                            <Button variant="outline" size="sm">
-                              View
-                            </Button>
-                          </Link>
-                        )}
-
-                        {/* Edit available only for drafts */}
-                        {newsletter.status === "draft" && (
-                          <Link
-                            href={`/admin/newsletters/${newsletter.id}/edit`}
+                        <Dropdown
+                          isOpen={openDropdown === newsletter.id}
+                          onClose={() => setOpenDropdown(null)}
+                          className="min-w-44"
+                        >
+                          {/* Preview — all statuses */}
+                          <DropdownItem
+                            tag="button"
+                            onClick={() => {
+                              setOpenDropdown(null);
+                              setPreviewNewsletter(newsletter);
+                            }}
+                            className="flex items-center gap-2"
                           >
-                            <Button variant="outline" size="sm">
-                              Edit
-                            </Button>
-                          </Link>
-                        )}
+                            Preview
+                          </DropdownItem>
 
-                        {/* Send Now for drafts and failed */}
-                        {["draft", "failed"].includes(newsletter.status) && (
-                          <Button
-                            variant="default"
-                            size="sm"
-                            onClick={() => handleSendNow(newsletter)}
-                            disabled={sendNowMutation.isPending}
-                          >
-                            Send Now
-                          </Button>
-                        )}
-
-                        {/* Schedule for drafts */}
-                        {newsletter.status === "draft" && (
-                          <Link
-                            href={`/admin/newsletters/${newsletter.id}/edit?action=schedule`}
-                          >
-                            <Button variant="secondary" size="sm">
-                              Schedule
-                            </Button>
-                          </Link>
-                        )}
-
-                        {/* Cancel schedule for scheduled */}
-                        {newsletter.status === "scheduled" && (
-                          <>
-                            <Link href={`/admin/newsletters/${newsletter.id}`}>
-                              <Button variant="outline" size="sm">
-                                View
-                              </Button>
-                            </Link>
-                            <Button
-                              variant="warning"
-                              size="sm"
-                              onClick={() => handleCancelSchedule(newsletter)}
-                              disabled={cancelScheduleMutation.isPending}
+                          {/* View — sent, failed, sending, scheduled */}
+                          {["sent", "failed", "sending", "scheduled"].includes(
+                            newsletter.status
+                          ) && (
+                            <DropdownItem
+                              tag="a"
+                              href={`/admin/newsletters/${newsletter.id}`}
+                              className="flex items-center gap-2"
                             >
-                              Cancel
-                            </Button>
-                          </>
-                        )}
+                              View
+                            </DropdownItem>
+                          )}
 
-                        {/* Delete for drafts and failed */}
-                        {["draft", "failed"].includes(newsletter.status) && (
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => handleDelete(newsletter)}
-                            disabled={deleteMutation.isPending}
+                          {/* Edit — draft only */}
+                          {newsletter.status === "draft" && (
+                            <DropdownItem
+                              tag="a"
+                              href={`/admin/newsletters/${newsletter.id}/edit`}
+                              className="flex items-center gap-2"
+                            >
+                              Edit
+                            </DropdownItem>
+                          )}
+
+                          {/* Send Now — draft, failed */}
+                          {["draft", "failed"].includes(newsletter.status) && (
+                            <DropdownItem
+                              tag="button"
+                              onClick={() => {
+                                setOpenDropdown(null);
+                                handleSendNow(newsletter);
+                              }}
+                              className="flex items-center gap-2"
+                            >
+                              Send Now
+                            </DropdownItem>
+                          )}
+
+                          {/* Schedule — draft only */}
+                          {newsletter.status === "draft" && (
+                            <DropdownItem
+                              tag="a"
+                              href={`/admin/newsletters/${newsletter.id}/edit?action=schedule`}
+                              className="flex items-center gap-2"
+                            >
+                              Schedule
+                            </DropdownItem>
+                          )}
+
+                          {/* Duplicate — all statuses */}
+                          <DropdownItem
+                            tag="button"
+                            onClick={() => {
+                              setOpenDropdown(null);
+                              handleDuplicate(newsletter);
+                            }}
+                            className="flex items-center gap-2"
                           >
-                            Delete
-                          </Button>
-                        )}
+                            Duplicate
+                          </DropdownItem>
 
-                        {/* Duplicate all statuses */}
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDuplicate(newsletter)}
-                          disabled={duplicateMutation.isPending}
-                        >
-                          Duplicate
-                        </Button>
+                          {/* Divider before destructive actions */}
+                          {(["draft", "failed"].includes(newsletter.status) ||
+                            newsletter.status === "scheduled") && (
+                            <div className="border-t border-gray-200 dark:border-gray-700 my-1" />
+                          )}
+
+                          {/* Cancel Schedule — scheduled only */}
+                          {newsletter.status === "scheduled" && (
+                            <DropdownItem
+                              tag="button"
+                              onClick={() => {
+                                setOpenDropdown(null);
+                                handleCancelSchedule(newsletter);
+                              }}
+                              className="flex items-center gap-2 text-warning-600"
+                            >
+                              Cancel Schedule
+                            </DropdownItem>
+                          )}
+
+                          {/* Delete — draft, failed */}
+                          {["draft", "failed"].includes(newsletter.status) && (
+                            <DropdownItem
+                              tag="button"
+                              onClick={() => {
+                                setOpenDropdown(null);
+                                handleDelete(newsletter);
+                              }}
+                              className="flex items-center gap-2 text-error-600"
+                            >
+                              Delete
+                            </DropdownItem>
+                          )}
+                        </Dropdown>
                       </div>
                     </TableCell>
                   </TableRow>
