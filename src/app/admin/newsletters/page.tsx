@@ -8,6 +8,8 @@ import {
   useSendNewsletterNow,
   useCancelSchedule,
 } from "@/services/hooks/useNewsletter";
+import { PreviewModal } from "@/components/admin/newsletter/builder/PreviewModal";
+import type { EmailBlock } from "@/components/admin/newsletter/builder/utils/blockTypes";
 import { Newsletter } from "@/services/api/newsletter";
 import Badge from "@/components/ui/badge/Badge";
 import Button from "@/components/ui/button/Button";
@@ -79,6 +81,7 @@ export default function NewslettersPage() {
     undefined
   );
   const [page, setPage] = useState(1);
+  const [previewNewsletter, setPreviewNewsletter] = useState<Newsletter | null>(null);
   const limit = 10;
 
   const { data, isLoading, refetch } = useNewsletters(
@@ -219,6 +222,15 @@ export default function NewslettersPage() {
                     </TableCell>
                     <TableCell className="px-4 py-3">
                       <div className="flex items-center gap-2 flex-wrap">
+                        {/* Preview is available for all statuses */}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setPreviewNewsletter(newsletter)}
+                        >
+                          Preview
+                        </Button>
+
                         {/* View/detail is always available for sent */}
                         {["sent", "failed", "sending"].includes(
                           newsletter.status
@@ -333,6 +345,13 @@ export default function NewslettersPage() {
           </div>
         )}
       </div>
+
+      <PreviewModal
+        isOpen={!!previewNewsletter}
+        onClose={() => setPreviewNewsletter(null)}
+        blocks={(previewNewsletter?.builderBlocks as EmailBlock[]) ?? []}
+        subject={previewNewsletter?.subject ?? ""}
+      />
     </div>
   );
 }
