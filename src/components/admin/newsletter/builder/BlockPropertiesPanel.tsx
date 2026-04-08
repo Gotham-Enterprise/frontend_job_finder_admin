@@ -492,6 +492,9 @@ function HtmlPanel({ block, onChange }: { block: HtmlBlock; onChange: (b: HtmlBl
         <p className="text-[10px] text-gray-400 mt-1">
           Rendered live on the canvas. Use inline styles for email compatibility.
         </p>
+        <p className="text-[10px] text-amber-400 mt-0.5">
+          Paste HTML snippets only — full documents (&lt;html&gt;, &lt;head&gt;, &lt;body&gt;) are stripped automatically.
+        </p>
       </Field>
       <Field label="Padding (px)">
         <PaddingFields

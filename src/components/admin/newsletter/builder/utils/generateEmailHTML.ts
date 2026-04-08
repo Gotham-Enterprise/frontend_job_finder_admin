@@ -15,6 +15,27 @@ function escapeHTML(str: string): string {
   return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 
+/**
+ * If `html` contains a full HTML document shell (<!DOCTYPE>, <html>, <head>, <body> tags),
+ * extract and return only the inner body content. Otherwise return `html` unchanged.
+ * This prevents a full pasted HTML document from breaking the canvas or preview layout.
+ */
+export function stripHtmlDocumentShell(html: string): string {
+  if (!html) return html;
+  // If there's a <body> tag, extract only its inner content
+  const bodyMatch = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+  if (bodyMatch) return bodyMatch[1];
+  // Otherwise strip individual document-level tags
+  return html
+    .replace(/<!DOCTYPE[^>]*>/gi, "")
+    .replace(/<html[^>]*>/gi, "")
+    .replace(/<\/html>/gi, "")
+    .replace(/<head[^>]*>[\s\S]*?<\/head>/gi, "")
+    .replace(/<body[^>]*>/gi, "")
+    .replace(/<\/body>/gi, "")
+    .trim();
+}
+
 function alignToMargin(align: "left" | "center" | "right"): string {
   if (align === "center") return "margin: 0 auto;";
   if (align === "right") return "margin-left: auto;";
@@ -149,8 +170,8 @@ function renderQuote(block: QuoteBlock): string {
 
 function renderHtml(block: HtmlBlock): string {
   const { html, paddingTop, paddingBottom, paddingLeft, paddingRight } = block.props;
-  const style = `padding: ${paddingTop}px ${paddingRight}px ${paddingBottom}px ${paddingLeft}px;`;
-  return `<div style="${style}">${html}</div>`;
+  const style = `padding: ${paddingTop}px ${paddingRight}px ${paddingBottom}px ${paddingLeft}px; overflow: hidden; max-width: 100%;`;
+  return `<div style="${style}">${stripHtmlDocumentShell(html)}</div>`;
 }
 
 export function generateEmailHTML(blocks: EmailBlock[]): string {

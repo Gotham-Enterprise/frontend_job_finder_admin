@@ -1,6 +1,7 @@
 import React from "react";
 import type { HtmlBlock as HtmlBlockType } from "../utils/blockTypes";
 import { BlockWrapper } from "./BlockWrapper";
+import { stripHtmlDocumentShell } from "../utils/generateEmailHTML";
 
 interface Props {
   block: HtmlBlockType;
@@ -13,6 +14,7 @@ interface Props {
 
 export function HtmlBlock({ block, isSelected, onSelect, onDelete, onDuplicate, dragHandleProps }: Props) {
   const { html, paddingTop, paddingBottom, paddingLeft, paddingRight } = block.props;
+  const safeHtml = stripHtmlDocumentShell(html);
 
   return (
     <BlockWrapper
@@ -23,7 +25,7 @@ export function HtmlBlock({ block, isSelected, onSelect, onDelete, onDuplicate, 
       label="Custom HTML"
       dragHandleProps={dragHandleProps}
     >
-      <div style={{ position: "relative" }}>
+      <div style={{ position: "relative", overflow: "hidden", maxWidth: "100%" }}>
         {/* Badge */}
         <span
           style={{
@@ -50,8 +52,10 @@ export function HtmlBlock({ block, isSelected, onSelect, onDelete, onDuplicate, 
           style={{
             padding: `${paddingTop}px ${paddingRight}px ${paddingBottom}px ${paddingLeft}px`,
             minHeight: "32px",
+            overflow: "hidden",
+            maxWidth: "100%",
           }}
-          dangerouslySetInnerHTML={{ __html: html || "<p style=\"color:#9ca3af;font-size:13px;\">Empty HTML block — edit in the properties panel.</p>" }}
+          dangerouslySetInnerHTML={{ __html: safeHtml || "<p style=\"color:#9ca3af;font-size:13px;\">Empty HTML block — edit in the properties panel.</p>" }}
         />
       </div>
     </BlockWrapper>
