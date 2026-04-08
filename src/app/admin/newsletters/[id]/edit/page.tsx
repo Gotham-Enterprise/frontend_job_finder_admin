@@ -69,7 +69,7 @@ export default function EditNewsletterPage() {
 
   const handleSubmit = async (values: NewsletterFormValues) => {
     try {
-      const { sendMode, scheduledAt, filters, ...rest } = values;
+      const { sendMode, scheduledAt, filters, builderBlocks, ...rest } = values;
 
       await updateMutation.mutateAsync({
         id,
@@ -79,6 +79,7 @@ export default function EditNewsletterPage() {
             ...(filters.country ? { country: filters.country } : {}),
             ...(filters.state ? { state: filters.state } : {}),
           },
+          builderBlocks,
         },
       });
 

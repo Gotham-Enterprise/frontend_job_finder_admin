@@ -8,6 +8,7 @@ export interface Newsletter {
   status: "draft" | "scheduled" | "sending" | "sent" | "failed";
   targetAudience: "all" | "job-seeker" | "employer";
   filters: { country?: string; state?: string } | null;
+  builderBlocks: import("@/components/admin/newsletter/builder/utils/blockTypes").EmailBlock[] | null;
   scheduledAt: string | null;
   sentAt: string | null;
   recipientCount: number | null;
@@ -65,6 +66,7 @@ export interface CreateNewsletterRequest {
   content: string;
   targetAudience?: "all" | "job-seeker" | "employer";
   filters?: { country?: string; state?: string };
+  builderBlocks?: import("@/components/admin/newsletter/builder/utils/blockTypes").EmailBlock[];
 }
 
 export interface UpdateNewsletterRequest {
@@ -73,6 +75,7 @@ export interface UpdateNewsletterRequest {
   content?: string;
   targetAudience?: "all" | "job-seeker" | "employer";
   filters?: { country?: string; state?: string };
+  builderBlocks?: import("@/components/admin/newsletter/builder/utils/blockTypes").EmailBlock[];
 }
 
 const BASE = "/api/admin/newsletters";

@@ -1,16 +1,24 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import Button from "@/components/ui/button/Button";
 import { useRecipientCount } from "@/services/hooks/useNewsletter";
 import { CreateNewsletterRequest, Newsletter } from "@/services/api/newsletter";
 import { showToast } from "@/services/utils/toast";
+import type { EmailBlock } from "./builder/utils/blockTypes";
 
-// Dynamically import RichTextEditor to avoid SSR issues
-const RichTextEditor = dynamic(
-  () => import("@/components/form/input/RichTextEditor"),
-  { ssr: false }
+// Dynamically import EmailBuilder to avoid SSR issues
+const EmailBuilder = dynamic(
+  () => import("./builder/EmailBuilder").then((m) => ({ default: m.EmailBuilder })),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="h-[700px] rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-500" />
+      </div>
+    ),
+  }
 );
 
 export type SendMode = "draft" | "send" | "schedule";
@@ -19,6 +27,7 @@ export interface NewsletterFormValues {
   title: string;
   subject: string;
   content: string;
+  builderBlocks: EmailBlock[];
   targetAudience: "all" | "job-seeker" | "employer";
   filters: { country: string; state: string };
   scheduledAt: string;
@@ -49,6 +58,9 @@ const NewsletterForm: React.FC<NewsletterFormProps> = ({
   const [title, setTitle] = useState(initialValues?.title ?? "");
   const [subject, setSubject] = useState(initialValues?.subject ?? "");
   const [content, setContent] = useState(initialValues?.content ?? "");
+  const [builderBlocks, setBuilderBlocks] = useState<EmailBlock[]>(
+    (initialValues?.builderBlocks as EmailBlock[] | null | undefined) ?? []
+  );
   const [targetAudience, setTargetAudience] = useState<
     "all" | "job-seeker" | "employer"
   >((initialValues?.targetAudience as any) ?? "all");
@@ -80,8 +92,12 @@ const NewsletterForm: React.FC<NewsletterFormProps> = ({
       showToast.error("Validation", "Subject is required");
       return;
     }
+    if (builderBlocks.length === 0) {
+      showToast.error("Validation", "Add at least one block to your email");
+      return;
+    }
     if (!content.trim() || content === "<p></p>") {
-      showToast.error("Validation", "Content cannot be empty");
+      showToast.error("Validation", "Content cannot be empty — add blocks to your email");
       return;
     }
     if (mode === "schedule" && !scheduledAt) {
@@ -97,6 +113,7 @@ const NewsletterForm: React.FC<NewsletterFormProps> = ({
       title: title.trim(),
       subject: subject.trim(),
       content,
+      builderBlocks,
       targetAudience,
       filters: { country: country.trim(), state: state.trim() },
       scheduledAt,
@@ -205,17 +222,21 @@ const NewsletterForm: React.FC<NewsletterFormProps> = ({
         )}
       </div>
 
-      {/* Content Editor */}
+      {/* Email Builder */}
       <div>
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          Newsletter Content <span className="text-red-500">*</span>
+          Email Content <span className="text-red-500">*</span>
         </label>
-        <RichTextEditor
-          content={content}
-          onChange={setContent}
-          placeholder="Write your newsletter content here..."
-          minHeight={400}
-          hideImageButton={false}
+        <p className="text-xs text-gray-400 dark:text-gray-500 mb-3">
+          Drag blocks from the left panel onto the canvas. Click any block to edit its properties on the right.
+        </p>
+        <EmailBuilder
+          initialBlocks={builderBlocks}
+          subject={subject}
+          onChange={(blocks, html) => {
+            setBuilderBlocks(blocks);
+            setContent(html);
+          }}
         />
       </div>
 

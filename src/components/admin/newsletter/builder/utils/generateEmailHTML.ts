@@ -1,0 +1,195 @@
+import type {
+  EmailBlock,
+  HeadingBlock,
+  TextBlock,
+  ImageBlock,
+  ButtonBlock,
+  DividerBlock,
+  SpacerBlock,
+  TwoColumnBlock,
+  QuoteBlock,
+  HtmlBlock,
+} from "./blockTypes";
+
+function escapeHTML(str: string): string {
+  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+function alignToMargin(align: "left" | "center" | "right"): string {
+  if (align === "center") return "margin: 0 auto;";
+  if (align === "right") return "margin-left: auto;";
+  return "";
+}
+
+function renderHeading(block: HeadingBlock): string {
+  const { text, level, align, color, fontSize, bold } = block.props;
+  const tag = `h${level}`;
+  const style = [
+    `font-size: ${fontSize}px`,
+    `color: ${color}`,
+    `text-align: ${align}`,
+    `font-weight: ${bold ? "700" : "400"}`,
+    "margin: 0 0 8px 0",
+    "padding: 0",
+    "line-height: 1.3",
+  ].join("; ");
+  return `<${tag} style="${style}">${escapeHTML(text)}</${tag}>`;
+}
+
+function renderText(block: TextBlock): string {
+  const { html, align, color, fontSize, lineHeight, bgColor, paddingTop, paddingBottom, paddingLeft, paddingRight } =
+    block.props;
+  const style = [
+    `font-size: ${fontSize}px`,
+    `color: ${color}`,
+    `text-align: ${align}`,
+    `line-height: ${lineHeight}`,
+    `background-color: ${bgColor}`,
+    `padding: ${paddingTop}px ${paddingRight}px ${paddingBottom}px ${paddingLeft}px`,
+  ].join("; ");
+  return `<div style="${style}">${html}</div>`;
+}
+
+function renderImage(block: ImageBlock): string {
+  const { src, alt, width, align, link, borderRadius, caption } = block.props;
+  if (!src) return "";
+
+  const imgStyle = [
+    `width: ${width}%`,
+    "max-width: 100%",
+    "height: auto",
+    "display: block",
+    `border-radius: ${borderRadius}px`,
+    alignToMargin(align),
+  ].join("; ");
+
+  const img = `<img src="${src}" alt="${escapeHTML(alt)}" style="${imgStyle}" />`;
+  const wrapped = link ? `<a href="${escapeHTML(link)}" target="_blank" rel="noopener noreferrer">${img}</a>` : img;
+  const captionHtml = caption
+    ? `<p style="font-size: 12px; color: #666666; text-align: ${align}; margin: 4px 0 0 0;">${escapeHTML(caption)}</p>`
+    : "";
+  return `<div style="text-align: ${align};">${wrapped}${captionHtml}</div>`;
+}
+
+function renderButton(block: ButtonBlock): string {
+  const {
+    label,
+    href,
+    align,
+    bgColor,
+    textColor,
+    borderRadius,
+    paddingTop,
+    paddingBottom,
+    paddingLeft,
+    paddingRight,
+    fullWidth,
+  } = block.props;
+
+  const btnStyle = [
+    `background-color: ${bgColor}`,
+    `color: ${textColor}`,
+    `border-radius: ${borderRadius}px`,
+    `padding: ${paddingTop}px ${paddingRight}px ${paddingBottom}px ${paddingLeft}px`,
+    "text-decoration: none",
+    "font-size: 14px",
+    "font-weight: 600",
+    "display: inline-block",
+    ...(fullWidth ? ["width: 100%", "text-align: center", "box-sizing: border-box"] : []),
+  ].join("; ");
+
+  const wrapperStyle = `text-align: ${align};`;
+  return `<div style="${wrapperStyle}"><a href="${escapeHTML(href)}" target="_blank" rel="noopener noreferrer" style="${btnStyle}">${escapeHTML(label)}</a></div>`;
+}
+
+function renderDivider(block: DividerBlock): string {
+  const { color, thickness, marginTop, marginBottom, style } = block.props;
+  const hrStyle = [
+    `border: none`,
+    `border-top: ${thickness}px ${style} ${color}`,
+    `margin: ${marginTop}px 0 ${marginBottom}px 0`,
+  ].join("; ");
+  return `<hr style="${hrStyle}" />`;
+}
+
+function renderSpacer(block: SpacerBlock): string {
+  return `<div style="height: ${block.props.height}px; line-height: ${block.props.height}px;">&nbsp;</div>`;
+}
+
+function renderTwoColumn(block: TwoColumnBlock): string {
+  const { leftHtml, rightHtml, leftWidth, gap, bgColor, paddingTop, paddingBottom } = block.props;
+  const rightWidth = 100 - leftWidth;
+  const style = `background-color: ${bgColor}; padding: ${paddingTop}px 0 ${paddingBottom}px 0;`;
+  // Use table for email client compatibility
+  return `<table width="100%" cellpadding="0" cellspacing="0" border="0" style="${style}">
+  <tr>
+    <td width="${leftWidth}%" style="vertical-align: top; padding-right: ${Math.round(gap / 2)}px;">
+      <div style="font-size: 14px; color: #333333; line-height: 1.6;">${leftHtml}</div>
+    </td>
+    <td width="${rightWidth}%" style="vertical-align: top; padding-left: ${Math.round(gap / 2)}px;">
+      <div style="font-size: 14px; color: #333333; line-height: 1.6;">${rightHtml}</div>
+    </td>
+  </tr>
+</table>`;
+}
+
+function renderQuote(block: QuoteBlock): string {
+  const { html, borderColor, bgColor, textColor, paddingTop, paddingBottom, paddingLeft, paddingRight } = block.props;
+  const style = [
+    `background-color: ${bgColor}`,
+    `border-left: 4px solid ${borderColor}`,
+    `color: ${textColor}`,
+    `padding: ${paddingTop}px ${paddingRight}px ${paddingBottom}px ${paddingLeft}px`,
+    "font-size: 14px",
+    "line-height: 1.6",
+    "margin: 0",
+  ].join("; ");
+  return `<blockquote style="${style}">${html}</blockquote>`;
+}
+
+function renderHtml(block: HtmlBlock): string {
+  const { html, paddingTop, paddingBottom, paddingLeft, paddingRight } = block.props;
+  const style = `padding: ${paddingTop}px ${paddingRight}px ${paddingBottom}px ${paddingLeft}px;`;
+  return `<div style="${style}">${html}</div>`;
+}
+
+export function generateEmailHTML(blocks: EmailBlock[]): string {
+  const parts = blocks.map((block) => {
+    const wrapperStyle = "max-width: 600px; margin: 0 auto; padding: 8px 0; font-family: Inter, Arial, sans-serif;";
+    let inner = "";
+
+    switch (block.type) {
+      case "heading":
+        inner = renderHeading(block);
+        break;
+      case "text":
+        inner = renderText(block);
+        break;
+      case "image":
+        inner = renderImage(block);
+        break;
+      case "button":
+        inner = renderButton(block);
+        break;
+      case "divider":
+        inner = renderDivider(block);
+        break;
+      case "spacer":
+        inner = renderSpacer(block);
+        break;
+      case "two-column":
+        inner = renderTwoColumn(block);
+        break;
+      case "quote":
+        inner = renderQuote(block);
+        break;
+      case "html":
+        inner = renderHtml(block);
+        break;
+    }
+
+    return `<div style="${wrapperStyle}">${inner}</div>`;
+  });
+
+  return parts.join("\n");
+}
