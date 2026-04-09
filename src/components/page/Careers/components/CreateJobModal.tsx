@@ -169,9 +169,8 @@ export const CreateJobModal: React.FC<CreateJobModalProps> = ({
     if (!formData.country?.trim()) {
       newErrors.country = 'Country is required';
     }
-    if (!formData.address?.trim()) {
-      newErrors.address = 'Address is required';
-    } else if (!ADDRESS_REGEX.test(formData.address.trim())) {
+    const trimmedAddress = formData.address?.trim() ?? '';
+    if (trimmedAddress && !ADDRESS_REGEX.test(trimmedAddress)) {
       newErrors.address = 'Address contains invalid characters';
     }
     if (!formData.zipCode?.trim()) {
@@ -208,6 +207,7 @@ export const CreateJobModal: React.FC<CreateJobModalProps> = ({
       const payload: CreateCareerPayload = {
         ...formData,
         state: formData.state ? getStateName(formData.state) : '',
+        address: formData.address?.trim() ?? '',
       };
 
       await createCareerMutation.mutateAsync(payload);
@@ -316,7 +316,7 @@ export const CreateJobModal: React.FC<CreateJobModalProps> = ({
                 {/* Address */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Address *
+                    Address
                   </label>
                   <Input
                     type="text"
