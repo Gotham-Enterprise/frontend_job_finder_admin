@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import flatpickr from 'flatpickr';
 import 'flatpickr/dist/flatpickr.css';
 import SearchableSelect from '../../../ui/SearchableSelect';
+import MultiSelect from '../../../form/MultiSelect';
 import Label from '../../../form/Label';
 import Input from '../../../ui/input/Input';
 import { CalenderIcon } from '@/icons';
@@ -49,7 +50,7 @@ const JobSeekersFilters: React.FC<JobSeekersFiltersProps> = ({
   }, [filters.city]);
 
   
-  const isRadiusDisabled = !filters.city || !filters.location;
+  const isRadiusDisabled = !filters.city || !(filters.location && filters.location.length > 0);
 
 
   useEffect(() => {
@@ -205,7 +206,7 @@ const JobSeekersFilters: React.FC<JobSeekersFiltersProps> = ({
             <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
               State
             </Label>
-            {filters.location && (
+            {filters.location && filters.location.length > 0 && (
               <button
                 onClick={() => clearIndividualFilter('location')}
                 className="text-xs text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100 font-medium cursor-pointer hover:underline"
@@ -214,13 +215,12 @@ const JobSeekersFilters: React.FC<JobSeekersFiltersProps> = ({
               </button>
             )}
           </div>
-          <SearchableSelect
-            value={filters.location || ''}
-            onChange={(value: string) => onFilterChange('location', value)}
-            options={stateOptions}
-            placeholder="Select state..."
-            searchPlaceholder="Search states..."
-            className="w-full"
+          <MultiSelect
+            label=""
+            value={filters.location ?? []}
+            options={stateOptions.map((o) => ({ value: o.value, text: o.label, selected: false }))}
+            onChange={(selected: string[]) => onFilterChange('location', selected)}
+            placeholder="Select states..."
           />
         </div>
            <div className="space-y-2">
