@@ -42,7 +42,7 @@ export interface JobSeekerFilters {
   search?: string;
   city?: string;
   radius?: number;
-  location?: string;
+  location?: string[];
   specialty?: string;
   occupationId?: number;
   status?: "active" | "inactive" | "suspended" | "pending";
