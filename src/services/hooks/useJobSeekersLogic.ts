@@ -24,7 +24,8 @@ export const useJobSeekersLogic = () => {
           ? (statusParam as "active" | "inactive" | "pending" | "suspended")
           : undefined;
       const urlPage = searchParams.get("page");
-      const urlLocation = searchParams.get("location");
+      const urlLocationRaw = searchParams.get("location");
+      const urlLocation = urlLocationRaw ? urlLocationRaw.split(",").filter(Boolean) : [];
       const urlCity = searchParams.get("city");
       const urlRadius = searchParams.get("radius");
       const urlOccupationId = searchParams.get("occupationId");
@@ -39,7 +40,7 @@ export const useJobSeekersLogic = () => {
         search: decodedSearch,
         city: urlCity || "",
         radius: urlRadius ? parseInt(urlRadius, 10) : undefined,
-        location: urlLocation || "",
+        location: urlLocation,
         occupationId: urlOccupationId ? parseInt(urlOccupationId, 10) : undefined,
         status: validStatus,
         licenseName: urlLicenseName || "",
@@ -52,7 +53,7 @@ export const useJobSeekersLogic = () => {
         !decodedSearch &&
         !urlCity &&
         !urlRadius &&
-        !urlLocation &&
+        !urlLocation.length &&
         !urlOccupationId &&
         !validStatus &&
         !urlLicenseName &&
@@ -84,7 +85,7 @@ export const useJobSeekersLogic = () => {
               search: parsed.search || "",
               city: parsed.city || "",
               radius: parsed.radius || undefined,
-              location: parsed.location || "",
+              location: Array.isArray(parsed.location) ? parsed.location : (parsed.location ? [parsed.location] : []),
               occupationId: parsed.occupationId || undefined,
               status: parsed.status || undefined,
               licenseName: parsed.licenseName || "",
@@ -109,7 +110,7 @@ export const useJobSeekersLogic = () => {
       search: "",
       city: "",
       radius: undefined,
-      location: "",
+      location: [] as string[],
       occupationId: undefined,
       status: undefined,
       licenseName: "",
@@ -151,7 +152,7 @@ export const useJobSeekersLogic = () => {
     if (filters.search) params.set("search", encodeURIComponent(filters.search));
     if (filters.city) params.set("city", filters.city);
     if (filters.radius) params.set("radius", filters.radius.toString());
-    if (filters.location) params.set("location", filters.location);
+    if (filters.location && filters.location.length > 0) params.set("location", filters.location.join(","));
     if (filters.occupationId) params.set("occupationId", filters.occupationId.toString());
     if (filters.status) params.set("status", filters.status);
     if (filters.licenseName) params.set("licenseName", filters.licenseName);
@@ -232,7 +233,7 @@ export const useJobSeekersLogic = () => {
         search: filters.search,
         city: filters.city,
         radius: filters.radius,
-        location: filters.location,
+        location: filters.location ?? [],
         occupationId: filters.occupationId,
         status: filters.status,
       };
@@ -295,17 +296,13 @@ export const useJobSeekersLogic = () => {
   }, [occupationsData]);
 
   const stateOptions = useMemo(() => {
-    const baseOptions = [{ value: "", label: "All States" }];
-
     if (statesData?.success && statesData.data) {
-      const dynamicOptions = statesData.data.states.map((state) => ({
+      return statesData.data.states.map((state) => ({
         value: state.abbreviation,
         label: state.name,
       }));
-      return [...baseOptions, ...dynamicOptions];
     }
-
-    return baseOptions;
+    return [];
   }, [statesData]);
 
   const licenseOptions = useMemo(() => {
@@ -420,7 +417,7 @@ export const useJobSeekersLogic = () => {
       search: "",
       city: "",
       radius: undefined,
-      location: "",
+      location: [] as string[],
       occupationId: undefined,
       status: undefined,
       licenseName: "",
@@ -449,7 +446,7 @@ export const useJobSeekersLogic = () => {
           filterChange("radius", undefined);
           break;
         case "location":
-          filterChange("location", "");
+          filterChange("location", []);
           break;
         case "status":
           filterChange("status", undefined);
@@ -478,13 +475,13 @@ export const useJobSeekersLogic = () => {
       searchInput ||
       filters.city ||
       filters.radius ||
-      filters.location ||
+      (filters.location && filters.location.length > 0) ||
       filters.occupationId ||
       filters.status ||
       filters.licenseName ||
       filters.licenseIssuingState
     );
-  }, [searchInput, filters.city, filters.radius, filters.location, filters.occupationId, filters.status]);
+  }, [searchInput, filters.city, filters.radius, filters.location, filters.occupationId, filters.status, filters.licenseName, filters.licenseIssuingState]);
 
   const handleExport = useCallback(async () => {
     if (isExporting) return;
@@ -558,7 +555,7 @@ export const useJobSeekersLogic = () => {
       !filters.search &&
       !filters.city &&
       !filters.radius &&
-      !filters.location &&
+      !(filters.location && filters.location.length > 0) &&
       !filters.occupationId &&
       !filters.status;
 
@@ -571,7 +568,7 @@ export const useJobSeekersLogic = () => {
       filters.search ||
       filters.city ||
       filters.radius ||
-      filters.location ||
+      (filters.location && filters.location.length > 0) ||
       filters.occupationId ||
       filters.status ||
       (filters.page && filters.page > 1)
