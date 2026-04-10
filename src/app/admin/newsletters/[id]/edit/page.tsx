@@ -69,17 +69,14 @@ export default function EditNewsletterPage() {
 
   const handleSubmit = async (values: NewsletterFormValues) => {
     try {
-      const { sendMode, scheduledAt, filters, builderBlocks, showHeader, showFooter, ...rest } = values;
+      const { sendMode, scheduledAt, builderBlocks, listIds, showHeader, showFooter, ...rest } = values;
 
       await updateMutation.mutateAsync({
         id,
         data: {
           ...rest,
-          filters: {
-            ...(filters.country ? { country: filters.country } : {}),
-            ...(filters.state ? { state: filters.state } : {}),
-          },
           builderBlocks,
+          listIds: listIds.length > 0 ? listIds : [],
           showHeader,
           showFooter,
         },

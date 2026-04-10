@@ -30,11 +30,12 @@ export const useNewsletterLogs = (id: string, page = 1, limit = 20) => {
 
 export const useRecipientCount = (
   targetAudience: "all" | "job-seeker" | "employer",
-  filters?: { country?: string; state?: string }
+  filters?: { country?: string; state?: string },
+  listIds?: string[]
 ) => {
   return useQuery({
-    queryKey: ["newsletterRecipientCount", targetAudience, filters],
-    queryFn: () => newsletterApi.getRecipientCount(targetAudience, filters),
+    queryKey: ["newsletterRecipientCount", targetAudience, filters, listIds],
+    queryFn: () => newsletterApi.getRecipientCount(targetAudience, filters, listIds),
     enabled: !!targetAudience,
     staleTime: 30 * 1000,
   });

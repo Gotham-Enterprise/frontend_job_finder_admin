@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import Button from "@/components/ui/button/Button";
 import { useRecipientCount } from "@/services/hooks/useNewsletter";
+import { useContactLists } from "@/services/hooks/useContacts";
 import { CreateNewsletterRequest, Newsletter } from "@/services/api/newsletter";
 import { showToast } from "@/services/utils/toast";
 import type { EmailBlock } from "./builder/utils/blockTypes";
@@ -28,8 +29,7 @@ export interface NewsletterFormValues {
   subject: string;
   content: string;
   builderBlocks: EmailBlock[];
-  targetAudience: "all" | "job-seeker" | "employer";
-  filters: { country: string; state: string };
+  listIds: string[];
   scheduledAt: string;
   sendMode: SendMode;
   showHeader: boolean;
@@ -42,12 +42,6 @@ interface NewsletterFormProps {
   isSubmitting?: boolean;
   defaultSendMode?: SendMode;
 }
-
-const AUDIENCE_OPTIONS = [
-  { value: "all", label: "All Users (Job Seekers + Employers)" },
-  { value: "job-seeker", label: "Job Seekers only" },
-  { value: "employer", label: "Employers only" },
-];
 
 const NewsletterForm: React.FC<NewsletterFormProps> = ({
   initialValues,
@@ -63,21 +57,31 @@ const NewsletterForm: React.FC<NewsletterFormProps> = ({
   const [builderBlocks, setBuilderBlocks] = useState<EmailBlock[]>(
     (initialValues?.builderBlocks as EmailBlock[] | null | undefined) ?? []
   );
-  const [targetAudience, setTargetAudience] = useState<
-    "all" | "job-seeker" | "employer"
-  >((initialValues?.targetAudience as any) ?? "all");
-  const [country, setCountry] = useState(
-    (initialValues?.filters as any)?.country ?? ""
-  );
-  const [state, setState] = useState(
-    (initialValues?.filters as any)?.state ?? ""
-  );
   const [sendMode, setSendMode] = useState<SendMode>(defaultSendMode);
   const [scheduledAt, setScheduledAt] = useState(
     initialValues?.scheduledAt
       ? new Date(initialValues.scheduledAt).toISOString().slice(0, 16)
       : ""
   );
+  const [selectedListIds, setSelectedListIds] = useState<string[]>(
+    Array.isArray((initialValues as any)?.listIds)
+      ? (initialValues as any).listIds
+      : []
+  );
+  const [listDropdownOpen, setListDropdownOpen] = useState(false);
+
+  // Close list dropdown when clicking outside
+  const listDropdownRef = React.useRef<HTMLDivElement>(null);
+  React.useEffect(() => {
+    if (!listDropdownOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (listDropdownRef.current && !listDropdownRef.current.contains(e.target as Node)) {
+        setListDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [listDropdownOpen]);
   const [showHeader, setShowHeader] = useState(
     initialValues?.showHeader !== undefined ? initialValues.showHeader : true
   );
@@ -85,8 +89,14 @@ const NewsletterForm: React.FC<NewsletterFormProps> = ({
     initialValues?.showFooter !== undefined ? initialValues.showFooter : true
   );
 
-  const filters = { country: country || undefined, state: state || undefined };
-  const { data: countData } = useRecipientCount(targetAudience, filters);
+  const { data: listsData } = useContactLists();
+  const availableLists = listsData?.data ?? [];
+
+  const { data: countData } = useRecipientCount(
+    "all",
+    undefined,
+    selectedListIds.length > 0 ? selectedListIds : undefined
+  );
   const recipientCount = countData?.data?.count ?? null;
 
   const handleSubmit = async (e: React.FormEvent, mode: SendMode) => {
@@ -122,8 +132,7 @@ const NewsletterForm: React.FC<NewsletterFormProps> = ({
       subject: subject.trim(),
       content,
       builderBlocks,
-      targetAudience,
-      filters: { country: country.trim(), state: state.trim() },
+      listIds: selectedListIds,
       scheduledAt,
       sendMode: mode,
       showHeader,
@@ -166,53 +175,103 @@ const NewsletterForm: React.FC<NewsletterFormProps> = ({
         />
       </div>
 
-      {/* Audience + Filters */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Target Audience
-          </label>
-          <select
-            value={targetAudience}
-            onChange={(e) =>
-              setTargetAudience(e.target.value as typeof targetAudience)
-            }
-            className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500"
+      {/* Target Audience (Lists) */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          Target Audience
+        </label>
+        <p className="text-xs text-gray-400 dark:text-gray-500 mb-2">
+          Select which lists receive this newsletter. If none are selected, it sends to all users.
+        </p>
+
+        <div className="relative" ref={listDropdownRef}>
+          {/* Trigger */}
+          <button
+            onClick={() => setListDropdownOpen((v) => !v)}
+            className="w-full flex items-center justify-between rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500 text-left"
           >
-            {AUDIENCE_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
-        </div>
+            <span className="flex flex-wrap gap-1 flex-1 min-w-0">
+              {selectedListIds.length === 0 ? (
+                  <span className="text-gray-400">No lists selected (sends to all users)</span>
+              ) : (
+                availableLists
+                  .filter((l) => selectedListIds.includes(l.id))
+                  .map((l) => (
+                    <span
+                      key={l.id}
+                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-brand-100 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300 text-xs font-medium"
+                    >
+                      {l.name}
+                      <span
+                        role="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedListIds((prev) => prev.filter((id) => id !== l.id));
+                        }}
+                        className="cursor-pointer hover:text-brand-900 dark:hover:text-brand-100 leading-none"
+                      >
+                        ×
+                      </span>
+                    </span>
+                  ))
+              )}
+            </span>
+            <svg
+              className={`ml-2 h-4 w-4 flex-shrink-0 text-gray-400 transition-transform ${listDropdownOpen ? "rotate-180" : ""}`}
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Filter by Country{" "}
-            <span className="text-gray-400 font-normal">(optional)</span>
-          </label>
-          <input
-            type="text"
-            value={country}
-            onChange={(e) => setCountry(e.target.value)}
-            placeholder="e.g., United States"
-            className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Filter by State{" "}
-            <span className="text-gray-400 font-normal">(optional)</span>
-          </label>
-          <input
-            type="text"
-            value={state}
-            onChange={(e) => setState(e.target.value)}
-            placeholder="e.g., California"
-            className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500"
-          />
+          {/* Dropdown */}
+          {listDropdownOpen && (
+            <div className="absolute z-20 mt-1 w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg overflow-hidden">
+              {availableLists.length === 0 ? (
+                <p className="px-4 py-3 text-sm text-gray-400">
+                  No lists available — create lists in the Contacts tab first.
+                </p>
+              ) : (
+                <div className="max-h-56 overflow-y-auto">
+                  {availableLists.map((list) => {
+                    const checked = selectedListIds.includes(list.id);
+                    return (
+                      <label
+                        key={list.id}
+                        className="flex items-center gap-3 px-4 py-2.5 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() => {
+                            setSelectedListIds((prev) =>
+                              checked
+                                ? prev.filter((id) => id !== list.id)
+                                : [...prev, list.id]
+                            );
+                          }}
+                          className="accent-brand-500 h-4 w-4 cursor-pointer flex-shrink-0"
+                        />
+                        <span className="flex-1 text-sm text-gray-800 dark:text-gray-200">
+                          {list.name}
+                        </span>
+                        <span className="text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap">
+                          {list.contactCount.toLocaleString()} contact{list.contactCount !== 1 ? "s" : ""}
+                        </span>
+                        {list.isSystem && (
+                          <span className="text-xs px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 font-medium">
+                            System
+                          </span>
+                        )}
+                      </label>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 

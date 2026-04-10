@@ -111,6 +111,17 @@ const navItems: NavItem[] = [
     ],
   },
   {
+    icon: <MailIcon />,
+    name: "Newsletter Manager",
+    path: "/admin/newsletters",
+    isAccessible: true,
+    subItems: [
+      { name: "All Newsletters", path: "/admin/newsletters" },
+      { name: "Create New", path: "/admin/newsletters/create" },
+      { name: "Contacts", path: "/admin/newsletters/contacts" },
+    ],
+  },
+  {
     icon: <PieChartIcon />,
     name: "Analytics",
     subItems: [
@@ -138,16 +149,6 @@ const navItems: NavItem[] = [
     path: "/admin/coupons",
     permissionKey: "coupons",
     //subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
-  },
-  {
-    icon: <MailIcon />,
-    name: "Newsletters",
-    path: "/admin/newsletters",
-    isAccessible: true,
-    subItems: [
-      { name: "All Newsletters", path: "/admin/newsletters" },
-      { name: "Create New", path: "/admin/newsletters/create" },
-    ],
   },
   {
     icon: <IdCardIcon />,

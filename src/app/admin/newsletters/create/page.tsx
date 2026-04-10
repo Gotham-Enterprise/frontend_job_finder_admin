@@ -24,15 +24,12 @@ export default function CreateNewsletterPage() {
 
   const handleSubmit = async (values: NewsletterFormValues) => {
     try {
-      const { sendMode, scheduledAt, filters, builderBlocks, showHeader, showFooter, ...rest } = values;
+      const { sendMode, scheduledAt, builderBlocks, listIds, showHeader, showFooter, ...rest } = values;
 
       const response = await createMutation.mutateAsync({
         ...rest,
-        filters: {
-          ...(filters.country ? { country: filters.country } : {}),
-          ...(filters.state ? { state: filters.state } : {}),
-        },
         builderBlocks,
+        listIds: listIds.length > 0 ? listIds : undefined,
         showHeader,
         showFooter,
       });

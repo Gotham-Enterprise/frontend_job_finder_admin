@@ -9,6 +9,9 @@ import {
   useCancelSchedule,
   useDuplicateNewsletter,
 } from "@/services/hooks/useNewsletter";
+import { Newsletter } from "@/services/api/newsletter";
+import { useContactLists } from "@/services/hooks/useContacts";
+import type { ContactList } from "@/services/api/contacts";
 import Badge from "@/components/ui/badge/Badge";
 import Button from "@/components/ui/button/Button";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
@@ -40,15 +43,14 @@ const statusBadgeColor = (
   }
 };
 
-const audienceLabel = (audience: string) => {
-  switch (audience) {
-    case "job-seeker":
-      return "Job Seekers";
-    case "employer":
-      return "Employers";
-    default:
-      return "All Users";
+const resolveAudienceLabel = (newsletter: Newsletter, lists: ContactList[]) => {
+  if (Array.isArray(newsletter.listIds) && newsletter.listIds.length > 0) {
+    const names = newsletter.listIds
+      .map((id) => lists.find((l) => l.id === id)?.name)
+      .filter(Boolean) as string[];
+    return names.length > 0 ? names.join(", ") : `${newsletter.listIds.length} list(s)`;
   }
+  return "All Users";
 };
 
 const formatDate = (dateStr: string | null) => {
@@ -74,6 +76,7 @@ export default function NewsletterDetailPage() {
     id,
     logsPage
   );
+  const { data: listsData } = useContactLists();
   const sendNowMutation = useSendNewsletterNow();
   const cancelScheduleMutation = useCancelSchedule();
   const duplicateMutation = useDuplicateNewsletter();
@@ -81,6 +84,7 @@ export default function NewsletterDetailPage() {
   const newsletter = newsletterData?.data;
   const logs = logsData?.data ?? [];
   const logsMeta = logsData?.metaData;
+  const availableLists: ContactList[] = listsData?.data ?? [];
 
   if (newsletterLoading) {
     return (
@@ -141,7 +145,7 @@ export default function NewsletterDetailPage() {
                 onClick={() => {
                   if (
                     confirm(
-                      `Send "${newsletter.title}" to ${audienceLabel(newsletter.targetAudience)} now?`
+                      `Send "${newsletter.title}" to ${resolveAudienceLabel(newsletter, availableLists)} now?`
                     )
                   ) {
                     sendNowMutation.mutateAsync(id).then(() => {
@@ -202,7 +206,7 @@ export default function NewsletterDetailPage() {
           <div className="bg-gray-50 dark:bg-gray-700/40 rounded-lg p-3">
             <p className="text-xs text-gray-500 dark:text-gray-400">Audience</p>
             <p className="text-sm font-medium text-gray-900 dark:text-white mt-0.5">
-              {audienceLabel(newsletter.targetAudience)}
+              {resolveAudienceLabel(newsletter, availableLists)}
             </p>
           </div>
           <div className="bg-gray-50 dark:bg-gray-700/40 rounded-lg p-3">

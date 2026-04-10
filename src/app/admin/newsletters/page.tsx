@@ -12,6 +12,8 @@ import {
 import { PreviewModal } from "@/components/admin/newsletter/builder/PreviewModal";
 import type { EmailBlock } from "@/components/admin/newsletter/builder/utils/blockTypes";
 import { Newsletter } from "@/services/api/newsletter";
+import { useContactLists } from "@/services/hooks/useContacts";
+import type { ContactList } from "@/services/api/contacts";
 import Badge from "@/components/ui/badge/Badge";
 import Button from "@/components/ui/button/Button";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
@@ -56,15 +58,14 @@ const statusBadgeColor = (
   }
 };
 
-const audienceLabel = (audience: string) => {
-  switch (audience) {
-    case "job-seeker":
-      return "Job Seekers";
-    case "employer":
-      return "Employers";
-    default:
-      return "All Users";
+const resolveAudienceLabel = (newsletter: Newsletter, lists: ContactList[]) => {
+  if (Array.isArray(newsletter.listIds) && newsletter.listIds.length > 0) {
+    const names = newsletter.listIds
+      .map((id) => lists.find((l) => l.id === id)?.name)
+      .filter(Boolean) as string[];
+    return names.length > 0 ? names.join(", ") : `${newsletter.listIds.length} list(s)`;
   }
+  return "All Users";
 };
 
 const formatDate = (dateStr: string | null) => {
@@ -92,6 +93,7 @@ export default function NewslettersPage() {
     limit,
     activeStatus
   );
+  const { data: listsData } = useContactLists();
   const deleteMutation = useDeleteNewsletter();
   const sendNowMutation = useSendNewsletterNow();
   const cancelScheduleMutation = useCancelSchedule();
@@ -99,6 +101,7 @@ export default function NewslettersPage() {
 
   const newsletters = data?.data ?? [];
   const meta = data?.metaData;
+  const availableLists: ContactList[] = listsData?.data ?? [];
 
   const handleTabChange = (status: string | undefined) => {
     setActiveStatus(status);
@@ -118,7 +121,7 @@ export default function NewslettersPage() {
   const handleSendNow = async (newsletter: Newsletter) => {
     if (
       !confirm(
-        `Send "${newsletter.title}" to ${audienceLabel(newsletter.targetAudience)} now?`
+        `Send "${newsletter.title}" to ${resolveAudienceLabel(newsletter, availableLists)} now?`
       )
     )
       return;
@@ -206,7 +209,7 @@ export default function NewslettersPage() {
                       {newsletter.subject}
                     </TableCell>
                     <TableCell className="px-4 py-3 text-gray-600 dark:text-gray-300 whitespace-nowrap">
-                      {audienceLabel(newsletter.targetAudience)}
+                      {resolveAudienceLabel(newsletter, availableLists)}
                     </TableCell>
                     <TableCell className="px-4 py-3">
                       <Badge

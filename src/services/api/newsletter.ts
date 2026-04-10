@@ -9,6 +9,7 @@ export interface Newsletter {
   targetAudience: "all" | "job-seeker" | "employer";
   filters: { country?: string; state?: string } | null;
   builderBlocks: import("@/components/admin/newsletter/builder/utils/blockTypes").EmailBlock[] | null;
+  listIds: string[] | null;
   showHeader: boolean;
   showFooter: boolean;
   scheduledAt: string | null;
@@ -69,6 +70,7 @@ export interface CreateNewsletterRequest {
   targetAudience?: "all" | "job-seeker" | "employer";
   filters?: { country?: string; state?: string };
   builderBlocks?: import("@/components/admin/newsletter/builder/utils/blockTypes").EmailBlock[];
+  listIds?: string[];
   showHeader?: boolean;
   showFooter?: boolean;
 }
@@ -80,6 +82,7 @@ export interface UpdateNewsletterRequest {
   targetAudience?: "all" | "job-seeker" | "employer";
   filters?: { country?: string; state?: string };
   builderBlocks?: import("@/components/admin/newsletter/builder/utils/blockTypes").EmailBlock[];
+  listIds?: string[];
   showHeader?: boolean;
   showFooter?: boolean;
 }
@@ -110,11 +113,13 @@ export const newsletterApi = {
 
   getRecipientCount: (
     targetAudience: "all" | "job-seeker" | "employer",
-    filters?: { country?: string; state?: string }
+    filters?: { country?: string; state?: string },
+    listIds?: string[]
   ) => {
     const params = new URLSearchParams({ targetAudience });
     if (filters?.country) params.set("country", filters.country);
     if (filters?.state) params.set("state", filters.state);
+    if (listIds && listIds.length > 0) params.set("listIds", listIds.join(","));
     return apiGet<RecipientCountResponse>(`${BASE}/recipient-count?${params.toString()}`);
   },
 
