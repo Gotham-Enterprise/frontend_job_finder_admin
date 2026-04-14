@@ -57,7 +57,7 @@ export interface JobseekerTrendsResponse {
   fromCache?: boolean;
 }
 
-export type Period = "24h" | "7d" | "28d" | "3m";
+export type Period = "24h" | "7d" | "28d" | "3m" | "6m" | "9m" | "1y" | "custom";
 
 export interface AnalyticsError {
   success: false;
