@@ -52,13 +52,21 @@ class AdminAnalyticsService {
 
   /**
    * Get new jobseeker registration trends for specified period
-   * @param period - Time period: "24h", "7d", "28d", "3m"
+   * @param period - Time period: "24h", "7d", "28d", "3m", "6m", "9m", "1y", "custom"
+   * @param customDateRange - Optional custom date range for "custom" period
    */
-  async getJobseekerTrends(period: Period = "3m"): Promise<JobseekerTrendsResponse> {
+  async getJobseekerTrends(
+    period: Period = "3m",
+    customDateRange?: { startDate: string | null; endDate: string | null }
+  ): Promise<JobseekerTrendsResponse> {
     const timezone = this.getTimezone();
-    return apiGet<JobseekerTrendsResponse>(
-      `/api/admin/analytics/jobseeker-trends?period=${period}&timezone=${encodeURIComponent(timezone)}`
-    );
+    let url = `/api/admin/analytics/jobseeker-trends?period=${period}&timezone=${encodeURIComponent(timezone)}`;
+    
+    if (period === "custom" && customDateRange?.startDate && customDateRange?.endDate) {
+      url += `&startDate=${customDateRange.startDate}&endDate=${customDateRange.endDate}`;
+    }
+    
+    return apiGet<JobseekerTrendsResponse>(url);
   }
 }
 
