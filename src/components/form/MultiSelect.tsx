@@ -10,6 +10,7 @@ interface MultiSelectProps {
   label: string;
   options: Option[];
   defaultSelected?: string[];
+  value?: string[];
   onChange?: (selected: string[]) => void;
   disabled?: boolean;
   className?: string;
@@ -23,13 +24,20 @@ const MultiSelect: React.FC<MultiSelectProps> = ({
   label,
   options,
   defaultSelected = [],
+  value,
   onChange,
   disabled = false,
   className = "",
   placeholder = "Select options...",
   maxDisplayItems = 3,
 }) => {
-  const [selectedOptions, setSelectedOptions] = useState<string[]>(defaultSelected);
+  const [selectedOptions, setSelectedOptions] = useState<string[]>(value ?? defaultSelected);
+
+  useEffect(() => {
+    if (value !== undefined) {
+      setSelectedOptions(value);
+    }
+  }, [value]);
   const [isOpen, setIsOpen] = useState(false);
   const [zIndex, setZIndex] = useState(1000);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -117,7 +125,7 @@ const MultiSelect: React.FC<MultiSelectProps> = ({
             onClick={toggleDropdown} 
             className={`w-full cursor-pointer ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
-            <div className="min-h-[2.75rem] rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 shadow-sm transition-all duration-200 hover:border-gray-400 dark:hover:border-gray-500 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500 dark:focus-within:border-blue-400">
+            <div className="min-h-[2.75rem] rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 shadow-sm transition-all duration-200 hover:border-gray-400 dark:hover:border-gray-500 focus-within:border-green-700 focus-within:ring-1 focus-within:ring-green-700 dark:focus-within:border-green-600">
               <div className="flex items-center justify-between">
                 <div className="flex-1 flex flex-wrap gap-1.5 min-h-[1.75rem] items-center">
                   {selectedValuesText.length > 0 ? (
@@ -125,13 +133,13 @@ const MultiSelect: React.FC<MultiSelectProps> = ({
                       {displayedItems.map((text, index) => (
                         <div
                           key={index}
-                          className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-blue-700 bg-blue-50 rounded-md border border-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800"
+                          className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-white bg-green-700 rounded-md border border-green-700 dark:bg-green-800 dark:border-green-800"
                         >
                           <span className="truncate max-w-[120px]">{text}</span>
                           <button
                             type="button"
                             onClick={(e) => removeOption(selectedOptions[index], e)}
-                            className="ml-1 text-blue-500 hover:text-blue-700 dark:text-blue-300 dark:hover:text-blue-100 focus:outline-none"
+                            className="ml-1 text-green-200 hover:text-white focus:outline-none"
                           >
                             <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                               <path
@@ -201,8 +209,8 @@ const MultiSelect: React.FC<MultiSelectProps> = ({
                           <div
                             className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-all duration-200 ${
                               isSelected
-                                ? "bg-blue-500 border-blue-500 text-white"
-                                : "border-gray-300 dark:border-gray-500 hover:border-blue-400"
+                                ? "bg-green-700 border-green-700 text-white"
+                                : "border-gray-300 dark:border-gray-500 hover:border-green-600"
                             }`}
                           >
                             {isSelected && (
@@ -220,7 +228,7 @@ const MultiSelect: React.FC<MultiSelectProps> = ({
                           <div
                             className={`text-sm font-medium transition-colors duration-150 ${
                               isSelected
-                                ? "text-blue-600 dark:text-blue-400"
+                                ? "text-green-800 dark:text-green-300"
                                 : "text-gray-900 dark:text-white"
                             }`}
                           >
@@ -231,7 +239,7 @@ const MultiSelect: React.FC<MultiSelectProps> = ({
                         {isSelected && (
                           <div className="flex-shrink-0 ml-2">
                             <svg
-                              className="w-4 h-4 text-blue-500"
+                              className="w-4 h-4 text-green-700"
                               fill="currentColor"
                               viewBox="0 0 20 20"
                             >
