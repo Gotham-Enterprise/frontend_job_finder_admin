@@ -142,15 +142,21 @@ function renderSpacer(block: SpacerBlock): string {
 function renderTwoColumn(block: TwoColumnBlock): string {
   const { leftHtml, rightHtml, leftWidth, gap, bgColor, paddingTop, paddingBottom } = block.props;
   const rightWidth = 100 - leftWidth;
-  const style = `background-color: ${bgColor}; padding: ${paddingTop}px 0 ${paddingBottom}px 0;`;
-  // Use table for email client compatibility
-  return `<table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${bgColor}" style="${style}">
+  const wrapperTdStyle = `background-color: ${bgColor}; padding: ${paddingTop}px 0 ${paddingBottom}px 0;`;
+  // Use table for email client compatibility; background-color/padding must be on <td> not <table>
+  return `<table width="100%" cellpadding="0" cellspacing="0" border="0">
   <tr>
-    <td width="${leftWidth}%" bgcolor="${bgColor}" style="vertical-align: top; padding-right: ${Math.round(gap / 2)}px;">
-      <div style="font-size: 14px; color: #333333; line-height: 1.6;">${leftHtml}</div>
-    </td>
-    <td width="${rightWidth}%" bgcolor="${bgColor}" style="vertical-align: top; padding-left: ${Math.round(gap / 2)}px;">
-      <div style="font-size: 14px; color: #333333; line-height: 1.6;">${rightHtml}</div>
+    <td bgcolor="${bgColor}" style="${wrapperTdStyle}">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td width="${leftWidth}%" style="vertical-align: top; padding-right: ${Math.round(gap / 2)}px;">
+            <div style="font-size: 14px; color: #333333; line-height: 1.6;">${leftHtml}</div>
+          </td>
+          <td width="${rightWidth}%" style="vertical-align: top; padding-left: ${Math.round(gap / 2)}px;">
+            <div style="font-size: 14px; color: #333333; line-height: 1.6;">${rightHtml}</div>
+          </td>
+        </tr>
+      </table>
     </td>
   </tr>
 </table>`;
@@ -199,7 +205,9 @@ function renderSection(block: SectionBlock): string {
   const { columns, bgColor, bgImageSrc, paddingTop, paddingBottom, paddingLeft, paddingRight, borderRadius } =
     block.props;
 
-  const outerStyle = [
+  // background-color, padding, and border-radius must be on the <td>, not the <table>,
+  // for reliable rendering across email clients (especially Outlook).
+  const wrapperTdStyle = [
     `background-color: ${bgColor}`,
     bgImageSrc ? `background-image: url('${bgImageSrc}')` : "",
     bgImageSrc ? "background-size: cover" : "",
@@ -230,16 +238,22 @@ function renderSection(block: SectionBlock): string {
     return cell.replace("<td ", `<td width="${w}%" `);
   });
 
-  return `<table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${bgColor}" style="${outerStyle}">
+  return `<table width="100%" cellpadding="0" cellspacing="0" border="0">
   <tr>
-    ${cellsWithWidth.join("\n    ")}
+    <td bgcolor="${bgColor}" style="${wrapperTdStyle}">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          ${cellsWithWidth.join("\n          ")}
+        </tr>
+      </table>
+    </td>
   </tr>
 </table>`;
 }
 
 export function generateEmailHTML(blocks: EmailBlock[]): string {
   const parts = blocks.map((block) => {
-    const wrapperStyle = "max-width: 600px; margin: 0 auto; padding: 8px 0; font-family: Inter, Arial, sans-serif;";
+    const wrapperStyle = "max-width: 600px; margin: 0 auto; padding: 8px 30px; font-family: Inter, Arial, sans-serif;";
     let inner = "";
 
     switch (block.type) {
