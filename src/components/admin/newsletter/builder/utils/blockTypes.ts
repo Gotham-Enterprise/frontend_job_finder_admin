@@ -7,7 +7,30 @@ export type BlockType =
   | "spacer"
   | "two-column"
   | "quote"
-  | "html";
+  | "html"
+  | "section";
+
+// --------------- Section (Column Layout) ---------------
+export type ColumnPreset =
+  | "100"
+  | "50-50"
+  | "33-33-33"
+  | "25-25-25-25"
+  | "33-67"
+  | "67-33"
+  | "17-33-17-33"
+  | "33-17-33-17";
+
+export const COLUMN_PRESET_WIDTHS: Record<ColumnPreset, number[]> = {
+  "100": [100],
+  "50-50": [50, 50],
+  "33-33-33": [33, 33, 34],
+  "25-25-25-25": [25, 25, 25, 25],
+  "33-67": [33, 67],
+  "67-33": [67, 33],
+  "17-33-17-33": [17, 33, 17, 33],
+  "33-17-33-17": [33, 17, 33, 17],
+};
 
 // --------------- Heading ---------------
 export interface HeadingProps {
@@ -159,6 +182,39 @@ export interface HtmlBlock {
   props: HtmlProps;
 }
 
+// --------------- Section ---------------
+/** Blocks allowed inside a section column */
+export type ColumnBlockType = "heading" | "text" | "image" | "button" | "html" | "quote";
+
+export interface SectionColumn {
+  id: string;
+  bgColor: string;
+  paddingTop: number;
+  paddingBottom: number;
+  paddingLeft: number;
+  paddingRight: number;
+  borderRadius: number;
+  blocks: EmailBlock[];
+}
+
+export interface SectionProps {
+  preset: ColumnPreset;
+  columns: SectionColumn[];
+  bgColor: string;
+  bgImageSrc: string;
+  paddingTop: number;
+  paddingBottom: number;
+  paddingLeft: number;
+  paddingRight: number;
+  borderRadius: number;
+}
+
+export interface SectionBlock {
+  id: string;
+  type: "section";
+  props: SectionProps;
+}
+
 // --------------- Union ---------------
 export type EmailBlock =
   | HeadingBlock
@@ -169,4 +225,5 @@ export type EmailBlock =
   | SpacerBlock
   | TwoColumnBlock
   | QuoteBlock
-  | HtmlBlock;
+  | HtmlBlock
+  | SectionBlock;

@@ -11,7 +11,7 @@ import {
   type DragStartEvent,
 } from "@dnd-kit/core";
 import { arrayMove } from "@dnd-kit/sortable";
-import type { EmailBlock, BlockType } from "./utils/blockTypes";
+import type { EmailBlock, BlockType, SectionBlock, SectionColumn } from "./utils/blockTypes";
 import { createBlock } from "./utils/blockDefaults";
 import { generateEmailHTML } from "./utils/generateEmailHTML";
 import { BlockPalette } from "./BlockPalette";
@@ -32,6 +32,11 @@ interface EmailBuilderProps {
 export function EmailBuilder({ initialBlocks = [], onChange, subject = "", showHeader = true, showFooter = true, onShowHeaderChange, onShowFooterChange }: EmailBuilderProps) {
   const [blocks, setBlocks] = useState<EmailBlock[]>(initialBlocks);
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
+  const [selectedColumnBlock, setSelectedColumnBlock] = useState<{
+    sectionId: string;
+    columnIndex: number;
+    blockId: string;
+  } | null>(null);
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
   const [activeDragType, setActiveDragType] = useState<string | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -79,25 +84,93 @@ export function EmailBuilder({ initialBlocks = [], onChange, subject = "", showH
     if (!over) return;
 
     const sourceType = active.data.current?.type;
+    const overId = String(over.id);
+    const overType = over.data.current?.type as string | undefined;
 
     if (sourceType === "new-block") {
       // Dropped from palette — insert a new block
       const blockType = active.data.current?.blockType as BlockType;
       const newBlock = createBlock(blockType);
 
-      const overId = String(over.id);
-      let insertIndex = blocks.length;
+      // Dropped on a section column droppable zone → append to that column
+      if (overId.startsWith("section-col:")) {
+        const parts = overId.split(":");
+        const sectionId = parts[1];
+        const colIdx = Number(parts[2]);
+        setBlocks((prev) => {
+          const next = prev.map((b) => {
+            if (b.id !== sectionId || b.type !== "section") return b;
+            const section = b as SectionBlock;
+            const nextColumns = section.props.columns.map((col, i) =>
+              i === colIdx ? { ...col, blocks: [...col.blocks, newBlock] } : col
+            );
+            return { ...section, props: { ...section.props, columns: nextColumns } } as EmailBlock;
+          });
+          notify(next);
+          return next;
+        });
+        setSelectedColumnBlock({ sectionId, columnIndex: colIdx, blockId: newBlock.id });
+        return;
+      }
 
+      // Dropped on a column child block → insert before it
+      if (overType === "column-child") {
+        const { sectionId, columnIndex } = over.data.current as { sectionId: string; columnIndex: number };
+        const overBlockId = overId;
+        setBlocks((prev) => {
+          const next = prev.map((b) => {
+            if (b.id !== sectionId || b.type !== "section") return b;
+            const section = b as SectionBlock;
+            const nextColumns = section.props.columns.map((col, i) => {
+              if (i !== columnIndex) return col;
+              const insertIdx = col.blocks.findIndex((cb) => cb.id === overBlockId);
+              const atIdx = insertIdx !== -1 ? insertIdx : col.blocks.length;
+              return { ...col, blocks: [...col.blocks.slice(0, atIdx), newBlock, ...col.blocks.slice(atIdx)] };
+            });
+            return { ...section, props: { ...section.props, columns: nextColumns } } as EmailBlock;
+          });
+          notify(next);
+          return next;
+        });
+        setSelectedColumnBlock({ sectionId, columnIndex, blockId: newBlock.id });
+        return;
+      }
+
+      // Dropped on canvas — insert into top-level block list
+      let insertIndex = blocks.length;
       if (overId !== "canvas-droppable") {
-        // Dropped on top of an existing block — insert before it
         const overIndex = blocks.findIndex((b) => b.id === overId);
         if (overIndex !== -1) insertIndex = overIndex;
       }
-
       const updated = [...blocks.slice(0, insertIndex), newBlock, ...blocks.slice(insertIndex)];
       setBlocks(updated);
       setSelectedBlockId(newBlock.id);
       notify(updated);
+    } else if (sourceType === "column-child") {
+      // Reordering column children within the same column
+      const { sectionId, columnIndex } = active.data.current as { sectionId: string; columnIndex: number };
+      if (overType === "column-child") {
+        const overData = over.data.current as { sectionId: string; columnIndex: number };
+        if (overData.sectionId === sectionId && overData.columnIndex === columnIndex) {
+          setBlocks((prev) => {
+            const next = prev.map((b) => {
+              if (b.id !== sectionId || b.type !== "section") return b;
+              const section = b as SectionBlock;
+              const col = section.props.columns[columnIndex];
+              const oldIndex = col.blocks.findIndex((cb) => cb.id === String(active.id));
+              const newIndex = col.blocks.findIndex((cb) => cb.id === String(over.id));
+              if (oldIndex === -1 || newIndex === -1 || oldIndex === newIndex) return b;
+              const reordered = arrayMove(col.blocks, oldIndex, newIndex);
+              const nextColumns = section.props.columns.map((c, i) =>
+                i === columnIndex ? { ...c, blocks: reordered } : c
+              );
+              return { ...section, props: { ...section.props, columns: nextColumns } } as EmailBlock;
+            });
+            notify(next);
+            return next;
+          });
+        }
+      }
     } else if (sourceType === "canvas-block") {
       // Reordering within canvas
       const oldIndex = blocks.findIndex((b) => b.id === String(active.id));
@@ -130,6 +203,34 @@ export function EmailBuilder({ initialBlocks = [], onChange, subject = "", showH
     });
   }, [onChange]);
 
+  const handleSelectColumnBlock = useCallback(
+    (sectionId: string, columnIndex: number, blockId: string) => {
+      setSelectedBlockId(null);
+      setSelectedColumnBlock({ sectionId, columnIndex, blockId });
+    },
+    []
+  );
+
+  const handleUpdateColumnBlock = useCallback(
+    (sectionId: string, columnIndex: number, updated: EmailBlock) => {
+      setBlocks((prev) => {
+        const next = prev.map((b) => {
+          if (b.id !== sectionId || b.type !== "section") return b;
+          const section = b as SectionBlock;
+          const nextColumns: SectionColumn[] = section.props.columns.map((col, i) => {
+            if (i !== columnIndex) return col;
+            return { ...col, blocks: col.blocks.map((cb) => (cb.id === updated.id ? updated : cb)) };
+          });
+          return { ...section, props: { ...section.props, columns: nextColumns } } as EmailBlock;
+        });
+        const html = generateEmailHTML(next);
+        onChange(next, html);
+        return next;
+      });
+    },
+    [onChange]
+  );
+
   function handleDeleteBlock(id: string) {
     setBlocks((prev) => {
       const next = prev.filter((b) => b.id !== id);
@@ -137,6 +238,7 @@ export function EmailBuilder({ initialBlocks = [], onChange, subject = "", showH
       return next;
     });
     if (selectedBlockId === id) setSelectedBlockId(null);
+    if (selectedColumnBlock?.sectionId === id) setSelectedColumnBlock(null);
   }
 
   function handleDuplicateBlock(id: string) {
@@ -151,6 +253,15 @@ export function EmailBuilder({ initialBlocks = [], onChange, subject = "", showH
   }
 
   const selectedBlock = blocks.find((b) => b.id === selectedBlockId) ?? null;
+
+  // Resolve the selected column child block for the right panel
+  const selectedColumnChildBlock: EmailBlock | null = (() => {
+    if (!selectedColumnBlock) return null;
+    const section = blocks.find((b) => b.id === selectedColumnBlock.sectionId);
+    if (!section || section.type !== "section") return null;
+    const col = (section as SectionBlock).props.columns[selectedColumnBlock.columnIndex];
+    return col?.blocks.find((b) => b.id === selectedColumnBlock.blockId) ?? null;
+  })();
 
   return (
     <>
@@ -324,20 +435,22 @@ export function EmailBuilder({ initialBlocks = [], onChange, subject = "", showH
         <BuilderCanvas
           blocks={blocks}
           selectedBlockId={selectedBlockId}
-          onSelectBlock={setSelectedBlockId}
+          onSelectBlock={(id) => { setSelectedBlockId(id); setSelectedColumnBlock(null); }}
           onDeleteBlock={handleDeleteBlock}
           onDuplicateBlock={handleDuplicateBlock}
           onPropsChange={handlePropsChange}
-          onCanvasClick={() => setSelectedBlockId(null)}
+          onCanvasClick={() => { setSelectedBlockId(null); setSelectedColumnBlock(null); }}
           showHeader={showHeader}
           showFooter={showFooter}
           subject={subject}
+          selectedColumnBlock={selectedColumnBlock}
+          onSelectColumnBlock={handleSelectColumnBlock}
         />
 
         {/* Right: Properties panel */}
         <div
           style={{
-            width: "280px",
+            width: isFullscreen ? "340px" : "280px",
             borderLeft: "1px solid #e5e7eb",
             flexShrink: 0,
             background: "#fff",
@@ -347,6 +460,17 @@ export function EmailBuilder({ initialBlocks = [], onChange, subject = "", showH
         >
           {selectedBlock ? (
             <BlockPropertiesPanel block={selectedBlock} onChange={handleUpdateBlock} />
+          ) : selectedColumnChildBlock && selectedColumnBlock ? (
+            <BlockPropertiesPanel
+              block={selectedColumnChildBlock}
+              onChange={(updated) =>
+                handleUpdateColumnBlock(
+                  selectedColumnBlock.sectionId,
+                  selectedColumnBlock.columnIndex,
+                  updated
+                )
+              }
+            />
           ) : (
             <div className="flex flex-col items-center justify-center h-full text-gray-400 dark:text-gray-600 px-6 text-center gap-3">
               <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">

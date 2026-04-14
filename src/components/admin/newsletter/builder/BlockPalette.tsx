@@ -76,13 +76,14 @@ const PALETTE_ITEMS: PaletteItem[] = [
     ),
   },
   {
-    type: "two-column",
-    label: "Two Columns",
-    description: "Side-by-side layout",
+    type: "section",
+    label: "Section",
+    description: "Multi-column container",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="18" height="18">
-        <rect x="3" y="4" width="8" height="16" rx="1" />
-        <rect x="13" y="4" width="8" height="16" rx="1" />
+        <rect x="2" y="4" width="20" height="16" rx="2" />
+        <line x1="9" y1="4" x2="9" y2="20" />
+        <line x1="15" y1="4" x2="15" y2="20" />
       </svg>
     ),
   },

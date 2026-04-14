@@ -11,7 +11,23 @@ import type {
   TwoColumnProps,
   QuoteProps,
   HtmlProps,
+  SectionProps,
+  SectionColumn,
 } from "./blockTypes";
+import { COLUMN_PRESET_WIDTHS } from "./blockTypes";
+
+export function createSectionColumn(): SectionColumn {
+  return {
+    id: nanoid(),
+    bgColor: "#ffffff",
+    paddingTop: 8,
+    paddingBottom: 8,
+    paddingLeft: 8,
+    paddingRight: 8,
+    borderRadius: 0,
+    blocks: [],
+  };
+}
 
 export function createBlock(type: BlockType): EmailBlock {
   const id = nanoid();
@@ -148,5 +164,25 @@ export function createBlock(type: BlockType): EmailBlock {
           paddingRight: 0,
         } satisfies HtmlProps,
       };
+
+    case "section": {
+      const preset = "50-50";
+      const widths = COLUMN_PRESET_WIDTHS[preset];
+      return {
+        id,
+        type: "section",
+        props: {
+          preset,
+          columns: widths.map(() => createSectionColumn()),
+          bgColor: "#ffffff",
+          bgImageSrc: "",
+          paddingTop: 16,
+          paddingBottom: 16,
+          paddingLeft: 16,
+          paddingRight: 16,
+          borderRadius: 0,
+        } satisfies SectionProps,
+      };
+    }
   }
 }

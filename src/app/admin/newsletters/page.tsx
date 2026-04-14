@@ -16,6 +16,7 @@ import { useContactLists } from "@/services/hooks/useContacts";
 import type { ContactList } from "@/services/api/contacts";
 import Badge from "@/components/ui/badge/Badge";
 import Button from "@/components/ui/button/Button";
+import ConfirmationDialog from "@/components/ui/ConfirmationDialog";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import TableHeading from "@/components/tables/tableHeader";
 import { Dropdown } from "@/components/ui/dropdown/Dropdown";
@@ -86,6 +87,14 @@ export default function NewslettersPage() {
   const [page, setPage] = useState(1);
   const [previewNewsletter, setPreviewNewsletter] = useState<Newsletter | null>(null);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+  const buttonRefs = React.useRef<Map<string, HTMLDivElement>>(new Map());
+  const [confirmDialog, setConfirmDialog] = useState<{
+    title: string;
+    message: string;
+    confirmText: string;
+    onConfirm: () => void;
+  } | null>(null);
   const limit = 10;
 
   const { data, isLoading, refetch } = useNewsletters(
@@ -108,30 +117,31 @@ export default function NewslettersPage() {
     setPage(1);
   };
 
-  const handleDelete = async (newsletter: Newsletter) => {
-    if (
-      !confirm(
-        `Are you sure you want to delete "${newsletter.title}"? This cannot be undone.`
-      )
-    )
-      return;
-    await deleteMutation.mutateAsync(newsletter.id);
+  const handleDelete = (newsletter: Newsletter) => {
+    setConfirmDialog({
+      title: "Delete Newsletter",
+      message: `Are you sure you want to delete "${newsletter.title}"? This cannot be undone.`,
+      confirmText: "Delete",
+      onConfirm: () => deleteMutation.mutateAsync(newsletter.id),
+    });
   };
 
-  const handleSendNow = async (newsletter: Newsletter) => {
-    if (
-      !confirm(
-        `Send "${newsletter.title}" to ${resolveAudienceLabel(newsletter, availableLists)} now?`
-      )
-    )
-      return;
-    await sendNowMutation.mutateAsync(newsletter.id);
+  const handleSendNow = (newsletter: Newsletter) => {
+    setConfirmDialog({
+      title: "Send Newsletter",
+      message: `Send "${newsletter.title}" to ${resolveAudienceLabel(newsletter, availableLists)} now?`,
+      confirmText: "Send Now",
+      onConfirm: () => sendNowMutation.mutateAsync(newsletter.id),
+    });
   };
 
-  const handleCancelSchedule = async (newsletter: Newsletter) => {
-    if (!confirm(`Cancel the scheduled send for "${newsletter.title}"?`))
-      return;
-    await cancelScheduleMutation.mutateAsync(newsletter.id);
+  const handleCancelSchedule = (newsletter: Newsletter) => {
+    setConfirmDialog({
+      title: "Cancel Schedule",
+      message: `Cancel the scheduled send for "${newsletter.title}"?`,
+      confirmText: "Cancel Schedule",
+      onConfirm: () => cancelScheduleMutation.mutateAsync(newsletter.id),
+    });
   };
 
   const handleDuplicate = async (newsletter: Newsletter) => {
@@ -232,24 +242,33 @@ export default function NewslettersPage() {
                       {newsletter.recipientCount ?? "—"}
                     </TableCell>
                     <TableCell className="px-4 py-3">
-                      <div className="relative inline-block">
+                      <div
+                        className="relative inline-block"
+                        ref={(el) => {
+                          if (el) buttonRefs.current.set(newsletter.id, el);
+                          else buttonRefs.current.delete(newsletter.id);
+                        }}
+                      >
                         <Button
                           variant="ghost"
                           size="icon"
                           className="!h-8 !w-8 dropdown-toggle"
-                          onClick={() =>
-                            setOpenDropdown(
-                              openDropdown === newsletter.id
-                                ? null
-                                : newsletter.id
-                            )
-                          }
+                          onClick={() => {
+                            if (openDropdown === newsletter.id) {
+                              setOpenDropdown(null);
+                              setAnchorEl(null);
+                            } else {
+                              setOpenDropdown(newsletter.id);
+                              setAnchorEl(buttonRefs.current.get(newsletter.id) ?? null);
+                            }
+                          }}
                         >
                           <MoreVertical className="w-4 h-4" />
                         </Button>
                         <Dropdown
                           isOpen={openDropdown === newsletter.id}
-                          onClose={() => setOpenDropdown(null)}
+                          onClose={() => { setOpenDropdown(null); setAnchorEl(null); }}
+                          anchorEl={anchorEl}
                           className="min-w-44"
                         >
                           {/* Preview — all statuses */}
@@ -398,6 +417,21 @@ export default function NewslettersPage() {
           </div>
         )}
       </div>
+
+      <ConfirmationDialog
+        isOpen={confirmDialog !== null}
+        onClose={() => setConfirmDialog(null)}
+        onConfirm={async () => {
+          if (confirmDialog) await confirmDialog.onConfirm();
+          setConfirmDialog(null);
+        }}
+        onCancel={() => setConfirmDialog(null)}
+        title={confirmDialog?.title ?? ""}
+        message={confirmDialog?.message ?? ""}
+        confirmText={confirmDialog?.confirmText ?? "Confirm"}
+        cancelText="Cancel"
+        isLoading={deleteMutation.isPending || sendNowMutation.isPending || cancelScheduleMutation.isPending}
+      />
 
       <PreviewModal
         isOpen={!!previewNewsletter}

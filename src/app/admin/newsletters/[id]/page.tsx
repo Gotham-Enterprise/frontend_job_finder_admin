@@ -14,6 +14,7 @@ import { useContactLists } from "@/services/hooks/useContacts";
 import type { ContactList } from "@/services/api/contacts";
 import Badge from "@/components/ui/badge/Badge";
 import Button from "@/components/ui/button/Button";
+import ConfirmationDialog from "@/components/ui/ConfirmationDialog";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import TableHeading from "@/components/tables/tableHeader";
 
@@ -69,6 +70,12 @@ export default function NewsletterDetailPage() {
   const router = useRouter();
   const id = params.id as string;
   const [logsPage, setLogsPage] = useState(1);
+  const [confirmDialog, setConfirmDialog] = useState<{
+    title: string;
+    message: string;
+    confirmText: string;
+    onConfirm: () => void;
+  } | null>(null);
 
   const { data: newsletterData, isLoading: newsletterLoading } =
     useNewsletter(id);
@@ -143,15 +150,12 @@ export default function NewsletterDetailPage() {
                 variant="default"
                 size="sm"
                 onClick={() => {
-                  if (
-                    confirm(
-                      `Send "${newsletter.title}" to ${resolveAudienceLabel(newsletter, availableLists)} now?`
-                    )
-                  ) {
-                    sendNowMutation.mutateAsync(id).then(() => {
-                      router.refresh();
-                    });
-                  }
+                  setConfirmDialog({
+                    title: "Send Newsletter",
+                    message: `Send "${newsletter.title}" to ${resolveAudienceLabel(newsletter, availableLists)} now?`,
+                    confirmText: "Send Now",
+                    onConfirm: () => sendNowMutation.mutateAsync(id).then(() => router.refresh()),
+                  });
                 }}
                 disabled={sendNowMutation.isPending}
               >
@@ -164,15 +168,12 @@ export default function NewsletterDetailPage() {
                 variant="warning"
                 size="sm"
                 onClick={() => {
-                  if (
-                    confirm(
-                      `Cancel the scheduled send for "${newsletter.title}"?`
-                    )
-                  ) {
-                    cancelScheduleMutation.mutateAsync(id).then(() => {
-                      router.push("/admin/newsletters");
-                    });
-                  }
+                  setConfirmDialog({
+                    title: "Cancel Schedule",
+                    message: `Cancel the scheduled send for "${newsletter.title}"?`,
+                    confirmText: "Cancel Schedule",
+                    onConfirm: () => cancelScheduleMutation.mutateAsync(id).then(() => router.push("/admin/newsletters")),
+                  });
                 }}
                 disabled={cancelScheduleMutation.isPending}
               >
@@ -349,6 +350,21 @@ export default function NewsletterDetailPage() {
           )}
         </div>
       )}
+
+      <ConfirmationDialog
+        isOpen={confirmDialog !== null}
+        onClose={() => setConfirmDialog(null)}
+        onConfirm={async () => {
+          if (confirmDialog) await confirmDialog.onConfirm();
+          setConfirmDialog(null);
+        }}
+        onCancel={() => setConfirmDialog(null)}
+        title={confirmDialog?.title ?? ""}
+        message={confirmDialog?.message ?? ""}
+        confirmText={confirmDialog?.confirmText ?? "Confirm"}
+        cancelText="Cancel"
+        isLoading={sendNowMutation.isPending || cancelScheduleMutation.isPending}
+      />
     </div>
   );
 }

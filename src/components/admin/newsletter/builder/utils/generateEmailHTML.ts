@@ -9,7 +9,9 @@ import type {
   TwoColumnBlock,
   QuoteBlock,
   HtmlBlock,
+  SectionBlock,
 } from "./blockTypes";
+import { COLUMN_PRESET_WIDTHS } from "./blockTypes";
 
 function escapeHTML(str: string): string {
   return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -142,12 +144,12 @@ function renderTwoColumn(block: TwoColumnBlock): string {
   const rightWidth = 100 - leftWidth;
   const style = `background-color: ${bgColor}; padding: ${paddingTop}px 0 ${paddingBottom}px 0;`;
   // Use table for email client compatibility
-  return `<table width="100%" cellpadding="0" cellspacing="0" border="0" style="${style}">
+  return `<table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${bgColor}" style="${style}">
   <tr>
-    <td width="${leftWidth}%" style="vertical-align: top; padding-right: ${Math.round(gap / 2)}px;">
+    <td width="${leftWidth}%" bgcolor="${bgColor}" style="vertical-align: top; padding-right: ${Math.round(gap / 2)}px;">
       <div style="font-size: 14px; color: #333333; line-height: 1.6;">${leftHtml}</div>
     </td>
-    <td width="${rightWidth}%" style="vertical-align: top; padding-left: ${Math.round(gap / 2)}px;">
+    <td width="${rightWidth}%" bgcolor="${bgColor}" style="vertical-align: top; padding-left: ${Math.round(gap / 2)}px;">
       <div style="font-size: 14px; color: #333333; line-height: 1.6;">${rightHtml}</div>
     </td>
   </tr>
@@ -172,6 +174,67 @@ function renderHtml(block: HtmlBlock): string {
   const { html, paddingTop, paddingBottom, paddingLeft, paddingRight } = block.props;
   const style = `padding: ${paddingTop}px ${paddingRight}px ${paddingBottom}px ${paddingLeft}px; overflow: hidden; max-width: 100%;`;
   return `<div style="${style}">${stripHtmlDocumentShell(html)}</div>`;
+}
+
+function renderColumnBlock(block: EmailBlock): string {
+  switch (block.type) {
+    case "heading":
+      return renderHeading(block);
+    case "text":
+      return renderText(block);
+    case "image":
+      return renderImage(block);
+    case "button":
+      return renderButton(block);
+    case "quote":
+      return renderQuote(block);
+    case "html":
+      return renderHtml(block);
+    default:
+      return "";
+  }
+}
+
+function renderSection(block: SectionBlock): string {
+  const { columns, bgColor, bgImageSrc, paddingTop, paddingBottom, paddingLeft, paddingRight, borderRadius } =
+    block.props;
+
+  const outerStyle = [
+    `background-color: ${bgColor}`,
+    bgImageSrc ? `background-image: url('${bgImageSrc}')` : "",
+    bgImageSrc ? "background-size: cover" : "",
+    bgImageSrc ? "background-position: center" : "",
+    `padding: ${paddingTop}px ${paddingRight}px ${paddingBottom}px ${paddingLeft}px`,
+    borderRadius ? `border-radius: ${borderRadius}px` : "",
+  ]
+    .filter(Boolean)
+    .join("; ");
+
+  const cells = columns.map((col) => {
+    const colStyle = [
+      `background-color: ${col.bgColor}`,
+      `padding: ${col.paddingTop}px ${col.paddingRight}px ${col.paddingBottom}px ${col.paddingLeft}px`,
+      col.borderRadius ? `border-radius: ${col.borderRadius}px` : "",
+      "vertical-align: top",
+    ]
+      .filter(Boolean)
+      .join("; ");
+    const innerHtml = col.blocks.map(renderColumnBlock).join("\n");
+    return `<td bgcolor="${col.bgColor}" style="${colStyle}">${innerHtml || ""}</td>`;
+  });
+
+  // Build a <td width=N%> for each column
+  const widths = COLUMN_PRESET_WIDTHS[block.props.preset];
+  const cellsWithWidth = cells.map((cell, i) => {
+    const w = widths[i] ?? Math.round(100 / columns.length);
+    return cell.replace("<td ", `<td width="${w}%" `);
+  });
+
+  return `<table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${bgColor}" style="${outerStyle}">
+  <tr>
+    ${cellsWithWidth.join("\n    ")}
+  </tr>
+</table>`;
 }
 
 export function generateEmailHTML(blocks: EmailBlock[]): string {
@@ -207,6 +270,9 @@ export function generateEmailHTML(blocks: EmailBlock[]): string {
       case "html":
         inner = renderHtml(block);
         break;
+      case "section":
+        // Section gets its own full-width wrapper (no constrained wrapperStyle)
+        return renderSection(block);
     }
 
     return `<div style="${wrapperStyle}">${inner}</div>`;

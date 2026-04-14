@@ -17,6 +17,13 @@ import { SpacerBlock } from "./blocks/SpacerBlock";
 import { TwoColumnBlock } from "./blocks/TwoColumnBlock";
 import { QuoteBlock } from "./blocks/QuoteBlock";
 import { HtmlBlock } from "./blocks/HtmlBlock";
+import { SectionBlock } from "./blocks/SectionBlock";
+
+interface SelectedColumnBlock {
+  sectionId: string;
+  columnIndex: number;
+  blockId: string;
+}
 
 interface SortableBlockProps {
   block: EmailBlock;
@@ -25,9 +32,11 @@ interface SortableBlockProps {
   onDelete: () => void;
   onDuplicate: () => void;
   onPropsChange: (blockId: string, partial: Partial<EmailBlock["props"]>) => void;
+  selectedColumnBlock: SelectedColumnBlock | null;
+  onSelectColumnBlock: (sectionId: string, columnIndex: number, blockId: string) => void;
 }
 
-function SortableBlock({ block, isSelected, onSelect, onDelete, onDuplicate, onPropsChange }: SortableBlockProps) {
+function SortableBlock({ block, isSelected, onSelect, onDelete, onDuplicate, onPropsChange, selectedColumnBlock, onSelectColumnBlock }: SortableBlockProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: block.id,
     data: { type: "canvas-block", blockId: block.id },
@@ -78,6 +87,16 @@ function SortableBlock({ block, isSelected, onSelect, onDelete, onDuplicate, onP
         return <QuoteBlock block={block} {...sharedProps} />;
       case "html":
         return <HtmlBlock block={block} {...sharedProps} />;
+      case "section":
+        return (
+          <SectionBlock
+            block={block}
+            {...sharedProps}
+            onPropsChange={(partial) => onPropsChange(block.id, partial)}
+            selectedColumnBlock={selectedColumnBlock}
+            onSelectColumnBlock={onSelectColumnBlock}
+          />
+        );
     }
   }
 
@@ -99,6 +118,8 @@ interface BuilderCanvasProps {
   showHeader?: boolean;
   showFooter?: boolean;
   subject?: string;
+  selectedColumnBlock: SelectedColumnBlock | null;
+  onSelectColumnBlock: (sectionId: string, columnIndex: number, blockId: string) => void;
 }
 
 export function BuilderCanvas({
@@ -112,6 +133,8 @@ export function BuilderCanvas({
   showHeader = false,
   showFooter = false,
   subject = "",
+  selectedColumnBlock,
+  onSelectColumnBlock,
 }: BuilderCanvasProps) {
   const { setNodeRef, isOver } = useDroppable({ id: "canvas-droppable" });
 
@@ -208,6 +231,8 @@ export function BuilderCanvas({
                   onDelete={() => onDeleteBlock(block.id)}
                   onDuplicate={() => onDuplicateBlock(block.id)}
                   onPropsChange={onPropsChange}
+                  selectedColumnBlock={selectedColumnBlock}
+                  onSelectColumnBlock={onSelectColumnBlock}
                 />
               ))}
             </SortableContext>

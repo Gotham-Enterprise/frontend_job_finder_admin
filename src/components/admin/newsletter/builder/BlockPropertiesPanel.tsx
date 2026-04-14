@@ -1,6 +1,7 @@
 "use client";
-import React, { useCallback } from "react";
+import React, { useCallback, useState } from "react";
 import dynamic from "next/dynamic";
+import ConfirmationDialog from "@/components/ui/ConfirmationDialog";
 import type {
   EmailBlock,
   HeadingBlock,
@@ -12,7 +13,10 @@ import type {
   TwoColumnBlock,
   QuoteBlock,
   HtmlBlock,
+  SectionBlock,
+  ColumnPreset,
 } from "./utils/blockTypes";
+import { COLUMN_PRESET_WIDTHS } from "./utils/blockTypes";
 
 // Dynamically import RichTextEditor to avoid SSR
 const RichTextEditor = dynamic(
@@ -509,6 +513,279 @@ function HtmlPanel({ block, onChange }: { block: HtmlBlock; onChange: (b: HtmlBl
   );
 }
 
+// ---- Section panel helpers ----
+
+const PRESET_OPTIONS: { value: ColumnPreset; label: string; widths: number[] }[] = (
+  Object.entries(COLUMN_PRESET_WIDTHS) as [ColumnPreset, number[]][]
+).map(([value, widths]) => ({ value, label: widths.map((w) => `${w}%`).join(" / "), widths }));
+
+function PresetButton({
+  option,
+  isActive,
+  onClick,
+}: {
+  option: (typeof PRESET_OPTIONS)[number];
+  isActive: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      title={option.label}
+      onClick={onClick}
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: "4px",
+        padding: "6px 4px",
+        background: isActive ? "#eff6ff" : "#f9fafb",
+        border: isActive ? "1.5px solid #3b82f6" : "1.5px solid #e5e7eb",
+        borderRadius: "6px",
+        cursor: "pointer",
+        width: "100%",
+        transition: "all 0.12s",
+      }}
+      className="dark:bg-gray-700 dark:border-gray-600"
+    >
+      <div style={{ display: "flex", gap: "2px", width: "44px", height: "20px" }}>
+        {option.widths.map((w, i) => (
+          <div
+            key={i}
+            style={{
+              flex: w,
+              background: isActive ? "#3b82f6" : "#d1d5db",
+              borderRadius: "2px",
+              transition: "background 0.12s",
+            }}
+          />
+        ))}
+      </div>
+      <span
+        style={{
+          fontSize: "9px",
+          fontWeight: 600,
+          color: isActive ? "#2563eb" : "#6b7280",
+          whiteSpace: "nowrap",
+          lineHeight: 1.2,
+        }}
+      >
+        {option.label}
+      </span>
+    </button>
+  );
+}
+
+function SectionPanel({ block, onChange }: { block: SectionBlock; onChange: (b: SectionBlock) => void }) {
+  const [pendingPreset, setPendingPreset] = useState<{
+    preset: ColumnPreset;
+    message: string;
+    hasContent: boolean;
+  } | null>(null);
+  const [activeColTab, setActiveColTab] = useState(0);
+
+  function set(partial: Partial<SectionBlock["props"]>) {
+    onChange({ ...block, props: { ...block.props, ...partial } });
+  }
+
+  function handlePresetChange(newPreset: ColumnPreset) {
+    const currentCount = block.props.columns.length;
+    const newCount = COLUMN_PRESET_WIDTHS[newPreset].length;
+
+    if (newCount < currentCount) {
+      const losing = block.props.columns
+        .slice(newCount)
+        .map((_, i) => `Column ${newCount + i + 1}`)
+        .join(", ");
+      const hasContent = block.props.columns.slice(newCount).some((col) => col.blocks.length > 0);
+      const msg = hasContent
+        ? `Switching to this layout will remove ${losing} and all their blocks. This cannot be undone.`
+        : `Switching to this layout will remove ${losing}.`;
+      setPendingPreset({ preset: newPreset, message: msg, hasContent });
+      return;
+    } else if (newCount > currentCount) {
+      const extras = Array.from({ length: newCount - currentCount }, () => ({
+        id: Math.random().toString(36).slice(2),
+        bgColor: "#ffffff",
+        paddingTop: 8,
+        paddingBottom: 8,
+        paddingLeft: 8,
+        paddingRight: 8,
+        borderRadius: 0,
+        blocks: [] as SectionBlock["props"]["columns"][number]["blocks"],
+      }));
+      set({ preset: newPreset, columns: [...block.props.columns, ...extras] });
+    } else {
+      set({ preset: newPreset });
+    }
+  }
+
+  function handleBgImageFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => set({ bgImageSrc: reader.result as string });
+    reader.readAsDataURL(file);
+  }
+
+  function updateColumn(colIdx: number, partial: Partial<SectionBlock["props"]["columns"][number]>) {
+    const next = block.props.columns.map((c, i) => (i === colIdx ? { ...c, ...partial } : c));
+    set({ columns: next });
+  }
+
+  function confirmPresetChange() {
+    if (!pendingPreset) return;
+    const newCount = COLUMN_PRESET_WIDTHS[pendingPreset.preset].length;
+    set({ preset: pendingPreset.preset, columns: block.props.columns.slice(0, newCount) });
+    setActiveColTab((prev) => Math.min(prev, newCount - 1));
+    setPendingPreset(null);
+  }
+
+  return (
+    <>
+      <ConfirmationDialog
+        isOpen={pendingPreset !== null}
+        onClose={() => setPendingPreset(null)}
+        onConfirm={confirmPresetChange}
+        onCancel={() => setPendingPreset(null)}
+        title="Change Column Layout"
+        message={pendingPreset?.message ?? ""}
+        confirmText="Change Layout"
+        cancelText="Keep Current"
+      />
+
+      <Field label="Column Layout">
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "4px" }}>
+          {PRESET_OPTIONS.map((opt) => (
+            <PresetButton
+              key={opt.value}
+              option={opt}
+              isActive={block.props.preset === opt.value}
+              onClick={() => handlePresetChange(opt.value)}
+            />
+          ))}
+        </div>
+      </Field>
+
+      <Field label="Section Background Color">
+        <ColorInput value={block.props.bgColor} onChange={(v) => set({ bgColor: v })} />
+      </Field>
+
+      <Field label="Background Image">
+        {block.props.bgImageSrc && (
+          <div style={{ marginBottom: "6px" }}>
+            <img
+              src={block.props.bgImageSrc}
+              alt="Section background"
+              style={{ width: "100%", maxHeight: "80px", objectFit: "cover", borderRadius: "4px" }}
+            />
+            <button
+              type="button"
+              onClick={() => set({ bgImageSrc: "" })}
+              style={{
+                marginTop: "4px",
+                fontSize: "10px",
+                color: "#ef4444",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                padding: 0,
+              }}
+            >
+              Remove image
+            </button>
+          </div>
+        )}
+        <input type="file" accept="image/*" onChange={handleBgImageFile} className="text-xs w-full" />
+      </Field>
+
+      <Field label="Section Padding (px)">
+        <PaddingFields
+          top={block.props.paddingTop}
+          bottom={block.props.paddingBottom}
+          left={block.props.paddingLeft}
+          right={block.props.paddingRight}
+          onChange={(field, v) => set({ [field]: v })}
+        />
+      </Field>
+
+      <Field label="Corner Radius (px)">
+        <NumberInput
+          value={block.props.borderRadius ?? 0}
+          onChange={(v) => set({ borderRadius: v })}
+          min={0}
+          max={48}
+        />
+      </Field>
+
+      {/* Column tabs */}
+      <div style={{ marginTop: "12px", paddingTop: "10px", borderTop: "1px solid #e5e7eb" }} className="dark:border-gray-700">
+        <p style={{ fontSize: "11px", fontWeight: 700, color: "#64748b", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+          Column Settings
+        </p>
+        <div style={{ display: "flex", gap: "4px", marginBottom: "12px", flexWrap: "wrap" }}>
+          {block.props.columns.map((col, i) => {
+            const w = COLUMN_PRESET_WIDTHS[block.props.preset][i] ?? Math.round(100 / block.props.columns.length);
+            const isActive = activeColTab === i;
+            return (
+              <button
+                key={col.id}
+                type="button"
+                onClick={() => setActiveColTab(i)}
+                style={{
+                  flex: 1,
+                  minWidth: 0,
+                  padding: "5px 4px",
+                  fontSize: "10px",
+                  fontWeight: 700,
+                  borderRadius: "6px",
+                  border: isActive ? "1.5px solid #3b82f6" : "1.5px solid #e5e7eb",
+                  background: isActive ? "#eff6ff" : "#f9fafb",
+                  color: isActive ? "#2563eb" : "#6b7280",
+                  cursor: "pointer",
+                  whiteSpace: "nowrap" as const,
+                  transition: "all 0.12s",
+                }}
+                className="dark:bg-gray-700 dark:border-gray-600"
+              >
+                Col {i + 1} · {w}%
+              </button>
+            );
+          })}
+        </div>
+        {(() => {
+          const col = block.props.columns[activeColTab];
+          if (!col) return null;
+          return (
+            <>
+              <Field label="Background Color">
+                <ColorInput value={col.bgColor} onChange={(v) => updateColumn(activeColTab, { bgColor: v })} />
+              </Field>
+              <Field label="Corner Radius (px)">
+                <NumberInput
+                  value={col.borderRadius ?? 0}
+                  onChange={(v) => updateColumn(activeColTab, { borderRadius: v })}
+                  min={0}
+                  max={48}
+                />
+              </Field>
+              <Field label="Padding (px)">
+                <PaddingFields
+                  top={col.paddingTop}
+                  bottom={col.paddingBottom}
+                  left={col.paddingLeft}
+                  right={col.paddingRight}
+                  onChange={(field, v) => updateColumn(activeColTab, { [field]: v })}
+                />
+              </Field>
+            </>
+          );
+        })()}
+      </div>
+    </>
+  );
+}
+
 export function BlockPropertiesPanel({ block, onChange }: Props) {
   const render = useCallback(() => {
     switch (block.type) {
@@ -530,6 +807,8 @@ export function BlockPropertiesPanel({ block, onChange }: Props) {
         return <QuotePanel block={block} onChange={onChange as (b: QuoteBlock) => void} />;
       case "html":
         return <HtmlPanel block={block} onChange={onChange as (b: HtmlBlock) => void} />;
+      case "section":
+        return <SectionPanel block={block} onChange={onChange as (b: SectionBlock) => void} />;
     }
   }, [block, onChange]);
 
