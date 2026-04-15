@@ -8,6 +8,7 @@ import { useContactLists } from "@/services/hooks/useContacts";
 import { CreateNewsletterRequest, Newsletter } from "@/services/api/newsletter";
 import { showToast } from "@/services/utils/toast";
 import type { EmailBlock } from "./builder/utils/blockTypes";
+import { MERGE_TAGS } from "./builder/utils/mergeTags";
 
 // Dynamically import EmailBuilder to avoid SSR issues
 const EmailBuilder = dynamic(
@@ -69,6 +70,24 @@ const NewsletterForm: React.FC<NewsletterFormProps> = ({
       : []
   );
   const [listDropdownOpen, setListDropdownOpen] = useState(false);
+  const subjectRef = React.useRef<HTMLInputElement>(null);
+
+  const insertMergeTagInSubject = (tag: string) => {
+    const input = subjectRef.current;
+    if (!input) {
+      setSubject((prev) => prev + tag);
+      return;
+    }
+    const start = input.selectionStart ?? subject.length;
+    const end = input.selectionEnd ?? subject.length;
+    const newValue = subject.slice(0, start) + tag + subject.slice(end);
+    setSubject(newValue);
+    requestAnimationFrame(() => {
+      input.focus();
+      const cursor = start + tag.length;
+      input.setSelectionRange(cursor, cursor);
+    });
+  };
 
   // Close list dropdown when clicking outside
   const listDropdownRef = React.useRef<HTMLDivElement>(null);
@@ -166,6 +185,7 @@ const NewsletterForm: React.FC<NewsletterFormProps> = ({
           Email Subject <span className="text-red-500">*</span>
         </label>
         <input
+          ref={subjectRef}
           type="text"
           value={subject}
           onChange={(e) => setSubject(e.target.value)}
@@ -173,6 +193,20 @@ const NewsletterForm: React.FC<NewsletterFormProps> = ({
           maxLength={200}
           className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500"
         />
+        <div className="mt-2 flex flex-wrap gap-1.5 items-center">
+          <span className="text-xs text-gray-400 dark:text-gray-500 shrink-0">Merge tags:</span>
+          {MERGE_TAGS.map(({ label, tag }) => (
+            <button
+              key={tag}
+              type="button"
+              onClick={() => insertMergeTagInSubject(tag)}
+              title={`Insert ${tag}`}
+              className="px-2 py-0.5 text-xs rounded border border-brand-300 dark:border-brand-700 bg-brand-50 dark:bg-brand-900/20 text-brand-600 dark:text-brand-400 hover:bg-brand-100 dark:hover:bg-brand-900/40 transition-colors font-mono"
+            >
+              {label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Target Audience (Lists) */}

@@ -2,6 +2,7 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import type { EmailBlock } from "./utils/blockTypes";
 import { generateEmailHTML } from "./utils/generateEmailHTML";
+import { substituteMergeTagsForPreview } from "./utils/mergeTags";
 
 interface PreviewModalProps {
   isOpen: boolean;
@@ -202,8 +203,9 @@ export function PreviewModal({ isOpen, onClose, blocks, subject, showHeader = tr
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [iframeHeight, setIframeHeight] = useState(600);
 
-  const contentHtml = generateEmailHTML(blocks);
-  const doc = buildPreviewDocument(contentHtml, subject, showHeader, showFooter);
+  const contentHtml = substituteMergeTagsForPreview(generateEmailHTML(blocks));
+  const previewSubject = substituteMergeTagsForPreview(subject);
+  const doc = buildPreviewDocument(contentHtml, previewSubject, showHeader, showFooter);
 
   // Resize iframe to fit content after load
   const handleIframeLoad = useCallback(() => {
@@ -295,7 +297,7 @@ export function PreviewModal({ isOpen, onClose, blocks, subject, showHeader = tr
             <span style={{ fontSize: "13px", fontWeight: 600, color: "#f1f5f9" }}>Email Preview</span>
             {subject && (
               <span style={{ fontSize: "11px", color: "#64748b", maxWidth: "260px", overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" }}>
-                — {subject}
+                — {previewSubject}
               </span>
             )}
           </div>

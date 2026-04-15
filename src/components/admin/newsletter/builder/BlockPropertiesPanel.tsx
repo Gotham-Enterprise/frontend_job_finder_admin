@@ -16,6 +16,7 @@ import type {
   SectionBlock,
   ColumnPreset,
 } from "./utils/blockTypes";
+import { MERGE_TAGS } from "./utils/mergeTags";
 import { COLUMN_PRESET_WIDTHS } from "./utils/blockTypes";
 
 // Dynamically import RichTextEditor to avoid SSR
@@ -178,6 +179,24 @@ const ALIGN_OPTIONS = [
   { value: "right" as const, label: "Right" },
 ];
 
+function MergeTagPicker({ onInsert }: { onInsert: (tag: string) => void }) {
+  return (
+    <div className="flex flex-wrap gap-1">
+      {MERGE_TAGS.map(({ label, tag }) => (
+        <button
+          key={tag}
+          type="button"
+          onClick={() => onInsert(tag)}
+          title={`Insert ${tag}`}
+          className="px-2 py-0.5 text-xs rounded border border-brand-300 dark:border-brand-700 bg-brand-50 dark:bg-brand-900/20 text-brand-600 dark:text-brand-400 hover:bg-brand-100 dark:hover:bg-brand-900/40 transition-colors font-mono"
+        >
+          {label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 // ---- Per-block panels ----
 
 function HeadingPanel({ block, onChange }: { block: HeadingBlock; onChange: (b: HeadingBlock) => void }) {
@@ -212,6 +231,9 @@ function HeadingPanel({ block, onChange }: { block: HeadingBlock; onChange: (b: 
       <Field label="">
         <CheckboxInput checked={block.props.bold} onChange={(v) => set({ bold: v })} label="Bold" />
       </Field>
+      <Field label="Merge Tags">
+        <MergeTagPicker onInsert={(tag) => set({ text: block.props.text + tag })} />
+      </Field>
     </>
   );
 }
@@ -229,6 +251,7 @@ function TextPanel({ block, onChange }: { block: TextBlock; onChange: (b: TextBl
           placeholder="Write content…"
           minHeight={150}
           hideImageButton
+          mergeTags={[...MERGE_TAGS]}
         />
       </Field>
       <Field label="Alignment">
