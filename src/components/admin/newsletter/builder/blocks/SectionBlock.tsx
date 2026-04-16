@@ -13,6 +13,10 @@ import type {
   SectionColumn,
   EmailBlock,
   ColumnBlockType,
+  HeadingBlock as HeadingBlockType,
+  TextBlock as TextBlockType,
+  HeadingProps,
+  TextProps,
 } from "../utils/blockTypes";
 import { COLUMN_PRESET_WIDTHS } from "../utils/blockTypes";
 import { createBlock } from "../utils/blockDefaults";
@@ -150,6 +154,166 @@ function renderColumnBlockPreview(block: EmailBlock): React.ReactNode {
   }
 }
 
+// ---- Inline-editable heading (inside section columns) ----
+
+const COL_TAG_MAP: Record<1 | 2 | 3, "h1" | "h2" | "h3"> = { 1: "h1", 2: "h2", 3: "h3" };
+
+function InlineEditableHeading({
+  block,
+  onPropsChange,
+}: {
+  block: HeadingBlockType;
+  onPropsChange: (partial: Partial<HeadingProps>) => void;
+}) {
+  const { text, level, align, color, fontSize, bold } = block.props;
+  const Tag = COL_TAG_MAP[level];
+  const [isEditing, setIsEditing] = useState(false);
+  const editRef = useRef<HTMLElement>(null);
+  const cancelledRef = useRef(false);
+
+  useEffect(() => {
+    if (isEditing && editRef.current) {
+      editRef.current.innerText = text || "";
+      editRef.current.focus();
+      const range = document.createRange();
+      const sel = window.getSelection();
+      range.selectNodeContents(editRef.current);
+      range.collapse(false);
+      sel?.removeAllRanges();
+      sel?.addRange(range);
+      cancelledRef.current = false;
+    }
+  }, [isEditing]);
+
+  const commit = useCallback(() => {
+    if (!editRef.current) return;
+    onPropsChange({ text: editRef.current.innerText.trim() });
+    setIsEditing(false);
+  }, [onPropsChange]);
+
+  const handleBlur = useCallback(() => {
+    if (cancelledRef.current) { cancelledRef.current = false; setIsEditing(false); return; }
+    commit();
+  }, [commit]);
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    e.stopPropagation();
+    if (e.key === "Enter") { e.preventDefault(); commit(); }
+    if (e.key === "Escape") { cancelledRef.current = true; editRef.current?.blur(); }
+  }, [commit]);
+
+  const style: React.CSSProperties = {
+    fontSize: `${Math.min(fontSize, 22)}px`,
+    color,
+    textAlign: align,
+    fontWeight: bold ? 700 : 400,
+    lineHeight: 1.3,
+    wordBreak: "break-word",
+    margin: 0,
+    outline: "none",
+  };
+
+  if (isEditing) {
+    return (
+      <>
+        <Tag
+          ref={editRef as any}
+          contentEditable
+          suppressContentEditableWarning
+          style={{ ...style, boxShadow: "0 0 0 2px #60a5fa", borderRadius: "3px", padding: "2px 4px", cursor: "text", minWidth: "40px", display: "block" }}
+          onBlur={handleBlur}
+          onKeyDown={handleKeyDown}
+          onClick={(e) => e.stopPropagation()}
+        />
+        <div style={{ fontSize: "9px", color: "#6b7280", textAlign: "center", marginTop: "2px" }}>↵ Enter to save · Esc to cancel</div>
+      </>
+    );
+  }
+
+  return (
+    <Tag
+      style={{ ...style, cursor: "text" }}
+      onDoubleClick={(e) => { e.stopPropagation(); setIsEditing(true); }}
+      title="Double-click to edit"
+    >
+      {text || "Heading…"}
+    </Tag>
+  );
+}
+
+// ---- Inline-editable text (inside section columns) ----
+
+function InlineEditableText({
+  block,
+  onPropsChange,
+}: {
+  block: TextBlockType;
+  onPropsChange: (partial: Partial<TextProps>) => void;
+}) {
+  const { html, align, color, fontSize, lineHeight, bgColor, paddingTop, paddingBottom, paddingLeft, paddingRight } = block.props;
+  const [isEditing, setIsEditing] = useState(false);
+  const editRef = useRef<HTMLDivElement>(null);
+  const cancelledRef = useRef(false);
+
+  useEffect(() => {
+    if (isEditing && editRef.current) {
+      editRef.current.innerHTML = html || "<p>Text content…</p>";
+      editRef.current.focus();
+      cancelledRef.current = false;
+    }
+  }, [isEditing]);
+
+  const divStyle: React.CSSProperties = {
+    fontSize: `${fontSize}px`,
+    color,
+    textAlign: align,
+    lineHeight,
+    backgroundColor: bgColor,
+    padding: `${paddingTop}px ${paddingRight}px ${paddingBottom}px ${paddingLeft}px`,
+    wordBreak: "break-word",
+    outline: "none",
+    minHeight: "20px",
+  };
+
+  const handleBlur = useCallback(() => {
+    if (cancelledRef.current) { cancelledRef.current = false; setIsEditing(false); return; }
+    if (!editRef.current) return;
+    onPropsChange({ html: editRef.current.innerHTML });
+    setIsEditing(false);
+  }, [onPropsChange]);
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    e.stopPropagation();
+    if (e.key === "Escape") { cancelledRef.current = true; editRef.current?.blur(); }
+  }, []);
+
+  if (isEditing) {
+    return (
+      <>
+        <div
+          ref={editRef}
+          contentEditable
+          suppressContentEditableWarning
+          style={{ ...divStyle, boxShadow: "0 0 0 2px #60a5fa", borderRadius: "3px", cursor: "text" }}
+          onBlur={handleBlur}
+          onKeyDown={handleKeyDown}
+          onClick={(e) => e.stopPropagation()}
+        />
+        <div style={{ fontSize: "9px", color: "#6b7280", textAlign: "center", marginTop: "2px" }}>Click outside to save · Esc to cancel</div>
+      </>
+    );
+  }
+
+  return (
+    <div
+      style={{ ...divStyle, cursor: "text" }}
+      dangerouslySetInnerHTML={{ __html: html || "<p>Text content…</p>" }}
+      onDoubleClick={(e) => { e.stopPropagation(); setIsEditing(true); }}
+      title="Double-click to edit"
+    />
+  );
+}
+
 // ---- Sortable column child block ----
 
 const COLUMN_BLOCK_LABELS: Record<ColumnBlockType, string> = {
@@ -169,9 +333,10 @@ interface SortableColumnChildProps {
   onSelect: () => void;
   onDelete: () => void;
   onDuplicate: () => void;
+  onPropsChange: (partial: Partial<EmailBlock["props"]>) => void;
 }
 
-function SortableColumnChild({ block, sectionId, columnIndex, isSelected, onSelect, onDelete, onDuplicate }: SortableColumnChildProps) {
+function SortableColumnChild({ block, sectionId, columnIndex, isSelected, onSelect, onDelete, onDuplicate, onPropsChange }: SortableColumnChildProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: block.id,
     data: { type: "column-child", sectionId, columnIndex, blockId: block.id },
@@ -285,7 +450,19 @@ function SortableColumnChild({ block, sectionId, columnIndex, isSelected, onSele
           minHeight: "24px",
         }}
       >
-        {renderColumnBlockPreview(block)}
+        {block.type === "heading" ? (
+          <InlineEditableHeading
+            block={block as HeadingBlockType}
+            onPropsChange={(partial) => onPropsChange(partial as Partial<EmailBlock["props"]>)}
+          />
+        ) : block.type === "text" ? (
+          <InlineEditableText
+            block={block as TextBlockType}
+            onPropsChange={(partial) => onPropsChange(partial as Partial<EmailBlock["props"]>)}
+          />
+        ) : (
+          renderColumnBlockPreview(block)
+        )}
       </div>
     </div>
   );
@@ -528,6 +705,13 @@ function SectionColumnArea({
     onUpdateColumn({ ...column, blocks: next });
   }
 
+  function handleBlockPropsChange(blockId: string, partial: Partial<EmailBlock["props"]>) {
+    const updatedBlocks = column.blocks.map((b) =>
+      b.id === blockId ? ({ ...b, props: { ...b.props, ...partial } } as EmailBlock) : b
+    );
+    onUpdateColumn({ ...column, blocks: updatedBlocks });
+  }
+
   return (
     <div
       ref={setDropRef}
@@ -594,6 +778,7 @@ function SectionColumnArea({
                 onSelect={() => onSelectBlock(block.id)}
                 onDelete={() => handleDeleteBlock(block.id)}
                 onDuplicate={() => handleDuplicateBlock(block.id)}
+                onPropsChange={(partial) => handleBlockPropsChange(block.id, partial)}
               />
             ))}
           </div>

@@ -64,9 +64,21 @@ function SortableBlock({ block, isSelected, onSelect, onDelete, onDuplicate, onP
   function renderBlock() {
     switch (block.type) {
       case "heading":
-        return <HeadingBlock block={block} {...sharedProps} />;
+        return (
+          <HeadingBlock
+            block={block}
+            {...sharedProps}
+            onPropsChange={(partial) => onPropsChange(block.id, partial)}
+          />
+        );
       case "text":
-        return <TextBlock block={block} {...sharedProps} />;
+        return (
+          <TextBlock
+            block={block}
+            {...sharedProps}
+            onPropsChange={(partial) => onPropsChange(block.id, partial)}
+          />
+        );
       case "image":
         return (
           <ImageBlock
