@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import { useParams } from "next/navigation";
 import { useJobApplicationDetails } from "@/services/hooks/useJobApplications";
 import { formatDateTimeEST } from "@/services/utils/dateUtils";
@@ -11,6 +11,7 @@ import ErrorState from "@/components/common/ErrorState";
 import BackToListButton from "@/components/ui/BackToListButton";
 import ProfileCard from "@/components/ui/ProfileCard";
 import { Accordion } from "@/components/ui/accordion";
+import { Modal } from "@/components/ui/modal";
 import Link from "next/link";
 
 interface ViewDetailsProps {
@@ -22,6 +23,7 @@ export default function JobApplicationDetails({ id }: ViewDetailsProps) {
   const applicationId = id || (params?.id as string);
 
   const { data, isLoading, error } = useJobApplicationDetails(applicationId);
+  const [previewFile, setPreviewFile] = useState<{ url: string; filename: string } | null>(null);
 
   if (isLoading) {
     return <FullScreenSpinner isVisible={true} message="Loading application details..." />;
@@ -179,13 +181,26 @@ export default function JobApplicationDetails({ id }: ViewDetailsProps) {
                   };
 
                   const formattedAnswer = formatAnswer(item.answers);
+                  const isFileType = item.questionType === "Upload File" || item.questionType === "File";
+                  const hasFileUrl = isFileType && item.fileUrl;
 
                   return {
                     id: `question-${index}`,
                     trigger: <span className="font-medium text-gray-900 dark:text-white">{item.question}</span>,
                     content: (
                       <div className="text-gray-700 dark:text-gray-300 mt-2">
-                        {formattedAnswer.type === "date" ? (
+                        {hasFileUrl ? (
+                          <button
+                            onClick={() => setPreviewFile({ url: item.fileUrl!, filename: item.answers || 'Document' })}
+                            className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 font-medium"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                            View Document
+                          </button>
+                        ) : formattedAnswer.type === "date" ? (
                           <>
                             <div>{(formattedAnswer.content as { date: string; time: string }).date}</div>
                             <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
@@ -221,6 +236,45 @@ export default function JobApplicationDetails({ id }: ViewDetailsProps) {
           )}
         </div>
       </div>
+
+      {/* File Preview Modal */}
+      {previewFile && (
+        <Modal
+          isOpen={!!previewFile}
+          onClose={() => setPreviewFile(null)}
+          isFullscreen={false}
+          className="max-w-4xl max-h-[90vh] w-full"
+        >
+          <div className="p-4">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+              {previewFile.filename}
+            </h3>
+            {(() => {
+              const ext = previewFile.filename.split('.').pop()?.toLowerCase();
+              const isOfficeDoc = ['doc', 'docx'].includes(ext || '');
+              const srcUrl = isOfficeDoc
+                ? `https://docs.google.com/gview?url=${encodeURIComponent(previewFile.url)}&embedded=true`
+                : previewFile.url;
+              return (
+                <iframe
+                  src={srcUrl}
+                  className="w-full h-[70vh] border border-gray-200 dark:border-gray-700 rounded-lg"
+                  title="Document Preview"
+                />
+              );
+            })()}
+            <div className="mt-4 flex justify-end">
+              <a
+                href={previewFile.url}
+                download={previewFile.filename}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              >
+                Download
+              </a>
+            </div>
+          </div>
+        </Modal>
+      )}
     </>
   );
 }
