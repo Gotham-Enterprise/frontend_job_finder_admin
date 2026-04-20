@@ -1,6 +1,6 @@
 import { useState, useMemo, useTransition, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useJobsAdmin, useJobsAdminOccupations } from "@/services/hooks/useJobsAdmin";
+import { useJobsAdmin, useJobsAdminOccupations, useSoftDeleteJob } from "@/services/hooks/useJobsAdmin";
 import { useStates } from "@/services/hooks/useStates";
 import { useCitiesByState } from "@/lib/useStatesCities";
 import { JobsAdminFilters, Specialty } from "@/services/types/jobsAdmin";
@@ -22,6 +22,7 @@ export const useJobsAdminLogic = () => {
       const urlOccupationId = searchParams.get("occupationId");
       const urlSpecialtyId = searchParams.get("specialtyId");
       const urlCompanyName = searchParams.get("companyName");
+      const urlIsDeleted = searchParams.get("isDeleted");
 
       const urlFilters: JobsAdminFilters = {
         page: urlPage ? Math.max(1, parseInt(urlPage, 10)) : 1,
@@ -37,6 +38,7 @@ export const useJobsAdminLogic = () => {
         occupationId: urlOccupationId ? parseInt(urlOccupationId) : undefined,
         specialtyId: urlSpecialtyId ? parseInt(urlSpecialtyId) : undefined,
         companyName: urlCompanyName || "",
+        isDeleted: urlIsDeleted === "true" || urlIsDeleted === "all" ? urlIsDeleted : undefined,
       };
 
       const isSimpleNavigation =
@@ -78,6 +80,7 @@ export const useJobsAdminLogic = () => {
               occupationId: parsed.occupationId || undefined,
               specialtyId: parsed.specialtyId || undefined,
               companyName: parsed.companyName || "",
+              isDeleted: parsed.isDeleted || undefined,
             };
 
             return restoredFilters;
@@ -101,6 +104,7 @@ export const useJobsAdminLogic = () => {
       occupationId: undefined,
       specialtyId: undefined,
       companyName: "",
+      isDeleted: undefined,
     };
   };
 
@@ -117,6 +121,8 @@ export const useJobsAdminLogic = () => {
   const [isInitialized, setIsInitialized] = useState(false);
   const [hasRestoredFromState, setHasRestoredFromState] = useState(false);
   const [initialSearchValue, setInitialSearchValue] = useState(initialFilters.name || "");
+  const softDeleteMutation = useSoftDeleteJob();
+  const [deleteConfirmJobId, setDeleteConfirmJobId] = useState<string | null>(null);
 
   useEffect(() => {
     setIsInitialized(true);
@@ -190,6 +196,7 @@ export const useJobsAdminLogic = () => {
     if (filters.occupationId) params.set("occupationId", filters.occupationId.toString());
     if (filters.specialtyId) params.set("specialtyId", filters.specialtyId.toString());
     if (filters.companyName) params.set("companyName", filters.companyName);
+    if (filters.isDeleted) params.set("isDeleted", filters.isDeleted);
 
     const newURL = params.toString() ? `?${params.toString()}` : "";
     const currentURL = window.location.search;
@@ -231,6 +238,7 @@ export const useJobsAdminLogic = () => {
         occupationId: filters.occupationId,
         specialtyId: filters.specialtyId,
         companyName: filters.companyName,
+        isDeleted: filters.isDeleted,
       };
       localStorage.setItem("jobsAdmin-search-state", JSON.stringify(stateToSave));
     }
@@ -425,6 +433,8 @@ export const useJobsAdminLogic = () => {
         switch (jobStatus?.toLowerCase()) {
           case "published":
             return "solid";
+          case "deleted":
+            return "light";
           case "draft":
             return "light";
           default:
@@ -465,6 +475,7 @@ export const useJobsAdminLogic = () => {
       occupationId: undefined,
       specialtyId: undefined,
       companyName: "",
+      isDeleted: undefined,
     };
     setFilters(newFilters);
     setSearchInput("");
@@ -513,6 +524,9 @@ export const useJobsAdminLogic = () => {
             updatedFilters.companyName = "";
             setCompanyNameInput("");
             break;
+          case "isDeleted":
+            updatedFilters.isDeleted = undefined;
+            break;
           default:
             break;
         }
@@ -534,6 +548,7 @@ export const useJobsAdminLogic = () => {
       filters.datePosted ||
       filters.occupationId ||
       filters.specialtyId ||
+      filters.isDeleted ||
       selectedJobStatuses.length > 0
     );
   }, [
@@ -545,6 +560,7 @@ export const useJobsAdminLogic = () => {
     filters.datePosted,
     filters.occupationId,
     filters.specialtyId,
+    filters.isDeleted,
     selectedJobStatuses,
   ]);
 
@@ -575,7 +591,7 @@ export const useJobsAdminLogic = () => {
       !filters.specialtyId &&
       !filters.companyName;
 
-    if (isOnPageOneWithNoFilters) {
+    if (isOnPageOneWithNoFilters && !filters.isDeleted) {
       if (typeof window !== "undefined") {
         localStorage.removeItem("jobsAdmin-search-state");
         localStorage.removeItem("jobsAdmin-scroll-position");
@@ -589,6 +605,7 @@ export const useJobsAdminLogic = () => {
       filters.occupationId ||
       filters.specialtyId ||
       filters.companyName ||
+      filters.isDeleted ||
       (filters.page && filters.page > 1)
     ) {
       saveSearchState();
@@ -642,6 +659,26 @@ export const useJobsAdminLogic = () => {
     return () => clearTimeout(timeoutId);
   }, [companyNameInput, isInitialized, filters.companyName]);
 
+  const deleteJobPost = useCallback(
+    (jobId: string) => {
+      setDeleteConfirmJobId(jobId);
+    },
+    []
+  );
+
+  const confirmDeleteJobPost = useCallback(
+    async () => {
+      if (!deleteConfirmJobId) return;
+      await softDeleteMutation.mutateAsync(deleteConfirmJobId);
+      setDeleteConfirmJobId(null);
+    },
+    [deleteConfirmJobId, softDeleteMutation]
+  );
+
+  const cancelDeleteJobPost = useCallback(() => {
+    setDeleteConfirmJobId(null);
+  }, []);
+
   return {
     filters,
     searchInput,
@@ -676,6 +713,11 @@ export const useJobsAdminLogic = () => {
     getJobStatusVariant,
     viewJobDetails,
     editJobPost,
+    deleteJobPost,
+    confirmDeleteJobPost,
+    cancelDeleteJobPost,
+    isDeleteDialogOpen: !!deleteConfirmJobId,
+    isDeletingJob: softDeleteMutation.isPending,
     clearAllFilters,
     clearIndividualFilter,
     hasActiveFilters,
