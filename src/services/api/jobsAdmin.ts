@@ -1,5 +1,5 @@
 import { JobsAdminFilters, JobsAdminResponse, JobsAdminDetailsResponse, OccupationsResponse } from "../types/jobsAdmin";
-import { apiGet, apiPost, apiPut } from "./apiUtils";
+import { apiGet, apiPost, apiPut, apiDelete } from "./apiUtils";
 import { AIJobDescriptionPayload, JobCreationPayload, AITonesProps } from "../types/jobCreation";
 
 export type { AITonesProps, AIJobDescriptionPayload, JobCreationPayload };
@@ -31,6 +31,7 @@ export const jobsAdminApi = {
     if (filters.occupationId) queryParams.append("occupationId", filters.occupationId.toString());
     if (filters.specialtyId) queryParams.append("specialtyId", filters.specialtyId.toString());
     if (filters.companyName) queryParams.append("companyName", filters.companyName);
+    if (filters.isDeleted) queryParams.append("isDeleted", filters.isDeleted);
 
     const endpoint = `/api/admin/jobs?${queryParams.toString()}`;
 
@@ -47,6 +48,10 @@ export const jobsAdminApi = {
 
   async getOccupations(): Promise<OccupationsResponse> {
     return apiGet<OccupationsResponse>("/api/categories/occupations?page=1&limit=0");
+  },
+
+  async softDeleteJob(id: string): Promise<{ success: boolean; message: string }> {
+    return apiDelete<{ success: boolean; message: string }>(`/api/admin/jobs/${id}`);
   },
   async generateAIJobDescription(payload: AIJobDescriptionPayload): Promise<{
     success: boolean;
