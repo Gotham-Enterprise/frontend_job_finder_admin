@@ -20,6 +20,10 @@ export interface Supervisor {
   profilePhotoUrl: string | null;
   occupation: SupervisorOccupation | null;
   specialty: SupervisorSpecialty | null;
+  /** Hierarchy-based plain strings from SupervisorProfile */
+  supervisorType: string | null;
+  supervisorOccupation: string | null;
+  supervisorSpecialty: string | null;
   verificationStatus: VerificationStatus;
   licenseType: string | null;
   yearsOfExperience: string | null;
@@ -75,6 +79,10 @@ export interface SupervisorProfile {
   supervisionFeeAmount: number | null;
   professionalSummary: string | null;
   website: string | null;
+  /** Hierarchy-based plain strings */
+  supervisorType: string | null;
+  occupation: string | null;
+  specialty: string | null;
   verificationStatus: VerificationStatus;
   verificationNotes: string | null;
   verificationNotesAt: string | null;
@@ -128,8 +136,12 @@ export interface SupervisorDetails {
   status: string;
   createdAt: string;
   updatedAt: string;
+  /** Legacy FK-based objects from SupervisionUser (may be null for new registrations) */
   occupation: SupervisorOccupation | null;
   specialty: SupervisorSpecialty | null;
+  /** Hierarchy-based plain strings lifted from SupervisorProfile */
+  supervisorOccupation: string | null;
+  supervisorSpecialty: string | null;
   supervisorProfile: SupervisorProfile | null;
   /** supervisorSettings and permissions are excluded until the DB migration is applied */
   subscriptions: SupervisorSubscription[];
