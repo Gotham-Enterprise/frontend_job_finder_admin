@@ -43,6 +43,9 @@ export interface JobApplicationsResponse {
 export interface EmployerQuestion {
   question: string;
   answers: string;
+  questionType?: string;
+  fileUrl?: string;
+  fileObjectKey?: string;
 }
 
 export interface Documents {
