@@ -123,7 +123,7 @@ export default function CategoryDistribution({ refreshKey }: CategoryDistributio
     fetchCategoryData();
   }, [period, refreshKey]);
 
-  const periodLabels: Record<Period, string> = {
+  const periodLabels: Partial<Record<Period, string>> = {
     "24h": "24 Hours",
     "7d": "7 Days",
     "28d": "28 Days",
@@ -155,7 +155,7 @@ export default function CategoryDistribution({ refreshKey }: CategoryDistributio
                 : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
             }`}
           >
-            {periodLabels[p]}
+            {periodLabels[p] ?? p}
           </button>
         ))}
       </div>

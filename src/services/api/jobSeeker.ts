@@ -17,7 +17,7 @@ export const jobSeekerApi = {
     if (filters.search) queryParams.append("name", filters.search);
     if (filters.city) queryParams.append("city", filters.city);
     if (filters.radius) queryParams.append("radius", filters.radius.toString());
-    if (filters.location) queryParams.append("location", filters.location);
+    if (filters.location && filters.location.length > 0) queryParams.append("location", filters.location.join(","));
     if (filters.specialty) queryParams.append("specialty", filters.specialty);
     if (filters.occupationId) queryParams.append("occupationId", filters.occupationId.toString());
     if (filters.status) queryParams.append("status", filters.status);
@@ -88,7 +88,7 @@ export const jobSeekerApi = {
     if (filters.search) queryParams.append("name", filters.search);
     if (filters.city) queryParams.append("city", filters.city);
     if (filters.radius) queryParams.append("radius", filters.radius.toString());
-    if (filters.location) queryParams.append("location", filters.location);
+    if (filters.location && filters.location.length > 0) queryParams.append("location", filters.location.join(","));
     if (filters.specialty) queryParams.append("specialty", filters.specialty);
     if (filters.occupationId) queryParams.append("occupationId", filters.occupationId.toString());
     if (filters.status) queryParams.append("status", filters.status);
