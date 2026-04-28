@@ -1,6 +1,14 @@
 import { apiGet, apiPost, apiPut, apiDelete } from "./apiUtils";
 import { PaginationMeta } from "./newsletter";
 
+export interface ContactFilters {
+  role?: "employer" | "job-seeker";
+  occupationId?: number;
+  specialtyId?: number;
+  city?: string;
+  state?: string;
+}
+
 export interface Contact {
   id: string;
   email: string;
@@ -37,9 +45,14 @@ export interface ContactListResponse {
 const BASE = "/api/admin/contacts";
 
 export const contactsApi = {
-  getContacts: (page = 1, limit = 20, search?: string) => {
+  getContacts: (page = 1, limit = 20, search?: string, filters?: ContactFilters) => {
     const params = new URLSearchParams({ page: String(page), limit: String(limit) });
     if (search) params.set("search", search);
+    if (filters?.role) params.set("role", filters.role);
+    if (filters?.occupationId) params.set("occupationId", String(filters.occupationId));
+    if (filters?.specialtyId) params.set("specialtyId", String(filters.specialtyId));
+    if (filters?.city) params.set("city", filters.city);
+    if (filters?.state) params.set("state", filters.state);
     return apiGet<ContactsResponse>(`${BASE}?${params.toString()}`);
   },
 

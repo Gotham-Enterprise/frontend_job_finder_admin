@@ -1,11 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { contactsApi } from "@/services/api/contacts";
+import { contactsApi, ContactFilters } from "@/services/api/contacts";
 import { showToast } from "@/services/utils/toast";
 
-export const useContacts = (page = 1, limit = 20, search?: string) => {
+export const useContacts = (page = 1, limit = 20, search?: string, filters?: ContactFilters) => {
   return useQuery({
-    queryKey: ["contacts", page, limit, search],
-    queryFn: () => contactsApi.getContacts(page, limit, search),
+    queryKey: ["contacts", page, limit, search, filters],
+    queryFn: () => contactsApi.getContacts(page, limit, search, filters),
     staleTime: 2 * 60 * 1000,
   });
 };
