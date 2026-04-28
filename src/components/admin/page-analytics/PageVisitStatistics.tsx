@@ -267,7 +267,8 @@ export default function PageVisitStatistics() {
             {/* Load Button */}
             <button
               onClick={handleLoadTopPages}
-              disabled={isLoadingTopPages}
+              // disabled={isLoadingTopPag
+              disabled
               className="ml-auto flex items-center space-x-2 rounded-lg bg-blue-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-blue-500 dark:hover:bg-blue-600"
             >
               {isLoadingTopPages ? (
