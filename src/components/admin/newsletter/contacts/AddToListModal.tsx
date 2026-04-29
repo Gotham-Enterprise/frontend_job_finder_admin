@@ -1,7 +1,7 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import Button from "@/components/ui/button/Button";
-import { useContactLists } from "@/services/hooks/useContacts";
+import { useInfiniteContactLists } from "@/services/hooks/useContacts";
 import { useAddMembersToList } from "@/services/hooks/useContacts";
 import { ContactList } from "@/services/api/contacts";
 
@@ -19,10 +19,28 @@ export default function AddToListModal({
   onSuccess,
 }: AddToListModalProps) {
   const [selectedListId, setSelectedListId] = useState<string>("");
-  const { data } = useContactLists();
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+
+  const { data, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage } =
+    useInfiniteContactLists(debouncedSearch || undefined);
+
   const addMutation = useAddMembersToList();
 
-  const customLists: ContactList[] = (data?.data ?? []).filter((l) => !l.isSystem);
+  const customLists: ContactList[] = (data?.pages.flatMap((p) => p.data) ?? []).filter(
+    (l) => !l.isSystem
+  );
+
+  const handleSearchChange = (value: string) => {
+    setSearch(value);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      setDebouncedSearch(value);
+      setSelectedListId("");
+    }, 300);
+  };
 
   const handleAdd = async () => {
     if (!selectedListId || selectedUserIds.length === 0) return;
@@ -32,10 +50,35 @@ export default function AddToListModal({
     onClose();
   };
 
-  // Reset selection when modal opens
-  React.useEffect(() => {
-    if (isOpen) setSelectedListId("");
+  // Reset state when modal opens/closes
+  useEffect(() => {
+    if (isOpen) {
+      setSelectedListId("");
+      setSearch("");
+      setDebouncedSearch("");
+    } else {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    }
   }, [isOpen]);
+
+  // Infinite scroll via IntersectionObserver on sentinel
+  const handleObserver = useCallback(
+    (entries: IntersectionObserverEntry[]) => {
+      const [entry] = entries;
+      if (entry.isIntersecting && hasNextPage && !isFetchingNextPage) {
+        fetchNextPage();
+      }
+    },
+    [hasNextPage, isFetchingNextPage, fetchNextPage]
+  );
+
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+    const observer = new IntersectionObserver(handleObserver, { threshold: 0.1 });
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [handleObserver]);
 
   if (!isOpen) return null;
 
@@ -53,12 +96,38 @@ export default function AddToListModal({
           to a list
         </p>
 
-        {customLists.length === 0 ? (
+        {/* Search input */}
+        <div className="mb-3">
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => handleSearchChange(e.target.value)}
+            placeholder="Search lists by name…"
+            className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500"
+          />
+        </div>
+
+        {/* List */}
+        {isLoading ? (
+          <div className="flex justify-center items-center h-16 mb-4">
+            <svg
+              className="animate-spin h-5 w-5 text-brand-500"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+            </svg>
+          </div>
+        ) : customLists.length === 0 ? (
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-            No custom lists yet. Create a list in the Lists tab first.
+            {debouncedSearch
+              ? "No lists match your search."
+              : "No custom lists yet. Create a list in the Lists tab first."}
           </p>
         ) : (
-          <div className="mb-4 space-y-2">
+          <div className="mb-4 max-h-56 overflow-y-auto space-y-2 pr-1">
             {customLists.map((list) => (
               <label
                 key={list.id}
@@ -72,14 +141,32 @@ export default function AddToListModal({
                   onChange={() => setSelectedListId(list.id)}
                   className="accent-brand-500"
                 />
-                <span className="text-sm text-gray-800 dark:text-gray-200">
+                <span className="text-sm text-gray-800 dark:text-gray-200 flex-1 min-w-0 truncate">
                   {list.name}
                 </span>
-                <span className="ml-auto text-xs text-gray-400 dark:text-gray-500">
+                <span className="ml-auto shrink-0 text-xs text-gray-400 dark:text-gray-500">
                   {list.contactCount} contact{list.contactCount !== 1 ? "s" : ""}
                 </span>
               </label>
             ))}
+
+            {/* Sentinel for infinite scroll */}
+            <div ref={sentinelRef} className="h-1" />
+
+            {/* Loading indicator for next page */}
+            {isFetchingNextPage && (
+              <div className="flex justify-center py-2">
+                <svg
+                  className="animate-spin h-4 w-4 text-brand-500"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                </svg>
+              </div>
+            )}
           </div>
         )}
 

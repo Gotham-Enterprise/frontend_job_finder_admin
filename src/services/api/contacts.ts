@@ -57,8 +57,9 @@ export const contactsApi = {
     return apiGet<ContactsResponse>(`${BASE}?${params.toString()}`);
   },
 
-  getLists: (page = 1, limit = 10) => {
+  getLists: (page = 1, limit = 10, search?: string) => {
     const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+    if (search) params.set("search", search);
     return apiGet<ContactListsResponse>(`${BASE}/lists?${params.toString()}`);
   },
 

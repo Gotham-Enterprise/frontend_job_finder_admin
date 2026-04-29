@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
 import { contactsApi, ContactFilters } from "@/services/api/contacts";
 import { showToast } from "@/services/utils/toast";
 
@@ -14,6 +14,17 @@ export const useContactLists = (page = 1, limit = 10) => {
   return useQuery({
     queryKey: ["contact-lists", page, limit],
     queryFn: () => contactsApi.getLists(page, limit),
+    staleTime: 2 * 60 * 1000,
+  });
+};
+
+export const useInfiniteContactLists = (search?: string) => {
+  return useInfiniteQuery({
+    queryKey: ["contact-lists-infinite", search],
+    queryFn: ({ pageParam }) => contactsApi.getLists(pageParam as number, 10, search),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage, _allPages, lastPageParam) =>
+      lastPage.metaData.hasNextPage ? (lastPageParam as number) + 1 : undefined,
     staleTime: 2 * 60 * 1000,
   });
 };
