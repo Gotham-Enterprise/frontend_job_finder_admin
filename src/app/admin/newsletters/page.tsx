@@ -87,7 +87,6 @@ export default function NewslettersPage() {
   const [page, setPage] = useState(1);
   const [previewNewsletter, setPreviewNewsletter] = useState<Newsletter | null>(null);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
-  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const buttonRefs = React.useRef<Map<string, HTMLDivElement>>(new Map());
   const [confirmDialog, setConfirmDialog] = useState<{
     title: string;
@@ -115,6 +114,7 @@ export default function NewslettersPage() {
   const handleTabChange = (status: string | undefined) => {
     setActiveStatus(status);
     setPage(1);
+    setOpenDropdown(null);
   };
 
   const handleDelete = (newsletter: Newsletter) => {
@@ -256,10 +256,8 @@ export default function NewslettersPage() {
                           onClick={() => {
                             if (openDropdown === newsletter.id) {
                               setOpenDropdown(null);
-                              setAnchorEl(null);
                             } else {
                               setOpenDropdown(newsletter.id);
-                              setAnchorEl(buttonRefs.current.get(newsletter.id) ?? null);
                             }
                           }}
                         >
@@ -267,8 +265,8 @@ export default function NewslettersPage() {
                         </Button>
                         <Dropdown
                           isOpen={openDropdown === newsletter.id}
-                          onClose={() => { setOpenDropdown(null); setAnchorEl(null); }}
-                          anchorEl={anchorEl}
+                          onClose={() => setOpenDropdown(null)}
+                          anchorEl={buttonRefs.current.get(newsletter.id) ?? null}
                           className="min-w-44"
                         >
                           {/* Preview — all statuses */}
@@ -397,7 +395,10 @@ export default function NewslettersPage() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setPage((p) => Math.max(p - 1, 1))}
+                onClick={() => {
+                  setOpenDropdown(null);
+                  setPage((p) => Math.max(p - 1, 1));
+                }}
                 disabled={!meta.hasPreviousPage}
               >
                 Previous
@@ -408,7 +409,10 @@ export default function NewslettersPage() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setPage((p) => p + 1)}
+                onClick={() => {
+                  setOpenDropdown(null);
+                  setPage((p) => p + 1);
+                }}
                 disabled={!meta.hasNextPage}
               >
                 Next
