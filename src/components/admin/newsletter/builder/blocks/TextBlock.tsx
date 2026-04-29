@@ -81,6 +81,7 @@ export function TextBlock({ block, isSelected, onSelect, onDelete, onDuplicate, 
             ref={editRef}
             contentEditable
             suppressContentEditableWarning
+            className="newsletter-block-text"
             style={{
               ...divStyle,
               cursor: "text",

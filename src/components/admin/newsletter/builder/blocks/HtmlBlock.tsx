@@ -49,6 +49,7 @@ export function HtmlBlock({ block, isSelected, onSelect, onDelete, onDuplicate, 
 
         {/* Live canvas render */}
         <div
+          className="newsletter-block-text"
           style={{
             padding: `${paddingTop}px ${paddingRight}px ${paddingBottom}px ${paddingLeft}px`,
             minHeight: "32px",

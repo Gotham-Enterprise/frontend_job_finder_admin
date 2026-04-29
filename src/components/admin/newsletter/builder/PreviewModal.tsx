@@ -130,6 +130,16 @@ function buildPreviewDocument(contentHtml: string, subject: string, showHeader =
     .newsletter-content ol { padding-left: 20px; margin-bottom: 12px; }
     .newsletter-content ul li,
     .newsletter-content ol li { font-size: 14px; line-height: 1.6; color: #333; }
+    .newsletter-content pre {
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+    .newsletter-content code {
+      white-space: inherit;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
     /* ── Footer ── */
     .email-footer {
       background: #f9f9f9;

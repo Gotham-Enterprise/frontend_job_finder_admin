@@ -48,6 +48,7 @@ function renderColumnBlockPreview(block: EmailBlock): React.ReactNode {
         block.props;
       return (
         <div
+          className="newsletter-block-text"
           style={{
             fontSize: `${fontSize}px`,
             color,
@@ -294,6 +295,7 @@ function InlineEditableText({
           ref={editRef}
           contentEditable
           suppressContentEditableWarning
+          className="newsletter-block-text"
           style={{ ...divStyle, boxShadow: "0 0 0 2px #60a5fa", borderRadius: "3px", cursor: "text" }}
           onBlur={handleBlur}
           onKeyDown={handleKeyDown}
@@ -306,6 +308,7 @@ function InlineEditableText({
 
   return (
     <div
+      className="newsletter-block-text"
       style={{ ...divStyle, cursor: "text" }}
       dangerouslySetInnerHTML={{ __html: html || "<p>Text content…</p>" }}
       onDoubleClick={(e) => { e.stopPropagation(); setIsEditing(true); }}
