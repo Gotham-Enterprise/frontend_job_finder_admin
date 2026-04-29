@@ -8,6 +8,7 @@ import Pagination from "@/components/tables/Pagination";
 import Badge from "@/components/ui/badge/Badge";
 import Button from "@/components/ui/button/Button";
 import CreateListModal from "@/components/admin/newsletter/contacts/CreateListModal";
+import ConfirmationDialog from "@/components/ui/ConfirmationDialog";
 
 const LIMIT = 10;
 
@@ -37,15 +38,12 @@ export default function ContactListsPage() {
 
   const [createOpen, setCreateOpen] = useState(false);
   const [renameTarget, setRenameTarget] = useState<ContactList | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<ContactList | null>(null);
 
-  const handleDelete = async (list: ContactList) => {
-    if (
-      !confirm(
-        `Delete list "${list.name}"? This will remove all contacts from this list. This cannot be undone.`
-      )
-    )
-      return;
-    await deleteMutation.mutateAsync(list.id);
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
+    await deleteMutation.mutateAsync(deleteTarget.id);
+    setDeleteTarget(null);
     // If this was the last item on a non-first page, go back one page
     if (lists.length === 1 && page > 1) {
       setPage((p) => p - 1);
@@ -143,7 +141,7 @@ export default function ContactListsPage() {
                           </button>
                           <span className="text-gray-300 dark:text-gray-600">·</span>
                           <button
-                            onClick={() => handleDelete(list)}
+                            onClick={() => setDeleteTarget(list)}
                             disabled={deleteMutation.isPending}
                             className="text-xs text-red-500 hover:text-red-600 font-medium transition-colors disabled:opacity-50"
                           >
@@ -183,6 +181,18 @@ export default function ContactListsPage() {
         onClose={() => setRenameTarget(null)}
         listId={renameTarget?.id}
         initialName={renameTarget?.name ?? ""}
+      />
+
+      {/* Delete confirmation dialog */}
+      <ConfirmationDialog
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onCancel={() => setDeleteTarget(null)}
+        onConfirm={handleConfirmDelete}
+        title="Delete List"
+        message={`Delete list "${deleteTarget?.name}"? This will remove all contacts from this list. This cannot be undone.`}
+        confirmText="Delete"
+        isLoading={deleteMutation.isPending}
       />
     </div>
   );
