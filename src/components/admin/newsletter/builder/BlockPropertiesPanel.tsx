@@ -283,6 +283,8 @@ function TextPanel({ block, onChange }: { block: TextBlock; onChange: (b: TextBl
 }
 
 function ImagePanel({ block, onChange }: { block: ImageBlock; onChange: (b: ImageBlock) => void }) {
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
   function set(partial: Partial<ImageBlock["props"]>) {
     onChange({ ...block, props: { ...block.props, ...partial } });
   }
@@ -301,7 +303,25 @@ function ImagePanel({ block, onChange }: { block: ImageBlock; onChange: (b: Imag
         {block.props.src && (
           <img src={block.props.src} alt={block.props.alt} className="w-full rounded mb-2 max-h-40 object-contain bg-gray-100 dark:bg-gray-700" />
         )}
-        <input type="file" accept="image/*" onChange={handleFile} className="text-xs w-full" />
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded border-2 border-dashed border-brand-400 dark:border-brand-600 bg-brand-50 dark:bg-brand-950/30 hover:bg-brand-100 dark:hover:bg-brand-950/50 text-brand-700 dark:text-brand-400 font-medium text-sm transition-colors cursor-pointer"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="17 8 12 3 7 8" />
+            <line x1="12" y1="3" x2="12" y2="15" />
+          </svg>
+          Choose Image
+        </button>
+        <input 
+          ref={fileInputRef}
+          type="file" 
+          accept="image/*" 
+          onChange={handleFile} 
+          className="hidden" 
+        />
       </Field>
       <Field label="Alt Text">
         <TextInput value={block.props.alt} onChange={(v) => set({ alt: v })} placeholder="Describe image…" />
