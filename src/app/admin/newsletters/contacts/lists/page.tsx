@@ -9,6 +9,7 @@ import Badge from "@/components/ui/badge/Badge";
 import Button from "@/components/ui/button/Button";
 import CreateListModal from "@/components/admin/newsletter/contacts/CreateListModal";
 import ConfirmationDialog from "@/components/ui/ConfirmationDialog";
+import ListMembersDrawer from "@/components/admin/newsletter/contacts/ListMembersDrawer";
 
 const LIMIT = 10;
 
@@ -39,6 +40,7 @@ export default function ContactListsPage() {
   const [createOpen, setCreateOpen] = useState(false);
   const [renameTarget, setRenameTarget] = useState<ContactList | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<ContactList | null>(null);
+  const [viewTarget, setViewTarget] = useState<ContactList | null>(null);
 
   const handleConfirmDelete = async () => {
     if (!deleteTarget) return;
@@ -128,11 +130,27 @@ export default function ContactListsPage() {
 
                     <TableCell className="px-4 py-3">
                       {list.isSystem ? (
-                        <span className="text-xs text-gray-400 dark:text-gray-500">
-                          Auto-managed
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => setViewTarget(list)}
+                            className="text-xs text-brand-500 hover:text-brand-600 font-medium transition-colors"
+                          >
+                            View
+                          </button>
+                          <span className="text-gray-300 dark:text-gray-600">·</span>
+                          <span className="text-xs text-gray-400 dark:text-gray-500">
+                            Auto-managed
+                          </span>
+                        </div>
                       ) : (
                         <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => setViewTarget(list)}
+                            className="text-xs text-brand-500 hover:text-brand-600 font-medium transition-colors"
+                          >
+                            View
+                          </button>
+                          <span className="text-gray-300 dark:text-gray-600">·</span>
                           <button
                             onClick={() => setRenameTarget(list)}
                             className="text-xs text-brand-500 hover:text-brand-600 font-medium transition-colors"
@@ -193,6 +211,12 @@ export default function ContactListsPage() {
         message={`Delete list "${deleteTarget?.name}"? This will remove all contacts from this list. This cannot be undone.`}
         confirmText="Delete"
         isLoading={deleteMutation.isPending}
+      />
+
+      {/* Members drawer */}
+      <ListMembersDrawer
+        list={viewTarget}
+        onClose={() => setViewTarget(null)}
       />
     </div>
   );

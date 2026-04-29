@@ -74,4 +74,10 @@ export const contactsApi = {
 
   removeMembers: (listId: string, userIds: string[]) =>
     apiDelete<{ success: boolean; message: string }>(`${BASE}/lists/${listId}/members`, { body: { userIds } }),
+
+  getListMembers: (listId: string, page = 1, limit = 20, search?: string) => {
+    const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+    if (search) params.set("search", search);
+    return apiGet<ContactsResponse>(`${BASE}/lists/${listId}/members?${params.toString()}`);
+  },
 };

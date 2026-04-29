@@ -29,6 +29,15 @@ export const useInfiniteContactLists = (search?: string) => {
   });
 };
 
+export const useListMembers = (listId: string | null, page = 1, limit = 20, search?: string) => {
+  return useQuery({
+    queryKey: ["list-members", listId, page, limit, search],
+    queryFn: () => contactsApi.getListMembers(listId!, page, limit, search),
+    enabled: !!listId,
+    staleTime: 2 * 60 * 1000,
+  });
+};
+
 export const useCreateContactList = () => {
   const queryClient = useQueryClient();
   return useMutation({
@@ -75,9 +84,10 @@ export const useAddMembersToList = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ listId, userIds }: { listId: string; userIds: string[] }) => contactsApi.addMembers(listId, userIds),
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["contacts"] });
       queryClient.invalidateQueries({ queryKey: ["contact-lists"] });
+      queryClient.invalidateQueries({ queryKey: ["list-members", variables.listId] });
       showToast.success("Added", "Contacts added to list");
     },
     onError: (error: any) => {
@@ -91,9 +101,10 @@ export const useRemoveMembersFromList = () => {
   return useMutation({
     mutationFn: ({ listId, userIds }: { listId: string; userIds: string[] }) =>
       contactsApi.removeMembers(listId, userIds),
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["contacts"] });
       queryClient.invalidateQueries({ queryKey: ["contact-lists"] });
+      queryClient.invalidateQueries({ queryKey: ["list-members", variables.listId] });
       showToast.success("Removed", "Contacts removed from list");
     },
     onError: (error: any) => {
