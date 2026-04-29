@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useContactLists, useDeleteContactList } from "@/services/hooks/useContacts";
 import { ContactList } from "@/services/api/contacts";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
@@ -19,7 +19,18 @@ const TABLE_COLUMNS = [
 
 export default function ContactListsPage() {
   const [page, setPage] = useState(1);
-  const { data, isLoading } = useContactLists(page, LIMIT);
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(1);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  const { data, isLoading } = useContactLists(page, LIMIT, debouncedSearch || undefined);
   const deleteMutation = useDeleteContactList();
   const lists: ContactList[] = data?.data ?? [];
   const meta = data?.metaData;
@@ -48,9 +59,30 @@ export default function ContactListsPage() {
         <p className="text-sm text-gray-500 dark:text-gray-400">
           {meta ? `${meta.totalCount} list${meta.totalCount !== 1 ? "s" : ""}` : ""}
         </p>
-        <Button variant="default" size="sm" onClick={() => setCreateOpen(true)}>
-          + Create List
-        </Button>
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <svg
+              className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={2}
+              stroke="currentColor"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
+            </svg>
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search lists…"
+              className="pl-9 pr-3 py-1.5 text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent w-48"
+            />
+          </div>
+          <Button variant="default" size="sm" onClick={() => setCreateOpen(true)}>
+            + Create List
+          </Button>
+        </div>
       </div>
 
       {/* Table */}
