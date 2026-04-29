@@ -16,7 +16,7 @@ interface Props {
 const TAG_MAP: Record<1 | 2 | 3, "h1" | "h2" | "h3"> = { 1: "h1", 2: "h2", 3: "h3" };
 
 export function HeadingBlock({ block, isSelected, onSelect, onDelete, onDuplicate, dragHandleProps, onPropsChange }: Props) {
-  const { text, level, align, color, fontSize, bold } = block.props;
+  const { text, level, align, color, fontSize, bold, fontFamily } = block.props;
   const Tag = TAG_MAP[level];
 
   const [isEditing, setIsEditing] = useState(false);
@@ -63,6 +63,7 @@ export function HeadingBlock({ block, isSelected, onSelect, onDelete, onDuplicat
     color,
     textAlign: align,
     fontWeight: bold ? 700 : 400,
+    fontFamily,
     margin: 0,
     padding: "4px 0",
     lineHeight: 1.3,

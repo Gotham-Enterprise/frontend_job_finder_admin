@@ -40,6 +40,7 @@ export interface HeadingProps {
   color: string;
   fontSize: number; // px
   bold: boolean;
+  fontFamily: string;
 }
 
 export interface HeadingBlock {
@@ -60,6 +61,7 @@ export interface TextProps {
   paddingBottom: number;
   paddingLeft: number;
   paddingRight: number;
+  fontFamily: string;
 }
 
 export interface TextBlock {

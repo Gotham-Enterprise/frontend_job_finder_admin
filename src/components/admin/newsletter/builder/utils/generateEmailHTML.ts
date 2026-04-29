@@ -45,13 +45,14 @@ function alignToMargin(align: "left" | "center" | "right"): string {
 }
 
 function renderHeading(block: HeadingBlock): string {
-  const { text, level, align, color, fontSize, bold } = block.props;
+  const { text, level, align, color, fontSize, bold, fontFamily } = block.props;
   const tag = `h${level}`;
   const style = [
     `font-size: ${fontSize}px`,
     `color: ${color}`,
     `text-align: ${align}`,
     `font-weight: ${bold ? "700" : "400"}`,
+    `font-family: ${fontFamily}`,
     "margin: 0 0 8px 0",
     "padding: 0",
     "line-height: 1.3",
@@ -60,7 +61,7 @@ function renderHeading(block: HeadingBlock): string {
 }
 
 function renderText(block: TextBlock): string {
-  const { html, align, color, fontSize, lineHeight, bgColor, paddingTop, paddingBottom, paddingLeft, paddingRight } =
+  const { html, align, color, fontSize, lineHeight, bgColor, paddingTop, paddingBottom, paddingLeft, paddingRight, fontFamily } =
     block.props;
   const style = [
     `font-size: ${fontSize}px`,
@@ -69,6 +70,7 @@ function renderText(block: TextBlock): string {
     `line-height: ${lineHeight}`,
     `background-color: ${bgColor}`,
     `padding: ${paddingTop}px ${paddingRight}px ${paddingBottom}px ${paddingLeft}px`,
+    `font-family: ${fontFamily}`,
   ].join("; ");
   return `<div style="${style}">${html}</div>`;
 }

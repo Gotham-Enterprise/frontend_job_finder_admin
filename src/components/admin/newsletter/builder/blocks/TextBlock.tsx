@@ -14,7 +14,7 @@ interface Props {
 }
 
 export function TextBlock({ block, isSelected, onSelect, onDelete, onDuplicate, dragHandleProps, onPropsChange }: Props) {
-  const { html, align, color, fontSize, lineHeight, bgColor, paddingTop, paddingBottom, paddingLeft, paddingRight } =
+  const { html, align, color, fontSize, lineHeight, bgColor, paddingTop, paddingBottom, paddingLeft, paddingRight, fontFamily } =
     block.props;
 
   const [isEditing, setIsEditing] = useState(false);
@@ -27,6 +27,7 @@ export function TextBlock({ block, isSelected, onSelect, onDelete, onDuplicate, 
     textAlign: align,
     lineHeight,
     backgroundColor: bgColor,
+    fontFamily,
     padding: `${paddingTop}px ${paddingRight}px ${paddingBottom}px ${paddingLeft}px`,
     wordBreak: "break-word",
     outline: "none",

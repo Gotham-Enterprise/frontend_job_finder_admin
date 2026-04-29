@@ -179,6 +179,16 @@ const ALIGN_OPTIONS = [
   { value: "right" as const, label: "Right" },
 ];
 
+const FONT_OPTIONS = [
+  { value: "Inter, Arial, sans-serif", label: "Inter / Arial" },
+  { value: "Georgia, 'Times New Roman', serif", label: "Georgia" },
+  { value: "'Times New Roman', Times, serif", label: "Times New Roman" },
+  { value: "Verdana, Geneva, sans-serif", label: "Verdana" },
+  { value: "Tahoma, Geneva, sans-serif", label: "Tahoma" },
+  { value: "'Trebuchet MS', Helvetica, sans-serif", label: "Trebuchet MS" },
+  { value: "'Courier New', Courier, monospace", label: "Courier New" },
+];
+
 function MergeTagPicker({ onInsert }: { onInsert: (tag: string) => void }) {
   return (
     <div className="flex flex-wrap gap-1">
@@ -225,6 +235,13 @@ function HeadingPanel({ block, onChange }: { block: HeadingBlock; onChange: (b: 
       <Field label="Color">
         <ColorInput value={block.props.color} onChange={(v) => set({ color: v })} />
       </Field>
+      <Field label="Font">
+        <SelectInput
+          value={block.props.fontFamily}
+          onChange={(v) => set({ fontFamily: v })}
+          options={FONT_OPTIONS}
+        />
+      </Field>
       <Field label="Font Size (px)">
         <NumberInput value={block.props.fontSize} onChange={(v) => set({ fontSize: v })} min={10} max={80} />
       </Field>
@@ -262,6 +279,13 @@ function TextPanel({ block, onChange }: { block: TextBlock; onChange: (b: TextBl
       </Field>
       <Field label="Background Color">
         <ColorInput value={block.props.bgColor} onChange={(v) => set({ bgColor: v })} />
+      </Field>
+      <Field label="Font">
+        <SelectInput
+          value={block.props.fontFamily}
+          onChange={(v) => set({ fontFamily: v })}
+          options={FONT_OPTIONS}
+        />
       </Field>
       <Field label="Font Size (px)">
         <NumberInput value={block.props.fontSize} onChange={(v) => set({ fontSize: v })} min={10} max={40} />

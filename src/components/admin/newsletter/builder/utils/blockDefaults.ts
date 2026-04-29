@@ -44,6 +44,7 @@ export function createBlock(type: BlockType): EmailBlock {
           color: "#1a1a2e",
           fontSize: 28,
           bold: true,
+          fontFamily: "Inter, Arial, sans-serif",
         } satisfies HeadingProps,
       };
 
@@ -62,6 +63,7 @@ export function createBlock(type: BlockType): EmailBlock {
           paddingBottom: 8,
           paddingLeft: 0,
           paddingRight: 0,
+          fontFamily: "Inter, Arial, sans-serif",
         } satisfies TextProps,
       };
 
