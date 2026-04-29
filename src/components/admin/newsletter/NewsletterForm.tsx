@@ -1,10 +1,10 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import Button from "@/components/ui/button/Button";
 import { useRecipientCount } from "@/services/hooks/useNewsletter";
-import { useContactLists } from "@/services/hooks/useContacts";
+import { useInfiniteContactLists } from "@/services/hooks/useContacts";
 import { CreateNewsletterRequest, Newsletter } from "@/services/api/newsletter";
 import { showToast } from "@/services/utils/toast";
 import type { EmailBlock } from "./builder/utils/blockTypes";
@@ -70,6 +70,10 @@ const NewsletterForm: React.FC<NewsletterFormProps> = ({
       : []
   );
   const [listDropdownOpen, setListDropdownOpen] = useState(false);
+  const [listSearch, setListSearch] = useState("");
+  const [debouncedListSearch, setDebouncedListSearch] = useState("");
+  const listSearchDebounceRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const listSentinelRef = React.useRef<HTMLDivElement | null>(null);
   const subjectRef = React.useRef<HTMLInputElement>(null);
 
   const insertMergeTagInSubject = (tag: string) => {
@@ -96,6 +100,8 @@ const NewsletterForm: React.FC<NewsletterFormProps> = ({
     const handler = (e: MouseEvent) => {
       if (listDropdownRef.current && !listDropdownRef.current.contains(e.target as Node)) {
         setListDropdownOpen(false);
+        setListSearch("");
+        setDebouncedListSearch("");
       }
     };
     document.addEventListener("mousedown", handler);
@@ -108,8 +114,50 @@ const NewsletterForm: React.FC<NewsletterFormProps> = ({
     initialValues?.showFooter !== undefined ? initialValues.showFooter : true
   );
 
-  const { data: listsData } = useContactLists();
-  const availableLists = listsData?.data ?? [];
+  const { data: listsData, isLoading: listsLoading, isFetchingNextPage, hasNextPage, fetchNextPage } =
+    useInfiniteContactLists(debouncedListSearch || undefined);
+  const allLoadedLists = listsData?.pages.flatMap((p) => p.data) ?? [];
+  const listLookup = React.useMemo(
+    () => new Map(allLoadedLists.map((l) => [l.id, l])),
+    [allLoadedLists]
+  );
+
+  const handleListSearch = (value: string) => {
+    setListSearch(value);
+    if (listSearchDebounceRef.current) clearTimeout(listSearchDebounceRef.current);
+    listSearchDebounceRef.current = setTimeout(() => {
+      setDebouncedListSearch(value);
+    }, 300);
+  };
+
+  // Infinite scroll: fire fetchNextPage when the sentinel enters the viewport
+  const handleListObserver = useCallback(
+    (entries: IntersectionObserverEntry[]) => {
+      const [entry] = entries;
+      if (entry.isIntersecting && hasNextPage && !isFetchingNextPage) {
+        fetchNextPage();
+      }
+    },
+    [hasNextPage, isFetchingNextPage, fetchNextPage]
+  );
+
+  React.useEffect(() => {
+    if (!listDropdownOpen) return;
+    const sentinel = listSentinelRef.current;
+    if (!sentinel) return;
+    const observer = new IntersectionObserver(handleListObserver, { threshold: 0.1 });
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [listDropdownOpen, handleListObserver]);
+
+  // Auto-resolve: on edit page, keep fetching until all pre-selected IDs are present in the lookup
+  React.useEffect(() => {
+    if (selectedListIds.length === 0) return;
+    const allResolved = selectedListIds.every((id) => listLookup.has(id));
+    if (!allResolved && hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  }, [listsData, selectedListIds, listLookup, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const { data: countData } = useRecipientCount(
     "all",
@@ -226,28 +274,29 @@ const NewsletterForm: React.FC<NewsletterFormProps> = ({
           >
             <span className="flex flex-wrap gap-1 flex-1 min-w-0">
               {selectedListIds.length === 0 ? (
-                  <span className="text-gray-400">No lists selected (sends to all users)</span>
+                <span className="text-gray-400">No lists selected (sends to all users)</span>
               ) : (
-                availableLists
-                  .filter((l) => selectedListIds.includes(l.id))
-                  .map((l) => (
+                selectedListIds.map((id) => {
+                  const l = listLookup.get(id);
+                  return (
                     <span
-                      key={l.id}
+                      key={id}
                       className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-brand-100 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300 text-xs font-medium"
                     >
-                      {l.name}
+                      {l ? l.name : id}
                       <span
                         role="button"
                         onClick={(e) => {
                           e.stopPropagation();
-                          setSelectedListIds((prev) => prev.filter((id) => id !== l.id));
+                          setSelectedListIds((prev) => prev.filter((sid) => sid !== id));
                         }}
                         className="cursor-pointer hover:text-brand-900 dark:hover:text-brand-100 leading-none"
                       >
                         ×
                       </span>
                     </span>
-                  ))
+                  );
+                })
               )}
             </span>
             <svg
@@ -263,13 +312,35 @@ const NewsletterForm: React.FC<NewsletterFormProps> = ({
           {/* Dropdown */}
           {listDropdownOpen && (
             <div className="absolute z-20 mt-1 w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg overflow-hidden">
-              {availableLists.length === 0 ? (
+              {/* Search input */}
+              <div className="p-2 border-b border-gray-100 dark:border-gray-800">
+                <input
+                  type="text"
+                  value={listSearch}
+                  onChange={(e) => handleListSearch(e.target.value)}
+                  onClick={(e) => e.stopPropagation()}
+                  placeholder="Search lists by name…"
+                  autoFocus
+                  className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                />
+              </div>
+
+              {listsLoading ? (
+                <div className="flex justify-center items-center h-16">
+                  <svg className="animate-spin h-5 w-5 text-brand-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                  </svg>
+                </div>
+              ) : allLoadedLists.length === 0 ? (
                 <p className="px-4 py-3 text-sm text-gray-400">
-                  No lists available — create lists in the Contacts tab first.
+                  {debouncedListSearch
+                    ? "No lists match your search."
+                    : "No lists available — create lists in the Contacts tab first."}
                 </p>
               ) : (
                 <div className="max-h-56 overflow-y-auto">
-                  {availableLists.map((list) => {
+                  {allLoadedLists.map((list) => {
                     const checked = selectedListIds.includes(list.id);
                     return (
                       <label
@@ -302,6 +373,18 @@ const NewsletterForm: React.FC<NewsletterFormProps> = ({
                       </label>
                     );
                   })}
+
+                  {/* Infinite scroll sentinel */}
+                  <div ref={listSentinelRef} className="h-1" />
+
+                  {isFetchingNextPage && (
+                    <div className="flex justify-center py-2">
+                      <svg className="animate-spin h-4 w-4 text-brand-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                      </svg>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
