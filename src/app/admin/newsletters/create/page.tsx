@@ -38,7 +38,6 @@ export default function CreateNewsletterPage() {
 
       if (sendMode === "send") {
         await sendNowMutation.mutateAsync(newsletterId);
-        showToast.success("Sending", "Newsletter is being sent to recipients");
         router.push(`/admin/newsletters/${newsletterId}`);
       } else if (sendMode === "schedule") {
         await scheduleMutation.mutateAsync({

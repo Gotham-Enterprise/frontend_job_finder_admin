@@ -84,14 +84,12 @@ export default function EditNewsletterPage() {
 
       if (sendMode === "send") {
         await sendNowMutation.mutateAsync(id);
-        showToast.success("Sending", "Newsletter is being sent to recipients");
         router.push(`/admin/newsletters/${id}`);
       } else if (sendMode === "schedule") {
         await scheduleMutation.mutateAsync({
           id,
           scheduledAt: new Date(scheduledAt).toISOString(),
         });
-        showToast.success("Scheduled", "Newsletter has been scheduled");
         router.push("/admin/newsletters");
       } else {
         showToast.success("Saved", "Newsletter updated successfully");
