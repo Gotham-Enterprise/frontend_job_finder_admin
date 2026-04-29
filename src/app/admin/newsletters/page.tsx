@@ -218,8 +218,13 @@ export default function NewslettersPage() {
                     <TableCell className="px-4 py-3 text-gray-600 dark:text-gray-300 max-w-[200px] truncate">
                       {newsletter.subject}
                     </TableCell>
-                    <TableCell className="px-4 py-3 text-gray-600 dark:text-gray-300 whitespace-nowrap">
-                      {resolveAudienceLabel(newsletter, availableLists)}
+                    <TableCell className="px-4 py-3 text-gray-600 dark:text-gray-300 w-[160px] max-w-[160px]">
+                      <div
+                        className="truncate"
+                        title={resolveAudienceLabel(newsletter, availableLists)}
+                      >
+                        {resolveAudienceLabel(newsletter, availableLists)}
+                      </div>
                     </TableCell>
                     <TableCell className="px-4 py-3">
                       <Badge
