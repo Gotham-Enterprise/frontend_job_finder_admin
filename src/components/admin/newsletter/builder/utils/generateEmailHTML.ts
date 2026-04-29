@@ -61,8 +61,19 @@ function renderHeading(block: HeadingBlock): string {
 }
 
 function renderText(block: TextBlock): string {
-  const { html, align, color, fontSize, lineHeight, bgColor, paddingTop, paddingBottom, paddingLeft, paddingRight, fontFamily } =
-    block.props;
+  const {
+    html,
+    align,
+    color,
+    fontSize,
+    lineHeight,
+    bgColor,
+    paddingTop,
+    paddingBottom,
+    paddingLeft,
+    paddingRight,
+    fontFamily,
+  } = block.props;
   const style = [
     `font-size: ${fontSize}px`,
     `color: ${color}`,
@@ -253,6 +264,45 @@ function renderSection(block: SectionBlock): string {
 </table>`;
 }
 
+const CODE_BLOCK_INLINE_STYLES = [
+  "white-space: pre-wrap",
+  "overflow-wrap: anywhere",
+  "word-break: break-word",
+  "max-width: 100%",
+].join("; ");
+
+const CODE_INLINE_STYLES = ["white-space: pre-wrap", "overflow-wrap: anywhere", "word-break: break-word"].join("; ");
+
+/**
+ * Injects overflow-safe inline styles onto every <pre> and <code> tag in the
+ * generated HTML. This is required because <mj-style> CSS is stripped by many
+ * email clients (e.g. Gmail mobile), so inline styles are the only reliable
+ * way to prevent long code lines from overflowing the email container.
+ */
+function injectCodeBlockStyles(html: string): string {
+  // Inject into <pre> tags — merge with existing style attribute if present
+  let result = html.replace(/<pre(\s[^>]*)?>/gi, (match, attrs = "") => {
+    const existingStyle = attrs.match(/style="([^"]*)"/i);
+    if (existingStyle) {
+      const merged = existingStyle[1].replace(/;\s*$/, "") + "; " + CODE_BLOCK_INLINE_STYLES;
+      return `<pre${attrs.replace(/style="[^"]*"/i, `style="${merged}"`)}>`;
+    }
+    return `<pre${attrs} style="${CODE_BLOCK_INLINE_STYLES}">`;
+  });
+
+  // Inject into <code> tags — merge with existing style attribute if present
+  result = result.replace(/<code(\s[^>]*)?>/gi, (match, attrs = "") => {
+    const existingStyle = attrs.match(/style="([^"]*)"/i);
+    if (existingStyle) {
+      const merged = existingStyle[1].replace(/;\s*$/, "") + "; " + CODE_INLINE_STYLES;
+      return `<code${attrs.replace(/style="[^"]*"/i, `style="${merged}"`)}>`;
+    }
+    return `<code${attrs} style="${CODE_INLINE_STYLES}">`;
+  });
+
+  return result;
+}
+
 export function generateEmailHTML(blocks: EmailBlock[]): string {
   const parts = blocks.map((block) => {
     const wrapperStyle = "max-width: 600px; margin: 0 auto; padding: 8px 30px; font-family: Inter, Arial, sans-serif;";
@@ -294,5 +344,5 @@ export function generateEmailHTML(blocks: EmailBlock[]): string {
     return `<div style="${wrapperStyle}">${inner}</div>`;
   });
 
-  return parts.join("\n");
+  return injectCodeBlockStyles(parts.join("\n"));
 }
