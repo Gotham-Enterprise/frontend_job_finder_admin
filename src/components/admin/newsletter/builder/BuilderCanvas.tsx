@@ -257,11 +257,20 @@ export function BuilderCanvas({
             position: "relative",
             background: "#f9f9f9",
             borderTop: "1px solid #eeeeee",
-            padding: "20px 30px",
+            padding: "30px 30px",
             textAlign: "center",
             borderRadius: "0 0 6px 6px",
             flexShrink: 0,
           }}>
+            <span style={{
+              position: "absolute", top: "8px", right: "12px",
+              background: "rgba(0,0,0,0.06)", color: "#9ca3af",
+              fontSize: "9px", fontWeight: 700, padding: "2px 6px",
+              borderRadius: "3px", letterSpacing: "0.06em",
+              textTransform: "uppercase" as const,
+            }}>
+              Default Footer
+            </span>
             <div style={{ display: "flex", justifyContent: "center", marginBottom: "10px" }}>
               {[
                 { src: "/images/email/x_icon.png", alt: "X" },
@@ -283,15 +292,6 @@ export function BuilderCanvas({
             <p style={{ fontFamily: "Inter, Arial, sans-serif", fontSize: "11px", color: "#999999", margin: 0 }}>
               You are receiving this newsletter because you have an account with Gotham Enterprises.
             </p>
-            <span style={{
-              position: "absolute", top: "6px", right: "8px",
-              background: "rgba(0,0,0,0.06)", color: "#9ca3af",
-              fontSize: "9px", fontWeight: 700, padding: "2px 6px",
-              borderRadius: "3px", letterSpacing: "0.06em", pointerEvents: "none",
-              textTransform: "uppercase" as const,
-            }}>
-              Default Footer
-            </span>
           </div>
         )}
       </div>
