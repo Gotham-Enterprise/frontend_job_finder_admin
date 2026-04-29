@@ -35,6 +35,7 @@ export interface ContactsResponse {
 export interface ContactListsResponse {
   success: boolean;
   data: ContactList[];
+  metaData: PaginationMeta;
 }
 
 export interface ContactListResponse {
@@ -56,7 +57,10 @@ export const contactsApi = {
     return apiGet<ContactsResponse>(`${BASE}?${params.toString()}`);
   },
 
-  getLists: () => apiGet<ContactListsResponse>(`${BASE}/lists`),
+  getLists: (page = 1, limit = 10) => {
+    const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+    return apiGet<ContactListsResponse>(`${BASE}/lists?${params.toString()}`);
+  },
 
   createList: (name: string) => apiPost<ContactListResponse>(`${BASE}/lists`, { name }),
 

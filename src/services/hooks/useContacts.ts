@@ -10,10 +10,10 @@ export const useContacts = (page = 1, limit = 20, search?: string, filters?: Con
   });
 };
 
-export const useContactLists = () => {
+export const useContactLists = (page = 1, limit = 10) => {
   return useQuery({
-    queryKey: ["contact-lists"],
-    queryFn: () => contactsApi.getLists(),
+    queryKey: ["contact-lists", page, limit],
+    queryFn: () => contactsApi.getLists(page, limit),
     staleTime: 2 * 60 * 1000,
   });
 };

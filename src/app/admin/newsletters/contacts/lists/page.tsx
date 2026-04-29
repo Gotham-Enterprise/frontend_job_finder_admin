@@ -4,9 +4,12 @@ import { useContactLists, useDeleteContactList } from "@/services/hooks/useConta
 import { ContactList } from "@/services/api/contacts";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import TableHeading from "@/components/tables/tableHeader";
+import Pagination from "@/components/tables/Pagination";
 import Badge from "@/components/ui/badge/Badge";
 import Button from "@/components/ui/button/Button";
 import CreateListModal from "@/components/admin/newsletter/contacts/CreateListModal";
+
+const LIMIT = 10;
 
 const TABLE_COLUMNS = [
   { key: "name", label: "List Name" },
@@ -15,9 +18,11 @@ const TABLE_COLUMNS = [
 ];
 
 export default function ContactListsPage() {
-  const { data, isLoading } = useContactLists();
+  const [page, setPage] = useState(1);
+  const { data, isLoading } = useContactLists(page, LIMIT);
   const deleteMutation = useDeleteContactList();
   const lists: ContactList[] = data?.data ?? [];
+  const meta = data?.metaData;
 
   const [createOpen, setCreateOpen] = useState(false);
   const [renameTarget, setRenameTarget] = useState<ContactList | null>(null);
@@ -30,6 +35,10 @@ export default function ContactListsPage() {
     )
       return;
     await deleteMutation.mutateAsync(list.id);
+    // If this was the last item on a non-first page, go back one page
+    if (lists.length === 1 && page > 1) {
+      setPage((p) => p - 1);
+    }
   };
 
   return (
@@ -37,7 +46,7 @@ export default function ContactListsPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <p className="text-sm text-gray-500 dark:text-gray-400">
-          {lists.length} list{lists.length !== 1 ? "s" : ""}
+          {meta ? `${meta.totalCount} list${meta.totalCount !== 1 ? "s" : ""}` : ""}
         </p>
         <Button variant="default" size="sm" onClick={() => setCreateOpen(true)}>
           + Create List
@@ -117,6 +126,17 @@ export default function ContactListsPage() {
             </TableBody>
           </Table>
         </div>
+
+        {/* Pagination */}
+        {meta && meta.totalPages > 1 && (
+          <div className="flex justify-end px-4 py-3 border-t border-gray-200 dark:border-gray-700">
+            <Pagination
+              currentPage={meta.page}
+              totalPages={meta.totalPages}
+              onPageChange={setPage}
+            />
+          </div>
+        )}
       </div>
 
       {/* Create modal */}
