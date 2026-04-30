@@ -44,6 +44,7 @@ export const useCreateContactList = () => {
     mutationFn: (name: string) => contactsApi.createList(name),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["contact-lists"] });
+      queryClient.invalidateQueries({ queryKey: ["contact-lists-infinite"] });
       showToast.success("Created", "List created successfully");
     },
     onError: (error: any) => {
