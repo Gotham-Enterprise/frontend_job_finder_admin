@@ -87,6 +87,7 @@ export const useAddMembersToList = () => {
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["contacts"] });
       queryClient.invalidateQueries({ queryKey: ["contact-lists"] });
+      queryClient.invalidateQueries({ queryKey: ["contact-lists-infinite"] });
       queryClient.invalidateQueries({ queryKey: ["list-members", variables.listId] });
       showToast.success("Added", "Contacts added to list");
     },
@@ -104,6 +105,7 @@ export const useRemoveMembersFromList = () => {
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["contacts"] });
       queryClient.invalidateQueries({ queryKey: ["contact-lists"] });
+      queryClient.invalidateQueries({ queryKey: ["contact-lists-infinite"] });
       queryClient.invalidateQueries({ queryKey: ["list-members", variables.listId] });
       showToast.success("Removed", "Contacts removed from list");
     },
