@@ -10,9 +10,10 @@ import {
 import Badge from '../../../ui/badge/Badge';
 import Button from '../../../ui/button/Button';
 import TableHeading from '../../../tables/tableHeader';
-import { EyeIcon, PencilIcon, TimeIcon } from '@/icons';
+import { EyeIcon, PencilIcon, TimeIcon, TrashBinIcon } from '@/icons';
 import { JobsAdminTableProps } from '@/services/types/JobsAdminTypes';
 import PermissionWrapper from '@/components/common/PermissionWrapper';
+import ConfirmationDialog from '@/components/ui/ConfirmationDialog';
 import { showToast } from '@/services/utils/toast';
 
 const JobsAdminTable: React.FC<JobsAdminTableProps> = ({
@@ -23,6 +24,11 @@ const JobsAdminTable: React.FC<JobsAdminTableProps> = ({
   getJobStatusVariant,
   onViewJobDetails,
   onEditJobPost,
+  onDeleteJobPost,
+  onConfirmDelete,
+  onCancelDelete,
+  isDeleteDialogOpen,
+  isDeletingJob,
 }) => {
   const [copiedJobId, setCopiedJobId] = useState<string | null>(null);
 
@@ -33,7 +39,8 @@ const JobsAdminTable: React.FC<JobsAdminTableProps> = ({
     setTimeout(() => setCopiedJobId(null), 2000);
   };
   return (
-    <div className="overflow-x-auto">
+    <>
+      <div className="overflow-x-auto">
       <Table>
         <TableHeading columns={tableColumns} />
         <TableBody>
@@ -147,7 +154,10 @@ const JobsAdminTable: React.FC<JobsAdminTableProps> = ({
                   </Badge>
                 </TableCell>
                 <TableCell className="py-4 px-6">
-                  <Badge variant={getJobStatusVariant(job.jobStatus)}>
+                  <Badge 
+                    variant={getJobStatusVariant(job.jobStatus)}
+                    color={job.jobStatus === 'Deleted' ? 'error' : undefined}
+                  >
                     {job.jobStatus}
                   </Badge>
                 </TableCell>
@@ -175,6 +185,20 @@ const JobsAdminTable: React.FC<JobsAdminTableProps> = ({
                         Edit
                       </Button>
                     </PermissionWrapper>
+                    {!job.isDeleted && (
+                      <PermissionWrapper module="jobs" action="edit">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="text-red-400 hover:text-red-700"
+                          onClick={() => onDeleteJobPost(job.id)}
+                          disabled={isDeletingJob}
+                          startIcon={<TrashBinIcon />}
+                        >
+                          Delete
+                        </Button>
+                      </PermissionWrapper>
+                    )}
                   </div>
                 </TableCell>
               </TableRow>
@@ -183,6 +207,18 @@ const JobsAdminTable: React.FC<JobsAdminTableProps> = ({
         </TableBody>
       </Table>
     </div>
+      <ConfirmationDialog
+        isOpen={isDeleteDialogOpen}
+        onClose={onCancelDelete}
+        onConfirm={onConfirmDelete}
+        onCancel={onCancelDelete}
+        title="Delete Job Post"
+        message="Are you sure you want to delete this job post? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        isLoading={isDeletingJob}
+      />
+    </>
   );
 };
 

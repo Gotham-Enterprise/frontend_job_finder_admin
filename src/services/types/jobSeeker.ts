@@ -1,3 +1,12 @@
+/** Payload for PUT /api/admin/jobseekers/:id (matches admin validator) */
+export interface JobSeekerLicensePayload {
+  name: string;
+  issuingState: string;
+  issueDate: string;
+  expirationDate: string;
+  licenseIdNumber?: string;
+}
+
 export interface JobSeekerUpdateData {
   firstName: string;
   lastName: string;
@@ -9,6 +18,7 @@ export interface JobSeekerUpdateData {
   phoneNumber: string;
   occupationId: number;
   specialtyId?: number;
+  licenses?: JobSeekerLicensePayload[];
   uploadProfilePicture?: File;
 }
 
@@ -77,6 +87,8 @@ export interface JobSeekerStats {
 export interface JobSeekerDetails {
   id: string;
   name: string;
+  firstName?: string;
+  lastName?: string;
   status: "active" | "inactive" | "suspended" | "deleted";
   profilePicture?: {
     fileName: string;
@@ -140,9 +152,10 @@ export interface License {
   id: string;
   name: string;
   issueDate: string;
-  expiryDate?: string;
-  licenseNumber?: string;
-  issuingAuthority?: string;
+  expirationDate?: string;
+  licenseIdNumber?: string;
+  issuingState?: string;
+  issuingBody?: string;
 }
 
 export interface Skill {
