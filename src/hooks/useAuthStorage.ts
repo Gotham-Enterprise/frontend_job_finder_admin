@@ -1,12 +1,12 @@
-import { useState, useEffect } from 'react';
-import { authUtils } from '@/services/utils/authUtils';
+import { useState, useEffect } from "react";
+import { authUtils } from "@/services/utils/authUtils";
 
 export const useAuthStorage = () => {
   const [authData, setAuthData] = useState({
-    user: authUtils.getUser(),
-    displayName: authUtils.getUserDisplayName(),
-    userInitials: authUtils.getUserInitials(),
-    isAuthenticated: authUtils.isAuthenticated()
+    user: null as ReturnType<typeof authUtils.getUser>,
+    displayName: "",
+    userInitials: "",
+    isAuthenticated: false,
   });
 
   useEffect(() => {
@@ -15,12 +15,15 @@ export const useAuthStorage = () => {
         user: authUtils.getUser(),
         displayName: authUtils.getUserDisplayName(),
         userInitials: authUtils.getUserInitials(),
-        isAuthenticated: authUtils.isAuthenticated()
+        isAuthenticated: authUtils.isAuthenticated(),
       });
     };
 
+    // Populate from storage on mount
+    updateAuthData();
+
     const handleStorageChange = (event: StorageEvent) => {
-      if (event.key === 'jobfinder_auth') {
+      if (event.key === "jobfinder_auth") {
         updateAuthData();
       }
     };
@@ -29,12 +32,12 @@ export const useAuthStorage = () => {
       updateAuthData();
     };
 
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('authUpdate', handleAuthUpdate);
+    window.addEventListener("storage", handleStorageChange);
+    window.addEventListener("authUpdate", handleAuthUpdate);
 
     return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('authUpdate', handleAuthUpdate);
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("authUpdate", handleAuthUpdate);
     };
   }, []);
 
@@ -42,7 +45,7 @@ export const useAuthStorage = () => {
 };
 
 export const triggerAuthUpdate = () => {
-  if (typeof window !== 'undefined') {
-    window.dispatchEvent(new CustomEvent('authUpdate'));
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("authUpdate"));
   }
 };

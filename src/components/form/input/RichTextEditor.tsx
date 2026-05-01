@@ -159,14 +159,20 @@ const ListDropdown: React.FC<{
   );
 };
 
+interface MergeTagEntry {
+  label: string;
+  tag: string;
+}
+
 interface RichTextEditorProps {
   content?: string;
   onChange?: (content: string) => void;
   placeholder?: string;
   className?: string;
   minHeight?: number;
-  hideImageButton?: boolean; 
+  hideImageButton?: boolean;
   onEditorReady?: (imageUploadFn: (file: File) => void) => void;
+  mergeTags?: MergeTagEntry[];
 }
 
 const RichTextEditor: React.FC<RichTextEditorProps> = ({
@@ -175,14 +181,16 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
   placeholder = "Start writing your blog post...",
   className = "",
   minHeight = 300,
-  hideImageButton = false, 
+  hideImageButton = false,
   onEditorReady,
+  mergeTags,
 }) => {
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [showImageUpload, setShowImageUpload] = useState(false);
   const [showImageResizeModal, setShowImageResizeModal] = useState(false);
   const [showFormatDropdown, setShowFormatDropdown] = useState(false);
   const [showListDropdown, setShowListDropdown] = useState(false);
+  const [showMergeTagDropdown, setShowMergeTagDropdown] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const getCurrentFormat = () => {
@@ -646,6 +654,38 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
               </div>
             )}
           </div>
+
+          {mergeTags && mergeTags.length > 0 && (
+            <div className="relative">
+              <ToolbarButton
+                onClick={() => setShowMergeTagDropdown(!showMergeTagDropdown)}
+                title="Insert Merge Tag"
+              >
+                <div className="flex items-center gap-1">
+                  <span className="text-xs font-medium">Merge tags</span>
+                  <ChevronDownIcon className="w-4 h-4 shrink-0" />
+                </div>
+              </ToolbarButton>
+              {showMergeTagDropdown && (
+                <div className="absolute top-full left-0 mt-1 z-10 min-w-[160px] p-1 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 shadow-lg">
+                  {mergeTags.map(({ label, tag }) => (
+                    <button
+                      key={tag}
+                      type="button"
+                      onClick={() => {
+                        editor.chain().focus().insertContent(tag).run();
+                        setShowMergeTagDropdown(false);
+                      }}
+                      className="w-full text-left px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    >
+                      <span className="block text-xs text-gray-700 dark:text-gray-300">{label}</span>
+                      <span className="block text-xs text-gray-400 dark:text-gray-500 font-mono">{tag}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
            <div className="flex gap-1 ml-auto">
             <ToolbarButton

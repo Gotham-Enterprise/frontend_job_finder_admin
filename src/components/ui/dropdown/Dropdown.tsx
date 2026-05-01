@@ -9,11 +9,14 @@ import {
   shift,
   useFloating,
 } from "@floating-ui/react";
+
 interface DropdownProps {
   isOpen: boolean;
   onClose: () => void;
   children: React.ReactNode;
   className?: string;
+  /** @deprecated Use `referenceElement` instead. Kept for backward compatibility. */
+  anchorEl?: HTMLElement | null;
   /**
    * When set, the menu is rendered in a portal and positioned with Floating UI.
    * Use this when the trigger lives inside overflow:auto/hidden so the menu is not clipped.
@@ -26,10 +29,13 @@ export const Dropdown: React.FC<DropdownProps> = ({
   onClose,
   children,
   className = "",
+  anchorEl,
   referenceElement,
 }) => {
   const dropdownRef = useRef<HTMLDivElement | null>(null);
-  const portaled = Boolean(referenceElement);
+
+  const resolvedReference = referenceElement ?? anchorEl ?? null;
+  const portaled = Boolean(resolvedReference);
 
   const { refs, floatingStyles } = useFloating({
     open: isOpen,
@@ -37,8 +43,8 @@ export const Dropdown: React.FC<DropdownProps> = ({
     middleware: [offset(8), flip(), shift({ padding: 12 })],
     whileElementsMounted: autoUpdate,
     elements:
-      portaled && referenceElement
-        ? { reference: referenceElement }
+      portaled && resolvedReference
+        ? { reference: resolvedReference }
         : undefined,
   });
 
@@ -81,7 +87,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
       ref={setFloatingRef}
       className={
         portaled
-          ? `${shellClass} z-[200] ${className}`
+          ? `${shellClass} z-[9999] ${className}`
           : `absolute right-0 z-40 mt-2 ${shellClass} ${className}`
       }
       style={portaled ? floatingStyles : undefined}

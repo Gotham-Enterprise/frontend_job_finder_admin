@@ -18,7 +18,8 @@ import {
   UserCircleIcon,
   TaskIcon,
   IdCardIcon,
-  HandShake
+  HandShake,
+  MailIcon
 } from "../icons/index";
 import { BriefcaseIcon, CareerLadderIcon, TicketIcon, BlogIcon, CouponIcon } from "../components/ui/icons/index";
 
@@ -107,6 +108,17 @@ const navItems: NavItem[] = [
       { name: "Categories", path: "/admin/blog/categories", requiredAction: "view" },
       { name: "Tags", path: "/admin/blog/tags", requiredAction: "view" },
       { name: "Archives", path: "/admin/blog/archives", requiredAction: "view" },
+    ],
+  },
+  {
+    icon: <MailIcon />,
+    name: "Newsletter Manager",
+    path: "/admin/newsletters",
+    isAccessible: true,
+    subItems: [
+      { name: "All Newsletters", path: "/admin/newsletters" },
+      { name: "Create New", path: "/admin/newsletters/create" },
+      { name: "Contacts", path: "/admin/newsletters/contacts" },
     ],
   },
   {
