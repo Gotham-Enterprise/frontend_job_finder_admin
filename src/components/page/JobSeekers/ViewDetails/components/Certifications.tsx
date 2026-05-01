@@ -26,21 +26,22 @@ export default function Certifications({ licenses, formatDate }: CertificationsP
                                     <span className="font-medium text-gray-600 dark:text-gray-300">Issue Date:</span>
                                     <span className="ml-2 text-gray-900 dark:text-white">{formatDate(license.issueDate)}</span>
                                 </div>
-                                {license.expiryDate && (
+                                {license.expirationDate && (
                                     <div>
                                         <span className="font-medium text-gray-600 dark:text-gray-300">Expiry Date:</span>
-                                        <span className="ml-2 text-gray-900 dark:text-white">{formatDate(license.expiryDate)}</span>
+                                        <span className="ml-2 text-gray-900 dark:text-white">{formatDate(license.expirationDate)}</span>
                                     </div>
                                 )}
-                                {license.licenseNumber && (
+                                {license.licenseIdNumber && (
                                     <div>
                                         <span className="font-medium text-gray-600 dark:text-gray-300">License Number:</span>
-                                        <span className="ml-2 text-gray-900 dark:text-white">{license.licenseNumber}</span>
+                                        <span className="ml-2 text-gray-900 dark:text-white">{license.licenseIdNumber}</span>
                                     </div>
-                                )}                                <div>
-                                    <span className="font-medium text-gray-600 dark:text-gray-300">Issuing Authority:</span>
+                                )}
+                                <div>
+                                    <span className="font-medium text-gray-600 dark:text-gray-300">Issuing state:</span>
                                     <span className="ml-2 text-gray-900 dark:text-white">
-                                        {license.issuingAuthority || 'Not specified'}
+                                        {license.issuingState || "Not specified"}
                                     </span>
                                 </div>
                             </div>
