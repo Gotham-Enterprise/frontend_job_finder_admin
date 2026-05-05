@@ -58,7 +58,7 @@ function blankForm(): CreateSurveyJobData {
     locationCountry: 'United States',
     locationZipCode: '',
     locationAddress: '',
-    isPublished: false,
+    isPublished: true,
     datePosted: new Date().toISOString().split('T')[0],
     expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
   }
@@ -438,22 +438,6 @@ export default function CreateSurveyJobModal({ isOpen, onClose, job }: Props) {
             />
           </div>
 
-          {/* Published */}
-          <div className="flex items-center gap-3">
-            <input
-              id="isPublished"
-              type="checkbox"
-              checked={form.isPublished}
-              onChange={(e) => set('isPublished', e.target.checked)}
-              className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary"
-            />
-            <label
-              htmlFor="isPublished"
-              className="text-sm font-medium text-gray-700 dark:text-gray-300"
-            >
-              Publish immediately
-            </label>
-          </div>
         </form>
 
         {/* Footer */}
