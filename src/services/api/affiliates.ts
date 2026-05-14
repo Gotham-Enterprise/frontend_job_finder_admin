@@ -270,13 +270,14 @@ export const getAffiliateAnalytics = async (params?: {
   return response.data;
 };
 
-// ===== Adzuna Co-Registration APIs =====
+// ===== Co-Registration APIs (multi-partner) =====
 
-export interface AdzunaCoRegRecord {
+export interface CoRegRecord {
   id: string;
+  partner: string;
   email: string;
-  what: string | null;
-  where: string | null;
+  occupation: string | null;
+  location: string | null;
   status: "success" | "failed";
   responseCode: number | null;
   attempts: number;
@@ -285,9 +286,9 @@ export interface AdzunaCoRegRecord {
   updatedAt: string;
 }
 
-export interface AdzunaCoRegListResponse {
+export interface CoRegListResponse {
   success: boolean;
-  records: AdzunaCoRegRecord[];
+  records: CoRegRecord[];
   pagination: {
     page: number;
     limit: number;
@@ -300,19 +301,21 @@ export interface AdzunaCoRegListResponse {
   };
 }
 
-export const getAdzunaCoRegs = async (params?: {
+export const getCoRegs = async (params?: {
   page?: number;
   limit?: number;
   status?: string;
   startDate?: string;
   endDate?: string;
-}): Promise<AdzunaCoRegListResponse> => {
+  partner?: string;
+}): Promise<CoRegListResponse> => {
   const queryParams = new URLSearchParams();
   if (params?.page) queryParams.append("page", params.page.toString());
   if (params?.limit) queryParams.append("limit", params.limit.toString());
   if (params?.status && params.status !== "all") queryParams.append("status", params.status);
   if (params?.startDate) queryParams.append("startDate", params.startDate);
   if (params?.endDate) queryParams.append("endDate", params.endDate);
+  if (params?.partner) queryParams.append("partner", params.partner);
   const queryString = queryParams.toString();
-  return apiGet<AdzunaCoRegListResponse>(`/api/admin/affiliates/coreg${queryString ? `?${queryString}` : ""}`);
+  return apiGet<CoRegListResponse>(`/api/admin/affiliates/coreg${queryString ? `?${queryString}` : ""}`);
 };
