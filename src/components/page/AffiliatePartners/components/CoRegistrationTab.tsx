@@ -1,8 +1,8 @@
 'use client'
 
 import React, { useState, useMemo } from 'react'
-import { useAdzunaCoRegs } from '@/services/hooks/useAffiliates'
-import type { AdzunaCoRegRecord } from '@/services/api/affiliates'
+import { useCoRegs } from '@/services/hooks/useAffiliates'
+import type { CoRegRecord } from '@/services/api/affiliates'
 import { CheckCircle, XCircle, ChevronDown, ChevronUp } from 'lucide-react'
 import Pagination from '@/components/tables/Pagination'
 import DatePicker from '@/components/form/date-picker'
@@ -112,9 +112,18 @@ function ErrorCell({ message }: { message: string | null }) {
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
+type PartnerType = 'adzuna' | 'lensa' | 'disqo'
+
+const PARTNER_OPTIONS: { value: PartnerType; label: string }[] = [
+  { value: 'adzuna', label: 'Adzuna' },
+  { value: 'lensa', label: 'Lensa' },
+  { value: 'disqo', label: 'Disqo' },
+]
+
 export default function CoRegistrationTab() {
   const [page, setPage] = useState(1)
   const [limit] = useState(20)
+  const [partner, setPartner] = useState<PartnerType>('adzuna')
   const [statusFilter, setStatusFilter] = useState<'all' | 'success' | 'failed'>('all')
   const [timezone, setTimezone] = useState<'local' | 'utc'>('local')
   const [startDate, setStartDate] = useState(getFirstOfMonth())
@@ -126,14 +135,20 @@ export default function CoRegistrationTab() {
     () => ({
       page,
       limit,
+      partner,
       status: statusFilter !== 'all' ? statusFilter : undefined,
       startDate: formatDateWithOffset(startDate, 'start', offsetSuffix),
       endDate: formatDateWithOffset(endDate, 'end', offsetSuffix),
     }),
-    [page, limit, statusFilter, startDate, endDate, offsetSuffix]
+    [page, limit, partner, statusFilter, startDate, endDate, offsetSuffix]
   )
 
-  const { data, isLoading, isError } = useAdzunaCoRegs(queryParams)
+  const { data, isLoading, isError } = useCoRegs(queryParams)
+
+  const handlePartnerChange = (value: PartnerType) => {
+    setPartner(value)
+    setPage(1)
+  }
 
   const handleStatusChange = (value: 'all' | 'success' | 'failed') => {
     setStatusFilter(value)
@@ -179,6 +194,28 @@ export default function CoRegistrationTab() {
     <div className="space-y-6">
       {/* ── Filters ──────────────────────────────────────────────────── */}
       <div className="flex flex-wrap gap-4 items-end">
+        {/* Partner Selector */}
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-medium text-gray-600 dark:text-gray-400">Partner</label>
+          <div className="flex rounded-lg border border-gray-300 dark:border-gray-700 overflow-hidden h-10">
+            {PARTNER_OPTIONS.map((opt, i) => (
+              <button
+                key={opt.value}
+                onClick={() => handlePartnerChange(opt.value)}
+                className={`px-4 text-sm font-medium transition-colors ${
+                  i > 0 ? 'border-l border-gray-300 dark:border-gray-700' : ''
+                } ${
+                  partner === opt.value
+                    ? 'bg-primary text-white'
+                    : 'bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* Status Filter */}
         <div className="flex flex-col gap-1">
           <label className="text-xs font-medium text-gray-600 dark:text-gray-400">Status</label>
@@ -304,7 +341,7 @@ export default function CoRegistrationTab() {
                     </td>
                   </tr>
                 ) : (
-                  data?.records.map((record: AdzunaCoRegRecord) => (
+                  data?.records.map((record: CoRegRecord) => (
                     <tr
                       key={record.id}
                       className="hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors"
@@ -313,10 +350,10 @@ export default function CoRegistrationTab() {
                         {record.email}
                       </td>
                       <td className="px-4 py-3 text-gray-700 dark:text-gray-300 whitespace-nowrap">
-                        {record.what ?? <span className="text-gray-400 dark:text-gray-600">—</span>}
+                        {record.occupation ?? <span className="text-gray-400 dark:text-gray-600">—</span>}
                       </td>
                       <td className="px-4 py-3 text-gray-700 dark:text-gray-300 whitespace-nowrap">
-                        {record.where ?? <span className="text-gray-400 dark:text-gray-600">—</span>}
+                        {record.location ?? <span className="text-gray-400 dark:text-gray-600">—</span>}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap">
                         <StatusBadge status={record.status} />
