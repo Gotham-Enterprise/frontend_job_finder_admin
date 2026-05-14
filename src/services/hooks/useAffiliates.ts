@@ -13,7 +13,7 @@ import {
   getAffiliateAnalytics,
   triggerAffiliateSync,
   getAffiliateSyncStatus,
-  getAdzunaCoRegs,
+  getCoRegs,
   CreatePartnerData,
   UpdatePartnerData,
 } from "../api/affiliates";
@@ -28,7 +28,7 @@ export const affiliateQueryKeys = {
   batchStatus: (id: string) => [...affiliateQueryKeys.batches(), id, "status"] as const,
   batchJobs: (id: string, page: number) => [...affiliateQueryKeys.batches(), id, "jobs", page] as const,
   analytics: (filters: any) => [...affiliateQueryKeys.all, "analytics", filters] as const,
-  coReg: (filters: any) => [...affiliateQueryKeys.all, "coreg", filters] as const,
+  coReg: (partner: string, filters: any) => [...affiliateQueryKeys.all, "coreg", partner, filters] as const,
 };
 
 // Partner Management Hooks
@@ -204,16 +204,18 @@ export const useAffiliateAnalytics = (params?: { affiliateId?: string; startDate
 };
 
 // Co-Registration Hooks
-export const useAdzunaCoRegs = (params?: {
+export const useCoRegs = (params?: {
   page?: number;
   limit?: number;
   status?: string;
   startDate?: string;
   endDate?: string;
+  partner?: string;
 }) => {
+  const partner = params?.partner || "adzuna";
   return useQuery({
-    queryKey: affiliateQueryKeys.coReg(params || {}),
-    queryFn: () => getAdzunaCoRegs(params),
+    queryKey: affiliateQueryKeys.coReg(partner, params || {}),
+    queryFn: () => getCoRegs(params),
     staleTime: 1000 * 60 * 2, // 2 minutes
     gcTime: 1000 * 60 * 5,
   });
