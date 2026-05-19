@@ -324,6 +324,24 @@
   }
 }
 
+/* Newsletter builder canvas: prevent long code lines from being clipped */
+.newsletter-block-text {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.newsletter-block-text pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.newsletter-block-text code {
+  white-space: inherit;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
 /* third-party libraries CSS */
 .apexcharts-legend-text {
   @apply !text-gray-700 dark:!text-gray-400;

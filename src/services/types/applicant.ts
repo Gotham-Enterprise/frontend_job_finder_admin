@@ -183,8 +183,11 @@ export interface ApplicantAdditionalInfoProps {
 
 export interface EmployerQuestionAnswer {
     question: string;
+    questionType?: string;
     answers?: { answer: string }[] | string[];
-    answer?: string | object; 
+    answer?: string | object;
+    fileUrl?: string;
+    fileObjectKey?: string;
 }
 
 export interface ApplicantQuestionsProps {

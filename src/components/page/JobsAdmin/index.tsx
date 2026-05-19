@@ -48,6 +48,11 @@ const JobsAdmin: React.FC<JobsAdminProps> = ({ className = "" }) => {
     getJobStatusVariant,
     viewJobDetails,
     editJobPost,
+    deleteJobPost,
+    confirmDeleteJobPost,
+    cancelDeleteJobPost,
+    isDeleteDialogOpen,
+    isDeletingJob,
     clearAllFilters,
     clearIndividualFilter,
     hasActiveFilters,
@@ -108,6 +113,11 @@ const JobsAdmin: React.FC<JobsAdminProps> = ({ className = "" }) => {
         getJobStatusVariant={getJobStatusVariant}
         onViewJobDetails={viewJobDetails}
         onEditJobPost={editJobPost}
+        onDeleteJobPost={deleteJobPost}
+        onConfirmDelete={confirmDeleteJobPost}
+        onCancelDelete={cancelDeleteJobPost}
+        isDeleteDialogOpen={isDeleteDialogOpen}
+        isDeletingJob={isDeletingJob}
       />
 
       <JobsAdminTablePagination

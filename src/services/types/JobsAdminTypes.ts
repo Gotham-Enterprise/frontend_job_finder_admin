@@ -42,6 +42,11 @@ export interface JobsAdminTableProps {
   getJobStatusVariant: (jobStatus: string) => "light" | "solid";
   onViewJobDetails: (jobId: string) => void;
   onEditJobPost: (jobId: string) => void;
+  onDeleteJobPost: (jobId: string) => void;
+  onConfirmDelete: () => void;
+  onCancelDelete: () => void;
+  isDeleteDialogOpen: boolean;
+  isDeletingJob: boolean;
 }
 
 export interface JobsAdminTablePaginationProps {

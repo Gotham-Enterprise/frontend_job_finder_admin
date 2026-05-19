@@ -2,13 +2,14 @@
 
 import React, { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { FolderOpen, BarChart3, Handshake, UserCheck } from 'lucide-react'
+import { FolderOpen, BarChart3, Handshake, UserCheck, ClipboardList } from 'lucide-react'
 import PartnersTab from './components/PartnersTab'
 import BatchesTab from './components/BatchesTab'
 import AnalyticsTab from './components/AnalyticsTab'
 import CoRegistrationTab from './components/CoRegistrationTab'
+import SurveyJobsTab from './components/SurveyJobsTab'
 
-type TabType = 'partners' | 'batches' | 'analytics' | 'coreg'
+type TabType = 'partners' | 'batches' | 'analytics' | 'coreg' | 'survey'
 
 export default function AffiliatePartners() {
   const router = useRouter()
@@ -50,6 +51,11 @@ export default function AffiliatePartners() {
       label: 'Co Registration',
       icon: UserCheck,
     },
+    {
+      id: 'survey' as TabType,
+      label: 'Survey Jobs',
+      icon: ClipboardList,
+    },
   ]
 
   const renderTabContent = () => {
@@ -62,6 +68,8 @@ export default function AffiliatePartners() {
         return <AnalyticsTab />
       case 'coreg':
         return <CoRegistrationTab />
+      case 'survey':
+        return <SurveyJobsTab />
       default:
         return null
     }

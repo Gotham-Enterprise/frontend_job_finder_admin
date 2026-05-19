@@ -1,12 +1,15 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, memo, useMemo } from "react";
 import { Modal } from "@/components/ui/modal";
 import Button from "@/components/ui/button/Button";
 import Input from "@/components/ui/input/Input";
 import Select from "@/components/form/Select";
+import DatePicker from "@/components/form/date-picker";
 import { jobSeekerApi } from "@/services/api/jobSeeker";
-import { JobSeekerUpdateData } from "@/services/types/jobSeeker";
+import { JobSeekerLicensePayload, JobSeekerUpdateData } from "@/services/types/jobSeeker";
 import { useStates } from "@/services/hooks/useStates";
+import { useLicenses } from "@/services/hooks/useLicenses";
 import { useOccupationsWithSpecialties } from "@/services/hooks/useJobCreation";
+import { Trash2 } from "lucide-react";
 
 interface EditJobSeekerModalProps {
   isOpen: boolean;
@@ -14,6 +17,202 @@ interface EditJobSeekerModalProps {
   jobSeekerId: string;
   onUpdate: () => void;
 }
+
+function newLicenseKey(): string {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+    return crypto.randomUUID();
+  }
+  return `lic-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+}
+
+type LicenseFormRow = {
+  key: string;
+  name: string;
+  licenseIdNumber: string;
+  issuingState: string;
+  issueDate: string;
+  expirationDate: string;
+};
+
+const emptyLicenseRow = (): LicenseFormRow => ({
+  key: newLicenseKey(),
+  name: "",
+  licenseIdNumber: "",
+  issuingState: "",
+  issueDate: "",
+  expirationDate: "",
+});
+
+function toDateInputValue(value: string | undefined): string {
+  if (!value) return "";
+  const s = value.trim();
+  if (s.length >= 10 && s[4] === "-" && s[7] === "-") {
+    return s.slice(0, 10);
+  }
+  if (s.includes("T")) {
+    return s.split("T")[0]!.slice(0, 10);
+  }
+  return s.length >= 10 ? s.slice(0, 10) : s;
+}
+
+function buildValidLicenses(rows: LicenseFormRow[]): JobSeekerLicensePayload[] {
+  return rows
+    .map((row) => ({
+      name: row.name.trim(),
+      licenseIdNumber: row.licenseIdNumber.trim(),
+      issuingState: row.issuingState.trim(),
+      issueDate: row.issueDate.trim(),
+      expirationDate: row.expirationDate.trim(),
+    }))
+    .filter((r) => r.name && r.issuingState && r.issueDate && r.expirationDate)
+    .map((r) => ({
+      name: r.name,
+      issuingState: r.issuingState,
+      issueDate: r.issueDate,
+      expirationDate: r.expirationDate,
+      ...(r.licenseIdNumber ? { licenseIdNumber: r.licenseIdNumber } : {}),
+    }));
+}
+
+function validateNoPartialLicenseRows(rows: LicenseFormRow[]): string | null {
+  for (const row of rows) {
+    const parts = [row.name, row.licenseIdNumber, row.issuingState, row.issueDate, row.expirationDate].map((s) => s.trim());
+    const anyFilled = parts.some(Boolean);
+    const allRequired = row.name.trim() && row.issuingState.trim() && row.issueDate.trim() && row.expirationDate.trim();
+    if (anyFilled && !allRequired) {
+      return "Each license must have name, issuing state, issue date, and expiration date, or clear all fields in that row.";
+    }
+  }
+  return null;
+}
+
+/** Issue date must not be after expiration (ISO YYYY-MM-DD strings compare lexicographically). */
+function validateLicenseIssueNotAfterExpiration(rows: LicenseFormRow[]): string | null {
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i]!;
+    const issue = row.issueDate.trim();
+    const expiration = row.expirationDate.trim();
+    if (!issue || !expiration) continue;
+    if (issue > expiration) {
+      return `License ${i + 1}: Issue date must be on or before the expiration date.`;
+    }
+  }
+  return null;
+}
+
+type LicenseSelectOption = { value: string; label: string };
+
+const EditJobSeekerLicenseCard = memo(function EditJobSeekerLicenseCard({
+  row,
+  updateLicenseRow,
+  onRemove,
+  licenseNameOptions,
+  issuingStateOptions,
+  licensesSelectDisabled,
+  statesSelectDisabled,
+  licenseNumber,
+  licenseTotal,
+}: {
+  row: LicenseFormRow;
+  updateLicenseRow: (key: string, field: keyof Omit<LicenseFormRow, "key">, value: string) => void;
+  onRemove: (key: string) => void;
+  licenseNameOptions: LicenseSelectOption[];
+  issuingStateOptions: LicenseSelectOption[];
+  licensesSelectDisabled: boolean;
+  statesSelectDisabled: boolean;
+  licenseNumber: number;
+  licenseTotal: number;
+}) {
+  const onIssueDateChange = useCallback(
+    (_selectedDates: Date[], dateStr: string) => {
+      updateLicenseRow(row.key, "issueDate", dateStr || "");
+    },
+    [row.key, updateLicenseRow]
+  );
+
+  const onExpirationDateChange = useCallback(
+    (_selectedDates: Date[], dateStr: string) => {
+      updateLicenseRow(row.key, "expirationDate", dateStr || "");
+    },
+    [row.key, updateLicenseRow]
+  );
+
+  const issueInputId = `js-edit-lic-issue-${row.key}`;
+  const expInputId = `js-edit-lic-exp-${row.key}`;
+
+  return (
+    <div className="p-3 rounded-md border border-gray-200 dark:border-gray-600 bg-gray-50/50 dark:bg-gray-800/40 space-y-3">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
+          License {licenseNumber} of {licenseTotal}
+        </p>
+        <button
+          type="button"
+          onClick={() => onRemove(row.key)}
+          className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md p-1.5 text-red-600 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-950/40"
+          aria-label={`Remove license ${licenseNumber} of ${licenseTotal}`}
+        >
+          <Trash2 className="h-3.5 w-3.5 shrink-0" strokeWidth={2} aria-hidden />
+        </button>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">License name</label>
+          <Select
+            options={licenseNameOptions}
+            value={row.name}
+            onChange={(v) => updateLicenseRow(row.key, "name", v)}
+            placeholder="Select license"
+            disabled={licensesSelectDisabled}
+            searchable={true}
+            searchPlaceholder="Search licenses..."
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">License / ID number</label>
+          <Input
+            type="text"
+            value={row.licenseIdNumber}
+            onChange={(e) => updateLicenseRow(row.key, "licenseIdNumber", e.target.value)}
+            placeholder="Optional"
+          />
+        </div>
+      </div>
+      <div>
+        <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Issuing state</label>
+        <Select
+          options={issuingStateOptions}
+          value={row.issuingState}
+          onChange={(v) => updateLicenseRow(row.key, "issuingState", v)}
+          placeholder="Select state"
+          disabled={statesSelectDisabled}
+          searchable={true}
+          searchPlaceholder="Search states..."
+        />
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Issue date</label>
+          <DatePicker
+            id={issueInputId}
+            placeholder="Select issue date"
+            defaultDate={row.issueDate || undefined}
+            onChange={onIssueDateChange}
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Expiration date</label>
+          <DatePicker
+            id={expInputId}
+            placeholder="Select expiration date"
+            defaultDate={row.expirationDate || undefined}
+            onChange={onExpirationDateChange}
+          />
+        </div>
+      </div>
+    </div>
+  );
+});
 
 export const EditJobSeekerModal: React.FC<EditJobSeekerModalProps> = ({ isOpen, onClose, jobSeekerId, onUpdate }) => {
   const handleClose = () => {
@@ -39,6 +238,7 @@ export const EditJobSeekerModal: React.FC<EditJobSeekerModalProps> = ({ isOpen, 
       occupationId: 0,
       specialtyId: undefined,
     });
+    setLicenseRows([]);
 
     onClose();
   };
@@ -55,6 +255,7 @@ export const EditJobSeekerModal: React.FC<EditJobSeekerModalProps> = ({ isOpen, 
     occupationId: 0,
     specialtyId: undefined,
   });
+  const [licenseRows, setLicenseRows] = useState<LicenseFormRow[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -69,16 +270,50 @@ export const EditJobSeekerModal: React.FC<EditJobSeekerModalProps> = ({ isOpen, 
   } | null>(null);
 
   const { data: statesData, isLoading: isStatesLoading } = useStates();
+  const { data: licensesCategoryData, isLoading: isLicensesCategoryLoading } = useLicenses("", 1, 1000);
   const { data: occupationsData, isLoading: isOccupationsLoading } = useOccupationsWithSpecialties();
 
-  const stateOptions = [
-    ...(statesData?.success && statesData.data
-      ? statesData.data.states.map((state) => ({
-          value: state.abbreviation,
-          label: state.name,
-        }))
-      : []),
-  ];
+  const stateOptions = useMemo((): LicenseSelectOption[] => {
+    if (statesData?.success && statesData.data) {
+      return statesData.data.states.map((state) => ({
+        value: state.abbreviation,
+        label: state.name,
+      }));
+    }
+    return [];
+  }, [statesData]);
+
+  const licenseNameOptions = useMemo((): LicenseSelectOption[] => {
+    const fromApi: LicenseSelectOption[] = [];
+    if (licensesCategoryData?.success && licensesCategoryData.data?.length) {
+      for (const l of licensesCategoryData.data) {
+        fromApi.push({ value: l.name, label: l.name });
+      }
+    }
+    const seen = new Set(fromApi.map((o) => o.value));
+    const legacy: LicenseSelectOption[] = [];
+    for (const r of licenseRows) {
+      const n = r.name?.trim();
+      if (n && !seen.has(n)) {
+        seen.add(n);
+        legacy.push({ value: n, label: n });
+      }
+    }
+    return [{ value: "", label: "Select license" }, ...fromApi, ...legacy];
+  }, [licensesCategoryData, licenseRows]);
+
+  const issuingStateOptions = useMemo((): LicenseSelectOption[] => {
+    const seen = new Set(stateOptions.map((o) => o.value));
+    const legacy: LicenseSelectOption[] = [];
+    for (const r of licenseRows) {
+      const v = r.issuingState?.trim();
+      if (v && !seen.has(v)) {
+        seen.add(v);
+        legacy.push({ value: v, label: v });
+      }
+    }
+    return [...stateOptions, ...legacy];
+  }, [stateOptions, licenseRows]);
 
   const countryOptions = [
     { value: "US", label: "United States" },
@@ -172,8 +407,8 @@ export const EditJobSeekerModal: React.FC<EditJobSeekerModalProps> = ({ isOpen, 
         const jobSeeker = response.data;
         // Split name into first and last name
         const nameParts = jobSeeker.name?.split(" ") || ["", ""];
-        const firstName = nameParts[0] || "";
-        const lastName = nameParts.slice(1).join(" ") || "";
+        const firstName = jobSeeker.firstName?.trim() || nameParts[0] || "";
+        const lastName = jobSeeker.lastName?.trim() || nameParts.slice(1).join(" ") || "";
 
         setFormData({
           firstName,
@@ -187,6 +422,21 @@ export const EditJobSeekerModal: React.FC<EditJobSeekerModalProps> = ({ isOpen, 
           occupationId: jobSeeker.occupationId || 0,
           specialtyId: jobSeeker.specialtyId || undefined,
         });
+
+        if (jobSeeker.licenses && jobSeeker.licenses.length > 0) {
+          setLicenseRows(
+            jobSeeker.licenses.map((lic) => ({
+              key: lic.id || newLicenseKey(),
+              name: lic.name || "",
+              licenseIdNumber: lic.licenseIdNumber || "",
+              issuingState: lic.issuingState || "",
+              issueDate: toDateInputValue(lic.issueDate),
+              expirationDate: toDateInputValue(lic.expirationDate),
+            }))
+          );
+        } else {
+          setLicenseRows([]);
+        }
 
         // Set current profile picture if exists
         if (jobSeeker.profilePicture?.url) {
@@ -250,6 +500,35 @@ export const EditJobSeekerModal: React.FC<EditJobSeekerModalProps> = ({ isOpen, 
     }
   }, [statesData, formData.state, stateOptions]);
 
+  // Map stored issuing state (e.g. full name) to US state abbreviation to match us_states / Select values
+  useEffect(() => {
+    if (!statesData?.success || !statesData.data?.states.length) return;
+    const states = statesData.data.states;
+    setLicenseRows((prev) => {
+      if (!prev.length) return prev;
+      return prev.map((row) => {
+        if (!row.issuingState?.trim()) return row;
+        const t = row.issuingState.trim();
+        if (states.some((s) => s.abbreviation === t)) return row;
+        const byName = states.find((s) => s.name.toLowerCase() === t.toLowerCase());
+        if (byName) return { ...row, issuingState: byName.abbreviation };
+        return row;
+      });
+    });
+  }, [statesData]);
+
+  const updateLicenseRow = useCallback((key: string, field: keyof Omit<LicenseFormRow, "key">, value: string) => {
+    setLicenseRows((prev) => prev.map((r) => (r.key === key ? { ...r, [field]: value } : r)));
+  }, []);
+
+  const addLicenseRow = useCallback(() => {
+    setLicenseRows((prev) => [...prev, emptyLicenseRow()]);
+  }, []);
+
+  const removeLicenseRow = useCallback((key: string) => {
+    setLicenseRows((prev) => prev.filter((r) => r.key !== key));
+  }, []);
+
   const updateField = (field: keyof JobSeekerUpdateData, value: string | number | undefined) => {
     setFormData((prev) => ({
       ...prev,
@@ -300,11 +579,29 @@ export const EditJobSeekerModal: React.FC<EditJobSeekerModalProps> = ({ isOpen, 
       return;
     }
 
+    const licenseError = validateNoPartialLicenseRows(licenseRows);
+    if (licenseError) {
+      setError(licenseError);
+      setIsSaving(false);
+      return;
+    }
+
+    const licenseDateOrderError = validateLicenseIssueNotAfterExpiration(licenseRows);
+    if (licenseDateOrderError) {
+      setError(licenseDateOrderError);
+      setIsSaving(false);
+      return;
+    }
+
     try {
       // Create form data with file if selected
-      const updateData = { ...formData };
+      const updateData: JobSeekerUpdateData = { ...formData };
       if (selectedFile) {
         updateData.uploadProfilePicture = selectedFile;
+      }
+      const validLicenses = buildValidLicenses(licenseRows);
+      if (validLicenses.length > 0) {
+        updateData.licenses = validLicenses;
       }
 
       await jobSeekerApi.updateJobSeeker(jobSeekerId, updateData);
@@ -339,12 +636,6 @@ export const EditJobSeekerModal: React.FC<EditJobSeekerModalProps> = ({ isOpen, 
         </div>
 
         <div className="flex-1 overflow-y-auto p-6">
-          {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
-              <p className="text-sm text-red-600">{error}</p>
-            </div>
-          )}
-
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-brand-500"></div>
@@ -432,13 +723,6 @@ export const EditJobSeekerModal: React.FC<EditJobSeekerModalProps> = ({ isOpen, 
                   className="hidden"
                 />
               </div>
-
-              {/* Error message for file upload */}
-              {error && error.includes("image") && (
-                <div className="text-center">
-                  <span className="text-sm text-red-600 dark:text-red-400">{error}</span>
-                </div>
-              )}
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -557,24 +841,71 @@ export const EditJobSeekerModal: React.FC<EditJobSeekerModalProps> = ({ isOpen, 
                   searchPlaceholder="Search specialties..."
                 />
               </div>
+
+              <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-medium text-gray-900 dark:text-white">Licenses</h3>
+                  <button
+                    type="button"
+                    onClick={addLicenseRow}
+                    className="inline-flex items-center justify-center h-9 rounded-sm border border-gray-300 dark:border-gray-600 bg-transparent px-3 text-xs font-medium text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700"
+                  >
+                    Add license
+                  </button>
+                </div>
+                {licenseRows.length === 0 ? (
+                  <p className="text-sm text-gray-500 dark:text-gray-400">No licenses added. Use &quot;Add license&quot; to include one.</p>
+                ) : (
+                  <div className="space-y-4">
+                    {licenseRows.map((row, index) => (
+                      <EditJobSeekerLicenseCard
+                        key={row.key}
+                        row={row}
+                        updateLicenseRow={updateLicenseRow}
+                        onRemove={removeLicenseRow}
+                        licenseNameOptions={licenseNameOptions}
+                        issuingStateOptions={issuingStateOptions}
+                        licensesSelectDisabled={isLicensesCategoryLoading}
+                        statesSelectDisabled={isStatesLoading}
+                        licenseNumber={index + 1}
+                        licenseTotal={licenseRows.length}
+                      />
+                    ))}
+                  </div>
+                )}
+                <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">
+                  Saving with at least one complete license replaces all existing licenses for this job seeker. Clear all
+                  license rows to leave current licenses unchanged.
+                </p>
+              </div>
             </div>
           )}
         </div>
 
-        <div className="flex justify-end gap-3 p-6 pt-4 border-t border-gray-200 dark:border-gray-700">
-          <Button variant="ghost" onClick={handleClose} disabled={isSaving}>
-            Cancel
-          </Button>
-          <Button variant="default" onClick={saveChanges} disabled={!isFormValid() || isSaving || isLoading}>
-            {isSaving ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                Saving...
-              </>
-            ) : (
-              "Save Changes"
-            )}
-          </Button>
+        <div className="shrink-0 border-t border-gray-200 dark:border-gray-700 p-6 pt-4 space-y-3">
+          {error && (
+            <div
+              className="p-3 bg-red-50 border border-red-200 rounded-md dark:bg-red-950/30 dark:border-red-800"
+              role="alert"
+            >
+              <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+            </div>
+          )}
+          <div className="flex justify-end gap-3">
+            <Button variant="ghost" onClick={handleClose} disabled={isSaving}>
+              Cancel
+            </Button>
+            <Button variant="default" onClick={saveChanges} disabled={!isFormValid() || isSaving || isLoading}>
+              {isSaving ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Saving...
+                </>
+              ) : (
+                "Save Changes"
+              )}
+            </Button>
+          </div>
         </div>
       </div>
     </Modal>

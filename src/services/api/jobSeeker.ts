@@ -61,6 +61,9 @@ export const jobSeekerApi = {
       if (data.specialtyId) {
         formData.append("specialtyId", data.specialtyId.toString());
       }
+      if (data.licenses !== undefined) {
+        formData.append("licenses", JSON.stringify(data.licenses));
+      }
 
       // Append the file
       formData.append("uploadProfilePicture", data.uploadProfilePicture);
@@ -68,8 +71,8 @@ export const jobSeekerApi = {
       return apiPut<any>(`/api/admin/jobseekers/${id}`, formData);
     }
 
-    // Use regular JSON if no file
-    return apiPut<any>(`/api/admin/jobseekers/${id}`, data);
+    const { uploadProfilePicture: _file, ...jsonBody } = data;
+    return apiPut<any>(`/api/admin/jobseekers/${id}`, jsonBody);
   },
 
   async shareResume(resumeId: string, request: ShareResumeRequest): Promise<ShareResumeResponse> {

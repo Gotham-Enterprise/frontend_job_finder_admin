@@ -8,7 +8,9 @@ export interface JobsAdmin {
   location: string;
   locationState: string;
   companyName: string;
-  jobStatus: "Draft" | "Published";
+  jobStatus: "Draft" | "Published" | "Archived" | "Deleted" | "Unknown";
+  isDeleted: boolean;
+  deletedAt: string | null;
   salaryRangeStart?: number;
   salaryRangeEnd?: number;
   salaryCurrency?: string;
@@ -28,6 +30,7 @@ export interface JobsAdminFilters {
   occupationId?: number;
   specialtyId?: number;
   companyName?: string;
+  isDeleted?: "true" | "false" | "all";
 }
 
 export interface JobsAdminResponse {
