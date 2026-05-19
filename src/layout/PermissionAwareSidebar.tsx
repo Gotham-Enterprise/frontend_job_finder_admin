@@ -81,6 +81,12 @@ const navItems: NavItem[] = [
     name: "Affiliate Partners",
     path: "/admin/affiliates"
   },
+  {
+    icon: <IdCardIcon />,
+    name: "Supervisors",
+    path: "/admin/supervisors",
+    isAccessible: true,
+  },
    {
     icon: <PieChartIcon />,
     name: "Forum Moderation",
