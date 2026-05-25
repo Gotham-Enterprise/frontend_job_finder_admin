@@ -71,7 +71,7 @@ const JobsAdminFilters: React.FC<JobsAdminFiltersProps> = ({
         </div>
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">State</Label>
+            <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">State</Label>''
 
             {filters.state && (
               <button

@@ -17,6 +17,7 @@ export interface JobsAdmin {
   workType?: string;
   workSetting?: string;
   applicantCount?: number;
+  viewsCount: number;
 }
 
 export interface JobsAdminFilters {
@@ -31,6 +32,8 @@ export interface JobsAdminFilters {
   specialtyId?: number;
   companyName?: string;
   isDeleted?: "true" | "false" | "all";
+  sortBy?: "datePosted" | "viewsCount";
+  sortOrder?: "asc" | "desc";
 }
 
 export interface JobsAdminResponse {

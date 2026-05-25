@@ -1,4 +1,4 @@
-import { useState, useMemo, useTransition, useEffect, useCallback } from "react";
+import React, { useState, useMemo, useTransition, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useJobsAdmin, useJobsAdminOccupations, useSoftDeleteJob } from "@/services/hooks/useJobsAdmin";
 import { useStates } from "@/services/hooks/useStates";
@@ -24,6 +24,9 @@ export const useJobsAdminLogic = () => {
       const urlCompanyName = searchParams.get("companyName");
       const urlIsDeleted = searchParams.get("isDeleted");
 
+      const urlSortBy = searchParams.get("sortBy");
+      const urlSortOrder = searchParams.get("sortOrder");
+
       const urlFilters: JobsAdminFilters = {
         page: urlPage ? Math.max(1, parseInt(urlPage, 10)) : 1,
         limit: urlLimit ? parseInt(urlLimit, 10) : 100,
@@ -39,6 +42,8 @@ export const useJobsAdminLogic = () => {
         specialtyId: urlSpecialtyId ? parseInt(urlSpecialtyId) : undefined,
         companyName: urlCompanyName || "",
         isDeleted: urlIsDeleted === "true" || urlIsDeleted === "all" ? urlIsDeleted : undefined,
+        sortBy: urlSortBy === "viewsCount" ? "viewsCount" : urlSortBy === "datePosted" ? "datePosted" : undefined,
+        sortOrder: urlSortOrder === "asc" ? "asc" : urlSortOrder === "desc" ? "desc" : undefined,
       };
 
       const isSimpleNavigation =
@@ -81,6 +86,8 @@ export const useJobsAdminLogic = () => {
               specialtyId: parsed.specialtyId || undefined,
               companyName: parsed.companyName || "",
               isDeleted: parsed.isDeleted || undefined,
+              sortBy: parsed.sortBy || undefined,
+              sortOrder: parsed.sortOrder || undefined,
             };
 
             return restoredFilters;
@@ -105,6 +112,8 @@ export const useJobsAdminLogic = () => {
       specialtyId: undefined,
       companyName: "",
       isDeleted: undefined,
+      sortBy: undefined,
+      sortOrder: undefined,
     };
   };
 
@@ -197,6 +206,8 @@ export const useJobsAdminLogic = () => {
     if (filters.specialtyId) params.set("specialtyId", filters.specialtyId.toString());
     if (filters.companyName) params.set("companyName", filters.companyName);
     if (filters.isDeleted) params.set("isDeleted", filters.isDeleted);
+    if (filters.sortBy) params.set("sortBy", filters.sortBy);
+    if (filters.sortOrder) params.set("sortOrder", filters.sortOrder);
 
     const newURL = params.toString() ? `?${params.toString()}` : "";
     const currentURL = window.location.search;
@@ -239,6 +250,8 @@ export const useJobsAdminLogic = () => {
         specialtyId: filters.specialtyId,
         companyName: filters.companyName,
         isDeleted: filters.isDeleted,
+        sortBy: filters.sortBy,
+        sortOrder: filters.sortOrder,
       };
       localStorage.setItem("jobsAdmin-search-state", JSON.stringify(stateToSave));
     }
@@ -260,6 +273,17 @@ export const useJobsAdminLogic = () => {
     return cities.map((city) => ({ value: city, label: city }));
   }, [cities, filters.state]);
 
+  const handleSortByViews = useCallback(() => {
+    startTransition(() => {
+      setFilters((prev) => ({
+        ...prev,
+        sortBy: "viewsCount",
+        sortOrder: prev.sortBy === "viewsCount" && prev.sortOrder === "desc" ? "asc" : "desc",
+        page: 1,
+      }));
+    });
+  }, []);
+
   const tableColumns = useMemo(
     () => [
       { key: "jobId", label: "Job ID" },
@@ -268,11 +292,65 @@ export const useJobsAdminLogic = () => {
       { key: "occupation", label: "Occupation" },
       { key: "location", label: "Location" },
       { key: "datePosted", label: "Date Posted" },
+      {
+        key: "views",
+        label: React.createElement(
+          "button",
+          {
+            onClick: handleSortByViews,
+            className: "flex items-center gap-1 hover:text-brand-500 transition-colors font-semibold",
+            title:
+              filters.sortBy === "viewsCount"
+                ? `Sort by views ${filters.sortOrder === "desc" ? "ascending" : "descending"}`
+                : "Sort by views",
+          },
+          "Views",
+          filters.sortBy === "viewsCount"
+            ? filters.sortOrder === "desc"
+              ? React.createElement(
+                  "svg",
+                  {
+                    className: "w-3.5 h-3.5",
+                    fill: "none",
+                    viewBox: "0 0 24 24",
+                    stroke: "currentColor",
+                    strokeWidth: 2,
+                  },
+                  React.createElement("path", { strokeLinecap: "round", strokeLinejoin: "round", d: "M19 9l-7 7-7-7" })
+                )
+              : React.createElement(
+                  "svg",
+                  {
+                    className: "w-3.5 h-3.5",
+                    fill: "none",
+                    viewBox: "0 0 24 24",
+                    stroke: "currentColor",
+                    strokeWidth: 2,
+                  },
+                  React.createElement("path", { strokeLinecap: "round", strokeLinejoin: "round", d: "M5 15l7-7 7 7" })
+                )
+            : React.createElement(
+                "svg",
+                {
+                  className: "w-3.5 h-3.5 text-gray-400",
+                  fill: "none",
+                  viewBox: "0 0 24 24",
+                  stroke: "currentColor",
+                  strokeWidth: 2,
+                },
+                React.createElement("path", {
+                  strokeLinecap: "round",
+                  strokeLinejoin: "round",
+                  d: "M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4",
+                })
+              )
+        ),
+      },
       { key: "status", label: "Status" },
       { key: "jobStatus", label: "Job Status" },
       { key: "actions", label: "", className: "text-right" },
     ],
-    []
+    [filters.sortBy, filters.sortOrder, handleSortByViews]
   );
 
   const jobStatusOptions = useMemo(
@@ -476,6 +554,8 @@ export const useJobsAdminLogic = () => {
       specialtyId: undefined,
       companyName: "",
       isDeleted: undefined,
+      sortBy: undefined,
+      sortOrder: undefined,
     };
     setFilters(newFilters);
     setSearchInput("");
@@ -659,21 +739,15 @@ export const useJobsAdminLogic = () => {
     return () => clearTimeout(timeoutId);
   }, [companyNameInput, isInitialized, filters.companyName]);
 
-  const deleteJobPost = useCallback(
-    (jobId: string) => {
-      setDeleteConfirmJobId(jobId);
-    },
-    []
-  );
+  const deleteJobPost = useCallback((jobId: string) => {
+    setDeleteConfirmJobId(jobId);
+  }, []);
 
-  const confirmDeleteJobPost = useCallback(
-    async () => {
-      if (!deleteConfirmJobId) return;
-      await softDeleteMutation.mutateAsync(deleteConfirmJobId);
-      setDeleteConfirmJobId(null);
-    },
-    [deleteConfirmJobId, softDeleteMutation]
-  );
+  const confirmDeleteJobPost = useCallback(async () => {
+    if (!deleteConfirmJobId) return;
+    await softDeleteMutation.mutateAsync(deleteConfirmJobId);
+    setDeleteConfirmJobId(null);
+  }, [deleteConfirmJobId, softDeleteMutation]);
 
   const cancelDeleteJobPost = useCallback(() => {
     setDeleteConfirmJobId(null);
