@@ -65,15 +65,25 @@ export type UpdateSurveyJobData = Partial<CreateSurveyJobData>;
 
 // ─── API Calls ────────────────────────────────────────────────────────────────
 
+export type SurveyJobSortBy = "views_desc" | "views_asc" | "date_desc" | "date_asc";
+
 export const getSurveyJobs = async (params?: {
   page?: number;
   limit?: number;
   isPublished?: boolean;
+  search?: string;
+  locationState?: string;
+  locationCity?: string;
+  sortBy?: SurveyJobSortBy;
 }): Promise<SurveyJobListResponse> => {
   const query = new URLSearchParams();
   if (params?.page !== undefined) query.set("page", String(params.page));
   if (params?.limit !== undefined) query.set("limit", String(params.limit));
   if (params?.isPublished !== undefined) query.set("isPublished", String(params.isPublished));
+  if (params?.search) query.set("search", params.search);
+  if (params?.locationState) query.set("locationState", params.locationState);
+  if (params?.locationCity) query.set("locationCity", params.locationCity);
+  if (params?.sortBy) query.set("sortBy", params.sortBy);
   const qs = query.toString();
   return apiGet<SurveyJobListResponse>(`/api/admin/affiliates/survey-jobs${qs ? `?${qs}` : ""}`);
 };
