@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { Plus, Pencil, Trash2, Globe } from 'lucide-react'
+import { Plus, Pencil, Trash2, Globe, Eye } from 'lucide-react'
 import { useSurveyJobs, useToggleSurveyJob, useDeleteSurveyJob } from '@/services/hooks/useSurveyJobs'
 import type { SurveyJob } from '@/services/api/surveyJobs'
 import Pagination from '@/components/tables/Pagination'
@@ -111,6 +111,9 @@ export default function SurveyJobsTab() {
                   <th className="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">
                     Work Type
                   </th>
+                  <th className="text-right px-4 py-3 font-medium text-gray-600 dark:text-gray-400">
+                    Views
+                  </th>
                   <th className="text-center px-4 py-3 font-medium text-gray-600 dark:text-gray-400">
                     Published
                   </th>
@@ -136,6 +139,12 @@ export default function SurveyJobsTab() {
                     </td>
                     <td className="px-4 py-3 text-gray-600 dark:text-gray-400">
                       {job.workType ?? '—'}
+                    </td>
+                    <td className="px-4 py-3 text-right whitespace-nowrap">
+                      <div className="inline-flex items-center gap-1 text-gray-600 dark:text-gray-400">
+                        <Eye className="w-3.5 h-3.5" />
+                        <span className="text-sm">{(job.viewsCount ?? 0).toLocaleString()}</span>
+                      </div>
                     </td>
                     <td className="px-4 py-3 text-center">
                       <button
