@@ -1,4 +1,5 @@
 import { JobsAdminFilters } from "@/services/types/jobsAdmin";
+import { ReactNode } from "react";
 
 export interface JobsAdminProps {
   className?: string;
@@ -37,7 +38,7 @@ export interface JobsAdminFiltersProps {
 export interface JobsAdminTableProps {
   data: any;
   isLoading: boolean;
-  tableColumns: Array<{ key: string; label: string; className?: string }>;
+  tableColumns: Array<{ key: string; label: string | ReactNode; className?: string }>;
   getStatusVariant: (status: string) => "light" | "solid";
   getJobStatusVariant: (jobStatus: string) => "light" | "solid";
   onViewJobDetails: (jobId: string) => void;
