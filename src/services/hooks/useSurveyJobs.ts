@@ -7,6 +7,7 @@ import {
   deleteSurveyJob,
   CreateSurveyJobData,
   UpdateSurveyJobData,
+  SurveyJobSortBy,
 } from "../api/surveyJobs";
 import { showToast } from "../utils/toast";
 
@@ -19,7 +20,17 @@ export const surveyJobQueryKeys = {
 
 // ─── Hooks ────────────────────────────────────────────────────────────────────
 
-export const useSurveyJobs = (params?: { page?: number; limit?: number; isPublished?: boolean }) => {
+export interface SurveyJobsParams {
+  page?: number;
+  limit?: number;
+  isPublished?: boolean;
+  search?: string;
+  locationState?: string;
+  locationCity?: string;
+  sortBy?: SurveyJobSortBy;
+}
+
+export const useSurveyJobs = (params?: SurveyJobsParams) => {
   return useQuery({
     queryKey: surveyJobQueryKeys.list(params),
     queryFn: () => getSurveyJobs(params),

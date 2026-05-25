@@ -1,12 +1,33 @@
 'use client'
 
-import React, { useState } from 'react'
-import { Plus, Pencil, Trash2, Globe, Eye } from 'lucide-react'
+import React, { useState, useRef } from 'react'
+import { Plus, Pencil, Trash2, Globe, Eye, Search, ArrowUpDown, ChevronDown } from 'lucide-react'
 import { useSurveyJobs, useToggleSurveyJob, useDeleteSurveyJob } from '@/services/hooks/useSurveyJobs'
+import { SurveyJobSortBy } from '@/services/api/surveyJobs'
 import type { SurveyJob } from '@/services/api/surveyJobs'
 import Pagination from '@/components/tables/Pagination'
 import CreateSurveyJobModal from './CreateSurveyJobModal'
 import ConfirmationDialog from '@/components/ui/ConfirmationDialog'
+
+// ─── Constants ────────────────────────────────────────────────────────────────
+
+const US_STATES = [
+  'Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California', 'Colorado', 'Connecticut',
+  'Delaware', 'Florida', 'Georgia', 'Hawaii', 'Idaho', 'Illinois', 'Indiana', 'Iowa',
+  'Kansas', 'Kentucky', 'Louisiana', 'Maine', 'Maryland', 'Massachusetts', 'Michigan',
+  'Minnesota', 'Mississippi', 'Missouri', 'Montana', 'Nebraska', 'Nevada', 'New Hampshire',
+  'New Jersey', 'New Mexico', 'New York', 'North Carolina', 'North Dakota', 'Ohio',
+  'Oklahoma', 'Oregon', 'Pennsylvania', 'Rhode Island', 'South Carolina', 'South Dakota',
+  'Tennessee', 'Texas', 'Utah', 'Vermont', 'Virginia', 'Washington', 'West Virginia',
+  'Wisconsin', 'Wyoming',
+]
+
+const SORT_OPTIONS: { value: SurveyJobSortBy; label: string }[] = [
+  { value: 'date_desc', label: 'Newest first' },
+  { value: 'date_asc', label: 'Oldest first' },
+  { value: 'views_desc', label: 'Views: High → Low' },
+  { value: 'views_asc', label: 'Views: Low → High' },
+]
 
 const PAGE_SIZE = 15
 
@@ -16,7 +37,59 @@ export default function SurveyJobsTab() {
   const [editingJob, setEditingJob] = useState<SurveyJob | null>(null)
   const [jobToDelete, setJobToDelete] = useState<SurveyJob | null>(null)
 
-  const { data, isLoading, isError } = useSurveyJobs({ page, limit: PAGE_SIZE })
+  // ── Filter state ────────────────────────────────────────────────────────────
+  const [searchInput, setSearchInput] = useState('')
+  const [search, setSearch] = useState('')
+  const [locationState, setLocationState] = useState('')
+  const [cityInput, setCityInput] = useState('')
+  const [locationCity, setLocationCity] = useState('')
+  const [sortBy, setSortBy] = useState<SurveyJobSortBy>('date_desc')
+
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const cityDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Debounce title/ID search
+  const handleSearchChange = (value: string) => {
+    setSearchInput(value)
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => {
+      setSearch(value.trim())
+      setPage(1)
+    }, 300)
+  }
+
+  // Debounce city input
+  const handleCityInputChange = (value: string) => {
+    setCityInput(value)
+    if (cityDebounceRef.current) clearTimeout(cityDebounceRef.current)
+    cityDebounceRef.current = setTimeout(() => {
+      setLocationCity(value.trim())
+      setPage(1)
+    }, 300)
+  }
+
+  // Reset city when state changes
+  const handleStateChange = (state: string) => {
+    setLocationState(state)
+    setCityInput('')
+    setLocationCity('')
+    setPage(1)
+  }
+
+  const handleSortChange = (value: SurveyJobSortBy) => {
+    setSortBy(value)
+    setPage(1)
+  }
+
+  const { data, isLoading, isError } = useSurveyJobs({
+    page,
+    limit: PAGE_SIZE,
+    search: search || undefined,
+    locationState: locationState || undefined,
+    locationCity: locationCity || undefined,
+    sortBy,
+  })
+
   const toggleMutation = useToggleSurveyJob()
   const deleteMutation = useDeleteSurveyJob()
 
@@ -69,6 +142,63 @@ export default function SurveyJobsTab() {
         </button>
       </div>
 
+      {/* Filters */}
+      <div className="flex flex-wrap gap-3">
+        {/* Search */}
+        <div className="relative flex-1 min-w-[200px]">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+          <input
+            type="text"
+            value={searchInput}
+            onChange={(e) => handleSearchChange(e.target.value)}
+            placeholder="Search by title or Job ID…"
+            className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+          />
+        </div>
+
+        {/* State filter */}
+        <div className="relative">
+          <select
+            value={locationState}
+            onChange={(e) => handleStateChange(e.target.value)}
+            className="appearance-none pl-3 pr-8 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary cursor-pointer"
+          >
+            <option value="">All States</option>
+            {US_STATES.map((s) => (
+              <option key={s} value={s}>{s}</option>
+            ))}
+          </select>
+          <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+        </div>
+
+        {/* City filter */}
+        <div className="relative">
+          <input
+            type="text"
+            value={cityInput}
+            onChange={(e) => handleCityInputChange(e.target.value)}
+            disabled={!locationState}
+            placeholder={locationState ? 'Filter by city…' : 'Select state first'}
+            className="pl-3 pr-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary disabled:opacity-50 disabled:cursor-not-allowed w-44"
+          />
+        </div>
+
+        {/* Sort */}
+        <div className="relative">
+          <ArrowUpDown className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+          <select
+            value={sortBy}
+            onChange={(e) => handleSortChange(e.target.value as SurveyJobSortBy)}
+            className="appearance-none pl-8 pr-8 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary cursor-pointer"
+          >
+            {SORT_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
+          <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+        </div>
+      </div>
+
       {/* Loading */}
       {isLoading && (
         <div className="flex items-center justify-center py-16 text-gray-400">
@@ -87,8 +217,10 @@ export default function SurveyJobsTab() {
       {!isLoading && !isError && data?.data.length === 0 && (
         <div className="flex flex-col items-center justify-center py-16 text-gray-400">
           <Globe className="w-10 h-10 mb-3 opacity-30" />
-          <p className="text-sm font-medium">No survey jobs yet</p>
-          <p className="text-xs mt-1">Click "Add Survey Job" to create the first one.</p>
+          <p className="text-sm font-medium">No survey jobs found</p>
+          <p className="text-xs mt-1">
+            {search || locationState ? 'Try adjusting your filters.' : 'Click "Add Survey Job" to create the first one.'}
+          </p>
         </div>
       )}
 
