@@ -23,6 +23,7 @@ export interface SurveyJob {
   externalJobPostUrl: string | null;
   datePosted: string;
   expiresAt: string | null;
+  viewsCount: number;
   occupation: {
     id: number;
     name: string;
