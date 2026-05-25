@@ -1,12 +1,14 @@
+"use client";
+
 import Image from "next/image";
-import React from "react";
+import React, { useEffect, useState } from "react";
 
 interface AvatarProps {
-  src?: string; 
-  alt?: string; 
-  name?: string; 
-  size?: "xsmall" | "small" | "medium" | "large" | "xlarge" | "xxlarge"; 
-  status?: "online" | "offline" | "busy" | "none"; 
+  src?: string;
+  alt?: string;
+  name?: string;
+  size?: "xsmall" | "small" | "medium" | "large" | "xlarge" | "xxlarge";
+  status?: "online" | "offline" | "busy" | "none";
   className?: string;
 }
 
@@ -42,28 +44,36 @@ const Avatar: React.FC<AvatarProps> = ({
   status = "none",
   className = "",
 }) => {
-  const getInitials = (name: string): string => {
-    return name
-      .split(' ')
-      .map((part) => part.charAt(0))
-      .join('')
-      .substring(0, 2)
-      .toUpperCase();
+  const [imageFailed, setImageFailed] = useState(false);
+
+  useEffect(() => {
+    setImageFailed(false);
+  }, [src]);
+
+  const getInitials = (displayName: string): string => {
+    const parts = displayName
+      .trim()
+      .split(/\s+/)
+      .filter((part) => part.length > 0)
+      .map((part) => part.charAt(0));
+    if (parts.length === 0) return "?";
+    return parts.join("").substring(0, 2).toUpperCase();
   };
+
+  const showImage = Boolean(src) && !imageFailed;
 
   return (
     <div className={`relative rounded-full overflow-hidden ${sizeClasses[size]} ${className}`}>
-      {src ? (
-     
+      {showImage ? (
         <Image
           width={48}
           height={48}
-          src={src}
+          src={src!}
           alt={alt}
           className="object-cover w-full h-full rounded-full"
+          onError={() => setImageFailed(true)}
         />
       ) : (
-     
         <div className="w-full h-full flex items-center justify-center bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 font-medium text-sm">
           {getInitials(name)}
         </div>
