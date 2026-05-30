@@ -57,6 +57,7 @@ export interface Pagination {
 
 export interface HealthDetailJob {
   id: string;
+  slug: string | null;
   title: string;
   companyName: string | null;
   occupation: { name: string } | null;

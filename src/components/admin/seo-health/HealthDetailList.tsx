@@ -27,6 +27,20 @@ function Badge({ children, color }: { children: React.ReactNode; color: string }
   );
 }
 
+const FRONTEND_URL = process.env.NEXT_PUBLIC_FRONTEND_URL || "https://gothamenterprisesltd.com";
+
+function slugify(s: string): string {
+  return s.toLowerCase().replace(/[^\w\s]/gi, "").replace(/\s+/g, "-");
+}
+
+function jobFrontendUrl(job: HealthDetailJob): string {
+  const occupationSlug = job.occupation?.name
+    ? `${slugify(job.occupation.name)}-jobs`
+    : "all-jobs";
+  const titleSlug = slugify(job.title || "");
+  return `${FRONTEND_URL}/find-jobs/${occupationSlug}/${job.id}/${titleSlug}`;
+}
+
 function fmtDate(d: string): string {
   if (!d) return "-";
   return new Date(d).toLocaleDateString("en-US", {
@@ -150,12 +164,13 @@ function JobTable({ metric, items }: { metric: string; items: HealthDetailJob[] 
               <th className="px-6 py-3 font-medium text-gray-500 dark:text-gray-400">Occupation</th>
               <th className="px-6 py-3 font-medium text-gray-500 dark:text-gray-400">Location</th>
               <th className="px-6 py-3 font-medium text-gray-500 dark:text-gray-400">Status</th>
+              <th className="px-6 py-3 font-medium text-gray-500 dark:text-gray-400">View</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
             {items.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                <td colSpan={7} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
                   No items found
                 </td>
               </tr>
@@ -177,6 +192,19 @@ function JobTable({ metric, items }: { metric: string; items: HealthDetailJob[] 
                   </td>
                   <td className="px-6 py-4">
                     <StatusCell metric={metric} job={job} />
+                  </td>
+                  <td className="px-6 py-4">
+                    <a
+                      href={jobFrontendUrl(job)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                      title={`View on site: ${job.title}`}
+                    >
+                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                      </svg>
+                    </a>
                   </td>
                 </tr>
               ))
@@ -225,12 +253,13 @@ function SeoPageTable({ items }: { items: HealthDetailSeoPage[] }) {
               <th className="px-6 py-3 font-medium text-gray-500 dark:text-gray-400">Live</th>
               <th className="px-6 py-3 font-medium text-gray-500 dark:text-gray-400">Created</th>
               <th className="px-6 py-3 font-medium text-gray-500 dark:text-gray-400">Updated</th>
+              <th className="px-6 py-3 font-medium text-gray-500 dark:text-gray-400">View</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
             {items.length === 0 ? (
               <tr>
-                <td colSpan={9} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                <td colSpan={10} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
                   No pages found
                 </td>
               </tr>
@@ -252,6 +281,19 @@ function SeoPageTable({ items }: { items: HealthDetailSeoPage[] }) {
                   </td>
                   <td className="px-6 py-4 text-gray-600 dark:text-gray-400">{fmtDate(page.createdAt)}</td>
                   <td className="px-6 py-4 text-gray-600 dark:text-gray-400">{fmtDate(page.updatedAt)}</td>
+                  <td className="px-6 py-4">
+                    <a
+                      href={`${FRONTEND_URL}/${page.slug}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                      title={`View on site: ${page.title}`}
+                    >
+                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                      </svg>
+                    </a>
+                  </td>
                 </tr>
               ))
             )}
