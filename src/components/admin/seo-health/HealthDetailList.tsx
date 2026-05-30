@@ -27,9 +27,28 @@ function Badge({ children, color }: { children: React.ReactNode; color: string }
   );
 }
 
+function fmtDate(d: string): string {
+  if (!d) return "-";
+  return new Date(d).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+const qualityFilters = [
+  { key: "", label: "All" },
+  { key: "no-description", label: "No Description" },
+  { key: "no-company-name", label: "No Company" },
+  { key: "no-location", label: "No Location" },
+  { key: "no-salary", label: "No Salary" },
+];
+
 export default function HealthDetailList({ metric, title, description, issue, filter }: HealthDetailListProps) {
   const [page, setPage] = useState(1);
-  const { data, isLoading, error } = useHealthDetail(metric, { page, issue, filter });
+  const [activeIssue, setActiveIssue] = useState(issue || "");
+  const resolvedIssue = metric === "quality-issues" ? (activeIssue || undefined) : issue;
+  const { data, isLoading, error } = useHealthDetail(metric, { page, issue: resolvedIssue, filter });
 
   if (isLoading) {
     return (
@@ -65,6 +84,27 @@ export default function HealthDetailList({ metric, title, description, issue, fi
           {description} &mdash; {pagination.total.toLocaleString()} total
         </p>
       </div>
+
+      {metric === "quality-issues" && (
+        <div className="mb-4 flex flex-wrap gap-2">
+          {qualityFilters.map((f) => (
+            <button
+              key={f.key}
+              onClick={() => {
+                setActiveIssue(f.key);
+                setPage(1);
+              }}
+              className={`rounded-lg border px-4 py-2 text-sm font-medium transition-colors ${
+                activeIssue === f.key
+                  ? "border-blue-500 bg-blue-50 text-blue-700 dark:border-blue-400 dark:bg-blue-500/10 dark:text-blue-400"
+                  : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+              }`}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+      )}
 
       {metric === "seo-pages" ? (
         <SeoPageTable items={items as HealthDetailSeoPage[]} />
@@ -106,6 +146,7 @@ function JobTable({ metric, items }: { metric: string; items: HealthDetailJob[] 
             <tr className="border-b border-gray-100 bg-gray-50 dark:border-gray-700 dark:bg-gray-900">
               <th className="px-6 py-3 font-medium text-gray-500 dark:text-gray-400">Title</th>
               <th className="px-6 py-3 font-medium text-gray-500 dark:text-gray-400">Company</th>
+              <th className="px-6 py-3 font-medium text-gray-500 dark:text-gray-400">Affiliate</th>
               <th className="px-6 py-3 font-medium text-gray-500 dark:text-gray-400">Occupation</th>
               <th className="px-6 py-3 font-medium text-gray-500 dark:text-gray-400">Location</th>
               <th className="px-6 py-3 font-medium text-gray-500 dark:text-gray-400">Status</th>
@@ -114,15 +155,22 @@ function JobTable({ metric, items }: { metric: string; items: HealthDetailJob[] 
           <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
             {items.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                <td colSpan={6} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
                   No items found
                 </td>
               </tr>
             ) : (
               items.map((job) => (
                 <tr key={job.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                  <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">{job.title}</td>
+                  <td className="max-w-xs truncate px-6 py-4 font-medium text-gray-900 dark:text-white">{job.title}</td>
                   <td className="px-6 py-4 text-gray-600 dark:text-gray-400">{job.companyName || "-"}</td>
+                  <td className="px-6 py-4">
+                    {job.affiliateId ? (
+                      <Badge color="yellow">Affiliate</Badge>
+                    ) : (
+                      <Badge color="gray">Organic</Badge>
+                    )}
+                  </td>
                   <td className="px-6 py-4 text-gray-600 dark:text-gray-400">{job.occupation?.name || "-"}</td>
                   <td className="px-6 py-4 text-gray-600 dark:text-gray-400">
                     {[job.locationCity, job.locationState].filter(Boolean).join(", ") || "-"}
@@ -168,32 +216,42 @@ function SeoPageTable({ items }: { items: HealthDetailSeoPage[] }) {
         <table className="w-full text-left text-sm">
           <thead>
             <tr className="border-b border-gray-100 bg-gray-50 dark:border-gray-700 dark:bg-gray-900">
-              <th className="px-6 py-3 font-medium text-gray-500 dark:text-gray-400">Slug</th>
+              <th className="px-6 py-3 font-medium text-gray-500 dark:text-gray-400">Title</th>
               <th className="px-6 py-3 font-medium text-gray-500 dark:text-gray-400">Occupation</th>
               <th className="px-6 py-3 font-medium text-gray-500 dark:text-gray-400">State</th>
-              <th className="px-6 py-3 font-medium text-gray-500 dark:text-gray-400">Job Count</th>
-              <th className="px-6 py-3 font-medium text-gray-500 dark:text-gray-400">Indexable</th>
+              <th className="px-6 py-3 font-medium text-gray-500 dark:text-gray-400">City</th>
+              <th className="px-6 py-3 font-medium text-gray-500 dark:text-gray-400">Modifier</th>
+              <th className="px-6 py-3 font-medium text-gray-500 dark:text-gray-400">Jobs</th>
+              <th className="px-6 py-3 font-medium text-gray-500 dark:text-gray-400">Live</th>
+              <th className="px-6 py-3 font-medium text-gray-500 dark:text-gray-400">Created</th>
+              <th className="px-6 py-3 font-medium text-gray-500 dark:text-gray-400">Updated</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
             {items.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                <td colSpan={9} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
                   No pages found
                 </td>
               </tr>
             ) : (
               items.map((page) => (
                 <tr key={page.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                  <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">{page.slug}</td>
+                  <td className="max-w-xs truncate px-6 py-4 font-medium text-gray-900 dark:text-white" title={page.title}>
+                    {page.title}
+                  </td>
                   <td className="px-6 py-4 text-gray-600 dark:text-gray-400">{page.occupation?.name || "-"}</td>
                   <td className="px-6 py-4 text-gray-600 dark:text-gray-400">{page.state?.abbreviation || "-"}</td>
+                  <td className="px-6 py-4 text-gray-600 dark:text-gray-400">{page.city?.name || "-"}</td>
+                  <td className="px-6 py-4 text-gray-600 dark:text-gray-400">{page.modifier?.name || "-"}</td>
                   <td className="px-6 py-4">
                     <Badge color={page.jobCount > 0 ? "green" : "red"}>{page.jobCount}</Badge>
                   </td>
                   <td className="px-6 py-4">
                     <Badge color={page.indexable ? "green" : "gray"}>{page.indexable ? "Yes" : "No"}</Badge>
                   </td>
+                  <td className="px-6 py-4 text-gray-600 dark:text-gray-400">{fmtDate(page.createdAt)}</td>
+                  <td className="px-6 py-4 text-gray-600 dark:text-gray-400">{fmtDate(page.updatedAt)}</td>
                 </tr>
               ))
             )}

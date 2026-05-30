@@ -66,16 +66,23 @@ export interface HealthDetailJob {
   expiresAt?: string | null;
   salaryRangeStart?: number;
   jobDescription?: string | null;
+  affiliateId?: string | null;
 }
 
 export interface HealthDetailSeoPage {
   id: string;
   slug: string;
   title: string;
+  h1: string;
+  metaDescription: string;
   jobCount: number;
   indexable: boolean;
+  createdAt: string;
+  updatedAt: string;
   occupation: { name: string } | null;
   state: { name: string; abbreviation: string } | null;
+  city: { name: string } | null;
+  modifier: { name: string; slug: string } | null;
 }
 
 export interface HealthDetailResponse {
