@@ -45,4 +45,47 @@ export interface MetricCard {
   subtitle?: string;
   color: "green" | "yellow" | "red" | "blue";
   icon: string;
+  link?: string;
 }
+
+export interface Pagination {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
+export interface HealthDetailJob {
+  id: string;
+  title: string;
+  companyName: string | null;
+  occupation: { name: string } | null;
+  locationCity: string | null;
+  locationState: string | null;
+  datePosted?: string;
+  expiresAt?: string | null;
+  salaryRangeStart?: number;
+  jobDescription?: string | null;
+}
+
+export interface HealthDetailSeoPage {
+  id: string;
+  slug: string;
+  title: string;
+  jobCount: number;
+  indexable: boolean;
+  occupation: { name: string } | null;
+  state: { name: string; abbreviation: string } | null;
+}
+
+export interface HealthDetailResponse {
+  success: boolean;
+  data: HealthDetailJob[] | HealthDetailSeoPage[];
+  pagination: Pagination;
+}
+
+export type SeoHealthMetric =
+  | "active-jobs"
+  | "expired-7d"
+  | "quality-issues"
+  | "seo-pages";

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import type { MetricCard } from "@/types/seo-health";
 
 interface HealthMetricsCardsProps {
@@ -10,29 +11,28 @@ interface HealthMetricsCardsProps {
   seoPagesWithZeroJobs: number;
 }
 
-const colorMap: Record<string, { bg: string; text: string; iconBg: string }> =
-  {
-    green: {
-      bg: "bg-green-50 dark:bg-green-500/10",
-      text: "text-green-700 dark:text-green-400",
-      iconBg: "bg-green-100 dark:bg-green-500/20",
-    },
-    yellow: {
-      bg: "bg-yellow-50 dark:bg-yellow-500/10",
-      text: "text-yellow-700 dark:text-yellow-400",
-      iconBg: "bg-yellow-100 dark:bg-yellow-500/20",
-    },
-    red: {
-      bg: "bg-red-50 dark:bg-red-500/10",
-      text: "text-red-700 dark:text-red-400",
-      iconBg: "bg-red-100 dark:bg-red-500/20",
-    },
-    blue: {
-      bg: "bg-blue-50 dark:bg-blue-500/10",
-      text: "text-blue-700 dark:text-blue-400",
-      iconBg: "bg-blue-100 dark:bg-blue-500/20",
-    },
-  };
+const colorMap: Record<string, { bg: string; text: string; iconBg: string }> = {
+  green: {
+    bg: "bg-green-50 dark:bg-green-500/10",
+    text: "text-green-700 dark:text-green-400",
+    iconBg: "bg-green-100 dark:bg-green-500/20",
+  },
+  yellow: {
+    bg: "bg-yellow-50 dark:bg-yellow-500/10",
+    text: "text-yellow-700 dark:text-yellow-400",
+    iconBg: "bg-yellow-100 dark:bg-yellow-500/20",
+  },
+  red: {
+    bg: "bg-red-50 dark:bg-red-500/10",
+    text: "text-red-700 dark:text-red-400",
+    iconBg: "bg-red-100 dark:bg-red-500/20",
+  },
+  blue: {
+    bg: "bg-blue-50 dark:bg-blue-500/10",
+    text: "text-blue-700 dark:text-blue-400",
+    iconBg: "bg-blue-100 dark:bg-blue-500/20",
+  },
+};
 
 const icons: Record<string, string> = {
   green: "💼",
@@ -55,6 +55,7 @@ export default function HealthMetricsCards({
       subtitle: "Published & not expired",
       color: "green",
       icon: icons.green,
+      link: "/admin/seo-health/active-jobs",
     },
     {
       title: "Expired (7d)",
@@ -62,6 +63,7 @@ export default function HealthMetricsCards({
       subtitle: "Expired in last 7 days",
       color: "yellow",
       icon: icons.yellow,
+      link: "/admin/seo-health/expired-7d",
     },
     {
       title: "Quality Issues",
@@ -69,6 +71,7 @@ export default function HealthMetricsCards({
       subtitle: "Jobs missing critical fields",
       color: "red",
       icon: icons.red,
+      link: "/admin/seo-health/quality-issues",
     },
     {
       title: "SEO Pages",
@@ -76,6 +79,7 @@ export default function HealthMetricsCards({
       subtitle: "No Active Jobs / Total",
       color: "blue",
       icon: icons.blue,
+      link: "/admin/seo-health/seo-pages?filter=no-active-jobs",
     },
   ];
 
@@ -83,10 +87,9 @@ export default function HealthMetricsCards({
     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
       {cards.map((card) => {
         const c = colorMap[card.color];
-        return (
+        const content = (
           <div
-            key={card.title}
-            className={`rounded-xl border border-gray-200 p-5 dark:border-gray-700 ${c.bg}`}
+            className={`rounded-xl border border-gray-200 p-5 transition-shadow hover:shadow-md dark:border-gray-700 ${c.bg}`}
           >
             <div className="flex items-start justify-between">
               <div>
@@ -110,6 +113,16 @@ export default function HealthMetricsCards({
             </div>
           </div>
         );
+
+        if (card.link) {
+          return (
+            <Link key={card.title} href={card.link}>
+              {content}
+            </Link>
+          );
+        }
+
+        return <div key={card.title}>{content}</div>;
       })}
     </div>
   );
