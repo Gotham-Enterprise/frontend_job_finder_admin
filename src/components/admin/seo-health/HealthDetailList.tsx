@@ -226,6 +226,9 @@ function StatusCell({ metric, job }: { metric: string; job: HealthDetailJob }) {
   if (metric === "expired-7d") {
     return <Badge color="yellow">Expired</Badge>;
   }
+  if (metric === "expired-but-active") {
+    return <Badge color="red">Expired</Badge>;
+  }
   if (metric === "quality-issues") {
     const reasons: string[] = [];
     if (!job.jobDescription) reasons.push("No description");
