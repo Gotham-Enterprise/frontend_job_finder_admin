@@ -94,7 +94,6 @@ export interface HealthDetailResponse {
 
 export type SeoHealthMetric =
   | "active-jobs"
-  | "expired-7d"
-  | "expired-but-active"
+  | "expired-jobs"
   | "quality-issues"
   | "seo-pages";

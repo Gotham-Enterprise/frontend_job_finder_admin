@@ -17,13 +17,14 @@ class SeoHealthAPI {
 
   async getHealthDetail(
     metric: SeoHealthMetric,
-    params: { page?: number; limit?: number; issue?: string; filter?: string } = {}
+    params: { page?: number; limit?: number; issue?: string; filter?: string; days?: number } = {}
   ): Promise<HealthDetailResponse> {
     const query = new URLSearchParams();
     if (params.page) query.set("page", String(params.page));
     if (params.limit) query.set("limit", String(params.limit));
     if (params.issue) query.set("issue", params.issue);
     if (params.filter) query.set("filter", params.filter);
+    if (params.days) query.set("days", String(params.days));
     const qs = query.toString();
     return apiGet<HealthDetailResponse>(
       `/api/admin/seo/health/${metric}${qs ? `?${qs}` : ""}`

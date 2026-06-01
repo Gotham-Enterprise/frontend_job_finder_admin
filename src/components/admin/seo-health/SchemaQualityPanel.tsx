@@ -54,10 +54,10 @@ export default function SchemaQualityPanel({
       description: "Remote jobs (need TELECOMMUTE schema)",
     },
     {
-      label: "Expired but still active",
+      label: "Expired Jobs",
       count: expiredButActive,
-      severity: expiredButActive > 0 ? "error" : "info",
-      description: "past expiresAt but still isPublished",
+      severity: expiredButActive > 0 ? "warning" : "info",
+      description: "Jobs that are already expired",
     },
   ];
 
@@ -100,13 +100,13 @@ export default function SchemaQualityPanel({
           <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
             {rows.map((row) => {
               const isExpiredRow =
-                row.label === "Expired but still active" && row.count > 0;
+                row.label === "Expired Jobs" && row.count > 0;
               return (
                 <tr
                   key={row.label}
                   onClick={
                     isExpiredRow
-                      ? () => router.push("/admin/seo-health/expired-but-active")
+                      ? () => router.push("/admin/seo-health/expired-jobs")
                       : undefined
                   }
                   onKeyDown={
@@ -114,7 +114,7 @@ export default function SchemaQualityPanel({
                       ? (e) => {
                         if (e.key === "Enter" || e.key === " ") {
                           e.preventDefault();
-                          router.push("/admin/seo-health/expired-but-active");
+                          router.push("/admin/seo-health/expired-jobs");
                         }
                       }
                       : undefined
@@ -122,8 +122,8 @@ export default function SchemaQualityPanel({
                   tabIndex={isExpiredRow ? 0 : undefined}
                   role={isExpiredRow ? "link" : undefined}
                   className={`hover:bg-gray-50 dark:hover:bg-gray-700/50 ${isExpiredRow
-                      ? "cursor-pointer"
-                      : ""
+                    ? "cursor-pointer"
+                    : ""
                     }`}
                 >
                   <td className="px-6 py-4">
