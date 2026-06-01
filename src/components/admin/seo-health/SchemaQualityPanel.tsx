@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import Badge from "@/components/ui/badge/Badge";
 
 interface SchemaQualityPanelProps {
@@ -26,6 +27,7 @@ export default function SchemaQualityPanel({
   expiredButActive,
   totalActive,
 }: SchemaQualityPanelProps) {
+  const router = useRouter();
   const rows: SchemaRow[] = [
     {
       label: "Missing hiringOrganization.name",
@@ -96,37 +98,61 @@ export default function SchemaQualityPanel({
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-            {rows.map((row) => (
-              <tr
-                key={row.label}
-                className="hover:bg-gray-50 dark:hover:bg-gray-700/50"
-              >
-                <td className="px-6 py-4">
-                  <div>
-                    <p className="font-medium text-gray-900 dark:text-white">
-                      {row.label}
-                    </p>
-                    <p className="mt-0.5 text-xs text-gray-500">
-                      {row.description}
-                    </p>
-                  </div>
-                </td>
-                <td className="px-6 py-4 text-gray-600 dark:text-gray-400">
-                  {row.count.toLocaleString()}
-                </td>
-                <td className="px-6 py-4">
-                  <Badge variant="light" color={badgeColor(row.severity)}>
-                    {row.count === 0
-                      ? "OK"
-                      : row.severity === "error"
-                        ? "Critical"
-                        : row.severity === "warning"
-                          ? "Warning"
-                          : "Info"}
-                  </Badge>
-                </td>
-              </tr>
-            ))}
+            {rows.map((row) => {
+              const isExpiredRow =
+                row.label === "Expired but still active" && row.count > 0;
+              return (
+                <tr
+                  key={row.label}
+                  onClick={
+                    isExpiredRow
+                      ? () => router.push("/admin/seo-health/expired-but-active")
+                      : undefined
+                  }
+                  onKeyDown={
+                    isExpiredRow
+                      ? (e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          router.push("/admin/seo-health/expired-but-active");
+                        }
+                      }
+                      : undefined
+                  }
+                  tabIndex={isExpiredRow ? 0 : undefined}
+                  role={isExpiredRow ? "link" : undefined}
+                  className={`hover:bg-gray-50 dark:hover:bg-gray-700/50 ${isExpiredRow
+                      ? "cursor-pointer"
+                      : ""
+                    }`}
+                >
+                  <td className="px-6 py-4">
+                    <div>
+                      <p className="font-medium text-gray-900 dark:text-white">
+                        {row.label}
+                      </p>
+                      <p className="mt-0.5 text-xs text-gray-500">
+                        {row.description}
+                      </p>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-gray-600 dark:text-gray-400">
+                    {row.count.toLocaleString()}
+                  </td>
+                  <td className="px-6 py-4">
+                    <Badge variant="light" color={badgeColor(row.severity)}>
+                      {row.count === 0
+                        ? "OK"
+                        : row.severity === "error"
+                          ? "Critical"
+                          : row.severity === "warning"
+                            ? "Warning"
+                            : "Info"}
+                    </Badge>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

@@ -6,6 +6,7 @@ import type { MetricCard } from "@/types/seo-health";
 interface HealthMetricsCardsProps {
   activeJobs: number;
   expired7d: number;
+  expiredButActive: number;
   qualityIssuesTotal: number;
   seoPagesTotal: number;
   seoPagesWithZeroJobs: number;
@@ -44,6 +45,7 @@ const icons: Record<string, string> = {
 export default function HealthMetricsCards({
   activeJobs,
   expired7d,
+  expiredButActive,
   qualityIssuesTotal,
   seoPagesTotal,
   seoPagesWithZeroJobs,
@@ -64,6 +66,14 @@ export default function HealthMetricsCards({
       color: "yellow",
       icon: icons.yellow,
       link: "/admin/seo-health/expired-7d",
+    },
+    {
+      title: "Expired but Active",
+      value: expiredButActive.toLocaleString(),
+      subtitle: "Past expiresAt, still published",
+      color: "red",
+      icon: icons.red,
+      link: "/admin/seo-health/expired-but-active",
     },
     {
       title: "Quality Issues",
