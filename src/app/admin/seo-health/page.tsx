@@ -105,6 +105,7 @@ export default function SeoHealthPage() {
         <HealthMetricsCards
           activeJobs={d.activeJobs}
           expired7d={d.expiredJobs.last7Days}
+          expiredButActive={schema?.data.expiredButActive ?? 0}
           qualityIssuesTotal={qualityIssuesTotal}
           seoPagesTotal={d.seoPages.total}
           seoPagesWithZeroJobs={d.seoPages.withZeroJobs}
