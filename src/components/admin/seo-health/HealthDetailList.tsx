@@ -58,11 +58,21 @@ const qualityFilters = [
   { key: "no-salary", label: "No Salary" },
 ];
 
+const expiredFilters = [
+  { days: 0, label: "All" },
+  { days: 7, label: "Last 7 Days" },
+  { days: 30, label: "Last 30 Days" },
+  { days: 60, label: "Last 2 Months" },
+];
+
 export default function HealthDetailList({ metric, title, description, issue, filter }: HealthDetailListProps) {
   const [page, setPage] = useState(1);
   const [activeIssue, setActiveIssue] = useState(issue || "");
+  const [activeDays, setActiveDays] = useState(0);
+  const [customDays, setCustomDays] = useState("");
   const resolvedIssue = metric === "quality-issues" ? (activeIssue || undefined) : issue;
-  const { data, isLoading, error } = useHealthDetail(metric, { page, issue: resolvedIssue, filter });
+  const resolvedDays = metric === "expired-jobs" ? (activeDays || undefined) : undefined;
+  const { data, isLoading, error } = useHealthDetail(metric, { page, issue: resolvedIssue, filter, days: resolvedDays });
 
   if (isLoading) {
     return (
@@ -116,6 +126,58 @@ export default function HealthDetailList({ metric, title, description, issue, fi
               {f.label}
             </button>
           ))}
+        </div>
+      )}
+
+      {metric === "expired-jobs" && (
+        <div className="mb-4 flex flex-wrap items-center gap-2">
+          {expiredFilters.map((f) => (
+            <button
+              key={f.days}
+              onClick={() => {
+                setActiveDays(f.days);
+                setCustomDays("");
+                setPage(1);
+              }}
+              className={`rounded-lg border px-4 py-2 text-sm font-medium transition-colors ${activeDays === f.days && !customDays
+                  ? "border-blue-500 bg-blue-50 text-blue-700 dark:border-blue-400 dark:bg-blue-500/10 dark:text-blue-400"
+                  : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                }`}
+            >
+              {f.label}
+            </button>
+          ))}
+          <div className="flex items-center gap-1">
+            <input
+              type="number"
+              min="1"
+              placeholder="Custom days"
+              value={customDays}
+              onChange={(e) => setCustomDays(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  const days = parseInt(customDays);
+                  if (days > 0) {
+                    setActiveDays(days);
+                    setPage(1);
+                  }
+                }
+              }}
+              className="w-28 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 placeholder-gray-400 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300"
+            />
+            <button
+              onClick={() => {
+                const days = parseInt(customDays);
+                if (days > 0) {
+                  setActiveDays(days);
+                  setPage(1);
+                }
+              }}
+              className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+            >
+              Go
+            </button>
+          </div>
         </div>
       )}
 
@@ -222,8 +284,8 @@ function StatusCell({ metric, job }: { metric: string; job: HealthDetailJob }) {
     }
     return <Badge color="green">Active</Badge>;
   }
-  if (metric === "expired-7d") {
-    return <Badge color="yellow">Expired</Badge>;
+  if (metric === "expired-jobs") {
+    return <Badge color="red">Expired</Badge>;
   }
   if (metric === "expired-but-active") {
     return <Badge color="red">Expired</Badge>;
