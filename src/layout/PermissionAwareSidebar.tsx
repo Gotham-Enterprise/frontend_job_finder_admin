@@ -19,7 +19,8 @@ import {
   TaskIcon,
   IdCardIcon,
   HandShake,
-  MailIcon
+  MailIcon,
+  ShootingStarIcon,
 } from "../icons/index";
 import { BriefcaseIcon, CareerLadderIcon, TicketIcon, BlogIcon, CouponIcon } from "../components/ui/icons/index";
 
@@ -56,6 +57,12 @@ const navItems: NavItem[] = [
     path: "/",
     isAccessible: true, // Dashboard is always accessible
     //subItems: [{ name: "Ecommerce", path: "/", pro: false }],
+  },
+  {
+    icon: <ShootingStarIcon />,
+    name: "SEO Health",
+    path: "/admin/seo-health",
+    isAccessible: true,
   },
   {
     icon: <GroupIcon />,
