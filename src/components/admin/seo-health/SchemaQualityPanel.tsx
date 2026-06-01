@@ -54,10 +54,10 @@ export default function SchemaQualityPanel({
       description: "Remote jobs (need TELECOMMUTE schema)",
     },
     {
-      label: "Expired but still active",
+      label: "Expired Jobs",
       count: expiredButActive,
       severity: expiredButActive > 0 ? "error" : "info",
-      description: "past expiresAt but still isPublished",
+      description: "Jobs that past already expires",
     },
   ];
 
@@ -100,23 +100,23 @@ export default function SchemaQualityPanel({
           <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
             {rows.map((row) => {
               const isExpiredRow =
-                row.label === "Expired but still active" && row.count > 0;
+                row.label === "Expired Jobs" && row.count > 0;
               return (
                 <tr
                   key={row.label}
                   onClick={
                     isExpiredRow
-                      ? () => router.push("/admin/seo-health/expired-but-active")
+                      ? () => router.push("/admin/seo-health/expired-jobs")
                       : undefined
                   }
                   onKeyDown={
                     isExpiredRow
                       ? (e) => {
-                        if (e.key === "Enter" || e.key === " ") {
-                          e.preventDefault();
-                          router.push("/admin/seo-health/expired-but-active");
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            router.push("/admin/seo-health/expired-jobs");
+                          }
                         }
-                      }
                       : undefined
                   }
                   tabIndex={isExpiredRow ? 0 : undefined}

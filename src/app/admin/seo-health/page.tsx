@@ -104,8 +104,7 @@ export default function SeoHealthPage() {
       <div className="mb-6">
         <HealthMetricsCards
           activeJobs={d.activeJobs}
-          expired7d={d.expiredJobs.last7Days}
-          expiredButActive={schema?.data.expiredButActive ?? 0}
+          expiredJobs={schema?.data.expiredButActive ?? 0}
           qualityIssuesTotal={qualityIssuesTotal}
           seoPagesTotal={d.seoPages.total}
           seoPagesWithZeroJobs={d.seoPages.withZeroJobs}

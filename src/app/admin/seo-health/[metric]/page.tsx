@@ -10,13 +10,9 @@ const metricConfig: Record<
     title: "Active Jobs",
     description: "Published jobs that are not expired",
   },
-  "expired-7d": {
-    title: "Expired Jobs (Last 7 Days)",
-    description: "Jobs that expired in the last 7 days",
-  },
-  "expired-but-active": {
-    title: "Expired but Still Active",
-    description: "Published jobs past their expiration date",
+  "expired-jobs": {
+    title: "Expired Jobs",
+    description: "Jobs that past already expires",
   },
   "quality-issues": {
     title: "Quality Issues",
@@ -40,8 +36,7 @@ export default async function SeoHealthMetricPage({
 
   const validMetrics: SeoHealthMetric[] = [
     "active-jobs",
-    "expired-7d",
-    "expired-but-active",
+    "expired-jobs",
     "quality-issues",
     "seo-pages",
   ];
