@@ -112,20 +112,19 @@ export default function SchemaQualityPanel({
                   onKeyDown={
                     isExpiredRow
                       ? (e) => {
-                          if (e.key === "Enter" || e.key === " ") {
-                            e.preventDefault();
-                            router.push("/admin/seo-health/expired-but-active");
-                          }
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          router.push("/admin/seo-health/expired-but-active");
                         }
+                      }
                       : undefined
                   }
                   tabIndex={isExpiredRow ? 0 : undefined}
                   role={isExpiredRow ? "link" : undefined}
-                  className={`hover:bg-gray-50 dark:hover:bg-gray-700/50 ${
-                    isExpiredRow
+                  className={`hover:bg-gray-50 dark:hover:bg-gray-700/50 ${isExpiredRow
                       ? "cursor-pointer"
                       : ""
-                  }`}
+                    }`}
                 >
                   <td className="px-6 py-4">
                     <div>
