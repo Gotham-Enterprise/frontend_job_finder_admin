@@ -60,7 +60,7 @@ export default function HealthMetricsCards({
     {
       title: "Expired Jobs",
       value: expiredJobs.toLocaleString(),
-      subtitle: "Jobs that past already expires",
+      subtitle: "Jobs that are already expired",
       color: "red",
       icon: icons.red,
       link: "/admin/seo-health/expired-jobs",

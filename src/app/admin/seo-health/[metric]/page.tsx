@@ -12,7 +12,7 @@ const metricConfig: Record<
   },
   "expired-jobs": {
     title: "Expired Jobs",
-    description: "Jobs that past already expires",
+    description: "Jobs that are already expired",
   },
   "quality-issues": {
     title: "Quality Issues",
