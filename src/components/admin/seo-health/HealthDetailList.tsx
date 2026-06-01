@@ -119,8 +119,8 @@ export default function HealthDetailList({ metric, title, description, issue, fi
                 setPage(1);
               }}
               className={`rounded-lg border px-4 py-2 text-sm font-medium transition-colors ${activeIssue === f.key
-                  ? "border-blue-500 bg-blue-50 text-blue-700 dark:border-blue-400 dark:bg-blue-500/10 dark:text-blue-400"
-                  : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                ? "border-blue-500 bg-blue-50 text-blue-700 dark:border-blue-400 dark:bg-blue-500/10 dark:text-blue-400"
+                : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
                 }`}
             >
               {f.label}
@@ -140,8 +140,8 @@ export default function HealthDetailList({ metric, title, description, issue, fi
                 setPage(1);
               }}
               className={`rounded-lg border px-4 py-2 text-sm font-medium transition-colors ${activeDays === f.days && !customDays
-                  ? "border-blue-500 bg-blue-50 text-blue-700 dark:border-blue-400 dark:bg-blue-500/10 dark:text-blue-400"
-                  : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                ? "border-blue-500 bg-blue-50 text-blue-700 dark:border-blue-400 dark:bg-blue-500/10 dark:text-blue-400"
+                : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
                 }`}
             >
               {f.label}
@@ -285,6 +285,9 @@ function StatusCell({ metric, job }: { metric: string; job: HealthDetailJob }) {
     return <Badge color="green">Active</Badge>;
   }
   if (metric === "expired-jobs") {
+    return <Badge color="red">Expired</Badge>;
+  }
+  if (metric === "expired-but-active") {
     return <Badge color="red">Expired</Badge>;
   }
   if (metric === "expired-but-active") {
