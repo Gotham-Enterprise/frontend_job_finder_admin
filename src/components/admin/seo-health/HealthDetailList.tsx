@@ -41,7 +41,7 @@ function jobFrontendUrl(job: HealthDetailJob): string {
   return `${FRONTEND_URL}/find-jobs/${occupationSlug}/${job.id}/${titleSlug}`;
 }
 
-function fmtDate(d: string): string {
+function fmtDate(d: string | null | undefined): string {
   if (!d) return "-";
   return new Date(d).toLocaleDateString("en-US", {
     month: "short",
@@ -59,20 +59,21 @@ const qualityFilters = [
 ];
 
 const expiredFilters = [
-  { days: 0, label: "All" },
-  { days: 7, label: "Last 7 Days" },
-  { days: 30, label: "Last 30 Days" },
-  { days: 60, label: "Last 2 Months" },
+  { daysFrom: undefined, daysTo: undefined, label: "All" },
+  { daysFrom: 7, daysTo: 30, label: "Last 7 Days" },
+  { daysFrom: 30, daysTo: 60, label: "Last 30 Days" },
+  { daysFrom: 60, daysTo: undefined, label: "Last 2 Months" },
 ];
 
 export default function HealthDetailList({ metric, title, description, issue, filter }: HealthDetailListProps) {
   const [page, setPage] = useState(1);
   const [activeIssue, setActiveIssue] = useState(issue || "");
-  const [activeDays, setActiveDays] = useState(0);
+  const [activeFilter, setActiveFilter] = useState<{ daysFrom?: number; daysTo?: number }>({});
   const [customDays, setCustomDays] = useState("");
   const resolvedIssue = metric === "quality-issues" ? (activeIssue || undefined) : issue;
-  const resolvedDays = metric === "expired-jobs" ? (activeDays || undefined) : undefined;
-  const { data, isLoading, error } = useHealthDetail(metric, { page, issue: resolvedIssue, filter, days: resolvedDays });
+  const resolvedDaysFrom = metric === "expired-jobs" ? activeFilter.daysFrom : undefined;
+  const resolvedDaysTo = metric === "expired-jobs" ? activeFilter.daysTo : undefined;
+  const { data, isLoading, error } = useHealthDetail(metric, { page, issue: resolvedIssue, filter, daysFrom: resolvedDaysFrom, daysTo: resolvedDaysTo });
 
   if (isLoading) {
     return (
@@ -133,13 +134,13 @@ export default function HealthDetailList({ metric, title, description, issue, fi
         <div className="mb-4 flex flex-wrap items-center gap-2">
           {expiredFilters.map((f) => (
             <button
-              key={f.days}
+              key={f.label}
               onClick={() => {
-                setActiveDays(f.days);
+                setActiveFilter({ daysFrom: f.daysFrom, daysTo: f.daysTo });
                 setCustomDays("");
                 setPage(1);
               }}
-              className={`rounded-lg border px-4 py-2 text-sm font-medium transition-colors ${activeDays === f.days && !customDays
+              className={`rounded-lg border px-4 py-2 text-sm font-medium transition-colors ${activeFilter.daysFrom === f.daysFrom && activeFilter.daysTo === f.daysTo && !customDays
                 ? "border-blue-500 bg-blue-50 text-blue-700 dark:border-blue-400 dark:bg-blue-500/10 dark:text-blue-400"
                 : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
                 }`}
@@ -158,7 +159,7 @@ export default function HealthDetailList({ metric, title, description, issue, fi
                 if (e.key === "Enter") {
                   const days = parseInt(customDays);
                   if (days > 0) {
-                    setActiveDays(days);
+                    setActiveFilter({ daysFrom: days, daysTo: undefined });
                     setPage(1);
                   }
                 }
@@ -169,7 +170,7 @@ export default function HealthDetailList({ metric, title, description, issue, fi
               onClick={() => {
                 const days = parseInt(customDays);
                 if (days > 0) {
-                  setActiveDays(days);
+                  setActiveFilter({ daysFrom: days, daysTo: undefined });
                   setPage(1);
                 }
               }}
@@ -224,7 +225,7 @@ function JobTable({ metric, items }: { metric: string; items: HealthDetailJob[] 
               <th className="px-6 py-3 font-medium text-gray-500 dark:text-gray-400">Affiliate</th>
               <th className="px-6 py-3 font-medium text-gray-500 dark:text-gray-400">Occupation</th>
               <th className="px-6 py-3 font-medium text-gray-500 dark:text-gray-400">Location</th>
-              <th className="px-6 py-3 font-medium text-gray-500 dark:text-gray-400">Status</th>
+              <th className="px-6 py-3 font-medium text-gray-500 dark:text-gray-400">{metric === "expired-jobs" ? "Date" : "Status"}</th>
               <th className="px-6 py-3 font-medium text-gray-500 dark:text-gray-400">View</th>
             </tr>
           </thead>
@@ -240,13 +241,13 @@ function JobTable({ metric, items }: { metric: string; items: HealthDetailJob[] 
                 <tr key={job.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                   <td className="max-w-xs truncate px-6 py-4 font-medium text-gray-900 dark:text-white">{job.title}</td>
                   <td className="px-6 py-4 text-gray-600 dark:text-gray-400">{job.companyName || "-"}</td>
-                  <td className="px-6 py-4">
-                    {job.affiliateId ? (
-                      <Badge color="yellow">Affiliate</Badge>
-                    ) : (
-                      <Badge color="gray">Organic</Badge>
-                    )}
-                  </td>
+                    <td className="px-6 py-4">
+                      {job.affiliateId ? (
+                        <Badge color="yellow">Yes</Badge>
+                      ) : (
+                        <Badge color="gray">No</Badge>
+                      )}
+                    </td>
                   <td className="px-6 py-4 text-gray-600 dark:text-gray-400">{job.occupation?.name || "-"}</td>
                   <td className="px-6 py-4 text-gray-600 dark:text-gray-400">
                     {[job.locationCity, job.locationState].filter(Boolean).join(", ") || "-"}
@@ -285,7 +286,7 @@ function StatusCell({ metric, job }: { metric: string; job: HealthDetailJob }) {
     return <Badge color="green">Active</Badge>;
   }
   if (metric === "expired-jobs") {
-    return <Badge color="red">Expired</Badge>;
+    return <span className="text-gray-600 dark:text-gray-400">{fmtDate(job.expiresAt || null)}</span>;
   }
   if (metric === "expired-but-active") {
     return <Badge color="red">Expired</Badge>;

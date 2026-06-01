@@ -22,7 +22,7 @@ export function useSchemaQuality() {
 
 export function useHealthDetail(
   metric: SeoHealthMetric,
-  params: { page?: number; issue?: string; filter?: string; days?: number } = {}
+  params: { page?: number; issue?: string; filter?: string; daysFrom?: number; daysTo?: number } = {}
 ) {
   return useQuery({
     queryKey: ["seoHealthDetail", metric, params],
