@@ -56,7 +56,7 @@ export default function SchemaQualityPanel({
     {
       label: "Expired Jobs",
       count: expiredButActive,
-      severity: expiredButActive > 0 ? "error" : "info",
+      severity: expiredButActive > 0 ? "warning" : "info",
       description: "Jobs that past already expires",
     },
   ];
