@@ -36,9 +36,10 @@ const AuthInitializer: React.FC<{ children: React.ReactNode }> = ({ children }) 
               console.log('AuthInitializer: Setting permissions in Redux');
               dispatch(setPermissions(user.adminRoleAccess.rolePermissions));
               
-              // Log each permission for debugging
               user.adminRoleAccess.rolePermissions.forEach(p => {
-                console.log('Permission:', p.permission.name, 'view:', p.view, 'add:', p.add, 'edit:', p.edit, 'delete:', p.delete);
+                if (p.permission) {
+                  console.log('Permission:', p.permission.name, 'view:', p.view, 'add:', p.add, 'edit:', p.edit, 'delete:', p.delete);
+                }
               });
             }
             
