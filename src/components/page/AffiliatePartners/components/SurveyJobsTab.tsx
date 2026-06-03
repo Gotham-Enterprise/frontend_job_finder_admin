@@ -358,15 +358,13 @@ export default function SurveyJobsTab() {
                       <button
                         onClick={() => handleToggle(job)}
                         disabled={toggleMutation.isPending}
-                        className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus:outline-none ${
-                          job.isPublished ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'
-                        } disabled:opacity-50`}
+                        className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus:outline-none ${job.isPublished ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'
+                          } disabled:opacity-50`}
                         title={job.isPublished ? 'Unpublish' : 'Publish'}
                       >
                         <span
-                          className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition-transform ${
-                            job.isPublished ? 'translate-x-4' : 'translate-x-0'
-                          }`}
+                          className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition-transform ${job.isPublished ? 'translate-x-4' : 'translate-x-0'
+                            }`}
                         />
                       </button>
                     </td>
