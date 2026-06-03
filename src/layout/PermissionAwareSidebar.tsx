@@ -83,9 +83,13 @@ const navItems: NavItem[] = [
   },
   {
     icon: <IdCardIcon />,
-    name: "Supervisors",
+    name: "Find A Supervisor",
     path: "/admin/supervisors",
     isAccessible: true,
+    subItems: [
+      { name: "Supervisor", path: "/admin/supervisors" },
+      { name: "Supervisee", path: "/admin/supervisees" },
+    ],
   },
    {
     icon: <PieChartIcon />,
@@ -407,6 +411,11 @@ const AppSidebar: React.FC = () => {
 
                       // If we have permissions loaded but no specific permission requirement, show the item
                       if (permissions && !subItem.requiredAction) {
+                        return true;
+                      }
+
+                      // Always show subitems for explicitly accessible menu groups
+                      if (nav.isAccessible && !subItem.requiredAction) {
                         return true;
                       }
 

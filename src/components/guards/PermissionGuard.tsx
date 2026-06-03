@@ -76,8 +76,8 @@ const getPermissionForPath = (pathname: string): { permission: string; action: '
     return null; // Dashboard is always accessible
   }
 
-  // Supervisors are always accessible (no backend RBAC module yet for Find Supervisor)
-  if (pathname.startsWith('/admin/supervisors')) {
+  // Supervisors / supervisees are always accessible (no backend RBAC module yet for Find Supervisor)
+  if (pathname.startsWith('/admin/supervisors') || pathname.startsWith('/admin/supervisees')) {
     return null;
   }
   
