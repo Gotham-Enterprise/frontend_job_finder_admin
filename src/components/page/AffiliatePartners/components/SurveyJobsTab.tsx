@@ -1,13 +1,15 @@
 'use client'
 
 import React, { useState, useRef } from 'react'
-import { Plus, Pencil, Trash2, Globe, Eye, Search, ArrowUpDown, ChevronDown } from 'lucide-react'
+import { autoUpdate, flip, FloatingPortal, offset, shift, useFloating } from '@floating-ui/react'
+import { Plus, Pencil, Trash2, Globe, Eye, Search, ArrowUpDown, ChevronDown, Info, MousePointerClick } from 'lucide-react'
 import { useSurveyJobs, useToggleSurveyJob, useDeleteSurveyJob } from '@/services/hooks/useSurveyJobs'
 import { SurveyJobSortBy } from '@/services/api/surveyJobs'
 import type { SurveyJob } from '@/services/api/surveyJobs'
 import Pagination from '@/components/tables/Pagination'
 import CreateSurveyJobModal from './CreateSurveyJobModal'
 import ConfirmationDialog from '@/components/ui/ConfirmationDialog'
+import { formatDate } from '@/services/utils/dateUtils'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -27,9 +29,60 @@ const SORT_OPTIONS: { value: SurveyJobSortBy; label: string }[] = [
   { value: 'date_asc', label: 'Oldest first' },
   { value: 'views_desc', label: 'Views: High → Low' },
   { value: 'views_asc', label: 'Views: Low → High' },
+  { value: 'clicks_desc', label: 'Clicks: High → Low' },
+  { value: 'clicks_asc', label: 'Clicks: Low → High' },
 ]
 
+const CLICK_COUNT_TOOLTIP =
+  'Count of users who clicked the job and were redirected to the affiliate partner\'s site.'
+
 const PAGE_SIZE = 15
+
+function isExpired(expiresAt: string | null): boolean {
+  if (!expiresAt) return false
+  return new Date(expiresAt) < new Date()
+}
+
+function ClickCountHeaderLabel() {
+  const [open, setOpen] = useState(false)
+
+  const { refs, floatingStyles } = useFloating({
+    open,
+    placement: 'top',
+    middleware: [offset(8), flip(), shift({ padding: 12 })],
+    whileElementsMounted: open ? autoUpdate : undefined,
+  })
+
+  return (
+    <span className="inline-flex items-center justify-end gap-1">
+      Click Count
+      <button
+        type="button"
+        ref={refs.setReference}
+        className="inline-flex cursor-help rounded text-gray-400 hover:text-gray-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 dark:hover:text-gray-300"
+        aria-label={CLICK_COUNT_TOOLTIP}
+        onMouseEnter={() => setOpen(true)}
+        onMouseLeave={() => setOpen(false)}
+        onFocus={() => setOpen(true)}
+        onBlur={() => setOpen(false)}
+      >
+        <Info className="h-3.5 w-3.5" />
+      </button>
+      {open && (
+        <FloatingPortal>
+          <div
+            ref={refs.setFloating}
+            role="tooltip"
+            style={floatingStyles}
+            className="z-[9999] w-56 rounded-md bg-gray-900 px-2.5 py-2 text-left text-xs font-normal text-white shadow-lg dark:bg-gray-700"
+          >
+            {CLICK_COUNT_TOOLTIP}
+          </div>
+        </FloatingPortal>
+      )}
+    </span>
+  )
+}
 
 export default function SurveyJobsTab() {
   const [page, setPage] = useState(1)
@@ -243,8 +296,14 @@ export default function SurveyJobsTab() {
                   <th className="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">
                     Work Type
                   </th>
+                  <th className="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">
+                    Expiration Date
+                  </th>
                   <th className="text-right px-4 py-3 font-medium text-gray-600 dark:text-gray-400">
                     Views
+                  </th>
+                  <th className="text-right px-4 py-3 font-medium text-gray-600 dark:text-gray-400">
+                    <ClickCountHeaderLabel />
                   </th>
                   <th className="text-center px-4 py-3 font-medium text-gray-600 dark:text-gray-400">
                     Published
@@ -272,25 +331,40 @@ export default function SurveyJobsTab() {
                     <td className="px-4 py-3 text-gray-600 dark:text-gray-400">
                       {job.workType ?? '—'}
                     </td>
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      <span
+                        className={
+                          isExpired(job.expiresAt)
+                            ? 'text-red-600 dark:text-red-400 font-medium'
+                            : 'text-gray-600 dark:text-gray-400'
+                        }
+                      >
+                        {formatDate(job.expiresAt, '—')}
+                      </span>
+                    </td>
                     <td className="px-4 py-3 text-right whitespace-nowrap">
                       <div className="inline-flex items-center gap-1 text-gray-600 dark:text-gray-400">
                         <Eye className="w-3.5 h-3.5" />
                         <span className="text-sm">{(job.viewsCount ?? 0).toLocaleString()}</span>
                       </div>
                     </td>
+                    <td className="px-4 py-3 text-right whitespace-nowrap">
+                      <div className="inline-flex items-center gap-1 text-gray-600 dark:text-gray-400">
+                        <MousePointerClick className="w-3.5 h-3.5" />
+                        <span className="text-sm">{(job.clicksCount ?? 0).toLocaleString()}</span>
+                      </div>
+                    </td>
                     <td className="px-4 py-3 text-center">
                       <button
                         onClick={() => handleToggle(job)}
                         disabled={toggleMutation.isPending}
-                        className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus:outline-none ${
-                          job.isPublished ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'
-                        } disabled:opacity-50`}
+                        className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus:outline-none ${job.isPublished ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'
+                          } disabled:opacity-50`}
                         title={job.isPublished ? 'Unpublish' : 'Publish'}
                       >
                         <span
-                          className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition-transform ${
-                            job.isPublished ? 'translate-x-4' : 'translate-x-0'
-                          }`}
+                          className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition-transform ${job.isPublished ? 'translate-x-4' : 'translate-x-0'
+                            }`}
                         />
                       </button>
                     </td>
