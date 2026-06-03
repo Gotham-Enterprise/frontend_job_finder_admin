@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useSidebar } from "../context/SidebarContext";
 import { useAuthPermissions } from "../hooks/useAuthPermissions";
 import { useUnlockRequestContext } from "../context/UnlockRequestContext";
+import { usePendingSupervisorContext } from "../context/PendingSupervisorContext";
 import { hasAnyModulePermission, hasPermission } from "../utils/permissionUtils";
 import { authUtils } from "../services/utils/authUtils";
 import SidebarSkeleton from "../components/common/SidebarSkeleton";
@@ -47,6 +48,8 @@ type NavItem = {
     | "blog"
     // | "forum"
     | "unlockRequest";
+  /** Drives a pending-count badge independent of permissionKey */
+  badgeType?: "supervisors";
   isAccessible?: boolean;
 };
 
@@ -90,9 +93,14 @@ const navItems: NavItem[] = [
   },
   {
     icon: <IdCardIcon />,
-    name: "Supervisors",
+    name: "Find A Supervisor",
     path: "/admin/supervisors",
     isAccessible: true,
+    badgeType: "supervisors",
+    subItems: [
+      { name: "Supervisor", path: "/admin/supervisors" },
+      { name: "Supervisee", path: "/admin/supervisees" },
+    ],
   },
    {
     icon: <PieChartIcon />,
@@ -196,6 +204,14 @@ const AppSidebar: React.FC = () => {
   } catch (error) {
     // Context not available, use default value
     console.debug("[Sidebar] UnlockRequestContext not available");
+  }
+
+  let pendingSupervisorCount = 0;
+  try {
+    const supervisorContext = usePendingSupervisorContext();
+    pendingSupervisorCount = supervisorContext.pendingCount;
+  } catch (error) {
+    console.debug("[Sidebar] PendingSupervisorContext not available");
   }
 
   const pathname = usePathname();
@@ -310,29 +326,67 @@ const AppSidebar: React.FC = () => {
             {nav.subItems ? (
               <button
                 onClick={() => submenuToggle(index, menuType)}
-                className={`menu-item group  ${
+                className={`menu-item group relative ${
                   openSubmenu?.type === menuType && openSubmenu?.index === index
                     ? "menu-item-active"
                     : "menu-item-inactive"
-                } cursor-pointer ${!isExpanded && !isHovered ? "lg:justify-center" : "lg:justify-start"}`}
+                } cursor-pointer ${!isExpanded && !isHovered ? "lg:justify-center" : "lg:justify-start"} ${
+                  nav.badgeType === "supervisors" && pendingSupervisorCount > 0
+                    ? "!bg-[#006D36]/10 dark:!bg-[#006D36]/20 border-l-4 !border-[#006D36]"
+                    : ""
+                }`}
               >
                 <span
-                  className={` ${
+                  className={`${
                     openSubmenu?.type === menuType && openSubmenu?.index === index
                       ? "menu-item-icon-active"
                       : "menu-item-icon-inactive"
-                  }`}
+                  } ${nav.badgeType === "supervisors" && pendingSupervisorCount > 0 ? "!text-[#006D36]" : ""}`}
                 >
                   {nav.icon}
                 </span>
-                {(isExpanded || isHovered || isMobileOpen) && <span className={`menu-item-text`}>{nav.name}</span>}
                 {(isExpanded || isHovered || isMobileOpen) && (
-                  <ChevronDownIcon
-                    className={`ml-auto w-5 h-5 transition-transform duration-200  ${
-                      openSubmenu?.type === menuType && openSubmenu?.index === index ? "rotate-180 text-brand-500" : ""
+                  <span
+                    className={`menu-item-text ${
+                      nav.badgeType === "supervisors" && pendingSupervisorCount > 0 ? "!text-[#006D36] !font-semibold" : ""
                     }`}
-                  />
+                  >
+                    {nav.name}
+                  </span>
                 )}
+                {(isExpanded || isHovered || isMobileOpen) && (
+                  <span className="ml-auto flex items-center gap-1.5">
+                    {nav.badgeType === "supervisors" && pendingSupervisorCount > 0 && (
+                      <span className="relative group/badge">
+                        <span className="bg-[#006D36] text-white text-xs font-bold rounded-full px-2 py-0.5 min-w-[24px] text-center cursor-default">
+                          {pendingSupervisorCount}
+                        </span>
+                        <span className="pointer-events-none absolute bottom-full right-0 mb-2 hidden group-hover/badge:block bg-gray-800 text-white text-xs rounded px-2 py-1 whitespace-nowrap z-50 shadow-lg">
+                          {pendingSupervisorCount} pending supervisor{pendingSupervisorCount !== 1 ? "s" : ""}
+                        </span>
+                      </span>
+                    )}
+                    <ChevronDownIcon
+                      className={`w-5 h-5 transition-transform duration-200 ${
+                        openSubmenu?.type === menuType && openSubmenu?.index === index ? "rotate-180 text-brand-500" : ""
+                      } ${nav.badgeType === "supervisors" && pendingSupervisorCount > 0 ? "!text-[#006D36]" : ""}`}
+                    />
+                  </span>
+                )}
+                {nav.badgeType === "supervisors" &&
+                  pendingSupervisorCount > 0 &&
+                  !isExpanded &&
+                  !isHovered &&
+                  !isMobileOpen && (
+                    <span className="absolute -top-1 -right-1 group/badge">
+                      <span className="bg-[#006D36] text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center cursor-default">
+                        {pendingSupervisorCount > 9 ? "9+" : pendingSupervisorCount}
+                      </span>
+                      <span className="pointer-events-none absolute bottom-full left-full ml-1 -translate-y-1/2 top-1/2 hidden group-hover/badge:block bg-gray-800 text-white text-xs rounded px-2 py-1 whitespace-nowrap z-50 shadow-lg">
+                        {pendingSupervisorCount} pending supervisor{pendingSupervisorCount !== 1 ? "s" : ""}
+                      </span>
+                    </span>
+                  )}
               </button>
             ) : (
               nav.path && (
@@ -414,6 +468,11 @@ const AppSidebar: React.FC = () => {
 
                       // If we have permissions loaded but no specific permission requirement, show the item
                       if (permissions && !subItem.requiredAction) {
+                        return true;
+                      }
+
+                      // Always show subitems for explicitly accessible menu groups
+                      if (nav.isAccessible && !subItem.requiredAction) {
                         return true;
                       }
 

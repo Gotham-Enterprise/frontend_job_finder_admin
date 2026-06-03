@@ -3,6 +3,29 @@ export const formatPhoneNumber = (phoneNumber: string) => {
 };
 
 /** US NANP display without country prefix, e.g. (423) 123-4567 */
+const US_LOCAL_DIGITS = 10;
+
+/** Formats raw input for tel fields as (XXX) XXX-XXXX — matches Find Supervisor signup. */
+export function formatUSPhoneForDisplay(input: string): string {
+  const digits = input.replace(/\D/g, "");
+  if (digits.length === 0) return "";
+
+  let toFormat = digits;
+  if (digits.startsWith("1") && digits.length > US_LOCAL_DIGITS) {
+    toFormat = digits.slice(1, US_LOCAL_DIGITS + 1);
+  } else if (digits.length > US_LOCAL_DIGITS) {
+    toFormat = digits.slice(0, US_LOCAL_DIGITS);
+  }
+
+  if (toFormat.length <= 3) {
+    return toFormat.length > 0 ? `(${toFormat}` : "";
+  }
+  if (toFormat.length <= 6) {
+    return `(${toFormat.slice(0, 3)}) ${toFormat.slice(3)}`;
+  }
+  return `(${toFormat.slice(0, 3)}) ${toFormat.slice(3, 6)}-${toFormat.slice(6)}`;
+}
+
 export const formatUSPhoneNationalDisplay = (phoneNumber: string | null | undefined): string => {
   if (!phoneNumber?.trim()) return "";
 

@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/context/ThemeContext";
 import { ToastProvider } from "@/context/ToastContext";
 import { SubscriptionProvider } from "@/context/SubscriptionContext";
 import { UnlockRequestProvider } from "@/context/UnlockRequestContext";
+import { PendingSupervisorProvider } from "@/context/PendingSupervisorContext";
 import { ReduxProvider } from "@/store/ReduxProvider";
 import QueryProvider from "@/services/providers/QueryProvider";
 import ToastContainer from "@/components/ui/toast/ToastContainer";
@@ -28,7 +29,9 @@ export default function RootLayout({
               <ToastProvider>
                 <SubscriptionProvider>
                   <UnlockRequestProvider>
-                    <SidebarProvider>{children}</SidebarProvider>
+                    <PendingSupervisorProvider>
+                      <SidebarProvider>{children}</SidebarProvider>
+                    </PendingSupervisorProvider>
                   </UnlockRequestProvider>
                 </SubscriptionProvider>
                 <ToastContainer />
