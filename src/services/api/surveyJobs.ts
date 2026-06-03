@@ -24,6 +24,7 @@ export interface SurveyJob {
   datePosted: string;
   expiresAt: string | null;
   viewsCount: number;
+  clicksCount: number;
   occupation: {
     id: number;
     name: string;
@@ -65,7 +66,13 @@ export type UpdateSurveyJobData = Partial<CreateSurveyJobData>;
 
 // ─── API Calls ────────────────────────────────────────────────────────────────
 
-export type SurveyJobSortBy = "views_desc" | "views_asc" | "date_desc" | "date_asc";
+export type SurveyJobSortBy =
+  | "views_desc"
+  | "views_asc"
+  | "date_desc"
+  | "date_asc"
+  | "clicks_desc"
+  | "clicks_asc";
 
 export const getSurveyJobs = async (params?: {
   page?: number;
