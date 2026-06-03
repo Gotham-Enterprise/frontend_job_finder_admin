@@ -9,6 +9,7 @@ import type { SurveyJob } from '@/services/api/surveyJobs'
 import Pagination from '@/components/tables/Pagination'
 import CreateSurveyJobModal from './CreateSurveyJobModal'
 import ConfirmationDialog from '@/components/ui/ConfirmationDialog'
+import { formatDate } from '@/services/utils/dateUtils'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -36,6 +37,11 @@ const CLICK_COUNT_TOOLTIP =
   'Count of users who clicked the job and were redirected to the affiliate partner\'s site.'
 
 const PAGE_SIZE = 15
+
+function isExpired(expiresAt: string | null): boolean {
+  if (!expiresAt) return false
+  return new Date(expiresAt) < new Date()
+}
 
 function ClickCountHeaderLabel() {
   const [open, setOpen] = useState(false)
@@ -290,6 +296,9 @@ export default function SurveyJobsTab() {
                   <th className="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">
                     Work Type
                   </th>
+                  <th className="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">
+                    Expiration Date
+                  </th>
                   <th className="text-right px-4 py-3 font-medium text-gray-600 dark:text-gray-400">
                     Views
                   </th>
@@ -321,6 +330,17 @@ export default function SurveyJobsTab() {
                     </td>
                     <td className="px-4 py-3 text-gray-600 dark:text-gray-400">
                       {job.workType ?? '—'}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      <span
+                        className={
+                          isExpired(job.expiresAt)
+                            ? 'text-red-600 dark:text-red-400 font-medium'
+                            : 'text-gray-600 dark:text-gray-400'
+                        }
+                      >
+                        {formatDate(job.expiresAt, '—')}
+                      </span>
                     </td>
                     <td className="px-4 py-3 text-right whitespace-nowrap">
                       <div className="inline-flex items-center gap-1 text-gray-600 dark:text-gray-400">
