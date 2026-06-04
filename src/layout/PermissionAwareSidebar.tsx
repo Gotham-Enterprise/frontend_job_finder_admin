@@ -140,6 +140,7 @@ const navItems: NavItem[] = [
     subItems: [
       { name: "Traffic Analytics", path: "/admin/analytics/page-visits", pro: false },
       { name: "Job Search Analytics", path: "/admin/analytics/job-search", pro: false },
+      { name: "API Metrics", path: "/admin/analytics/api-metrics", pro: false },
     ],
   },
   {
