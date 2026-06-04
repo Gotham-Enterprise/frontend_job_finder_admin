@@ -36,6 +36,8 @@ type NavItem = {
     pro?: boolean;
     new?: boolean;
     requiredAction?: "view" | "add" | "edit" | "delete";
+    /** Drives a pending-count badge on this submenu item */
+    badgeType?: "supervisors";
   }[];
   permissionKey?:
     | "jobSeekers"
@@ -48,8 +50,6 @@ type NavItem = {
     | "blog"
     // | "forum"
     | "unlockRequest";
-  /** Drives a pending-count badge independent of permissionKey */
-  badgeType?: "supervisors";
   isAccessible?: boolean;
 };
 
@@ -96,10 +96,10 @@ const navItems: NavItem[] = [
     name: "Find A Supervisor",
     path: "/admin/supervisors",
     isAccessible: true,
-    badgeType: "supervisors",
     subItems: [
-      { name: "Supervisor", path: "/admin/supervisors" },
+      { name: "Supervisor", path: "/admin/supervisors", badgeType: "supervisors" },
       { name: "Supervisee", path: "/admin/supervisees" },
+      { name: "Reviews", path: "/admin/supervision-reviews" },
     ],
   },
    {
@@ -330,63 +330,27 @@ const AppSidebar: React.FC = () => {
                   openSubmenu?.type === menuType && openSubmenu?.index === index
                     ? "menu-item-active"
                     : "menu-item-inactive"
-                } cursor-pointer ${!isExpanded && !isHovered ? "lg:justify-center" : "lg:justify-start"} ${
-                  nav.badgeType === "supervisors" && pendingSupervisorCount > 0
-                    ? "!bg-[#006D36]/10 dark:!bg-[#006D36]/20 border-l-4 !border-[#006D36]"
-                    : ""
-                }`}
+                } cursor-pointer ${!isExpanded && !isHovered ? "lg:justify-center" : "lg:justify-start"}`}
               >
                 <span
                   className={`${
                     openSubmenu?.type === menuType && openSubmenu?.index === index
                       ? "menu-item-icon-active"
                       : "menu-item-icon-inactive"
-                  } ${nav.badgeType === "supervisors" && pendingSupervisorCount > 0 ? "!text-[#006D36]" : ""}`}
+                  }`}
                 >
                   {nav.icon}
                 </span>
                 {(isExpanded || isHovered || isMobileOpen) && (
-                  <span
-                    className={`menu-item-text ${
-                      nav.badgeType === "supervisors" && pendingSupervisorCount > 0 ? "!text-[#006D36] !font-semibold" : ""
-                    }`}
-                  >
-                    {nav.name}
-                  </span>
+                  <span className="menu-item-text">{nav.name}</span>
                 )}
                 {(isExpanded || isHovered || isMobileOpen) && (
-                  <span className="ml-auto flex items-center gap-1.5">
-                    {nav.badgeType === "supervisors" && pendingSupervisorCount > 0 && (
-                      <span className="relative group/badge">
-                        <span className="bg-[#006D36] text-white text-xs font-bold rounded-full px-2 py-0.5 min-w-[24px] text-center cursor-default">
-                          {pendingSupervisorCount}
-                        </span>
-                        <span className="pointer-events-none absolute bottom-full right-0 mb-2 hidden group-hover/badge:block bg-gray-800 text-white text-xs rounded px-2 py-1 whitespace-nowrap z-50 shadow-lg">
-                          {pendingSupervisorCount} pending supervisor{pendingSupervisorCount !== 1 ? "s" : ""}
-                        </span>
-                      </span>
-                    )}
-                    <ChevronDownIcon
-                      className={`w-5 h-5 transition-transform duration-200 ${
-                        openSubmenu?.type === menuType && openSubmenu?.index === index ? "rotate-180 text-brand-500" : ""
-                      } ${nav.badgeType === "supervisors" && pendingSupervisorCount > 0 ? "!text-[#006D36]" : ""}`}
-                    />
-                  </span>
+                  <ChevronDownIcon
+                    className={`ml-auto w-5 h-5 transition-transform duration-200 ${
+                      openSubmenu?.type === menuType && openSubmenu?.index === index ? "rotate-180 text-brand-500" : ""
+                    }`}
+                  />
                 )}
-                {nav.badgeType === "supervisors" &&
-                  pendingSupervisorCount > 0 &&
-                  !isExpanded &&
-                  !isHovered &&
-                  !isMobileOpen && (
-                    <span className="absolute -top-1 -right-1 group/badge">
-                      <span className="bg-[#006D36] text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center cursor-default">
-                        {pendingSupervisorCount > 9 ? "9+" : pendingSupervisorCount}
-                      </span>
-                      <span className="pointer-events-none absolute bottom-full left-full ml-1 -translate-y-1/2 top-1/2 hidden group-hover/badge:block bg-gray-800 text-white text-xs rounded px-2 py-1 whitespace-nowrap z-50 shadow-lg">
-                        {pendingSupervisorCount} pending supervisor{pendingSupervisorCount !== 1 ? "s" : ""}
-                      </span>
-                    </span>
-                  )}
               </button>
             ) : (
               nav.path && (
@@ -485,10 +449,24 @@ const AppSidebar: React.FC = () => {
                           href={subItem.path}
                           className={`menu-dropdown-item ${
                             isActive(subItem.path) ? "menu-dropdown-item-active" : "menu-dropdown-item-inactive"
+                          } ${
+                            subItem.badgeType === "supervisors" && pendingSupervisorCount > 0
+                              ? "!text-[#006D36] !font-semibold"
+                              : ""
                           }`}
                         >
                           {subItem.name}
                           <span className="flex items-center gap-1 ml-auto">
+                            {subItem.badgeType === "supervisors" && pendingSupervisorCount > 0 && (
+                              <span className="relative group/badge">
+                                <span className="bg-[#006D36] text-white text-xs font-bold rounded-full px-2 py-0.5 min-w-[24px] text-center cursor-default">
+                                  {pendingSupervisorCount > 9 ? "9+" : pendingSupervisorCount}
+                                </span>
+                                <span className="pointer-events-none absolute bottom-full right-0 mb-2 hidden group-hover/badge:block bg-gray-800 text-white text-xs rounded px-2 py-1 whitespace-nowrap z-50 shadow-lg">
+                                  {pendingSupervisorCount} pending supervisor{pendingSupervisorCount !== 1 ? "s" : ""}
+                                </span>
+                              </span>
+                            )}
                             {subItem.new && (
                               <span
                                 className={`ml-auto ${
@@ -527,6 +505,7 @@ const AppSidebar: React.FC = () => {
   const [subMenuHeight, setSubMenuHeight] = useState<Record<string, number>>({});
   const subMenuRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const isActive = useCallback((path: string) => path === pathname, [pathname]);
+  const showSidebarSkeleton = loading && !permissions && isAuthenticated && hasUserData;
 
   useEffect(() => {
     let submenuMatched = false;
@@ -551,21 +530,36 @@ const AppSidebar: React.FC = () => {
     });
 
     if (!submenuMatched) {
+      if (pendingSupervisorCount > 0) {
+        const supervisorMenuIndex = navItems.findIndex((item) => item.name === "Find A Supervisor");
+        if (supervisorMenuIndex >= 0 && isItemAccessible(navItems[supervisorMenuIndex])) {
+          setOpenSubmenu({ type: "main", index: supervisorMenuIndex });
+          return;
+        }
+      }
       setOpenSubmenu(null);
     }
-  }, [pathname, isActive, permissions]);
+  }, [pathname, isActive, permissions, pendingSupervisorCount]);
 
   useEffect(() => {
-    if (openSubmenu !== null) {
-      const key = `${openSubmenu.type}-${openSubmenu.index}`;
-      if (subMenuRefs.current[key]) {
+    if (openSubmenu === null || showSidebarSkeleton) return;
+
+    const key = `${openSubmenu.type}-${openSubmenu.index}`;
+
+    const updateHeight = () => {
+      const el = subMenuRefs.current[key];
+      if (el) {
         setSubMenuHeight((prevHeights) => ({
           ...prevHeights,
-          [key]: subMenuRefs.current[key]?.scrollHeight || 0,
+          [key]: el.scrollHeight,
         }));
       }
-    }
-  }, [openSubmenu]);
+    };
+
+    updateHeight();
+    const frame = requestAnimationFrame(updateHeight);
+    return () => cancelAnimationFrame(frame);
+  }, [openSubmenu, showSidebarSkeleton, permissions, pendingSupervisorCount, isExpanded, isHovered, isMobileOpen]);
 
   const submenuToggle = (index: number, menuType: "main" | "others") => {
     setOpenSubmenu((prevOpenSubmenu) => {
@@ -577,7 +571,7 @@ const AppSidebar: React.FC = () => {
   };
 
   // Show skeleton if we're loading and don't have permissions yet, but only if authenticated
-  if (loading && !permissions && isAuthenticated && hasUserData) {
+  if (showSidebarSkeleton) {
     return (
       <aside
         className={`fixed flex flex-col lg:mt-0 top-0 px-5 left-0 bg-white dark:bg-gray-900 dark:border-gray-800 text-gray-900 h-screen transition-all duration-300 ease-in-out z-50 border-r border-gray-200 
