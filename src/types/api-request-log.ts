@@ -8,6 +8,7 @@ export interface ApiRequestLog {
   userId: string | null;
   ipAddress: string | null;
   userAgent: string | null;
+  responseMessage: string | null;
   requestedAt: string;
 }
 

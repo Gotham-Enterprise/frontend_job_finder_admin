@@ -107,6 +107,9 @@ export default function RequestLogTable({ timeWindow }: RequestLogTableProps) {
                     Route
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-300">
+                    Message
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-300">
                     Status
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-300">
@@ -134,6 +137,12 @@ export default function RequestLogTable({ timeWindow }: RequestLogTableProps) {
                     </td>
                     <td className="max-w-xs truncate px-4 py-3 text-sm font-mono text-gray-500 dark:text-gray-400" title={log.routeKey || ''}>
                       {log.routeKey || '—'}
+                    </td>
+                    <td
+                      className="max-w-[200px] truncate px-4 py-3 text-sm text-gray-700 dark:text-gray-300"
+                      title={log.responseMessage || ''}
+                    >
+                      {log.responseMessage || '—'}
                     </td>
                     <td className="whitespace-nowrap px-4 py-3 text-sm">
                       <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${statusBadgeClass(log.statusCode)}`}>
