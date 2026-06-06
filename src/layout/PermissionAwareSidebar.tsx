@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useSidebar } from "../context/SidebarContext";
 import { useAuthPermissions } from "../hooks/useAuthPermissions";
 import { useUnlockRequestContext } from "../context/UnlockRequestContext";
+import { usePendingSupervisorContext } from "../context/PendingSupervisorContext";
 import { hasAnyModulePermission, hasPermission } from "../utils/permissionUtils";
 import { authUtils } from "../services/utils/authUtils";
 import SidebarSkeleton from "../components/common/SidebarSkeleton";
@@ -35,6 +36,8 @@ type NavItem = {
     pro?: boolean;
     new?: boolean;
     requiredAction?: "view" | "add" | "edit" | "delete";
+    /** Drives a pending-count badge on this submenu item */
+    badgeType?: "supervisors";
   }[];
   permissionKey?:
     | "jobSeekers"
@@ -90,9 +93,14 @@ const navItems: NavItem[] = [
   },
   {
     icon: <IdCardIcon />,
-    name: "Supervisors",
+    name: "Find A Supervisor",
     path: "/admin/supervisors",
     isAccessible: true,
+    subItems: [
+      { name: "Supervisor", path: "/admin/supervisors", badgeType: "supervisors" },
+      { name: "Supervisee", path: "/admin/supervisees" },
+      { name: "Reviews", path: "/admin/supervision-reviews" },
+    ],
   },
    {
     icon: <PieChartIcon />,
@@ -197,6 +205,14 @@ const AppSidebar: React.FC = () => {
   } catch (error) {
     // Context not available, use default value
     console.debug("[Sidebar] UnlockRequestContext not available");
+  }
+
+  let pendingSupervisorCount = 0;
+  try {
+    const supervisorContext = usePendingSupervisorContext();
+    pendingSupervisorCount = supervisorContext.pendingCount;
+  } catch (error) {
+    console.debug("[Sidebar] PendingSupervisorContext not available");
   }
 
   const pathname = usePathname();
@@ -311,14 +327,14 @@ const AppSidebar: React.FC = () => {
             {nav.subItems ? (
               <button
                 onClick={() => submenuToggle(index, menuType)}
-                className={`menu-item group  ${
+                className={`menu-item group relative ${
                   openSubmenu?.type === menuType && openSubmenu?.index === index
                     ? "menu-item-active"
                     : "menu-item-inactive"
                 } cursor-pointer ${!isExpanded && !isHovered ? "lg:justify-center" : "lg:justify-start"}`}
               >
                 <span
-                  className={` ${
+                  className={`${
                     openSubmenu?.type === menuType && openSubmenu?.index === index
                       ? "menu-item-icon-active"
                       : "menu-item-icon-inactive"
@@ -326,10 +342,12 @@ const AppSidebar: React.FC = () => {
                 >
                   {nav.icon}
                 </span>
-                {(isExpanded || isHovered || isMobileOpen) && <span className={`menu-item-text`}>{nav.name}</span>}
+                {(isExpanded || isHovered || isMobileOpen) && (
+                  <span className="menu-item-text">{nav.name}</span>
+                )}
                 {(isExpanded || isHovered || isMobileOpen) && (
                   <ChevronDownIcon
-                    className={`ml-auto w-5 h-5 transition-transform duration-200  ${
+                    className={`ml-auto w-5 h-5 transition-transform duration-200 ${
                       openSubmenu?.type === menuType && openSubmenu?.index === index ? "rotate-180 text-brand-500" : ""
                     }`}
                   />
@@ -418,6 +436,11 @@ const AppSidebar: React.FC = () => {
                         return true;
                       }
 
+                      // Always show subitems for explicitly accessible menu groups
+                      if (nav.isAccessible && !subItem.requiredAction) {
+                        return true;
+                      }
+
                       // If we don't have permissions or are loading, don't show submenu items
                       return false;
                     })
@@ -427,10 +450,24 @@ const AppSidebar: React.FC = () => {
                           href={subItem.path}
                           className={`menu-dropdown-item ${
                             isActive(subItem.path) ? "menu-dropdown-item-active" : "menu-dropdown-item-inactive"
+                          } ${
+                            subItem.badgeType === "supervisors" && pendingSupervisorCount > 0
+                              ? "!text-[#006D36] !font-semibold"
+                              : ""
                           }`}
                         >
                           {subItem.name}
                           <span className="flex items-center gap-1 ml-auto">
+                            {subItem.badgeType === "supervisors" && pendingSupervisorCount > 0 && (
+                              <span className="relative group/badge">
+                                <span className="bg-[#006D36] text-white text-xs font-bold rounded-full px-2 py-0.5 min-w-[24px] text-center cursor-default">
+                                  {pendingSupervisorCount > 9 ? "9+" : pendingSupervisorCount}
+                                </span>
+                                <span className="pointer-events-none absolute bottom-full right-0 mb-2 hidden group-hover/badge:block bg-gray-800 text-white text-xs rounded px-2 py-1 whitespace-nowrap z-50 shadow-lg">
+                                  {pendingSupervisorCount} pending supervisor{pendingSupervisorCount !== 1 ? "s" : ""}
+                                </span>
+                              </span>
+                            )}
                             {subItem.new && (
                               <span
                                 className={`ml-auto ${
@@ -469,6 +506,7 @@ const AppSidebar: React.FC = () => {
   const [subMenuHeight, setSubMenuHeight] = useState<Record<string, number>>({});
   const subMenuRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const isActive = useCallback((path: string) => path === pathname, [pathname]);
+  const showSidebarSkeleton = loading && !permissions && isAuthenticated && hasUserData;
 
   useEffect(() => {
     let submenuMatched = false;
@@ -493,21 +531,36 @@ const AppSidebar: React.FC = () => {
     });
 
     if (!submenuMatched) {
+      if (pendingSupervisorCount > 0) {
+        const supervisorMenuIndex = navItems.findIndex((item) => item.name === "Find A Supervisor");
+        if (supervisorMenuIndex >= 0 && isItemAccessible(navItems[supervisorMenuIndex])) {
+          setOpenSubmenu({ type: "main", index: supervisorMenuIndex });
+          return;
+        }
+      }
       setOpenSubmenu(null);
     }
-  }, [pathname, isActive, permissions]);
+  }, [pathname, isActive, permissions, pendingSupervisorCount]);
 
   useEffect(() => {
-    if (openSubmenu !== null) {
-      const key = `${openSubmenu.type}-${openSubmenu.index}`;
-      if (subMenuRefs.current[key]) {
+    if (openSubmenu === null || showSidebarSkeleton) return;
+
+    const key = `${openSubmenu.type}-${openSubmenu.index}`;
+
+    const updateHeight = () => {
+      const el = subMenuRefs.current[key];
+      if (el) {
         setSubMenuHeight((prevHeights) => ({
           ...prevHeights,
-          [key]: subMenuRefs.current[key]?.scrollHeight || 0,
+          [key]: el.scrollHeight,
         }));
       }
-    }
-  }, [openSubmenu]);
+    };
+
+    updateHeight();
+    const frame = requestAnimationFrame(updateHeight);
+    return () => cancelAnimationFrame(frame);
+  }, [openSubmenu, showSidebarSkeleton, permissions, pendingSupervisorCount, isExpanded, isHovered, isMobileOpen]);
 
   const submenuToggle = (index: number, menuType: "main" | "others") => {
     setOpenSubmenu((prevOpenSubmenu) => {
@@ -519,7 +572,7 @@ const AppSidebar: React.FC = () => {
   };
 
   // Show skeleton if we're loading and don't have permissions yet, but only if authenticated
-  if (loading && !permissions && isAuthenticated && hasUserData) {
+  if (showSidebarSkeleton) {
     return (
       <aside
         className={`fixed flex flex-col lg:mt-0 top-0 px-5 left-0 bg-white dark:bg-gray-900 dark:border-gray-800 text-gray-900 h-screen transition-all duration-300 ease-in-out z-50 border-r border-gray-200 

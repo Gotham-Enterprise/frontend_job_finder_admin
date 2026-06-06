@@ -99,16 +99,23 @@ const SupervisorTable: React.FC<SupervisorTableProps> = ({
                   )}
                 </TableCell>
 
+                {/* Supervisor Type */}
+                <TableCell className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
+                  {supervisor.supervisorType || (
+                    <span className="text-gray-400 italic">Not specified</span>
+                  )}
+                </TableCell>
+
                 {/* Occupation */}
                 <TableCell className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
-                  {supervisor.occupation?.name || (
+                  {supervisor.supervisorOccupation || (
                     <span className="text-gray-400 italic">Not specified</span>
                   )}
                 </TableCell>
 
                 {/* Specialty */}
                 <TableCell className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
-                  {supervisor.specialty?.name || (
+                  {supervisor.supervisorSpecialty || (
                     <span className="text-gray-400 italic">Not specified</span>
                   )}
                 </TableCell>
