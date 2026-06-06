@@ -274,10 +274,11 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
               <SupervisorStatusBadge status={verificationStatus} />
             </div>
             <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">{s.email}</p>
-            {s.occupation && (
+            {(profile?.supervisorType || s.supervisorOccupation) && (
               <p className="text-sm text-gray-600 dark:text-gray-300">
-                {s.occupation.name}
-                {s.specialty ? ` · ${s.specialty.name}` : ""}
+                {[profile?.supervisorType, s.supervisorOccupation, s.supervisorSpecialty]
+                  .filter(Boolean)
+                  .join(" · ")}
               </p>
             )}
             {location && <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{location}</p>}
@@ -301,8 +302,9 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
 
           {/* Professional Info */}
           <SectionCard title="Professional Info">
-            <FieldRow label="Occupation" value={s.occupation?.name} />
-            <FieldRow label="Specialty" value={s.specialty?.name} />
+            <FieldRow label="Supervisor Type" value={profile?.supervisorType} />
+            <FieldRow label="Occupation" value={s.supervisorOccupation} />
+            <FieldRow label="Specialty" value={s.supervisorSpecialty} />
             <FieldRow label="Years of Experience" value={profile?.yearsOfExperience ? `${profile.yearsOfExperience} years` : null} />
             <FieldRow
               label="Professional Summary"
