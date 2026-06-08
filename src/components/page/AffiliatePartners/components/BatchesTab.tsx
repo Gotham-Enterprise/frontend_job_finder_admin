@@ -5,9 +5,10 @@ import {
   useAffiliateBatches,
   useAffiliateBatchJobs,
   useReprocessAffiliateBatch,
+  useCancelAffiliateBatch,
 } from '@/services/hooks/useAffiliates'
 import type { AffiliateBatch } from '@/services/api/affiliates'
-import { ChevronDown, ChevronRight, RefreshCw, Clock, CheckCircle, XCircle, AlertTriangle, Zap, Eye, EyeOff } from 'lucide-react'
+import { ChevronDown, ChevronRight, RefreshCw, Clock, CheckCircle, XCircle, AlertTriangle, Zap, Eye, EyeOff, Ban } from 'lucide-react'
 import Pagination from '@/components/tables/Pagination'
 
 export default function BatchesTab() {
@@ -17,14 +18,26 @@ export default function BatchesTab() {
   const [jobsPage, setJobsPage] = useState(1)
   const [allLoadedJobs, setAllLoadedJobs] = useState<any[]>([])
   const [isLoadingMore, setIsLoadingMore] = useState(false)
+  const [pollInterval, setPollInterval] = useState<number | false>(false)
 
-  const { data: batchesData, isLoading } = useAffiliateBatches({ page, limit })
+  const { data: batchesData, isLoading } = useAffiliateBatches(
+    { page, limit },
+    { refetchInterval: pollInterval }
+  )
+
+  useEffect(() => {
+    const hasActive = batchesData?.data?.some(
+      (b) => b.status === 'pending' || b.status === 'processing'
+    )
+    setPollInterval(hasActive ? 3000 : false)
+  }, [batchesData])
   const { data: jobsData, isLoading: isLoadingJobs } = useAffiliateBatchJobs(
     expandedBatchId || '',
     { page: jobsPage, limit: 20 }
   )
   
   const reprocessMutation = useReprocessAffiliateBatch()
+  const cancelMutation = useCancelAffiliateBatch()
 
   // Reset jobs when batch changes
   useEffect(() => {
@@ -53,6 +66,7 @@ export default function BatchesTab() {
       completed: { bg: 'bg-green-100 dark:bg-green-900/30', text: 'text-green-700 dark:text-green-400', icon: CheckCircle },
       failed: { bg: 'bg-red-100 dark:bg-red-900/30', text: 'text-red-700 dark:text-red-400', icon: XCircle },
       partial: { bg: 'bg-yellow-100 dark:bg-yellow-900/30', text: 'text-yellow-700 dark:text-yellow-400', icon: AlertTriangle },
+      cancelled: { bg: 'bg-orange-100 dark:bg-orange-900/30', text: 'text-orange-700 dark:text-orange-400', icon: Ban },
     }
     const style = styles[status as keyof typeof styles] || styles.pending
     const Icon = style.icon
@@ -67,6 +81,16 @@ export default function BatchesTab() {
   const handleReprocess = async (batchId: string) => {
     if (confirm('Are you sure you want to reprocess this batch? All existing jobs will be deleted and recreated.')) {
       await reprocessMutation.mutateAsync(batchId)
+    }
+  }
+
+  const handleCancel = async (batchId: string) => {
+    if (
+      confirm(
+        'Cancel reprocessing for this batch? Jobs already deleted cannot be restored. Processing will stop after the current chunk.'
+      )
+    ) {
+      await cancelMutation.mutateAsync(batchId)
     }
   }
 
@@ -201,7 +225,17 @@ export default function BatchesTab() {
                           Auto-Synced
                         </span>
                       )}
-                      {batch.status === 'failed' || batch.status === 'partial' ? (
+                      {batch.status === 'pending' || batch.status === 'processing' ? (
+                        <button
+                          onClick={() => handleCancel(batch.id)}
+                          disabled={cancelMutation.isPending}
+                          className="text-orange-600 hover:text-orange-700 dark:text-orange-400 dark:hover:text-orange-300 transition-colors disabled:opacity-50"
+                          title="Cancel reprocessing"
+                        >
+                          <Ban className="w-4 h-4" />
+                        </button>
+                      ) : null}
+                      {batch.status === 'failed' || batch.status === 'partial' || batch.status === 'cancelled' ? (
                         <button
                           onClick={() => handleReprocess(batch.id)}
                           disabled={reprocessMutation.isPending}
