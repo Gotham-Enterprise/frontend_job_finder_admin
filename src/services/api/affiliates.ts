@@ -32,7 +32,7 @@ export interface AffiliateBatch {
   fileName: string;
   s3Key: string;
   parserVersion: string;
-  status: "pending" | "processing" | "completed" | "failed" | "partial";
+  status: "pending" | "processing" | "completed" | "failed" | "partial" | "cancelled";
   totalJobs: number;
   processedJobs: number;
   duplicateJobs: number;
@@ -241,6 +241,12 @@ export const getAffiliateBatchJobs = async (
 
 export const reprocessAffiliateBatch = async (batchId: string): Promise<{ message: string; batchId: string }> => {
   return apiPost(`/api/admin/affiliates/batches/${batchId}/reprocess`, {});
+};
+
+export const cancelAffiliateBatch = async (
+  batchId: string
+): Promise<{ message: string; batchId: string }> => {
+  return apiPost(`/api/admin/affiliates/batches/${batchId}/cancel`, {});
 };
 
 // Sync Management APIs

@@ -10,6 +10,7 @@ import {
   getAffiliateBatchStatus,
   getAffiliateBatchJobs,
   reprocessAffiliateBatch,
+  cancelAffiliateBatch,
   getAffiliateAnalytics,
   triggerAffiliateSync,
   getAffiliateSyncStatus,
@@ -131,17 +132,21 @@ export const useAffiliateSyncStatus = () => {
 };
 
 // Upload & Batch Management Hooks
-export const useAffiliateBatches = (params?: {
-  page?: number;
-  limit?: number;
-  affiliateId?: string;
-  status?: string;
-}) => {
+export const useAffiliateBatches = (
+  params?: {
+    page?: number;
+    limit?: number;
+    affiliateId?: string;
+    status?: string;
+  },
+  options?: { refetchInterval?: number | false }
+) => {
   return useQuery({
     queryKey: [...affiliateQueryKeys.batches(), params || {}],
     queryFn: () => getAffiliateBatches(params),
     staleTime: 1000 * 60 * 2, // 2 minutes
     gcTime: 1000 * 60 * 5,
+    refetchInterval: options?.refetchInterval,
   });
 };
 
@@ -189,6 +194,23 @@ export const useReprocessAffiliateBatch = () => {
     onError: (error: any) => {
       const errorMessage = error.response?.data?.message || error.message || "Failed to reprocess batch";
       showToast.error("Reprocess Failed", errorMessage);
+    },
+  });
+};
+
+export const useCancelAffiliateBatch = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (batchId: string) => cancelAffiliateBatch(batchId),
+    onSuccess: (_data, batchId) => {
+      queryClient.invalidateQueries({ queryKey: affiliateQueryKeys.batchStatus(batchId) });
+      queryClient.invalidateQueries({ queryKey: affiliateQueryKeys.batches() });
+      showToast.success("Batch Cancelled", "Reprocessing has been stopped for this batch.");
+    },
+    onError: (error: any) => {
+      const errorMessage = error.response?.data?.message || error.message || "Failed to cancel batch";
+      showToast.error("Cancel Failed", errorMessage);
     },
   });
 };
