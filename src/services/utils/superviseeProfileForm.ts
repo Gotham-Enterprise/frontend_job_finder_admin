@@ -1,6 +1,8 @@
 import type { SuperviseeDetails, SuperviseeUpdatePayload } from "@/services/types/supervisee";
 import { formatUSPhoneForDisplay } from "@/services/utils/phoneNumberUtils";
 
+export const SUPERVISEE_IDEAL_SUPERVISOR_MAX_LENGTH = 500;
+
 export type SuperviseeFieldErrors = Partial<
   Record<keyof SuperviseeEditFormData | "uploadProfilePhoto", string>
 >;
@@ -71,6 +73,8 @@ export function validateSuperviseeEditForm(form: SuperviseeEditFormData): Superv
     errors.idealSupervisor = "Description of ideal supervisor is required";
   } else if (form.idealSupervisor.trim().length < 20) {
     errors.idealSupervisor = "Description must be at least 20 characters";
+  } else if (form.idealSupervisor.length > SUPERVISEE_IDEAL_SUPERVISOR_MAX_LENGTH) {
+    errors.idealSupervisor = `Description must be ${SUPERVISEE_IDEAL_SUPERVISOR_MAX_LENGTH} characters or less`;
   }
 
   return errors;

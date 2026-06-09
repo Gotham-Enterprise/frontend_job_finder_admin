@@ -178,6 +178,7 @@ export interface SupervisorUpdatePayload {
   certification?: string[];
   supervisionFormat?: string;
   availability?: string;
+  professionalSummary?: string;
   describeYourself?: string;
   acceptingSupervisees?: boolean;
   supervisionFeeType?: string;

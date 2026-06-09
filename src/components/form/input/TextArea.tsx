@@ -9,6 +9,7 @@ interface TextareaProps {
   disabled?: boolean; 
   error?: boolean;
   hint?: string;
+  maxLength?: number;
 }
 
 const TextArea: React.FC<TextareaProps> = ({
@@ -19,7 +20,8 @@ const TextArea: React.FC<TextareaProps> = ({
   className = "", 
   disabled = false,
   error = false, 
-  hint = "", 
+  hint = "",
+  maxLength,
 }) => {
   const initChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     if (onChange) {
@@ -45,6 +47,7 @@ const TextArea: React.FC<TextareaProps> = ({
         value={value}
         onChange={initChange}
         disabled={disabled}
+        maxLength={maxLength}
         className={textareaClasses}
       />
       {hint && (

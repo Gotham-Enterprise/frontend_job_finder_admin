@@ -112,8 +112,7 @@ export const useSupervisorEditFormOptions = () => {
     formatOptions: queries[1].data ?? [],
     availabilityOptions: queries[2].data ?? [],
     patientPopulationOptions: queries[3].data ?? [],
-    yearsOfExperienceOptions: queries[4].data ?? [],
-    feeTypeOptions: queries[5].data ?? [],
+    feeTypeOptions: queries[4].data ?? [],
     isLoading: queries.some((q) => q.isLoading),
   };
 };

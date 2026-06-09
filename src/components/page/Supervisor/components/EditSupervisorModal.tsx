@@ -7,6 +7,7 @@ import Button from "@/components/ui/button/Button";
 import Input from "@/components/ui/input/Input";
 import Select from "@/components/form/Select";
 import MultiSelect from "@/components/form/MultiSelect";
+import DatePicker from "@/components/form/date-picker";
 import USPhoneInput from "@/components/ui/USPhoneInput";
 import { FormField } from "@/components/ui/form";
 import Alert from "@/components/ui/alert/Alert";
@@ -27,6 +28,10 @@ import {
 } from "@/services/hooks/useSupervisors";
 import { useSupervisorTypesData } from "@/services/hooks/useSupervisees";
 import { useStates } from "@/services/hooks/useStates";
+import {
+  SUPERVISOR_PROFILE_TEXT_MAX_LENGTH,
+  supervisorYearsOfExperienceSelectOptions,
+} from "@/constants/supervisorSignupOptions";
 
 interface EditSupervisorModalProps {
   isOpen: boolean;
@@ -54,6 +59,7 @@ const emptyForm = (): SupervisorEditFormData => ({
   certification: [],
   supervisionFormat: "",
   availability: "",
+  professionalSummary: "",
   describeYourself: "",
   acceptingSupervisees: false,
   supervisionFeeType: "",
@@ -92,7 +98,6 @@ export const EditSupervisorModal: React.FC<EditSupervisorModalProps> = ({
     formatOptions,
     availabilityOptions,
     patientPopulationOptions,
-    yearsOfExperienceOptions,
     feeTypeOptions,
     isLoading: optionsLoading,
   } = useSupervisorEditFormOptions();
@@ -346,7 +351,7 @@ export const EditSupervisorModal: React.FC<EditSupervisorModalProps> = ({
       isOpen={isOpen}
       onClose={handleClose}
       isFullscreen={false}
-      className="max-w-3xl mx-auto mt-8 mb-8 rounded-lg shadow-xl max-h-[90vh] overflow-y"
+      className="max-w-3xl w-full rounded-lg shadow-xl max-h-[90vh] overflow-hidden"
     >
       <div className="flex flex-col max-h-[90vh]">
         <div className="p-6 pb-4 border-b border-gray-200 dark:border-gray-700">
@@ -494,18 +499,21 @@ export const EditSupervisorModal: React.FC<EditSupervisorModalProps> = ({
                     />
                   </FormField>
                   <FormField label="License Expiration" error={fieldErrors.licenseExpiration}>
-                    <Input
-                      type="date"
-                      value={formData.licenseExpiration}
-                      onChange={(e) => updateField("licenseExpiration", e.target.value)}
-                      error={!!fieldErrors.licenseExpiration}
+                    <DatePicker
+                      key={`license-expiration-${supervisorId}-${formData.licenseExpiration || "empty"}`}
+                      id={`supervisor-license-expiration-${supervisorId}`}
+                      placeholder="Select expiration date"
+                      defaultDate={formData.licenseExpiration || undefined}
+                      onChange={(_selectedDates, dateStr) =>
+                        updateField("licenseExpiration", dateStr)
+                      }
                     />
                   </FormField>
                   <FormField label="Years of Experience" error={fieldErrors.yearsOfExperience}>
                     <Select
                       value={formData.yearsOfExperience}
                       onChange={(v) => updateField("yearsOfExperience", v)}
-                      options={choicesOnly(yearsOfExperienceOptions)}
+                      options={choicesOnly(supervisorYearsOfExperienceSelectOptions)}
                       placeholder={optionsStillLoading ? "Loading…" : "Select experience"}
                     />
                   </FormField>
@@ -563,6 +571,37 @@ export const EditSupervisorModal: React.FC<EditSupervisorModalProps> = ({
                     JPEG, PNG, PDF, DOC, DOCX · max 5 MB
                   </p>
                 </FormField>
+                <FormField label="About" required error={fieldErrors.describeYourself}>
+                  <TextArea
+                    value={formData.describeYourself}
+                    onChange={(v) => updateField("describeYourself", v)}
+                    rows={4}
+                    placeholder="Describe yourself as a supervisor…"
+                    maxLength={SUPERVISOR_PROFILE_TEXT_MAX_LENGTH}
+                    error={!!fieldErrors.describeYourself}
+                  />
+                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    {formData.describeYourself.length}/{SUPERVISOR_PROFILE_TEXT_MAX_LENGTH} characters
+                  </p>
+                </FormField>
+                <FormField
+                  label="Professional Summary"
+                  required
+                  error={fieldErrors.professionalSummary}
+                >
+                  <TextArea
+                    value={formData.professionalSummary}
+                    onChange={(v) => updateField("professionalSummary", v)}
+                    rows={4}
+                    placeholder="Summarize professional background and expertise…"
+                    maxLength={SUPERVISOR_PROFILE_TEXT_MAX_LENGTH}
+                    error={!!fieldErrors.professionalSummary}
+                  />
+                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    {formData.professionalSummary.length}/{SUPERVISOR_PROFILE_TEXT_MAX_LENGTH}{" "}
+                    characters
+                  </p>
+                </FormField>
               </section>
 
               {/* Supervision preferences */}
@@ -615,15 +654,6 @@ export const EditSupervisorModal: React.FC<EditSupervisorModalProps> = ({
                     value={formData.patientPopulation}
                     onChange={(selected) => updateField("patientPopulation", selected)}
                     placeholder="Select patient populations..."
-                  />
-                </FormField>
-                <FormField label="About / Describe Yourself" error={fieldErrors.describeYourself}>
-                  <TextArea
-                    value={formData.describeYourself}
-                    onChange={(v) => updateField("describeYourself", v)}
-                    rows={4}
-                    placeholder="Describe yourself as a supervisor…"
-                    error={!!fieldErrors.describeYourself}
                   />
                 </FormField>
               </section>

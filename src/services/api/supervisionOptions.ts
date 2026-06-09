@@ -24,7 +24,6 @@ export const SUPERVISION_SUPERVISOR_EDIT_OPTION_PARAMS = [
   "format",
   "availability",
   "patientPopulation",
-  "yearsOfExperience",
   "feeType",
 ] as const;
 

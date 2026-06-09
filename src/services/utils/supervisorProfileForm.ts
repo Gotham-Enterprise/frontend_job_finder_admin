@@ -1,3 +1,8 @@
+import {
+  SUPERVISOR_PROFILE_TEXT_MAX_LENGTH,
+  SUPERVISOR_PROFILE_TEXT_MIN_LENGTH,
+  SUPERVISOR_YEARS_OF_EXPERIENCE_OPTIONS,
+} from "@/constants/supervisorSignupOptions";
 import type { SupervisorDetails, SupervisorUpdatePayload } from "@/services/types/supervisor";
 import { formatUSPhoneForDisplay } from "@/services/utils/phoneNumberUtils";
 import { resolveStateToAbbreviation } from "./superviseeProfileForm";
@@ -24,6 +29,7 @@ export interface SupervisorEditFormData {
   certification: string[];
   supervisionFormat: string;
   availability: string;
+  professionalSummary: string;
   describeYourself: string;
   acceptingSupervisees: boolean;
   supervisionFeeType: string;
@@ -65,6 +71,22 @@ export function validateSupervisorEditForm(form: SupervisorEditFormData): Superv
     errors.stateOfLicensure = "At least one state of licensure is required";
   }
 
+  if (!form.professionalSummary.trim()) {
+    errors.professionalSummary = "Professional summary is required";
+  } else if (form.professionalSummary.trim().length < SUPERVISOR_PROFILE_TEXT_MIN_LENGTH) {
+    errors.professionalSummary = `Professional summary must be at least ${SUPERVISOR_PROFILE_TEXT_MIN_LENGTH} characters`;
+  } else if (form.professionalSummary.length > SUPERVISOR_PROFILE_TEXT_MAX_LENGTH) {
+    errors.professionalSummary = `Professional summary must be ${SUPERVISOR_PROFILE_TEXT_MAX_LENGTH} characters or less`;
+  }
+
+  if (!form.describeYourself.trim()) {
+    errors.describeYourself = "About is required";
+  } else if (form.describeYourself.trim().length < SUPERVISOR_PROFILE_TEXT_MIN_LENGTH) {
+    errors.describeYourself = `About must be at least ${SUPERVISOR_PROFILE_TEXT_MIN_LENGTH} characters`;
+  } else if (form.describeYourself.length > SUPERVISOR_PROFILE_TEXT_MAX_LENGTH) {
+    errors.describeYourself = `About must be ${SUPERVISOR_PROFILE_TEXT_MAX_LENGTH} characters or less`;
+  }
+
   return errors;
 }
 
@@ -90,12 +112,18 @@ export function mapSupervisorDetailsToFormData(
     licenseExpiration: profile?.licenseExpiration
       ? profile.licenseExpiration.slice(0, 10)
       : "",
-    yearsOfExperience: profile?.yearsOfExperience ?? "",
+    yearsOfExperience: (() => {
+      const raw = profile?.yearsOfExperience?.trim() ?? "";
+      return (SUPERVISOR_YEARS_OF_EXPERIENCE_OPTIONS as readonly string[]).includes(raw)
+        ? raw
+        : "";
+    })(),
     stateOfLicensure: details.stateOfLicensure ?? [],
     patientPopulation: profile?.patientPopulation ?? [],
     certification: profile?.certification ?? [],
     supervisionFormat: profile?.supervisionFormat ?? "",
     availability: profile?.availability ?? "",
+    professionalSummary: profile?.professionalSummary ?? "",
     describeYourself: profile?.describeYourself ?? "",
     acceptingSupervisees: profile?.acceptingSupervisees ?? false,
     supervisionFeeType: profile?.supervisionFeeType ?? "",
@@ -165,6 +193,7 @@ export function formDataToUpdatePayload(
     certification: form.certification.length ? form.certification : undefined,
     supervisionFormat: form.supervisionFormat || undefined,
     availability: form.availability || undefined,
+    professionalSummary: form.professionalSummary.trim() || undefined,
     describeYourself: form.describeYourself.trim() || undefined,
     acceptingSupervisees: form.acceptingSupervisees,
     supervisionFeeType: form.supervisionFeeType || undefined,

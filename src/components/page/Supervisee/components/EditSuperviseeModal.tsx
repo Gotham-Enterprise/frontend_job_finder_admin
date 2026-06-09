@@ -16,6 +16,7 @@ import { useCitiesByState } from "@/lib/useStatesCities";
 import {
   formDataToUpdatePayload,
   mapSuperviseeDetailsToFormData,
+  SUPERVISEE_IDEAL_SUPERVISOR_MAX_LENGTH,
   validateSuperviseeEditForm,
   type SuperviseeEditFormData,
   type SuperviseeFieldErrors,
@@ -304,7 +305,7 @@ export const EditSuperviseeModal: React.FC<EditSuperviseeModalProps> = ({
       isOpen={isOpen}
       onClose={handleClose}
       isFullscreen={false}
-      className="max-w-3xl mx-auto mt-8 mb-8 rounded-lg shadow-xl max-h-[90vh] overflow-y"
+      className="max-w-3xl w-full rounded-lg shadow-xl max-h-[90vh] overflow-hidden"
     >
       <div className="flex flex-col max-h-[90vh]">
         <div className="p-6 pb-4 border-b border-gray-200 dark:border-gray-700">
@@ -571,8 +572,13 @@ export const EditSuperviseeModal: React.FC<EditSuperviseeModalProps> = ({
                     onChange={(v) => updateField("idealSupervisor", v)}
                     rows={4}
                     placeholder="Describe ideal supervisor…"
+                    maxLength={SUPERVISEE_IDEAL_SUPERVISOR_MAX_LENGTH}
                     error={!!fieldErrors.idealSupervisor}
                   />
+                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    {formData.idealSupervisor.length}/{SUPERVISEE_IDEAL_SUPERVISOR_MAX_LENGTH}{" "}
+                    characters
+                  </p>
                 </FormField>
               </section>
             </div>
