@@ -19,9 +19,19 @@ export const SUPERVISION_SUPERVISEE_OPTION_PARAMS = [
   "budgetType",
 ] as const;
 
+export const SUPERVISION_SUPERVISOR_EDIT_OPTION_PARAMS = [
+  "certificate",
+  "format",
+  "availability",
+  "patientPopulation",
+  "yearsOfExperience",
+  "feeType",
+] as const;
+
 export type SupervisionProfileOptionsParam =
   | (typeof SUPERVISION_PROFILE_OPTION_PARAMS)[number]
-  | (typeof SUPERVISION_SUPERVISEE_OPTION_PARAMS)[number];
+  | (typeof SUPERVISION_SUPERVISEE_OPTION_PARAMS)[number]
+  | (typeof SUPERVISION_SUPERVISOR_EDIT_OPTION_PARAMS)[number];
 
 type RawOption = string | { label: string; value: string };
 

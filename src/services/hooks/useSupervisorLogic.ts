@@ -74,6 +74,13 @@ export const useSupervisorLogic = () => {
   const [isInitialized, setIsInitialized] = useState(false);
   const [hasRestoredFromState, setHasRestoredFromState] = useState(false);
 
+  // Edit profile modal state
+  const [editModal, setEditModal] = useState<{
+    isOpen: boolean;
+    supervisorId: string;
+    fullName: string;
+  }>({ isOpen: false, supervisorId: "", fullName: "" });
+
   // Approve/reject action state
   const [approveModal, setApproveModal] = useState<{ isOpen: boolean; supervisorId: string; fullName: string }>({
     isOpen: false,
@@ -214,6 +221,14 @@ export const useSupervisorLogic = () => {
     [router, saveScrollPosition, saveSearchState]
   );
 
+  const openEditModal = useCallback((supervisorId: string, fullName: string) => {
+    setEditModal({ isOpen: true, supervisorId, fullName });
+  }, []);
+
+  const closeEditModal = useCallback(() => {
+    setEditModal({ isOpen: false, supervisorId: "", fullName: "" });
+  }, []);
+
   const openApproveModal = useCallback((supervisorId: string, fullName: string) => {
     setApproveNotes("");
     setApproveModal({ isOpen: true, supervisorId, fullName });
@@ -317,6 +332,10 @@ export const useSupervisorLogic = () => {
     clearAllFilters,
     clearIndividualFilter,
     hasActiveFilters,
+
+    editModal,
+    openEditModal,
+    closeEditModal,
 
     approveModal,
     rejectModal,

@@ -328,7 +328,7 @@ export const EditSuperviseeModal: React.FC<EditSuperviseeModalProps> = ({
             </div>
           ) : (
             <div className="space-y-8">
-              <FormField label="Profile photo" error={fieldErrors.uploadProfilePhoto}>
+              <FormField label="Profile Photo" error={fieldErrors.uploadProfilePhoto}>
                 <ProfilePhotoUpload
                   displayUrl={previewUrl || currentPhotoUrl}
                   displayName={formData.fullName || superviseeName || "Supervisee"}
@@ -343,7 +343,7 @@ export const EditSuperviseeModal: React.FC<EditSuperviseeModalProps> = ({
                   Personal information
                 </h3>
                 <div className="grid grid-cols-1 gap-4">
-                  <FormField label="Full name" required error={fieldErrors.fullName}>
+                  <FormField label="Full Name" required error={fieldErrors.fullName}>
                     <Input
                       value={formData.fullName}
                       onChange={(e) => updateField("fullName", e.target.value)}
@@ -351,7 +351,7 @@ export const EditSuperviseeModal: React.FC<EditSuperviseeModalProps> = ({
                       error={!!fieldErrors.fullName}
                     />
                   </FormField>
-                  <FormField label="Contact number" required error={fieldErrors.contactNumber}>
+                  <FormField label="Contact Number" required error={fieldErrors.contactNumber}>
                     <USPhoneInput
                       value={formData.contactNumber}
                       onChange={(v) => updateField("contactNumber", v)}
@@ -384,7 +384,7 @@ export const EditSuperviseeModal: React.FC<EditSuperviseeModalProps> = ({
                       disabled={statesLoading}
                     />
                   </FormField>
-                  <FormField label="Zipcode" required error={fieldErrors.zipcode}>
+                  <FormField label="Zip Code" required error={fieldErrors.zipcode}>
                     <Input
                       value={formData.zipcode}
                       onChange={(e) => updateField("zipcode", e.target.value)}
@@ -433,7 +433,7 @@ export const EditSuperviseeModal: React.FC<EditSuperviseeModalProps> = ({
                     />
                   </FormField>
                 </div>
-                <FormField label="States of licensure" required error={fieldErrors.stateOfLicensure}>
+                <FormField label="States of Licensure" required error={fieldErrors.stateOfLicensure}>
                   <MultiSelect
                     label=""
                     options={stateMultiOptions}
@@ -454,7 +454,7 @@ export const EditSuperviseeModal: React.FC<EditSuperviseeModalProps> = ({
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <FormField
                     className="sm:col-span-2"
-                    label="Type of supervision needed"
+                    label="Type of Supervision Needed"
                     required
                     error={fieldErrors.typeOfSupervisorNeeded}
                   >
@@ -484,7 +484,7 @@ export const EditSuperviseeModal: React.FC<EditSuperviseeModalProps> = ({
                     />
                   </FormField>
                   <FormField
-                    label="How soon do you need supervision?"
+                    label="How Soon Do You Need Supervision?"
                     required
                     error={fieldErrors.howSoonLooking}
                   >
@@ -496,7 +496,7 @@ export const EditSuperviseeModal: React.FC<EditSuperviseeModalProps> = ({
                     />
                   </FormField>
                   {isCustomDate && (
-                    <FormField label="Looking date" required error={fieldErrors.lookingDate}>
+                    <FormField label="Looking Date" required error={fieldErrors.lookingDate}>
                       <Input
                         type="date"
                         value={formData.lookingDate}
@@ -505,7 +505,7 @@ export const EditSuperviseeModal: React.FC<EditSuperviseeModalProps> = ({
                       />
                     </FormField>
                   )}
-                  <FormField label="Preferred format" required error={fieldErrors.preferredFormat}>
+                  <FormField label="Preferred Format" required error={fieldErrors.preferredFormat}>
                     <Select
                       value={formData.preferredFormat}
                       onChange={(v) => updateField("preferredFormat", v)}
@@ -521,7 +521,7 @@ export const EditSuperviseeModal: React.FC<EditSuperviseeModalProps> = ({
                       placeholder="Select availability"
                     />
                   </FormField>
-                  <FormField label="Budget type" required error={fieldErrors.budgetRangeType}>
+                  <FormField label="Budget Type" required error={fieldErrors.budgetRangeType}>
                     <Select
                       value={formData.budgetRangeType}
                       onChange={(v) => updateField("budgetRangeType", v)}
@@ -529,7 +529,7 @@ export const EditSuperviseeModal: React.FC<EditSuperviseeModalProps> = ({
                       placeholder="Select budget type"
                     />
                   </FormField>
-                  <FormField label="Budget start ($)" required error={fieldErrors.budgetRangeStart}>
+                  <FormField label="Budget Start ($)" required error={fieldErrors.budgetRangeStart}>
                     <Input
                       type="number"
                       min={0}
@@ -538,7 +538,7 @@ export const EditSuperviseeModal: React.FC<EditSuperviseeModalProps> = ({
                       error={!!fieldErrors.budgetRangeStart}
                     />
                   </FormField>
-                  <FormField label="Budget end ($)" required error={fieldErrors.budgetRangeEnd}>
+                  <FormField label="Budget End ($)" required error={fieldErrors.budgetRangeEnd}>
                     <Input
                       type="number"
                       min={0}
@@ -549,7 +549,7 @@ export const EditSuperviseeModal: React.FC<EditSuperviseeModalProps> = ({
                   </FormField>
                 </div>
                 <FormField
-                  label="States they are looking in"
+                  label="States They Are Looking In"
                   required
                   error={fieldErrors.stateTheyAreLookingIn}
                 >
@@ -562,7 +562,7 @@ export const EditSuperviseeModal: React.FC<EditSuperviseeModalProps> = ({
                   />
                 </FormField>
                 <FormField
-                  label="Description of ideal supervisor"
+                  label="Description of Ideal Supervisor"
                   required
                   error={fieldErrors.idealSupervisor}
                 >

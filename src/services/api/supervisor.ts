@@ -3,7 +3,10 @@ import {
   SupervisorsResponse,
   SupervisorDetailsResponse,
   SupervisorActionResponse,
+  SupervisorUpdatePayload,
+  SupervisorUpdateResponse,
 } from "../types/supervisor";
+import { buildSupervisorUpdateFormData } from "../utils/supervisorProfileForm";
 import { apiGet, apiPatch } from "./apiUtils";
 import { showToast } from "../utils/toast";
 
@@ -50,6 +53,14 @@ export const supervisorApi = {
     return apiPatch<SupervisorActionResponse>(
       `/api/supervision/admin/supervisors/${id}/edit-verification-notes`,
       { verificationNotes }
+    );
+  },
+
+  async updateSupervisor(id: string, payload: SupervisorUpdatePayload): Promise<SupervisorUpdateResponse> {
+    const formData = buildSupervisorUpdateFormData(payload);
+    return apiPatch<SupervisorUpdateResponse>(
+      `/api/supervision/admin/supervisors/${id}`,
+      formData,
     );
   },
 };

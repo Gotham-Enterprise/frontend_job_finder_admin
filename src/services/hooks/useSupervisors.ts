@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient, useQueries, type QueryClient } f
 import { supervisorApi } from "../api/supervisor";
 import {
   SUPERVISION_PROFILE_OPTION_PARAMS,
+  SUPERVISION_SUPERVISOR_EDIT_OPTION_PARAMS,
   fetchSupervisionOptions,
   type SupervisionProfileOptionsParam,
 } from "../api/supervisionOptions";
@@ -95,6 +96,51 @@ export const useSupervisionProfileDisplayOptions = () => {
     availabilityOptions: queries[2].data ?? [],
     patientPopulationOptions: queries[3].data ?? [],
   };
+};
+
+export const useSupervisorEditFormOptions = () => {
+  const queries = useQueries({
+    queries: SUPERVISION_SUPERVISOR_EDIT_OPTION_PARAMS.map((param) => ({
+      queryKey: ["supervisor", "edit-options", param] as const,
+      queryFn: () => fetchSupervisionOptions(param as SupervisionProfileOptionsParam),
+      staleTime: 1000 * 60 * 10,
+    })),
+  });
+
+  return {
+    certificateOptions: queries[0].data ?? [],
+    formatOptions: queries[1].data ?? [],
+    availabilityOptions: queries[2].data ?? [],
+    patientPopulationOptions: queries[3].data ?? [],
+    yearsOfExperienceOptions: queries[4].data ?? [],
+    feeTypeOptions: queries[5].data ?? [],
+    isLoading: queries.some((q) => q.isLoading),
+  };
+};
+
+export const useUpdateSupervisor = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      id,
+      payload,
+    }: {
+      id: string;
+      payload: Parameters<typeof supervisorApi.updateSupervisor>[1];
+    }) => supervisorApi.updateSupervisor(id, payload),
+    onSuccess: async (_response, { id }) => {
+      showToast.success("Supervisor Updated", "Profile changes were saved successfully.");
+      await queryClient.invalidateQueries({ queryKey: supervisorQueryKeys.lists() });
+      await queryClient.invalidateQueries({ queryKey: supervisorQueryKeys.detail(id) });
+    },
+    onError: (error: Error) => {
+      showToast.error(
+        "Update Failed",
+        error.message || "Failed to update supervisor. Please try again.",
+      );
+    },
+  });
 };
 
 export const useApproveSupervisor = () => {
