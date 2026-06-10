@@ -21,6 +21,7 @@ import Badge from "@/components/ui/badge/Badge";
 import Avatar from "@/components/ui/avatar/Avatar";
 import { ApproveSupervisorModal, RejectSupervisorModal, SupervisorStatusBadge, EditVerificationNotesModal, EditSupervisorModal } from "../components";
 import { VerificationStatus } from "@/services/types/supervisor";
+import { getSupervisorCredentialTypeLabel, isSupervisorTypeWithoutCertifications } from "@/constants/supervisorSignupOptions";
 import { CloseLineIcon } from "@/icons";
 
 interface ViewDetailsProps {
@@ -337,10 +338,17 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
 
           {/* License / Credentials */}
           <SectionCard title="License & Credentials">
-            <FieldRow label="License Type" value={profile?.licenseType} />
+            <FieldRow
+              label={getSupervisorCredentialTypeLabel(profile?.supervisorType ?? "")}
+              value={
+                isSupervisorTypeWithoutCertifications(profile?.supervisorType ?? "")
+                  ? profile?.degreeType
+                  : profile?.licenseType
+              }
+            />
             <FieldRow label="License Number" value={profile?.licenseNumber} />
             <FieldRow label="States of Licensure" value={statesOfLicensureDisplay} />
-            <FieldRow label="License Expiration" value={formatDate(profile?.licenseExpiration)} />
+            <FieldRow label="License Expiration Date" value={formatDate(profile?.licenseExpiration)} />
             <FieldRow label="NPI Number" value={profile?.npiNumber} />
             <FieldRow label="Certifications" value={certificationDisplay} />
             <FieldRow label="License Document" value={profile?.licenseUrl ? (

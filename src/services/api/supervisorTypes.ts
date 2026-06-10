@@ -17,12 +17,19 @@ export interface SupervisorLicenseTypeData {
   name: string;
 }
 
+export interface SupervisorDegreeTypeData {
+  id: string;
+  occupationId: string;
+  name: string;
+}
+
 export interface SupervisorOccupationData {
   id: string;
   supervisorTypeId: string;
   name: string;
   specialties: SupervisorSpecialtyData[];
   licenseTypes: SupervisorLicenseTypeData[];
+  degreeTypes: SupervisorDegreeTypeData[];
 }
 
 export interface SupervisorTypeData {
