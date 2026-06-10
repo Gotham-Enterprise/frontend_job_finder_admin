@@ -19,7 +19,7 @@ import FullScreenSpinner from "../../../ui/FullScreenSpinner";
 import BackToListButton from "@/components/ui/BackToListButton";
 import Badge from "@/components/ui/badge/Badge";
 import Avatar from "@/components/ui/avatar/Avatar";
-import { ApproveSupervisorModal, RejectSupervisorModal, SupervisorStatusBadge, EditVerificationNotesModal } from "../components";
+import { ApproveSupervisorModal, RejectSupervisorModal, SupervisorStatusBadge, EditVerificationNotesModal, EditSupervisorModal } from "../components";
 import { VerificationStatus } from "@/services/types/supervisor";
 import { CloseLineIcon } from "@/icons";
 
@@ -57,7 +57,7 @@ function FieldRow({ label, value }: { label: string; value: React.ReactNode }) {
 }
 
 export default function ViewDetails({ id }: ViewDetailsProps) {
-  const { data, isLoading, error } = useSupervisorDetails(id);
+  const { data, isLoading, error, refetch } = useSupervisorDetails(id);
   const {
     certificateOptions,
     formatOptions,
@@ -114,6 +114,7 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
     return id || null;
   }, [data]);
 
+  const [editProfileOpen, setEditProfileOpen] = useState(false);
   const [approveModalOpen, setApproveModalOpen] = useState(false);
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
   const [editNotesModalOpen, setEditNotesModalOpen] = useState(false);
@@ -237,6 +238,15 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
           </BackToListButton>
 
           <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setEditProfileOpen(true)}
+              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-brand-700 bg-brand-50 hover:bg-brand-100 dark:bg-brand-500/10 dark:text-brand-300 dark:hover:bg-brand-500/20 rounded-lg transition-colors"
+            >
+              <Pencil className="h-4 w-4 shrink-0" aria-hidden />
+              Edit supervisor
+            </button>
+
             {verificationStatus !== "APPROVED" && (
               <button
                 onClick={() => { setApproveNotes(""); setApproveModalOpen(true); }}
@@ -460,6 +470,14 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
         onConfirm={handleSaveEditNotes}
         onCancel={() => { setEditNotesModalOpen(false); setEditNotesDraft(""); }}
         isLoading={isSavingNotes}
+      />
+
+      <EditSupervisorModal
+        isOpen={editProfileOpen}
+        onClose={() => setEditProfileOpen(false)}
+        supervisorId={id}
+        supervisorName={displayName || s.email}
+        onUpdate={() => refetch()}
       />
     </>
   );

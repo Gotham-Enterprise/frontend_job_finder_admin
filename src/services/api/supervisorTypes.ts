@@ -11,11 +11,18 @@ export interface SupervisorSpecialtyData {
   name: string;
 }
 
+export interface SupervisorLicenseTypeData {
+  id: string;
+  occupationId: string;
+  name: string;
+}
+
 export interface SupervisorOccupationData {
   id: string;
   supervisorTypeId: string;
   name: string;
   specialties: SupervisorSpecialtyData[];
+  licenseTypes: SupervisorLicenseTypeData[];
 }
 
 export interface SupervisorTypeData {

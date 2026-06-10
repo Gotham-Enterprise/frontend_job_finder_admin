@@ -12,6 +12,7 @@ import {
   SupervisorTablePagination,
   RejectSupervisorModal,
   ApproveSupervisorModal,
+  EditSupervisorModal,
 } from "./components";
 
 const Supervisors: React.FC<SupervisorsProps> = ({ className = "" }) => {
@@ -43,6 +44,10 @@ const Supervisors: React.FC<SupervisorsProps> = ({ className = "" }) => {
     clearAllFilters,
     clearIndividualFilter,
     hasActiveFilters,
+
+    editModal,
+    openEditModal,
+    closeEditModal,
 
     approveModal,
     rejectModal,
@@ -103,6 +108,7 @@ const Supervisors: React.FC<SupervisorsProps> = ({ className = "" }) => {
           isLoading={isLoading}
           tableColumns={tableColumns}
           onViewSupervisor={viewSupervisor}
+          onEditSupervisor={openEditModal}
           onApproveSupervisor={openApproveModal}
           onRejectSupervisor={openRejectModal}
           onRefresh={refetch}
@@ -135,6 +141,14 @@ const Supervisors: React.FC<SupervisorsProps> = ({ className = "" }) => {
         onConfirm={confirmReject}
         onCancel={closeRejectModal}
         isLoading={isRejecting}
+      />
+
+      <EditSupervisorModal
+        isOpen={editModal.isOpen}
+        onClose={closeEditModal}
+        supervisorId={editModal.supervisorId}
+        supervisorName={editModal.fullName}
+        onUpdate={() => refetch()}
       />
     </>
   );
