@@ -27,9 +27,9 @@ function getTickAmount(currentPeriod: Period, dataLength: number): number | unde
     case "7d":  return 7;
     case "28d": return 7;
     case "3m":  return 12;
-    case "6m":  return 12;
-    case "9m":  return 18;
-    case "1y":  return 12;
+    case "6m":  return 18;  // ~182 daily points — tick every ~10 days
+    case "9m":  return 18;  // ~273 daily points — tick every ~15 days
+    case "1y":  return 12;  // ~365 daily points — tick roughly every month
     case "custom":
       if (dataLength <= 7)   return dataLength;
       if (dataLength <= 31)  return 7;
@@ -70,7 +70,7 @@ export default function JobseekerTrends({ refreshKey }: JobseekerTrendsProps) {
     chart: {
       fontFamily: "Outfit, sans-serif",
       type: "area",
-      height: 180,
+      height: 420,
       toolbar: {
         show: false,
       },
@@ -296,7 +296,7 @@ export default function JobseekerTrends({ refreshKey }: JobseekerTrendsProps) {
               options={options}
               series={series}
               type="area"
-              height={719}
+              height={420}
             />
           </div>
         </div>
