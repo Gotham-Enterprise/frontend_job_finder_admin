@@ -1,5 +1,5 @@
 import React from "react";
-import { Check, Eye, X } from "lucide-react";
+import { Check, Eye, Pencil, X } from "lucide-react";
 import { formatDate } from "@/services/utils/dateUtils";
 import { formatUsStateCodeForDisplay } from "@/services/utils/formatUsStateLicensure";
 import { formatUSPhoneNationalDisplay } from "@/services/utils/phoneNumberUtils";
@@ -16,6 +16,7 @@ const SupervisorTable: React.FC<SupervisorTableProps> = ({
   isLoading,
   tableColumns,
   onViewSupervisor,
+  onEditSupervisor,
   onApproveSupervisor,
   onRejectSupervisor,
 }) => {
@@ -153,6 +154,15 @@ const SupervisorTable: React.FC<SupervisorTableProps> = ({
                       className="p-1.5 text-gray-500 hover:text-brand-600 dark:text-gray-400 dark:hover:text-brand-400 rounded transition-colors"
                     >
                       <Eye {...actionIconProps} />
+                    </button>
+                    <button
+                      onClick={() =>
+                        onEditSupervisor(supervisor.id, supervisor.fullName || supervisor.email)
+                      }
+                      title="Edit supervisor"
+                      className="p-1.5 text-gray-500 hover:text-brand-600 dark:text-gray-400 dark:hover:text-brand-400 rounded transition-colors"
+                    >
+                      <Pencil {...actionIconProps} />
                     </button>
 
                     {supervisor.verificationStatus !== "APPROVED" && (

@@ -31,6 +31,7 @@ export interface SupervisorTableProps {
   isLoading: boolean;
   tableColumns: Array<{ key: string; label: string; className?: string }>;
   onViewSupervisor: (supervisorId: string) => void;
+  onEditSupervisor: (supervisorId: string, fullName: string) => void;
   onApproveSupervisor: (supervisorId: string, fullName: string) => void;
   onRejectSupervisor: (supervisorId: string, fullName: string) => void;
   onRefresh?: () => void;

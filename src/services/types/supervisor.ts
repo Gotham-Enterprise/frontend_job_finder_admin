@@ -159,3 +159,39 @@ export interface SupervisorActionResponse {
   message: string;
   data: SupervisorProfile;
 }
+
+export interface SupervisorUpdatePayload {
+  fullName?: string;
+  contactNumber?: string;
+  city?: string;
+  state?: string;
+  zipcode?: string;
+  supervisorType?: string;
+  occupation?: string | null;
+  specialty?: string | null;
+  licenseType?: string;
+  licenseNumber?: string;
+  licenseExpiration?: string;
+  yearsOfExperience?: string;
+  stateOfLicensure?: string[];
+  patientPopulation?: string[];
+  certification?: string[];
+  supervisionFormat?: string;
+  availability?: string;
+  professionalSummary?: string;
+  describeYourself?: string;
+  acceptingSupervisees?: boolean;
+  supervisionFeeType?: string;
+  supervisionFeeAmount?: number;
+  uploadProfilePhoto?: File;
+  uploadLicense?: File;
+}
+
+export interface SupervisorUpdateResponse {
+  success: boolean;
+  message: string;
+  data: {
+    user: Pick<SupervisorDetails, "id" | "fullName" | "contactNumber" | "city" | "state" | "zipcode" | "profilePhotoUrl" | "stateOfLicensure">;
+    supervisor: SupervisorProfile;
+  };
+}
