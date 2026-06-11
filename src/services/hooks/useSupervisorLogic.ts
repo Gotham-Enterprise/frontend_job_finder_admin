@@ -165,6 +165,7 @@ export const useSupervisorLogic = () => {
       { key: "occupation", label: "Occupation" },
       { key: "specialty", label: "Specialty" },
       { key: "licenseType", label: "License Type" },
+      { key: "degreeType", label: "Degree Type" },
       { key: "yearsOfExperience", label: "Experience" },
       { key: "verificationStatus", label: "Status" },
       { key: "createdAt", label: "Submitted" },

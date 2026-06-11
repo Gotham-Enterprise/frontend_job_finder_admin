@@ -30,6 +30,10 @@ import { useSupervisorTypesData } from "@/services/hooks/useSupervisees";
 import { useStates } from "@/services/hooks/useStates";
 import {
   SUPERVISOR_PROFILE_TEXT_MAX_LENGTH,
+  SUPERVISOR_CERTIFICATIONS_DISABLED_MESSAGE,
+  getSupervisorCredentialTypeLabel,
+  getSupervisorCredentialSelectOptions,
+  isSupervisorTypeWithoutCertifications,
   supervisorYearsOfExperienceSelectOptions,
 } from "@/constants/supervisorSignupOptions";
 
@@ -51,6 +55,7 @@ const emptyForm = (): SupervisorEditFormData => ({
   occupation: "",
   specialty: "",
   licenseType: "",
+  degreeType: "",
   licenseNumber: "",
   licenseExpiration: "",
   yearsOfExperience: "",
@@ -176,19 +181,35 @@ export const EditSupervisorModal: React.FC<EditSupervisorModalProps> = ({
     return "Select specialty (optional)";
   }, [formData.occupation, specialtyChoices.length]);
 
+  const certificationsDisabled = isSupervisorTypeWithoutCertifications(formData.supervisorType);
+  const credentialTypeLabel = getSupervisorCredentialTypeLabel(formData.supervisorType);
+  const usesDegreeTypeField = certificationsDisabled;
+  const credentialField = usesDegreeTypeField ? "degreeType" : "licenseType";
+  const credentialFieldError = fieldErrors[credentialField];
+  const certificationsPlaceholder = certificationsDisabled
+    ? "Not applicable for this supervisor type"
+    : "Select certifications...";
+
   const licenseTypeChoices = useMemo(
     () =>
       choicesOnly(
-        selectedOccupation?.licenseTypes.map((l) => ({ label: l.name, value: l.name })) ?? [],
+        getSupervisorCredentialSelectOptions(selectedType, selectedOccupation),
       ),
-    [selectedOccupation],
+    [selectedType, selectedOccupation],
   );
 
+  const credentialChoices = licenseTypeChoices;
+
   const licenseTypePlaceholder = useMemo(() => {
+    const usesDegreeTypeLabel = isSupervisorTypeWithoutCertifications(formData.supervisorType);
+    if (usesDegreeTypeLabel) {
+      if (licenseTypeChoices.length === 0) return "Select degree type";
+      return "Select degree type";
+    }
     if (!formData.occupation) return "Select an occupation first";
     if (licenseTypeChoices.length === 0) return "No license types available";
     return "Select license type";
-  }, [formData.occupation, licenseTypeChoices.length]);
+  }, [formData.occupation, formData.supervisorType, licenseTypeChoices.length]);
 
   const certMultiOptions = useMemo(
     () =>
@@ -255,18 +276,35 @@ export const EditSupervisorModal: React.FC<EditSupervisorModalProps> = ({
         next.occupation = "";
         next.specialty = "";
         next.licenseType = "";
+        next.degreeType = "";
+        if (isSupervisorTypeWithoutCertifications(value as string)) {
+          next.certification = [];
+        }
       }
       if (field === "occupation") {
         next.specialty = "";
         next.licenseType = "";
+        next.degreeType = "";
       }
       if (field === "state") next.city = "";
       return next;
     });
     setFieldErrors((prev) => {
-      if (!prev[field as keyof SupervisorFieldErrors]) return prev;
-      const { [field as keyof SupervisorFieldErrors]: _, ...rest } = prev;
-      return rest as SupervisorFieldErrors;
+      const keysToClear = new Set<keyof SupervisorFieldErrors>([field as keyof SupervisorFieldErrors]);
+      if (field === "supervisorType" && isSupervisorTypeWithoutCertifications(value as string)) {
+        keysToClear.add("certification");
+        keysToClear.add("degreeType");
+        keysToClear.add("licenseType");
+      }
+      const next = { ...prev };
+      let changed = false;
+      for (const key of keysToClear) {
+        if (next[key]) {
+          delete next[key];
+          changed = true;
+        }
+      }
+      return changed ? (next as SupervisorFieldErrors) : prev;
     });
   };
 
@@ -444,10 +482,10 @@ export const EditSupervisorModal: React.FC<EditSupervisorModalProps> = ({
                 </div>
               </section>
 
-              {/* Professional & licensure */}
+              {/* Professional Info & Licensure */}
               <section className="space-y-4">
                 <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-                  Professional & licensure
+                  Professional Info & Licensure
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <FormField
@@ -481,13 +519,13 @@ export const EditSupervisorModal: React.FC<EditSupervisorModalProps> = ({
                       disabled={!formData.occupation}
                     />
                   </FormField>
-                  <FormField label="License Type" required error={fieldErrors.licenseType}>
+                  <FormField label={credentialTypeLabel} required error={credentialFieldError}>
                     <Select
-                      value={formData.licenseType}
-                      onChange={(v) => updateField("licenseType", v)}
-                      options={licenseTypeChoices}
+                      value={formData[credentialField]}
+                      onChange={(v) => updateField(credentialField, v)}
+                      options={credentialChoices}
                       placeholder={licenseTypePlaceholder}
-                      disabled={!formData.occupation}
+                      disabled={usesDegreeTypeField ? false : !formData.occupation}
                     />
                   </FormField>
                   <FormField label="License Number" error={fieldErrors.licenseNumber}>
@@ -498,7 +536,7 @@ export const EditSupervisorModal: React.FC<EditSupervisorModalProps> = ({
                       error={!!fieldErrors.licenseNumber}
                     />
                   </FormField>
-                  <FormField label="License Expiration" error={fieldErrors.licenseExpiration}>
+                  <FormField label="License Expiration Date" error={fieldErrors.licenseExpiration}>
                     <DatePicker
                       key={`license-expiration-${supervisorId}-${formData.licenseExpiration || "empty"}`}
                       id={`supervisor-license-expiration-${supervisorId}`}
@@ -571,6 +609,23 @@ export const EditSupervisorModal: React.FC<EditSupervisorModalProps> = ({
                     JPEG, PNG, PDF, DOC, DOCX · max 5 MB
                   </p>
                 </FormField>
+                <FormField label="Certifications" error={fieldErrors.certification}>
+                  <div title={certificationsDisabled ? SUPERVISOR_CERTIFICATIONS_DISABLED_MESSAGE : undefined}>
+                    <MultiSelect
+                      label=""
+                      options={certMultiOptions}
+                      value={formData.certification}
+                      onChange={(selected) => updateField("certification", selected)}
+                      placeholder={certificationsPlaceholder}
+                      disabled={certificationsDisabled || isSaving}
+                    />
+                  </div>
+                  {certificationsDisabled ? (
+                    <p className="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                      {SUPERVISOR_CERTIFICATIONS_DISABLED_MESSAGE}
+                    </p>
+                  ) : null}
+                </FormField>
                 <FormField label="About" required error={fieldErrors.describeYourself}>
                   <TextArea
                     value={formData.describeYourself}
@@ -638,15 +693,6 @@ export const EditSupervisorModal: React.FC<EditSupervisorModalProps> = ({
                     />
                   </FormField>
                 </div>
-                <FormField label="Certifications" error={fieldErrors.certification}>
-                  <MultiSelect
-                    label=""
-                    options={certMultiOptions}
-                    value={formData.certification}
-                    onChange={(selected) => updateField("certification", selected)}
-                    placeholder="Select certifications..."
-                  />
-                </FormField>
                 <FormField label="Patient Population" error={fieldErrors.patientPopulation}>
                   <MultiSelect
                     label=""

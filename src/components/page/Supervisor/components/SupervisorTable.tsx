@@ -11,6 +11,14 @@ import { SupervisorTableProps } from "@/services/types/SupervisorTypes";
 const ACTION_ICON_PX = 16;
 const actionIconProps = { size: ACTION_ICON_PX, className: "shrink-0" } as const;
 
+function renderOptionalCredential(value: string | null | undefined) {
+  return value?.trim() ? (
+    value
+  ) : (
+    <span className="text-gray-400 italic">N/A</span>
+  );
+}
+
 const SupervisorTable: React.FC<SupervisorTableProps> = ({
   data,
   isLoading,
@@ -123,7 +131,12 @@ const SupervisorTable: React.FC<SupervisorTableProps> = ({
 
                 {/* License Type */}
                 <TableCell className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">
-                  {supervisor.licenseType || <span className="text-gray-400 italic">—</span>}
+                  {renderOptionalCredential(supervisor.licenseType)}
+                </TableCell>
+
+                {/* Degree Type */}
+                <TableCell className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                  {renderOptionalCredential(supervisor.degreeType)}
                 </TableCell>
 
                 {/* Years of Experience */}
