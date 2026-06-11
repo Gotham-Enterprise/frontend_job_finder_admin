@@ -26,6 +26,7 @@ export interface Supervisor {
   supervisorSpecialty: string | null;
   verificationStatus: VerificationStatus;
   licenseType: string | null;
+  degreeType: string | null;
   yearsOfExperience: string | null;
   createdAt: string;
 }
@@ -59,6 +60,7 @@ export interface SupervisorProfile {
   id: string;
   userId: string;
   licenseType: string | null;
+  degreeType: string | null;
   profession: string | null;
   professionOther: string | null;
   licenseNumber: string | null;
@@ -170,6 +172,7 @@ export interface SupervisorUpdatePayload {
   occupation?: string | null;
   specialty?: string | null;
   licenseType?: string;
+  degreeType?: string;
   licenseNumber?: string;
   licenseExpiration?: string;
   yearsOfExperience?: string;

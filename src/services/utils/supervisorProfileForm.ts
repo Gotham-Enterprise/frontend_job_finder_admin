@@ -2,6 +2,8 @@ import {
   SUPERVISOR_PROFILE_TEXT_MAX_LENGTH,
   SUPERVISOR_PROFILE_TEXT_MIN_LENGTH,
   SUPERVISOR_YEARS_OF_EXPERIENCE_OPTIONS,
+  isSupervisorTypeWithoutCertifications,
+  isValidPhysicianDegreeType,
 } from "@/constants/supervisorSignupOptions";
 import type { SupervisorDetails, SupervisorUpdatePayload } from "@/services/types/supervisor";
 import { formatUSPhoneForDisplay } from "@/services/utils/phoneNumberUtils";
@@ -21,6 +23,7 @@ export interface SupervisorEditFormData {
   occupation: string;
   specialty: string;
   licenseType: string;
+  degreeType: string;
   licenseNumber: string;
   licenseExpiration: string;
   yearsOfExperience: string;
@@ -64,7 +67,13 @@ export function validateSupervisorEditForm(form: SupervisorEditFormData): Superv
   if (!form.occupation) {
     errors.occupation = "Occupation is required";
   }
-  if (!form.licenseType) {
+  if (isSupervisorTypeWithoutCertifications(form.supervisorType)) {
+    if (!form.degreeType) {
+      errors.degreeType = "Degree type is required";
+    } else if (!isValidPhysicianDegreeType(form.degreeType)) {
+      errors.degreeType = "Degree type must be MD or DO";
+    }
+  } else if (!form.licenseType) {
     errors.licenseType = "License type is required";
   }
   if (!form.stateOfLicensure.length) {
@@ -96,6 +105,8 @@ export function mapSupervisorDetailsToFormData(
 ): SupervisorEditFormData {
   const profile = details.supervisorProfile;
 
+  const physicianSupervisor = isSupervisorTypeWithoutCertifications(profile?.supervisorType ?? "");
+
   return {
     fullName: details.fullName ?? "",
     contactNumber: details.contactNumber
@@ -107,7 +118,10 @@ export function mapSupervisorDetailsToFormData(
     supervisorType: profile?.supervisorType ?? "",
     occupation: profile?.occupation ?? details.supervisorOccupation ?? "",
     specialty: profile?.specialty ?? details.supervisorSpecialty ?? "",
-    licenseType: profile?.licenseType ?? "",
+    licenseType: physicianSupervisor ? "" : profile?.licenseType ?? "",
+    degreeType: physicianSupervisor
+      ? profile?.degreeType ?? profile?.licenseType ?? ""
+      : "",
     licenseNumber: profile?.licenseNumber ?? "",
     licenseExpiration: profile?.licenseExpiration
       ? profile.licenseExpiration.slice(0, 10)
@@ -120,7 +134,9 @@ export function mapSupervisorDetailsToFormData(
     })(),
     stateOfLicensure: details.stateOfLicensure ?? [],
     patientPopulation: profile?.patientPopulation ?? [],
-    certification: profile?.certification ?? [],
+    certification: isSupervisorTypeWithoutCertifications(profile?.supervisorType ?? "")
+      ? []
+      : profile?.certification ?? [],
     supervisionFormat: profile?.supervisionFormat ?? "",
     availability: profile?.availability ?? "",
     professionalSummary: profile?.professionalSummary ?? "",
@@ -184,13 +200,19 @@ export function formDataToUpdatePayload(
     supervisorType: form.supervisorType || undefined,
     occupation: form.occupation || null,
     specialty: form.specialty || null,
-    licenseType: form.licenseType || undefined,
+    ...(isSupervisorTypeWithoutCertifications(form.supervisorType)
+      ? { degreeType: form.degreeType || undefined }
+      : { licenseType: form.licenseType || undefined }),
     licenseNumber: form.licenseNumber.trim() || undefined,
     licenseExpiration: form.licenseExpiration || undefined,
     yearsOfExperience: form.yearsOfExperience || undefined,
     stateOfLicensure: form.stateOfLicensure.length ? form.stateOfLicensure : undefined,
     patientPopulation: form.patientPopulation.length ? form.patientPopulation : undefined,
-    certification: form.certification.length ? form.certification : undefined,
+    certification: isSupervisorTypeWithoutCertifications(form.supervisorType)
+      ? []
+      : form.certification.length
+        ? form.certification
+        : undefined,
     supervisionFormat: form.supervisionFormat || undefined,
     availability: form.availability || undefined,
     professionalSummary: form.professionalSummary.trim() || undefined,
