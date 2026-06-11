@@ -27,6 +27,7 @@ export interface SurveyJobsParams {
   search?: string;
   locationState?: string;
   locationCity?: string;
+  affiliatePartnerId?: string;
   sortBy?: SurveyJobSortBy;
 }
 
