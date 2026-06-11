@@ -5,12 +5,14 @@ import { X } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { SurveyJob, CreateSurveyJobData } from '@/services/api/surveyJobs'
 import { useCreateSurveyJob, useUpdateSurveyJob } from '@/services/hooks/useSurveyJobs'
+import { useAffiliatePartners } from '@/services/hooks/useAffiliates'
 import { apiGet } from '@/services/api/apiUtils'
 import Select from '@/components/form/Select'
 import RichTextEditor from '@/components/form/input/RichTextEditor'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
+const MANUAL_SURVEY_PARTNER_NAMES = ['Survey Junkie', 'Sermo']
 
 const SALARY_TYPES = [
   { value: 'hourly', label: 'Hourly' },
@@ -41,8 +43,9 @@ interface Props {
 
 // ─── Blank form state ─────────────────────────────────────────────────────────
 
-function blankForm(): CreateSurveyJobData {
+function blankForm(affiliatePartnerId = ''): CreateSurveyJobData {
   return {
+    affiliatePartnerId,
     title: '',
     jobDescription: '',
     occupationId: 0,
@@ -100,11 +103,26 @@ export default function CreateSurveyJobModal({ isOpen, onClose, job }: Props) {
   const updateMutation = useUpdateSurveyJob()
   const isPending = createMutation.isPending || updateMutation.isPending
 
+  const { data: partnersData, isLoading: loadingPartners } = useAffiliatePartners({
+    limit: 100,
+    status: 'active',
+  })
+
+  const surveyPartners = (partnersData?.data ?? []).filter(
+    (p) => !p.syncEnabled && MANUAL_SURVEY_PARTNER_NAMES.includes(p.name)
+  )
+
+  const defaultPartnerId =
+    surveyPartners.find((p) => p.name === 'Survey Junkie')?.id ??
+    surveyPartners[0]?.id ??
+    ''
+
   // ── Populate form when editing ─────────────────────────────────────────────
   useEffect(() => {
     if (isOpen) {
       if (job) {
         setForm({
+          affiliatePartnerId: job.affiliate?.id ?? '',
           title: job.title,
           jobDescription: job.jobDescription ?? '',
           occupationId: job.occupation?.id ?? 0,
@@ -125,11 +143,11 @@ export default function CreateSurveyJobModal({ isOpen, onClose, job }: Props) {
           expiresAt: job.expiresAt ? job.expiresAt.split('T')[0] : '',
         })
       } else {
-        setForm(blankForm())
+        setForm(blankForm(defaultPartnerId))
       }
       setErrors({})
     }
-  }, [isOpen, job])
+  }, [isOpen, job, defaultPartnerId])
 
   // ── Field change ───────────────────────────────────────────────────────────
   const set = (field: keyof CreateSurveyJobData, value: any) => {
@@ -144,6 +162,9 @@ export default function CreateSurveyJobModal({ isOpen, onClose, job }: Props) {
   // ── Client-side validation ─────────────────────────────────────────────────
   const validate = (): boolean => {
     const errs: Record<string, string> = {}
+    if (!isEdit && !form.affiliatePartnerId) {
+      errs.affiliatePartnerId = 'Affiliate partner is required'
+    }
     if (!form.title.trim()) errs.title = 'Job title is required'
     if (!form.occupationId) errs.occupationId = 'Occupation is required'
     if (!form.locationCity.trim()) errs.locationCity = 'City is required'
@@ -206,6 +227,35 @@ export default function CreateSurveyJobModal({ isOpen, onClose, job }: Props) {
 
         {/* Body */}
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-5">
+          {/* Affiliate Partner */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Affiliate Partner {!isEdit && <span className="text-red-500">*</span>}
+            </label>
+            {isEdit ? (
+              <input
+                type="text"
+                value={job?.affiliate?.name ?? '—'}
+                disabled
+                className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 cursor-not-allowed"
+              />
+            ) : (
+              <Select
+                placeholder={loadingPartners ? 'Loading…' : 'Select affiliate partner'}
+                disabled={loadingPartners || surveyPartners.length === 0}
+                value={form.affiliatePartnerId}
+                options={surveyPartners.map((p) => ({
+                  value: p.id,
+                  label: p.name,
+                }))}
+                onChange={(val) => set('affiliatePartnerId', val)}
+              />
+            )}
+            {errors.affiliatePartnerId && (
+              <p className="text-red-500 text-xs mt-1">{errors.affiliatePartnerId}</p>
+            )}
+          </div>
+
           {/* Job Title */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
