@@ -29,6 +29,10 @@ export interface SurveyJob {
     id: number;
     name: string;
   } | null;
+  affiliate?: {
+    id: string;
+    name: string;
+  } | null;
 }
 
 export interface SurveyJobListResponse {
@@ -42,6 +46,7 @@ export interface SurveyJobListResponse {
 }
 
 export interface CreateSurveyJobData {
+  affiliatePartnerId: string;
   title: string;
   jobDescription?: string;
   occupationId: number;
@@ -81,6 +86,7 @@ export const getSurveyJobs = async (params?: {
   search?: string;
   locationState?: string;
   locationCity?: string;
+  affiliatePartnerId?: string;
   sortBy?: SurveyJobSortBy;
 }): Promise<SurveyJobListResponse> => {
   const query = new URLSearchParams();
@@ -90,6 +96,7 @@ export const getSurveyJobs = async (params?: {
   if (params?.search) query.set("search", params.search);
   if (params?.locationState) query.set("locationState", params.locationState);
   if (params?.locationCity) query.set("locationCity", params.locationCity);
+  if (params?.affiliatePartnerId) query.set("affiliatePartnerId", params.affiliatePartnerId);
   if (params?.sortBy) query.set("sortBy", params.sortBy);
   const qs = query.toString();
   return apiGet<SurveyJobListResponse>(`/api/admin/affiliates/survey-jobs${qs ? `?${qs}` : ""}`);

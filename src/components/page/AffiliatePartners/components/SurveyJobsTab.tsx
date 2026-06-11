@@ -4,6 +4,7 @@ import React, { useState, useRef } from 'react'
 import { autoUpdate, flip, FloatingPortal, offset, shift, useFloating } from '@floating-ui/react'
 import { Plus, Pencil, Trash2, Globe, Eye, Search, ArrowUpDown, ChevronDown, Info, MousePointerClick } from 'lucide-react'
 import { useSurveyJobs, useToggleSurveyJob, useDeleteSurveyJob } from '@/services/hooks/useSurveyJobs'
+import { useAffiliatePartners } from '@/services/hooks/useAffiliates'
 import { SurveyJobSortBy } from '@/services/api/surveyJobs'
 import type { SurveyJob } from '@/services/api/surveyJobs'
 import Pagination from '@/components/tables/Pagination'
@@ -37,6 +38,8 @@ const CLICK_COUNT_TOOLTIP =
   'Count of users who clicked the job and were redirected to the affiliate partner\'s site.'
 
 const PAGE_SIZE = 15
+
+const MANUAL_SURVEY_PARTNER_NAMES = ['Survey Junkie', 'Sermo']
 
 function isExpired(expiresAt: string | null): boolean {
   if (!expiresAt) return false
@@ -96,6 +99,7 @@ export default function SurveyJobsTab() {
   const [locationState, setLocationState] = useState('')
   const [cityInput, setCityInput] = useState('')
   const [locationCity, setLocationCity] = useState('')
+  const [affiliatePartnerId, setAffiliatePartnerId] = useState('')
   const [sortBy, setSortBy] = useState<SurveyJobSortBy>('date_desc')
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -134,12 +138,23 @@ export default function SurveyJobsTab() {
     setPage(1)
   }
 
+  const handlePartnerChange = (partnerId: string) => {
+    setAffiliatePartnerId(partnerId)
+    setPage(1)
+  }
+
+  const { data: partnersData } = useAffiliatePartners({ limit: 100, status: 'active' })
+  const surveyPartners = (partnersData?.data ?? []).filter(
+    (p) => !p.syncEnabled && MANUAL_SURVEY_PARTNER_NAMES.includes(p.name)
+  )
+
   const { data, isLoading, isError } = useSurveyJobs({
     page,
     limit: PAGE_SIZE,
     search: search || undefined,
     locationState: locationState || undefined,
     locationCity: locationCity || undefined,
+    affiliatePartnerId: affiliatePartnerId || undefined,
     sortBy,
   })
 
@@ -183,7 +198,7 @@ export default function SurveyJobsTab() {
         <div>
           <h2 className="text-base font-semibold text-gray-900 dark:text-white">Survey Jobs</h2>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-            Manually posted opportunities via Survey Junkie
+            Manually posted opportunities via affiliate partners (Survey Junkie, Sermo)
           </p>
         </div>
         <button
@@ -234,6 +249,21 @@ export default function SurveyJobsTab() {
             placeholder={locationState ? 'Filter by city…' : 'Select state first'}
             className="pl-3 pr-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary disabled:opacity-50 disabled:cursor-not-allowed w-44"
           />
+        </div>
+
+        {/* Partner filter */}
+        <div className="relative">
+          <select
+            value={affiliatePartnerId}
+            onChange={(e) => handlePartnerChange(e.target.value)}
+            className="appearance-none pl-3 pr-8 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary cursor-pointer"
+          >
+            <option value="">All Partners</option>
+            {surveyPartners.map((p) => (
+              <option key={p.id} value={p.id}>{p.name}</option>
+            ))}
+          </select>
+          <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
         </div>
 
         {/* Sort */}
@@ -288,6 +318,9 @@ export default function SurveyJobsTab() {
                     Title
                   </th>
                   <th className="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">
+                    Partner
+                  </th>
+                  <th className="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">
                     Location
                   </th>
                   <th className="text-left px-4 py-3 font-medium text-gray-600 dark:text-gray-400">
@@ -321,6 +354,9 @@ export default function SurveyJobsTab() {
                   >
                     <td className="px-4 py-3 text-gray-900 dark:text-white font-medium max-w-xs truncate">
                       {job.title}
+                    </td>
+                    <td className="px-4 py-3 text-gray-600 dark:text-gray-400 whitespace-nowrap">
+                      {job.affiliate?.name ?? '—'}
                     </td>
                     <td className="px-4 py-3 text-gray-600 dark:text-gray-400 whitespace-nowrap">
                       {[job.locationCity, job.locationState].filter(Boolean).join(', ') || '—'}
