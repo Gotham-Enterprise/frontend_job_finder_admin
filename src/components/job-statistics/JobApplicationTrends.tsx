@@ -25,7 +25,7 @@ export default function JobApplicationTrends({ refreshKey }: JobApplicationTrend
     chart: {
       fontFamily: "Outfit, sans-serif",
       type: "bar",
-      height: 180,
+      height: 420,
       toolbar: {
         show: false,
       },
@@ -159,7 +159,7 @@ export default function JobApplicationTrends({ refreshKey }: JobApplicationTrend
               options={options}
               series={series}
               type="bar"
-              height={719}
+              height={420}
             />
           </div>
         </div>
