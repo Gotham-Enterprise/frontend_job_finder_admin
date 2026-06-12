@@ -2,7 +2,7 @@ import { ApexOptions } from "apexcharts";
 import dynamic from "next/dynamic";
 import { useEffect, useState, useRef, useMemo, useCallback } from "react";
 import { adminAnalyticsService } from "@/services/adminAnalytics";
-import type { Period } from "@/types/analytics";
+import type { Period, GroupBy } from "@/types/analytics";
 import { buildCustomDateRange, formatDateForDisplay } from "@/utils/chartDateUtils";
 import flatpickr from "flatpickr";
 import "flatpickr/dist/flatpickr.css";
@@ -15,29 +15,15 @@ interface JobseekerTrendsProps {
   refreshKey?: number;
 }
 
-// Moved outside component — pure function with no closure deps, so recreating
-// it on every render was wasteful and made useMemo dependency tracking noisier.
-function getTickAmount(currentPeriod: Period, dataLength: number): number | undefined {
-  switch (currentPeriod) {
-    case "24h":
-      // undefined lets ApexCharts auto-distribute labels. Combined with
-      // hideOverlappingLabels:true, it always keeps the first and last label
-      // visible — ensuring the full 24-hour rolling window is shown.
-      return undefined;
-    case "7d":  return 7;
-    case "28d": return 7;
-    case "3m":  return 12;
-    case "6m":  return 12;
-    case "9m":  return 18;
-    case "1y":  return 12;
-    case "custom":
-      if (dataLength <= 7)   return dataLength;
-      if (dataLength <= 31)  return 7;
-      if (dataLength <= 180) return 12;
-      return 18;
-    default:
-      return undefined;
-  }
+// Moved outside component — pure function with no closure deps.
+// Driven by the actual dataLength returned from the API so it adapts correctly
+// for any groupBy (monthly → few labels, daily → many labels).
+function getTickAmount(dataLength: number): number | undefined {
+  if (dataLength <= 12)  return undefined; // show all — ApexCharts auto-spaces
+  if (dataLength <= 31)  return 7;
+  if (dataLength <= 52)  return 12;
+  if (dataLength <= 180) return 12;
+  return 18;
 }
 
 // Static — never changes. Defined outside so it isn't reallocated every render.
@@ -51,8 +37,19 @@ const PERIOD_LABELS: Record<Exclude<Period, "custom">, string> = {
   "1y":  "1Y",
 };
 
+const GROUP_BY_LABELS: Record<GroupBy, string> = {
+  daily:   "Daily",
+  weekly:  "Weekly",
+  monthly: "Monthly",
+};
+
+// Periods that show the groupBy selector. 24h / 7d / 28d are always fixed-grain.
+const GROUPBY_ELIGIBLE_PERIODS = new Set<Period>(["3m", "6m", "9m", "1y", "custom"]);
+
 export default function JobseekerTrends({ refreshKey }: JobseekerTrendsProps) {
   const [period, setPeriod] = useState<Period>("3m");
+  // Default monthly for all groupBy-eligible periods (3m → 1y and custom).
+  const [groupBy, setGroupBy] = useState<GroupBy>("monthly");
   const [categories, setCategories] = useState<string[]>([]);
   const [data, setData] = useState<number[]>([]);
   const [total, setTotal] = useState<number>(0);
@@ -65,12 +62,18 @@ export default function JobseekerTrends({ refreshKey }: JobseekerTrendsProps) {
   const datePickerRef = useRef<HTMLInputElement>(null);
   const flatpickrInstance = useRef<flatpickr.Instance | null>(null);
 
+  // Whether to show the groupBy selector for the current period.
+  const showGroupBySelector = GROUPBY_ELIGIBLE_PERIODS.has(period);
+
+  // Rotate x-axis labels when there are enough data points to crowd them.
+  const shouldRotateLabels = categories.length > 13;
+
   const options: ApexOptions = useMemo(() => ({
     colors: ["#10B981"],
     chart: {
       fontFamily: "Outfit, sans-serif",
       type: "area",
-      height: 180,
+      height: 420,
       toolbar: {
         show: false,
       },
@@ -84,14 +87,14 @@ export default function JobseekerTrends({ refreshKey }: JobseekerTrendsProps) {
     },
     xaxis: {
       categories: categories,
-      tickAmount: getTickAmount(period, categories.length),
+      tickAmount: getTickAmount(categories.length),
       labels: {
-        rotate: period === "6m" || period === "9m" ? -45 : -45,
-        rotateAlways: period === "6m" || period === "9m" ? true : false,
+        rotate: -45,
+        rotateAlways: shouldRotateLabels,
         hideOverlappingLabels: true,
-        trim: false, // Don't trim labels to avoid "..." truncation
+        trim: false,
         style: {
-          fontSize: period === "6m" || period === "9m" ? "10px" : "11px",
+          fontSize: categories.length > 52 ? "10px" : "11px",
         },
       },
       axisBorder: {
@@ -136,7 +139,7 @@ export default function JobseekerTrends({ refreshKey }: JobseekerTrendsProps) {
         formatter: (val: number) => `${val}`,
       },
     },
-  }), [period, categories]);
+  }), [categories, shouldRotateLabels]);
 
   // Memoized so react-apexcharts receives a stable reference between renders.
   // Without this, a new array is created on every render (e.g. when isLoading
@@ -182,9 +185,13 @@ export default function JobseekerTrends({ refreshKey }: JobseekerTrendsProps) {
     const fetchTrends = async () => {
       try {
         setIsLoading(true);
+        // Pass groupBy only for eligible periods — backend ignores it for 24h/7d/28d
+        // but sending it anyway is harmless; we skip it for clarity.
+        const effectiveGroupBy = GROUPBY_ELIGIBLE_PERIODS.has(period) ? groupBy : undefined;
         const response = await adminAnalyticsService.getJobseekerTrends(
           period,
-          period === "custom" ? customDateRange : undefined
+          period === "custom" ? customDateRange : undefined,
+          effectiveGroupBy
         );
         if (response.success && response.data) {
           setCategories(response.data.categories);
@@ -201,7 +208,7 @@ export default function JobseekerTrends({ refreshKey }: JobseekerTrendsProps) {
     if (period !== "custom" || (customDateRange.startDate && customDateRange.endDate)) {
       fetchTrends();
     }
-  }, [period, refreshKey, customDateRange]);
+  }, [period, groupBy, refreshKey, customDateRange]);
 
   const handleCustomDateClick = useCallback(() => {
     setShowCustomDatePicker(true);
@@ -211,6 +218,10 @@ export default function JobseekerTrends({ refreshKey }: JobseekerTrendsProps) {
   const handlePeriodClick = useCallback((p: Exclude<Period, "custom">) => {
     setPeriod(p);
     setCustomDateRange({ startDate: null, endDate: null });
+  }, []);
+
+  const handleGroupByClick = useCallback((g: GroupBy) => {
+    setGroupBy(g);
   }, []);
 
   return (
@@ -224,60 +235,82 @@ export default function JobseekerTrends({ refreshKey }: JobseekerTrendsProps) {
         </p>
       </div>
 
-      {/* Period Selector */}
-      <div className="flex gap-2 mb-4 flex-wrap items-center">
-        <div className="inline-flex gap-2 p-1.5 bg-gray-100 dark:bg-gray-800 rounded-xl relative">
-          {(Object.keys(PERIOD_LABELS) as Array<Exclude<Period, "custom">>).map((p) => (
-            <button
-              key={p}
-              onClick={() => handlePeriodClick(p)}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
-                period === p
-                  ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm"
-                  : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
-              }`}
-            >
-              {PERIOD_LABELS[p]}
-            </button>
-          ))}
-          <div className="relative">
-            <button
-              onClick={handleCustomDateClick}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
-                period === "custom"
-                  ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm"
-                  : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
-              }`}
-              title="Custom Date Range"
-            >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+      {/* Controls row — period selector + groupBy selector */}
+      <div className="flex flex-wrap gap-3 mb-4 items-center justify-between">
+        {/* Period selector */}
+        <div className="flex gap-2 flex-wrap items-center">
+          <div className="inline-flex gap-2 p-1.5 bg-gray-100 dark:bg-gray-800 rounded-xl relative">
+            {(Object.keys(PERIOD_LABELS) as Array<Exclude<Period, "custom">>).map((p) => (
+              <button
+                key={p}
+                onClick={() => handlePeriodClick(p)}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                  period === p
+                    ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm"
+                    : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+                }`}
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                />
-              </svg>
-            </button>
-            {/* Hidden date picker input positioned next to button */}
-            <input
-              ref={datePickerRef}
-              type="text"
-              className="absolute top-0 left-0 opacity-0 pointer-events-none w-full h-full"
-              placeholder="Select date range"
-              readOnly
-            />
+                {PERIOD_LABELS[p]}
+              </button>
+            ))}
+            <div className="relative">
+              <button
+                onClick={handleCustomDateClick}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                  period === "custom"
+                    ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm"
+                    : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+                }`}
+                title="Custom Date Range"
+              >
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  />
+                </svg>
+              </button>
+              {/* Hidden date picker input positioned next to button */}
+              <input
+                ref={datePickerRef}
+                type="text"
+                className="absolute top-0 left-0 opacity-0 pointer-events-none w-full h-full"
+                placeholder="Select date range"
+                readOnly
+              />
+            </div>
           </div>
+          {period === "custom" && customDateRange.startDate && customDateRange.endDate && (
+            <span className="text-sm text-gray-600 dark:text-gray-400">
+              {formatDateForDisplay(customDateRange.startDate)} to {formatDateForDisplay(customDateRange.endDate)}
+            </span>
+          )}
         </div>
-        {period === "custom" && customDateRange.startDate && customDateRange.endDate && (
-          <span className="text-sm text-gray-600 dark:text-gray-400">
-            {formatDateForDisplay(customDateRange.startDate)} to {formatDateForDisplay(customDateRange.endDate)}
-          </span>
+
+        {/* GroupBy selector — only shown for 3m, 6m, 9m, 1y, and custom ranges */}
+        {showGroupBySelector && (
+          <div className="inline-flex gap-1 p-1 bg-gray-100 dark:bg-gray-800 rounded-xl">
+            {(Object.keys(GROUP_BY_LABELS) as GroupBy[]).map((g) => (
+              <button
+                key={g}
+                onClick={() => handleGroupByClick(g)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                  groupBy === g
+                    ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm"
+                    : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+                }`}
+              >
+                {GROUP_BY_LABELS[g]}
+              </button>
+            ))}
+          </div>
         )}
       </div>
 
@@ -296,7 +329,7 @@ export default function JobseekerTrends({ refreshKey }: JobseekerTrendsProps) {
               options={options}
               series={series}
               type="area"
-              height={719}
+              height={420}
             />
           </div>
         </div>

@@ -5,6 +5,7 @@ import type {
   CategoryDistributionResponse,
   JobseekerTrendsResponse,
   Period,
+  GroupBy,
 } from "@/types/analytics";
 
 class AdminAnalyticsService {
@@ -51,21 +52,29 @@ class AdminAnalyticsService {
   }
 
   /**
-   * Get new jobseeker registration trends for specified period
+   * Get new jobseeker registration trends for specified period.
    * @param period - Time period: "24h", "7d", "28d", "3m", "6m", "9m", "1y", "custom"
    * @param customDateRange - Optional custom date range for "custom" period
+   * @param groupBy - Optional grouping granularity for 3m–1y and custom ranges.
+   *                  When omitted the backend uses its own default (daily for named
+   *                  periods, auto-detect for custom).
    */
   async getJobseekerTrends(
     period: Period = "3m",
-    customDateRange?: { startDate: string | null; endDate: string | null }
+    customDateRange?: { startDate: string | null; endDate: string | null },
+    groupBy?: GroupBy
   ): Promise<JobseekerTrendsResponse> {
     const timezone = this.getTimezone();
     let url = `/api/admin/analytics/jobseeker-trends?period=${period}&timezone=${encodeURIComponent(timezone)}`;
-    
+
     if (period === "custom" && customDateRange?.startDate && customDateRange?.endDate) {
       url += `&startDate=${customDateRange.startDate}&endDate=${customDateRange.endDate}`;
     }
-    
+
+    if (groupBy) {
+      url += `&groupBy=${groupBy}`;
+    }
+
     return apiGet<JobseekerTrendsResponse>(url);
   }
 }

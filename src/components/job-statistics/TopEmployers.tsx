@@ -85,7 +85,7 @@ export default function TopEmployers() {
 
   return (
     <div className="rounded-2xl border border-gray-200 bg-gray-100 dark:border-gray-800 dark:bg-white/[0.03]">
-      <div className="px-5 pt-5 bg-white shadow-default rounded-2xl pb-8 dark:bg-gray-900 sm:px-6 sm:pt-6 relative">
+      <div className="px-5 pt-5 bg-white shadow-default rounded-2xl pb-8 dark:bg-gray-900 sm:px-6 sm:pt-6 relative min-h-[420px]">
         {/* Blurred content wrapper */}
         <div className="blur-sm pointer-events-none select-none">
           <div className="flex justify-between">
