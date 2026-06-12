@@ -22,6 +22,7 @@ import {
   HandShake,
   MailIcon,
   ShootingStarIcon,
+  DocsIcon,
 } from "../icons/index";
 import { BriefcaseIcon, CareerLadderIcon, TicketIcon, BlogIcon, CouponIcon } from "../components/ui/icons/index";
 
@@ -140,6 +141,16 @@ const navItems: NavItem[] = [
       { name: "All Newsletters", path: "/admin/newsletters" },
       { name: "Create New", path: "/admin/newsletters/create" },
       { name: "Contacts", path: "/admin/newsletters/contacts" },
+    ],
+  },
+  {
+    icon: <DocsIcon />,
+    name: "Legal Documents",
+    path: "/admin/legal/privacy-policy",
+    isAccessible: true,
+    subItems: [
+      { name: "Privacy Policy", path: "/admin/legal/privacy-policy" },
+      { name: "Terms of Use", path: "/admin/legal/terms-of-use" },
     ],
   },
   {

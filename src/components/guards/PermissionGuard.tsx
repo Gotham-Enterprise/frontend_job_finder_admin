@@ -80,6 +80,11 @@ const getPermissionForPath = (pathname: string): { permission: string; action: '
   if (pathname.startsWith('/admin/supervisors') || pathname.startsWith('/admin/supervisees')) {
     return null;
   }
+
+  // Legal documents are accessible to all authenticated admins
+  if (pathname.startsWith('/admin/legal')) {
+    return null;
+  }
   
   if (pathname.startsWith('/admin/job-seekers')) {
     return { 
