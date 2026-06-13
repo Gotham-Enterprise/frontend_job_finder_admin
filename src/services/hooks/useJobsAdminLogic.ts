@@ -35,8 +35,8 @@ export const useJobsAdminLogic = () => {
         state: urlState || "",
         city: urlCity || "",
         jobStatus:
-          urlJobStatus === "Draft" || urlJobStatus === "Published"
-            ? (urlJobStatus as "Draft" | "Published")
+          urlJobStatus === "Draft" || urlJobStatus === "Published" || urlJobStatus === "Unpublished"
+            ? (urlJobStatus as "Draft" | "Published" | "Unpublished")
             : undefined,
         datePosted: urlDatePosted || "",
         occupationId: urlOccupationId ? parseInt(urlOccupationId) : undefined,
@@ -368,6 +368,7 @@ export const useJobsAdminLogic = () => {
       { value: "", label: "All Job Status" },
       { value: "Draft", label: "Draft" },
       { value: "Published", label: "Published" },
+      { value: "Unpublished", label: "Unpublished" },
     ],
     []
   );
@@ -487,16 +488,26 @@ export const useJobsAdminLogic = () => {
   );
 
   const jobStatusToggle = useCallback((statuses: string[]) => {
-    setSelectedJobStatuses(statuses);
+    const publishStatuses = new Set(["Published", "Unpublished"]);
+    let normalized = statuses;
+
+    if (statuses.includes("Published") && statuses.includes("Unpublished")) {
+      const newlySelected = statuses.find((status) => !selectedJobStatuses.includes(status));
+      normalized = newlySelected
+        ? [newlySelected]
+        : statuses.filter((status) => !publishStatuses.has(status));
+    }
+
+    setSelectedJobStatuses(normalized);
     startTransition(() => {
-      const jobStatus = statuses.length > 0 ? (statuses[0] as "Draft" | "Published") : undefined;
+      const jobStatus = normalized.length > 0 ? (normalized[0] as "Draft" | "Published" | "Unpublished") : undefined;
       setFilters((prev) => ({
         ...prev,
         jobStatus,
         ...(prev.jobStatus !== jobStatus && { page: 1 }),
       }));
     });
-  }, []);
+  }, [selectedJobStatuses]);
 
   const initPageChange = useMemo(
     () => (newPage: number) => {
@@ -512,6 +523,7 @@ export const useJobsAdminLogic = () => {
       (status: string): "light" | "solid" => {
         switch (status?.toLowerCase()) {
           case "open":
+          case "active":
             return "solid";
           case "closed":
             return "light";
@@ -530,6 +542,8 @@ export const useJobsAdminLogic = () => {
         switch (jobStatus?.toLowerCase()) {
           case "published":
             return "solid";
+          case "unpublished":
+            return "light";
           case "deleted":
             return "light";
           case "draft":
