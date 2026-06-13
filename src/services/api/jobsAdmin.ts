@@ -34,6 +34,7 @@ export const jobsAdminApi = {
     if (filters.isDeleted) queryParams.append("isDeleted", filters.isDeleted);
     if (filters.sortBy) queryParams.append("sortBy", filters.sortBy);
     if (filters.sortOrder) queryParams.append("sortOrder", filters.sortOrder);
+    if (filters.jobSource) queryParams.append("jobSource", filters.jobSource);
 
     const endpoint = `/api/admin/jobs?${queryParams.toString()}`;
 

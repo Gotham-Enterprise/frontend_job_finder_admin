@@ -18,6 +18,7 @@ export interface JobsAdmin {
   workSetting?: string;
   applicantCount?: number;
   viewsCount: number;
+  expiresAt: string | null;
 }
 
 export interface JobsAdminFilters {
@@ -34,6 +35,7 @@ export interface JobsAdminFilters {
   isDeleted?: "true" | "false" | "all";
   sortBy?: "datePosted" | "viewsCount";
   sortOrder?: "asc" | "desc";
+  jobSource?: "affiliate" | "scraped";
 }
 
 export interface JobsAdminResponse {

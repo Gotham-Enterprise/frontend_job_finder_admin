@@ -29,6 +29,7 @@ export interface JobsAdminFiltersProps {
   cityOptions: Array<{ value: string; label: string }>;
   isLoadingCities: boolean;
   jobStatusOptions: Array<{ value: string; label: string }>;
+  jobSourceOptions: Array<{ value: string; label: string }>;
   selectedOccupationId?: number;
   hasActiveFilters: boolean;
   selectedJobStatuses: string[];

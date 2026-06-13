@@ -16,6 +16,11 @@ import PermissionWrapper from '@/components/common/PermissionWrapper';
 import ConfirmationDialog from '@/components/ui/ConfirmationDialog';
 import { showToast } from '@/services/utils/toast';
 
+function isExpired(expiresAt: string | null): boolean {
+  if (!expiresAt) return false;
+  return new Date(expiresAt) < new Date();
+}
+
 const JobsAdminTable: React.FC<JobsAdminTableProps> = ({
   data,
   isLoading,
@@ -46,7 +51,7 @@ const JobsAdminTable: React.FC<JobsAdminTableProps> = ({
         <TableBody>
           {isLoading ? (
             <TableRow>
-              <TableCell className="text-center py-8 px-6" colSpan={10}>
+              <TableCell className="text-center py-8 px-6" colSpan={11}>
                 <div className="flex items-center justify-center gap-3">
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-brand-500"></div>
                   <p className="text-gray-500 dark:text-gray-400">Loading...</p>
@@ -55,7 +60,7 @@ const JobsAdminTable: React.FC<JobsAdminTableProps> = ({
             </TableRow>
           ) : !data?.data?.length ? (
             <TableRow>
-              <TableCell className="text-center py-8 px-6" colSpan={10}>
+              <TableCell className="text-center py-8 px-6" colSpan={11}>
                 <p className="text-gray-500 dark:text-gray-400">No jobs found</p>
               </TableCell>
             </TableRow>          
@@ -141,6 +146,30 @@ const JobsAdminTable: React.FC<JobsAdminTableProps> = ({
                         <div className="flex items-center mt-1">
                           <TimeIcon className="mr-1" />
                           <span>{datePosted.time}</span>
+                        </div>
+                      </div>
+                    );
+                  })() : (
+                    <span className="text-gray-400 dark:text-gray-500 italic">Not specified</span>
+                  )}
+                </TableCell>
+                <TableCell className="py-4 px-6 whitespace-nowrap">
+                  {job.expiresAt ? (() => {
+                    const expiresAt = formatDateTimeEST(job.expiresAt);
+                    const expired = isExpired(job.expiresAt);
+                    if (typeof expiresAt === 'string') {
+                      return (
+                        <p className={`text-sm ${expired ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-white'}`}>
+                          {expiresAt}
+                        </p>
+                      );
+                    }
+                    return (
+                      <div className={`text-sm ${expired ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-white'}`}>
+                        <div>{expiresAt.date}</div>
+                        <div className="flex items-center mt-1">
+                          <TimeIcon className="mr-1" />
+                          <span>{expiresAt.time}</span>
                         </div>
                       </div>
                     );

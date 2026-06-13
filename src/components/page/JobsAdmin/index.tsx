@@ -35,6 +35,7 @@ const JobsAdmin: React.FC<JobsAdminProps> = ({ className = "" }) => {
     
     tableColumns,
     jobStatusOptions,
+    jobSourceOptions,
     occupationOptions,
     specialtyOptions,
     stateOptions,
@@ -98,6 +99,7 @@ const JobsAdmin: React.FC<JobsAdminProps> = ({ className = "" }) => {
             cityOptions={cityOptions}
             isLoadingCities={isLoadingCities}
             jobStatusOptions={jobStatusOptions}
+            jobSourceOptions={jobSourceOptions}
             selectedOccupationId={selectedOccupationId}
             hasActiveFilters={hasActiveFilters}
             selectedJobStatuses={selectedJobStatuses}

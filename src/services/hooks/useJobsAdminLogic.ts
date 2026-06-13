@@ -23,6 +23,7 @@ export const useJobsAdminLogic = () => {
       const urlSpecialtyId = searchParams.get("specialtyId");
       const urlCompanyName = searchParams.get("companyName");
       const urlIsDeleted = searchParams.get("isDeleted");
+      const urlJobSource = searchParams.get("jobSource");
 
       const urlSortBy = searchParams.get("sortBy");
       const urlSortOrder = searchParams.get("sortOrder");
@@ -42,6 +43,10 @@ export const useJobsAdminLogic = () => {
         specialtyId: urlSpecialtyId ? parseInt(urlSpecialtyId) : undefined,
         companyName: urlCompanyName || "",
         isDeleted: urlIsDeleted === "true" || urlIsDeleted === "all" ? urlIsDeleted : undefined,
+        jobSource:
+          urlJobSource === "affiliate" || urlJobSource === "scraped"
+            ? urlJobSource
+            : undefined,
         sortBy: urlSortBy === "viewsCount" ? "viewsCount" : urlSortBy === "datePosted" ? "datePosted" : undefined,
         sortOrder: urlSortOrder === "asc" ? "asc" : urlSortOrder === "desc" ? "desc" : undefined,
       };
@@ -86,6 +91,7 @@ export const useJobsAdminLogic = () => {
               specialtyId: parsed.specialtyId || undefined,
               companyName: parsed.companyName || "",
               isDeleted: parsed.isDeleted || undefined,
+              jobSource: parsed.jobSource || undefined,
               sortBy: parsed.sortBy || undefined,
               sortOrder: parsed.sortOrder || undefined,
             };
@@ -112,6 +118,7 @@ export const useJobsAdminLogic = () => {
       specialtyId: undefined,
       companyName: "",
       isDeleted: undefined,
+      jobSource: undefined,
       sortBy: undefined,
       sortOrder: undefined,
     };
@@ -206,6 +213,7 @@ export const useJobsAdminLogic = () => {
     if (filters.specialtyId) params.set("specialtyId", filters.specialtyId.toString());
     if (filters.companyName) params.set("companyName", filters.companyName);
     if (filters.isDeleted) params.set("isDeleted", filters.isDeleted);
+    if (filters.jobSource) params.set("jobSource", filters.jobSource);
     if (filters.sortBy) params.set("sortBy", filters.sortBy);
     if (filters.sortOrder) params.set("sortOrder", filters.sortOrder);
 
@@ -250,6 +258,7 @@ export const useJobsAdminLogic = () => {
         specialtyId: filters.specialtyId,
         companyName: filters.companyName,
         isDeleted: filters.isDeleted,
+        jobSource: filters.jobSource,
         sortBy: filters.sortBy,
         sortOrder: filters.sortOrder,
       };
@@ -292,6 +301,7 @@ export const useJobsAdminLogic = () => {
       { key: "occupation", label: "Occupation" },
       { key: "location", label: "Location" },
       { key: "datePosted", label: "Date Posted" },
+      { key: "expiresAt", label: "Expiration Date" },
       {
         key: "views",
         label: React.createElement(
@@ -358,6 +368,15 @@ export const useJobsAdminLogic = () => {
       { value: "", label: "All Job Status" },
       { value: "Draft", label: "Draft" },
       { value: "Published", label: "Published" },
+    ],
+    []
+  );
+
+  const jobSourceOptions = useMemo(
+    () => [
+      { value: "", label: "All Sources" },
+      { value: "affiliate", label: "Affiliate Jobs" },
+      { value: "scraped", label: "Scraped Jobs" },
     ],
     []
   );
@@ -554,6 +573,7 @@ export const useJobsAdminLogic = () => {
       specialtyId: undefined,
       companyName: "",
       isDeleted: undefined,
+      jobSource: undefined,
       sortBy: undefined,
       sortOrder: undefined,
     };
@@ -607,6 +627,9 @@ export const useJobsAdminLogic = () => {
           case "isDeleted":
             updatedFilters.isDeleted = undefined;
             break;
+          case "jobSource":
+            updatedFilters.jobSource = undefined;
+            break;
           default:
             break;
         }
@@ -629,6 +652,7 @@ export const useJobsAdminLogic = () => {
       filters.occupationId ||
       filters.specialtyId ||
       filters.isDeleted ||
+      filters.jobSource ||
       selectedJobStatuses.length > 0
     );
   }, [
@@ -641,6 +665,7 @@ export const useJobsAdminLogic = () => {
     filters.occupationId,
     filters.specialtyId,
     filters.isDeleted,
+    filters.jobSource,
     selectedJobStatuses,
   ]);
 
@@ -686,6 +711,7 @@ export const useJobsAdminLogic = () => {
       filters.specialtyId ||
       filters.companyName ||
       filters.isDeleted ||
+      filters.jobSource ||
       (filters.page && filters.page > 1)
     ) {
       saveSearchState();
@@ -773,6 +799,7 @@ export const useJobsAdminLogic = () => {
 
     tableColumns,
     jobStatusOptions,
+    jobSourceOptions,
     occupationOptions,
     specialtyOptions,
     stateOptions,
