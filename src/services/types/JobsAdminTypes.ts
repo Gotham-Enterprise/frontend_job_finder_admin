@@ -29,6 +29,7 @@ export interface JobsAdminFiltersProps {
   cityOptions: Array<{ value: string; label: string }>;
   isLoadingCities: boolean;
   jobStatusOptions: Array<{ value: string; label: string }>;
+  jobSourceOptions: Array<{ value: string; label: string }>;
   selectedOccupationId?: number;
   hasActiveFilters: boolean;
   selectedJobStatuses: string[];
@@ -41,6 +42,11 @@ export interface JobsAdminTableProps {
   tableColumns: Array<{ key: string; label: string | ReactNode; className?: string }>;
   getStatusVariant: (status: string) => "light" | "solid";
   getJobStatusVariant: (jobStatus: string) => "light" | "solid";
+  getJobSourceLabel: (jobSource: string) => string;
+  getJobSourceBadgeProps: (jobSource: string) => {
+    variant: "light" | "solid";
+    color: "info" | "warning" | "success" | "light";
+  };
   onViewJobDetails: (jobId: string) => void;
   onEditJobPost: (jobId: string) => void;
   onDeleteJobPost: (jobId: string) => void;

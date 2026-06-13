@@ -15,6 +15,7 @@ const JobsAdminFilters: React.FC<JobsAdminFiltersProps> = ({
   cityOptions,
   isLoadingCities,
   jobStatusOptions,
+  jobSourceOptions,
   selectedOccupationId,
   hasActiveFilters,
   selectedJobStatuses,
@@ -158,6 +159,27 @@ const JobsAdminFilters: React.FC<JobsAdminFiltersProps> = ({
               value: option.value,
               label: option.label,
             }))}
+          />
+        </div>
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Job Source</Label>
+
+            {filters.jobSource && (
+              <button
+                onClick={() => onClearIndividualFilter("jobSource")}
+                className="text-xs text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100 font-medium cursor-pointer hover:underline"
+              >
+                Clear
+              </button>
+            )}
+          </div>
+          <SearchableSelect
+            value={filters.jobSource || ""}
+            onChange={(value: string) => onFilterChange("jobSource", value || undefined)}
+            options={jobSourceOptions}
+            placeholder="All Sources"
+            className="w-full"
           />
         </div>
         <div className="space-y-2">

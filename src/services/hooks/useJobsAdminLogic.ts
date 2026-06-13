@@ -23,6 +23,7 @@ export const useJobsAdminLogic = () => {
       const urlSpecialtyId = searchParams.get("specialtyId");
       const urlCompanyName = searchParams.get("companyName");
       const urlIsDeleted = searchParams.get("isDeleted");
+      const urlJobSource = searchParams.get("jobSource");
 
       const urlSortBy = searchParams.get("sortBy");
       const urlSortOrder = searchParams.get("sortOrder");
@@ -34,14 +35,18 @@ export const useJobsAdminLogic = () => {
         state: urlState || "",
         city: urlCity || "",
         jobStatus:
-          urlJobStatus === "Draft" || urlJobStatus === "Published"
-            ? (urlJobStatus as "Draft" | "Published")
+          urlJobStatus === "Draft" || urlJobStatus === "Published" || urlJobStatus === "Unpublished"
+            ? (urlJobStatus as "Draft" | "Published" | "Unpublished")
             : undefined,
         datePosted: urlDatePosted || "",
         occupationId: urlOccupationId ? parseInt(urlOccupationId) : undefined,
         specialtyId: urlSpecialtyId ? parseInt(urlSpecialtyId) : undefined,
         companyName: urlCompanyName || "",
         isDeleted: urlIsDeleted === "true" || urlIsDeleted === "all" ? urlIsDeleted : undefined,
+        jobSource:
+          urlJobSource === "affiliate" || urlJobSource === "scraped" || urlJobSource === "internal"
+            ? urlJobSource
+            : undefined,
         sortBy: urlSortBy === "viewsCount" ? "viewsCount" : urlSortBy === "datePosted" ? "datePosted" : undefined,
         sortOrder: urlSortOrder === "asc" ? "asc" : urlSortOrder === "desc" ? "desc" : undefined,
       };
@@ -86,6 +91,7 @@ export const useJobsAdminLogic = () => {
               specialtyId: parsed.specialtyId || undefined,
               companyName: parsed.companyName || "",
               isDeleted: parsed.isDeleted || undefined,
+              jobSource: parsed.jobSource || undefined,
               sortBy: parsed.sortBy || undefined,
               sortOrder: parsed.sortOrder || undefined,
             };
@@ -112,6 +118,7 @@ export const useJobsAdminLogic = () => {
       specialtyId: undefined,
       companyName: "",
       isDeleted: undefined,
+      jobSource: undefined,
       sortBy: undefined,
       sortOrder: undefined,
     };
@@ -206,6 +213,7 @@ export const useJobsAdminLogic = () => {
     if (filters.specialtyId) params.set("specialtyId", filters.specialtyId.toString());
     if (filters.companyName) params.set("companyName", filters.companyName);
     if (filters.isDeleted) params.set("isDeleted", filters.isDeleted);
+    if (filters.jobSource) params.set("jobSource", filters.jobSource);
     if (filters.sortBy) params.set("sortBy", filters.sortBy);
     if (filters.sortOrder) params.set("sortOrder", filters.sortOrder);
 
@@ -250,6 +258,7 @@ export const useJobsAdminLogic = () => {
         specialtyId: filters.specialtyId,
         companyName: filters.companyName,
         isDeleted: filters.isDeleted,
+        jobSource: filters.jobSource,
         sortBy: filters.sortBy,
         sortOrder: filters.sortOrder,
       };
@@ -289,9 +298,11 @@ export const useJobsAdminLogic = () => {
       { key: "jobId", label: "Job ID" },
       { key: "title", label: "Job Title" },
       { key: "company", label: "Company" },
+      { key: "jobSource", label: "Source" },
       { key: "occupation", label: "Occupation" },
       { key: "location", label: "Location" },
       { key: "datePosted", label: "Date Posted" },
+      { key: "expiresAt", label: "Expiration Date" },
       {
         key: "views",
         label: React.createElement(
@@ -358,6 +369,17 @@ export const useJobsAdminLogic = () => {
       { value: "", label: "All Job Status" },
       { value: "Draft", label: "Draft" },
       { value: "Published", label: "Published" },
+      { value: "Unpublished", label: "Unpublished" },
+    ],
+    []
+  );
+
+  const jobSourceOptions = useMemo(
+    () => [
+      { value: "", label: "All Sources" },
+      { value: "affiliate", label: "Affiliate Jobs" },
+      { value: "scraped", label: "Scraped Jobs" },
+      { value: "internal", label: "Internal Jobs" },
     ],
     []
   );
@@ -468,16 +490,26 @@ export const useJobsAdminLogic = () => {
   );
 
   const jobStatusToggle = useCallback((statuses: string[]) => {
-    setSelectedJobStatuses(statuses);
+    const publishStatuses = new Set(["Published", "Unpublished"]);
+    let normalized = statuses;
+
+    if (statuses.includes("Published") && statuses.includes("Unpublished")) {
+      const newlySelected = statuses.find((status) => !selectedJobStatuses.includes(status));
+      normalized = newlySelected
+        ? [newlySelected]
+        : statuses.filter((status) => !publishStatuses.has(status));
+    }
+
+    setSelectedJobStatuses(normalized);
     startTransition(() => {
-      const jobStatus = statuses.length > 0 ? (statuses[0] as "Draft" | "Published") : undefined;
+      const jobStatus = normalized.length > 0 ? (normalized[0] as "Draft" | "Published" | "Unpublished") : undefined;
       setFilters((prev) => ({
         ...prev,
         jobStatus,
         ...(prev.jobStatus !== jobStatus && { page: 1 }),
       }));
     });
-  }, []);
+  }, [selectedJobStatuses]);
 
   const initPageChange = useMemo(
     () => (newPage: number) => {
@@ -493,6 +525,7 @@ export const useJobsAdminLogic = () => {
       (status: string): "light" | "solid" => {
         switch (status?.toLowerCase()) {
           case "open":
+          case "active":
             return "solid";
           case "closed":
             return "light";
@@ -511,12 +544,48 @@ export const useJobsAdminLogic = () => {
         switch (jobStatus?.toLowerCase()) {
           case "published":
             return "solid";
+          case "unpublished":
+            return "light";
           case "deleted":
             return "light";
           case "draft":
             return "light";
           default:
             return "light";
+        }
+      },
+    []
+  );
+
+  const getJobSourceLabel = useMemo(
+    () =>
+      (jobSource: string): string => {
+        switch (jobSource) {
+          case "affiliate":
+            return "Affiliate";
+          case "scraped":
+            return "Scraped";
+          case "internal":
+            return "Internal";
+          default:
+            return "Unknown";
+        }
+      },
+    []
+  );
+
+  const getJobSourceBadgeProps = useMemo(
+    () =>
+      (jobSource: string): { variant: "light" | "solid"; color: "info" | "warning" | "success" | "light" } => {
+        switch (jobSource) {
+          case "affiliate":
+            return { variant: "light", color: "info" };
+          case "scraped":
+            return { variant: "light", color: "warning" };
+          case "internal":
+            return { variant: "light", color: "success" };
+          default:
+            return { variant: "light", color: "light" };
         }
       },
     []
@@ -554,6 +623,7 @@ export const useJobsAdminLogic = () => {
       specialtyId: undefined,
       companyName: "",
       isDeleted: undefined,
+      jobSource: undefined,
       sortBy: undefined,
       sortOrder: undefined,
     };
@@ -607,6 +677,9 @@ export const useJobsAdminLogic = () => {
           case "isDeleted":
             updatedFilters.isDeleted = undefined;
             break;
+          case "jobSource":
+            updatedFilters.jobSource = undefined;
+            break;
           default:
             break;
         }
@@ -629,6 +702,7 @@ export const useJobsAdminLogic = () => {
       filters.occupationId ||
       filters.specialtyId ||
       filters.isDeleted ||
+      filters.jobSource ||
       selectedJobStatuses.length > 0
     );
   }, [
@@ -641,6 +715,7 @@ export const useJobsAdminLogic = () => {
     filters.occupationId,
     filters.specialtyId,
     filters.isDeleted,
+    filters.jobSource,
     selectedJobStatuses,
   ]);
 
@@ -686,6 +761,7 @@ export const useJobsAdminLogic = () => {
       filters.specialtyId ||
       filters.companyName ||
       filters.isDeleted ||
+      filters.jobSource ||
       (filters.page && filters.page > 1)
     ) {
       saveSearchState();
@@ -773,6 +849,7 @@ export const useJobsAdminLogic = () => {
 
     tableColumns,
     jobStatusOptions,
+    jobSourceOptions,
     occupationOptions,
     specialtyOptions,
     stateOptions,
@@ -785,6 +862,8 @@ export const useJobsAdminLogic = () => {
     initPageChange,
     getStatusVariant,
     getJobStatusVariant,
+    getJobSourceLabel,
+    getJobSourceBadgeProps,
     viewJobDetails,
     editJobPost,
     deleteJobPost,
