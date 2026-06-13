@@ -12,5 +12,5 @@ const EMPLOYER_BASE_URL = process.env.NEXT_PUBLIC_JOBFINDER_URL || "https://goth
  */
 export function getEmployerJobUrl(jobId: string): string {
   const base = EMPLOYER_BASE_URL.replace(/\/$/, "");
-  return `${base}/employer/jobs/${jobId}`;
+  return `${base}/find-jobs/occupation/${jobId}/slug`;
 }
