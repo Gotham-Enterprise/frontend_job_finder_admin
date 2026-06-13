@@ -44,7 +44,7 @@ export const useJobsAdminLogic = () => {
         companyName: urlCompanyName || "",
         isDeleted: urlIsDeleted === "true" || urlIsDeleted === "all" ? urlIsDeleted : undefined,
         jobSource:
-          urlJobSource === "affiliate" || urlJobSource === "scraped"
+          urlJobSource === "affiliate" || urlJobSource === "scraped" || urlJobSource === "internal"
             ? urlJobSource
             : undefined,
         sortBy: urlSortBy === "viewsCount" ? "viewsCount" : urlSortBy === "datePosted" ? "datePosted" : undefined,
@@ -298,6 +298,7 @@ export const useJobsAdminLogic = () => {
       { key: "jobId", label: "Job ID" },
       { key: "title", label: "Job Title" },
       { key: "company", label: "Company" },
+      { key: "jobSource", label: "Source" },
       { key: "occupation", label: "Occupation" },
       { key: "location", label: "Location" },
       { key: "datePosted", label: "Date Posted" },
@@ -378,6 +379,7 @@ export const useJobsAdminLogic = () => {
       { value: "", label: "All Sources" },
       { value: "affiliate", label: "Affiliate Jobs" },
       { value: "scraped", label: "Scraped Jobs" },
+      { value: "internal", label: "Internal Jobs" },
     ],
     []
   );
@@ -550,6 +552,40 @@ export const useJobsAdminLogic = () => {
             return "light";
           default:
             return "light";
+        }
+      },
+    []
+  );
+
+  const getJobSourceLabel = useMemo(
+    () =>
+      (jobSource: string): string => {
+        switch (jobSource) {
+          case "affiliate":
+            return "Affiliate";
+          case "scraped":
+            return "Scraped";
+          case "internal":
+            return "Internal";
+          default:
+            return "Unknown";
+        }
+      },
+    []
+  );
+
+  const getJobSourceBadgeProps = useMemo(
+    () =>
+      (jobSource: string): { variant: "light" | "solid"; color: "info" | "warning" | "success" | "light" } => {
+        switch (jobSource) {
+          case "affiliate":
+            return { variant: "light", color: "info" };
+          case "scraped":
+            return { variant: "light", color: "warning" };
+          case "internal":
+            return { variant: "light", color: "success" };
+          default:
+            return { variant: "light", color: "light" };
         }
       },
     []
@@ -826,6 +862,8 @@ export const useJobsAdminLogic = () => {
     initPageChange,
     getStatusVariant,
     getJobStatusVariant,
+    getJobSourceLabel,
+    getJobSourceBadgeProps,
     viewJobDetails,
     editJobPost,
     deleteJobPost,

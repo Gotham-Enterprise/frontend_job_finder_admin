@@ -47,6 +47,8 @@ const JobsAdmin: React.FC<JobsAdminProps> = ({ className = "" }) => {
     initPageChange,
     getStatusVariant,
     getJobStatusVariant,
+    getJobSourceLabel,
+    getJobSourceBadgeProps,
     viewJobDetails,
     editJobPost,
     deleteJobPost,
@@ -113,6 +115,8 @@ const JobsAdmin: React.FC<JobsAdminProps> = ({ className = "" }) => {
         tableColumns={tableColumns}
         getStatusVariant={getStatusVariant}
         getJobStatusVariant={getJobStatusVariant}
+        getJobSourceLabel={getJobSourceLabel}
+        getJobSourceBadgeProps={getJobSourceBadgeProps}
         onViewJobDetails={viewJobDetails}
         onEditJobPost={editJobPost}
         onDeleteJobPost={deleteJobPost}

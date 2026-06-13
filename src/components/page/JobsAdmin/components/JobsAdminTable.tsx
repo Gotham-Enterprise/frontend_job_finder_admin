@@ -27,6 +27,8 @@ const JobsAdminTable: React.FC<JobsAdminTableProps> = ({
   tableColumns,
   getStatusVariant,
   getJobStatusVariant,
+  getJobSourceLabel,
+  getJobSourceBadgeProps,
   onViewJobDetails,
   onEditJobPost,
   onDeleteJobPost,
@@ -51,7 +53,7 @@ const JobsAdminTable: React.FC<JobsAdminTableProps> = ({
         <TableBody>
           {isLoading ? (
             <TableRow>
-              <TableCell className="text-center py-8 px-6" colSpan={11}>
+              <TableCell className="text-center py-8 px-6" colSpan={12}>
                 <div className="flex items-center justify-center gap-3">
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-brand-500"></div>
                   <p className="text-gray-500 dark:text-gray-400">Loading...</p>
@@ -60,7 +62,7 @@ const JobsAdminTable: React.FC<JobsAdminTableProps> = ({
             </TableRow>
           ) : !data?.data?.length ? (
             <TableRow>
-              <TableCell className="text-center py-8 px-6" colSpan={11}>
+              <TableCell className="text-center py-8 px-6" colSpan={12}>
                 <p className="text-gray-500 dark:text-gray-400">No jobs found</p>
               </TableCell>
             </TableRow>          
@@ -114,6 +116,16 @@ const JobsAdminTable: React.FC<JobsAdminTableProps> = ({
                   <p className="text-sm text-gray-900 dark:text-white">
                     {job.companyName}
                   </p>
+                </TableCell>
+                <TableCell className="py-4 px-6">
+                  {(() => {
+                    const badgeProps = getJobSourceBadgeProps(job.jobSource);
+                    return (
+                      <Badge variant={badgeProps.variant} color={badgeProps.color}>
+                        {getJobSourceLabel(job.jobSource)}
+                      </Badge>
+                    );
+                  })()}
                 </TableCell>
                 <TableCell className="py-4 px-6">
                   <p className="text-sm text-gray-900 dark:text-white">
