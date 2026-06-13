@@ -2,13 +2,13 @@ export interface JobsAdmin {
   id: string;
   title: string;
   datePosted: string;
-  status: "OPEN" | "CLOSED" | "PAUSED";
+  status: "OPEN" | "CLOSED" | "PAUSED" | "Open" | "Filled" | "Closed" | "Paused";
   occupation: string;
   specialty?: string;
   location: string;
   locationState: string;
   companyName: string;
-  jobStatus: "Draft" | "Published" | "Archived" | "Deleted" | "Unknown";
+  jobStatus: "Draft" | "Published" | "Unpublished" | "Archived" | "Deleted" | "Unknown";
   isDeleted: boolean;
   deletedAt: string | null;
   salaryRangeStart?: number;
@@ -18,6 +18,8 @@ export interface JobsAdmin {
   workSetting?: string;
   applicantCount?: number;
   viewsCount: number;
+  expiresAt: string | null;
+  jobSource: "affiliate" | "scraped" | "internal";
 }
 
 export interface JobsAdminFilters {
@@ -26,7 +28,7 @@ export interface JobsAdminFilters {
   name?: string;
   state?: string;
   city?: string;
-  jobStatus?: "Draft" | "Published";
+  jobStatus?: "Draft" | "Published" | "Unpublished";
   datePosted?: string;
   occupationId?: number;
   specialtyId?: number;
@@ -34,6 +36,7 @@ export interface JobsAdminFilters {
   isDeleted?: "true" | "false" | "all";
   sortBy?: "datePosted" | "viewsCount";
   sortOrder?: "asc" | "desc";
+  jobSource?: "affiliate" | "scraped" | "internal";
 }
 
 export interface JobsAdminResponse {

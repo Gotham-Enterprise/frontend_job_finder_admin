@@ -35,6 +35,7 @@ const JobsAdmin: React.FC<JobsAdminProps> = ({ className = "" }) => {
     
     tableColumns,
     jobStatusOptions,
+    jobSourceOptions,
     occupationOptions,
     specialtyOptions,
     stateOptions,
@@ -46,6 +47,8 @@ const JobsAdmin: React.FC<JobsAdminProps> = ({ className = "" }) => {
     initPageChange,
     getStatusVariant,
     getJobStatusVariant,
+    getJobSourceLabel,
+    getJobSourceBadgeProps,
     viewJobDetails,
     editJobPost,
     deleteJobPost,
@@ -98,6 +101,7 @@ const JobsAdmin: React.FC<JobsAdminProps> = ({ className = "" }) => {
             cityOptions={cityOptions}
             isLoadingCities={isLoadingCities}
             jobStatusOptions={jobStatusOptions}
+            jobSourceOptions={jobSourceOptions}
             selectedOccupationId={selectedOccupationId}
             hasActiveFilters={hasActiveFilters}
             selectedJobStatuses={selectedJobStatuses}
@@ -111,6 +115,8 @@ const JobsAdmin: React.FC<JobsAdminProps> = ({ className = "" }) => {
         tableColumns={tableColumns}
         getStatusVariant={getStatusVariant}
         getJobStatusVariant={getJobStatusVariant}
+        getJobSourceLabel={getJobSourceLabel}
+        getJobSourceBadgeProps={getJobSourceBadgeProps}
         onViewJobDetails={viewJobDetails}
         onEditJobPost={editJobPost}
         onDeleteJobPost={deleteJobPost}
