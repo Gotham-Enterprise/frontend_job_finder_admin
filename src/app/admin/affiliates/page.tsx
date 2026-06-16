@@ -1,19 +1,5 @@
-import React, { Suspense } from 'react'
-import AffiliatePartners from '@/components/page/AffiliatePartners'
-import FullScreenSpinner from '@/components/ui/FullScreenSpinner'
+import { redirect } from 'next/navigation'
 
-function AffiliatePartnersContent() {
-  return <AffiliatePartners />
-}
-
-export default function AffiliatePartnersPage() {
-  return (
-    <Suspense
-      fallback={
-        <FullScreenSpinner isVisible={true} message="Loading affiliate partners..." />
-      }
-    >
-      <AffiliatePartnersContent />
-    </Suspense>
-  )
+export default function AffiliatesPage() {
+  redirect('/admin/affiliates/partners')
 }

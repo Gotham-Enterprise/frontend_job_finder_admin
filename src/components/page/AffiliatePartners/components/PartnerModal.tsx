@@ -33,25 +33,31 @@ export default function PartnerModal({
         name: partner.name,
         email: partner.email,
         contactPerson: partner.contactPerson || '',
-        contactPhone: partner.contactPhone || '',
-        websiteUrl: partner.websiteUrl || '',
-        commissionRate: partner.commissionRate || 0,
-        notes: partner.notes || '',
+        phone: partner.phone || '',
+        website: partner.website || '',
       })
     } else {
       reset({
         name: '',
         email: '',
         contactPerson: '',
-        contactPhone: '',
-        websiteUrl: '',
-        commissionRate: 0,
-        notes: '',
+        phone: '',
+        website: '',
       })
     }
   }, [partner, reset])
 
   if (!isOpen) return null
+
+  const handleFormSubmit = (data: any) => {
+    const submitData = { ...data }
+    if (data.logo && data.logo.length > 0) {
+      submitData.logo = data.logo[0]
+    } else {
+      delete submitData.logo
+    }
+    onSubmit(submitData as CreatePartnerData)
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
@@ -74,7 +80,7 @@ export default function PartnerModal({
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit(onSubmit)} className="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
+        <form onSubmit={handleSubmit(handleFormSubmit)} className="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
           <div className="space-y-4">
             {/* Partner Name */}
             <div>
@@ -133,7 +139,7 @@ export default function PartnerModal({
                 Contact Phone
               </label>
               <input
-                {...register('contactPhone')}
+                {...register('phone')}
                 type="tel"
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-800 dark:text-white"
                 placeholder="+1 (555) 123-4567"
@@ -146,47 +152,29 @@ export default function PartnerModal({
                 Website URL
               </label>
               <input
-                {...register('websiteUrl')}
+                {...register('website')}
                 type="url"
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-800 dark:text-white"
                 placeholder="https://www.example.com"
               />
             </div>
 
-            {/* Commission Rate */}
+            {/* Logo */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Commission Rate (%)
+                Company / Partner Logo
               </label>
               <input
-                {...register('commissionRate', {
-                  valueAsNumber: true,
-                  min: { value: 0, message: 'Must be 0 or greater' },
-                  max: { value: 100, message: 'Must be 100 or less' },
-                })}
-                type="number"
-                step="0.01"
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-800 dark:text-white"
-                placeholder="0.00"
+                {...register('logo')}
+                type="file"
+                accept="image/*"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-800 dark:text-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
               />
-              {errors.commissionRate && (
-                <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                  {errors.commissionRate.message}
-                </p>
+              {partner?.logoUrl && (
+                <div className="mt-2 text-sm text-gray-500">
+                  Current Logo: <a href={partner.logoUrl} target="_blank" rel="noreferrer" className="text-primary hover:underline">View Image</a>
+                </div>
               )}
-            </div>
-
-            {/* Notes */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Notes
-              </label>
-              <textarea
-                {...register('notes')}
-                rows={3}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-800 dark:text-white resize-none"
-                placeholder="Additional notes about this partner..."
-              />
             </div>
           </div>
 
