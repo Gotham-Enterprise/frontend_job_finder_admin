@@ -9,6 +9,9 @@ interface HealthMetricsCardsProps {
   qualityIssuesTotal: number;
   seoPagesTotal: number;
   seoPagesWithZeroJobs: number;
+  seoPagesPruned?: number;
+  seoPagesIndexableWithZeroJobs?: number;
+  lastCronRun?: string | null;
 }
 
 const colorMap: Record<string, { bg: string; text: string; iconBg: string }> = {
@@ -47,7 +50,15 @@ export default function HealthMetricsCards({
   qualityIssuesTotal,
   seoPagesTotal,
   seoPagesWithZeroJobs,
+  seoPagesPruned = 0,
+  seoPagesIndexableWithZeroJobs = 0,
+  lastCronRun,
 }: HealthMetricsCardsProps) {
+  const seoPagesColor = seoPagesIndexableWithZeroJobs > 0 ? "red" : "blue";
+  const seoPagesSubtitle = seoPagesIndexableWithZeroJobs > 0
+    ? `${seoPagesIndexableWithZeroJobs.toLocaleString()} still indexable / ${seoPagesPruned.toLocaleString()} pruned`
+    : `${seoPagesPruned.toLocaleString()} pruned / ${seoPagesTotal.toLocaleString()} total`;
+
   const cards: MetricCard[] = [
     {
       title: "Active Jobs",
@@ -76,8 +87,8 @@ export default function HealthMetricsCards({
     {
       title: "SEO Pages",
       value: `${seoPagesWithZeroJobs.toLocaleString()} / ${seoPagesTotal.toLocaleString()}`,
-      subtitle: "No Active Jobs / Total",
-      color: "blue",
+      subtitle: seoPagesSubtitle,
+      color: seoPagesColor,
       icon: icons.blue,
       link: "/admin/seo-health/seo-pages?filter=no-active-jobs",
     },
