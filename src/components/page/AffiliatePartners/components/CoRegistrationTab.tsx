@@ -112,12 +112,13 @@ function ErrorCell({ message }: { message: string | null }) {
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-type PartnerType = 'adzuna' | 'lensa' | 'disqo'
+type PartnerType = 'adzuna' | 'lensa' | 'disqo' | 'cv_library'
 
 const PARTNER_OPTIONS: { value: PartnerType; label: string }[] = [
   { value: 'adzuna', label: 'Adzuna' },
   { value: 'lensa', label: 'Lensa' },
   { value: 'disqo', label: 'Disqo' },
+  { value: 'cv_library', label: 'CV Library' },
 ]
 
 export default function CoRegistrationTab() {
