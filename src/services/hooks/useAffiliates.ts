@@ -17,6 +17,12 @@ import {
   getCoRegs,
   CreatePartnerData,
   UpdatePartnerData,
+  getAffiliateLinks,
+  createAffiliateLink,
+  updateAffiliateLink,
+  deleteAffiliateLink,
+  CreateLinkData,
+  UpdateLinkData,
 } from "../api/affiliates";
 import { showToast } from "../utils/toast";
 
@@ -24,6 +30,7 @@ export const affiliateQueryKeys = {
   all: ["affiliates"] as const,
   partners: () => [...affiliateQueryKeys.all, "partners"] as const,
   partner: (id: string) => [...affiliateQueryKeys.partners(), id] as const,
+  links: () => [...affiliateQueryKeys.all, "links"] as const,
   batches: () => [...affiliateQueryKeys.all, "batches"] as const,
   batch: (id: string) => [...affiliateQueryKeys.batches(), id] as const,
   batchStatus: (id: string) => [...affiliateQueryKeys.batches(), id, "status"] as const,
@@ -95,6 +102,64 @@ export const useDeleteAffiliatePartner = () => {
     },
     onError: (error: any) => {
       const errorMessage = error.response?.data?.message || error.message || "Failed to delete partner";
+      showToast.error("Deletion Failed", errorMessage);
+    },
+  });
+};
+
+// Link Management Hooks
+export const useAffiliateLinks = (params?: { page?: number; limit?: number; affiliateId?: string }) => {
+  return useQuery({
+    queryKey: [...affiliateQueryKeys.links(), params || {}],
+    queryFn: () => getAffiliateLinks(params),
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    gcTime: 1000 * 60 * 10,
+  });
+};
+
+export const useCreateAffiliateLink = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: CreateLinkData) => createAffiliateLink(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: affiliateQueryKeys.links() });
+      showToast.success("Link Created!", "The affiliate link has been created successfully.");
+    },
+    onError: (error: any) => {
+      const errorMessage = error.response?.data?.message || error.message || "Failed to create link";
+      showToast.error("Creation Failed", errorMessage);
+    },
+  });
+};
+
+export const useUpdateAffiliateLink = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: UpdateLinkData }) => updateAffiliateLink(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: affiliateQueryKeys.links() });
+      showToast.success("Link Updated!", "The affiliate link has been updated successfully.");
+    },
+    onError: (error: any) => {
+      const errorMessage = error.response?.data?.message || error.message || "Failed to update link";
+      showToast.error("Update Failed", errorMessage);
+    },
+  });
+};
+
+export const useDeleteAffiliateLink = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => deleteAffiliateLink(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: affiliateQueryKeys.links() });
+      showToast.success("Link Deleted!", "The affiliate link has been deleted successfully.");
+    },
+    onError: (error: any) => {
+      const errorMessage = error.response?.data?.message || error.message || "Failed to delete link";
       showToast.error("Deletion Failed", errorMessage);
     },
   });
