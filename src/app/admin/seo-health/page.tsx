@@ -108,6 +108,9 @@ export default function SeoHealthPage() {
           qualityIssuesTotal={qualityIssuesTotal}
           seoPagesTotal={d.seoPages.total}
           seoPagesWithZeroJobs={d.seoPages.withZeroJobs}
+          seoPagesPruned={d.seoPages.pruned}
+          seoPagesIndexableWithZeroJobs={d.seoPages.indexableWithZeroJobs}
+          lastCronRun={d.seoPages.lastCronRun}
         />
       </div>
 

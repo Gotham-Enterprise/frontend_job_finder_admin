@@ -122,13 +122,13 @@ export default function PartnersTab() {
       {/* Header with Create Button */}
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Affiliate Partners</h2>
-        {/* <button
+        <button
           onClick={handleCreate}
           className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
         >
           <Plus className="w-4 h-4" />
           Add Partner
-        </button> */}
+        </button>
       </div>
 
       {/* Partners Table */}
@@ -151,9 +151,9 @@ export default function PartnersTab() {
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 Created
               </th>
-              {/* <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 Actions
-              </th> */}
+              </th>
             </tr>
           </thead>
           <tbody className="bg-white dark:bg-transparent divide-y divide-gray-200 dark:divide-gray-800">
@@ -167,16 +167,16 @@ export default function PartnersTab() {
                     <div className="text-sm font-medium text-gray-900 dark:text-white">
                       {partner.name}
                     </div>
-                    {partner.websiteUrl && (
+                    {partner.website && (
                       <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 mt-1">
                         <Globe className="w-3 h-3" />
                         <a
-                          href={partner.websiteUrl}
+                          href={partner.website}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="hover:text-primary"
                         >
-                          {partner.websiteUrl}
+                          {partner.website}
                         </a>
                       </div>
                     )}
@@ -195,10 +195,10 @@ export default function PartnersTab() {
                         {partner.contactPerson}
                       </div>
                     )}
-                    {partner.contactPhone && (
+                    {partner.phone && (
                       <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
                         <Phone className="w-3 h-3" />
-                        <span>{partner.contactPhone}</span>
+                        <span>{partner.phone}</span>
                       </div>
                     )}
                   </div>
@@ -265,7 +265,7 @@ export default function PartnersTab() {
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                   {new Date(partner.createdAt).toLocaleDateString()}
                 </td>
-                {/* <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <div className="flex items-center justify-end gap-2">
                     {partner.syncEnabled && (
                       <button
@@ -293,7 +293,7 @@ export default function PartnersTab() {
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
-                </td> */}
+                </td>
               </tr>
             ))}
           </tbody>
@@ -303,12 +303,12 @@ export default function PartnersTab() {
           <div className="text-center py-12">
             <Building2 className="w-12 h-12 text-gray-400 mx-auto mb-3" />
             <p className="text-gray-500 dark:text-gray-400">No partners found</p>
-            {/* <button
+            <button
               onClick={handleCreate}
               className="mt-4 text-primary hover:text-primary/80 text-sm font-medium"
             >
               Create your first partner
-            </button> */}
+            </button>
           </div>
         )}
       </div>

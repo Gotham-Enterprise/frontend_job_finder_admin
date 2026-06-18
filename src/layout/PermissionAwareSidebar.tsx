@@ -83,8 +83,13 @@ const navItems: NavItem[] = [
   },
   {
     icon: <HandShake />,
-    name: "Affiliate Partners",
-    path: "/admin/affiliates"
+    name: "Affiliates",
+    path: "/admin/affiliates",
+    isAccessible: true,
+    subItems: [
+      { name: "Partners", path: "/admin/affiliates/partners" },
+      { name: "Links", path: "/admin/affiliates/links" }
+    ],
   },
   {
     icon: <IdCardIcon />,
