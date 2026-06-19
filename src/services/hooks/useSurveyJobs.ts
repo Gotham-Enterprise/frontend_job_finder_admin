@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   getSurveyJobs,
+  getSurveyJobTrends,
   createSurveyJob,
   updateSurveyJob,
   toggleSurveyJob,
@@ -9,6 +10,7 @@ import {
   UpdateSurveyJobData,
   SurveyJobSortBy,
 } from "../api/surveyJobs";
+import type { Period, GroupBy } from "@/types/analytics";
 import { showToast } from "../utils/toast";
 
 // ─── Query Keys ───────────────────────────────────────────────────────────────
@@ -16,6 +18,7 @@ import { showToast } from "../utils/toast";
 export const surveyJobQueryKeys = {
   all: ["surveyJobs"] as const,
   list: (filters?: object) => [...surveyJobQueryKeys.all, "list", filters ?? {}] as const,
+  trends: (filters?: object) => [...surveyJobQueryKeys.all, "trends", filters ?? {}] as const,
 };
 
 // ─── Hooks ────────────────────────────────────────────────────────────────────
@@ -35,6 +38,30 @@ export const useSurveyJobs = (params?: SurveyJobsParams) => {
   return useQuery({
     queryKey: surveyJobQueryKeys.list(params),
     queryFn: () => getSurveyJobs(params),
+    staleTime: 1000 * 60 * 2,
+    gcTime: 1000 * 60 * 5,
+  });
+};
+
+export interface SurveyJobTrendsParams {
+  period?: Period;
+  groupBy?: GroupBy;
+  customDateRange?: { startDate: string | null; endDate: string | null };
+  affiliatePartnerId?: string;
+  enabled?: boolean;
+}
+
+export const useSurveyJobTrends = (params?: SurveyJobTrendsParams) => {
+  const { enabled = true, ...queryParams } = params ?? {};
+  const isCustomReady =
+    queryParams.period !== "custom" ||
+    (!!queryParams.customDateRange?.startDate &&
+      !!queryParams.customDateRange?.endDate);
+
+  return useQuery({
+    queryKey: surveyJobQueryKeys.trends(queryParams),
+    queryFn: () => getSurveyJobTrends(queryParams),
+    enabled: enabled && isCustomReady,
     staleTime: 1000 * 60 * 2,
     gcTime: 1000 * 60 * 5,
   });
