@@ -1,4 +1,5 @@
 import { apiGet, apiPost, apiPut, apiDelete, apiPatch } from "./apiUtils";
+import type { Period, GroupBy } from "@/types/analytics";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -69,6 +70,24 @@ export interface CreateSurveyJobData {
 
 export type UpdateSurveyJobData = Partial<CreateSurveyJobData>;
 
+export interface SurveyJobTrendsData {
+  period: string;
+  categories: string[];
+  clicks: {
+    data: number[];
+    total: number;
+  };
+  views: {
+    data: number[];
+    total: number;
+  };
+}
+
+export interface SurveyJobTrendsResponse {
+  success: boolean;
+  data: SurveyJobTrendsData;
+}
+
 // ─── API Calls ────────────────────────────────────────────────────────────────
 
 export type SurveyJobSortBy =
@@ -121,4 +140,46 @@ export const toggleSurveyJob = async (
 
 export const deleteSurveyJob = async (id: string): Promise<void> => {
   return apiDelete<void>(`/api/admin/affiliates/survey-jobs/${id}`);
+};
+
+function getTimezone(): string {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone;
+  } catch {
+    return "UTC";
+  }
+}
+
+export const getSurveyJobTrends = async (params?: {
+  period?: Period;
+  groupBy?: GroupBy;
+  customDateRange?: { startDate: string | null; endDate: string | null };
+  affiliatePartnerId?: string;
+}): Promise<SurveyJobTrendsResponse> => {
+  const timezone = getTimezone();
+  const period = params?.period ?? "3m";
+  const query = new URLSearchParams();
+  query.set("period", period);
+  query.set("timezone", timezone);
+
+  if (
+    period === "custom" &&
+    params?.customDateRange?.startDate &&
+    params?.customDateRange?.endDate
+  ) {
+    query.set("startDate", params.customDateRange.startDate);
+    query.set("endDate", params.customDateRange.endDate);
+  }
+
+  if (params?.groupBy) {
+    query.set("groupBy", params.groupBy);
+  }
+
+  if (params?.affiliatePartnerId) {
+    query.set("affiliatePartnerId", params.affiliatePartnerId);
+  }
+
+  return apiGet<SurveyJobTrendsResponse>(
+    `/api/admin/affiliates/survey-jobs/trends?${query.toString()}`
+  );
 };
