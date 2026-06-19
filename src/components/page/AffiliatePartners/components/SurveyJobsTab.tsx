@@ -9,6 +9,7 @@ import { SurveyJobSortBy } from '@/services/api/surveyJobs'
 import type { SurveyJob } from '@/services/api/surveyJobs'
 import Pagination from '@/components/tables/Pagination'
 import CreateSurveyJobModal from './CreateSurveyJobModal'
+import SurveyJobTrends from './SurveyJobTrends'
 import ConfirmationDialog from '@/components/ui/ConfirmationDialog'
 import { formatDate } from '@/services/utils/dateUtils'
 
@@ -193,6 +194,8 @@ export default function SurveyJobsTab() {
 
   return (
     <div className="space-y-4">
+      <SurveyJobTrends affiliatePartnerId={affiliatePartnerId || undefined} />
+
       {/* Toolbar */}
       <div className="flex items-center justify-between">
         <div>
