@@ -15,6 +15,8 @@ const ReactApexChart = dynamic(() => import('react-apexcharts'), {
 
 interface SurveyJobTrendsProps {
   affiliatePartnerId?: string
+  /** Defer fetching until true — set to false while the main table is still loading. */
+  enabled?: boolean
 }
 
 function getTickAmount(dataLength: number): number | undefined {
@@ -43,7 +45,7 @@ const GROUP_BY_LABELS: Record<GroupBy, string> = {
 
 const GROUPBY_ELIGIBLE_PERIODS = new Set<Period>(['3m', '6m', '9m', '1y', 'custom'])
 
-export default function SurveyJobTrends({ affiliatePartnerId }: SurveyJobTrendsProps) {
+export default function SurveyJobTrends({ affiliatePartnerId, enabled = true }: SurveyJobTrendsProps) {
   const [period, setPeriod] = useState<Period>('3m')
   const [groupBy, setGroupBy] = useState<GroupBy>('monthly')
   const [showCustomDatePicker, setShowCustomDatePicker] = useState(false)
@@ -62,6 +64,7 @@ export default function SurveyJobTrends({ affiliatePartnerId }: SurveyJobTrendsP
     groupBy: effectiveGroupBy,
     customDateRange: period === 'custom' ? customDateRange : undefined,
     affiliatePartnerId,
+    enabled,
   })
 
   const categories = response?.data?.categories ?? []

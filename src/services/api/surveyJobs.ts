@@ -6,7 +6,7 @@ import type { Period, GroupBy } from "@/types/analytics";
 export interface SurveyJob {
   id: string;
   title: string;
-  jobDescription: string | null;
+  jobDescription?: string | null;
   locationCity: string | null;
   locationState: string | null;
   locationCountry: string | null;
@@ -119,6 +119,10 @@ export const getSurveyJobs = async (params?: {
   if (params?.sortBy) query.set("sortBy", params.sortBy);
   const qs = query.toString();
   return apiGet<SurveyJobListResponse>(`/api/admin/affiliates/survey-jobs${qs ? `?${qs}` : ""}`);
+};
+
+export const getSurveyJob = async (id: string): Promise<{ data: SurveyJob }> => {
+  return apiGet<{ data: SurveyJob }>(`/api/admin/affiliates/survey-jobs/${id}`);
 };
 
 export const createSurveyJob = async (data: CreateSurveyJobData): Promise<{ data: SurveyJob }> => {

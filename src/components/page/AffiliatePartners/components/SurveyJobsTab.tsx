@@ -194,7 +194,7 @@ export default function SurveyJobsTab() {
 
   return (
     <div className="space-y-4">
-      <SurveyJobTrends affiliatePartnerId={affiliatePartnerId || undefined} />
+      <SurveyJobTrends affiliatePartnerId={affiliatePartnerId || undefined} enabled={!isLoading} />
 
       {/* Toolbar */}
       <div className="flex items-center justify-between">
@@ -285,10 +285,36 @@ export default function SurveyJobsTab() {
         </div>
       </div>
 
-      {/* Loading */}
+      {/* Loading skeleton */}
       {isLoading && (
-        <div className="flex items-center justify-center py-16 text-gray-400">
-          <span className="text-sm">Loading…</span>
+        <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+                {['Title', 'Partner', 'Location', 'Occupation', 'Work Type', 'Expiration Date', 'Views', 'Click Count', 'Published', 'Actions'].map((col) => (
+                  <th key={col} className="px-4 py-3 font-medium text-gray-600 dark:text-gray-400 text-left">
+                    {col}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100 dark:divide-gray-700/50">
+              {Array.from({ length: PAGE_SIZE }).map((_, i) => (
+                <tr key={i} className="animate-pulse">
+                  <td className="px-4 py-3"><div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-40" /></td>
+                  <td className="px-4 py-3"><div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-24" /></td>
+                  <td className="px-4 py-3"><div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-28" /></td>
+                  <td className="px-4 py-3"><div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-20" /></td>
+                  <td className="px-4 py-3"><div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-16" /></td>
+                  <td className="px-4 py-3"><div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-24" /></td>
+                  <td className="px-4 py-3"><div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-10 ml-auto" /></td>
+                  <td className="px-4 py-3"><div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-10 ml-auto" /></td>
+                  <td className="px-4 py-3"><div className="h-5 w-9 bg-gray-200 dark:bg-gray-700 rounded-full mx-auto" /></td>
+                  <td className="px-4 py-3"><div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-14 ml-auto" /></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
 
