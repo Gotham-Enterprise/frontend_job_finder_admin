@@ -216,7 +216,7 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
     });
   };
 
-  const openSettings = (type: 'image' | 'video' | 'paragraph' | 'button' | 'list' | 'quote', block: LayoutBlock) => {
+  const openSettings = (type: 'image' | 'ad' | 'video' | 'paragraph' | 'button' | 'list' | 'quote', block: LayoutBlock) => {
     setSelectedBlockId(block.id);
     setShowPropertiesPanel(true);
     setPropertyPanelActiveTab('settings');
@@ -230,7 +230,23 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
     switch (viewMode) {
       case 'mobile': return 'max-w-sm';
       case 'tablet': return 'max-w-2xl';
-      default: return 'max-w-8xl'; 
+      default: return 'max-w-6xl';
+    }
+  };
+
+  const getCanvasAreaPadding = () => {
+    switch (viewMode) {
+      case 'mobile': return 'px-8 py-8 pb-24';
+      case 'tablet': return 'px-12 py-8 pb-24';
+      default: return 'px-16 lg:px-24 xl:px-32 py-8 pb-24';
+    }
+  };
+
+  const getContentAreaPadding = () => {
+    switch (viewMode) {
+      case 'mobile': return 'p-8';
+      case 'tablet': return 'p-10';
+      default: return 'px-16 lg:px-20 py-12';
     }
   };
 
@@ -289,7 +305,7 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
           </div>
 
           <div 
-            className="flex-1 p-8 pb-24"
+            className={`flex-1 ${getCanvasAreaPadding()}`}
             onClick={(e) => {
               if (e.target === e.currentTarget) {
                 handleDeselectBlock();
@@ -304,7 +320,7 @@ const VisualLayoutBuilder: React.FC<VisualLayoutBuilderProps> = ({
               <SortableContext items={Array.isArray(blocks) ? blocks.map(b => b.id) : []} strategy={verticalListSortingStrategy}>
                 <div className={`mx-auto transition-all duration-300 ${getContainerMaxWidth()}`}>
                   <div 
-                    className="bg-white p-12 min-h-[600px]" 
+                    className={`bg-white min-h-[600px] ${getContentAreaPadding()}`} 
                     onClick={(e) => {
                       if (e.target === e.currentTarget) {
                         handleDeselectBlock();

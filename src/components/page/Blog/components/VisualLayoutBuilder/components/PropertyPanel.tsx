@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { LayoutBlock } from '../../../../../../services/types/visualLayoutTypes';
+import { LayoutBlock, getAdBlockType, AdBlock } from '../../../../../../services/types/visualLayoutTypes';
 import FloatingPanel from './FloatingPanel';
 import StyleControls from './StyleControls';
 import ContentControls from './ContentControls';
@@ -21,6 +21,7 @@ interface PropertyPanelProps {
 const blockTypeConfig = {
   image: { showStyleTab: false, showSettingsTab: true },
   video: { showStyleTab: false, showSettingsTab: true },
+  ad: { showStyleTab: false, showSettingsTab: true },
   default: { showStyleTab: true, showSettingsTab: true }
 };
 
@@ -113,7 +114,12 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({
 
   if (!block) return null;
 
-  const currentConfig = blockTypeConfig[block.type as keyof typeof blockTypeConfig] || blockTypeConfig.default;
+  const isLinkAd = block.type === 'ad' && getAdBlockType((block.content as AdBlock['content']) || {}) === 'link';
+  const showContentOnlyPanel =
+    block.type === 'image' || block.type === 'video' || (block.type === 'ad' && !isLinkAd);
+  const currentConfig = isLinkAd
+    ? blockTypeConfig.default
+    : blockTypeConfig[block.type as keyof typeof blockTypeConfig] || blockTypeConfig.default;
 
   const openFloatingPanel = (panelType: string, event: React.MouseEvent) => {
     const rect = event.currentTarget.getBoundingClientRect();
@@ -199,7 +205,7 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({
           )}
 
           <div className="flex-1 overflow-y-auto bg-white">
-            {(block.type === 'image' || block.type === 'video') ? (
+            {showContentOnlyPanel ? (
               <div className="p-5">
                 <ContentControls 
                   block={block} 
