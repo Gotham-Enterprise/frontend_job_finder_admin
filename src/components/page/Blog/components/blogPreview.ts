@@ -1,3 +1,5 @@
+import { getAdBlockType, getAdLinkTextCss, AD_MEDIA_LINK_CLASS, getAdMediaLinkHoverCss } from '@/services/types/visualLayoutTypes';
+
 interface BlogPost {
   title: string;
   permalink: string;
@@ -205,6 +207,78 @@ export const openBlogPreview = (
               <figure style="width: 100%;">
                 <img src="${imageUrl}" alt="${imageAlt}" class="${imageUniqueId}" />
                 ${imageCaption ? `<figcaption class="${captionUniqueId}">${imageCaption}</figcaption>` : ''}
+              </figure>
+            </div>
+          `;
+
+        case 'ad':
+          if (getAdBlockType(blockContent) === 'link') {
+            const adLinkText = blockContent.text || '';
+            const adLinkUrl = blockContent.link || '';
+            const adTextAlign = block.styles?.textAlign || 'center';
+            const adLinkUniqueId = `ad-link-${index}-${Date.now()}`;
+
+            const adLinkInlineStyle = getAdLinkTextCss(block.styles);
+            const adLinkTag = adLinkUrl
+              ? `<a href="${adLinkUrl}" target="_blank" rel="noopener noreferrer sponsored" style="${adLinkInlineStyle}">${adLinkText}</a>`
+              : `<span style="${adLinkInlineStyle}">${adLinkText}</span>`;
+
+            const adLinkCssStyles = `
+              .container-${adLinkUniqueId} {
+                margin-bottom: 32px !important;
+                text-align: ${adTextAlign} !important;
+              }
+            `;
+
+            return `
+              <style>${adLinkCssStyles}</style>
+              <div class="container-${adLinkUniqueId}">${adLinkTag}</div>
+            `;
+          }
+
+          const adUrl = blockContent.url || '';
+          const adLink = blockContent.link || '';
+          const adAlt = blockContent.alt || 'Advertisement';
+          const adCaption = blockContent.caption || '';
+          const isAdVideo = /\.(mp4|webm|mov|avi|m4v|ogg)(\?.*)?$/i.test(adUrl);
+          const adUniqueId = `ad-${index}-${Date.now()}`;
+          const adCaptionUniqueId = `ad-caption-${index}-${Date.now()}`;
+
+          const adCssStyles = `
+            .container-${adUniqueId} {
+              margin-bottom: 32px !important;
+            }
+            .${adUniqueId} {
+              width: 100% !important;
+              height: auto !important;
+              max-width: 100% !important;
+              border-radius: 8px !important;
+              display: block !important;
+              box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+            }
+            ${adLink ? getAdMediaLinkHoverCss() : ''}
+            .${adCaptionUniqueId} {
+              text-align: center !important;
+              font-size: 0.875rem !important;
+              color: #6b7280 !important;
+              margin-top: 12px !important;
+              font-style: italic !important;
+            }
+          `;
+
+          const adMediaTag = isAdVideo
+            ? `<video src="${adUrl}" class="${adUniqueId}" controls muted playsinline preload="metadata"></video>`
+            : `<img src="${adUrl}" alt="${adAlt}" class="${adUniqueId}" />`;
+          const adLinkedMediaTag = adLink
+            ? `<a href="${adLink}" target="_blank" rel="noopener noreferrer sponsored" class="${AD_MEDIA_LINK_CLASS}">${adMediaTag}</a>`
+            : adMediaTag;
+
+          return `
+            <style>${adCssStyles}</style>
+            <div class="container-${adUniqueId}">
+              <figure style="width: 100%;">
+                ${adLinkedMediaTag}
+                ${adCaption ? `<figcaption class="${adCaptionUniqueId}">${adCaption}</figcaption>` : ''}
               </figure>
             </div>
           `;

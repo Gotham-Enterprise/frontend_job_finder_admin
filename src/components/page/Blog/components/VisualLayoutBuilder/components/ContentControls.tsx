@@ -1,6 +1,6 @@
 import React, { useState, useRef, memo, useCallback, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { LayoutBlock } from '../../../../../../services/types/visualLayoutTypes';
+import { LayoutBlock, getAdBlockType, AdBlockType } from '../../../../../../services/types/visualLayoutTypes';
 import ImageUrlInput from '../ImageUrlInput';
 import VideoUrlInput from '../VideoUrlInput';
 import ButtonSettings from './ButtonSettings';
@@ -729,6 +729,103 @@ const ContentControls: React.FC<ContentControlsProps> = memo(({
         />
       </div>
     ),
+
+    ad: () => {
+      const adContent = (block.content as any) || {};
+      const adType = getAdBlockType(adContent);
+
+      return (
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Ad Type</label>
+            <div className="flex rounded-xl border border-gray-200 overflow-hidden">
+              {(['media', 'link'] as AdBlockType[]).map((type) => (
+                <button
+                  key={type}
+                  type="button"
+                  onClick={() => {
+                    onContentUpdate('adType', type);
+                    if (type === 'link') {
+                      if (!block.styles?.textAlign) onStyleUpdate?.('textAlign', 'center');
+                      if (!block.styles?.textDecoration) onStyleUpdate?.('textDecoration', 'underline');
+                      if (!block.styles?.linkColor && !block.styles?.textColor) {
+                        onStyleUpdate?.('linkColor', '#2563eb');
+                      }
+                      if (!block.styles?.fontSize) onStyleUpdate?.('fontSize', '16px');
+                    }
+                  }}
+                  className={`flex-1 py-2.5 text-sm font-medium transition-colors ${
+                    adType === type
+                      ? 'bg-purple-100 text-purple-700'
+                      : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+                  }`}
+                >
+                  {type === 'media' ? 'Media' : 'Link'}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {adType === 'media' ? (
+            <>
+              <ImageUrlInput
+                imageUrl={adContent.url || ''}
+                altText={adContent.alt || ''}
+                onImageUrlChange={(value: string) => onContentUpdate('url', value)}
+                onAltTextChange={(value: string) => onContentUpdate('alt', value)}
+                allowVideo
+                hideMediaLayoutControls
+              />
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Ad Link URL</label>
+                <input
+                  type="url"
+                  value={adContent.link || ''}
+                  onChange={(e) => onContentUpdate('link', e.target.value)}
+                  placeholder="https://example.com"
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 placeholder-gray-400 focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-100 transition-all"
+                />
+                <p className="mt-1 text-xs text-gray-500">Opens in a new tab when clicked.</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Caption (Optional)</label>
+                <input
+                  type="text"
+                  value={adContent.caption || ''}
+                  onChange={(e) => onContentUpdate('caption', e.target.value)}
+                  placeholder="Ad caption..."
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 placeholder-gray-400 focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-100 transition-all"
+                />
+              </div>
+            </>
+          ) : (
+            <>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Display Text</label>
+                <input
+                  type="text"
+                  value={adContent.text || ''}
+                  onChange={(e) => onContentUpdate('text', e.target.value)}
+                  placeholder="Text your audience will see"
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 placeholder-gray-400 focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-100 transition-all"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Redirect URL</label>
+                <input
+                  type="url"
+                  value={adContent.link || ''}
+                  onChange={(e) => onContentUpdate('link', e.target.value)}
+                  placeholder="https://example.com"
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 placeholder-gray-400 focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-100 transition-all"
+                />
+                <p className="mt-1 text-xs text-gray-500">Opens in a new tab when clicked.</p>
+              </div>
+            </>
+          )}
+        </div>
+      );
+    },
 
     video: () => (
       <div className="space-y-4">
