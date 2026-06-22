@@ -17,6 +17,7 @@ export interface Supervisee {
   contactNumber: string | null;
   profilePhotoUrl: string | null;
   emailVerified: boolean;
+  emailVerifiedAt: string | null;
   isActive: boolean;
   status: string;
   occupation: SuperviseeOccupation | null;
@@ -36,6 +37,11 @@ export interface SuperviseeFilters {
   page?: number;
   limit?: number;
   keyword?: string;
+}
+
+export interface SuperviseeResendVerificationResponse {
+  success: boolean;
+  message: string;
 }
 
 export interface SuperviseesMetaData {

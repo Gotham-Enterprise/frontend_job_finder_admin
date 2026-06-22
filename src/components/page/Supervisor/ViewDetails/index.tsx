@@ -1,10 +1,11 @@
 "use client";
 import React, { useMemo, useState } from "react";
-import { Check, Pencil } from "lucide-react";
+import { Check, Mail, Pencil } from "lucide-react";
 import {
   useSupervisorDetails,
   useApproveSupervisor,
   useRejectSupervisor,
+  useResendSupervisorVerification,
   useEditSupervisorVerificationNotes,
   useSupervisionProfileDisplayOptions,
 } from "@/services/hooks/useSupervisors";
@@ -18,8 +19,9 @@ import ErrorState from "../../../common/ErrorState";
 import FullScreenSpinner from "../../../ui/FullScreenSpinner";
 import BackToListButton from "@/components/ui/BackToListButton";
 import Badge from "@/components/ui/badge/Badge";
+import EmailVerifiedBadge from "@/components/ui/badge/EmailVerifiedBadge";
 import Avatar from "@/components/ui/avatar/Avatar";
-import { ApproveSupervisorModal, RejectSupervisorModal, SupervisorStatusBadge, EditVerificationNotesModal, EditSupervisorModal } from "../components";
+import { ApproveSupervisorModal, RejectSupervisorModal, SupervisorStatusBadge, EditVerificationNotesModal, EditSupervisorModal, ResendVerificationModal } from "../components";
 import { VerificationStatus } from "@/services/types/supervisor";
 import { getSupervisorCredentialTypeLabel, isSupervisorTypeWithoutCertifications } from "@/constants/supervisorSignupOptions";
 import { CloseLineIcon } from "@/icons";
@@ -118,6 +120,7 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
   const [editProfileOpen, setEditProfileOpen] = useState(false);
   const [approveModalOpen, setApproveModalOpen] = useState(false);
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
+  const [resendModalOpen, setResendModalOpen] = useState(false);
   const [editNotesModalOpen, setEditNotesModalOpen] = useState(false);
   const [rejectNotes, setRejectNotes] = useState("");
   const [approveNotes, setApproveNotes] = useState("");
@@ -126,6 +129,7 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
   const { mutate: approveMutate, isPending: isApproving } = useApproveSupervisor();
   const { mutate: rejectMutate, isPending: isRejecting } = useRejectSupervisor();
   const { mutate: editNotesMutate, isPending: isSavingNotes } = useEditSupervisorVerificationNotes();
+  const { mutate: resendMutate, isPending: isResending } = useResendSupervisorVerification();
 
   const handleApprove = () => {
     const trimmed = approveNotes.trim();
@@ -160,6 +164,10 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
         },
       }
     );
+  };
+
+  const handleResendVerification = () => {
+    resendMutate(id, { onSuccess: () => setResendModalOpen(false) });
   };
 
   const verificationBusy = isApproving || isRejecting || isSavingNotes;
@@ -248,6 +256,18 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
               Edit supervisor
             </button>
 
+            {!s.emailVerified && (
+              <button
+                type="button"
+                onClick={() => setResendModalOpen(true)}
+                disabled={isResending}
+                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-warning-700 bg-warning-50 hover:bg-warning-100 dark:bg-warning-500/10 dark:text-warning-400 dark:hover:bg-warning-500/20 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Mail className="h-4 w-4 shrink-0" aria-hidden />
+                Resend verification
+              </button>
+            )}
+
             {verificationStatus !== "APPROVED" && (
               <button
                 onClick={() => { setApproveNotes(""); setApproveModalOpen(true); }}
@@ -306,7 +326,14 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
             <FieldRow label="City" value={s.city} />
             <FieldRow label="State" value={formatStateOfLicensureForDisplay(s.state)} />
             <FieldRow label="Zip Code" value={s.zipcode} />
-            <FieldRow label="Email Verified" value={s.emailVerified ? "Yes" : "No"} />
+            <FieldRow
+              label="Email Verified"
+              value={<EmailVerifiedBadge verified={s.emailVerified} />}
+            />
+            <FieldRow
+              label="Email Verified At"
+              value={s.emailVerified ? formatDate(s.emailVerifiedAt) : null}
+            />
             <FieldRow label="Account Status" value={s.status} />
             <FieldRow label="Registered" value={formatDate(s.createdAt)} />
           </SectionCard>
@@ -486,6 +513,14 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
         supervisorId={id}
         supervisorName={displayName || s.email}
         onUpdate={() => refetch()}
+      />
+
+      <ResendVerificationModal
+        isOpen={resendModalOpen}
+        fullName={displayName || s.email}
+        onConfirm={handleResendVerification}
+        onCancel={() => setResendModalOpen(false)}
+        isLoading={isResending}
       />
     </>
   );

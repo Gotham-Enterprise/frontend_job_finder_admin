@@ -90,6 +90,24 @@ export const useSuperviseeFormOptions = () => {
   };
 };
 
+export const useResendSuperviseeVerification = () => {
+  return useMutation({
+    mutationFn: (id: string) => superviseeApi.resendVerificationEmail(id),
+    onSuccess: (response) => {
+      showToast.success(
+        "Verification Email Sent",
+        response.message || "The verification email has been resent to the supervisee.",
+      );
+    },
+    onError: (error: Error) => {
+      showToast.error(
+        "Resend Failed",
+        error.message || "Failed to resend the verification email. Please try again.",
+      );
+    },
+  });
+};
+
 export const useUpdateSupervisee = () => {
   const queryClient = useQueryClient();
 

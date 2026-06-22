@@ -1,6 +1,11 @@
 import { useState, useMemo, useTransition, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useSupervisors, useApproveSupervisor, useRejectSupervisor } from "@/services/hooks/useSupervisors";
+import {
+  useSupervisors,
+  useApproveSupervisor,
+  useRejectSupervisor,
+  useResendSupervisorVerification,
+} from "@/services/hooks/useSupervisors";
 import { SupervisorFilters, VerificationStatus } from "@/services/types/supervisor";
 
 export const useSupervisorLogic = () => {
@@ -92,11 +97,17 @@ export const useSupervisorLogic = () => {
     supervisorId: "",
     fullName: "",
   });
+  const [resendModal, setResendModal] = useState<{ isOpen: boolean; supervisorId: string; fullName: string }>({
+    isOpen: false,
+    supervisorId: "",
+    fullName: "",
+  });
   const [rejectNotes, setRejectNotes] = useState("");
   const [approveNotes, setApproveNotes] = useState("");
 
   const { mutate: approveMutate, isPending: isApproving } = useApproveSupervisor();
   const { mutate: rejectMutate, isPending: isRejecting } = useRejectSupervisor();
+  const { mutate: resendMutate, isPending: isResending } = useResendSupervisorVerification();
 
   useEffect(() => {
     setIsInitialized(true);
@@ -168,6 +179,7 @@ export const useSupervisorLogic = () => {
       { key: "degreeType", label: "Degree Type" },
       { key: "yearsOfExperience", label: "Experience" },
       { key: "verificationStatus", label: "Status" },
+      { key: "emailVerified", label: "Email Verified" },
       { key: "createdAt", label: "Submitted" },
       { key: "actions", label: "", className: "text-right" },
     ],
@@ -258,6 +270,19 @@ export const useSupervisorLogic = () => {
       { onSettled: closeApproveModal }
     );
   }, [approveModal.supervisorId, approveNotes, approveMutate, closeApproveModal]);
+
+  const openResendModal = useCallback((supervisorId: string, fullName: string) => {
+    setResendModal({ isOpen: true, supervisorId, fullName });
+  }, []);
+
+  const closeResendModal = useCallback(() => {
+    setResendModal({ isOpen: false, supervisorId: "", fullName: "" });
+  }, []);
+
+  const confirmResend = useCallback(() => {
+    if (!resendModal.supervisorId) return;
+    resendMutate(resendModal.supervisorId, { onSettled: closeResendModal });
+  }, [resendModal.supervisorId, resendMutate, closeResendModal]);
 
   const confirmReject = useCallback(() => {
     if (!rejectModal.supervisorId || !rejectNotes.trim()) return;
@@ -352,5 +377,11 @@ export const useSupervisorLogic = () => {
     closeRejectModal,
     confirmApprove,
     confirmReject,
+
+    resendModal,
+    isResending,
+    openResendModal,
+    closeResendModal,
+    confirmResend,
   };
 };
