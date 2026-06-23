@@ -13,6 +13,7 @@ import {
   RejectSupervisorModal,
   ApproveSupervisorModal,
   EditSupervisorModal,
+  ResendVerificationModal,
 } from "./components";
 
 const Supervisors: React.FC<SupervisorsProps> = ({ className = "" }) => {
@@ -63,6 +64,12 @@ const Supervisors: React.FC<SupervisorsProps> = ({ className = "" }) => {
     closeRejectModal,
     confirmApprove,
     confirmReject,
+
+    resendModal,
+    isResending,
+    openResendModal,
+    closeResendModal,
+    confirmResend,
   } = useSupervisorLogic();
 
   if (error && !isPending) {
@@ -111,6 +118,7 @@ const Supervisors: React.FC<SupervisorsProps> = ({ className = "" }) => {
           onEditSupervisor={openEditModal}
           onApproveSupervisor={openApproveModal}
           onRejectSupervisor={openRejectModal}
+          onResendVerification={openResendModal}
           onRefresh={refetch}
         />
 
@@ -149,6 +157,14 @@ const Supervisors: React.FC<SupervisorsProps> = ({ className = "" }) => {
         supervisorId={editModal.supervisorId}
         supervisorName={editModal.fullName}
         onUpdate={() => refetch()}
+      />
+
+      <ResendVerificationModal
+        isOpen={resendModal.isOpen}
+        fullName={resendModal.fullName}
+        onConfirm={confirmResend}
+        onCancel={closeResendModal}
+        isLoading={isResending}
       />
     </>
   );

@@ -469,7 +469,7 @@ const AppSidebar: React.FC = () => {
                                 <span className="bg-[#006D36] text-white text-xs font-bold rounded-full px-2 py-0.5 min-w-[24px] text-center cursor-default">
                                   {pendingSupervisorCount > 9 ? "9+" : pendingSupervisorCount}
                                 </span>
-                                <span className="pointer-events-none absolute bottom-full right-0 mb-2 hidden group-hover/badge:block bg-gray-800 text-white text-xs rounded px-2 py-1 whitespace-nowrap z-50 shadow-lg">
+                                <span className="pointer-events-none absolute right-full top-1/2 -translate-y-1/2 mr-2 hidden group-hover/badge:block bg-gray-800 text-white text-xs rounded px-2 py-1 whitespace-nowrap z-50 shadow-lg">
                                   {pendingSupervisorCount} pending supervisor{pendingSupervisorCount !== 1 ? "s" : ""}
                                 </span>
                               </span>
