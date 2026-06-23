@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutBlock } from '../../../../../../services/types/visualLayoutTypes';
+import { LayoutBlock, getAdBlockType, AdBlock } from '../../../../../../services/types/visualLayoutTypes';
 import { 
   BoldIcon, 
   ItalicIcon, 
@@ -122,7 +122,8 @@ const TYPOGRAPHY_CONTROLS = [
 ];
 
 const StyleControls: React.FC<StyleControlsProps> = ({ block, onFloatingPanelOpen, onStyleUpdate, onDuplicate }) => {
-  const showTextFormatting = ['heading', 'paragraph'].includes(block.type);
+  const isLinkAd = block.type === 'ad' && getAdBlockType((block.content as AdBlock['content']) || {}) === 'link';
+  const showTextFormatting = ['heading', 'paragraph'].includes(block.type) || isLinkAd;
   const showImageControls = block.type === 'image';
   const showVideoControls = block.type === 'video';
   const showListControls = block.type === 'list';
@@ -398,7 +399,9 @@ const StyleControls: React.FC<StyleControlsProps> = ({ block, onFloatingPanelOpe
               title={option.tooltip}
             >
               <option.icon width={16} height={16} />
-              <span>{option.label}</span>
+              <span>
+                {isLinkAd && option.key === 'textColor' ? 'Link Color' : option.label}
+              </span>
             </button>
           ))}
         </div>

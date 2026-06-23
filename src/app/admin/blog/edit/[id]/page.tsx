@@ -9,7 +9,7 @@ interface EditBlogPageProps {
 
 export default async function EditBlog({ params }: EditBlogPageProps) {
   const { id } = await params;
-  
+
   return (
     <EditBlogWithLayoutBuilder blogId={id} />
   );
