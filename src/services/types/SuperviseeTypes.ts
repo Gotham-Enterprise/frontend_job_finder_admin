@@ -17,6 +17,7 @@ export interface SuperviseeTableProps {
   tableColumns: Array<{ key: string; label: string; className?: string }>;
   onViewSupervisee: (superviseeId: string) => void;
   onEditSupervisee: (superviseeId: string, fullName: string) => void;
+  onResendVerification: (superviseeId: string, fullName: string) => void;
 }
 
 export interface SuperviseeTablePaginationProps {
