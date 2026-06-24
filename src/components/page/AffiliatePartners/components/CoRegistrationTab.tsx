@@ -59,12 +59,20 @@ function formatDateDisplay(iso: string): string {
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function StatusBadge({ status }: { status: 'success' | 'failed' }) {
+function StatusBadge({ status }: { status: 'success' | 'failed' | 'duplicate' }) {
   if (status === 'success') {
     return (
       <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
         <CheckCircle className="w-3 h-3" />
         Success
+      </span>
+    )
+  }
+  if (status === 'duplicate') {
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+        <CheckCircle className="w-3 h-3" />
+        Duplicate
       </span>
     )
   }
@@ -112,20 +120,21 @@ function ErrorCell({ message }: { message: string | null }) {
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-type PartnerType = 'adzuna' | 'lensa' | 'disqo' | 'cv_library'
+type PartnerType = 'adzuna' | 'lensa' | 'disqo' | 'cv_library' | 'talent_inc'
 
 const PARTNER_OPTIONS: { value: PartnerType; label: string }[] = [
   { value: 'adzuna', label: 'Adzuna' },
   { value: 'lensa', label: 'Lensa' },
   { value: 'disqo', label: 'Disqo' },
   { value: 'cv_library', label: 'CV Library' },
+  { value: 'talent_inc', label: 'Talent Inc' },
 ]
 
 export default function CoRegistrationTab() {
   const [page, setPage] = useState(1)
   const [limit] = useState(20)
   const [partner, setPartner] = useState<PartnerType>('adzuna')
-  const [statusFilter, setStatusFilter] = useState<'all' | 'success' | 'failed'>('all')
+  const [statusFilter, setStatusFilter] = useState<'all' | 'success' | 'failed' | 'duplicate'>('all')
   const [timezone, setTimezone] = useState<'local' | 'utc'>('local')
   const [startDate, setStartDate] = useState(getFirstOfMonth())
   const [endDate, setEndDate] = useState(getTodayDate())
@@ -151,7 +160,7 @@ export default function CoRegistrationTab() {
     setPage(1)
   }
 
-  const handleStatusChange = (value: 'all' | 'success' | 'failed') => {
+  const handleStatusChange = (value: 'all' | 'success' | 'failed' | 'duplicate') => {
     setStatusFilter(value)
     setPage(1)
   }
@@ -220,11 +229,12 @@ export default function CoRegistrationTab() {
           <label className="text-xs font-medium text-gray-600 dark:text-gray-400">Status</label>
           <select
             value={statusFilter}
-            onChange={(e) => handleStatusChange(e.target.value as 'all' | 'success' | 'failed')}
+            onChange={(e) => handleStatusChange(e.target.value as 'all' | 'success' | 'failed' | 'duplicate')}
             className="h-10 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm text-gray-800 dark:text-gray-200 px-3 focus:outline-none focus:ring-2 focus:ring-primary"
           >
             <option value="all">All Statuses</option>
             <option value="success">Success</option>
+            <option value="duplicate">Duplicate</option>
             <option value="failed">Failed</option>
           </select>
         </div>
@@ -236,8 +246,8 @@ export default function CoRegistrationTab() {
             <button
               onClick={() => handleTimezoneChange('local')}
               className={`px-3 text-sm font-medium transition-colors ${timezone === 'local'
-                  ? 'bg-primary text-white'
-                  : 'bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
+                ? 'bg-primary text-white'
+                : 'bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
                 }`}
             >
               {getLocalOffsetLabel()}
@@ -245,8 +255,8 @@ export default function CoRegistrationTab() {
             <button
               onClick={() => handleTimezoneChange('utc')}
               className={`px-3 text-sm font-medium border-l border-gray-300 dark:border-gray-700 transition-colors ${timezone === 'utc'
-                  ? 'bg-primary text-white'
-                  : 'bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
+                ? 'bg-primary text-white'
+                : 'bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
                 }`}
             >
               UTC
@@ -283,7 +293,7 @@ export default function CoRegistrationTab() {
 
       {/* ── Summary Cards ─────────────────────────────────────────────── */}
       {data && (
-        <div className="grid grid-cols-2 gap-4 sm:max-w-sm">
+        <div className="grid grid-cols-2 gap-4 sm:max-w-lg sm:grid-cols-3">
           <div className="rounded-xl border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20 p-4">
             <div className="flex items-center gap-2 mb-1">
               <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
@@ -291,6 +301,15 @@ export default function CoRegistrationTab() {
             </div>
             <p className="text-2xl font-bold text-green-700 dark:text-green-300">
               {data.summary.successCount.toLocaleString()}
+            </p>
+          </div>
+          <div className="rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 p-4">
+            <div className="flex items-center gap-2 mb-1">
+              <CheckCircle className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+              <span className="text-xs font-medium text-amber-700 dark:text-amber-400">Total Duplicate</span>
+            </div>
+            <p className="text-2xl font-bold text-amber-700 dark:text-amber-300">
+              {(data.summary.duplicateCount ?? 0).toLocaleString()}
             </p>
           </div>
           <div className="rounded-xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 p-4">
@@ -353,15 +372,18 @@ export default function CoRegistrationTab() {
                         {record.location ?? <span className="text-gray-400 dark:text-gray-600">—</span>}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap">
-                        <StatusBadge status={record.status} />
+                        <StatusBadge status={record.status as 'success' | 'failed' | 'duplicate'} />
                       </td>
                       <td className="px-4 py-3 text-gray-700 dark:text-gray-300 whitespace-nowrap">
                         {record.responseCode != null ? (
                           <span
-                            className={`font-mono text-xs px-1.5 py-0.5 rounded ${record.responseCode >= 200 && record.responseCode < 300
+                            className={`font-mono text-xs px-1.5 py-0.5 rounded ${
+                              record.status === 'success'
                                 ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                                : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-                              }`}
+                                : record.status === 'duplicate'
+                                  ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
+                                  : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                            }`}
                           >
                             {record.responseCode}
                           </span>
