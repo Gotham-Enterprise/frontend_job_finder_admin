@@ -13,21 +13,21 @@ import ImageGalleryModal from "./VisualLayoutBuilder/components/ImageGalleryModa
 import BlogExitConfirmationModal from "@/components/ui/BlogExitConfirmationModal";
 import BlogDropdown from "./BlogDropdown";
 import { authUtils } from '@/services/utils/authUtils';
-import { 
-  transformBlogDataForAPI, 
-  validateBlogData, 
+import {
+  transformBlogDataForAPI,
+  validateBlogData,
   BlogCreatePayload,
-  BlogMetadata 
+  BlogMetadata
 } from '@/services/utils/blogPayloadUtils';
 import { CategoryWithSubCategories } from '@/services/types/subCategoryTypes';
 import { blogApi } from "@/services/api/blog";
 import { tagApi } from '@/services/api/tag';
 import { useUpdateBlogPost } from '@/services/hooks/useBlog';
-import { 
-  LayoutBlock, 
-  BlockType, 
+import {
+  LayoutBlock,
+  BlockType,
   BLOCK_TEMPLATES,
-  BlogLayout 
+  BlogLayout
 } from "@/services/types/visualLayoutTypes";
 
 interface EditBlogWithLayoutBuilderProps {
@@ -68,14 +68,14 @@ const createEmptyBlogLayout = (): BlogLayout => ({
 });
 
 const naturalSort = (a: string, b: string): number => {
-  return a.localeCompare(b, undefined, { 
-    numeric: true, 
-    sensitivity: 'base' 
+  return a.localeCompare(b, undefined, {
+    numeric: true,
+    sensitivity: 'base'
   });
 };
 
-const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({ 
-  blogId: id 
+const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
+  blogId: id
 }) => {
   const router = useRouter();
   const { mutate: updateBlogPost, isPending: isUpdating } = useUpdateBlogPost();
@@ -87,24 +87,24 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
   const [categoriesLoading, setCategoriesLoading] = useState(false);
   const [tagOptions, setTagOptions] = useState<TagOption[]>([]);
   const [tagsLoading, setTagsLoading] = useState(false);
-  
+
   const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
   const [dateDropdownOpen, setDateDropdownOpen] = useState(false);
   const [categoriesDropdownOpen, setCategoriesDropdownOpen] = useState(false);
   const [tagsDropdownOpen, setTagsDropdownOpen] = useState(false);
   const [categoriesSearchTerm, setCategoriesSearchTerm] = useState('');
   const [tagsSearchTerm, setTagsSearchTerm] = useState('');
-  
+
   const [fullCategoriesData, setFullCategoriesData] = useState<CategoryWithSubCategories[]>([]);
   const [subCategoryOptions, setSubCategoryOptions] = useState<{ id: string; name: string }[]>([]);
   const [subCategoriesLoading, setSubCategoriesLoading] = useState(false);
   const [subCategoriesDropdownOpen, setSubCategoriesDropdownOpen] = useState(false);
   const [subCategoriesSearchTerm, setSubCategoriesSearchTerm] = useState('');
-  
+
   const subCategoriesDropdownRef = useRef<HTMLDivElement>(null);
 
   const [activeTab, setActiveTab] = useState<'general' | 'seo'>('general');
-  
+
 
   const titleModal = useModal();
   const imageGalleryModal = useModal();
@@ -114,7 +114,7 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
     description: '',
     keywords: ''
   });
-  
+
   const [tempMetadata, setTempMetadata] = useState<BlogMetadata>({
     title: '',
     permalink: '',
@@ -133,13 +133,13 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
     allowPings: true,
     author: '',
   });
-  
+
   const [seoData, setSeoData] = useState({
     title: '',
     description: '',
     keywords: ''
   });
-  
+
   const [expandedSections, setExpandedSections] = useState({
     publish: true,
     categories: true,
@@ -176,12 +176,12 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
     try {
       setIsPageLoading(true);
       const response = await blogApi.getBlogPostById(id);
-      
+
       if (response) {
         setBlogData(response);
         const blogResponse = response as any;
-              
-    
+
+
         setMetadata({
           title: blogResponse.title || '',
           excerpt: blogResponse.excerpt || '',
@@ -190,11 +190,11 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
           visibility: blogResponse.metadata?.visibility || blogResponse.visibility || 'public',
           publishDate: blogResponse.metadata?.publishDate || blogResponse.publishedDate || new Date().toISOString(),
           categories: blogResponse.metadata?.categories?.[0]?.id || blogResponse.category?.id || '',
-          subCategories: blogResponse.metadata?.subCategories?.map((sub: any) => sub.id) || 
-                        blogResponse.metadata?.categories?.[0]?.subCategory?.map((sub: any) => sub.id) || 
-                        blogResponse.metadata?.categories?.[0]?.subCategories?.map((sub: any) => sub.id) || [],
-          tags: blogResponse.metadata?.tags?.map((tag: any) => tag.id) || 
-                blogResponse.tags?.map((tag: any) => tag.id) || [],
+          subCategories: blogResponse.metadata?.subCategories?.map((sub: any) => sub.id) ||
+            blogResponse.metadata?.categories?.[0]?.subCategory?.map((sub: any) => sub.id) ||
+            blogResponse.metadata?.categories?.[0]?.subCategories?.map((sub: any) => sub.id) || [],
+          tags: blogResponse.metadata?.tags?.map((tag: any) => tag.id) ||
+            blogResponse.tags?.map((tag: any) => tag.id) || [],
           seoTitle: blogResponse.metadata?.seo?.title || blogResponse.seo?.title || blogResponse.title || '',
           seoDescription: blogResponse.metadata?.seo?.description || blogResponse.seo?.description || blogResponse.excerpt || '',
           allowComments: true,
@@ -213,24 +213,24 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
             return 'No Author';
           })()
         });
-        
- 
+
+
         if (response.content) {
           try {
-           
+
             let parsedContent;
             if (typeof response.content === 'string') {
               try {
                 parsedContent = JSON.parse(response.content);
               } catch {
-              
+
                 parsedContent = response.content;
               }
             } else {
               parsedContent = response.content;
             }
 
-           
+
             if (parsedContent && parsedContent.blocks && Array.isArray(parsedContent.blocks)) {
               setCurrentLayout(prev => ({
                 ...prev,
@@ -241,7 +241,7 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
                 }))
               }));
             } else {
-            
+
               const textContent = typeof parsedContent === 'string' ? parsedContent : JSON.stringify(parsedContent);
               setCurrentLayout(prev => ({
                 ...prev,
@@ -256,7 +256,7 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
             }
           } catch (error) {
             console.error('Error parsing content:', error);
-          
+
             setCurrentLayout(prev => ({
               ...prev,
               blocks: []
@@ -284,9 +284,9 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
       try {
         const response = await blogApi.getCategoriesForDropdown();
         if (response.success && response.data) {
-       
+
           setFullCategoriesData(response.data);
-          
+
           const transformedCategories: CategoryOption[] = response.data
             .map((category: CategoryWithSubCategories) => ({
               value: category.id,
@@ -316,7 +316,7 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
               value: tag.id,
               text: tag.name
             }))
-            .sort((a, b) => naturalSort(a.text, b.text)); 
+            .sort((a, b) => naturalSort(a.text, b.text));
           setTagOptions(tagOptions);
         }
       } catch (error) {
@@ -356,14 +356,14 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
       try {
 
         const selectedCategory = categoryOptions.find(cat => cat.value === tempMetadata.categories);
-        
+
         if (!selectedCategory) {
           setSubCategoryOptions([]);
           return;
         }
 
         const response = await blogApi.getSubCategories(selectedCategory.text);
-        
+
         if (response.success && response.data) {
           const sortedSubCategories = response.data.sort((a: any, b: any) => naturalSort(a.name, b.name));
           setSubCategoryOptions(sortedSubCategories);
@@ -407,30 +407,30 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
   }, [metadata.seoTitle, metadata.seoDescription]);
 
   useEffect(() => {
-    if (!blogData) return; 
-    
+    if (!blogData) return;
+
     const hasContentChanges = JSON.stringify(metadata) !== JSON.stringify(blogData.metadata) ||
-                             JSON.stringify(currentLayout.blocks) !== JSON.stringify(blogData.blocks);
-    
+      JSON.stringify(currentLayout.blocks) !== JSON.stringify(blogData.blocks);
+
     setHasUnsavedChanges(hasContentChanges);
   }, [metadata, currentLayout.blocks, blogData]);
 
 
-  const filteredCategories = useMemo(() => 
+  const filteredCategories = useMemo(() =>
     categoryOptions
       .filter(category =>
         category.text.toLowerCase().includes(categoriesSearchTerm.toLowerCase())
       )
-      .sort((a, b) => naturalSort(a.text, b.text)), 
+      .sort((a, b) => naturalSort(a.text, b.text)),
     [categoryOptions, categoriesSearchTerm]
   );
 
   const filteredSubCategories = useMemo(() => {
     if (!tempMetadata.categories) return [];
-    
+
     const selectedCategory = fullCategoriesData.find(cat => cat.id === tempMetadata.categories);
     if (!selectedCategory?.subCategories) return [];
-    
+
     return selectedCategory.subCategories
       .filter(sub =>
         sub.name.toLowerCase().includes(subCategoriesSearchTerm.toLowerCase())
@@ -438,41 +438,41 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
       .sort((a, b) => naturalSort(a.name, b.name));
   }, [fullCategoriesData, tempMetadata.categories, subCategoriesSearchTerm]);
 
-  const filteredTags = useMemo(() => 
+  const filteredTags = useMemo(() =>
     tagOptions
       .filter(tag =>
         tag.text.toLowerCase().includes(tagsSearchTerm.toLowerCase())
       )
-      .sort((a, b) => naturalSort(a.text, b.text)), 
+      .sort((a, b) => naturalSort(a.text, b.text)),
     [tagOptions, tagsSearchTerm]
   );
 
   const isFormValid = useMemo(() => {
     const isValid = (
-      metadata.title.trim().length > 0 && 
-      metadata.author.trim().length > 0 && 
-      metadata.categories.length > 0 && 
-      metadata.subCategories.length > 0 && 
-      metadata.tags.length > 0 && 
+      metadata.title.trim().length > 0 &&
+      metadata.author.trim().length > 0 &&
+      metadata.categories.length > 0 &&
+      metadata.subCategories.length > 0 &&
+      metadata.tags.length > 0 &&
       (metadata.featuredImage?.length || 0) > 0 &&
       metadata.publishDate.length > 0
     );
-        
+
     return isValid;
   }, [metadata.title, metadata.author, metadata.categories, metadata.subCategories, metadata.tags, metadata.featuredImage, metadata.publishDate]);
 
   const isModalFormValid = useMemo(() => {
     const isValid = (
-      tempMetadata.title.trim().length > 0 && 
-      tempMetadata.author.trim().length > 0 && 
-      tempMetadata.categories.length > 0 && 
-      tempMetadata.subCategories.length > 0 && 
-      tempMetadata.tags.length > 0 && 
+      tempMetadata.title.trim().length > 0 &&
+      tempMetadata.author.trim().length > 0 &&
+      tempMetadata.categories.length > 0 &&
+      tempMetadata.subCategories.length > 0 &&
+      tempMetadata.tags.length > 0 &&
       (tempMetadata.featuredImage?.length || 0) > 0 &&
       tempMetadata.publishDate.length > 0
     );
-    
-   
+
+
     return isValid;
   }, [tempMetadata.title, tempMetadata.author, tempMetadata.categories, tempMetadata.subCategories, tempMetadata.tags, tempMetadata.featuredImage, tempMetadata.publishDate]);
 
@@ -503,7 +503,7 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
       description: seoData.description,
       keywords: seoData.keywords
     });
- 
+
     setTempMetadata({
       ...metadata,
 
@@ -530,7 +530,7 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
 
 
     setSeoData(tempSeoData);
-    
+
 
     setActiveTab('general');
     titleModal.closeModal();
@@ -547,7 +547,7 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
       description: seoData.description,
       keywords: seoData.keywords
     });
-    
+
     setActiveTab('general');
     titleModal.closeModal();
   }, [metadata, seoData, titleModal]);
@@ -573,7 +573,7 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
   const handleSaveAsDraft = useCallback(async () => {
     try {
       const draftMetadata = { ...metadata, status: 'draft' as const };
-      
+
       const payload = transformBlogDataForAPI(
         draftMetadata,
         currentLayout.blocks,
@@ -622,7 +622,7 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
     if (childAddBlock) {
       childAddBlock(blockType);
     } else {
-     
+
       const newBlock: LayoutBlock = {
         id: `block-${Date.now()}`,
         type: blockType,
@@ -644,7 +644,7 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
 
   const saveBlog = useCallback(async () => {
     try {
-    
+
 
       const payload = transformBlogDataForAPI(
         metadata,
@@ -654,7 +654,7 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
         fullCategoriesData
       );
 
-    
+
       const validation = validateBlogData(payload);
 
       if (!validation.isValid) {
@@ -666,7 +666,7 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
         { id, data: payload },
         {
           onSuccess: () => {
-          
+
             router.push('/admin/blog');
           },
           onError: (error) => {
@@ -688,7 +688,7 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
       <div className="flex items-center justify-center h-screen">
         <div className="text-center">
           <h2 className="text-xl font-semibold text-gray-700">Blog post not found</h2>
-          <Button 
+          <Button
             onClick={() => router.push('/admin/blog')}
             className="mt-4"
             variant="outline"
@@ -702,7 +702,7 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
 
   return (
     <>
-     
+
       <div className="fixed inset-0 z-50 bg-gray-50 dark:bg-gray-900">
         <div className="h-16 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between px-6">
           <div className="flex items-center space-x-4">
@@ -712,7 +712,7 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
               size="sm"
               className='text-brand-400'
             >
-             <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
               Back
@@ -747,10 +747,10 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
               disabled={isUpdating || !isFormValid}
               className="bg-brand-500 hover:bg-brand-600 text-white"
             >
-              {isUpdating 
-                ? 'Saving...' 
-                : metadata.status === 'published' 
-                  ? 'Update & Publish' 
+              {isUpdating
+                ? 'Saving...'
+                : metadata.status === 'published'
+                  ? 'Update & Publish'
                   : metadata.status === 'draft'
                     ? 'Save as Draft'
                     : 'Save Changes'
@@ -759,9 +759,9 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
           </div>
         </div>
 
-     
+
         <div className="h-[calc(100vh-80px)] flex">
-       
+
           <div className="flex-1 bg-white">
             <div className="h-full">
               <div className="h-full relative">
@@ -795,27 +795,25 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
       >
         <div className="p-6">
           <h2 className="text-xl font-bold mb-6">Edit Blog Title & SEO Settings</h2>
-          
+
           {/* Tabs */}
           <div className="border-b border-gray-200 dark:border-gray-700 mb-6">
             <nav className="flex space-x-8" aria-label="Tabs">
               <button
                 onClick={() => setActiveTab('general')}
-                className={`whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === 'general'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
+                className={`whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm ${activeTab === 'general'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
               >
                 General
               </button>
               <button
                 onClick={() => setActiveTab('seo')}
-                className={`whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === 'seo'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
+                className={`whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm ${activeTab === 'seo'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
               >
                 SEO Settings
               </button>
@@ -921,8 +919,8 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
                     className="w-full px-3 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:border-blue-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none text-gray-900 dark:text-gray-100 transition-colors text-left flex items-center justify-between"
                   >
                     <span>
-                      {tempMetadata.categories ? 
-                        (categoryOptions.find(cat => cat.value === tempMetadata.categories)?.text || 'Select Category') : 
+                      {tempMetadata.categories ?
+                        (categoryOptions.find(cat => cat.value === tempMetadata.categories)?.text || 'Select Category') :
                         'Select Category'
                       }
                     </span>
@@ -967,17 +965,16 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
                   <button
                     onClick={() => setSubCategoriesDropdownOpen(!subCategoriesDropdownOpen)}
                     disabled={!tempMetadata.categories}
-                    className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-colors text-left flex items-center justify-between ${
-                      !tempMetadata.categories 
-                        ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 border-gray-300 dark:border-gray-600 cursor-not-allowed' 
-                        : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600 hover:border-blue-500'
-                    }`}
+                    className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-colors text-left flex items-center justify-between ${!tempMetadata.categories
+                      ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 border-gray-300 dark:border-gray-600 cursor-not-allowed'
+                      : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600 hover:border-blue-500'
+                      }`}
                   >
                     <span>
-                      {!tempMetadata.categories ? 
-                        'Select a category first' : 
-                        tempMetadata.subCategories.length > 0 ? 
-                          `${tempMetadata.subCategories.length} subcategory(ies) selected` : 
+                      {!tempMetadata.categories ?
+                        'Select a category first' :
+                        tempMetadata.subCategories.length > 0 ?
+                          `${tempMetadata.subCategories.length} subcategory(ies) selected` :
                           'Select subcategories'
                       }
                     </span>
@@ -996,7 +993,7 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
                           className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                         />
                       </div>
-                      
+
                       <div className="max-h-32 overflow-y-auto">
                         {subCategoriesLoading ? (
                           <div className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
@@ -1018,7 +1015,7 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
                                   onChange={(e) => {
                                     const isChecked = e.target.checked;
                                     const currentSubCategories = [...tempMetadata.subCategories];
-                                    
+
                                     if (isChecked && !currentSubCategories.includes(subCategory.id)) {
                                       currentSubCategories.push(subCategory.id);
                                     } else if (!isChecked) {
@@ -1027,7 +1024,7 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
                                         currentSubCategories.splice(index, 1);
                                       }
                                     }
-                                    
+
                                     setTempMetadata(prev => ({ ...prev, subCategories: currentSubCategories }));
                                   }}
                                   className="mr-3 w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 rounded"
@@ -1043,14 +1040,14 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
                           </>
                         ) : (
                           <div className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
-                            {subCategoriesSearchTerm ? 
-                              'No subcategories found matching your search.' : 
+                            {subCategoriesSearchTerm ?
+                              'No subcategories found matching your search.' :
                               'No subcategories available for this category.'
                             }
                           </div>
                         )}
                       </div>
-                      
+
                       <div className="p-3 border-t border-gray-200 dark:border-gray-700 text-xs text-gray-500 dark:text-gray-400">
                         Select subcategories for more specific categorization. Please select a category first.
                       </div>
@@ -1070,7 +1067,7 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
                     className="w-full px-3 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:border-blue-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none text-gray-900 dark:text-gray-100 transition-colors text-left flex items-center justify-between"
                   >
                     <span>
-                      {tempMetadata.tags.length > 0 
+                      {tempMetadata.tags.length > 0
                         ? `${tempMetadata.tags.length} tag(s) selected`
                         : 'Select Tags'
                       }
@@ -1151,9 +1148,9 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
                 <div className="flex items-center space-x-4">
                   {tempMetadata.featuredImage ? (
                     <div className="flex items-center space-x-3">
-                      <img 
-                        src={tempMetadata.featuredImage} 
-                        alt="Featured" 
+                      <img
+                        src={tempMetadata.featuredImage}
+                        alt="Featured"
                         className="w-16 h-16 object-cover rounded border border-gray-300"
                       />
                       <div className="flex flex-col space-y-2">
@@ -1234,7 +1231,7 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
               {/* Keywords */}
               <div className="mb-4">
                 <label htmlFor="seo-keywords" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Keywords 
+                  Keywords
                 </label>
                 <input
                   id="seo-keywords"
@@ -1306,9 +1303,9 @@ const EditBlogWithLayoutBuilder: React.FC<EditBlogWithLayoutBuilderProps> = ({
         disableSaveAsDraft={!isFormValid}
       />
 
-      <FullScreenSpinner 
-        isVisible={isUpdating} 
-        message="Updating blog post..." 
+      <FullScreenSpinner
+        isVisible={isUpdating}
+        message="Updating blog post..."
       />
     </>
   );
