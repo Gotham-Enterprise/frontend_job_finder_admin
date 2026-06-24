@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { validateImageUrl, generateImagePlaceholder } from './imageUtils';
+import { validateImageUrl, generateImagePlaceholder, isVideoUrl, buildMediaDisplayStyles, isFullBleedMedia } from './imageUtils';
 import { useModal } from '@/hooks/useModal';
 import ImageGalleryModal from './components/ImageGalleryModal';
 
@@ -23,6 +23,9 @@ interface ImageUrlInputProps {
   onBorderRadiusChange?: (radius: number) => void;
   onSetFeaturedImage?: (imageUrl: string) => void;
   currentFeaturedImage?: string;
+  allowVideo?: boolean;
+  /** Hides width, height, alignment, and border-radius controls (used for Ad blocks). */
+  hideMediaLayoutControls?: boolean;
 }
 
 const ImageUrlInput: React.FC<ImageUrlInputProps> = ({
@@ -44,6 +47,8 @@ const ImageUrlInput: React.FC<ImageUrlInputProps> = ({
   onBorderRadiusChange,
   onSetFeaturedImage,
   currentFeaturedImage = '',
+  allowVideo = false,
+  hideMediaLayoutControls = false,
 }) => {
   const [localImageUrl, setLocalImageUrl] = useState(imageUrl);
   const [localAltText, setLocalAltText] = useState(altText);
@@ -74,6 +79,20 @@ const ImageUrlInput: React.FC<ImageUrlInputProps> = ({
 
   const isValidUrl = validateImageUrl(localImageUrl);
   const hasImageUrl = localImageUrl.trim().length > 0;
+  const isVideoMedia = isVideoUrl(localImageUrl);
+  const fullBleed = isFullBleedMedia({
+    width: imageWidth,
+    height: imageHeight,
+    widthUnit,
+    heightUnit,
+  });
+  const { mediaStyle: previewMediaStyle } = buildMediaDisplayStyles({
+    width: imageWidth,
+    height: imageHeight,
+    widthUnit,
+    heightUnit,
+    borderRadius,
+  });
 
   const clearImage = () => {
     setLocalImageUrl('');
@@ -90,7 +109,7 @@ const ImageUrlInput: React.FC<ImageUrlInputProps> = ({
       <div>
         <div className="flex items-center justify-between mb-2">
           <label className="block text-sm font-medium text-gray-700">
-            Image URL
+            {allowVideo ? 'Media URL (Image/GIF/Video)' : 'Image URL'}
           </label>
           <button
             type="button"
@@ -105,7 +124,7 @@ const ImageUrlInput: React.FC<ImageUrlInputProps> = ({
           value={localImageUrl}
           onChange={(e) => setLocalImageUrl(e.target.value)}
           className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 placeholder-gray-400 focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-100 transition-all"
-          placeholder="https://example.com/image.jpg or https://unsplash.com/..."
+          placeholder={allowVideo ? "https://example.com/ad.gif or https://example.com/ad.mp4" : "https://example.com/image.jpg or https://unsplash.com/..."}
         />
         {hasImageUrl && !isValidUrl && (
           <div className="text-xs text-red-500 mt-2">
@@ -122,7 +141,7 @@ const ImageUrlInput: React.FC<ImageUrlInputProps> = ({
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          Alt Text
+          {allowVideo ? 'Alt Text / Media Description' : 'Alt Text'}
         </label>
         <input
           type="text"
@@ -133,6 +152,8 @@ const ImageUrlInput: React.FC<ImageUrlInputProps> = ({
         />
       </div>
 
+      {!hideMediaLayoutControls && (
+      <>
       <div className="space-y-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -285,26 +306,50 @@ const ImageUrlInput: React.FC<ImageUrlInputProps> = ({
           <span>Rounded</span>
         </div>
       </div>
+      </>
+      )}
+
+      {hideMediaLayoutControls && hasImageUrl && isValidUrl && (
+        <p className="text-xs text-gray-500">Ad media is always displayed at full width.</p>
+      )}
       
       {hasImageUrl && isValidUrl && (
         <div className="space-y-3">
           <label className="block text-sm font-medium text-gray-700">
             Preview
           </label>
-          <div className="relative">
-            <img 
-              src={localImageUrl} 
-              alt={localAltText || "Preview"} 
-              className="object-cover border border-gray-200"
-              style={{
-                width: widthUnit === '%' ? '100%' : `${Math.min(imageWidth, 320)}px`,
-                height: `${Math.min(imageHeight, 180)}px`,
-                borderRadius: `${borderRadius}px`
-              }}
-              onError={(e) => {
-                e.currentTarget.src = generateImagePlaceholder(100, 100, 'Failed to load');
-              }}
-            />
+          <div
+            className="relative"
+            style={hideMediaLayoutControls || fullBleed ? { width: '100%' } : undefined}
+          >
+            {allowVideo && isVideoMedia ? (
+              <video
+                src={localImageUrl}
+                className={`border border-gray-200 ${hideMediaLayoutControls ? 'w-full h-auto' : 'object-cover'}`}
+                style={hideMediaLayoutControls ? undefined : {
+                  ...previewMediaStyle,
+                  width: fullBleed ? '100%' : widthUnit === '%' ? '100%' : `${Math.min(imageWidth, 320)}px`,
+                  height: fullBleed ? '100%' : `${Math.min(imageHeight, 180)}px`,
+                }}
+                controls
+                muted
+                playsInline
+              />
+            ) : (
+              <img 
+                src={localImageUrl} 
+                alt={localAltText || "Preview"} 
+                className={`border border-gray-200 ${hideMediaLayoutControls ? 'w-full h-auto' : 'object-cover'}`}
+                style={hideMediaLayoutControls ? undefined : {
+                  ...previewMediaStyle,
+                  width: fullBleed ? '100%' : widthUnit === '%' ? '100%' : `${Math.min(imageWidth, 320)}px`,
+                  height: fullBleed ? '100%' : `${Math.min(imageHeight, 180)}px`,
+                }}
+                onError={(e) => {
+                  e.currentTarget.src = generateImagePlaceholder(100, 100, 'Failed to load');
+                }}
+              />
+            )}
             <button
               onClick={clearImage}
               className="absolute top-2 right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-xs hover:bg-red-600 transition-colors"
@@ -313,9 +358,11 @@ const ImageUrlInput: React.FC<ImageUrlInputProps> = ({
               ×
             </button>
           </div>
-          <p className="text-xs text-gray-500">
-            Actual size: {imageWidth}{widthUnit} × {imageHeight}{heightUnit}
-          </p>
+          {!hideMediaLayoutControls && (
+            <p className="text-xs text-gray-500">
+              Actual size: {imageWidth}{widthUnit} × {imageHeight}{heightUnit}
+            </p>
+          )}
         </div>
       )}
 
@@ -325,6 +372,7 @@ const ImageUrlInput: React.FC<ImageUrlInputProps> = ({
         onImageSelect={selectImageFromGallery}
         onSetFeaturedImage={onSetFeaturedImage}
         currentFeaturedImage={currentFeaturedImage}
+        allowVideo={allowVideo}
       />
     </div>
   );

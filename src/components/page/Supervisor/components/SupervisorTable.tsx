@@ -1,15 +1,14 @@
 import React from "react";
-import { Check, Eye, Pencil, X } from "lucide-react";
 import { formatDate } from "@/services/utils/dateUtils";
 import { formatUsStateCodeForDisplay } from "@/services/utils/formatUsStateLicensure";
 import { formatUSPhoneNationalDisplay } from "@/services/utils/phoneNumberUtils";
 import { Table, TableBody, TableCell, TableRow } from "../../../ui/table";
 import Avatar from "../../../ui/avatar/Avatar";
 import TableHeading from "../../../tables/tableHeader";
+import EmailVerifiedBadge from "../../../ui/badge/EmailVerifiedBadge";
 import SupervisorStatusBadge from "./SupervisorStatusBadge";
+import SupervisorRowActions from "./SupervisorRowActions";
 import { SupervisorTableProps } from "@/services/types/SupervisorTypes";
-const ACTION_ICON_PX = 16;
-const actionIconProps = { size: ACTION_ICON_PX, className: "shrink-0" } as const;
 
 function renderOptionalCredential(value: string | null | undefined) {
   return value?.trim() ? (
@@ -27,6 +26,7 @@ const SupervisorTable: React.FC<SupervisorTableProps> = ({
   onEditSupervisor,
   onApproveSupervisor,
   onRejectSupervisor,
+  onResendVerification,
 }) => {
   return (
     <div className="overflow-x-auto">
@@ -153,6 +153,11 @@ const SupervisorTable: React.FC<SupervisorTableProps> = ({
                   <SupervisorStatusBadge status={supervisor.verificationStatus} />
                 </TableCell>
 
+                {/* Email Verified */}
+                <TableCell className="px-4 py-3 whitespace-nowrap">
+                  <EmailVerifiedBadge verified={supervisor.emailVerified} />
+                </TableCell>
+
                 {/* Submitted date */}
                 <TableCell className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
                   {formatDate(supervisor.createdAt)}
@@ -160,43 +165,15 @@ const SupervisorTable: React.FC<SupervisorTableProps> = ({
 
                 {/* Actions */}
                 <TableCell className="px-4 py-3 whitespace-nowrap text-right">
-                  <div className="flex items-center justify-end gap-1">
-                    <button
-                      onClick={() => onViewSupervisor(supervisor.id)}
-                      title="View details"
-                      className="p-1.5 text-gray-500 hover:text-brand-600 dark:text-gray-400 dark:hover:text-brand-400 rounded transition-colors"
-                    >
-                      <Eye {...actionIconProps} />
-                    </button>
-                    <button
-                      onClick={() =>
-                        onEditSupervisor(supervisor.id, supervisor.fullName || supervisor.email)
-                      }
-                      title="Edit supervisor"
-                      className="p-1.5 text-gray-500 hover:text-brand-600 dark:text-gray-400 dark:hover:text-brand-400 rounded transition-colors"
-                    >
-                      <Pencil {...actionIconProps} />
-                    </button>
-
-                    {supervisor.verificationStatus !== "APPROVED" && (
-                      <button
-                        onClick={() => onApproveSupervisor(supervisor.id, supervisor.fullName || supervisor.email)}
-                        title="Approve supervisor"
-                        className="p-1.5 text-gray-500 hover:text-success-600 dark:text-gray-400 dark:hover:text-success-400 rounded transition-colors"
-                      >
-                        <Check {...actionIconProps} />
-                      </button>
-                    )}
-
-                    {supervisor.verificationStatus !== "REJECTED" && (
-                      <button
-                        onClick={() => onRejectSupervisor(supervisor.id, supervisor.fullName || supervisor.email)}
-                        title="Reject supervisor"
-                        className="p-1.5 text-gray-500 hover:text-error-600 dark:text-gray-400 dark:hover:text-error-400 rounded transition-colors"
-                      >
-                        <X {...actionIconProps} />
-                      </button>
-                    )}
+                  <div className="flex items-center justify-end">
+                    <SupervisorRowActions
+                      supervisor={supervisor}
+                      onView={onViewSupervisor}
+                      onEdit={onEditSupervisor}
+                      onApprove={onApproveSupervisor}
+                      onReject={onRejectSupervisor}
+                      onResendVerification={onResendVerification}
+                    />
                   </div>
                 </TableCell>
               </TableRow>

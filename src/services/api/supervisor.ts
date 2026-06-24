@@ -3,11 +3,12 @@ import {
   SupervisorsResponse,
   SupervisorDetailsResponse,
   SupervisorActionResponse,
+  SupervisorResendVerificationResponse,
   SupervisorUpdatePayload,
   SupervisorUpdateResponse,
 } from "../types/supervisor";
 import { buildSupervisorUpdateFormData } from "../utils/supervisorProfileForm";
-import { apiGet, apiPatch } from "./apiUtils";
+import { apiGet, apiPatch, apiPost } from "./apiUtils";
 import { showToast } from "../utils/toast";
 
 export const supervisorApi = {
@@ -53,6 +54,17 @@ export const supervisorApi = {
     return apiPatch<SupervisorActionResponse>(
       `/api/supervision/admin/supervisors/${id}/edit-verification-notes`,
       { verificationNotes }
+    );
+  },
+
+  /**
+   * Resend the email verification link to a supervisor who hasn't confirmed their email.
+   * `id` is the supervision user id (the same id used by the list/detail endpoints).
+   * Backend returns 400 if the user's email is already verified.
+   */
+  async resendVerificationEmail(id: string): Promise<SupervisorResendVerificationResponse> {
+    return apiPost<SupervisorResendVerificationResponse>(
+      `/api/supervision/admin/users/${id}/send-email-verification-reminder`,
     );
   },
 

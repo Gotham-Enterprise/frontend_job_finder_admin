@@ -1,11 +1,12 @@
 import {
   SuperviseeDetailsResponse,
   SuperviseeFilters,
+  SuperviseeResendVerificationResponse,
   SuperviseeUpdatePayload,
   SuperviseeUpdateResponse,
   SuperviseesResponse,
 } from "../types/supervisee";
-import { apiGet, apiPatch } from "./apiUtils";
+import { apiGet, apiPatch, apiPost } from "./apiUtils";
 import { buildSuperviseeUpdateFormData } from "../utils/superviseeProfileForm";
 import { showToast } from "../utils/toast";
 
@@ -29,6 +30,17 @@ export const superviseeApi = {
 
   async getSuperviseeById(id: string): Promise<SuperviseeDetailsResponse> {
     return apiGet<SuperviseeDetailsResponse>(`/api/supervision/admin/supervisees/${id}`);
+  },
+
+  /**
+   * Resend the email verification link to a supervisee who hasn't confirmed their email.
+   * `id` is the supervision user id (the same id used by the list/detail endpoints).
+   * Backend returns 400 if the user's email is already verified.
+   */
+  async resendVerificationEmail(id: string): Promise<SuperviseeResendVerificationResponse> {
+    return apiPost<SuperviseeResendVerificationResponse>(
+      `/api/supervision/admin/users/${id}/send-email-verification-reminder`,
+    );
   },
 
   async updateSupervisee(

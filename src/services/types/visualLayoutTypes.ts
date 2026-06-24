@@ -10,7 +10,8 @@ export type BlockType =
   | "hero"
   | "gallery"
   | "embed"
-  | "button";
+  | "button"
+  | "ad";
 
 export interface LayoutBlock {
   id: string;
@@ -115,6 +116,77 @@ export interface ImageBlock extends LayoutBlock {
     aspectRatio?: string;
   };
 }
+
+export type AdBlockType = "media" | "link";
+
+export interface AdBlock extends LayoutBlock {
+  type: "ad";
+  content: {
+    adType?: AdBlockType;
+    url?: string;
+    alt?: string;
+    caption?: string;
+    target?: "_self" | "_blank";
+    link?: string;
+    text?: string;
+  };
+}
+
+export const getAdBlockType = (content: AdBlock["content"]): AdBlockType =>
+  content?.adType === "link" ? "link" : "media";
+
+export const getAdLinkTextStyles = (styles?: BlockStyles): Record<string, string> => {
+  const s = styles || {};
+  const result: Record<string, string> = {
+    color: s.linkColor || s.textColor || "#2563eb",
+    fontSize: s.fontSize || "1rem",
+    fontWeight: s.fontWeight || "normal",
+    fontStyle: s.fontStyle || "normal",
+    textDecoration: s.textDecoration ?? "underline",
+  };
+
+  if (s.letterSpacing) result.letterSpacing = s.letterSpacing;
+  if (s.lineHeight) result.lineHeight = s.lineHeight;
+
+  return result;
+};
+
+export const getAdLinkTextCss = (styles?: BlockStyles): string =>
+  Object.entries(getAdLinkTextStyles(styles))
+    .map(([key, value]) => {
+      const cssKey = key.replace(/[A-Z]/g, (match) => `-${match.toLowerCase()}`);
+      return `${cssKey}: ${value} !important`;
+    })
+    .join("; ");
+
+export const AD_MEDIA_LINK_CLASS = "editorjs-ad-media-link";
+
+export const getAdMediaLinkHoverCss = (scopeClass = AD_MEDIA_LINK_CLASS): string => `
+  .${scopeClass} {
+    cursor: pointer !important;
+    display: block !important;
+    width: 100% !important;
+    overflow: hidden !important;
+    border-radius: 8px !important;
+    transition: box-shadow 0.2s ease !important;
+  }
+  .${scopeClass} img,
+  .${scopeClass} video {
+    transition: transform 0.2s ease, filter 0.2s ease !important;
+  }
+  .${scopeClass}:hover img,
+  .${scopeClass}:hover video {
+    transform: scale(1.02) !important;
+    filter: brightness(0.95) !important;
+  }
+  .${scopeClass}:hover {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.15) !important;
+  }
+  .${scopeClass}:focus-visible {
+    outline: 2px solid #2563eb !important;
+    outline-offset: 2px !important;
+  }
+`;
 
 export interface VideoBlock extends LayoutBlock {
   type: "video";
@@ -282,6 +354,23 @@ export const BLOCK_TEMPLATES: Record<BlockType, Partial<LayoutBlock>> = {
       widthUnit: "%",
       heightUnit: "px",
       imageAlign: "center",
+    },
+    position: { x: 0, y: 0, width: 100, height: 200 },
+  },
+
+  ad: {
+    type: "ad",
+    content: {
+      adType: "media",
+      url: "",
+      link: "",
+      alt: "Advertisement",
+      target: "_blank",
+    },
+    styles: {
+      padding: { top: 0, right: 0, bottom: 0, left: 0 },
+      margin: { top: 24, right: 0, bottom: 24, left: 0 },
+      border: { width: 0, style: "solid", color: "#e5e7eb", radius: 8 },
     },
     position: { x: 0, y: 0, width: 100, height: 200 },
   },
@@ -576,7 +665,7 @@ export const convertLayoutToHtml = (layout: BlogLayout): string => {
     if (styles.accentColor) cssProperties.push(`accent-color: ${styles.accentColor} !important`);
 
     // Alignment - handle special alignment properties for different block types with !important
-    if (blockType === "image" && styles.imageAlign) {
+    if ((blockType === "image" || blockType === "ad") && styles.imageAlign) {
       cssProperties.push(`text-align: ${styles.imageAlign} !important`);
       if (styles.imageAlign === "center") {
         cssProperties.push(`display: block !important`);
@@ -694,7 +783,7 @@ export const convertLayoutToHtml = (layout: BlogLayout): string => {
     }
 
     // Special alignment handling
-    if (blockType === "image" && styles.imageAlign === "center") {
+    if ((blockType === "image" || blockType === "ad") && styles.imageAlign === "center") {
       cssProperties.push(`display: block !important`);
       cssProperties.push(`margin-left: auto !important`);
       cssProperties.push(`margin-right: auto !important`);
@@ -756,6 +845,40 @@ export const convertLayoutToHtml = (layout: BlogLayout): string => {
           return `${imageStyle}${imgStyle}<figure class="${imageClass} ${imageContainerAlign}">
           <img src="${imageBlock.content.url}" alt="${imageBlock.content.alt}" class="${imgClass}" />
           ${imageBlock.content.caption ? `<figcaption style="text-align: center !important; font-size: 0.875rem !important; color: #6b7280 !important; margin-top: 12px !important; font-style: italic !important;">${imageBlock.content.caption}</figcaption>` : ""}
+        </figure>`;
+
+        case "ad":
+          const adBlock = block as AdBlock;
+          const adVariant = getAdBlockType(adBlock.content);
+          const { cssClass: adClass, cssStyle: adStyle } = createUniqueCss(block.styles, "ad", index);
+
+          if (adVariant === "link") {
+            const adLinkText = adBlock.content.text || "";
+            const adLinkUrl = adBlock.content.link || "";
+            const adTextAlign = block.styles?.textAlign || "center";
+            const adLinkInlineStyle = getAdLinkTextCss(block.styles);
+            const adLinkHtml = adLinkUrl
+              ? `<a href="${adLinkUrl}" target="_blank" rel="noopener noreferrer sponsored" style="${adLinkInlineStyle}">${adLinkText}</a>`
+              : `<span style="${adLinkInlineStyle}">${adLinkText}</span>`;
+            return `${adStyle}<div class="${adClass}" style="text-align: ${adTextAlign} !important; width: 100% !important;">${adLinkHtml}</div>`;
+          }
+
+          const adMediaStyle =
+            'width: 100% !important; height: auto !important; max-width: 100% !important; display: block !important; border-radius: 8px !important;';
+
+          const adTarget = adBlock.content.target || "_blank";
+          const isAdVideo = /\.(mp4|webm|mov|avi|m4v|ogg)(\?.*)?$/i.test(adBlock.content.url || "");
+          const adMedia = isAdVideo
+            ? `<video src="${adBlock.content.url}" style="${adMediaStyle}" controls muted playsinline preload="metadata"></video>`
+            : `<img src="${adBlock.content.url}" alt="${adBlock.content.alt}" style="${adMediaStyle}" />`;
+          const adLinkedMedia = adBlock.content.link
+            ? `<a href="${adBlock.content.link}" target="${adTarget}"${adTarget === "_blank" ? ' rel="noopener noreferrer sponsored"' : ""} class="${AD_MEDIA_LINK_CLASS}">${adMedia}</a>`
+            : adMedia;
+          const adMediaHoverCss = adBlock.content.link ? `<style>${getAdMediaLinkHoverCss()}</style>` : "";
+
+          return `${adStyle}${adMediaHoverCss}<figure class="${adClass}" style="width: 100% !important;">
+          ${adLinkedMedia}
+          ${adBlock.content.caption ? `<figcaption style="text-align: center !important; font-size: 0.875rem !important; color: #6b7280 !important; margin-top: 12px !important; font-style: italic !important;">${adBlock.content.caption}</figcaption>` : ""}
         </figure>`;
 
         case "quote":

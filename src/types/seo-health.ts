@@ -16,6 +16,11 @@ export interface SeoHealthResponse {
     seoPages: {
       total: number;
       withZeroJobs: number;
+      pruned: number;
+      indexableWithZeroJobs: number;
+      lastCronRun: string | null;
+      lastCronDuration: number | null;
+      lastCronError: string | null;
     };
   };
 }

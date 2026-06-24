@@ -11,6 +11,7 @@ import {
   SuperviseeTable,
   SuperviseeTablePagination,
   EditSuperviseeModal,
+  ResendVerificationModal,
 } from "./components";
 
 const Supervisees: React.FC<SuperviseesProps> = ({ className = "" }) => {
@@ -37,6 +38,12 @@ const Supervisees: React.FC<SuperviseesProps> = ({ className = "" }) => {
     editModal,
     openEditModal,
     closeEditModal,
+
+    resendModal,
+    isResending,
+    openResendModal,
+    closeResendModal,
+    confirmResend,
   } = useSuperviseeLogic();
 
   if (error && !isPending) {
@@ -68,6 +75,7 @@ const Supervisees: React.FC<SuperviseesProps> = ({ className = "" }) => {
           tableColumns={tableColumns}
           onViewSupervisee={viewSupervisee}
           onEditSupervisee={openEditModal}
+          onResendVerification={openResendModal}
         />
 
         <SuperviseeTablePagination
@@ -85,6 +93,14 @@ const Supervisees: React.FC<SuperviseesProps> = ({ className = "" }) => {
         superviseeId={editModal.superviseeId}
         superviseeName={editModal.fullName}
         onUpdate={() => refetch()}
+      />
+
+      <ResendVerificationModal
+        isOpen={resendModal.isOpen}
+        fullName={resendModal.fullName}
+        onConfirm={confirmResend}
+        onCancel={closeResendModal}
+        isLoading={isResending}
       />
     </>
   );

@@ -178,6 +178,24 @@ export const useRejectSupervisor = () => {
   });
 };
 
+export const useResendSupervisorVerification = () => {
+  return useMutation({
+    mutationFn: (id: string) => supervisorApi.resendVerificationEmail(id),
+    onSuccess: (response) => {
+      showToast.success(
+        "Verification Email Sent",
+        response.message || "The verification email has been resent to the supervisor.",
+      );
+    },
+    onError: (error: Error) => {
+      showToast.error(
+        "Resend Failed",
+        error.message || "Failed to resend the verification email. Please try again.",
+      );
+    },
+  });
+};
+
 export const useEditSupervisorVerificationNotes = () => {
   const queryClient = useQueryClient();
 

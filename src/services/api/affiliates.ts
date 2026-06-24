@@ -8,8 +8,8 @@ export interface AffiliatePartner {
   apiKey: string;
   status: "active" | "inactive" | "suspended";
   contactPerson?: string;
-  contactPhone?: string;
-  websiteUrl?: string;
+  phone?: string;
+  website?: string;
   feedUrl?: string;
   syncEnabled?: boolean;
   syncIntervalHours?: number;
@@ -20,11 +20,24 @@ export interface AffiliatePartner {
   consecutiveFailures?: number;
   isRunning?: boolean; // Real-time sync status from getSyncStatus
   activeBatch?: AffiliateBatch; // Current processing batch
-  commissionRate?: number;
-  notes?: string;
+  logoUrl?: string;
   createdAt: string;
   updatedAt: string;
 }
+
+export interface AffiliateLink {
+  id: string;
+  name: string;
+  url: string;
+  affiliateId: string;
+  affiliate?: {
+    id: string;
+    name: string;
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
 
 export interface AffiliateBatch {
   id: string;
@@ -126,13 +139,12 @@ export interface CreatePartnerData {
   name: string;
   email: string;
   contactPerson?: string;
-  contactPhone?: string;
-  websiteUrl?: string;
+  phone?: string;
+  website?: string;
   feedUrl?: string;
   syncEnabled?: boolean;
   syncIntervalHours?: number;
-  commissionRate?: number;
-  notes?: string;
+  logo?: File;
 }
 
 export interface UpdatePartnerData {
@@ -140,13 +152,24 @@ export interface UpdatePartnerData {
   email?: string;
   status?: "active" | "inactive" | "suspended";
   contactPerson?: string;
-  contactPhone?: string;
-  websiteUrl?: string;
+  phone?: string;
+  website?: string;
   feedUrl?: string;
   syncEnabled?: boolean;
   syncIntervalHours?: number;
-  commissionRate?: number;
-  notes?: string;
+  logo?: File;
+}
+
+export interface CreateLinkData {
+  name: string;
+  url: string;
+  affiliateId: string;
+}
+
+export interface UpdateLinkData {
+  name?: string;
+  url?: string;
+  affiliateId?: string;
 }
 
 // Partner Management APIs
@@ -168,15 +191,75 @@ export const getAffiliatePartner = async (id: string): Promise<AffiliatePartner>
 };
 
 export const createAffiliatePartner = async (data: CreatePartnerData): Promise<AffiliatePartner> => {
-  return apiPost("/api/admin/affiliates/partners", data);
+  if (data.logo) {
+    const formData = new FormData();
+    Object.entries(data).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        formData.append(key, value as any);
+      }
+    });
+    const res = await apiRequest<{ data: AffiliatePartner }>("/api/admin/affiliates/partners", {
+      method: "POST",
+      body: formData,
+    });
+    return res.data;
+  }
+  const res = await apiPost<{ data: AffiliatePartner }>("/api/admin/affiliates/partners", data);
+  return res.data;
 };
 
 export const updateAffiliatePartner = async (id: string, data: UpdatePartnerData): Promise<AffiliatePartner> => {
-  return apiPut(`/api/admin/affiliates/partners/${id}`, data);
+  if (data.logo) {
+    const formData = new FormData();
+    Object.entries(data).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        formData.append(key, value as any);
+      }
+    });
+    const res = await apiRequest<{ data: AffiliatePartner }>(`/api/admin/affiliates/partners/${id}`, {
+      method: "PUT",
+      body: formData,
+    });
+    return res.data;
+  }
+  const res = await apiPut<{ data: AffiliatePartner }>(`/api/admin/affiliates/partners/${id}`, data);
+  return res.data;
 };
 
 export const deleteAffiliatePartner = async (id: string): Promise<void> => {
   return apiDelete(`/api/admin/affiliates/partners/${id}`);
+};
+
+// Affiliate Link Management APIs
+export const getAffiliateLinks = async (params?: {
+  page?: number;
+  limit?: number;
+  affiliateId?: string;
+}): Promise<{ data: AffiliateLink[]; total: number; page: number; totalPages: number }> => {
+  const queryParams = new URLSearchParams();
+  if (params?.page) queryParams.append("page", params.page.toString());
+  if (params?.limit) queryParams.append("limit", params.limit.toString());
+  if (params?.affiliateId) queryParams.append("affiliateId", params.affiliateId);
+  const queryString = queryParams.toString();
+  const res = await apiGet<{ data: AffiliateLink[]; pagination: { page: number; limit: number; total: number; totalPages: number } }>(`/api/admin/affiliates/links${queryString ? `?${queryString}` : ""}`);
+  return {
+    data: res.data,
+    ...res.pagination
+  };
+};
+
+export const createAffiliateLink = async (data: CreateLinkData): Promise<AffiliateLink> => {
+  const res = await apiPost<{ data: AffiliateLink }>("/api/admin/affiliates/links", data);
+  return res.data;
+};
+
+export const updateAffiliateLink = async (id: string, data: UpdateLinkData): Promise<AffiliateLink> => {
+  const res = await apiPut<{ data: AffiliateLink }>(`/api/admin/affiliates/links/${id}`, data);
+  return res.data;
+};
+
+export const deleteAffiliateLink = async (id: string): Promise<void> => {
+  return apiDelete(`/api/admin/affiliates/links/${id}`);
 };
 
 // Upload & Batch Management APIs

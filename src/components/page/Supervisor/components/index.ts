@@ -6,4 +6,5 @@ export { default as SupervisorTablePagination } from "./SupervisorTablePaginatio
 export { default as RejectSupervisorModal } from "./RejectSupervisorModal";
 export { default as ApproveSupervisorModal } from "./ApproveSupervisorModal";
 export { default as EditVerificationNotesModal } from "./EditVerificationNotesModal";
+export { default as ResendVerificationModal } from "./ResendVerificationModal";
 export { default as EditSupervisorModal } from "./EditSupervisorModal";

@@ -112,12 +112,13 @@ function ErrorCell({ message }: { message: string | null }) {
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-type PartnerType = 'adzuna' | 'lensa' | 'disqo'
+type PartnerType = 'adzuna' | 'lensa' | 'disqo' | 'cv_library'
 
 const PARTNER_OPTIONS: { value: PartnerType; label: string }[] = [
   { value: 'adzuna', label: 'Adzuna' },
   { value: 'lensa', label: 'Lensa' },
   { value: 'disqo', label: 'Disqo' },
+  { value: 'cv_library', label: 'CV Library' },
 ]
 
 export default function CoRegistrationTab() {
@@ -202,13 +203,11 @@ export default function CoRegistrationTab() {
               <button
                 key={opt.value}
                 onClick={() => handlePartnerChange(opt.value)}
-                className={`px-4 text-sm font-medium transition-colors ${
-                  i > 0 ? 'border-l border-gray-300 dark:border-gray-700' : ''
-                } ${
-                  partner === opt.value
+                className={`px-4 text-sm font-medium transition-colors ${i > 0 ? 'border-l border-gray-300 dark:border-gray-700' : ''
+                  } ${partner === opt.value
                     ? 'bg-primary text-white'
                     : 'bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
-                }`}
+                  }`}
               >
                 {opt.label}
               </button>
@@ -236,21 +235,19 @@ export default function CoRegistrationTab() {
           <div className="flex rounded-lg border border-gray-300 dark:border-gray-700 overflow-hidden h-10">
             <button
               onClick={() => handleTimezoneChange('local')}
-              className={`px-3 text-sm font-medium transition-colors ${
-                timezone === 'local'
+              className={`px-3 text-sm font-medium transition-colors ${timezone === 'local'
                   ? 'bg-primary text-white'
                   : 'bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
-              }`}
+                }`}
             >
               {getLocalOffsetLabel()}
             </button>
             <button
               onClick={() => handleTimezoneChange('utc')}
-              className={`px-3 text-sm font-medium border-l border-gray-300 dark:border-gray-700 transition-colors ${
-                timezone === 'utc'
+              className={`px-3 text-sm font-medium border-l border-gray-300 dark:border-gray-700 transition-colors ${timezone === 'utc'
                   ? 'bg-primary text-white'
                   : 'bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
-              }`}
+                }`}
             >
               UTC
             </button>
@@ -361,11 +358,10 @@ export default function CoRegistrationTab() {
                       <td className="px-4 py-3 text-gray-700 dark:text-gray-300 whitespace-nowrap">
                         {record.responseCode != null ? (
                           <span
-                            className={`font-mono text-xs px-1.5 py-0.5 rounded ${
-                              record.responseCode >= 200 && record.responseCode < 300
+                            className={`font-mono text-xs px-1.5 py-0.5 rounded ${record.responseCode >= 200 && record.responseCode < 300
                                 ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
                                 : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-                            }`}
+                              }`}
                           >
                             {record.responseCode}
                           </span>

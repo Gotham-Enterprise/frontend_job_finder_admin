@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { useMedia } from '@/hooks/useMedia';
 import { useConfirmation } from '@/hooks/useConfirmation';
 import { MediaItem } from '@/services/types/mediaTypes';
-import { validateMediaType, createObjectUrl, revokeObjectUrl, formatFileSize, isValidImageType } from '@/services/utils/mediaUtils';
+import { createObjectUrl, revokeObjectUrl, formatFileSize, isValidImageType, isValidVideoType } from '@/services/utils/mediaUtils';
 import ConfirmationDialog from '@/components/ui/ConfirmationDialog';
 
 interface ImageGalleryModalProps {
@@ -12,6 +12,7 @@ interface ImageGalleryModalProps {
   onImageSelect: (imageUrl: string, file?: File) => void;
   onSetFeaturedImage?: (imageUrl: string) => void;
   currentFeaturedImage?: string;
+  allowVideo?: boolean;
 }
 
 interface UploadPreview {
@@ -25,12 +26,17 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = memo(({
   onClose, 
   onImageSelect,
   onSetFeaturedImage,
-  currentFeaturedImage
+  currentFeaturedImage,
+  allowVideo = false
 }) => {
-  const { images, loading, error, uploadMedia, deleteMediaItem, deleteMultipleMedia, refreshMedia } = useMedia({
-    initialFilters: { type: 'IMAGE', limit: 50 },
+  const { media, images, loading, error, uploadMedia, deleteMediaItem, deleteMultipleMedia, refreshMedia } = useMedia({
+    initialFilters: allowVideo ? { limit: 50 } : { type: 'IMAGE', limit: 50 },
     autoFetch: false,
   });
+  const galleryItems = allowVideo ? media : images;
+  const isVideoMedia = (url: string, fileName?: string) =>
+    /\.(mp4|webm|mov|avi|m4v|ogg)(\?.*)?$/i.test(url) ||
+    !!fileName?.toLowerCase().match(/\.(mp4|webm|mov|avi|m4v|ogg)$/);
 
   const confirmation = useConfirmation();
 
@@ -103,8 +109,8 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = memo(({
   }, []);
 
   const selectAllImages = useCallback(() => {
-    setSelectedGalleryImages(new Set(images.map(img => img.id)));
-  }, [images]);
+    setSelectedGalleryImages(new Set(galleryItems.map(img => img.id)));
+  }, [galleryItems]);
 
   const deselectAllImages = useCallback(() => {
     setSelectedGalleryImages(new Set());
@@ -181,7 +187,8 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = memo(({
         setUploadingFiles(prev => new Set(prev).add(fileName));
         
         try {
-          const uploadedMedia = await uploadMedia(file, 'IMAGE');
+            const mediaType = file.type.toLowerCase().startsWith('video/') ? 'VIDEO' : 'IMAGE';
+            const uploadedMedia = await uploadMedia(file, mediaType);
           if (uploadedMedia) {
             onImageSelect(uploadedMedia.url, file);
             closeModal();
@@ -200,7 +207,8 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = memo(({
           setUploadingFiles(prev => new Set(prev).add(fileName));
           
           try {
-            const result = await uploadMedia(file, 'IMAGE');
+            const mediaType = file.type.toLowerCase().startsWith('video/') ? 'VIDEO' : 'IMAGE';
+            const result = await uploadMedia(file, mediaType);
             return result;
           } finally {
             setUploadingFiles(prev => {
@@ -231,16 +239,18 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = memo(({
 
   const processFileUpload = useCallback((files: FileList | File[]) => {
     const fileArray = Array.from(files);
-    const imageFiles = fileArray.filter(file => isValidImageType(file));
+    const validFiles = fileArray.filter(file => allowVideo ? (isValidImageType(file) || isValidVideoType(file)) : isValidImageType(file));
     
-    if (imageFiles.length === 0) {
-      setUploadError('Please select valid image files (PNG, JPG, JPEG, GIF, WebP)');
+    if (validFiles.length === 0) {
+      setUploadError(allowVideo
+        ? 'Please select valid media files (PNG, JPG, JPEG, GIF, WebP, MP4, WebM, MOV, AVI)'
+        : 'Please select valid image files (PNG, JPG, JPEG, GIF, WebP)');
       return;
     }
 
     setUploadError(null);
 
-    const newPreviews = imageFiles.map(file => ({
+    const newPreviews = validFiles.map(file => ({
       file,
       url: createObjectUrl(file),
       selected: false,
@@ -383,7 +393,7 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = memo(({
           <div className="p-6 max-h-[85vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
-                Select Images
+                {allowVideo ? 'Select Media' : 'Select Images'}
                 {isMultiSelectMode && selectedGalleryImages.size > 0 && (
                   <span className="ml-2 text-sm font-normal text-purple-600 dark:text-purple-400">
                     ({selectedGalleryImages.size} selected)
@@ -394,11 +404,11 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = memo(({
                 <div className="text-sm text-gray-500 dark:text-gray-400">
                   {activeTab === 'gallery' 
                     ? isMultiSelectMode 
-                      ? 'Click on images to select multiple for deletion'
-                      : 'Click on images to select them'
+                      ? (allowVideo ? 'Click on files to select multiple for deletion' : 'Click on images to select multiple for deletion')
+                      : (allowVideo ? 'Click on files to select one' : 'Click on images to select them')
                     : uploadPreviews.length > 0
-                      ? `${uploadPreviews.length} image${uploadPreviews.length > 1 ? 's' : ''} ready to upload`
-                      : 'Upload and select your images'
+                      ? `${uploadPreviews.length} file${uploadPreviews.length > 1 ? 's' : ''} ready to upload`
+                      : allowVideo ? 'Upload and select your media' : 'Upload and select your images'
                   }
                 </div>
                 <button
@@ -444,7 +454,7 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = memo(({
             {activeTab === 'gallery' ? (
               <>
                 {/* Multi-select controls */}
-                {images.length > 0 && (
+                {galleryItems.length > 0 && (
                   <div className="flex items-center justify-between mb-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
                     <div className="flex items-center gap-4">
                       <button
@@ -462,7 +472,7 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = memo(({
                         <>
                           <button
                             onClick={selectAllImages}
-                            disabled={selectedGalleryImages.size === images.length}
+                            disabled={selectedGalleryImages.size === galleryItems.length}
                             className="text-sm text-purple-600 hover:text-purple-700 disabled:text-gray-400 dark:text-purple-400 dark:hover:text-purple-300"
                           >
                             Select All
@@ -498,21 +508,21 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = memo(({
                 {loading ? (
                   <div className="flex items-center justify-center py-12">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
-                    <span className="ml-2 text-gray-600 dark:text-gray-400">Loading images...</span>
+                    <span className="ml-2 text-gray-600 dark:text-gray-400">Loading media...</span>
                   </div>
-                ) : images.length === 0 ? (
+                ) : galleryItems.length === 0 ? (
                   <div className="text-center py-12">
-                    <div className="text-gray-500 dark:text-gray-400 mb-4">No images found</div>
+                    <div className="text-gray-500 dark:text-gray-400 mb-4">{allowVideo ? 'No media found' : 'No images found'}</div>
                     <button
                       onClick={() => setActiveTab('upload')}
                       className="text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300"
                     >
-                      Upload your first image
+                      {allowVideo ? 'Upload your first media file' : 'Upload your first image'}
                     </button>
                   </div>
                 ) : (
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 mb-6">
-                    {images.map((image) => {
+                    {galleryItems.map((image) => {
                       const isSingleSelected = selectedGalleryImage?.id === image.id;
                       const isMultiSelected = selectedGalleryImages.has(image.id);
                       const isSelected = isMultiSelectMode ? isMultiSelected : isSingleSelected;
@@ -530,14 +540,24 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = memo(({
                               : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'
                           } ${isDeleting ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
-                          <img
-                            src={image.url}
-                            alt={image.fileName}
-                            className="w-full h-full object-cover transition-transform duration-200 hover:scale-105"
-                            onLoad={() => imageLoad(image.url)}
-                            onError={() => imageError(image.url)}
-                            loading="lazy"
-                          />
+                          {isVideoMedia(image.url, image.fileName) ? (
+                            <video
+                              src={image.url}
+                              className="w-full h-full object-cover transition-transform duration-200 hover:scale-105"
+                              muted
+                              playsInline
+                              preload="metadata"
+                            />
+                          ) : (
+                            <img
+                              src={image.url}
+                              alt={image.fileName}
+                              className="w-full h-full object-cover transition-transform duration-200 hover:scale-105"
+                              onLoad={() => imageLoad(image.url)}
+                              onError={() => imageError(image.url)}
+                              loading="lazy"
+                            />
+                          )}
                           
                           {/* Featured Image Badge */}
                           {isFeaturedImage && (
@@ -633,14 +653,24 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = memo(({
                 {selectedGalleryImage && (
                   <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
                     <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Selected Image:
+                      {allowVideo ? 'Selected Media:' : 'Selected Image:'}
                     </h4>
                     <div className="flex items-center gap-3 p-3 bg-white dark:bg-gray-600 rounded border">
-                      <img
-                        src={selectedGalleryImage.url}
-                        alt={selectedGalleryImage.fileName}
-                        className="w-12 h-12 object-cover rounded border border-gray-200 dark:border-gray-500"
-                      />
+                      {isVideoMedia(selectedGalleryImage.url, selectedGalleryImage.fileName) ? (
+                        <video
+                          src={selectedGalleryImage.url}
+                          className="w-12 h-12 object-cover rounded border border-gray-200 dark:border-gray-500"
+                          muted
+                          playsInline
+                          preload="metadata"
+                        />
+                      ) : (
+                        <img
+                          src={selectedGalleryImage.url}
+                          alt={selectedGalleryImage.fileName}
+                          className="w-12 h-12 object-cover rounded border border-gray-200 dark:border-gray-500"
+                        />
+                      )}
                       <div className="flex-1 min-w-0">
                         <div className="text-sm font-medium text-gray-900 dark:text-white truncate">
                           {selectedGalleryImage.fileName}
@@ -678,7 +708,7 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = memo(({
                       </svg>
                     </div>
                     <div className="text-xl font-medium text-gray-900 dark:text-white mb-2">
-                      Drop your images here
+                      {allowVideo ? 'Drop your media files here' : 'Drop your images here'}
                     </div>
                     <div className="text-sm text-gray-500 dark:text-gray-400 mb-4">
                       or{' '}
@@ -687,14 +717,16 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = memo(({
                         <input
                           type="file"
                           multiple
-                          accept="image/*"
+                          accept={allowVideo ? "image/*,video/*" : "image/*"}
                           onChange={fileInputChange}
                           className="hidden"
                         />
                       </label>
                     </div>
                     <div className="text-xs text-gray-400 dark:text-gray-500">
-                      Supports: JPEG, PNG, GIF, WebP (Max 100MB each)
+                      {allowVideo
+                        ? 'Supports: JPEG, PNG, GIF, WebP, MP4, WebM, MOV, AVI (Max 100MB each)'
+                        : 'Supports: JPEG, PNG, GIF, WebP (Max 100MB each)'}
                     </div>
                   </div>
                 </div>
@@ -703,10 +735,10 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = memo(({
                   <div className="mb-6">
                     <div className="flex items-center justify-between mb-3">
                       <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Uploaded Images ({uploadPreviews.length})
+                        Uploaded {allowVideo ? 'Files' : 'Images'} ({uploadPreviews.length})
                       </h4>
                       <div className="text-xs text-gray-500 dark:text-gray-400">
-                        {uploadPreviews.length === 1 ? 'Click "Upload & Select" to use this image' : 'Click to select specific image or upload all'}
+                        {uploadPreviews.length === 1 ? 'Click "Upload & Select" to use this file' : 'Click to select specific file or upload all'}
                       </div>
                     </div>
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
@@ -722,12 +754,22 @@ const ImageGalleryModal: React.FC<ImageGalleryModalProps> = memo(({
                                 : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'
                             }`}
                           >
-                            <img
-                              src={preview.url}
-                              alt={preview.file.name}
-                              className="w-full h-full object-cover"
-                              loading="lazy"
-                            />
+                            {preview.file.type.toLowerCase().startsWith('video/') ? (
+                              <video
+                                src={preview.url}
+                                className="w-full h-full object-cover"
+                                muted
+                                playsInline
+                                preload="metadata"
+                              />
+                            ) : (
+                              <img
+                                src={preview.url}
+                                alt={preview.file.name}
+                                className="w-full h-full object-cover"
+                                loading="lazy"
+                              />
+                            )}
                             
                             <div className="absolute top-2 left-2 z-10">
                               <input

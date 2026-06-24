@@ -8,6 +8,7 @@ import { formatDate } from '@/services/utils/dateUtils';
 import { ArrowRightIcon, CalenderIcon, UserIcon, GothamLogo } from '@/icons';
 import FullScreenSpinner from '@/components/ui/FullScreenSpinner';
 import { SITE_CONFIG, generateBlogUrl } from '@/config/constants';
+import { getAdBlockType, getAdLinkTextStyles, AD_MEDIA_LINK_CLASS, getAdMediaLinkHoverCss } from '@/services/types/visualLayoutTypes';
 import { 
   extractBlogOpenGraphData, 
   generateOpenGraphTags, 
@@ -385,6 +386,99 @@ const BlogContentRenderer: React.FC<BlogContentRendererProps> = ({ content }) =>
           </React.Fragment>
         );
 
+      case 'ad':
+        if (getAdBlockType(blockContent) === 'link') {
+          const adLinkId = `ad-link-${block.id || Date.now()}`;
+          const adLinkText = blockContent?.text || '';
+          const adLinkUrl = blockContent?.link || '';
+          const adTextAlign = styles.textAlign || 'center';
+
+          const adLinkTextStyles = getAdLinkTextStyles(styles);
+          const adLinkCSS = `
+            .container-${adLinkId} {
+              margin-bottom: 32px !important;
+              text-align: ${adTextAlign} !important;
+            }
+          `;
+
+          return (
+            <React.Fragment key={block.id}>
+              <style dangerouslySetInnerHTML={{ __html: adLinkCSS }} />
+              <div className={`container-${adLinkId}`}>
+                {adLinkUrl ? (
+                  <a
+                    href={adLinkUrl}
+                    target="_blank"
+                    rel="noopener noreferrer sponsored"
+                    style={adLinkTextStyles}
+                  >
+                    {adLinkText}
+                  </a>
+                ) : (
+                  <span style={adLinkTextStyles}>{adLinkText}</span>
+                )}
+              </div>
+            </React.Fragment>
+          );
+        }
+
+        const adId = `ad-${block.id || Date.now()}`;
+        const adLink = blockContent?.link || '';
+        const isAdVideo = /\.(mp4|webm|mov|avi|m4v|ogg)(\?.*)?$/i.test(blockContent?.url || '');
+
+        const adCSS = `
+          .container-${adId} {
+            margin-bottom: 32px !important;
+          }
+          .${adId} {
+            width: 100% !important;
+            height: auto !important;
+            max-width: 100% !important;
+            border-radius: 8px !important;
+            display: block !important;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+          }
+          ${adLink ? getAdMediaLinkHoverCss() : ''}
+        `;
+
+        const adImage = isAdVideo ? (
+          <video
+            src={blockContent?.url}
+            className={adId}
+            controls
+            muted
+            playsInline
+            preload="metadata"
+          />
+        ) : (
+          <img
+            src={blockContent?.url}
+            alt={blockContent?.alt || 'Advertisement'}
+            className={adId}
+          />
+        );
+
+        return (
+          <React.Fragment key={block.id}>
+            <style dangerouslySetInnerHTML={{ __html: adCSS }} />
+            <div className={`container-${adId}`}>
+              <figure style={{ width: '100%' }}>
+                {adLink ? (
+                  <a href={adLink} target="_blank" rel="noopener noreferrer sponsored" className={AD_MEDIA_LINK_CLASS}>
+                    {adImage}
+                  </a>
+                ) : (
+                  adImage
+                )}
+                {blockContent?.caption && (
+                  <figcaption style={{ textAlign: 'center', fontSize: '0.875rem', color: '#6b7280', marginTop: '12px', fontStyle: 'italic' }}>
+                    {blockContent.caption}
+                  </figcaption>
+                )}
+              </figure>
+            </div>
+          </React.Fragment>
+        );
 
       case 'video':
         const videoUrl = blockContent?.url;
