@@ -2,6 +2,7 @@
   "name": "job-finder-admin-dashboard",
   "version": "0.0.1",
   "private": true,
+  "packageManager": "pnpm@10.2.1",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -81,6 +82,12 @@
     "prettier": "^3.6.2",
     "tailwindcss": "^4.0.0",
     "typescript": "^5"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "sharp",
+      "unrs-resolver"
+    ]
   },
   "overrides": {
     "@react-jvectormap/core": {
