@@ -88,6 +88,12 @@ export default function AffiliateLinks() {
                   URL
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Category
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Occupations
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Company (Partner)
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
@@ -115,6 +121,27 @@ export default function AffiliateLinks() {
                       <a href={link.url} target="_blank" rel="noopener noreferrer" className="hover:text-primary truncate">
                         {link.url}
                       </a>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className="inline-block px-2.5 py-0.5 bg-primary/10 text-primary text-xs font-medium rounded-full">
+                      {link.type || 'Uncategorized'}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex flex-wrap gap-1 max-w-[200px]">
+                      {link.occupations && link.occupations.length > 0 ? (
+                        link.occupations.map((occ) => (
+                          <span
+                            key={occ}
+                            className="inline-block px-2 py-0.5 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 text-xs rounded-md"
+                          >
+                            {occ}
+                          </span>
+                        ))
+                      ) : (
+                        <span className="text-sm text-gray-400">—</span>
+                      )}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
