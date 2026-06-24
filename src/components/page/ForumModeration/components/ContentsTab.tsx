@@ -5,6 +5,7 @@ import { authUtils } from '@/services/utils/authUtils'
 import { getForumContent, moderateContent, deleteContent } from '@/services/api/forumModerationApi'
 import type { ForumContentItem, PaginationMeta } from '@/services/api/forumModerationApi'
 import { ExternalLink, Check, X, Trash2, FileText, Search, Filter } from 'lucide-react'
+import Pagination from '@/components/tables/Pagination'
 import ViewContentModal from './ViewContentModal'
 import DeleteContentModal from './DeleteContentModal'
 
@@ -25,6 +26,7 @@ export default function ContentsTab({ onStatsUpdate }: ContentsTabProps) {
   const [showViewContentModal, setShowViewContentModal] = useState(false)
   const [deleteContentItem, setDeleteContentItem] = useState<ForumContentItem | null>(null)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const limit = 20
 
   useEffect(() => {
     loadContent()
@@ -39,7 +41,7 @@ export default function ContentsTab({ onStatsUpdate }: ContentsTabProps) {
         type: typeFilter,
         sortBy,
         page: currentPage, 
-        limit: 20,
+        limit,
         search: searchQuery.trim() || undefined
       }
 
@@ -124,7 +126,7 @@ export default function ContentsTab({ onStatsUpdate }: ContentsTabProps) {
     return tmp.textContent || tmp.innerText || ''
   }
 
-  if (isLoading) return <div className="text-center py-8">Loading...</div>
+  if (isLoading && content.length === 0) return <div className="text-center py-8">Loading...</div>
 
   return (
     <>
@@ -322,28 +324,15 @@ export default function ContentsTab({ onStatsUpdate }: ContentsTabProps) {
         {/* Pagination */}
         {pagination && pagination.totalPages > 1 && (
           <div className="flex items-center justify-between mt-6 flex-wrap gap-4">
-            <div className="text-sm text-gray-600 dark:text-gray-400">
-              Showing {((currentPage - 1) * 20) + 1} to {Math.min(currentPage * 20, pagination.totalCount)} of {pagination.totalCount} items
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setCurrentPage(currentPage - 1)}
-                disabled={!pagination.hasPrevPage}
-                className="px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-800"
-              >
-                Previous
-              </button>
-              <span className="px-4 py-2 text-gray-700 dark:text-gray-300">
-                Page {currentPage} of {pagination.totalPages}
-              </span>
-              <button
-                onClick={() => setCurrentPage(currentPage + 1)}
-                disabled={!pagination.hasNextPage}
-                className="px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-800"
-              >
-                Next
-              </button>
-            </div>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Showing {((currentPage - 1) * limit) + 1}–{Math.min(currentPage * limit, pagination.totalCount)} of{' '}
+              {pagination.totalCount.toLocaleString()} items
+            </p>
+            <Pagination
+              currentPage={currentPage}
+              totalPages={pagination.totalPages}
+              onPageChange={setCurrentPage}
+            />
           </div>
         )}
       </div>

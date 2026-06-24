@@ -5,6 +5,7 @@ import { authUtils } from '@/services/utils/authUtils'
 import { getAllForumUsers, blockUser, unblockUser } from '@/services/api/forumModerationApi'
 import type { BlockedUser, PaginationMeta } from '@/services/api/forumModerationApi'
 import { Shield, Unlock, Search, X } from 'lucide-react'
+import Pagination from '@/components/tables/Pagination'
 import BlockUserModal from './BlockUserModal'
 import UnblockUserModal from './UnblockUserModal'
 
@@ -25,6 +26,7 @@ export default function AllUsersTab({ onStatsUpdate }: AllUsersTabProps) {
   const [isUnblockModalOpen, setIsUnblockModalOpen] = useState(false)
   const [selectedUserForUnblock, setSelectedUserForUnblock] = useState<BlockedUser | null>(null)
   const [isUnblocking, setIsUnblocking] = useState(false)
+  const limit = 20
 
   useEffect(() => {
     loadUsers()
@@ -37,7 +39,7 @@ export default function AllUsersTab({ onStatsUpdate }: AllUsersTabProps) {
       setIsLoading(true)
       const params: any = { 
         page: currentPage, 
-        limit: 20,
+        limit,
         search: searchQuery.trim() || undefined
       }
       
@@ -120,7 +122,7 @@ export default function AllUsersTab({ onStatsUpdate }: AllUsersTabProps) {
     await handleBlock(userId, reason)
   }
 
-  if (isLoading) return <div className="text-center py-8">Loading...</div>
+  if (isLoading && users.length === 0) return <div className="text-center py-8">Loading...</div>
 
   return (
     <>
@@ -280,26 +282,16 @@ export default function AllUsersTab({ onStatsUpdate }: AllUsersTabProps) {
 
           {/* Pagination */}
           {pagination && pagination.totalPages > 1 && (
-            <div className="mt-6 flex items-center justify-between">
-              <div className="text-sm text-gray-700 dark:text-gray-300">
-                Showing page {pagination.page} of {pagination.totalPages} ({pagination.totalCount} total users)
-              </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                  disabled={!pagination.hasPrevPage}
-                  className="px-4 py-2 border rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-800 dark:border-gray-600"
-                >
-                  Previous
-                </button>
-                <button
-                  onClick={() => setCurrentPage(p => p + 1)}
-                  disabled={!pagination.hasNextPage}
-                  className="px-4 py-2 border rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-800 dark:border-gray-600"
-                >
-                  Next
-                </button>
-              </div>
+            <div className="mt-6 flex items-center justify-between flex-wrap gap-4">
+              <p className="text-sm text-gray-700 dark:text-gray-300">
+                Showing {((currentPage - 1) * limit) + 1}–{Math.min(currentPage * limit, pagination.totalCount)} of{' '}
+                {pagination.totalCount.toLocaleString()} users
+              </p>
+              <Pagination
+                currentPage={currentPage}
+                totalPages={pagination.totalPages}
+                onPageChange={setCurrentPage}
+              />
             </div>
           )}
         </>
