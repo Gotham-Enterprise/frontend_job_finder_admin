@@ -1,6 +1,6 @@
 import { useState, useMemo, useTransition, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useSupervisees } from "@/services/hooks/useSupervisees";
+import { useSupervisees, useResendSuperviseeVerification } from "@/services/hooks/useSupervisees";
 import { SuperviseeFilters } from "@/services/types/supervisee";
 
 export const useSuperviseeLogic = () => {
@@ -70,6 +70,14 @@ export const useSuperviseeLogic = () => {
     superviseeId: string;
     fullName: string;
   }>({ isOpen: false, superviseeId: "", fullName: "" });
+
+  const [resendModal, setResendModal] = useState<{
+    isOpen: boolean;
+    superviseeId: string;
+    fullName: string;
+  }>({ isOpen: false, superviseeId: "", fullName: "" });
+
+  const { mutate: resendMutate, isPending: isResending } = useResendSuperviseeVerification();
 
   useEffect(() => {
     setIsInitialized(true);
@@ -186,6 +194,19 @@ export const useSuperviseeLogic = () => {
     setEditModal({ isOpen: false, superviseeId: "", fullName: "" });
   }, []);
 
+  const openResendModal = useCallback((superviseeId: string, fullName: string) => {
+    setResendModal({ isOpen: true, superviseeId, fullName });
+  }, []);
+
+  const closeResendModal = useCallback(() => {
+    setResendModal({ isOpen: false, superviseeId: "", fullName: "" });
+  }, []);
+
+  const confirmResend = useCallback(() => {
+    if (!resendModal.superviseeId) return;
+    resendMutate(resendModal.superviseeId, { onSettled: closeResendModal });
+  }, [resendModal.superviseeId, resendMutate, closeResendModal]);
+
   const clearAllFilters = useCallback(() => {
     setFilters({ page: 1, limit: 10, keyword: "" });
     setSearchInput("");
@@ -236,5 +257,11 @@ export const useSuperviseeLogic = () => {
     editModal,
     openEditModal,
     closeEditModal,
+
+    resendModal,
+    isResending,
+    openResendModal,
+    closeResendModal,
+    confirmResend,
   };
 };

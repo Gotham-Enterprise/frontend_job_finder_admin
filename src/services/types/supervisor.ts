@@ -29,6 +29,9 @@ export interface Supervisor {
   degreeType: string | null;
   yearsOfExperience: string | null;
   createdAt: string;
+  /** Email confirmation status; used to gate the "Resend verification email" action. */
+  emailVerified: boolean;
+  emailVerifiedAt: string | null;
 }
 
 export interface SupervisorFilters {
@@ -160,6 +163,11 @@ export interface SupervisorActionResponse {
   success: boolean;
   message: string;
   data: SupervisorProfile;
+}
+
+export interface SupervisorResendVerificationResponse {
+  success: boolean;
+  message: string;
 }
 
 export interface SupervisorUpdatePayload {

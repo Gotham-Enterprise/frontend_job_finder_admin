@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react'
 import { X } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
-import { SurveyJob, CreateSurveyJobData } from '@/services/api/surveyJobs'
+import { SurveyJob, CreateSurveyJobData, getSurveyJob } from '@/services/api/surveyJobs'
 import { useCreateSurveyJob, useUpdateSurveyJob } from '@/services/hooks/useSurveyJobs'
 import { useAffiliatePartners } from '@/services/hooks/useAffiliates'
 import { apiGet } from '@/services/api/apiUtils'
@@ -99,6 +99,15 @@ export default function CreateSurveyJobModal({ isOpen, onClose, job }: Props) {
     staleTime: 1000 * 60 * 60,
   })
 
+  // Fetch the full job (including jobDescription) when editing — the list response omits jobDescription.
+  const { data: fullJobData } = useQuery({
+    queryKey: ['surveyJob', job?.id],
+    queryFn: () => getSurveyJob(job!.id),
+    enabled: !!job?.id && isOpen,
+    staleTime: 1000 * 60 * 5,
+  })
+  const fullJob = fullJobData?.data ?? null
+
   const createMutation = useCreateSurveyJob()
   const updateMutation = useUpdateSurveyJob()
   const isPending = createMutation.isPending || updateMutation.isPending
@@ -118,36 +127,39 @@ export default function CreateSurveyJobModal({ isOpen, onClose, job }: Props) {
     ''
 
   // ── Populate form when editing ─────────────────────────────────────────────
+  // For new jobs: populate on open. For edits: populate once the full job (with jobDescription) is fetched.
   useEffect(() => {
-    if (isOpen) {
-      if (job) {
-        setForm({
-          affiliatePartnerId: job.affiliate?.id ?? '',
-          title: job.title,
-          jobDescription: job.jobDescription ?? '',
-          occupationId: job.occupation?.id ?? 0,
-          workType: job.workType ?? '',
-          workSetting: job.workSetting ?? '',
-          workFacility: job.workFacility ?? '',
-          salaryType: job.salaryType,
-          salaryRangeStart: job.salaryRangeStart || undefined,
-          salaryRangeEnd: job.salaryRangeEnd || undefined,
-          salaryCurrency: job.salaryCurrency,
-          locationCity: job.locationCity ?? '',
-          locationState: job.locationState ?? '',
-          locationCountry: job.locationCountry ?? 'United States',
-          locationZipCode: job.locationZipCode ?? '',
-          locationAddress: job.locationAddress ?? '',
-          isPublished: job.isPublished,
-          datePosted: job.datePosted ? job.datePosted.split('T')[0] : new Date().toISOString().split('T')[0],
-          expiresAt: job.expiresAt ? job.expiresAt.split('T')[0] : '',
-        })
-      } else {
-        setForm(blankForm(defaultPartnerId))
-      }
+    if (!isOpen) return
+    if (!job) {
+      setForm(blankForm(defaultPartnerId))
       setErrors({})
+      return
     }
-  }, [isOpen, job, defaultPartnerId])
+    // Use fullJob once available; fall back to the list-response job for all other fields immediately
+    const source = fullJob ?? job
+    setForm({
+      affiliatePartnerId: source.affiliate?.id ?? '',
+      title: source.title,
+      jobDescription: fullJob?.jobDescription ?? '',
+      occupationId: source.occupation?.id ?? 0,
+      workType: source.workType ?? '',
+      workSetting: source.workSetting ?? '',
+      workFacility: source.workFacility ?? '',
+      salaryType: source.salaryType,
+      salaryRangeStart: source.salaryRangeStart || undefined,
+      salaryRangeEnd: source.salaryRangeEnd || undefined,
+      salaryCurrency: source.salaryCurrency,
+      locationCity: source.locationCity ?? '',
+      locationState: source.locationState ?? '',
+      locationCountry: source.locationCountry ?? 'United States',
+      locationZipCode: source.locationZipCode ?? '',
+      locationAddress: source.locationAddress ?? '',
+      isPublished: source.isPublished,
+      datePosted: source.datePosted ? source.datePosted.split('T')[0] : new Date().toISOString().split('T')[0],
+      expiresAt: source.expiresAt ? source.expiresAt.split('T')[0] : '',
+    })
+    setErrors({})
+  }, [isOpen, job, fullJob, defaultPartnerId])
 
   // ── Field change ───────────────────────────────────────────────────────────
   const set = (field: keyof CreateSurveyJobData, value: any) => {

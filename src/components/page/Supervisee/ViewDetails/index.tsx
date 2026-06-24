@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import { Pencil } from "lucide-react";
-import { useSuperviseeDetails } from "@/services/hooks/useSupervisees";
+import { Mail, Pencil } from "lucide-react";
+import { useSuperviseeDetails, useResendSuperviseeVerification } from "@/services/hooks/useSupervisees";
 import { formatDate } from "@/services/utils/dateUtils";
 import { formatStateOfLicensureForDisplay, formatUsStateCodeForDisplay } from "@/services/utils/formatUsStateLicensure";
 import { formatUSPhoneNationalDisplay } from "@/services/utils/phoneNumberUtils";
@@ -14,9 +14,10 @@ import {
 import ErrorState from "../../../common/ErrorState";
 import FullScreenSpinner from "../../../ui/FullScreenSpinner";
 import BackToListButton from "@/components/ui/BackToListButton";
-import Badge from "@/components/ui/badge/Badge";
+import EmailVerifiedBadge from "@/components/ui/badge/EmailVerifiedBadge";
 import Avatar from "@/components/ui/avatar/Avatar";
 import { EditSuperviseeModal } from "../components/EditSuperviseeModal";
+import ResendVerificationModal from "../components/ResendVerificationModal";
 
 interface ViewDetailsProps {
   id: string;
@@ -60,6 +61,12 @@ function FieldRow({ label, value }: { label: string; value: React.ReactNode }) {
 export default function ViewDetails({ id }: ViewDetailsProps) {
   const { data, isLoading, error, refetch } = useSuperviseeDetails(id);
   const [editOpen, setEditOpen] = useState(false);
+  const [resendOpen, setResendOpen] = useState(false);
+  const { mutate: resendMutate, isPending: isResending } = useResendSuperviseeVerification();
+
+  const handleResendVerification = () => {
+    resendMutate(id, { onSuccess: () => setResendOpen(false) });
+  };
 
   const displayName = useMemo(() => {
     if (!data?.success || !data.data) return "";
@@ -117,14 +124,28 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
             Back to Supervisees
           </BackToListButton>
 
-          <button
-            type="button"
-            onClick={() => setEditOpen(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-brand-700 bg-brand-50 hover:bg-brand-100 dark:bg-brand-500/10 dark:text-brand-300 dark:hover:bg-brand-500/20 rounded-lg transition-colors"
-          >
-            <Pencil className="h-4 w-4 shrink-0" aria-hidden />
-            Edit supervisee
-          </button>
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setEditOpen(true)}
+              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-brand-700 bg-brand-50 hover:bg-brand-100 dark:bg-brand-500/10 dark:text-brand-300 dark:hover:bg-brand-500/20 rounded-lg transition-colors"
+            >
+              <Pencil className="h-4 w-4 shrink-0" aria-hidden />
+              Edit supervisee
+            </button>
+
+            {!s.emailVerified && (
+              <button
+                type="button"
+                onClick={() => setResendOpen(true)}
+                disabled={isResending}
+                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-warning-700 bg-warning-50 hover:bg-warning-100 dark:bg-warning-500/10 dark:text-warning-400 dark:hover:bg-warning-500/20 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Mail className="h-4 w-4 shrink-0" aria-hidden />
+                Resend verification
+              </button>
+            )}
+          </div>
         </div>
 
         <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 mb-6 flex flex-col sm:flex-row gap-5 items-start">
@@ -132,9 +153,7 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
           <div className="flex-1 min-w-0">
             <div className="flex flex-wrap items-center gap-3 mb-1">
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white">{displayName || "—"}</h2>
-              <Badge variant="solid" color={s.emailVerified ? "success" : "warning"} size="sm">
-                {s.emailVerified ? "Email verified" : "Email unverified"}
-              </Badge>
+              <EmailVerifiedBadge verified={s.emailVerified} />
             </div>
             <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">{s.email}</p>
             {(profile?.superviseeOccupation || s.occupation?.name) && (
@@ -152,6 +171,14 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
           <SectionCard title="Basic Info">
             <FieldRow label="Full Name" value={displayName} />
             <FieldRow label="Email" value={s.email} />
+            <FieldRow
+              label="Email Verified"
+              value={<EmailVerifiedBadge verified={s.emailVerified} />}
+            />
+            <FieldRow
+              label="Email Verified At"
+              value={s.emailVerified ? formatDate(s.emailVerifiedAt) : null}
+            />
             <FieldRow
               label="Phone"
               value={
@@ -233,6 +260,14 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
         superviseeId={id}
         superviseeName={displayName || s.email}
         onUpdate={() => refetch()}
+      />
+
+      <ResendVerificationModal
+        isOpen={resendOpen}
+        fullName={displayName || s.email}
+        onConfirm={handleResendVerification}
+        onCancel={() => setResendOpen(false)}
+        isLoading={isResending}
       />
     </>
   );

@@ -373,7 +373,7 @@ export interface CoRegRecord {
   email: string;
   occupation: string | null;
   location: string | null;
-  status: "success" | "failed";
+  status: "success" | "failed" | "duplicate";
   responseCode: number | null;
   attempts: number;
   errorMessage: string | null;
@@ -393,6 +393,7 @@ export interface CoRegListResponse {
   summary: {
     successCount: number;
     failedCount: number;
+    duplicateCount: number;
   };
 }
 

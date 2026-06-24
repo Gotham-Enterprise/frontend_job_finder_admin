@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { LayoutBlock } from '../../../../../../services/types/visualLayoutTypes';
+import { LayoutBlock, getAdBlockType, getAdLinkTextStyles, AD_MEDIA_LINK_CLASS, getAdMediaLinkHoverCss } from '../../../../../../services/types/visualLayoutTypes';
 import { getButtonDefaultStyles, getSizeStyles } from '../utils/buttonUtils';
+import { buildMediaDisplayStyles, buildAdMediaDisplayStyles, isFullBleedMedia } from '../imageUtils';
 import RichTextEditor from './RichTextEditor';
 
 interface BlockRendererProps {
@@ -10,7 +11,7 @@ interface BlockRendererProps {
   onRemove?: () => void;
   onContentUpdate?: (field: string, value: any) => void;
   onStyleUpdate?: (field: string, value: any) => void;
-  onOpenSettings?: (type: 'image' | 'video' | 'paragraph' | 'button' | 'list' | 'quote', block: LayoutBlock) => void;
+  onOpenSettings?: (type: 'image' | 'ad' | 'video' | 'paragraph' | 'button' | 'list' | 'quote', block: LayoutBlock) => void;
 }
 
 const HEADING_TAGS = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'] as const;
@@ -412,42 +413,43 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
     );
   };
 
+  const getMediaAlignmentClass = (imageAlign: string) => {
+    switch (imageAlign) {
+      case 'left': return 'mr-auto';
+      case 'right': return 'ml-auto';
+      case 'center':
+      default: return 'mx-auto';
+    }
+  };
+
+  const getMediaStylesFromBlock = (blockStyles: LayoutBlock['styles']) => {
+    const imageAlign = blockStyles.imageAlign || 'center';
+    const borderRadius = blockStyles.border?.radius || 8;
+    const dimensions = buildMediaDisplayStyles({
+      width: blockStyles.width || 100,
+      height: blockStyles.height !== undefined ? blockStyles.height : 400,
+      widthUnit: (blockStyles.widthUnit as 'px' | '%') || '%',
+      heightUnit: (blockStyles.heightUnit as 'px' | '%') || 'px',
+      borderRadius,
+    });
+
+    return { imageAlign, borderRadius, ...dimensions };
+  };
+
   const renderImage = () => {
     const imageUrl = (block.content as any)?.url;
     const altText = (block.content as any)?.alt || 'Image';
-    const imageWidth = block.styles.width || 100;
-    const imageHeight = block.styles.height !== undefined ? block.styles.height : 400;
-    const widthUnit = block.styles.widthUnit || '%';
-    const heightUnit = block.styles.heightUnit || 'px';
-    const imageAlign = block.styles.imageAlign || 'center';
-    const borderRadius = block.styles.border?.radius || 8;
-    
-    const getAlignmentClass = () => {
-      switch (imageAlign) {
-        case 'left': return 'mr-auto';
-        case 'right': return 'ml-auto';
-        case 'center': 
-        default: return 'mx-auto';
-      }
-    };
-    
-    const imageStyle = {
-      width: `${imageWidth}${widthUnit}`,
-      height: `${imageHeight}${heightUnit}`,
-      borderRadius: `${borderRadius}px`,
-      objectFit: 'cover' as const,
-      display: 'block',
-    };
+    const { imageAlign, mediaStyle, wrapperStyle, fullWidth } = getMediaStylesFromBlock(block.styles);
+    const alignmentClass = fullWidth ? '' : getMediaAlignmentClass(imageAlign);
 
     if (!imageUrl) {
       return (
         <div 
-          className={`bg-gray-200 rounded flex items-center justify-center ${getAlignmentClass()}`}
+          className={`bg-gray-200 rounded flex items-center justify-center ${getMediaAlignmentClass(imageAlign)}`}
           style={{ 
-            width: `${imageWidth}${widthUnit}`, 
-            height: `${imageHeight}${heightUnit}`,
-            borderRadius: `${borderRadius}px`,
-            display: 'block'
+            ...wrapperStyle,
+            borderRadius: `${block.styles.border?.radius || 8}px`,
+            display: 'block',
           }}
         >
           <div className="text-center text-gray-500">
@@ -461,14 +463,141 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
     }
 
     return (
-      <div className="w-full">
+      <figure className="w-full">
         <img 
           src={imageUrl} 
           alt={altText}
-          style={imageStyle}
-          className={`border border-gray-200 ${getAlignmentClass()}`}
+          style={mediaStyle}
+          className={`shadow-md ${alignmentClass}`.trim()}
         />
-      </div>
+      </figure>
+    );
+  };
+
+  const renderAd = () => {
+    const adContent = (block.content as any) || {};
+    const adVariant = getAdBlockType(adContent);
+
+    if (adVariant === 'link') {
+      const linkText = adContent.text || '';
+      const linkUrl = adContent.link || '';
+      const textAlign = block.styles?.textAlign || 'center';
+      const linkTextStyles = getAdLinkTextStyles(block.styles);
+
+      if (!linkText && !linkUrl) {
+        return (
+          <div
+            className="bg-amber-50 border-2 border-dashed border-amber-200 rounded flex items-center justify-center w-full"
+            style={{ minHeight: '80px', display: 'block' }}
+          >
+            <div className="text-center text-amber-600">
+              <svg className="w-10 h-10 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+              </svg>
+              <p className="text-sm font-medium">Link Ad</p>
+              <p className="text-xs mt-1 text-amber-500">Enter link text and URL</p>
+            </div>
+          </div>
+        );
+      }
+
+      const linkElement = linkUrl ? (
+        <a
+          href={linkUrl}
+          target="_blank"
+          rel="noopener noreferrer sponsored"
+          style={linkTextStyles}
+          onClick={(e) => e.preventDefault()}
+        >
+          {linkText || linkUrl}
+        </a>
+      ) : (
+        <span style={linkTextStyles}>{linkText}</span>
+      );
+
+      return (
+        <div className="w-full py-2" style={{ textAlign }}>
+          {linkElement}
+          {!linkUrl && linkText && (
+            <p className="text-xs text-amber-600 mt-2">Add redirect URL in settings</p>
+          )}
+        </div>
+      );
+    }
+
+    const imageUrl = adContent.url;
+    const adLink = adContent.link;
+    const altText = adContent.alt || 'Advertisement';
+    const caption = adContent.caption;
+    const { mediaStyle, wrapperStyle } = buildAdMediaDisplayStyles();
+    const isVideoMedia = /\.(mp4|webm|mov|avi|m4v|ogg)(\?.*)?$/i.test(imageUrl || '');
+
+    if (!imageUrl) {
+      return (
+        <div
+          className="bg-amber-50 border-2 border-dashed border-amber-200 rounded flex items-center justify-center w-full"
+          style={{
+            ...wrapperStyle,
+            minHeight: '120px',
+            display: 'block',
+          }}
+        >
+          <div className="text-center text-amber-600">
+            <svg className="w-12 h-12 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
+            </svg>
+            <p className="text-sm font-medium">Ad</p>
+            <p className="text-xs mt-1 text-amber-500">Select media and add a link</p>
+          </div>
+        </div>
+      );
+    }
+
+    const imageElement = isVideoMedia ? (
+      <video
+        src={imageUrl}
+        style={mediaStyle}
+        className="shadow-md w-full"
+        controls
+        muted
+        playsInline
+        preload="metadata"
+      />
+    ) : (
+      <img
+        src={imageUrl}
+        alt={altText}
+        style={mediaStyle}
+        className="shadow-md w-full"
+      />
+    );
+
+    const mediaContent = adLink ? (
+      <>
+        <style dangerouslySetInnerHTML={{ __html: getAdMediaLinkHoverCss() }} />
+        <a
+          href={adLink}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={AD_MEDIA_LINK_CLASS}
+        >
+          {imageElement}
+        </a>
+      </>
+    ) : (
+      <>
+        {imageElement}
+        <p className="text-xs text-amber-600 mt-2 text-center">Add link URL in settings</p>
+      </>
+    );
+
+    return (
+      <figure className="w-full">
+        {mediaContent}
+        {caption && (
+          <figcaption className="text-center text-sm text-gray-500 mt-2 italic">{caption}</figcaption>
+        )}
+      </figure>
     );
   };
 
@@ -819,6 +948,7 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
     heading: renderEditableHeading,
     paragraph: renderEditableParagraph,
     image: renderImage,
+    ad: renderAd,
     video: renderVideo,
     list: renderList,
     quote: renderQuote,
@@ -844,22 +974,34 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
     const margin = block.styles.margin;
     const padding = block.styles.padding;
     const hasCustomBorder = block.styles.border?.width;
+    const isMediaAdBlock = block.type === 'ad' && getAdBlockType((block.content as any) || {}) === 'media';
+    const isMediaBlock = block.type === 'image' || isMediaAdBlock;
+    const mediaDimensions = isMediaBlock && block.type !== 'ad'
+      ? buildMediaDisplayStyles({
+          width: block.styles.width || 100,
+          height: block.styles.height !== undefined ? block.styles.height : 400,
+          widthUnit: (block.styles.widthUnit as 'px' | '%') || '%',
+          heightUnit: (block.styles.heightUnit as 'px' | '%') || 'px',
+          borderRadius: block.styles.border?.radius || 8,
+        })
+      : null;
+    const fullBleed = isMediaAdBlock || Boolean(mediaDimensions?.fullBleed);
     
-    const defaultMargin = (block.type === 'image' || block.type === 'video') ? { top: 16, right: 0, bottom: 16, left: 0 } : { top: 8, right: 0, bottom: 8, left: 0 };
+    const defaultMargin = (block.type === 'image' || block.type === 'ad' || block.type === 'video') ? { top: 16, right: 0, bottom: 16, left: 0 } : { top: 8, right: 0, bottom: 8, left: 0 };
     const actualMargin = margin || defaultMargin;
     
-   
     const adjustedPadding = padding || { top: 0, right: 0, bottom: 0, left: 0 };
-    const minTopPadding = Math.max(adjustedPadding.top || 0, 15); 
-    const minRightPadding = Math.max(adjustedPadding.right || 0, 8); 
+    const minTopPadding = fullBleed ? 0 : Math.max(adjustedPadding.top || 0, 15); 
+    const minRightPadding = fullBleed ? 0 : Math.max(adjustedPadding.right || 0, 8); 
     
     const containerBackgroundColor = block.type === 'button' ? 'transparent' : (block.styles.backgroundColor || 'transparent');
+    const mediaMinHeight = mediaDimensions?.heightPx ? `${mediaDimensions.heightPx}px` : undefined;
     
     return {
       margin: `${actualMargin.top || 0}px ${actualMargin.right || 0}px ${actualMargin.bottom || 0}px ${actualMargin.left || 0}px`,
-      padding: `${minTopPadding}px ${minRightPadding}px ${adjustedPadding.bottom || 0}px ${adjustedPadding.left || 0}px`,
+      padding: `${minTopPadding}px ${minRightPadding}px ${fullBleed ? 0 : (adjustedPadding.bottom || 0)}px ${fullBleed ? 0 : (adjustedPadding.left || 0)}px`,
       backgroundColor: containerBackgroundColor,
-      minHeight: '40px',
+      minHeight: mediaMinHeight || '40px',
       overflow: 'visible',
       position: 'relative' as const,
       width: '100%',
@@ -884,6 +1026,16 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
     }
     return false;
   };
+
+  const isMediaAdBlock = block.type === 'ad' && getAdBlockType((block.content as any) || {}) === 'media';
+  const isFullBleedBlock =
+    (block.type === 'image' || isMediaAdBlock) &&
+    isFullBleedMedia({
+      width: block.styles.width || 100,
+      height: block.styles.height !== undefined ? block.styles.height : 400,
+      widthUnit: (block.styles.widthUnit as 'px' | '%') || '%',
+      heightUnit: (block.styles.heightUnit as 'px' | '%') || 'px',
+    });
 
   return (
     <div 
@@ -924,7 +1076,13 @@ const BlockRenderer: React.FC<BlockRendererProps> = ({
         </button>
       </div>
 
-      {renderBlockContent()}
+      {isFullBleedBlock ? (
+        <div className="flex flex-1 flex-col min-h-0 w-full">
+          {renderBlockContent()}
+        </div>
+      ) : (
+        renderBlockContent()
+      )}
     </div>
   );
 };

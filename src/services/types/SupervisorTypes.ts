@@ -34,6 +34,7 @@ export interface SupervisorTableProps {
   onEditSupervisor: (supervisorId: string, fullName: string) => void;
   onApproveSupervisor: (supervisorId: string, fullName: string) => void;
   onRejectSupervisor: (supervisorId: string, fullName: string) => void;
+  onResendVerification: (supervisorId: string, fullName: string) => void;
   onRefresh?: () => void;
 }
 

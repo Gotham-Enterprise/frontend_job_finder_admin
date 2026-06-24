@@ -1,5 +1,5 @@
 import React from "react";
-import { Eye, Pencil } from "lucide-react";
+import { Eye, Mail, Pencil } from "lucide-react";
 import { formatDate } from "@/services/utils/dateUtils";
 import { formatUsStateCodeForDisplay } from "@/services/utils/formatUsStateLicensure";
 import { formatUSPhoneNationalDisplay } from "@/services/utils/phoneNumberUtils";
@@ -10,7 +10,7 @@ import {
 import { Table, TableBody, TableCell, TableRow } from "../../../ui/table";
 import Avatar from "../../../ui/avatar/Avatar";
 import TableHeading from "../../../tables/tableHeader";
-import Badge from "../../../ui/badge/Badge";
+import EmailVerifiedBadge from "../../../ui/badge/EmailVerifiedBadge";
 import { SuperviseeTableProps } from "@/services/types/SuperviseeTypes";
 
 const ACTION_ICON_PX = 16;
@@ -22,6 +22,7 @@ const SuperviseeTable: React.FC<SuperviseeTableProps> = ({
   tableColumns,
   onViewSupervisee,
   onEditSupervisee,
+  onResendVerification,
 }) => {
   return (
     <div className="overflow-x-auto">
@@ -100,13 +101,7 @@ const SuperviseeTable: React.FC<SuperviseeTableProps> = ({
                 </TableCell>
 
                 <TableCell className="px-4 py-3 whitespace-nowrap">
-                  <Badge
-                    variant="solid"
-                    color={supervisee.emailVerified ? "success" : "warning"}
-                    size="sm"
-                  >
-                    {supervisee.emailVerified ? "Verified" : "Unverified"}
-                  </Badge>
+                  <EmailVerifiedBadge verified={supervisee.emailVerified} />
                 </TableCell>
 
                 <TableCell className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
@@ -122,6 +117,18 @@ const SuperviseeTable: React.FC<SuperviseeTableProps> = ({
                     >
                       <Eye {...actionIconProps} />
                     </button>
+
+                    {!supervisee.emailVerified && (
+                      <button
+                        onClick={() =>
+                          onResendVerification(supervisee.id, supervisee.fullName || supervisee.email)
+                        }
+                        title="Resend verification email"
+                        className="p-1.5 text-gray-500 hover:text-warning-600 dark:text-gray-400 dark:hover:text-warning-400 rounded transition-colors"
+                      >
+                        <Mail {...actionIconProps} />
+                      </button>
+                    )}
                     <button
                       onClick={() =>
                         onEditSupervisee(supervisee.id, supervisee.fullName || supervisee.email)

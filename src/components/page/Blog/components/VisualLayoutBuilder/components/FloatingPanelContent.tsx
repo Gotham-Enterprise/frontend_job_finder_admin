@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { LayoutBlock } from '../../../../../../services/types/visualLayoutTypes';
+import { LayoutBlock, getAdBlockType, AdBlock } from '../../../../../../services/types/visualLayoutTypes';
 
 interface FloatingPanelContentProps {
   panelType: string;
@@ -329,7 +329,9 @@ const FloatingPanelContent: React.FC<FloatingPanelContentProps> = ({ panelType, 
   };
 
   const renderTextColorPanel = () => {
-    const textColor = block.styles.textColor || '#000000';
+    const isLinkAd = block.type === 'ad' && getAdBlockType((block.content as AdBlock['content']) || {}) === 'link';
+    const colorField = isLinkAd ? 'linkColor' : 'textColor';
+    const textColor = (block.styles as Record<string, string>)[colorField] || (isLinkAd ? '#2563eb' : '#000000');
     
     return (
       <div className="space-y-4">
@@ -340,15 +342,15 @@ const FloatingPanelContent: React.FC<FloatingPanelContentProps> = ({ panelType, 
               <input
                 type="color"
                 value={textColor}
-                onChange={(e) => onStyleUpdate('textColor', e.target.value)}
+                onChange={(e) => onStyleUpdate(colorField, e.target.value)}
                 className="w-10 h-10 rounded-lg border border-gray-200 cursor-pointer hover:border-gray-300 transition-colors"
               />
               <input
                 type="text"
                 value={textColor}
-                onChange={(e) => onStyleUpdate('textColor', e.target.value)}
+                onChange={(e) => onStyleUpdate(colorField, e.target.value)}
                 className="flex-1 px-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-100"
-                placeholder="#000000"
+                placeholder={isLinkAd ? '#2563eb' : '#000000'}
               />
             </div>
           </div>
@@ -358,7 +360,7 @@ const FloatingPanelContent: React.FC<FloatingPanelContentProps> = ({ panelType, 
               {['#000000', '#374151', '#6b7280', '#9ca3af', '#d1d5db', '#ffffff', '#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6', '#8b5cf6'].map(color => (
                 <button
                   key={color}
-                  onClick={() => onStyleUpdate('textColor', color)}
+                  onClick={() => onStyleUpdate(colorField, color)}
                   className="w-8 h-8 rounded-lg border-2 hover:scale-110 transition-all duration-200 shadow-sm hover:shadow-md"
                   style={{ 
                     backgroundColor: color,
