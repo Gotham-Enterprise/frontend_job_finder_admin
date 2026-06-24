@@ -29,6 +29,8 @@ export interface AffiliateLink {
   id: string;
   name: string;
   url: string;
+  type?: string;
+  occupations?: string[];
   affiliateId: string;
   affiliate?: {
     id: string;
@@ -163,12 +165,16 @@ export interface UpdatePartnerData {
 export interface CreateLinkData {
   name: string;
   url: string;
+  type?: string;
+  occupations?: string[];
   affiliateId: string;
 }
 
 export interface UpdateLinkData {
   name?: string;
   url?: string;
+  type?: string;
+  occupations?: string[];
   affiliateId?: string;
 }
 
