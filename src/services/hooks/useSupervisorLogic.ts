@@ -5,8 +5,9 @@ import {
   useApproveSupervisor,
   useRejectSupervisor,
   useResendSupervisorVerification,
+  useHideSupervisorProfile,
 } from "@/services/hooks/useSupervisors";
-import { SupervisorFilters, VerificationStatus } from "@/services/types/supervisor";
+import { SupervisorFilters, SupervisorSortBy, VerificationStatus } from "@/services/types/supervisor";
 
 export const useSupervisorLogic = () => {
   const router = useRouter();
@@ -57,6 +58,8 @@ export const useSupervisorLogic = () => {
               limit: parsed.limit || 10,
               keyword: parsed.keyword || "",
               verificationStatus: parsed.verificationStatus || undefined,
+              sortBy: parsed.sortBy || undefined,
+              sortOrder: parsed.sortOrder || undefined,
             };
           } catch {
             // fall through to defaults
@@ -102,12 +105,19 @@ export const useSupervisorLogic = () => {
     supervisorId: "",
     fullName: "",
   });
+  const [hideProfileModal, setHideProfileModal] = useState<{
+    isOpen: boolean;
+    supervisorId: string;
+    fullName: string;
+    currentlyHidden: boolean;
+  }>({ isOpen: false, supervisorId: "", fullName: "", currentlyHidden: false });
   const [rejectNotes, setRejectNotes] = useState("");
   const [approveNotes, setApproveNotes] = useState("");
 
   const { mutate: approveMutate, isPending: isApproving } = useApproveSupervisor();
   const { mutate: rejectMutate, isPending: isRejecting } = useRejectSupervisor();
   const { mutate: resendMutate, isPending: isResending } = useResendSupervisorVerification();
+  const { mutate: hideProfileMutate, isPending: isHidingProfile } = useHideSupervisorProfile();
 
   useEffect(() => {
     setIsInitialized(true);
@@ -160,6 +170,8 @@ export const useSupervisorLogic = () => {
           limit: filters.limit,
           keyword: filters.keyword,
           verificationStatus: filters.verificationStatus,
+          sortBy: filters.sortBy,
+          sortOrder: filters.sortOrder,
         })
       );
     }
@@ -169,22 +181,32 @@ export const useSupervisorLogic = () => {
 
   const tableColumns = useMemo(
     () => [
-      { key: "name", label: "Name" },
-      { key: "email", label: "Email" },
-      { key: "state", label: "State" },
-      { key: "supervisorType", label: "Supervisor Type" },
-      { key: "occupation", label: "Occupation" },
-      { key: "specialty", label: "Specialty" },
+      { key: "name", label: "Name", sortKey: "fullName" },
+      { key: "state", label: "State", sortKey: "state" },
+      { key: "role", label: "Role" },
       { key: "licenseType", label: "License Type" },
       { key: "degreeType", label: "Degree Type" },
-      { key: "yearsOfExperience", label: "Experience" },
-      { key: "verificationStatus", label: "Status" },
+      { key: "yearsOfExperience", label: "Experience", sortKey: "yearsOfExperience" },
+      { key: "verificationStatus", label: "Status", sortKey: "verificationStatus" },
       { key: "emailVerified", label: "Email Verified" },
-      { key: "createdAt", label: "Submitted" },
+      { key: "visibility", label: "Visibility", sortKey: "hideProfile" },
+      { key: "createdAt", label: "Submitted", sortKey: "createdAt" },
       { key: "actions", label: "", className: "text-right" },
     ],
     []
   );
+
+  const handleSort = useCallback((sortKey: string) => {
+    startTransition(() => {
+      setFilters((prev) => ({
+        ...prev,
+        sortBy: sortKey as SupervisorSortBy,
+        // Toggle direction when re-clicking the active column; default to asc.
+        sortOrder: prev.sortBy === sortKey && prev.sortOrder === "asc" ? "desc" : "asc",
+        page: 1,
+      }));
+    });
+  }, []);
 
   const statusOptions = useMemo(
     () => [
@@ -284,6 +306,30 @@ export const useSupervisorLogic = () => {
     resendMutate(resendModal.supervisorId, { onSettled: closeResendModal });
   }, [resendModal.supervisorId, resendMutate, closeResendModal]);
 
+  const openHideProfileModal = useCallback(
+    (supervisorId: string, fullName: string, currentlyHidden: boolean) => {
+      setHideProfileModal({ isOpen: true, supervisorId, fullName, currentlyHidden });
+    },
+    []
+  );
+
+  const closeHideProfileModal = useCallback(() => {
+    setHideProfileModal({ isOpen: false, supervisorId: "", fullName: "", currentlyHidden: false });
+  }, []);
+
+  const confirmHideProfile = useCallback(() => {
+    if (!hideProfileModal.supervisorId) return;
+    hideProfileMutate(
+      { id: hideProfileModal.supervisorId, hideProfile: !hideProfileModal.currentlyHidden },
+      { onSettled: closeHideProfileModal }
+    );
+  }, [
+    hideProfileModal.supervisorId,
+    hideProfileModal.currentlyHidden,
+    hideProfileMutate,
+    closeHideProfileModal,
+  ]);
+
   const confirmReject = useCallback(() => {
     if (!rejectModal.supervisorId || !rejectNotes.trim()) return;
     rejectMutate(
@@ -352,6 +398,10 @@ export const useSupervisorLogic = () => {
     statusOptions,
     itemsPerPageOptions,
 
+    sortBy: filters.sortBy,
+    sortOrder: filters.sortOrder,
+    handleSort,
+
     filterChange,
     initPageChange,
     viewSupervisor,
@@ -383,5 +433,11 @@ export const useSupervisorLogic = () => {
     openResendModal,
     closeResendModal,
     confirmResend,
+
+    hideProfileModal,
+    isHidingProfile,
+    openHideProfileModal,
+    closeHideProfileModal,
+    confirmHideProfile,
   };
 };

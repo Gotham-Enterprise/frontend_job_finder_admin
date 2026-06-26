@@ -6,6 +6,7 @@ import {
   SupervisorResendVerificationResponse,
   SupervisorUpdatePayload,
   SupervisorUpdateResponse,
+  HideProfileResponse,
 } from "../types/supervisor";
 import { buildSupervisorUpdateFormData } from "../utils/supervisorProfileForm";
 import { apiGet, apiPatch, apiPost } from "./apiUtils";
@@ -21,6 +22,8 @@ export const supervisorApi = {
       if (filters.keyword) queryParams.append("keyword", filters.keyword);
       // Only send verificationStatus when a specific one is selected; omitting it returns all statuses
       if (filters.verificationStatus) queryParams.append("verificationStatus", filters.verificationStatus);
+      if (filters.sortBy) queryParams.append("sortBy", filters.sortBy);
+      if (filters.sortOrder) queryParams.append("sortOrder", filters.sortOrder);
 
       const endpoint = `/api/supervision/admin/supervisors?${queryParams.toString()}`;
       return apiGet<SupervisorsResponse>(endpoint);
@@ -73,6 +76,17 @@ export const supervisorApi = {
     return apiPatch<SupervisorUpdateResponse>(
       `/api/supervision/admin/supervisors/${id}`,
       formData,
+    );
+  },
+
+  /**
+   * Hide or show a supervisor's public profile.
+   * `id` is the supervision user id. Note the endpoint has no `/supervisors/` segment.
+   */
+  async setHideProfile(id: string, hideProfile: boolean): Promise<HideProfileResponse> {
+    return apiPatch<HideProfileResponse>(
+      `/api/supervision/admin/${id}/hide-profile`,
+      { hideProfile },
     );
   },
 };

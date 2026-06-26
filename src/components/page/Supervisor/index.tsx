@@ -14,6 +14,7 @@ import {
   ApproveSupervisorModal,
   EditSupervisorModal,
   ResendVerificationModal,
+  HideProfileModal,
 } from "./components";
 
 const Supervisors: React.FC<SupervisorsProps> = ({ className = "" }) => {
@@ -39,6 +40,9 @@ const Supervisors: React.FC<SupervisorsProps> = ({ className = "" }) => {
     tableColumns,
     statusOptions,
     itemsPerPageOptions,
+    sortBy,
+    sortOrder,
+    handleSort,
     filterChange,
     initPageChange,
     viewSupervisor,
@@ -70,6 +74,12 @@ const Supervisors: React.FC<SupervisorsProps> = ({ className = "" }) => {
     openResendModal,
     closeResendModal,
     confirmResend,
+
+    hideProfileModal,
+    isHidingProfile,
+    openHideProfileModal,
+    closeHideProfileModal,
+    confirmHideProfile,
   } = useSupervisorLogic();
 
   if (error && !isPending) {
@@ -114,11 +124,15 @@ const Supervisors: React.FC<SupervisorsProps> = ({ className = "" }) => {
           data={data}
           isLoading={isLoading}
           tableColumns={tableColumns}
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          onSort={handleSort}
           onViewSupervisor={viewSupervisor}
           onEditSupervisor={openEditModal}
           onApproveSupervisor={openApproveModal}
           onRejectSupervisor={openRejectModal}
           onResendVerification={openResendModal}
+          onToggleHideProfile={openHideProfileModal}
           onRefresh={refetch}
         />
 
@@ -165,6 +179,15 @@ const Supervisors: React.FC<SupervisorsProps> = ({ className = "" }) => {
         onConfirm={confirmResend}
         onCancel={closeResendModal}
         isLoading={isResending}
+      />
+
+      <HideProfileModal
+        isOpen={hideProfileModal.isOpen}
+        fullName={hideProfileModal.fullName}
+        currentlyHidden={hideProfileModal.currentlyHidden}
+        onConfirm={confirmHideProfile}
+        onCancel={closeHideProfileModal}
+        isLoading={isHidingProfile}
       />
     </>
   );

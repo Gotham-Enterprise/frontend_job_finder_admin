@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient, useQueries, type QueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, useQueries, keepPreviousData, type QueryClient } from "@tanstack/react-query";
 import { supervisorApi } from "../api/supervisor";
 import {
   SUPERVISION_PROFILE_OPTION_PARAMS,
@@ -57,6 +57,9 @@ export const useSupervisors = (filters: SupervisorFilters = {}) => {
   return useQuery({
     queryKey: supervisorQueryKeys.list(filters),
     queryFn: () => supervisorApi.getSupervisors(filters),
+    // Keep the previous rows on screen while a new page/sort/filter loads,
+    // so the table doesn't flash the full-body spinner on every change.
+    placeholderData: keepPreviousData,
     staleTime: 1000 * 60 * 5,
     retry: (failureCount, error: Error) => {
       if (error.message.includes("HTTP 401")) return false;
@@ -191,6 +194,33 @@ export const useResendSupervisorVerification = () => {
       showToast.error(
         "Resend Failed",
         error.message || "Failed to resend the verification email. Please try again.",
+      );
+    },
+  });
+};
+
+export const useHideSupervisorProfile = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, hideProfile }: { id: string; hideProfile: boolean }) =>
+      supervisorApi.setHideProfile(id, hideProfile),
+    onSuccess: async (response, { id }) => {
+      const hidden = response.data?.hideProfile;
+      showToast.success(
+        hidden ? "Profile Hidden" : "Profile Visible",
+        response.message ||
+          (hidden
+            ? "The supervisor's profile is now hidden."
+            : "The supervisor's profile is now visible."),
+      );
+      await queryClient.invalidateQueries({ queryKey: supervisorQueryKeys.lists() });
+      await queryClient.invalidateQueries({ queryKey: supervisorQueryKeys.detail(id) });
+    },
+    onError: (error: Error) => {
+      showToast.error(
+        "Update Failed",
+        error.message || "Failed to update profile visibility. Please try again.",
       );
     },
   });
