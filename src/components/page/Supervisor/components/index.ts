@@ -8,3 +8,4 @@ export { default as ApproveSupervisorModal } from "./ApproveSupervisorModal";
 export { default as EditVerificationNotesModal } from "./EditVerificationNotesModal";
 export { default as ResendVerificationModal } from "./ResendVerificationModal";
 export { default as EditSupervisorModal } from "./EditSupervisorModal";
+export { default as HideProfileModal } from "./HideProfileModal";

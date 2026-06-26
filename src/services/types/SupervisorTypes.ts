@@ -29,12 +29,16 @@ export interface SupervisorFiltersProps {
 export interface SupervisorTableProps {
   data: SupervisorsResponse | undefined;
   isLoading: boolean;
-  tableColumns: Array<{ key: string; label: string; className?: string }>;
+  tableColumns: Array<{ key: string; label: string; className?: string; sortKey?: string }>;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
+  onSort?: (sortKey: string) => void;
   onViewSupervisor: (supervisorId: string) => void;
   onEditSupervisor: (supervisorId: string, fullName: string) => void;
   onApproveSupervisor: (supervisorId: string, fullName: string) => void;
   onRejectSupervisor: (supervisorId: string, fullName: string) => void;
   onResendVerification: (supervisorId: string, fullName: string) => void;
+  onToggleHideProfile: (supervisorId: string, fullName: string, currentlyHidden: boolean) => void;
   onRefresh?: () => void;
 }
 
