@@ -29,8 +29,8 @@ const ResendVerificationModal: React.FC<ResendVerificationModalProps> = ({
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl overflow-hidden">
         <div className="px-6 pt-6 pb-4">
           <div className="flex items-start gap-4">
-            <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-brand-50 dark:bg-brand-500/20">
-              <Mail className="h-6 w-6 text-brand-600 dark:text-brand-400" aria-hidden />
+            <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 dark:bg-primary/20">
+              <Mail className="h-6 w-6 text-primary dark:text-primary" aria-hidden />
             </div>
             <div className="flex-1 min-w-0">
               <h3 className="text-lg font-semibold leading-6 text-gray-900 dark:text-white mb-1">

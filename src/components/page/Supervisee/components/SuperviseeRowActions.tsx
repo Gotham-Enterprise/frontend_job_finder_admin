@@ -1,37 +1,33 @@
 "use client";
 
 import React, { useRef, useState } from "react";
-import { Check, Eye, EyeOff, Mail, MoreVertical, Pencil, X } from "lucide-react";
+import { Eye, EyeOff, Mail, MoreVertical, Pencil } from "lucide-react";
 import { Dropdown } from "../../../ui/dropdown/Dropdown";
 import { DropdownItem } from "../../../ui/dropdown/DropdownItem";
-import { Supervisor } from "@/services/types/supervisor";
+import { Supervisee } from "@/services/types/supervisee";
 
 const iconProps = { size: 16, className: "shrink-0" } as const;
 const itemClass = "flex items-center gap-2 dark:text-gray-300 dark:hover:bg-white/[0.05]";
 
-interface SupervisorRowActionsProps {
-  supervisor: Supervisor;
+interface SuperviseeRowActionsProps {
+  supervisee: Supervisee;
   onView: (id: string) => void;
   onEdit: (id: string, name: string) => void;
-  onApprove: (id: string, name: string) => void;
-  onReject: (id: string, name: string) => void;
   onResendVerification: (id: string, name: string) => void;
   onToggleHideProfile: (id: string, name: string, currentlyHidden: boolean) => void;
 }
 
-const SupervisorRowActions: React.FC<SupervisorRowActionsProps> = ({
-  supervisor,
+const SuperviseeRowActions: React.FC<SuperviseeRowActionsProps> = ({
+  supervisee,
   onView,
   onEdit,
-  onApprove,
-  onReject,
   onResendVerification,
   onToggleHideProfile,
 }) => {
   const [open, setOpen] = useState(false);
   const buttonRef = useRef<HTMLButtonElement | null>(null);
 
-  const name = supervisor.fullName || supervisor.email;
+  const name = supervisee.fullName || supervisee.email;
   const close = () => setOpen(false);
   const run = (fn: () => void) => () => {
     close();
@@ -61,16 +57,16 @@ const SupervisorRowActions: React.FC<SupervisorRowActionsProps> = ({
         <DropdownItem
           tag="button"
           className={itemClass}
-          onClick={run(() => onView(supervisor.id))}
+          onClick={run(() => onView(supervisee.id))}
         >
           <Eye {...iconProps} /> View details
         </DropdownItem>
 
-        {supervisor.emailVerified === false && (
+        {!supervisee.emailVerified && (
           <DropdownItem
             tag="button"
             className={itemClass}
-            onClick={run(() => onResendVerification(supervisor.id, name))}
+            onClick={run(() => onResendVerification(supervisee.id, name))}
           >
             <Mail {...iconProps} /> Resend verification email
           </DropdownItem>
@@ -79,37 +75,17 @@ const SupervisorRowActions: React.FC<SupervisorRowActionsProps> = ({
         <DropdownItem
           tag="button"
           className={itemClass}
-          onClick={run(() => onEdit(supervisor.id, name))}
+          onClick={run(() => onEdit(supervisee.id, name))}
         >
           <Pencil {...iconProps} /> Edit
         </DropdownItem>
 
-        {supervisor.verificationStatus !== "APPROVED" && (
-          <DropdownItem
-            tag="button"
-            className={itemClass}
-            onClick={run(() => onApprove(supervisor.id, name))}
-          >
-            <Check {...iconProps} /> Approve
-          </DropdownItem>
-        )}
-
-        {supervisor.verificationStatus !== "REJECTED" && (
-          <DropdownItem
-            tag="button"
-            className={itemClass}
-            onClick={run(() => onReject(supervisor.id, name))}
-          >
-            <X {...iconProps} /> Reject
-          </DropdownItem>
-        )}
-
         <DropdownItem
           tag="button"
           className={itemClass}
-          onClick={run(() => onToggleHideProfile(supervisor.id, name, supervisor.hideProfile))}
+          onClick={run(() => onToggleHideProfile(supervisee.id, name, supervisee.hideProfile))}
         >
-          {supervisor.hideProfile ? (
+          {supervisee.hideProfile ? (
             <>
               <Eye {...iconProps} /> Show profile
             </>
@@ -124,4 +100,4 @@ const SupervisorRowActions: React.FC<SupervisorRowActionsProps> = ({
   );
 };
 
-export default SupervisorRowActions;
+export default SuperviseeRowActions;
