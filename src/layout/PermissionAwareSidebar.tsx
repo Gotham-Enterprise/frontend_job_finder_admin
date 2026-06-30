@@ -23,6 +23,7 @@ import {
   MailIcon,
   ShootingStarIcon,
   DocsIcon,
+  BoltIcon,
 } from "../icons/index";
 import { BriefcaseIcon, CareerLadderIcon, TicketIcon, BlogIcon, CouponIcon } from "../components/ui/icons/index";
 
@@ -194,7 +195,13 @@ const navItems: NavItem[] = [
     name: "SEO Health",
     path: "/admin/seo-health",
     isAccessible: true,
-  }
+  },
+  {
+    icon: <BoltIcon />,
+    name: "AI Batch Monitoring",
+    path: "/admin/openai/batches",
+    isAccessible: true,
+  },
 ];
 
 const othersItems: NavItem[] = [
