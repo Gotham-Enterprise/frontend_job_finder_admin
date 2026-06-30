@@ -6,6 +6,7 @@ import {
   SuperviseeUpdateResponse,
   SuperviseesResponse,
 } from "../types/supervisee";
+import { HideProfileResponse } from "../types/supervisor";
 import { apiGet, apiPatch, apiPost } from "./apiUtils";
 import { buildSuperviseeUpdateFormData } from "../utils/superviseeProfileForm";
 import { showToast } from "../utils/toast";
@@ -18,6 +19,8 @@ export const superviseeApi = {
       if (filters.page) queryParams.append("page", filters.page.toString());
       if (filters.limit) queryParams.append("limit", filters.limit.toString());
       if (filters.keyword) queryParams.append("keyword", filters.keyword);
+      if (filters.sortBy) queryParams.append("sortBy", filters.sortBy);
+      if (filters.sortOrder) queryParams.append("sortOrder", filters.sortOrder);
 
       const endpoint = `/api/supervision/admin/supervisees?${queryParams.toString()}`;
       return apiGet<SuperviseesResponse>(endpoint);
@@ -51,6 +54,17 @@ export const superviseeApi = {
     return apiPatch<SuperviseeUpdateResponse>(
       `/api/supervision/admin/supervisees/${id}`,
       formData,
+    );
+  },
+
+  /**
+   * Hide or show a supervisee's public profile.
+   * `id` is the supervision user id. Note the endpoint has no `/supervisees/` segment.
+   */
+  async setHideProfile(id: string, hideProfile: boolean): Promise<HideProfileResponse> {
+    return apiPatch<HideProfileResponse>(
+      `/api/supervision/admin/${id}/hide-profile`,
+      { hideProfile },
     );
   },
 };

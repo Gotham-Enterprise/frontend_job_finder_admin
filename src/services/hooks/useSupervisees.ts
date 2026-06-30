@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient, useQueries } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, useQueries, keepPreviousData } from "@tanstack/react-query";
 import { superviseeApi } from "../api/supervisee";
 import {
   fetchSupervisionOptions,
@@ -32,6 +32,9 @@ export const useSupervisees = (filters: SuperviseeFilters = {}) => {
   return useQuery({
     queryKey: superviseeQueryKeys.list(filters),
     queryFn: () => superviseeApi.getSupervisees(filters),
+    // Keep the previous rows on screen while a new page/sort/filter loads,
+    // so the table doesn't flash the full-body spinner on every change.
+    placeholderData: keepPreviousData,
     staleTime: 1000 * 60 * 5,
     retry: (failureCount, error: Error) => {
       if (error.message.includes("HTTP 401")) return false;
@@ -103,6 +106,33 @@ export const useResendSuperviseeVerification = () => {
       showToast.error(
         "Resend Failed",
         error.message || "Failed to resend the verification email. Please try again.",
+      );
+    },
+  });
+};
+
+export const useHideSuperviseeProfile = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, hideProfile }: { id: string; hideProfile: boolean }) =>
+      superviseeApi.setHideProfile(id, hideProfile),
+    onSuccess: async (response, { id }) => {
+      const hidden = response.data?.hideProfile;
+      showToast.success(
+        hidden ? "Profile Hidden" : "Profile Visible",
+        response.message ||
+          (hidden
+            ? "The supervisee's profile is now hidden."
+            : "The supervisee's profile is now visible."),
+      );
+      await queryClient.invalidateQueries({ queryKey: superviseeQueryKeys.lists() });
+      await queryClient.invalidateQueries({ queryKey: superviseeQueryKeys.detail(id) });
+    },
+    onError: (error: Error) => {
+      showToast.error(
+        "Update Failed",
+        error.message || "Failed to update profile visibility. Please try again.",
       );
     },
   });

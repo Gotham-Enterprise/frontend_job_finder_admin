@@ -32,13 +32,39 @@ export interface Supervisor {
   /** Email confirmation status; used to gate the "Resend verification email" action. */
   emailVerified: boolean;
   emailVerifiedAt: string | null;
+  /** Whether the supervisor's profile is hidden from public listings; drives the Hide/Show action. */
+  hideProfile: boolean;
 }
+
+/** Response shape from PATCH /api/supervision/admin/:id/hide-profile */
+export interface HideProfileResponse {
+  success: boolean;
+  message: string;
+  data: {
+    id: string;
+    email: string;
+    fullName: string;
+    role: "SUPERVISOR" | "SUPERVISEE";
+    hideProfile: boolean;
+    profileVisibility: "HIDDEN" | "VISIBLE";
+  };
+}
+
+export type SupervisorSortBy =
+  | "fullName"
+  | "state"
+  | "yearsOfExperience"
+  | "verificationStatus"
+  | "hideProfile"
+  | "createdAt";
 
 export interface SupervisorFilters {
   page?: number;
   limit?: number;
   keyword?: string;
   verificationStatus?: VerificationStatus | "";
+  sortBy?: SupervisorSortBy;
+  sortOrder?: "asc" | "desc";
 }
 
 export interface SupervisorsMetaData {
