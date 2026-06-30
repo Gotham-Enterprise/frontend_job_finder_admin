@@ -11,6 +11,7 @@ export interface JobsByStateCity {
 }
 
 export interface SeoReportsData {
+  isComputing?: boolean;
   totalJobs: number;
   uniqueJobs: number;
   jobsByCategorySpecialty: JobsByCategorySpecialty[];
@@ -35,4 +36,18 @@ export interface DuplicateJobGroup {
 export interface DuplicateJobsResponse {
   success: boolean;
   data: DuplicateJobGroup[];
+}
+
+export interface BotLogEntry {
+  timestamp: string;
+  method: string;
+  url: string;
+  userAgent: string;
+  ip: string;
+  type?: string;
+}
+
+export interface BotLogsResponse {
+  success: boolean;
+  data: BotLogEntry[];
 }

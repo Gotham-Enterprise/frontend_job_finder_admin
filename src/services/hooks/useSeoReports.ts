@@ -18,3 +18,12 @@ export function useDuplicateJobs() {
     refetchOnWindowFocus: false,
   });
 }
+
+export function useBotLogs() {
+  return useQuery({
+    queryKey: ["seoBotLogs"],
+    queryFn: () => seoReportsAPI.getBotLogs(),
+    staleTime: 1000 * 60 * 5,
+    refetchOnWindowFocus: false,
+  });
+}

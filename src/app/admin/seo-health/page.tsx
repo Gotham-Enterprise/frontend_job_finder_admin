@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSeoHealth, useSchemaQuality } from "@/services/hooks/useSeoHealth";
-import { useSeoReports, useDuplicateJobs } from "@/services/hooks/useSeoReports";
+import { useSeoReports, useDuplicateJobs, useBotLogs } from "@/services/hooks/useSeoReports";
 import HealthMetricsCards from "@/components/admin/seo-health/HealthMetricsCards";
 import QualityIssuesTable from "@/components/admin/seo-health/QualityIssuesTable";
 import SchemaQualityPanel from "@/components/admin/seo-health/SchemaQualityPanel";
@@ -11,7 +11,7 @@ import type { QualityIssueRow } from "@/types/seo-health";
 
 export default function SeoHealthPage() {
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState<"health" | "coverage" | "duplicates">("health");
+  const [activeTab, setActiveTab] = useState<"health" | "coverage" | "duplicates" | "bot-logs">("health");
   const [coverageSubTab, setCoverageSubTab] = useState<"category" | "location">("category");
 
   // Health Data
@@ -23,16 +23,20 @@ export default function SeoHealthPage() {
   
   // Duplicates Data
   const { data: duplicatesData, isLoading: duplicatesLoading, error: duplicatesError } = useDuplicateJobs();
+  
+  // Bot Logs Data
+  const { data: botLogsData, isLoading: botLogsLoading, error: botLogsError } = useBotLogs();
 
   const handleRefresh = () => {
     queryClient.invalidateQueries({ queryKey: ["seoHealth"] });
     queryClient.invalidateQueries({ queryKey: ["seoSchemaQuality"] });
     queryClient.invalidateQueries({ queryKey: ["seoReports"] });
     queryClient.invalidateQueries({ queryKey: ["seoDuplicateJobs"] });
+    queryClient.invalidateQueries({ queryKey: ["seoBotLogs"] });
   };
 
-  const isLoading = healthLoading || reportsLoading || duplicatesLoading;
-  const hasError = healthError || reportsError || duplicatesError;
+  const isLoading = healthLoading || reportsLoading || duplicatesLoading || botLogsLoading;
+  const hasError = healthError || reportsError || duplicatesError || botLogsError;
 
   if (isLoading) {
     return (
@@ -155,6 +159,16 @@ export default function SeoHealthPage() {
                 {duplicatesData.data.length}
               </span>
             )}
+          </button>
+          <button
+            onClick={() => setActiveTab("bot-logs")}
+            className={`whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium ${
+              activeTab === "bot-logs"
+                ? "border-primary-500 text-primary-600 dark:border-primary-400 dark:text-primary-400"
+                : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:border-gray-700 dark:hover:text-gray-300"
+            }`}
+          >
+            Bot Traffic Logs
           </button>
         </nav>
       </div>
@@ -355,6 +369,59 @@ export default function SeoHealthPage() {
                               );
                             })}
                           </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Tab Content: Bot Logs */}
+      {activeTab === "bot-logs" && (
+        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
+          {!botLogsData?.data || botLogsData.data.length === 0 ? (
+            <div className="rounded-lg border border-gray-200 bg-gray-50 p-6 text-center text-gray-600 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400">
+              No recent Googlebot traffic logs found.
+            </div>
+          ) : (
+            <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden dark:border-gray-800 dark:bg-gray-900">
+              <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50">
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white">Recent Googlebot Traffic</h3>
+                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                  Showing the most recent {botLogsData.data.length} crawl requests from the server logs.
+                </p>
+              </div>
+              <div className="max-h-[600px] overflow-y-auto overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-800">
+                  <thead className="sticky top-0 bg-gray-50 dark:bg-gray-800/50 z-10 shadow-sm">
+                    <tr>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Timestamp</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Method</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">URL</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">IP / User Agent</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-800 dark:bg-gray-900">
+                    {botLogsData.data.map((log, idx) => (
+                      <tr key={idx} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                        <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
+                          {new Date(log.timestamp).toLocaleString()}
+                        </td>
+                        <td className="whitespace-nowrap px-6 py-4">
+                          <span className="inline-flex items-center rounded bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
+                            {log.method}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-100 break-all max-w-md">
+                          {log.url}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
+                          <div className="font-mono text-xs">{log.ip}</div>
+                          <div className="text-xs mt-1 text-gray-400">{log.userAgent}</div>
                         </td>
                       </tr>
                     ))}
