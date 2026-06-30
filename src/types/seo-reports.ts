@@ -51,3 +51,32 @@ export interface BotLogsResponse {
   success: boolean;
   data: BotLogEntry[];
 }
+
+export interface AffiliateJob {
+  id: string;
+  title: string;
+  companyName: string;
+  locationCity: string;
+  locationState: string;
+  datePosted: string;
+  isPublished: boolean;
+  isArchived: boolean;
+  expiresAt: string | null;
+  affiliateId: string;
+  affiliate: {
+    name: string;
+  } | null;
+}
+
+export interface AffiliateJobsResponse {
+  success: boolean;
+  data: {
+    jobs: AffiliateJob[];
+    pagination: {
+      total: number;
+      page: number;
+      limit: number;
+      totalPages: number;
+    }
+  }
+}

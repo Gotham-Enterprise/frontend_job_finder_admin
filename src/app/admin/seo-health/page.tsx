@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSeoHealth, useSchemaQuality } from "@/services/hooks/useSeoHealth";
-import { useSeoReports, useDuplicateJobs, useBotLogs } from "@/services/hooks/useSeoReports";
+import { useSeoReports, useDuplicateJobs, useBotLogs, useAffiliateJobs } from "@/services/hooks/useSeoReports";
 import HealthMetricsCards from "@/components/admin/seo-health/HealthMetricsCards";
 import QualityIssuesTable from "@/components/admin/seo-health/QualityIssuesTable";
 import SchemaQualityPanel from "@/components/admin/seo-health/SchemaQualityPanel";
@@ -11,8 +11,9 @@ import type { QualityIssueRow } from "@/types/seo-health";
 
 export default function SeoHealthPage() {
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState<"health" | "coverage" | "duplicates" | "bot-logs">("health");
+  const [activeTab, setActiveTab] = useState<"health" | "coverage" | "duplicates" | "bot-logs" | "affiliates">("health");
   const [coverageSubTab, setCoverageSubTab] = useState<"category" | "location">("category");
+  const [affiliatePage, setAffiliatePage] = useState(1);
 
   // Health Data
   const { data: health, isLoading: healthLoading, error: healthError } = useSeoHealth();
@@ -27,16 +28,20 @@ export default function SeoHealthPage() {
   // Bot Logs Data
   const { data: botLogsData, isLoading: botLogsLoading, error: botLogsError } = useBotLogs();
 
+  // Affiliate Jobs Data
+  const { data: affiliateData, isLoading: affiliateLoading, error: affiliateError } = useAffiliateJobs(affiliatePage, 50);
+
   const handleRefresh = () => {
     queryClient.invalidateQueries({ queryKey: ["seoHealth"] });
     queryClient.invalidateQueries({ queryKey: ["seoSchemaQuality"] });
     queryClient.invalidateQueries({ queryKey: ["seoReports"] });
     queryClient.invalidateQueries({ queryKey: ["seoDuplicateJobs"] });
     queryClient.invalidateQueries({ queryKey: ["seoBotLogs"] });
+    queryClient.invalidateQueries({ queryKey: ["seoAffiliateJobs"] });
   };
 
-  const isLoading = healthLoading || reportsLoading || duplicatesLoading || botLogsLoading;
-  const hasError = healthError || reportsError || duplicatesError || botLogsError;
+  const isLoading = healthLoading || reportsLoading || duplicatesLoading || botLogsLoading || affiliateLoading;
+  const hasError = healthError || reportsError || duplicatesError || botLogsError || affiliateError;
 
   if (isLoading) {
     return (
@@ -169,6 +174,16 @@ export default function SeoHealthPage() {
             }`}
           >
             Bot Traffic Logs
+          </button>
+          <button
+            onClick={() => setActiveTab("affiliates")}
+            className={`whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium ${
+              activeTab === "affiliates"
+                ? "border-primary-500 text-primary-600 dark:border-primary-400 dark:text-primary-400"
+                : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:border-gray-700 dark:hover:text-gray-300"
+            }`}
+          >
+            Affiliate Jobs
           </button>
         </nav>
       </div>
@@ -425,6 +440,90 @@ export default function SeoHealthPage() {
                         </td>
                       </tr>
                     ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Tab Content: Affiliate Jobs */}
+      {activeTab === "affiliates" && (
+        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
+          {!affiliateData?.data || affiliateData.data.jobs.length === 0 ? (
+            <div className="rounded-lg border border-gray-200 bg-gray-50 p-6 text-center text-gray-600 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400">
+              No affiliate jobs found.
+            </div>
+          ) : (
+            <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden dark:border-gray-800 dark:bg-gray-900">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50">
+                <div>
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white">Affiliate Jobs</h3>
+                  <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                    Showing {(affiliatePage - 1) * 50 + 1} - {Math.min(affiliatePage * 50, affiliateData.data.pagination.total)} of {affiliateData.data.pagination.total.toLocaleString()} total affiliate jobs.
+                  </p>
+                </div>
+                <div className="mt-4 flex sm:mt-0 space-x-2">
+                  <button
+                    onClick={() => setAffiliatePage((p) => Math.max(1, p - 1))}
+                    disabled={affiliatePage === 1}
+                    className="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                  >
+                    Previous
+                  </button>
+                  <button
+                    onClick={() => setAffiliatePage((p) => Math.min(affiliateData.data.pagination.totalPages, p + 1))}
+                    disabled={affiliatePage === affiliateData.data.pagination.totalPages}
+                    className="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+              <div className="max-h-[600px] overflow-y-auto overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-800">
+                  <thead className="sticky top-0 bg-gray-50 dark:bg-gray-800/50 z-10 shadow-sm">
+                    <tr>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Job Details</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Location</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Source</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-800 dark:bg-gray-900">
+                    {affiliateData.data.jobs.map((job) => {
+                      const isExpired = job.expiresAt ? new Date(job.expiresAt) < new Date() : false;
+                      const status = !job.isPublished ? "Draft" : job.isArchived ? "Archived" : isExpired ? "Expired" : "Active";
+                      return (
+                        <tr key={job.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                          <td className="px-6 py-4 align-top">
+                            <div className="text-sm font-medium text-gray-900 dark:text-white max-w-xs truncate">{job.title}</div>
+                            <div className="text-sm text-gray-500 dark:text-gray-400">{job.companyName}</div>
+                            <div className="text-xs text-gray-400 mt-1">ID: {job.id}</div>
+                          </td>
+                          <td className="px-6 py-4 align-top">
+                            <div className="text-sm text-gray-900 dark:text-white">{job.locationCity || "Remote"}</div>
+                            <div className="text-sm text-gray-500 dark:text-gray-400">{job.locationState}</div>
+                          </td>
+                          <td className="px-6 py-4 align-top text-sm text-gray-500 dark:text-gray-400">
+                            {job.affiliate?.name || job.affiliateId}
+                          </td>
+                          <td className="whitespace-nowrap px-6 py-4 align-top">
+                            <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                              status === "Active" 
+                                ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
+                                : "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300"
+                            }`}>
+                              {status}
+                            </span>
+                            <div className="text-xs text-gray-400 mt-1">
+                              Posted: {new Date(job.datePosted).toLocaleDateString()}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>

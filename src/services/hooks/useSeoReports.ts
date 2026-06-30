@@ -27,3 +27,12 @@ export function useBotLogs() {
     refetchOnWindowFocus: false,
   });
 }
+
+export function useAffiliateJobs(page: number, limit: number) {
+  return useQuery({
+    queryKey: ["seoAffiliateJobs", page, limit],
+    queryFn: () => seoReportsAPI.getAffiliateJobs(page, limit),
+    staleTime: 1000 * 60 * 5,
+    refetchOnWindowFocus: false,
+  });
+}
