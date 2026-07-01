@@ -9,7 +9,7 @@ import {
   useEditSupervisorVerificationNotes,
   useSupervisionProfileDisplayOptions,
 } from "@/services/hooks/useSupervisors";
-import { formatDate } from "@/services/utils/dateUtils";
+import { formatDate, formatDateTime } from "@/services/utils/dateUtils";
 import { formatStateOfLicensureForDisplay } from "@/services/utils/formatUsStateLicensure";
 import {
   formatSingleSupervisionOptionDisplay,
@@ -332,10 +332,10 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
             />
             <FieldRow
               label="Email Verified At"
-              value={s.emailVerified ? formatDate(s.emailVerifiedAt) : null}
+              value={s.emailVerified ? formatDateTime(s.emailVerifiedAt, "Not specified") : null}
             />
             <FieldRow label="Account Status" value={s.status} />
-            <FieldRow label="Registered" value={formatDate(s.createdAt)} />
+            <FieldRow label="Registered" value={formatDateTime(s.createdAt, "Not specified")} />
           </SectionCard>
 
           {/* Professional Info */}
