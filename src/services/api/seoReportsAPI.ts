@@ -1,4 +1,4 @@
-import { apiGet } from "./apiUtils";
+import { apiGet, apiPost } from "./apiUtils";
 import type { SeoReportsResponse, DuplicateJobsResponse, BotLogsResponse, AffiliateJobsResponse } from "@/types/seo-reports";
 
 class SeoReportsAPI {
@@ -8,6 +8,10 @@ class SeoReportsAPI {
 
   async getDuplicateJobs(): Promise<DuplicateJobsResponse> {
     return apiGet<DuplicateJobsResponse>("/api/admin/analytics/duplicate-jobs");
+  }
+
+  async refreshDuplicateJobs(): Promise<DuplicateJobsResponse> {
+    return apiPost<DuplicateJobsResponse>("/api/admin/analytics/duplicate-jobs/refresh");
   }
 
   async getBotLogs(): Promise<BotLogsResponse> {
