@@ -1,5 +1,6 @@
 import React from "react";
-import { formatDate } from "@/services/utils/dateUtils";
+import { formatDate, formatDateTimeLocal } from "@/services/utils/dateUtils";
+import { TimeIcon } from "@/icons";
 import { formatUsStateCodeForDisplay } from "@/services/utils/formatUsStateLicensure";
 import { formatUSPhoneNationalDisplay } from "@/services/utils/phoneNumberUtils";
 import {
@@ -117,7 +118,25 @@ const SuperviseeTable: React.FC<SuperviseeTableProps> = ({
                 </TableCell>
 
                 <TableCell className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                  {formatDate(supervisee.createdAt)}
+                  {supervisee.createdAt ? (
+                    (() => {
+                      const registered = formatDateTimeLocal(supervisee.createdAt);
+                      if (typeof registered === "string") {
+                        return <p>{registered}</p>;
+                      }
+                      return (
+                        <div>
+                          <div>{registered.date}</div>
+                          <div className="flex items-center mt-1">
+                            <TimeIcon className="mr-1" />
+                            <span>{registered.time}</span>
+                          </div>
+                        </div>
+                      );
+                    })()
+                  ) : (
+                    formatDate(supervisee.createdAt)
+                  )}
                 </TableCell>
 
                 <TableCell className="px-4 py-3 whitespace-nowrap text-right">
