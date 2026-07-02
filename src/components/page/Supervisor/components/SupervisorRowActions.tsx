@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useRef, useState } from "react";
-import { Check, Eye, EyeOff, Mail, MoreVertical, Pencil, X } from "lucide-react";
+import { Check, Eye, Mail, MoreVertical, Pause, Pencil, Play, X } from "lucide-react";
 import { Dropdown } from "../../../ui/dropdown/Dropdown";
 import { DropdownItem } from "../../../ui/dropdown/DropdownItem";
 import { Supervisor } from "@/services/types/supervisor";
@@ -100,7 +100,7 @@ const SupervisorRowActions: React.FC<SupervisorRowActionsProps> = ({
             className={itemClass}
             onClick={run(() => onReject(supervisor.id, name))}
           >
-            <X {...iconProps} /> Reject
+            <X {...iconProps} /> Decline
           </DropdownItem>
         )}
 
@@ -111,11 +111,11 @@ const SupervisorRowActions: React.FC<SupervisorRowActionsProps> = ({
         >
           {supervisor.hideProfile ? (
             <>
-              <Eye {...iconProps} /> Show profile
+              <Play {...iconProps} /> Resume account
             </>
           ) : (
             <>
-              <EyeOff {...iconProps} /> Hide profile
+              <Pause {...iconProps} /> Pause account
             </>
           )}
         </DropdownItem>

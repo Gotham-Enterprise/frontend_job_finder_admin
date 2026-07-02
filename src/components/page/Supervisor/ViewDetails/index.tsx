@@ -9,7 +9,7 @@ import {
   useEditSupervisorVerificationNotes,
   useSupervisionProfileDisplayOptions,
 } from "@/services/hooks/useSupervisors";
-import { formatDate } from "@/services/utils/dateUtils";
+import { formatDate, formatDateTime } from "@/services/utils/dateUtils";
 import { formatStateOfLicensureForDisplay } from "@/services/utils/formatUsStateLicensure";
 import {
   formatSingleSupervisionOptionDisplay,
@@ -286,7 +286,7 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
                 className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-error-700 bg-error-50 hover:bg-error-100 dark:bg-error-500/10 dark:text-error-400 dark:hover:bg-error-500/20 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <CloseLineIcon className="w-4 h-4" />
-                Reject
+                Decline
               </button>
             )}
           </div>
@@ -332,10 +332,10 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
             />
             <FieldRow
               label="Email Verified At"
-              value={s.emailVerified ? formatDate(s.emailVerifiedAt) : null}
+              value={s.emailVerified ? formatDateTime(s.emailVerifiedAt, "Not specified") : null}
             />
             <FieldRow label="Account Status" value={s.status} />
-            <FieldRow label="Registered" value={formatDate(s.createdAt)} />
+            <FieldRow label="Registered" value={formatDateTime(s.createdAt, "Not specified")} />
           </SectionCard>
 
           {/* Professional Info */}

@@ -3,7 +3,7 @@
 import React, { useMemo, useState } from "react";
 import { Mail, Pencil } from "lucide-react";
 import { useSuperviseeDetails, useResendSuperviseeVerification } from "@/services/hooks/useSupervisees";
-import { formatDate } from "@/services/utils/dateUtils";
+import { formatDate, formatDateTime } from "@/services/utils/dateUtils";
 import { formatStateOfLicensureForDisplay, formatUsStateCodeForDisplay } from "@/services/utils/formatUsStateLicensure";
 import { formatUSPhoneNationalDisplay } from "@/services/utils/phoneNumberUtils";
 import {
@@ -177,7 +177,7 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
             />
             <FieldRow
               label="Email Verified At"
-              value={s.emailVerified ? formatDate(s.emailVerifiedAt) : null}
+              value={s.emailVerified ? formatDateTime(s.emailVerifiedAt, "Not specified") : null}
             />
             <FieldRow
               label="Phone"
@@ -191,7 +191,7 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
             <FieldRow label="Zip Code" value={s.zipcode} />
             <FieldRow label="Account Status" value={s.status} />
             <FieldRow label="Active" value={s.isActive ? "Yes" : "No"} />
-            <FieldRow label="Registered" value={formatDate(s.createdAt)} />
+            <FieldRow label="Registered" value={formatDateTime(s.createdAt, "Not specified")} />
           </SectionCard>
 
           <SectionCard title="Occupation & Licensure">

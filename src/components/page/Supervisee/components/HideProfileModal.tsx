@@ -1,5 +1,5 @@
 import React from "react";
-import { Eye, EyeOff } from "lucide-react";
+import { Pause, Play } from "lucide-react";
 import { Modal } from "@/components/ui/modal";
 import Button from "@/components/ui/button/Button";
 
@@ -22,7 +22,7 @@ const HideProfileModal: React.FC<HideProfileModalProps> = ({
   isLoading,
 }) => {
   const willHide = !currentlyHidden;
-  const Icon = willHide ? EyeOff : Eye;
+  const Icon = willHide ? Pause : Play;
 
   return (
     <Modal
@@ -40,18 +40,18 @@ const HideProfileModal: React.FC<HideProfileModalProps> = ({
             </div>
             <div className="flex-1 min-w-0">
               <h3 className="text-lg font-semibold leading-6 text-gray-900 dark:text-white mb-1">
-                {willHide ? "Hide Profile" : "Show Profile"}
+                {willHide ? "Pause Account" : "Resume Account"}
               </h3>
               <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
                 {willHide ? (
                   <>
-                    Hide <span className="font-medium">{fullName}</span>&apos;s profile? It will no
-                    longer appear in public listings until you make it visible again.
+                    Pause <span className="font-medium">{fullName}</span>&apos;s account? Their
+                    profile will no longer appear in public listings until you resume it.
                   </>
                 ) : (
                   <>
-                    Make <span className="font-medium">{fullName}</span>&apos;s profile visible
-                    again? It will reappear in public listings.
+                    Resume <span className="font-medium">{fullName}</span>&apos;s account? Their
+                    profile will reappear in public listings.
                   </>
                 )}
               </p>
@@ -91,9 +91,9 @@ const HideProfileModal: React.FC<HideProfileModalProps> = ({
                 Saving…
               </div>
             ) : willHide ? (
-              "Hide Profile"
+              "Pause Account"
             ) : (
-              "Show Profile"
+              "Resume Account"
             )}
           </Button>
         </div>
