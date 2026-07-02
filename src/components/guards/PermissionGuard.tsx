@@ -104,6 +104,15 @@ const getPermissionForPath = (pathname: string): { permission: string; action: '
     };
   }
   
+  if (pathname.startsWith('/admin/batch-api-jobs')) {
+    return {
+      permission: 'jobs',
+      action: 'view',
+      module: 'jobs',
+      moduleAction: 'view'
+    };
+  }
+
   if (pathname.startsWith('/admin/jobs')) {
     if (pathname.includes('/create-job') || pathname.includes('/add-new')) {
       return { 
