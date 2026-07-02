@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useRef, useState } from "react";
-import { Eye, EyeOff, Mail, MoreVertical, Pencil } from "lucide-react";
+import { Eye, Mail, MoreVertical, Pause, Pencil, Play } from "lucide-react";
 import { Dropdown } from "../../../ui/dropdown/Dropdown";
 import { DropdownItem } from "../../../ui/dropdown/DropdownItem";
 import { Supervisee } from "@/services/types/supervisee";
@@ -87,11 +87,11 @@ const SuperviseeRowActions: React.FC<SuperviseeRowActionsProps> = ({
         >
           {supervisee.hideProfile ? (
             <>
-              <Eye {...iconProps} /> Show profile
+              <Play {...iconProps} /> Resume account
             </>
           ) : (
             <>
-              <EyeOff {...iconProps} /> Hide profile
+              <Pause {...iconProps} /> Pause account
             </>
           )}
         </DropdownItem>

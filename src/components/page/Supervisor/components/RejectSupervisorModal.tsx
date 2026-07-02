@@ -51,23 +51,23 @@ const RejectSupervisorModal: React.FC<RejectSupervisorModalProps> = ({
             </div>
             <div className="flex-1 min-w-0">
               <h3 className="text-lg font-semibold leading-6 text-gray-900 dark:text-white mb-1">
-                Reject Supervisor
+                Decline Supervisor
               </h3>
               <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
-                Rejecting <span className="font-medium">{fullName}</span>. Please provide a reason below.
+                Declining <span className="font-medium">{fullName}</span>. Please provide a reason below.
               </p>
             </div>
           </div>
 
           <div className="mt-4">
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Rejection Reason <span className="text-error-500">*</span>
+              Decline Reason <span className="text-error-500">*</span>
             </label>
             <textarea
               value={notes}
               onChange={(e) => onNotesChange(e.target.value)}
               rows={3}
-              placeholder="Enter the reason for rejection..."
+              placeholder="Enter the reason for declining..."
               disabled={isLoading}
               className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500 resize-none disabled:opacity-60"
             />
@@ -106,7 +106,7 @@ const RejectSupervisorModal: React.FC<RejectSupervisorModalProps> = ({
                 Processing...
               </div>
             ) : (
-              "Reject"
+              "Decline"
             )}
           </Button>
         </div>
