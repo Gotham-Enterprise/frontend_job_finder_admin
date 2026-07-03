@@ -162,10 +162,10 @@ const BatchApiJobs: React.FC<{ className?: string }> = ({ className = "" }) => {
                         job.batch?.status === "completed"
                           ? "success"
                           : job.batch?.status === "failed" || job.batch?.status === "expired" || job.batch?.status === "cancelled"
-                          ? "error"
-                          : job.batch?.status === "in_progress" || job.batch?.status === "validating" || job.batch?.status === "finalizing"
-                          ? "warning"
-                          : "info"
+                            ? "error"
+                            : job.batch?.status === "in_progress" || job.batch?.status === "validating" || job.batch?.status === "finalizing"
+                              ? "warning"
+                              : "info"
                       }
                     >
                       {job.batch?.status || "unknown"}
