@@ -4,6 +4,7 @@ import { Modal } from '@/components/ui/modal';
 import Input from '@/components/ui/input/Input';
 import Button from '@/components/ui/button/Button';
 import Select from '@/components/form/Select';
+import Radio from '@/components/form/input/Radio';
 import RichTextEditor from '@/components/form/input/RichTextEditor';
 import { useCreateCareer } from '@/services/hooks/useCareers';
 import { useStates } from '@/services/hooks/useStates';
@@ -24,6 +25,15 @@ const COUNTRIES = [
   'Afghanistan', 'Pakistan', 'Bangladesh', 'Sri Lanka', 'Nepal', 'Bhutan', 'Maldives', 'Myanmar', 'Cambodia', 'Laos',
   'Mongolia', 'Taiwan', 'Brunei', 'East Timor', 'Papua New Guinea', 'Fiji', 'Solomon Islands', 'Vanuatu', 'Samoa',
   'Tonga', 'Kiribati', 'Tuvalu', 'Nauru', 'Palau', 'Marshall Islands', 'Micronesia'
+];
+
+// Job type options
+const JOB_TYPE_OPTIONS = [
+  { value: 'Full-time', label: 'Full-time' },
+  { value: 'Part-time', label: 'Part-time' },
+  { value: 'Contract', label: 'Contract' },
+  { value: 'Temporary', label: 'Temporary' },
+  { value: 'Internship', label: 'Internship' },
 ];
 
 // Workplace type options
@@ -60,7 +70,8 @@ export const CreateJobModal: React.FC<CreateJobModalProps> = ({
   // departmentId & unitId removed
     timezone: '',
     salaryRangeStart: undefined,
-    salaryRangeEnd: 0,
+    salaryRangeEnd: undefined,
+    salaryType: undefined,
     jobDescription: '',
   });
 
@@ -134,6 +145,9 @@ export const CreateJobModal: React.FC<CreateJobModalProps> = ({
       city: '' // Reset city when state changes
     }));
     setIsCityDropdownOpen(false); // Close city dropdown
+    if (errors.state) {
+      setErrors(prev => ({ ...prev, state: '' }));
+    }
   };
 
   const handleSelectCity = (val: string) => {
@@ -142,6 +156,9 @@ export const CreateJobModal: React.FC<CreateJobModalProps> = ({
       city: val
     }));
     setIsCityDropdownOpen(false); // Close dropdown after selection
+    if (errors.city) {
+      setErrors(prev => ({ ...prev, city: '' }));
+    }
   };
 
   const validateForm = (): boolean => {
@@ -186,6 +203,14 @@ export const CreateJobModal: React.FC<CreateJobModalProps> = ({
       newErrors.salaryRangeEnd = 'Max salary must be greater than or equal to min salary';
     }
 
+    // A salary range without a unit is ambiguous
+    if (
+      (typeof formData.salaryRangeStart === 'number' || typeof formData.salaryRangeEnd === 'number') &&
+      !formData.salaryType
+    ) {
+      newErrors.salaryType = 'Select Annual Salary or Hourly Rate';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -208,6 +233,9 @@ export const CreateJobModal: React.FC<CreateJobModalProps> = ({
         ...formData,
         state: formData.state ? getStateName(formData.state) : '',
         address: formData.address?.trim() ?? '',
+        salaryRangeStart: formData.salaryRangeStart ?? null,
+        salaryRangeEnd: formData.salaryRangeEnd ?? null,
+        salaryType: formData.salaryType ?? null,
       };
 
       await createCareerMutation.mutateAsync(payload);
@@ -224,7 +252,8 @@ export const CreateJobModal: React.FC<CreateJobModalProps> = ({
   // departmentId & unitId removed
         timezone: '',
         salaryRangeStart: undefined,
-        salaryRangeEnd: 0,
+        salaryRangeEnd: undefined,
+        salaryType: undefined,
         jobDescription: '',
       });
       // Reset city search state
@@ -281,18 +310,12 @@ export const CreateJobModal: React.FC<CreateJobModalProps> = ({
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Job Type *
                     </label>
-                    <select
+                    <Select
+                      options={JOB_TYPE_OPTIONS}
                       value={formData.jobType}
-                      onChange={handleInputChange('jobType')}
-                      className="h-11 w-full rounded-lg border bg-transparent text-gray-800 border-gray-300 focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-800 px-4 py-2.5 text-sm shadow-theme-xs focus:outline-hidden appearance-none"
-                    >
-                      <option value="">Job Type</option>
-                      <option value="Full-time">Full-time</option>
-                      <option value="Part-time">Part-time</option>
-                      <option value="Contract">Contract</option>
-                      <option value="Temporary">Temporary</option>
-                      <option value="Internship">Internship</option>
-                    </select>
+                      onChange={handleSelectChange('jobType')}
+                      placeholder="Select Job Type"
+                    />
                     {errors.jobType && (
                       <p className="mt-1.5 text-xs text-error-500">{errors.jobType}</p>
                     )}
@@ -328,9 +351,9 @@ export const CreateJobModal: React.FC<CreateJobModalProps> = ({
                   />
                 </div>
 
-                {/* City, State, Zip Code Row (Enhanced with search functionality) */}
-                <div className="grid grid-cols-3 gap-4">
-                  
+                {/* City, State Row (Enhanced with search functionality) */}
+                <div className="grid grid-cols-2 gap-4">
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       City *
@@ -342,6 +365,9 @@ export const CreateJobModal: React.FC<CreateJobModalProps> = ({
                         value={formData.city}
                         onChange={(e) => {
                           setFormData(prev => ({ ...prev, city: e.target.value }));
+                          if (errors.city && e.target.value.trim()) {
+                            setErrors(prev => ({ ...prev, city: '' }));
+                          }
                           if (!isCityDropdownOpen && e.target.value && stateAbbr) {
                             setIsCityDropdownOpen(true);
                           }
@@ -421,6 +447,12 @@ export const CreateJobModal: React.FC<CreateJobModalProps> = ({
                       <p className="mt-1.5 text-xs text-error-500">{errors.state}</p>
                     )}
                   </div>
+                </div>
+
+                {/* Department & Unit inputs removed */}
+
+                {/* Zip Code and Timezone Row */}
+                <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Zip Code *
@@ -434,12 +466,6 @@ export const CreateJobModal: React.FC<CreateJobModalProps> = ({
                       hint={errors.zipCode}
                     />
                   </div>
-                </div>
-
-                {/* Department & Unit inputs removed */}
-
-                {/* Timezone and Salary Range Row */}
-                <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Timezone *
@@ -454,14 +480,38 @@ export const CreateJobModal: React.FC<CreateJobModalProps> = ({
                       <p className="mt-1.5 text-xs text-error-500">{errors.timezone}</p>
                     )}
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Salary Range
-                    </label>
+                </div>
+
+                {/* Salary Range Row */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Salary Range
+                  </label>
+                    <div className="flex items-center gap-6 mb-3">
+                      <Radio
+                        id="salary-type-yearly"
+                        name="salaryType"
+                        value="yearly"
+                        checked={formData.salaryType === 'yearly'}
+                        label="Annual Salary"
+                        onChange={handleSelectChange('salaryType')}
+                      />
+                      <Radio
+                        id="salary-type-hourly"
+                        name="salaryType"
+                        value="hourly"
+                        checked={formData.salaryType === 'hourly'}
+                        label="Hourly Rate (per hour)"
+                        onChange={handleSelectChange('salaryType')}
+                      />
+                    </div>
+                    {errors.salaryType && (
+                      <p className="mb-2 text-xs text-error-500">{errors.salaryType}</p>
+                    )}
                     <div className="grid grid-cols-2 gap-2">
                       <Input
                         type="number"
-                        placeholder="Min Salary"
+                        placeholder={formData.salaryType === 'hourly' ? 'Min Rate' : 'Min Salary'}
                         value={formData.salaryRangeStart || ''}
                         onChange={(e) => {
                           const value = e.target.value ? parseInt(e.target.value) : undefined;
@@ -485,15 +535,16 @@ export const CreateJobModal: React.FC<CreateJobModalProps> = ({
                       />
                       <Input
                         type="number"
-                        placeholder="Max Salary"
+                        placeholder={formData.salaryType === 'hourly' ? 'Max Rate' : 'Max Salary'}
                         value={formData.salaryRangeEnd || ''}
                         onChange={(e) => {
-                          const value = parseInt(e.target.value) || 0;
+                          const value = e.target.value ? parseInt(e.target.value) : undefined;
                           setFormData(prev => ({ ...prev, salaryRangeEnd: value }));
                           // Validate relation with current min
                           const min = formData.salaryRangeStart;
                           if (
               typeof min === 'number' &&
+              typeof value === 'number' &&
               value < min
                           ) {
               setErrors(prev => ({ ...prev, salaryRangeEnd: 'Max salary must be greater than or equal to min salary' }));
@@ -507,7 +558,6 @@ export const CreateJobModal: React.FC<CreateJobModalProps> = ({
                         hint={errors.salaryRangeEnd}
                       />
                     </div>
-                  </div>
                 </div>
               </div>
 

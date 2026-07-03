@@ -60,6 +60,7 @@ export const useCareersLogic = () => {
         salaryRangeStart: rawStart > 0 ? rawStart : undefined,
         salaryRangeEnd: rawEnd > 0 ? rawEnd : undefined,
         salaryRange: hasRange ? career.salaryRange || `${rawStart}-${rawEnd}` : undefined,
+        salaryType: career.salaryType === 'hourly' || career.salaryType === 'yearly' ? career.salaryType : undefined,
         createdAtISO: career.createdAt,
         createdAtTs: Date.parse(career.createdAt),
       };

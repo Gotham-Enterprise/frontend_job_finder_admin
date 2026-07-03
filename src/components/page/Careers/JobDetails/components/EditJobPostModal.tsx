@@ -4,6 +4,7 @@ import Button from '@/components/ui/button/Button';
 import Input from '@/components/ui/input/Input';
 import RichTextEditor from '@/components/form/input/RichTextEditor';
 import Select from '@/components/form/Select';
+import Radio from '@/components/form/input/Radio';
 import { useUpdateCareer } from '@/services/hooks/useCareers';
 import { useStates } from '@/services/hooks/useStates';
 import { useStatesCities, useCitiesByState } from '@/lib/useStatesCities';
@@ -28,6 +29,7 @@ interface FormData {
   timezone: string;
   salaryRangeStart: string;
   salaryRangeEnd: string;
+  salaryType: string;
   jobDescription: string;
 }
 
@@ -48,6 +50,7 @@ const EditJobPostModal: React.FC<EditJobPostModalProps> = ({
     timezone: '',
     salaryRangeStart: '',
     salaryRangeEnd: '',
+    salaryType: '',
     jobDescription: '',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -127,7 +130,7 @@ const EditJobPostModal: React.FC<EditJobPostModalProps> = ({
       let salaryEnd = '';
       
       // Use individual salary fields if available, otherwise parse from salaryRange string
-      if (job.salaryRangeStart !== undefined) {
+      if (job.salaryRangeStart != null) {
         salaryStart = job.salaryRangeStart.toString();
       } else if (job.salaryRange) {
         const salaryParts = job.salaryRange.split('-');
@@ -136,7 +139,7 @@ const EditJobPostModal: React.FC<EditJobPostModalProps> = ({
         }
       }
       
-      if (job.salaryRangeEnd !== undefined) {
+      if (job.salaryRangeEnd != null) {
         salaryEnd = job.salaryRangeEnd.toString();
       } else if (job.salaryRange) {
         const salaryParts = job.salaryRange.split('-');
@@ -156,6 +159,7 @@ const EditJobPostModal: React.FC<EditJobPostModalProps> = ({
         timezone: job.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
         salaryRangeStart: salaryStart,
         salaryRangeEnd: salaryEnd,
+        salaryType: job.salaryType || '',
         jobDescription: job.jobDescription || job.description || '',
       };
       
@@ -208,10 +212,17 @@ const EditJobPostModal: React.FC<EditJobPostModalProps> = ({
       zipCode: formData.zipCode,
       country: formData.country,
       timezone: formData.timezone,
-      salaryRangeStart: formData.salaryRangeStart ? parseFloat(formData.salaryRangeStart) : undefined,
-      salaryRangeEnd: formData.salaryRangeEnd ? parseFloat(formData.salaryRangeEnd) : 0,
+      salaryRangeStart: formData.salaryRangeStart ? parseFloat(formData.salaryRangeStart) : null,
+      salaryRangeEnd: formData.salaryRangeEnd ? parseFloat(formData.salaryRangeEnd) : null,
+      salaryType: formData.salaryType === 'hourly' || formData.salaryType === 'yearly' ? formData.salaryType : null,
       jobDescription: formData.jobDescription,
     };
+
+    // A salary range without a unit is ambiguous
+    if ((payload.salaryRangeStart != null || payload.salaryRangeEnd != null) && !payload.salaryType) {
+      setErrors(prev => ({ ...prev, salaryType: 'Select Annual Salary or Hourly Rate' }));
+      return;
+    }
 
     try {
       await updateCareerMutation.mutateAsync({
@@ -425,7 +436,43 @@ const EditJobPostModal: React.FC<EditJobPostModalProps> = ({
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Salary Range Start ($)
+                    Compensation Type
+                  </label>
+                  <div className="flex items-center gap-6 h-11">
+                    <Radio
+                      id="edit-salary-type-yearly"
+                      name="editSalaryType"
+                      value="yearly"
+                      checked={formData.salaryType === 'yearly'}
+                      label="Annual Salary"
+                      onChange={(value) => {
+                        updateField('salaryType', value);
+                        if (errors.salaryType) {
+                          setErrors(prev => ({ ...prev, salaryType: '' }));
+                        }
+                      }}
+                    />
+                    <Radio
+                      id="edit-salary-type-hourly"
+                      name="editSalaryType"
+                      value="hourly"
+                      checked={formData.salaryType === 'hourly'}
+                      label="Hourly Rate (per hour)"
+                      onChange={(value) => {
+                        updateField('salaryType', value);
+                        if (errors.salaryType) {
+                          setErrors(prev => ({ ...prev, salaryType: '' }));
+                        }
+                      }}
+                    />
+                  </div>
+                  {errors.salaryType && (
+                    <p className="mt-1 text-xs text-error-500">{errors.salaryType}</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    {formData.salaryType === 'hourly' ? 'Hourly Rate Start ($)' : 'Salary Range Start ($)'}
                   </label>
                   <Input
                     type="number"
@@ -452,7 +499,7 @@ const EditJobPostModal: React.FC<EditJobPostModalProps> = ({
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Salary Range End ($)
+                    {formData.salaryType === 'hourly' ? 'Hourly Rate End ($)' : 'Salary Range End ($)'}
                   </label>
                   <Input
                     type="number"

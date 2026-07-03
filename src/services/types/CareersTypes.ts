@@ -44,6 +44,7 @@ export interface CareerTableData {
   salaryRangeStart?: number;
   salaryRangeEnd?: number;
   salaryRange?: string; // combined string from backend if present
+  salaryType?: 'yearly' | 'hourly';
   createdAtISO?: string; // raw ISO date for sorting
   createdAtTs?: number; // timestamp for efficient sorting
 }
