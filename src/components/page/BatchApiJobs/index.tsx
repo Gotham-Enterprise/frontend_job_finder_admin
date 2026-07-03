@@ -3,10 +3,23 @@ import React, { useState, useEffect, useCallback } from "react";
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "../../ui/table";
 import Badge from "../../ui/badge/Badge";
 import Pagination from "../../tables/Pagination";
-import { batchApiJobsApi, BatchApiJobsResponse } from "@/services/api/batchApiJobs";
+import { batchApiJobsApi, BatchApiJob, BatchApiJobsResponse } from "@/services/api/batchApiJobs";
 import { formatDate } from "@/services/utils/dateUtils";
 
+const FRONTEND_URL = process.env.NEXT_PUBLIC_FRONTEND_URL || "https://gothamenterprisesltd.com";
 const LIMIT = 20;
+
+function slugify(s: string): string {
+  return s.toLowerCase().replace(/[^\w\s]/gi, "").replace(/\s+/g, "-");
+}
+
+function jobFrontendUrl(job: BatchApiJob): string {
+  const occupationSlug = job.occupation?.name
+    ? `${slugify(job.occupation.name)}-jobs`
+    : "all-jobs";
+  const titleSlug = slugify(job.title || "");
+  return `${FRONTEND_URL}/find-jobs/${occupationSlug}/${job.id}/${titleSlug}`;
+}
 
 const BatchApiJobs: React.FC<{ className?: string }> = ({ className = "" }) => {
   const [data, setData] = useState<BatchApiJobsResponse | null>(null);
@@ -71,12 +84,15 @@ const BatchApiJobs: React.FC<{ className?: string }> = ({ className = "" }) => {
               <TableCell isHeader className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 Status
               </TableCell>
+              <TableCell isHeader className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                View
+              </TableCell>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell className="text-center py-8 px-6" colSpan={6}>
+                <TableCell className="text-center py-8 px-6" colSpan={7}>
                   <div className="flex items-center justify-center gap-3">
                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-brand-500"></div>
                     <p className="text-gray-500 dark:text-gray-400">Loading...</p>
@@ -85,7 +101,7 @@ const BatchApiJobs: React.FC<{ className?: string }> = ({ className = "" }) => {
               </TableRow>
             ) : error ? (
               <TableRow>
-                <TableCell className="text-center py-8 px-6" colSpan={6}>
+                <TableCell className="text-center py-8 px-6" colSpan={7}>
                   <div className="flex flex-col items-center gap-2">
                     <p className="text-red-500 dark:text-red-400">{error}</p>
                     <button
@@ -99,12 +115,12 @@ const BatchApiJobs: React.FC<{ className?: string }> = ({ className = "" }) => {
               </TableRow>
             ) : jobs.length === 0 ? (
               <TableRow>
-                <TableCell className="text-center py-8 px-6" colSpan={6}>
+                <TableCell className="text-center py-8 px-6" colSpan={7}>
                   <p className="text-gray-500 dark:text-gray-400">No batch API jobs found</p>
                 </TableCell>
               </TableRow>
             ) : (
-              jobs.map((job: any) => (
+              jobs.map((job: BatchApiJob) => (
                 <TableRow
                   key={job.id}
                   className="border-b border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50"
@@ -154,6 +170,19 @@ const BatchApiJobs: React.FC<{ className?: string }> = ({ className = "" }) => {
                     >
                       {job.batch?.status || "unknown"}
                     </Badge>
+                  </TableCell>
+                  <TableCell className="px-6 py-4">
+                    <a
+                      href={jobFrontendUrl(job)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                      title={`View on site: ${job.title}`}
+                    >
+                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                      </svg>
+                    </a>
                   </TableCell>
                 </TableRow>
               ))

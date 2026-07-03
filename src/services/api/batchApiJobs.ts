@@ -4,12 +4,14 @@ export interface BatchApiJob {
   id: string;
   title: string;
   createdAt: string;
-  batchId: string | null;
-  batchStatus: string | null;
-  inputTokens: number | null;
-  outputTokens: number | null;
-  originJobPostId: string | null;
-  originTitle: string | null;
+  originalPost: { id: string; title: string } | null;
+  batch: { batchId: string; status: string } | null;
+  usage: {
+    promptTokens: number;
+    completionTokens: number;
+    totalTokens: number;
+  } | null;
+  occupation: { name: string } | null;
 }
 
 export interface BatchApiJobsResponse {
