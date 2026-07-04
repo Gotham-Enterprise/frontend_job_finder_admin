@@ -195,6 +195,12 @@ const navItems: NavItem[] = [
     name: "SEO Health",
     path: "/admin/seo-health",
     isAccessible: true,
+  },
+  {
+    icon: <TaskIcon />,
+    name: "Indexing Logs",
+    path: "/admin/indexing-logs",
+    isAccessible: true,
   }
 ];
 
