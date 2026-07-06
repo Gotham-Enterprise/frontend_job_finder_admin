@@ -317,7 +317,7 @@ const JobDetailsView: React.FC<JobDetailsViewProps> = ({ jobId }) => {
             <DollarSign className="w-4 h-4 text-gray-500" />
             <span>
               {formatCurrency(job.salaryRange)}
-              {job.salaryRange && job.salaryType ? (job.salaryType === 'hourly' ? ' /hr' : ' /yr') : ''}
+              {job.salaryRange && job.salaryType ? (job.salaryType === 'hourly' ? ' /hour' : ' /year') : ''}
             </span>
           </div>
           {job.department && (
