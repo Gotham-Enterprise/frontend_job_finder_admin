@@ -17,7 +17,7 @@ import BackToListButton from "@/components/ui/BackToListButton";
 import EmailVerifiedBadge from "@/components/ui/badge/EmailVerifiedBadge";
 import Avatar from "@/components/ui/avatar/Avatar";
 import { EditSuperviseeModal } from "../components/EditSuperviseeModal";
-import ResendVerificationModal from "../components/ResendVerificationModal";
+import ResendVerificationModal from "@/components/common/ResendVerificationModal";
 
 interface ViewDetailsProps {
   id: string;

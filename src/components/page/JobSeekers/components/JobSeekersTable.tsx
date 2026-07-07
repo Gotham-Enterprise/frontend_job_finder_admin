@@ -2,25 +2,18 @@ import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { formatDateTimeEST, formatDateTimeLocal } from "@/services/utils/dateUtils";
 import { Table, TableBody, TableCell, TableRow } from "../../../ui/table";
-import Badge from "../../../ui/badge/Badge";
+import StatusBadge from "../../../ui/badge/StatusBadge";
+import EmailVerifiedBadge from "../../../ui/badge/EmailVerifiedBadge";
 import Button from "../../../ui/button/Button";
 import TableHeading from "../../../tables/tableHeader";
-import {
-  EyeIcon,
-  TimeIcon,
-  FileIcon,
-  DownloadIcon,
-  PencilIcon,
-  PaperPlaneIcon,
-  IdCardIcon,
-  CheckCircleIcon,
-} from "@/icons";
+import { TimeIcon, FileIcon, DownloadIcon, PaperPlaneIcon, IdCardIcon, CheckCircleIcon } from "@/icons";
 import { JobSeekersTableProps } from "@/services/types/JobSeekersTypes";
 import Avatar from "../../../ui/avatar/Avatar";
 import { EditJobSeekerModal } from "./EditJobSeekerModal";
 import { ShareResumeModal } from "./ShareResumeModal";
 import { useToast } from "@/context/ToastContext";
-import PermissionWrapper from "@/components/common/PermissionWrapper";
+import JobSeekerRowActions from "./JobSeekerRowActions";
+import ResendVerificationModal from "@/components/common/ResendVerificationModal";
 import { useConfirmation } from "@/hooks/useConfirmation";
 import ConfirmationDialog from "@/components/ui/ConfirmationDialog";
 
@@ -550,6 +543,8 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
   const [loadingLicensesId, setLoadingLicensesId] = useState<string | null>(null);
   const [loadingCertificationsId, setLoadingCertificationsId] = useState<string | null>(null);
   const [resetPasswordLoadingId, setResetPasswordLoadingId] = useState<string | null>(null);
+  const [resendVerificationJobSeeker, setResendVerificationJobSeeker] = useState<any>(null);
+  const [isResendingVerification, setIsResendingVerification] = useState(false);
   const licensesButtonRefs = useRef<{ [key: string]: React.RefObject<HTMLButtonElement | null> }>({});
   const certificationsButtonRefs = useRef<{ [key: string]: React.RefObject<HTMLButtonElement | null> }>({});
   const { addToast } = useToast();
@@ -660,6 +655,52 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
       });
     } finally {
       setResetPasswordLoadingId(null);
+    }
+  };
+
+  const openResendVerificationModal = (jobSeeker: any) => {
+    if (!jobSeeker.userId) {
+      addToast({
+        variant: "error",
+        title: "Error",
+        message: "Job seeker does not have an associated user account",
+        duration: 5000,
+      });
+      return;
+    }
+
+    setResendVerificationJobSeeker(jobSeeker);
+  };
+
+  const closeResendVerificationModal = () => {
+    setResendVerificationJobSeeker(null);
+  };
+
+  const confirmResendVerification = async () => {
+    if (!resendVerificationJobSeeker) return;
+
+    setIsResendingVerification(true);
+    try {
+      const { jobSeekerApi } = await import("@/services/api/jobSeeker");
+      await jobSeekerApi.sendEmailVerificationReminder(resendVerificationJobSeeker.userId);
+
+      addToast({
+        variant: "success",
+        title: "Success",
+        message: `Email verification reminder has been sent to ${resendVerificationJobSeeker.email}`,
+        duration: 5000,
+      });
+    } catch (error: any) {
+      console.error("Resend verification error:", error);
+      addToast({
+        variant: "error",
+        title: "Error",
+        message: error.message || "Failed to send email verification reminder",
+        duration: 5000,
+      });
+    } finally {
+      setIsResendingVerification(false);
+      closeResendVerificationModal();
     }
   };
 
@@ -832,7 +873,7 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
         <TableBody>
           {isLoading ? (
             <TableRow>
-              <TableCell className="text-center py-8 px-6" colSpan={9}>
+              <TableCell className="text-center py-8 px-6" colSpan={tableColumns.length}>
                 <div className="flex items-center justify-center gap-3">
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-brand-500"></div>
                   <p className="text-gray-500 dark:text-gray-400">Loading...</p>
@@ -841,7 +882,7 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
             </TableRow>
           ) : !data?.data?.length ? (
             <TableRow>
-              <TableCell className="text-center py-12 px-6" colSpan={9}>
+              <TableCell className="text-center py-12 px-6" colSpan={tableColumns.length}>
                 <div className="flex flex-col items-center justify-center space-y-3">
                   <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
                     <FileIcon className="w-8 h-8 text-gray-400 dark:text-gray-500" />
@@ -1020,35 +1061,21 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
                     )}
                   </TableCell>
                   <TableCell className="py-4 px-6">
-                    <Badge variant={getStatusVariant(jobSeeker.status)}>{jobSeeker.status}</Badge>
+                    <StatusBadge tone={getStatusVariant(jobSeeker.status) === "solid" ? "dark" : "light"}>
+                      {jobSeeker.status}
+                    </StatusBadge>
+                  </TableCell>
+                  <TableCell className="py-4 px-6">
+                    <EmailVerifiedBadge verified={!!jobSeeker.emailVerified} />
                   </TableCell>
                   <TableCell className="py-4 px-6 text-right">
-                    <div className="flex items-center gap-4">
-                      <PermissionWrapper module="jobseekers" action="view">
-                        <button className="flex gap-2 text-brand-400" onClick={() => onViewJobSeeker(jobSeeker.id)}>
-                          <EyeIcon /> View
-                        </button>
-                      </PermissionWrapper>
-                      <PermissionWrapper module="jobseekers" action="edit">
-                        <button className="flex gap-2 text-brand-400" onClick={() => openEditModal(jobSeeker.id)}>
-                          <PencilIcon /> Edit
-                        </button>
-                      </PermissionWrapper>
-                      <button
-                        className="flex gap-2 text-brand-400 disabled:opacity-50 disabled:cursor-not-allowed text-nowrap"
-                        onClick={() => handleResetPassword(jobSeeker)}
-                        disabled={resetPasswordLoadingId === jobSeeker.id}
-                      >
-                        {resetPasswordLoadingId === jobSeeker.id ? (
-                          <>
-                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-brand-400"></div>
-                            Sending...
-                          </>
-                        ) : (
-                          <>Reset password</>
-                        )}
-                      </button>
-                    </div>
+                    <JobSeekerRowActions
+                      onView={() => onViewJobSeeker(jobSeeker.id)}
+                      onEdit={() => openEditModal(jobSeeker.id)}
+                      onResetPassword={() => handleResetPassword(jobSeeker)}
+                      onResendVerification={() => openResendVerificationModal(jobSeeker)}
+                      showResendVerification={jobSeeker.emailVerified === false}
+                    />
                   </TableCell>
                 </TableRow>
               );
@@ -1111,6 +1138,15 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
         confirmText={confirmation.config?.confirmText}
         cancelText={confirmation.config?.cancelText}
         isLoading={resetPasswordLoadingId !== null}
+      />
+
+      {/* Resend Verification Email Modal */}
+      <ResendVerificationModal
+        isOpen={resendVerificationJobSeeker !== null}
+        fullName={resendVerificationJobSeeker?.name || ""}
+        onConfirm={confirmResendVerification}
+        onCancel={closeResendVerificationModal}
+        isLoading={isResendingVerification}
       />
     </div>
   );
