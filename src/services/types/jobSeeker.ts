@@ -24,8 +24,11 @@ export interface JobSeekerUpdateData {
 
 export interface JobSeeker {
   id: string;
+  userId?: string;
   name: string;
   email?: string;
+  emailVerified?: boolean;
+  emailVerifiedAt?: string | null;
   specialty: string[];
   occupation: string;
   address: string;

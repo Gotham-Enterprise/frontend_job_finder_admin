@@ -85,6 +85,10 @@ export const jobSeekerApi = {
     return apiPost<any>("/api/auth/forgot-password", { email });
   },
 
+  async sendEmailVerificationReminder(userId: string): Promise<any> {
+    return apiPost<any>(`/api/admin/users/${userId}/send-email-verification-reminder`);
+  },
+
   async exportJobSeekers(filters: JobSeekerFilters = {}): Promise<void> {
     const queryParams = new URLSearchParams();
 
