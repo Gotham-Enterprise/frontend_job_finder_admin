@@ -29,16 +29,8 @@ function Badge({ children, color }: { children: React.ReactNode; color: string }
 
 const FRONTEND_URL = process.env.NEXT_PUBLIC_FRONTEND_URL || "https://gothamenterprisesltd.com";
 
-function slugify(s: string): string {
-  return s.toLowerCase().replace(/[^\w\s]/gi, "").replace(/\s+/g, "-");
-}
-
 function jobFrontendUrl(job: HealthDetailJob): string {
-  const occupationSlug = job.occupation?.name
-    ? `${slugify(job.occupation.name)}-jobs`
-    : "all-jobs";
-  const titleSlug = slugify(job.title || "");
-  return `${FRONTEND_URL}/find-jobs/${occupationSlug}/${job.id}/${titleSlug}`;
+  return `${FRONTEND_URL}/job/all-jobs/${job.id}`;
 }
 
 function fmtDate(d: string | null | undefined): string {

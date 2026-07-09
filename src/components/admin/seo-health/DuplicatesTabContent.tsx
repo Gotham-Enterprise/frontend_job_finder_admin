@@ -157,8 +157,7 @@ export default function DuplicatesTabContent() {
                     <div className="flex flex-wrap gap-2">
                       {group.jobIds.map((id, index) => {
                         const FRONTEND_URL = process.env.NEXT_PUBLIC_FRONTEND_URL || "https://gothamenterprisesltd.com";
-                        const titleSlug = (group.title || "").toLowerCase().replace(/[^\w\s]/gi, "").replace(/\s+/g, "-");
-                        const publicUrl = `${FRONTEND_URL}/find-jobs/all-jobs/${id}/${titleSlug}`;
+                        const publicUrl = `${FRONTEND_URL}/job/all-jobs/${id}`;
                         return (
                           <a
                             key={id}

@@ -9,16 +9,8 @@ import { formatDate } from "@/services/utils/dateUtils";
 const FRONTEND_URL = process.env.NEXT_PUBLIC_FRONTEND_URL || "https://gothamenterprisesltd.com";
 const LIMIT = 20;
 
-function slugify(s: string): string {
-  return s.toLowerCase().replace(/[^\w\s]/gi, "").replace(/\s+/g, "-");
-}
-
 function jobFrontendUrl(job: BatchApiJob): string {
-  const occupationSlug = job.occupation?.name
-    ? `${slugify(job.occupation.name)}-jobs`
-    : "all-jobs";
-  const titleSlug = slugify(job.title || "");
-  return `${FRONTEND_URL}/find-jobs/${occupationSlug}/${job.id}/${titleSlug}`;
+  return `${FRONTEND_URL}/job/all-jobs/${job.id}`;
 }
 
 const BatchApiJobs: React.FC<{ className?: string }> = ({ className = "" }) => {
