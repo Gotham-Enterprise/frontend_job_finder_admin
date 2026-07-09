@@ -26,7 +26,6 @@ import {
 } from "../icons/index";
 import { BriefcaseIcon, CareerLadderIcon, TicketIcon, BlogIcon, CouponIcon } from "../components/ui/icons/index";
 
-
 type NavItem = {
   name: string;
   icon: React.ReactNode;
@@ -41,16 +40,16 @@ type NavItem = {
     badgeType?: "supervisors";
   }[];
   permissionKey?:
-  | "jobSeekers"
-  | "employers"
-  | "jobs"
-  | "applications"
-  | "careers"
-  | "tickets"
-  | "coupons"
-  | "blog"
-  // | "forum"
-  | "unlockRequest";
+    | "jobSeekers"
+    | "employers"
+    | "jobs"
+    | "applications"
+    | "careers"
+    | "tickets"
+    | "coupons"
+    | "blog"
+    // | "forum"
+    | "unlockRequest";
   isAccessible?: boolean;
 };
 
@@ -88,7 +87,7 @@ const navItems: NavItem[] = [
     isAccessible: true,
     subItems: [
       { name: "Partners", path: "/admin/affiliates/partners" },
-      { name: "Links", path: "/admin/affiliates/links" }
+      { name: "Links", path: "/admin/affiliates/links" },
     ],
   },
   {
@@ -169,6 +168,14 @@ const navItems: NavItem[] = [
     permissionKey: "careers",
     //subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
   },
+
+  {
+    icon: <MailIcon />,
+    name: "Email Campaigns",
+    path: "/admin/email-campaign-settings",
+    isAccessible: true,
+  },
+
   {
     icon: <TicketIcon />,
     name: "Tickets",
@@ -201,7 +208,7 @@ const navItems: NavItem[] = [
     name: "Indexing Logs",
     path: "/admin/indexing-logs",
     isAccessible: true,
-  }
+  },
 ];
 
 const othersItems: NavItem[] = [
@@ -285,7 +292,7 @@ const AppSidebar: React.FC = () => {
 
       return () => {
         window.removeEventListener("permissionsLoaded" as any, handlePermissionsLoaded);
-        window.removeEventListener("authUpdate", () => { });
+        window.removeEventListener("authUpdate", () => {});
       };
     }
   }, []);
@@ -349,26 +356,27 @@ const AppSidebar: React.FC = () => {
             {nav.subItems ? (
               <button
                 onClick={() => submenuToggle(index, menuType)}
-                className={`menu-item group relative ${openSubmenu?.type === menuType && openSubmenu?.index === index
-                  ? "menu-item-active"
-                  : "menu-item-inactive"
-                  } cursor-pointer ${!isExpanded && !isHovered ? "lg:justify-center" : "lg:justify-start"}`}
+                className={`menu-item group relative ${
+                  openSubmenu?.type === menuType && openSubmenu?.index === index
+                    ? "menu-item-active"
+                    : "menu-item-inactive"
+                } cursor-pointer ${!isExpanded && !isHovered ? "lg:justify-center" : "lg:justify-start"}`}
               >
                 <span
-                  className={`${openSubmenu?.type === menuType && openSubmenu?.index === index
-                    ? "menu-item-icon-active"
-                    : "menu-item-icon-inactive"
-                    }`}
+                  className={`${
+                    openSubmenu?.type === menuType && openSubmenu?.index === index
+                      ? "menu-item-icon-active"
+                      : "menu-item-icon-inactive"
+                  }`}
                 >
                   {nav.icon}
                 </span>
-                {(isExpanded || isHovered || isMobileOpen) && (
-                  <span className="menu-item-text">{nav.name}</span>
-                )}
+                {(isExpanded || isHovered || isMobileOpen) && <span className="menu-item-text">{nav.name}</span>}
                 {(isExpanded || isHovered || isMobileOpen) && (
                   <ChevronDownIcon
-                    className={`ml-auto w-5 h-5 transition-transform duration-200 ${openSubmenu?.type === menuType && openSubmenu?.index === index ? "rotate-180 text-brand-500" : ""
-                      }`}
+                    className={`ml-auto w-5 h-5 transition-transform duration-200 ${
+                      openSubmenu?.type === menuType && openSubmenu?.index === index ? "rotate-180 text-brand-500" : ""
+                    }`}
                   />
                 )}
               </button>
@@ -376,24 +384,28 @@ const AppSidebar: React.FC = () => {
               nav.path && (
                 <Link
                   href={nav.path}
-                  className={`menu-item group relative ${isActive(nav.path) ? "menu-item-active" : "menu-item-inactive"
-                    } ${nav.permissionKey === "unlockRequest" && pendingCount > 0
+                  className={`menu-item group relative ${
+                    isActive(nav.path) ? "menu-item-active" : "menu-item-inactive"
+                  } ${
+                    nav.permissionKey === "unlockRequest" && pendingCount > 0
                       ? "!bg-[#006D36]/10 dark:!bg-[#006D36]/20 border-l-4 !border-[#006D36]"
                       : ""
-                    }`}
+                  }`}
                 >
                   <span
-                    className={`${isActive(nav.path) ? "menu-item-icon-active" : "menu-item-icon-inactive"} ${nav.permissionKey === "unlockRequest" && pendingCount > 0 ? "!text-[#006D36]" : ""
-                      }`}
+                    className={`${isActive(nav.path) ? "menu-item-icon-active" : "menu-item-icon-inactive"} ${
+                      nav.permissionKey === "unlockRequest" && pendingCount > 0 ? "!text-[#006D36]" : ""
+                    }`}
                   >
                     {nav.icon}
                   </span>
                   {(isExpanded || isHovered || isMobileOpen) && (
                     <span
-                      className={`menu-item-text ${nav.permissionKey === "unlockRequest" && pendingCount > 0
-                        ? "!text-[#006D36] !font-semibold"
-                        : ""
-                        }`}
+                      className={`menu-item-text ${
+                        nav.permissionKey === "unlockRequest" && pendingCount > 0
+                          ? "!text-[#006D36] !font-semibold"
+                          : ""
+                      }`}
                     >
                       {nav.name}
                     </span>
@@ -463,11 +475,13 @@ const AppSidebar: React.FC = () => {
                       <li key={subItem.name}>
                         <Link
                           href={subItem.path}
-                          className={`menu-dropdown-item ${isActive(subItem.path) ? "menu-dropdown-item-active" : "menu-dropdown-item-inactive"
-                            } ${subItem.badgeType === "supervisors" && pendingSupervisorCount > 0
+                          className={`menu-dropdown-item ${
+                            isActive(subItem.path) ? "menu-dropdown-item-active" : "menu-dropdown-item-inactive"
+                          } ${
+                            subItem.badgeType === "supervisors" && pendingSupervisorCount > 0
                               ? "!text-[#006D36] !font-semibold"
                               : ""
-                            }`}
+                          }`}
                         >
                           {subItem.name}
                           <span className="flex items-center gap-1 ml-auto">
@@ -483,16 +497,18 @@ const AppSidebar: React.FC = () => {
                             )}
                             {subItem.new && (
                               <span
-                                className={`ml-auto ${isActive(subItem.path) ? "menu-dropdown-badge-active" : "menu-dropdown-badge-inactive"
-                                  } menu-dropdown-badge `}
+                                className={`ml-auto ${
+                                  isActive(subItem.path) ? "menu-dropdown-badge-active" : "menu-dropdown-badge-inactive"
+                                } menu-dropdown-badge `}
                               >
                                 new
                               </span>
                             )}
                             {subItem.pro && (
                               <span
-                                className={`ml-auto ${isActive(subItem.path) ? "menu-dropdown-badge-active" : "menu-dropdown-badge-inactive"
-                                  } menu-dropdown-badge `}
+                                className={`ml-auto ${
+                                  isActive(subItem.path) ? "menu-dropdown-badge-active" : "menu-dropdown-badge-inactive"
+                                } menu-dropdown-badge `}
                               >
                                 pro
                               </span>
@@ -650,8 +666,9 @@ const AppSidebar: React.FC = () => {
           <div className="flex flex-col gap-4">
             <div>
               <h2
-                className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${!isExpanded && !isHovered ? "lg:justify-center" : "justify-start"
-                  }`}
+                className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${
+                  !isExpanded && !isHovered ? "lg:justify-center" : "justify-start"
+                }`}
               >
                 {isExpanded || isHovered || isMobileOpen ? "Menu" : <HorizontaLDots />}
               </h2>
