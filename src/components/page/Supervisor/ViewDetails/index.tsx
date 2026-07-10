@@ -298,6 +298,7 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
             src={s.profilePhotoUrl || undefined}
             name={displayName || "?"}
             size="xlarge"
+            enablePreview
           />
           <div className="flex-1 min-w-0">
             <div className="flex flex-wrap items-center gap-3 mb-1">

@@ -8,6 +8,7 @@ import { jobApplicationApi } from "@/services/api/jobApplication";
 import { openFileInNewTab } from "@/services/utils/fileUtils";
 import Button from "../button/Button";
 import FullScreenSpinner from "../FullScreenSpinner";
+import ImagePreviewModal from "../ImagePreviewModal";
 import Link from "next/link";
 
 export type { ContactInfo, Document, ProfileData, ProfileCardProps } from "@/services/types/ProfileCard";
@@ -25,6 +26,7 @@ export default function ProfileCard({
   const [showAllResumes, setShowAllResumes] = useState(false);
   const [showAllDocuments, setShowAllDocuments] = useState(false);
   const [viewingResumeObjectKey, setViewingResumeObjectKey] = useState<string | null>(null);
+  const [isPhotoPreviewOpen, setIsPhotoPreviewOpen] = useState(false);
 
   const avatarSizes: Record<"sm" | "md" | "lg", { container: string; text: string }> = {
     sm: { container: "w-16 h-16", text: "text-lg" },
@@ -112,13 +114,21 @@ export default function ProfileCard({
       <div className="flex flex-col items-center">
         <div className={`relative ${variant === "compact" ? "mb-4" : "mb-6"} inline-block`}>
           {profileData.profilePicture?.url ? (
-            <Image
-              width={avatarSize === "lg" ? 120 : avatarSize === "md" ? 96 : 64}
-              height={avatarSize === "lg" ? 120 : avatarSize === "md" ? 96 : 64}
-              src={profileData.profilePicture.url}
-              alt={profileData.name}
-              className={`${avatarSizes[avatarSize].container} rounded-full object-cover border-4 border-blue-100 dark:border-blue-900 shadow-lg`}
-            />
+            <button
+              type="button"
+              onClick={() => setIsPhotoPreviewOpen(true)}
+              className="block cursor-pointer rounded-full transition-opacity hover:opacity-90"
+              aria-label="View profile photo"
+              title="Click to view photo"
+            >
+              <Image
+                width={avatarSize === "lg" ? 120 : avatarSize === "md" ? 96 : 64}
+                height={avatarSize === "lg" ? 120 : avatarSize === "md" ? 96 : 64}
+                src={profileData.profilePicture.url}
+                alt={profileData.name}
+                className={`${avatarSizes[avatarSize].container} rounded-full object-cover border-4 border-blue-100 dark:border-blue-900 shadow-lg`}
+              />
+            </button>
           ) : (
             <div
               className={`${avatarSizes[avatarSize].container} bg-gradient-to-br bg-primary rounded-full flex items-center justify-center border-4 border-blue-100 dark:border-blue-900 shadow-lg`}
@@ -322,6 +332,14 @@ export default function ProfileCard({
         )}
       </div>
       <FullScreenSpinner isVisible={!!viewingResumeObjectKey} message="Opening Resume..." />
+      {profileData.profilePicture?.url && (
+        <ImagePreviewModal
+          isOpen={isPhotoPreviewOpen}
+          onClose={() => setIsPhotoPreviewOpen(false)}
+          src={profileData.profilePicture.url}
+          alt={profileData.name}
+        />
+      )}
     </div>
   );
 }

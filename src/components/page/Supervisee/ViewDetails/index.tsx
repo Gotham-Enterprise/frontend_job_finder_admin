@@ -149,7 +149,7 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
         </div>
 
         <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 mb-6 flex flex-col sm:flex-row gap-5 items-start">
-          <Avatar src={s.profilePhotoUrl || undefined} name={displayName || "?"} size="xlarge" />
+          <Avatar src={s.profilePhotoUrl || undefined} name={displayName || "?"} size="xlarge" enablePreview />
           <div className="flex-1 min-w-0">
             <div className="flex flex-wrap items-center gap-3 mb-1">
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white">{displayName || "—"}</h2>

@@ -2,9 +2,10 @@
 
 import Image from "next/image";
 import { EmployerDetails } from "@/services/types/employer";
-import { ReactNode } from "react";
+import { ReactNode, useState } from "react";
 import { renderStars } from "@/services/utils/starUtils";
 import Button from "@/components/ui/button/Button";
+import ImagePreviewModal from "@/components/ui/ImagePreviewModal";
 import NotFoundState from "@/components/common/NotFoundState";
 
 interface CompanyProfileProps {
@@ -19,15 +20,36 @@ interface CompanyProfileProps {
 }
 
 export default function CompanyProfile({ employer, contactInfo, onSeeReviews, overview }: CompanyProfileProps) {
+    const [isPhotoPreviewOpen, setIsPhotoPreviewOpen] = useState(false);
+    const photoUrl = employer.profilePicture?.url || employer.avatarUrl;
+
     return (
         <div className="mb-6 rounded-xl bg-white p-6 shadow-lg border border-gray-100 dark:bg-gray-800 dark:border-gray-700 sm:p-8">
-            <div className="flex flex-col items-center">                
+            <div className="flex flex-col items-center">
                 <div className="relative mb-6 inline-block">
-                    <div className="w-30 h-30 bg-primary rounded-full flex items-center justify-center border-4 border-green-100 dark:border-green-900 shadow-lg">
-                        <span className="text-2xl font-bold text-white">
-                            {employer.companyName.split(' ').map(n => n.charAt(0)).join('').substring(0, 2)}
-                        </span>
-                    </div>
+                    {photoUrl ? (
+                        <button
+                            type="button"
+                            onClick={() => setIsPhotoPreviewOpen(true)}
+                            className="block cursor-pointer rounded-full transition-opacity hover:opacity-90"
+                            aria-label="View company photo"
+                            title="Click to view photo"
+                        >
+                            <Image
+                                width={120}
+                                height={120}
+                                src={photoUrl}
+                                alt={employer.companyName}
+                                className="w-30 h-30 rounded-full object-cover border-4 border-green-100 dark:border-green-900 shadow-lg"
+                            />
+                        </button>
+                    ) : (
+                        <div className="w-30 h-30 bg-primary rounded-full flex items-center justify-center border-4 border-green-100 dark:border-green-900 shadow-lg">
+                            <span className="text-2xl font-bold text-white">
+                                {employer.companyName.split(' ').map(n => n.charAt(0)).join('').substring(0, 2)}
+                            </span>
+                        </div>
+                    )}
                     <div className={`absolute bottom-1 right-1 w-6 h-6 rounded-full border-3 border-white dark:border-gray-800 shadow-sm ${
                         employer.status === 'active' ? 'bg-green-500' : 
                         employer.status === 'inactive' ? 'bg-gray-400' : 'bg-red-500'
@@ -84,6 +106,14 @@ export default function CompanyProfile({ employer, contactInfo, onSeeReviews, ov
                     )}
                 </div>
             </div>
+            {photoUrl && (
+                <ImagePreviewModal
+                    isOpen={isPhotoPreviewOpen}
+                    onClose={() => setIsPhotoPreviewOpen(false)}
+                    src={photoUrl}
+                    alt={employer.companyName}
+                />
+            )}
         </div>
     );
 }
