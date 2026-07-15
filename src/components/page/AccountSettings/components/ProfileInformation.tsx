@@ -1,6 +1,7 @@
 'use client';
 
 import Button from '@/components/ui/button/Button';
+import ImagePreviewModal from '@/components/ui/ImagePreviewModal';
 import { User } from '@/services/types/auth';
 import { PencilIcon } from '@/icons';
 import { FC, useState, useEffect } from 'react';
@@ -19,6 +20,7 @@ const ProfileInformation: FC<ProfileInformationProps> = ({
     displayName
 }) => {
     const [isClient, setIsClient] = useState(false);
+    const [previewOpen, setPreviewOpen] = useState(false);
 
     useEffect(() => {
         setIsClient(true);
@@ -64,11 +66,19 @@ const ProfileInformation: FC<ProfileInformationProps> = ({
             <div className="space-y-4">                <div className="flex items-center justify-center mb-4">
                     <div className="w-20 h-20 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center overflow-hidden">
                         {user?.adminProfile?.avatarUrl ? (
-                            <img 
-                                src={user.adminProfile.avatarUrl} 
-                                alt="Profile avatar"
-                                className="w-full h-full object-cover rounded-full"
-                            />
+                            <button
+                                type="button"
+                                onClick={() => setPreviewOpen(true)}
+                                className="block w-full h-full cursor-pointer rounded-full transition-opacity hover:opacity-90"
+                                aria-label="View profile photo"
+                                title="Click to view photo"
+                            >
+                                <img
+                                    src={user.adminProfile.avatarUrl}
+                                    alt="Profile avatar"
+                                    className="w-full h-full object-cover rounded-full"
+                                />
+                            </button>
                         ) : (
                             <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                                 {isClient ? (userInitials && userInitials.trim() !== '' ? userInitials : '?') : '?'}
@@ -86,6 +96,15 @@ const ProfileInformation: FC<ProfileInformationProps> = ({
                     ))}
                 </div>
             </div>
+
+            {user?.adminProfile?.avatarUrl && (
+                <ImagePreviewModal
+                    isOpen={previewOpen}
+                    onClose={() => setPreviewOpen(false)}
+                    src={user.adminProfile.avatarUrl}
+                    alt={displayName && displayName.trim() !== '' ? displayName : 'Profile photo'}
+                />
+            )}
         </div>
     );
 };
