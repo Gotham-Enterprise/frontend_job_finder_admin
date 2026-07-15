@@ -14,6 +14,7 @@ import {
   ApproveSupervisorModal,
   EditSupervisorModal,
   ResendVerificationModal,
+  ApproveEmailVerificationModal,
   HideProfileModal,
 } from "./components";
 
@@ -75,6 +76,12 @@ const Supervisors: React.FC<SupervisorsProps> = ({ className = "" }) => {
     closeResendModal,
     confirmResend,
 
+    approveEmailModal,
+    isApprovingEmail,
+    openApproveEmailModal,
+    closeApproveEmailModal,
+    confirmApproveEmail,
+
     hideProfileModal,
     isHidingProfile,
     openHideProfileModal,
@@ -132,6 +139,7 @@ const Supervisors: React.FC<SupervisorsProps> = ({ className = "" }) => {
           onApproveSupervisor={openApproveModal}
           onRejectSupervisor={openRejectModal}
           onResendVerification={openResendModal}
+          onApproveEmailVerification={openApproveEmailModal}
           onToggleHideProfile={openHideProfileModal}
           onRefresh={refetch}
         />
@@ -179,6 +187,14 @@ const Supervisors: React.FC<SupervisorsProps> = ({ className = "" }) => {
         onConfirm={confirmResend}
         onCancel={closeResendModal}
         isLoading={isResending}
+      />
+
+      <ApproveEmailVerificationModal
+        isOpen={approveEmailModal.isOpen}
+        fullName={approveEmailModal.fullName}
+        onConfirm={confirmApproveEmail}
+        onCancel={closeApproveEmailModal}
+        isLoading={isApprovingEmail}
       />
 
       <HideProfileModal

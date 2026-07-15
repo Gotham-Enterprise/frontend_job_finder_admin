@@ -38,6 +38,7 @@ export interface SupervisorTableProps {
   onApproveSupervisor: (supervisorId: string, fullName: string) => void;
   onRejectSupervisor: (supervisorId: string, fullName: string) => void;
   onResendVerification: (supervisorId: string, fullName: string) => void;
+  onApproveEmailVerification: (supervisorId: string, fullName: string) => void;
   onToggleHideProfile: (supervisorId: string, fullName: string, currentlyHidden: boolean) => void;
   onRefresh?: () => void;
 }

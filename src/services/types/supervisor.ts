@@ -196,6 +196,11 @@ export interface SupervisorResendVerificationResponse {
   message: string;
 }
 
+export interface SupervisorApproveEmailVerificationResponse {
+  success: boolean;
+  message: string;
+}
+
 export interface SupervisorUpdatePayload {
   fullName?: string;
   contactNumber?: string;

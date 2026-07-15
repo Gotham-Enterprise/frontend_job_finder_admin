@@ -21,6 +21,7 @@ export interface SuperviseeTableProps {
   onViewSupervisee: (superviseeId: string) => void;
   onEditSupervisee: (superviseeId: string, fullName: string) => void;
   onResendVerification: (superviseeId: string, fullName: string) => void;
+  onApproveEmailVerification: (superviseeId: string, fullName: string) => void;
   onToggleHideProfile: (superviseeId: string, fullName: string, currentlyHidden: boolean) => void;
 }
 

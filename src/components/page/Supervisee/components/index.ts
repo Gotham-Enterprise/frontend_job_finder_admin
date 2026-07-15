@@ -4,4 +4,5 @@ export { default as SuperviseeRowActions } from "./SuperviseeRowActions";
 export { default as SuperviseeTablePagination } from "./SuperviseeTablePagination";
 export { EditSuperviseeModal } from "./EditSuperviseeModal";
 export { default as ResendVerificationModal } from "@/components/common/ResendVerificationModal";
+export { default as ApproveEmailVerificationModal } from "@/components/common/ApproveEmailVerificationModal";
 export { default as HideProfileModal } from "./HideProfileModal";

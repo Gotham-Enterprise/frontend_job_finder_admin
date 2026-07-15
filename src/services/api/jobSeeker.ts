@@ -6,7 +6,7 @@ import {
   ShareResumeRequest,
   ShareResumeResponse,
 } from "../types/jobSeeker";
-import { apiGet, apiPut, apiPost } from "./apiUtils";
+import { apiGet, apiPut, apiPost, apiPatch } from "./apiUtils";
 
 export const jobSeekerApi = {
   async getJobSeekers(filters: JobSeekerFilters = {}): Promise<JobSeekersResponse> {
@@ -87,6 +87,15 @@ export const jobSeekerApi = {
 
   async sendEmailVerificationReminder(userId: string): Promise<any> {
     return apiPost<any>(`/api/admin/users/${userId}/send-email-verification-reminder`);
+  },
+
+  /**
+   * Approve a job seeker's pending email verification on their behalf,
+   * bypassing the standard verification link.
+   * Backend returns 400 if the user's email is already verified.
+   */
+  async approveEmailVerification(userId: string): Promise<any> {
+    return apiPatch<any>(`/api/admin/users/${userId}/approve-email-verification`);
   },
 
   async exportJobSeekers(filters: JobSeekerFilters = {}): Promise<void> {
