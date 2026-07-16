@@ -107,6 +107,7 @@ const EmployerTable: React.FC<EmployerTableProps> = ({
                       name={employer.companyName}
                       size="medium"
                       className="flex-shrink-0"
+                      enablePreview
                     />
                     <div className="min-w-0 flex-1 max-w-48">
                       <p className="font-medium text-gray-900 dark:text-white truncate" title={employer.companyName}>

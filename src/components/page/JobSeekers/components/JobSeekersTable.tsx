@@ -965,6 +965,7 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
                         name={jobSeeker.name}
                         size="medium"
                         className="flex-shrink-0"
+                        enablePreview
                       />
                       <div>
                         <p className="font-medium text-gray-900 dark:text-white">{jobSeeker.name}</p>
