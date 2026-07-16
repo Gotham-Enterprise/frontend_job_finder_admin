@@ -3,6 +3,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import {
   useSupervisees,
   useResendSuperviseeVerification,
+  useApproveSuperviseeEmailVerification,
   useHideSuperviseeProfile,
 } from "@/services/hooks/useSupervisees";
 import { SuperviseeFilters, SuperviseeSortBy } from "@/services/types/supervisee";
@@ -83,6 +84,12 @@ export const useSuperviseeLogic = () => {
     fullName: string;
   }>({ isOpen: false, superviseeId: "", fullName: "" });
 
+  const [approveEmailModal, setApproveEmailModal] = useState<{
+    isOpen: boolean;
+    superviseeId: string;
+    fullName: string;
+  }>({ isOpen: false, superviseeId: "", fullName: "" });
+
   const [hideProfileModal, setHideProfileModal] = useState<{
     isOpen: boolean;
     superviseeId: string;
@@ -91,6 +98,8 @@ export const useSuperviseeLogic = () => {
   }>({ isOpen: false, superviseeId: "", fullName: "", currentlyHidden: false });
 
   const { mutate: resendMutate, isPending: isResending } = useResendSuperviseeVerification();
+  const { mutate: approveEmailMutate, isPending: isApprovingEmail } =
+    useApproveSuperviseeEmailVerification();
   const { mutate: hideProfileMutate, isPending: isHidingProfile } = useHideSuperviseeProfile();
 
   useEffect(() => {
@@ -236,6 +245,19 @@ export const useSuperviseeLogic = () => {
     resendMutate(resendModal.superviseeId, { onSettled: closeResendModal });
   }, [resendModal.superviseeId, resendMutate, closeResendModal]);
 
+  const openApproveEmailModal = useCallback((superviseeId: string, fullName: string) => {
+    setApproveEmailModal({ isOpen: true, superviseeId, fullName });
+  }, []);
+
+  const closeApproveEmailModal = useCallback(() => {
+    setApproveEmailModal({ isOpen: false, superviseeId: "", fullName: "" });
+  }, []);
+
+  const confirmApproveEmail = useCallback(() => {
+    if (!approveEmailModal.superviseeId) return;
+    approveEmailMutate(approveEmailModal.superviseeId, { onSettled: closeApproveEmailModal });
+  }, [approveEmailModal.superviseeId, approveEmailMutate, closeApproveEmailModal]);
+
   const openHideProfileModal = useCallback(
     (superviseeId: string, fullName: string, currentlyHidden: boolean) => {
       setHideProfileModal({ isOpen: true, superviseeId, fullName, currentlyHidden });
@@ -319,6 +341,12 @@ export const useSuperviseeLogic = () => {
     openResendModal,
     closeResendModal,
     confirmResend,
+
+    approveEmailModal,
+    isApprovingEmail,
+    openApproveEmailModal,
+    closeApproveEmailModal,
+    confirmApproveEmail,
 
     hideProfileModal,
     isHidingProfile,
