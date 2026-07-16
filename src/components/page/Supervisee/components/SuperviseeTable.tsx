@@ -72,6 +72,7 @@ const SuperviseeTable: React.FC<SuperviseeTableProps> = ({
                       src={supervisee.profilePhotoUrl || undefined}
                       name={supervisee.fullName || "?"}
                       size="small"
+                      enablePreview
                     />
                     <div className="min-w-0">
                       <p className="text-sm font-medium text-gray-900 dark:text-white truncate max-w-[160px]">
