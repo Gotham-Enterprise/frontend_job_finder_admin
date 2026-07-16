@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import Badge from "@/components/ui/badge/Badge";
+import EmailVerifiedBadge from "@/components/ui/badge/EmailVerifiedBadge";
 import NotFoundState from "@/components/common/NotFoundState";
 import Pagination from "@/components/tables/Pagination";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
@@ -40,6 +41,8 @@ export default function CompanyUsers({ users }: CompanyUsersProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [resetPasswordLoadingId, setResetPasswordLoadingId] = useState<string | null>(null);
   const [toggleLoadingId, setToggleLoadingId] = useState<string | null>(null);
+  const [resendVerificationLoadingId, setResendVerificationLoadingId] = useState<string | null>(null);
+  const [approveVerificationLoadingId, setApproveVerificationLoadingId] = useState<string | null>(null);
   const [reasonModalOpen, setReasonModalOpen] = useState(false);
   const [pendingUserAction, setPendingUserAction] = useState<{ user: CompanyUser; isActive: boolean } | null>(null);
   const { addToast } = useToast();
@@ -101,6 +104,105 @@ export default function CompanyUsers({ users }: CompanyUsersProps) {
       });
     } finally {
       setResetPasswordLoadingId(null);
+    }
+  };
+
+  const handleResendVerification = async (user: CompanyUser) => {
+    if (!user.userId) {
+      addToast({
+        variant: "error",
+        title: "Error",
+        message: "User does not have an associated user account",
+        duration: 5000,
+      });
+      return;
+    }
+
+    const userName = `${user.firstName} ${user.lastName}`.trim() || user.email;
+
+    const confirmed = await confirmation.confirm({
+      title: "Resend Verification Email",
+      message: `Resend the email verification link to ${userName} (${user.email})? They'll receive a new email prompting them to confirm their address.`,
+      confirmText: "Yes, Resend Email",
+      cancelText: "Cancel",
+    });
+
+    if (!confirmed) {
+      return;
+    }
+
+    setResendVerificationLoadingId(user.id);
+    try {
+      const { jobSeekerApi } = await import("@/services/api/jobSeeker");
+      await jobSeekerApi.sendEmailVerificationReminder(user.userId);
+
+      addToast({
+        variant: "success",
+        title: "Success",
+        message: `Email verification reminder has been sent to ${user.email}`,
+        duration: 5000,
+      });
+    } catch (error: any) {
+      console.error("Resend verification error:", error);
+      addToast({
+        variant: "error",
+        title: "Error",
+        message: error.message || "Failed to send email verification reminder",
+        duration: 5000,
+      });
+    } finally {
+      setResendVerificationLoadingId(null);
+    }
+  };
+
+  const handleApproveVerification = async (user: CompanyUser) => {
+    if (!user.userId) {
+      addToast({
+        variant: "error",
+        title: "Error",
+        message: "User does not have an associated user account",
+        duration: 5000,
+      });
+      return;
+    }
+
+    const userName = `${user.firstName} ${user.lastName}`.trim() || user.email;
+
+    const confirmed = await confirmation.confirm({
+      title: "Approve Email Verification",
+      message: `Mark ${userName}'s email (${user.email}) as verified? This bypasses the standard verification email and immediately verifies their account on their behalf.`,
+      confirmText: "Yes, Approve Verification",
+      cancelText: "Cancel",
+    });
+
+    if (!confirmed) {
+      return;
+    }
+
+    setApproveVerificationLoadingId(user.id);
+    try {
+      const { jobSeekerApi } = await import("@/services/api/jobSeeker");
+      await jobSeekerApi.approveEmailVerification(user.userId);
+
+      addToast({
+        variant: "success",
+        title: "Success",
+        message: `Email verification has been approved for ${user.email}`,
+        duration: 5000,
+      });
+
+      // Refresh the page to get updated verification status
+      window.location.reload();
+    } catch (error: any) {
+      console.error("Approve email verification error:", error);
+      addToast({
+        variant: "error",
+        title: "Error",
+        message: error.message || "Failed to approve email verification",
+        duration: 5000,
+      });
+    } finally {
+      setApproveVerificationLoadingId(null);
     }
   };
 
@@ -178,10 +280,17 @@ export default function CompanyUsers({ users }: CompanyUsersProps) {
       { key: "email", label: "Email" },
       { key: "role", label: "Role" },
       { key: "status", label: "Status" },
+      { key: "emailVerified", label: "Email Verified" },
       { key: "actions", label: "", className: "text-right" },
     ],
     []
   );
+
+  const isRowBusy = (userId: string) =>
+    resetPasswordLoadingId === userId ||
+    toggleLoadingId === userId ||
+    resendVerificationLoadingId === userId ||
+    approveVerificationLoadingId === userId;
 
   return (
     <div className="rounded-xl bg-white shadow-lg border border-gray-100 dark:bg-gray-800 dark:border-gray-700">
@@ -218,12 +327,49 @@ export default function CompanyUsers({ users }: CompanyUsersProps) {
                     <TableCell className="py-4 px-6">
                       <Badge color={getStatusColor(user.status)}>{user.status}</Badge>
                     </TableCell>
+                    <TableCell className="py-4 px-6">
+                      <EmailVerifiedBadge verified={!!user.emailVerified} />
+                    </TableCell>
                     <TableCell className="py-4 px-6 text-right">
                       <div className="flex items-center justify-end gap-4">
+                        {!user.emailVerified && (
+                          <>
+                            <button
+                              className="text-brand-400 text-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
+                              onClick={() => handleResendVerification(user)}
+                              disabled={isRowBusy(user.id)}
+                            >
+                              {resendVerificationLoadingId === user.id ? (
+                                <span className="flex items-center gap-2">
+                                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-brand-400"></div>
+                                  Sending...
+                                </span>
+                              ) : (
+                                <>Resend verification</>
+                              )}
+                            </button>
+                            |
+                            <button
+                              className="text-brand-400 text-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
+                              onClick={() => handleApproveVerification(user)}
+                              disabled={isRowBusy(user.id)}
+                            >
+                              {approveVerificationLoadingId === user.id ? (
+                                <span className="flex items-center gap-2">
+                                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-brand-400"></div>
+                                  Approving...
+                                </span>
+                              ) : (
+                                <>Approve verification</>
+                              )}
+                            </button>
+                            |
+                          </>
+                        )}
                         <button
                           className="text-brand-400 text-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
                           onClick={() => handleResetPassword(user)}
-                          disabled={resetPasswordLoadingId === user.id || toggleLoadingId === user.id}
+                          disabled={isRowBusy(user.id)}
                         >
                           {resetPasswordLoadingId === user.id ? (
                             <span className="flex items-center gap-2">
@@ -242,7 +388,7 @@ export default function CompanyUsers({ users }: CompanyUsersProps) {
                               : "text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300"
                           }`}
                           onClick={() => handleToggleUserStatus(user)}
-                          disabled={toggleLoadingId === user.id || resetPasswordLoadingId === user.id}
+                          disabled={isRowBusy(user.id)}
                         >
                           {toggleLoadingId === user.id ? (
                             <span className="flex items-center gap-2">
@@ -284,7 +430,12 @@ export default function CompanyUsers({ users }: CompanyUsersProps) {
         message={confirmation.config?.message || ""}
         confirmText={confirmation.config?.confirmText}
         cancelText={confirmation.config?.cancelText}
-        isLoading={resetPasswordLoadingId !== null || toggleLoadingId !== null}
+        isLoading={
+          resetPasswordLoadingId !== null ||
+          toggleLoadingId !== null ||
+          resendVerificationLoadingId !== null ||
+          approveVerificationLoadingId !== null
+        }
       />
 
       {/* Reason Input Modal */}

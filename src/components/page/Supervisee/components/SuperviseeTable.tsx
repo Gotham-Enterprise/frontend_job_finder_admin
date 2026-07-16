@@ -25,6 +25,7 @@ const SuperviseeTable: React.FC<SuperviseeTableProps> = ({
   onViewSupervisee,
   onEditSupervisee,
   onResendVerification,
+  onApproveEmailVerification,
   onToggleHideProfile,
 }) => {
   return (
@@ -146,6 +147,7 @@ const SuperviseeTable: React.FC<SuperviseeTableProps> = ({
                       onView={onViewSupervisee}
                       onEdit={onEditSupervisee}
                       onResendVerification={onResendVerification}
+                      onApproveEmailVerification={onApproveEmailVerification}
                       onToggleHideProfile={onToggleHideProfile}
                     />
                   </div>

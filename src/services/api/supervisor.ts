@@ -4,6 +4,7 @@ import {
   SupervisorDetailsResponse,
   SupervisorActionResponse,
   SupervisorResendVerificationResponse,
+  SupervisorApproveEmailVerificationResponse,
   SupervisorUpdatePayload,
   SupervisorUpdateResponse,
   HideProfileResponse,
@@ -68,6 +69,18 @@ export const supervisorApi = {
   async resendVerificationEmail(id: string): Promise<SupervisorResendVerificationResponse> {
     return apiPost<SupervisorResendVerificationResponse>(
       `/api/supervision/admin/users/${id}/send-email-verification-reminder`,
+    );
+  },
+
+  /**
+   * Approve a supervisor's pending email verification on their behalf,
+   * bypassing the standard verification link.
+   * `id` is the supervision user id (the same id used by the list/detail endpoints).
+   * Backend returns 400 if the user's email is already verified.
+   */
+  async approveEmailVerification(id: string): Promise<SupervisorApproveEmailVerificationResponse> {
+    return apiPatch<SupervisorApproveEmailVerificationResponse>(
+      `/api/supervision/admin/users/${id}/approve-email-verification`,
     );
   },
 

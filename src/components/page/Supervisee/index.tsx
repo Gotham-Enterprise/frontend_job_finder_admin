@@ -12,6 +12,7 @@ import {
   SuperviseeTablePagination,
   EditSuperviseeModal,
   ResendVerificationModal,
+  ApproveEmailVerificationModal,
   HideProfileModal,
 } from "./components";
 
@@ -48,6 +49,12 @@ const Supervisees: React.FC<SuperviseesProps> = ({ className = "" }) => {
     openResendModal,
     closeResendModal,
     confirmResend,
+
+    approveEmailModal,
+    isApprovingEmail,
+    openApproveEmailModal,
+    closeApproveEmailModal,
+    confirmApproveEmail,
 
     hideProfileModal,
     isHidingProfile,
@@ -89,6 +96,7 @@ const Supervisees: React.FC<SuperviseesProps> = ({ className = "" }) => {
           onViewSupervisee={viewSupervisee}
           onEditSupervisee={openEditModal}
           onResendVerification={openResendModal}
+          onApproveEmailVerification={openApproveEmailModal}
           onToggleHideProfile={openHideProfileModal}
         />
 
@@ -115,6 +123,14 @@ const Supervisees: React.FC<SuperviseesProps> = ({ className = "" }) => {
         onConfirm={confirmResend}
         onCancel={closeResendModal}
         isLoading={isResending}
+      />
+
+      <ApproveEmailVerificationModal
+        isOpen={approveEmailModal.isOpen}
+        fullName={approveEmailModal.fullName}
+        onConfirm={confirmApproveEmail}
+        onCancel={closeApproveEmailModal}
+        isLoading={isApprovingEmail}
       />
 
       <HideProfileModal

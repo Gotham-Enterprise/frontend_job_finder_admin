@@ -111,6 +111,28 @@ export const useResendSuperviseeVerification = () => {
   });
 };
 
+export const useApproveSuperviseeEmailVerification = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => superviseeApi.approveEmailVerification(id),
+    onSuccess: async (response, id) => {
+      showToast.success(
+        "Email Verification Approved",
+        response.message || "The supervisee's email has been marked as verified.",
+      );
+      await queryClient.invalidateQueries({ queryKey: superviseeQueryKeys.lists() });
+      await queryClient.invalidateQueries({ queryKey: superviseeQueryKeys.detail(id) });
+    },
+    onError: (error: Error) => {
+      showToast.error(
+        "Approval Failed",
+        error.message || "Failed to approve the email verification. Please try again.",
+      );
+    },
+  });
+};
+
 export const useHideSuperviseeProfile = () => {
   const queryClient = useQueryClient();
 
