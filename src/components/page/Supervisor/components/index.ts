@@ -7,5 +7,6 @@ export { default as RejectSupervisorModal } from "./RejectSupervisorModal";
 export { default as ApproveSupervisorModal } from "./ApproveSupervisorModal";
 export { default as EditVerificationNotesModal } from "./EditVerificationNotesModal";
 export { default as ResendVerificationModal } from "@/components/common/ResendVerificationModal";
+export { default as ApproveEmailVerificationModal } from "@/components/common/ApproveEmailVerificationModal";
 export { default as EditSupervisorModal } from "./EditSupervisorModal";
 export { default as HideProfileModal } from "./HideProfileModal";

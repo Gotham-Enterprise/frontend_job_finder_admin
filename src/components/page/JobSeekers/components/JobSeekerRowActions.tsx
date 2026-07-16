@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useRef, useState } from "react";
-import { Eye, KeyRound, Mail, MoreVertical, Pencil } from "lucide-react";
+import { Eye, KeyRound, Mail, MailCheck, MoreVertical, Pencil } from "lucide-react";
 import { Dropdown } from "../../../ui/dropdown/Dropdown";
 import { DropdownItem } from "../../../ui/dropdown/DropdownItem";
 import PermissionWrapper from "@/components/common/PermissionWrapper";
@@ -15,6 +15,8 @@ interface JobSeekerRowActionsProps {
   onResetPassword: () => void;
   onResendVerification: () => void;
   showResendVerification: boolean;
+  onApproveEmailVerification: () => void;
+  showApproveEmailVerification: boolean;
 }
 
 const JobSeekerRowActions: React.FC<JobSeekerRowActionsProps> = ({
@@ -23,6 +25,8 @@ const JobSeekerRowActions: React.FC<JobSeekerRowActionsProps> = ({
   onResetPassword,
   onResendVerification,
   showResendVerification,
+  onApproveEmailVerification,
+  showApproveEmailVerification,
 }) => {
   const [open, setOpen] = useState(false);
   const buttonRef = useRef<HTMLButtonElement | null>(null);
@@ -67,6 +71,12 @@ const JobSeekerRowActions: React.FC<JobSeekerRowActionsProps> = ({
         {showResendVerification && (
           <DropdownItem tag="button" className={itemClass} onClick={run(onResendVerification)}>
             <Mail {...iconProps} /> Resend verification email
+          </DropdownItem>
+        )}
+
+        {showApproveEmailVerification && (
+          <DropdownItem tag="button" className={itemClass} onClick={run(onApproveEmailVerification)}>
+            <MailCheck {...iconProps} /> Approve email verification
           </DropdownItem>
         )}
       </Dropdown>

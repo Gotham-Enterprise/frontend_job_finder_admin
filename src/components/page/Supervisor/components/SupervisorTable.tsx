@@ -44,6 +44,7 @@ const SupervisorTable: React.FC<SupervisorTableProps> = ({
   onApproveSupervisor,
   onRejectSupervisor,
   onResendVerification,
+  onApproveEmailVerification,
   onToggleHideProfile,
 }) => {
   return (
@@ -214,6 +215,7 @@ const SupervisorTable: React.FC<SupervisorTableProps> = ({
                       onApprove={onApproveSupervisor}
                       onReject={onRejectSupervisor}
                       onResendVerification={onResendVerification}
+                      onApproveEmailVerification={onApproveEmailVerification}
                       onToggleHideProfile={onToggleHideProfile}
                     />
                   </div>

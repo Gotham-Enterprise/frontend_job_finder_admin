@@ -14,6 +14,7 @@ import { ShareResumeModal } from "./ShareResumeModal";
 import { useToast } from "@/context/ToastContext";
 import JobSeekerRowActions from "./JobSeekerRowActions";
 import ResendVerificationModal from "@/components/common/ResendVerificationModal";
+import ApproveEmailVerificationModal from "@/components/common/ApproveEmailVerificationModal";
 import { useConfirmation } from "@/hooks/useConfirmation";
 import ConfirmationDialog from "@/components/ui/ConfirmationDialog";
 
@@ -545,6 +546,8 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
   const [resetPasswordLoadingId, setResetPasswordLoadingId] = useState<string | null>(null);
   const [resendVerificationJobSeeker, setResendVerificationJobSeeker] = useState<any>(null);
   const [isResendingVerification, setIsResendingVerification] = useState(false);
+  const [approveVerificationJobSeeker, setApproveVerificationJobSeeker] = useState<any>(null);
+  const [isApprovingVerification, setIsApprovingVerification] = useState(false);
   const licensesButtonRefs = useRef<{ [key: string]: React.RefObject<HTMLButtonElement | null> }>({});
   const certificationsButtonRefs = useRef<{ [key: string]: React.RefObject<HTMLButtonElement | null> }>({});
   const { addToast } = useToast();
@@ -701,6 +704,53 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
     } finally {
       setIsResendingVerification(false);
       closeResendVerificationModal();
+    }
+  };
+
+  const openApproveVerificationModal = (jobSeeker: any) => {
+    if (!jobSeeker.userId) {
+      addToast({
+        variant: "error",
+        title: "Error",
+        message: "Job seeker does not have an associated user account",
+        duration: 5000,
+      });
+      return;
+    }
+
+    setApproveVerificationJobSeeker(jobSeeker);
+  };
+
+  const closeApproveVerificationModal = () => {
+    setApproveVerificationJobSeeker(null);
+  };
+
+  const confirmApproveVerification = async () => {
+    if (!approveVerificationJobSeeker) return;
+
+    setIsApprovingVerification(true);
+    try {
+      const { jobSeekerApi } = await import("@/services/api/jobSeeker");
+      await jobSeekerApi.approveEmailVerification(approveVerificationJobSeeker.userId);
+
+      addToast({
+        variant: "success",
+        title: "Success",
+        message: `Email verification has been approved for ${approveVerificationJobSeeker.email}`,
+        duration: 5000,
+      });
+      refreshData();
+    } catch (error: any) {
+      console.error("Approve email verification error:", error);
+      addToast({
+        variant: "error",
+        title: "Error",
+        message: error.message || "Failed to approve email verification",
+        duration: 5000,
+      });
+    } finally {
+      setIsApprovingVerification(false);
+      closeApproveVerificationModal();
     }
   };
 
@@ -1076,6 +1126,8 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
                       onResetPassword={() => handleResetPassword(jobSeeker)}
                       onResendVerification={() => openResendVerificationModal(jobSeeker)}
                       showResendVerification={jobSeeker.emailVerified === false}
+                      onApproveEmailVerification={() => openApproveVerificationModal(jobSeeker)}
+                      showApproveEmailVerification={jobSeeker.emailVerified === false}
                     />
                   </TableCell>
                 </TableRow>
@@ -1148,6 +1200,15 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
         onConfirm={confirmResendVerification}
         onCancel={closeResendVerificationModal}
         isLoading={isResendingVerification}
+      />
+
+      {/* Approve Email Verification Modal */}
+      <ApproveEmailVerificationModal
+        isOpen={approveVerificationJobSeeker !== null}
+        fullName={approveVerificationJobSeeker?.name || ""}
+        onConfirm={confirmApproveVerification}
+        onCancel={closeApproveVerificationModal}
+        isLoading={isApprovingVerification}
       />
     </div>
   );

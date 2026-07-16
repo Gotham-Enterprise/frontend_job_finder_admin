@@ -50,6 +50,11 @@ export interface SuperviseeResendVerificationResponse {
   message: string;
 }
 
+export interface SuperviseeApproveEmailVerificationResponse {
+  success: boolean;
+  message: string;
+}
+
 export interface SuperviseesMetaData {
   page: number;
   limit: number;

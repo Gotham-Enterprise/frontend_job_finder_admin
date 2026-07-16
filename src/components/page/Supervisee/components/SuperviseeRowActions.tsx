@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useRef, useState } from "react";
-import { Eye, Mail, MoreVertical, Pause, Pencil, Play } from "lucide-react";
+import { Eye, Mail, MailCheck, MoreVertical, Pause, Pencil, Play } from "lucide-react";
 import { Dropdown } from "../../../ui/dropdown/Dropdown";
 import { DropdownItem } from "../../../ui/dropdown/DropdownItem";
 import { Supervisee } from "@/services/types/supervisee";
@@ -14,6 +14,7 @@ interface SuperviseeRowActionsProps {
   onView: (id: string) => void;
   onEdit: (id: string, name: string) => void;
   onResendVerification: (id: string, name: string) => void;
+  onApproveEmailVerification: (id: string, name: string) => void;
   onToggleHideProfile: (id: string, name: string, currentlyHidden: boolean) => void;
 }
 
@@ -22,6 +23,7 @@ const SuperviseeRowActions: React.FC<SuperviseeRowActionsProps> = ({
   onView,
   onEdit,
   onResendVerification,
+  onApproveEmailVerification,
   onToggleHideProfile,
 }) => {
   const [open, setOpen] = useState(false);
@@ -69,6 +71,16 @@ const SuperviseeRowActions: React.FC<SuperviseeRowActionsProps> = ({
             onClick={run(() => onResendVerification(supervisee.id, name))}
           >
             <Mail {...iconProps} /> Resend verification email
+          </DropdownItem>
+        )}
+
+        {!supervisee.emailVerified && (
+          <DropdownItem
+            tag="button"
+            className={itemClass}
+            onClick={run(() => onApproveEmailVerification(supervisee.id, name))}
+          >
+            <MailCheck {...iconProps} /> Approve email verification
           </DropdownItem>
         )}
 
