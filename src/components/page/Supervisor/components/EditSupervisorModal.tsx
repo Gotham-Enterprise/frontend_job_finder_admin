@@ -33,6 +33,7 @@ import {
   SUPERVISOR_CERTIFICATIONS_DISABLED_MESSAGE,
   getSupervisorCredentialTypeLabel,
   getSupervisorCredentialSelectOptions,
+  isMonthlyOnlySupervisorType,
   isSupervisorTypeWithoutCertifications,
   supervisorYearsOfExperienceSelectOptions,
 } from "@/constants/supervisorSignupOptions";
@@ -149,6 +150,18 @@ export const EditSupervisorModal: React.FC<EditSupervisorModalProps> = ({
     () => supervisorTypesData.find((t) => t.name === formData.supervisorType),
     [formData.supervisorType, supervisorTypesData],
   );
+
+  const monthlyFeeOnly = isMonthlyOnlySupervisorType(formData.supervisorType);
+  const feeTypeChoices = useMemo(() => {
+    const base =
+      choicesOnly(feeTypeOptions).length > 0
+        ? choicesOnly(feeTypeOptions)
+        : [
+            { value: "HOURLY", label: "Hourly" },
+            { value: "MONTHLY", label: "Monthly" },
+          ];
+    return monthlyFeeOnly ? base.filter((o) => o.value === "MONTHLY") : base;
+  }, [feeTypeOptions, monthlyFeeOnly]);
 
   const occupationChoices = useMemo(
     () =>
@@ -279,6 +292,9 @@ export const EditSupervisorModal: React.FC<EditSupervisorModalProps> = ({
         next.degreeType = "";
         if (isSupervisorTypeWithoutCertifications(value as string)) {
           next.certification = [];
+        }
+        if (isMonthlyOnlySupervisorType(value as string)) {
+          next.supervisionFeeType = "MONTHLY";
         }
       }
       if (field === "occupation") {
@@ -714,14 +730,7 @@ export const EditSupervisorModal: React.FC<EditSupervisorModalProps> = ({
                     <Select
                       value={formData.supervisionFeeType}
                       onChange={(v) => updateField("supervisionFeeType", v)}
-                      options={
-                        choicesOnly(feeTypeOptions).length > 0
-                          ? choicesOnly(feeTypeOptions)
-                          : [
-                              { value: "HOURLY", label: "Hourly" },
-                              { value: "MONTHLY", label: "Monthly" },
-                            ]
-                      }
+                      options={feeTypeChoices}
                       placeholder="Select fee type"
                     />
                   </FormField>
