@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { Paperclip, X as XIcon } from "lucide-react";
+import { Paperclip, Plus, Trash2, X as XIcon } from "lucide-react";
 import { Modal } from "@/components/ui/modal";
 import Button from "@/components/ui/button/Button";
 import Input from "@/components/ui/input/Input";
@@ -16,11 +16,14 @@ import TextArea from "@/components/form/input/TextArea";
 import { supervisorApi } from "@/services/api/supervisor";
 import { useCitiesByState } from "@/lib/useStatesCities";
 import {
+  emptySupervisorLicenseEntry,
   formDataToUpdatePayload,
+  getSupervisorLicenseEntryDefaults,
   mapSupervisorDetailsToFormData,
   validateSupervisorEditForm,
   type SupervisorEditFormData,
   type SupervisorFieldErrors,
+  type SupervisorLicenseEntryFormData,
 } from "@/services/utils/supervisorProfileForm";
 import {
   useUpdateSupervisor,
@@ -33,7 +36,6 @@ import {
   PROFESSIONAL_CREDENTIALS_MAX_LENGTH,
   SUPERVISOR_PROFILE_TEXT_MAX_LENGTH,
   SUPERVISOR_CERTIFICATIONS_DISABLED_MESSAGE,
-  getSupervisorCredentialTypeLabel,
   getSupervisorCredentialSelectOptions,
   isMonthlyOnlySupervisorType,
   isSupervisorTypeWithoutCertifications,
@@ -58,12 +60,9 @@ const emptyForm = (): SupervisorEditFormData => ({
   supervisorType: "",
   occupation: "",
   specialty: "",
-  licenseType: "",
   degreeType: "",
-  licenseNumber: "",
-  licenseExpiration: "",
+  licenses: [emptySupervisorLicenseEntry()],
   yearsOfExperience: "",
-  stateOfLicensure: [],
   patientPopulation: [],
   certification: [],
   supervisionFormat: "",
@@ -92,6 +91,8 @@ export const EditSupervisorModal: React.FC<EditSupervisorModalProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<SupervisorFieldErrors>({});
+  /** Per-entry "needs review" flags for the prefilled licenses (legacy-migrated data). */
+  const [licenseEntriesNeedingReview, setLicenseEntriesNeedingReview] = useState<boolean[]>([]);
 
   const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -122,11 +123,6 @@ export const EditSupervisorModal: React.FC<EditSupervisorModalProps> = ({
         ? statesData.data.states.map((s) => ({ value: s.abbreviation, label: s.name }))
         : [],
     [statesData],
-  );
-
-  const stateMultiOptions = useMemo(
-    () => stateOptions.map((s) => ({ value: s.value, text: s.label, selected: false })),
-    [stateOptions],
   );
 
   const cityChoices = useMemo(() => {
@@ -198,10 +194,8 @@ export const EditSupervisorModal: React.FC<EditSupervisorModalProps> = ({
   }, [formData.occupation, specialtyChoices.length]);
 
   const certificationsDisabled = isSupervisorTypeWithoutCertifications(formData.supervisorType);
-  const credentialTypeLabel = getSupervisorCredentialTypeLabel(formData.supervisorType);
-  const usesDegreeTypeField = certificationsDisabled;
-  const credentialField = usesDegreeTypeField ? "degreeType" : "licenseType";
-  const credentialFieldError = fieldErrors[credentialField];
+  /** Physicians pick a single degree type; everyone else picks a license type per entry. */
+  const physicianSupervisorType = certificationsDisabled;
   const certificationsPlaceholder = certificationsDisabled
     ? "Not applicable for this supervisor type"
     : "Select certifications...";
@@ -214,18 +208,11 @@ export const EditSupervisorModal: React.FC<EditSupervisorModalProps> = ({
     [selectedType, selectedOccupation],
   );
 
-  const credentialChoices = licenseTypeChoices;
-
   const licenseTypePlaceholder = useMemo(() => {
-    const usesDegreeTypeLabel = isSupervisorTypeWithoutCertifications(formData.supervisorType);
-    if (usesDegreeTypeLabel) {
-      if (licenseTypeChoices.length === 0) return "Select degree type";
-      return "Select degree type";
-    }
     if (!formData.occupation) return "Select an occupation first";
     if (licenseTypeChoices.length === 0) return "No license types available";
     return "Select license type";
-  }, [formData.occupation, formData.supervisorType, licenseTypeChoices.length]);
+  }, [formData.occupation, licenseTypeChoices.length]);
 
   const certMultiOptions = useMemo(
     () =>
@@ -248,6 +235,7 @@ export const EditSupervisorModal: React.FC<EditSupervisorModalProps> = ({
     setCurrentLicenseFileName(null);
     setLoadError(null);
     setFieldErrors({});
+    setLicenseEntriesNeedingReview([]);
     setFormData(emptyForm());
     onClose();
   };
@@ -260,6 +248,9 @@ export const EditSupervisorModal: React.FC<EditSupervisorModalProps> = ({
       if (response.success && response.data) {
         const statesList = statesData?.success ? statesData.data.states : [];
         setFormData(mapSupervisorDetailsToFormData(response.data, statesList));
+        setLicenseEntriesNeedingReview(
+          getSupervisorLicenseEntryDefaults(response.data).entriesNeedingReview,
+        );
         setCurrentPhotoUrl(response.data.profilePhotoUrl);
         setCurrentLicenseFileName(
           response.data.supervisorProfile?.licenseFileName ?? null,
@@ -288,11 +279,13 @@ export const EditSupervisorModal: React.FC<EditSupervisorModalProps> = ({
   ) => {
     setFormData((prev) => {
       const next = { ...prev, [field]: value };
+      // License-type options depend on the supervisor type/occupation, so
+      // per-entry license types reset when either changes.
       if (field === "supervisorType") {
         next.occupation = "";
         next.specialty = "";
-        next.licenseType = "";
         next.degreeType = "";
+        next.licenses = prev.licenses.map((entry) => ({ ...entry, licenseType: "" }));
         if (isSupervisorTypeWithoutCertifications(value as string)) {
           next.certification = [];
         }
@@ -302,18 +295,21 @@ export const EditSupervisorModal: React.FC<EditSupervisorModalProps> = ({
       }
       if (field === "occupation") {
         next.specialty = "";
-        next.licenseType = "";
         next.degreeType = "";
+        next.licenses = prev.licenses.map((entry) => ({ ...entry, licenseType: "" }));
       }
       if (field === "state") next.city = "";
       return next;
     });
     setFieldErrors((prev) => {
       const keysToClear = new Set<keyof SupervisorFieldErrors>([field as keyof SupervisorFieldErrors]);
+      if (field === "supervisorType" || field === "occupation") {
+        keysToClear.add("degreeType");
+        keysToClear.add("licenses");
+        keysToClear.add("licenseEntries");
+      }
       if (field === "supervisorType" && isSupervisorTypeWithoutCertifications(value as string)) {
         keysToClear.add("certification");
-        keysToClear.add("degreeType");
-        keysToClear.add("licenseType");
       }
       const next = { ...prev };
       let changed = false;
@@ -324,6 +320,51 @@ export const EditSupervisorModal: React.FC<EditSupervisorModalProps> = ({
         }
       }
       return changed ? (next as SupervisorFieldErrors) : prev;
+    });
+  };
+
+  const updateLicenseEntry = (
+    index: number,
+    field: keyof SupervisorLicenseEntryFormData,
+    value: string,
+  ) => {
+    setFormData((prev) => ({
+      ...prev,
+      licenses: prev.licenses.map((entry, i) =>
+        i === index ? { ...entry, [field]: value } : entry,
+      ),
+    }));
+    setFieldErrors((prev) => {
+      if (!prev.licenseEntries?.[index]?.[field] && !prev.licenses) return prev;
+      const licenseEntries = prev.licenseEntries?.map((entryErrors, i) => {
+        if (i !== index) return entryErrors;
+        const { [field]: _, ...rest } = entryErrors;
+        return rest;
+      });
+      return { ...prev, licenses: undefined, licenseEntries };
+    });
+  };
+
+  const addLicenseEntry = () => {
+    setFormData((prev) => ({
+      ...prev,
+      licenses: [...prev.licenses, emptySupervisorLicenseEntry()],
+    }));
+  };
+
+  const removeLicenseEntry = (index: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      licenses: prev.licenses.filter((_, i) => i !== index),
+    }));
+    setLicenseEntriesNeedingReview((prev) => prev.filter((_, i) => i !== index));
+    setFieldErrors((prev) => {
+      if (!prev.licenseEntries) return prev;
+      return {
+        ...prev,
+        licenses: undefined,
+        licenseEntries: prev.licenseEntries.filter((_, i) => i !== index),
+      };
     });
   };
 
@@ -553,34 +594,16 @@ export const EditSupervisorModal: React.FC<EditSupervisorModalProps> = ({
                       disabled={!formData.occupation}
                     />
                   </FormField>
-                  <FormField label={credentialTypeLabel} required error={credentialFieldError}>
-                    <Select
-                      value={formData[credentialField]}
-                      onChange={(v) => updateField(credentialField, v)}
-                      options={credentialChoices}
-                      placeholder={licenseTypePlaceholder}
-                      disabled={usesDegreeTypeField ? false : !formData.occupation}
-                    />
-                  </FormField>
-                  <FormField label="License Number" error={fieldErrors.licenseNumber}>
-                    <Input
-                      value={formData.licenseNumber}
-                      onChange={(e) => updateField("licenseNumber", e.target.value)}
-                      placeholder="Enter license number"
-                      error={!!fieldErrors.licenseNumber}
-                    />
-                  </FormField>
-                  <FormField label="License Expiration Date" error={fieldErrors.licenseExpiration}>
-                    <DatePicker
-                      key={`license-expiration-${supervisorId}-${formData.licenseExpiration || "empty"}`}
-                      id={`supervisor-license-expiration-${supervisorId}`}
-                      placeholder="Select expiration date"
-                      defaultDate={formData.licenseExpiration || undefined}
-                      onChange={(_selectedDates, dateStr) =>
-                        updateField("licenseExpiration", dateStr)
-                      }
-                    />
-                  </FormField>
+                  {physicianSupervisorType ? (
+                    <FormField label="Degree Type" required error={fieldErrors.degreeType}>
+                      <Select
+                        value={formData.degreeType}
+                        onChange={(v) => updateField("degreeType", v)}
+                        options={licenseTypeChoices}
+                        placeholder="Select degree type"
+                      />
+                    </FormField>
+                  ) : null}
                   <FormField label="Years of Experience" error={fieldErrors.yearsOfExperience}>
                     <Select
                       value={formData.yearsOfExperience}
@@ -590,14 +613,113 @@ export const EditSupervisorModal: React.FC<EditSupervisorModalProps> = ({
                     />
                   </FormField>
                 </div>
-                <FormField label="States of Licensure" required error={fieldErrors.stateOfLicensure}>
-                  <MultiSelect
-                    label=""
-                    options={stateMultiOptions}
-                    value={formData.stateOfLicensure}
-                    onChange={(selected) => updateField("stateOfLicensure", selected)}
-                    placeholder="Select states..."
-                  />
+
+                {/* Licenses — one entry per license, each tied to its own state */}
+                <FormField label="Licenses" error={fieldErrors.licenses}>
+                  <div className="space-y-4">
+                    {formData.licenses.map((entry, index) => {
+                      const entryErrors = fieldErrors.licenseEntries?.[index] ?? {};
+                      return (
+                        <div
+                          key={index}
+                          className="space-y-4 rounded-lg border border-gray-200 dark:border-gray-700 p-4"
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-2">
+                              <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                License {index + 1}
+                              </p>
+                              {licenseEntriesNeedingReview[index] ? (
+                                <span className="inline-flex items-center rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-800">
+                                  Awaiting supervisor confirmation
+                                </span>
+                              ) : null}
+                            </div>
+                            {formData.licenses.length > 1 ? (
+                              <button
+                                type="button"
+                                onClick={() => removeLicenseEntry(index)}
+                                disabled={isSaving}
+                                className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400"
+                                aria-label={`Remove license ${index + 1}`}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                                Remove
+                              </button>
+                            ) : null}
+                          </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {!physicianSupervisorType ? (
+                              <FormField
+                                label="License Type"
+                                required
+                                error={entryErrors.licenseType}
+                              >
+                                <Select
+                                  value={entry.licenseType}
+                                  onChange={(v) => updateLicenseEntry(index, "licenseType", v)}
+                                  options={licenseTypeChoices}
+                                  placeholder={licenseTypePlaceholder}
+                                  disabled={!formData.occupation}
+                                />
+                              </FormField>
+                            ) : null}
+                            <FormField
+                              label="State of Licensure"
+                              required
+                              error={entryErrors.state}
+                            >
+                              <Select
+                                value={entry.state}
+                                onChange={(v) => updateLicenseEntry(index, "state", v)}
+                                options={choicesOnly(stateOptions)}
+                                placeholder={statesLoading ? "Loading…" : "Select state"}
+                                disabled={statesLoading}
+                              />
+                            </FormField>
+                            <FormField
+                              label="License Number"
+                              required
+                              error={entryErrors.licenseNumber}
+                            >
+                              <Input
+                                value={entry.licenseNumber}
+                                onChange={(e) =>
+                                  updateLicenseEntry(index, "licenseNumber", e.target.value)
+                                }
+                                placeholder="Enter license number"
+                                error={!!entryErrors.licenseNumber}
+                              />
+                            </FormField>
+                            <FormField
+                              label="License Expiration Date"
+                              required
+                              error={entryErrors.licenseExpiration}
+                            >
+                              <DatePicker
+                                key={`license-expiration-${supervisorId}-${index}-${entry.licenseExpiration || "empty"}`}
+                                id={`supervisor-license-expiration-${supervisorId}-${index}`}
+                                placeholder="Select expiration date"
+                                defaultDate={entry.licenseExpiration || undefined}
+                                onChange={(_selectedDates, dateStr) =>
+                                  updateLicenseEntry(index, "licenseExpiration", dateStr)
+                                }
+                              />
+                            </FormField>
+                          </div>
+                        </div>
+                      );
+                    })}
+                    <button
+                      type="button"
+                      onClick={addLicenseEntry}
+                      disabled={isSaving}
+                      className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <Plus className="h-4 w-4" />
+                      Add another license
+                    </button>
+                  </div>
                 </FormField>
 
                 {/* License document upload */}

@@ -379,9 +379,52 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
                   : profile?.licenseType
               }
             />
-            <FieldRow label="License Number" value={profile?.licenseNumber} />
+            {(profile?.licenses?.length ?? 0) > 0 ? (
+              <FieldRow
+                label={(profile?.licenses?.length ?? 0) === 1 ? "License" : "Licenses"}
+                value={
+                  <div className="space-y-1.5">
+                    {profile?.licenses?.map((license, index) => (
+                      <div
+                        key={license.id ?? index}
+                        className="flex flex-wrap items-center gap-2"
+                      >
+                        <span>
+                          {[
+                            license.licenseType ||
+                              profile?.degreeType ||
+                              profile?.licenseType,
+                            license.state
+                              ? formatStateOfLicensureForDisplay(license.state)
+                              : "State not confirmed",
+                            license.licenseNumber ? `#${license.licenseNumber}` : null,
+                            license.licenseExpiration
+                              ? `expires ${formatDate(license.licenseExpiration)}`
+                              : null,
+                          ]
+                            .filter(Boolean)
+                            .join(" · ")}
+                        </span>
+                        {license.needsReview || !license.state ? (
+                          <span className="inline-flex items-center rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-800">
+                            Awaiting supervisor confirmation
+                          </span>
+                        ) : null}
+                      </div>
+                    ))}
+                  </div>
+                }
+              />
+            ) : (
+              <>
+                <FieldRow label="License Number" value={profile?.licenseNumber} />
+                <FieldRow
+                  label="License Expiration Date"
+                  value={formatDate(profile?.licenseExpiration)}
+                />
+              </>
+            )}
             <FieldRow label="States of Licensure" value={statesOfLicensureDisplay} />
-            <FieldRow label="License Expiration Date" value={formatDate(profile?.licenseExpiration)} />
             <FieldRow label="NPI Number" value={profile?.npiNumber} />
             <FieldRow label="Certifications" value={certificationDisplay} />
             <FieldRow label="License Document" value={profile?.licenseUrl ? (
