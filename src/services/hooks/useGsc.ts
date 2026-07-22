@@ -25,9 +25,9 @@ export function useGscProperties() {
   });
 }
 
-export function useGscAnalyticsSummary(params: { startDate?: string; endDate?: string } = {}) {
+export function useGscAnalyticsSummary(params: { startDate?: string; endDate?: string; range?: string } = {}) {
   return useQuery({
-    queryKey: ["gsc", "analytics", "summary", params],
+    queryKey: ["gsc", "analytics", "summary", params.startDate, params.endDate, params.range],
     queryFn: () => gscAPI.getAnalyticsSummary(params),
     staleTime: GSC_STALE_TIME,
     refetchOnMount: GSC_REFETCH_ON_MOUNT,
@@ -88,6 +88,17 @@ export function useGscTriggerSync() {
     mutationFn: (propertyId?: string) => gscAPI.triggerSync(propertyId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["gsc"] });
+    },
+  });
+}
+
+export function useGscSyncSitemaps() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => gscAPI.syncSitemaps(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["gsc", "sitemaps"] });
+      queryClient.invalidateQueries({ queryKey: ["gsc", "properties"] });
     },
   });
 }

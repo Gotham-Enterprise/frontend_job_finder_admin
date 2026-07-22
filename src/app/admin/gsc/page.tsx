@@ -24,6 +24,7 @@ export default function GscDashboardPage() {
   const { data: summaryData, isLoading: summaryLoading } = useGscAnalyticsSummary({
     startDate: fmtStart,
     endDate: fmtEnd,
+    range: dateRange,
   });
   const { data: propertiesData, isLoading: propertiesLoading } = useGscProperties();
   const { data: syncData, isLoading: syncLoading } = useGscSyncHistory();

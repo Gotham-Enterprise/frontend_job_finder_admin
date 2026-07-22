@@ -61,6 +61,10 @@ class GscAPI {
     return apiGet(`/api/admin/gsc/sitemaps?${query.toString()}`);
   }
 
+  syncSitemaps(): Promise<{ success: boolean; data: any }> {
+    return apiPost("/api/admin/gsc/sitemaps/sync");
+  }
+
   submitSitemap(siteUrl: string, feedPath: string): Promise<{ success: boolean }> {
     return apiPost("/api/admin/gsc/sitemaps", { siteUrl, feedPath });
   }

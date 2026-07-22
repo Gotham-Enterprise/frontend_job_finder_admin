@@ -5,6 +5,8 @@ export interface GscStatusResponse {
     properties: GscProperty[];
     toggle: { key: string; value: string };
     lastSyncs: GscSyncLogEntry[];
+    canSync: boolean;
+    syncCooldownUntil: string | null;
     cron: { running: boolean; schedule: string; timezone: string };
   };
 }
