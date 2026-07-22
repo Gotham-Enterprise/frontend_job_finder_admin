@@ -6,6 +6,7 @@ import HealthTabContent from "@/components/admin/seo-health/HealthTabContent";
 import CoverageTabContent from "@/components/admin/seo-health/CoverageTabContent";
 import DuplicatesTabContent from "@/components/admin/seo-health/DuplicatesTabContent";
 import BotLogsTabContent from "@/components/admin/seo-health/BotLogsTabContent";
+import CrawlerDashboard from "@/components/admin/seo-health/CrawlerDashboard";
 import AffiliatesTabContent from "@/components/admin/seo-health/AffiliatesTabContent";
 
 export default function SeoHealthPage() {
@@ -111,7 +112,7 @@ export default function SeoHealthPage() {
 
       {/* Tab Content: Bot Logs */}
       <div className={`animate-in fade-in slide-in-from-bottom-2 ${activeTab === "bot-logs" ? "block" : "hidden"}`}>
-        <BotLogsTabContent />
+        <CrawlerDashboard />
       </div>
 
       {/* Tab Content: Affiliate Jobs */}
