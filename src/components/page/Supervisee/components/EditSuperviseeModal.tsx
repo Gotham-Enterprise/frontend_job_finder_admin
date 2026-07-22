@@ -27,6 +27,10 @@ import {
   useSupervisorTypesData,
   useSpecialtiesByOccupation,
 } from "@/services/hooks/useSupervisees";
+import {
+  getEligibleSupervisorTypes,
+  isSupervisorTypeEligibleForSupervisee,
+} from "@/services/utils/superviseeEligibility";
 import { useStates } from "@/services/hooks/useStates";
 import { useOccupationsWithSpecialties } from "@/services/hooks/useJobCreation";
 
@@ -148,9 +152,29 @@ export const EditSuperviseeModal: React.FC<EditSuperviseeModalProps> = ({
     return "Select specialty (optional)";
   }, [formData.occupation, profileSpecialtiesLoading, profileSpecialtyOptions.length]);
 
+  // Eligibility for the supervision type is driven by the supervisee's own
+  // occupation + credential title. Mirrors the signup flow; the backend enforces
+  // the same rules on save.
+  const eligibilityCtx = useMemo(
+    () => ({
+      occupationName:
+        profileOccupationChoices.find((o) => o.value === formData.occupation)?.label ?? "",
+      credentialTitle: formData.title,
+    }),
+    [profileOccupationChoices, formData.occupation, formData.title],
+  );
+  const eligibilityComplete =
+    formData.title.trim().length > 0 && formData.occupation.trim().length > 0;
+
   const supervisorTypeChoices = useMemo(
-    () => choicesOnly(supervisorTypesData.map((t) => ({ label: t.name, value: t.name }))),
-    [supervisorTypesData],
+    () =>
+      choicesOnly(
+        getEligibleSupervisorTypes(supervisorTypesData, eligibilityCtx).map((t) => ({
+          label: t.name,
+          value: t.name,
+        })),
+      ),
+    [supervisorTypesData, eligibilityCtx],
   );
 
   const supervisionOccupationChoices = useMemo(() => {
@@ -243,6 +267,26 @@ export const EditSuperviseeModal: React.FC<EditSuperviseeModalProps> = ({
       }
       if (field === "superviseeOccupation") next.superviseeSpecialty = "";
       if (field === "state") next.city = "";
+      // Changing the occupation or credential can make the selected supervision
+      // type ineligible — clear it (and its dependents) so it can't be saved.
+      if ((field === "occupation" || field === "title") && next.typeOfSupervisorNeeded) {
+        const selectedType = supervisorTypesData.find(
+          (t) => t.name === next.typeOfSupervisorNeeded,
+        );
+        const occupationName =
+          profileOccupationChoices.find((o) => o.value === next.occupation)?.label ?? "";
+        if (
+          selectedType &&
+          !isSupervisorTypeEligibleForSupervisee(selectedType, {
+            occupationName,
+            credentialTitle: next.title,
+          })
+        ) {
+          next.typeOfSupervisorNeeded = "";
+          next.superviseeOccupation = "";
+          next.superviseeSpecialty = "";
+        }
+      }
       return next;
     });
     setFieldErrors((prev) => {
@@ -464,8 +508,13 @@ export const EditSuperviseeModal: React.FC<EditSuperviseeModalProps> = ({
                       onChange={(v) => updateField("typeOfSupervisorNeeded", v)}
                       options={supervisorTypeChoices}
                       placeholder={
-                        supervisorTypesLoading ? "Loading…" : "Select type of supervision"
+                        supervisorTypesLoading
+                          ? "Loading…"
+                          : !eligibilityComplete
+                            ? "Enter credential and occupation first"
+                            : "Select type of supervision"
                       }
+                      disabled={supervisorTypesLoading || !eligibilityComplete}
                     />
                   </FormField>
                   <FormField label="Occupation" required error={fieldErrors.superviseeOccupation}>
