@@ -85,7 +85,20 @@ export function useGscUpdateSettings() {
 export function useGscTriggerSync() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (propertyId?: string) => gscAPI.triggerSync(propertyId),
+    mutationFn: (params?: { propertyId?: string; force?: boolean }) => {
+      if (params?.force) return gscAPI.triggerSyncForce();
+      return gscAPI.triggerSync(params?.propertyId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["gsc"] });
+    },
+  });
+}
+
+export function useGscResetData() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => gscAPI.resetData(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["gsc"] });
     },

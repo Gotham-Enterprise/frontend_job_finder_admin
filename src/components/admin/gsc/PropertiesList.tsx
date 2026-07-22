@@ -52,7 +52,6 @@ export default function PropertiesList({ properties, syncHistory, loading }: Pro
               <th className="px-6 py-3 font-medium text-gray-500 dark:text-gray-400">Site URL</th>
               <th className="px-6 py-3 font-medium text-gray-500 dark:text-gray-400">Status</th>
               <th className="px-6 py-3 text-right font-medium text-gray-500 dark:text-gray-400">Data Rows</th>
-              <th className="px-6 py-3 font-medium text-gray-500 dark:text-gray-400">Data Rows</th>
               <th className="px-6 py-3 text-right font-medium text-gray-500 dark:text-gray-400">
                 <span className="inline-flex items-center gap-1">
                   Sitemaps

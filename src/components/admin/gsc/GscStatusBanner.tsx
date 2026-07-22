@@ -1,12 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { useGscStatus, useGscUpdateSettings, useGscTriggerSync } from "@/services/hooks/useGsc";
+import {
+  useGscStatus,
+  useGscUpdateSettings,
+  useGscTriggerSync,
+  useGscResetData,
+} from "@/services/hooks/useGsc";
 
 export default function GscStatusBanner() {
   const { data, isLoading } = useGscStatus();
   const updateSettings = useGscUpdateSettings();
   const triggerSync = useGscTriggerSync();
+  const resetData = useGscResetData();
   const [toggling, setToggling] = useState(false);
 
   const enabled = data?.data?.enabled ?? false;
@@ -32,9 +38,19 @@ export default function GscStatusBanner() {
 
   const handleSync = async () => {
     try {
-      await triggerSync.mutateAsync(undefined);
+      await triggerSync.mutateAsync({ force: true });
     } catch (err) {
       console.error("Failed to sync:", err);
+    }
+  };
+
+  const handleResetAndSync = async () => {
+    if (!window.confirm("This will delete ALL GSC data and re-sync. Continue?")) return;
+    try {
+      await resetData.mutateAsync();
+      await triggerSync.mutateAsync({ force: true });
+    } catch (err) {
+      console.error("Failed to reset:", err);
     }
   };
 
@@ -64,29 +80,29 @@ export default function GscStatusBanner() {
         </div>
         <div className="flex items-center gap-2">
           {enabled && (
-            <button
-              onClick={handleSync}
-              disabled={!canSync || triggerSync.isPending}
-              className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-                canSync
-                  ? "bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-500/15 dark:text-blue-400"
-                  : "bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400"
-              } disabled:opacity-50`}
-              title={
-                canSync
-                  ? "Pull latest data from Google Search Console"
-                  : `Cooldown — available in ~${cooldownMinutes} min`
-              }
-            >
-              {triggerSync.isPending ? "Syncing..." : canSync ? "Sync Now" : `${cooldownMinutes}m cooldown`}
-            </button>
+            <>
+              <button
+                onClick={handleSync}
+                disabled={triggerSync.isPending}
+                className="rounded-lg bg-blue-100 px-4 py-2 text-sm font-medium text-blue-700 transition-colors hover:bg-blue-200 disabled:opacity-50 dark:bg-blue-500/15 dark:text-blue-400"
+              >
+                {triggerSync.isPending ? "Syncing..." : "Re-sync"}
+              </button>
+              <button
+                onClick={handleResetAndSync}
+                disabled={resetData.isPending || triggerSync.isPending}
+                className="rounded-lg bg-red-100 px-4 py-2 text-sm font-medium text-red-700 transition-colors hover:bg-red-200 disabled:opacity-50 dark:bg-red-500/15 dark:text-red-400"
+              >
+                {resetData.isPending ? "Resetting..." : "Reset & Re-sync"}
+              </button>
+            </>
           )}
           <button
             onClick={handleToggle}
             disabled={toggling}
             className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
               enabled
-                ? "bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-500/15 dark:text-red-400"
+                ? "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300"
                 : "bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-500/15 dark:text-green-400"
             } disabled:opacity-50`}
           >

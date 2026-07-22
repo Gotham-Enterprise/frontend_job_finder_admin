@@ -78,7 +78,17 @@ class GscAPI {
   }
 
   triggerSync(propertyId?: string): Promise<{ success: boolean; data: any }> {
-    return apiPost("/api/admin/gsc/sync", propertyId ? { propertyId } : {});
+    const body: any = {};
+    if (propertyId) body.propertyId = propertyId;
+    return apiPost("/api/admin/gsc/sync", body);
+  }
+
+  triggerSyncForce(): Promise<{ success: boolean; data: any }> {
+    return apiPost("/api/admin/gsc/sync", { force: true });
+  }
+
+  resetData(): Promise<{ success: boolean; message: string }> {
+    return apiPost("/api/admin/gsc/sync/reset");
   }
 
   getSyncHistory(propertyId?: string): Promise<{ success: boolean; data: GscSyncLogEntry[] }> {
