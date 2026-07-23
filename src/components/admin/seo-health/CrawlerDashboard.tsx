@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useCrawlerDashboard, useCrawlerAlerts, useCrawlerHealth, useCrawlerRequests } from "@/services/hooks/useCrawler";
-import type { CrawlerType, SeoPageType } from "@/types/crawler";
+import { useCrawlerDashboard, useCrawlerAlerts, useCrawlerHealth, useCrawlerRequests, useCwDashboard, useCwRequests, useCwAlerts } from "@/services/hooks/useCrawler";
+import type { CrawlerType, SeoPageType, BotCrawlerRequest } from "@/types/crawler";
 
 const PERIODS = [
   { value: "1h", label: "Last Hour" },
@@ -18,8 +18,7 @@ const CRAWLER_LABELS: Record<string, string> = {
   GOOGLE_OTHER: "Google Other",
   ADSBOT: "AdsBot",
   MEDIAPARTNERS: "Mediapartners",
-  OTHER_KNOWN: "Other Known",
-  FAKE_CLAIMED: "Fake/Unverified",
+  OTHER_KNOWN: "Other Known Bot",
 };
 
 const STATUS_COLORS: Record<string, string> = {
@@ -39,16 +38,23 @@ function StatusBadge({ status, children }: { status: number; children: React.Rea
 
 export default function CrawlerDashboard() {
   const [period, setPeriod] = useState("24h");
+  const [source, setSource] = useState<"db" | "cloudwatch">("cloudwatch");
   const [filterType, setFilterType] = useState<string>("");
   const [filterPageType, setFilterPageType] = useState<string>("");
   const [filterStatus, setFilterStatus] = useState<string>("");
 
   const dashboardParams = { period, crawlerType: filterType || undefined, seoPageType: filterPageType || undefined, httpStatus: filterStatus || undefined };
-  const { data: dashData, isLoading: dashLoading } = useCrawlerDashboard(dashboardParams);
-  const { data: alertsData } = useCrawlerAlerts({ period });
+  const { data: dashData, isLoading: dashLoading } = source === "cloudwatch"
+    ? useCwDashboard({ period })
+    : useCrawlerDashboard(dashboardParams);
+  const { data: alertsData } = source === "cloudwatch"
+    ? useCwAlerts({ period })
+    : useCrawlerAlerts({ period });
   const { data: healthData } = useCrawlerHealth({ period });
   const [requestUrl, setRequestUrl] = useState("");
-  const { data: requestsData, isLoading: requestsLoading } = useCrawlerRequests({ ...dashboardParams, url: requestUrl || undefined, limit: "50" });
+  const { data: requestsData, isLoading: requestsLoading } = source === "cloudwatch"
+    ? useCwRequests({ period, limit: "100" })
+    : useCrawlerRequests({ ...dashboardParams, url: requestUrl || undefined, limit: "50" });
 
   const dash = dashData?.data;
   const alerts = alertsData?.data || [];
@@ -82,7 +88,29 @@ export default function CrawlerDashboard() {
             </button>
           ))}
         </div>
-        <select value={filterType} onChange={(e) => setFilterType(e.target.value)}
+        <div className="flex rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+          <button onClick={() => setSource("cloudwatch")}
+            className={`px-3 py-2 text-xs font-medium transition-colors ${
+              source === "cloudwatch"
+                ? "bg-emerald-600 text-white"
+                : "bg-white text-gray-500 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"
+            }`}
+          >
+            WAF
+          </button>
+          <button onClick={() => setSource("db")}
+            className={`px-3 py-2 text-xs font-medium transition-colors ${
+              source === "db"
+                ? "bg-gray-600 text-white"
+                : "bg-white text-gray-500 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"
+            }`}
+          >
+            DB
+          </button>
+        </div>
+        {source === "db" && (
+          <>
+            <select value={filterType} onChange={(e) => setFilterType(e.target.value)}
           className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300"
         >
           <option value="">All Crawlers</option>
@@ -104,6 +132,8 @@ export default function CrawlerDashboard() {
           <option value="API">API</option>
           <option value="OTHER">Other</option>
         </select>
+          </>
+        )}
       </div>
 
       {/* Alerts */}
@@ -121,11 +151,21 @@ export default function CrawlerDashboard() {
       {dash && (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-6">
           <SummaryCard label="Total Requests" value={dash.summary.total.toLocaleString()} />
-          <SummaryCard label="Verified Google" value={dash.summary.totalVerified.toLocaleString()} variant="green" />
-          <SummaryCard label="Fake/Unverified" value={dash.summary.totalFake.toLocaleString()} variant="red" />
-          <SummaryCard label="Avg Latency" value={`${dash.summary.avgLatency}ms`} />
-          <SummaryCard label="P95 Latency" value={`${dash.summary.p95Latency}ms`} />
-          <SummaryCard label="Slow (>2s)" value={dash.summary.slowRequestCount.toLocaleString()} variant={dash.summary.slowRequestCount > 10 ? "red" : undefined} />
+          {source === "cloudwatch" ? (
+            <>
+              <SummaryCard label="Verified Bots" value={(dash.summary.verifiedBots ?? dash.summary.totalVerified ?? 0).toLocaleString()} variant="green" />
+              <SummaryCard label="Unverified" value={(dash.summary.unverifiedBots ?? dash.summary.totalFake ?? 0).toLocaleString()} variant="red" />
+              <SummaryCard label="Unique IPs" value={(dash.summary.uniqueIps ?? 0).toLocaleString()} />
+            </>
+          ) : (
+            <>
+              <SummaryCard label="Verified Google" value={dash.summary.totalVerified.toLocaleString()} variant="green" />
+              <SummaryCard label="Fake/Unverified" value={dash.summary.totalFake.toLocaleString()} variant="red" />
+              <SummaryCard label="Avg Latency" value={`${dash.summary.avgLatency}ms`} />
+              <SummaryCard label="P95 Latency" value={`${dash.summary.p95Latency}ms`} />
+              <SummaryCard label="Slow (>2s)" value={dash.summary.slowRequestCount.toLocaleString()} variant={dash.summary.slowRequestCount > 10 ? "red" : undefined} />
+            </>
+          )}
         </div>
       )}
 
@@ -169,22 +209,38 @@ export default function CrawlerDashboard() {
       {/* Breakdowns */}
       {dash && (
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          <BreakdownCard title="By Crawler Type" items={dash.byCrawlerType.map((r) => ({ label: CRAWLER_LABELS[r.type] || r.type, value: r.count }))} />
-          <BreakdownCard title="By HTTP Status" items={dash.byStatus.map((r) => ({ label: String(r.status), value: r.count }))} />
-          <BreakdownCard title="By Page Type" items={dash.byPageType.map((r) => ({ label: r.type.replace(/_/g, " "), value: r.count }))} />
+          <BreakdownCard title="By Crawler Type" items={
+            source === "cloudwatch"
+              ? (dash.byBot || []).map((r: any) => ({ label: (r.key || r.type || "").replace(/_/g, " "), value: r.count }))
+              : (dash.byCrawlerType || []).map((r: any) => ({ label: CRAWLER_LABELS[r.type] || r.type, value: r.count }))
+          } />
+          <BreakdownCard title="By HTTP Status" items={(dash.byStatus || []).map((r: any) => ({ label: String(r.status || r.key || r.statusCode), value: r.count }))} />
+          <BreakdownCard title="By Page Type" items={(dash.byPageType || []).map((r: any) => ({ label: (r.type || r.key || "").replace(/_/g, " "), value: r.count }))} />
         </div>
       )}
 
       {/* Top Lists */}
       {dash && (
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          <TopListCard title="Top Crawled URLs" items={dash.topUrls.map((r) => ({ label: r.url, count: r.count }))} />
-          <TopListCard title="Top 404 URLs" items={dash.top404s.map((r) => ({ label: r.url, count: r.count }))} warn />
-          <TopListCard title="Top Occupations" items={dash.topOccupations.map((r) => ({ label: r.occupation, count: r.count }))} />
-          <TopListCard title="Top States" items={dash.topStates.map((r) => ({ label: r.state, count: r.count }))} />
-          <TopListCard title="Top Cities" items={dash.topCities.map((r) => ({ label: r.city, count: r.count }))} />
-          <TopListCard title="Top Job IDs" items={dash.topJobIds.map((r) => ({ label: r.jobId, count: r.count }))} />
-          <TopListCard title="Expired (410) URLs" items={dash.topExpired.map((r) => ({ label: r.url, count: r.count }))} warn />
+          <TopListCard title="Top Crawled URLs" items={(dash.topUrls || []).map((r: any) => ({ label: r.url || r.key, count: r.count }))} />
+          {(source !== "cloudwatch" && dash.top404s) && (
+            <TopListCard title="Top 404 URLs" items={dash.top404s.map((r: any) => ({ label: r.url, count: r.count }))} warn />
+          )}
+          {(source !== "cloudwatch" && dash.topOccupations) && (
+            <TopListCard title="Top Occupations" items={dash.topOccupations.map((r: any) => ({ label: r.occupation, count: r.count }))} />
+          )}
+          {(source !== "cloudwatch" && dash.topStates) && (
+            <TopListCard title="Top States" items={dash.topStates.map((r: any) => ({ label: r.state, count: r.count }))} />
+          )}
+          {(source !== "cloudwatch" && dash.topCities) && (
+            <TopListCard title="Top Cities" items={dash.topCities.map((r: any) => ({ label: r.city, count: r.count }))} />
+          )}
+          {(source !== "cloudwatch" && dash.topJobIds) && (
+            <TopListCard title="Top Job IDs" items={dash.topJobIds.map((r: any) => ({ label: r.jobId, count: r.count }))} />
+          )}
+          {(source !== "cloudwatch" && dash.topExpired) && (
+            <TopListCard title="Expired (410) URLs" items={dash.topExpired.map((r: any) => ({ label: r.url, count: r.count }))} warn />
+          )}
         </div>
       )}
 
@@ -209,37 +265,58 @@ export default function CrawlerDashboard() {
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Status</th>
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Crawler</th>
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Page Type</th>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Latency</th>
+                {source === "cloudwatch" && <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Origin</th>}
+                {source !== "cloudwatch" && <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">Latency</th>}
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500">URL</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
               {requestsLoading ? (
-                <tr><td colSpan={7} className="px-4 py-8 text-center text-gray-400">Loading...</td></tr>
+                <tr><td colSpan={source === "cloudwatch" ? 8 : 7} className="px-4 py-8 text-center text-gray-400">Loading...</td></tr>
               ) : (requestsData?.data || []).length === 0 ? (
-                <tr><td colSpan={7} className="px-4 py-8 text-center text-gray-400">No requests found</td></tr>
+                <tr><td colSpan={source === "cloudwatch" ? 8 : 7} className="px-4 py-8 text-center text-gray-400">No requests found</td></tr>
               ) : (
-                requestsData?.data.map((req) => (
-                  <tr key={req.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                    <td className="whitespace-nowrap px-4 py-3 text-gray-500">{new Date(req.timestamp).toLocaleTimeString()}</td>
+                requestsData?.data.map((req, idx) => (
+                  <tr key={req.id || idx} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                    <td className="whitespace-nowrap px-4 py-3 text-gray-500">{new Date(req.timestamp || req["@timestamp"]).toLocaleTimeString()}</td>
                     <td className="px-4 py-3">
-                      <span className="rounded bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">{req.method}</span>
+                      <span className="rounded bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">{req.method || req.httpMethod}</span>
                     </td>
                     <td className="px-4 py-3">
                       <span className={`rounded px-2 py-0.5 text-xs font-medium ${
-                        req.httpStatus >= 500 ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400" :
-                        req.httpStatus >= 400 ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400" :
-                        req.httpStatus >= 300 ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400" :
+                        (req.httpStatus || req.statusCode || req.status) >= 500 ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400" :
+                        (req.httpStatus || req.statusCode || req.status) >= 400 ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400" :
+                        (req.httpStatus || req.statusCode || req.status) >= 300 ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400" :
                         "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
-                      }`}>{req.httpStatus}</span>
+                      }`}>{req.httpStatus || req.statusCode || req.status}</span>
                     </td>
                     <td className="px-4 py-3 text-xs text-gray-500">
-                      <div className={req.ipVerified ? "text-green-600" : "text-red-500"}>{CRAWLER_LABELS[req.crawlerType] || req.crawlerType}</div>
-                      {req.verifiedClientIp && <div className="font-mono text-gray-400">{req.verifiedClientIp}</div>}
+                      <div className="flex items-center gap-1.5">
+                        <span>{source === "cloudwatch"
+                          ? (req.crawlerType || req.crawlerName || req.botName || "").replace(/_/g, " ")
+                          : (CRAWLER_LABELS[req.crawlerType] || req.crawlerType)
+                        }</span>
+                        {source === "cloudwatch"
+                          ? req.crawlerVerified
+                            ? <span className="inline-block h-1.5 w-1.5 rounded-full bg-green-500" title="Verified" />
+                            : <span className="inline-block h-1.5 w-1.5 rounded-full bg-yellow-400" title="Unverified" />
+                          : <span className={`inline-block h-1.5 w-1.5 rounded-full ${req.ipVerified ? "bg-green-500" : "bg-yellow-400"}`} title={req.ipVerified ? "IP verified" : "IP not verified"} />
+                        }
+                      </div>
+                      {source === "cloudwatch"
+                        ? <>
+                            {req.crawlerOrganization && <div className="mt-0.5 font-mono text-gray-400 capitalize">{req.crawlerOrganization}</div>}
+                            {req.ja3Fingerprint && <div className="mt-0.5 font-mono text-[10px] text-gray-400">JA3: {req.ja3Fingerprint}</div>}
+                          </>
+                        : req.verifiedClientIp && <div className="mt-0.5 font-mono text-gray-400">{req.verifiedClientIp}</div>
+                      }
                     </td>
-                    <td className="px-4 py-3 text-xs text-gray-500">{req.seoPageType.replace(/_/g, " ")}</td>
-                    <td className={`px-4 py-3 text-xs font-mono ${req.responseTimeMs > 2000 ? "text-red-600" : "text-gray-500"}`}>{req.responseTimeMs}ms</td>
-                    <td className="max-w-xs truncate px-4 py-3 text-xs text-gray-600 dark:text-gray-400" title={req.url}>{req.url}</td>
+                    <td className="px-4 py-3 text-xs text-gray-500">{(req.seoPageType || req.classifiedPageType || req.pageType || "").replace(/_/g, " ")}</td>
+                    {source === "cloudwatch"
+                      ? <td className="px-4 py-3 text-xs text-gray-500">{req.country || "—"}</td>
+                      : <td className={`px-4 py-3 text-xs font-mono ${req.responseTimeMs > 2000 ? "text-red-600" : "text-gray-500"}`}>{req.responseTimeMs}ms</td>
+                    }
+                    <td className="max-w-xs truncate px-4 py-3 text-xs text-gray-600 dark:text-gray-400" title={req.url || req.uri}>{req.url || req.uri}</td>
                   </tr>
                 ))
               )}
