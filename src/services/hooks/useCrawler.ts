@@ -32,3 +32,28 @@ export function useCrawlerHealth(params?: { period?: string }) {
     refetchInterval: 60000,
   });
 }
+
+// CloudWatch WAF-powered hooks
+export function useCwDashboard(params?: { period?: string }) {
+  return useQuery({
+    queryKey: ["crawler", "cw", "dashboard", params],
+    queryFn: () => crawlerAPI.getCwDashboard(params),
+    refetchInterval: 120000,
+  });
+}
+
+export function useCwRequests(params?: { period?: string; limit?: string }) {
+  return useQuery({
+    queryKey: ["crawler", "cw", "requests", params],
+    queryFn: () => crawlerAPI.getCwRequests(params),
+    refetchInterval: 60000,
+  });
+}
+
+export function useCwAlerts(params?: { period?: string }) {
+  return useQuery({
+    queryKey: ["crawler", "cw", "alerts", params],
+    queryFn: () => crawlerAPI.getCwAlerts(params),
+    refetchInterval: 120000,
+  });
+}
