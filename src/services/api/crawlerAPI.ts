@@ -34,26 +34,6 @@ class CrawlerAPI {
     if (params.period) query.set("period", params.period);
     return apiGet(`/api/admin/crawler/health?${query.toString()}`);
   }
-
-  // CloudWatch WAF-powered endpoints
-  getCwDashboard(params: { period?: string } = {}): Promise<{ success: boolean; data: any; source: string }> {
-    const query = new URLSearchParams();
-    if (params.period) query.set("period", params.period);
-    return apiGet(`/api/admin/crawler/cw/dashboard?${query.toString()}`);
-  }
-
-  getCwRequests(params: { period?: string; limit?: string } = {}): Promise<{ success: boolean; data: any[]; source: string }> {
-    const query = new URLSearchParams();
-    if (params.period) query.set("period", params.period);
-    if (params.limit) query.set("limit", params.limit);
-    return apiGet(`/api/admin/crawler/cw/requests?${query.toString()}`);
-  }
-
-  getCwAlerts(params: { period?: string } = {}): Promise<{ success: boolean; data: any[]; source: string }> {
-    const query = new URLSearchParams();
-    if (params.period) query.set("period", params.period);
-    return apiGet(`/api/admin/crawler/cw/alerts?${query.toString()}`);
-  }
 }
 
 export const crawlerAPI = new CrawlerAPI();
