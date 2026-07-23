@@ -19,6 +19,7 @@ const CRAWLER_LABELS: Record<string, string> = {
   ADSBOT: "AdsBot",
   MEDIAPARTNERS: "Mediapartners",
   OTHER_KNOWN: "Other Known Bot",
+  FAKE_CLAIMED: "Fake/Unverified",
 };
 
 const STATUS_COLORS: Record<string, string> = {
