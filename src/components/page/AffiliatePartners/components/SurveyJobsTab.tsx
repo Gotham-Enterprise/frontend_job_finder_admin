@@ -194,7 +194,12 @@ export default function SurveyJobsTab() {
 
   return (
     <div className="space-y-4">
-      <SurveyJobTrends affiliatePartnerId={affiliatePartnerId || undefined} enabled={!isLoading} />
+      <SurveyJobTrends
+        affiliatePartnerId={affiliatePartnerId}
+        partners={surveyPartners}
+        onPartnerChange={handlePartnerChange}
+        enabled={!isLoading}
+      />
 
       {/* Toolbar */}
       <div className="flex items-center justify-between">
