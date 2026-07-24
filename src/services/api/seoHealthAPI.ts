@@ -5,6 +5,7 @@ import type {
   HealthDetailResponse,
   SeoHealthMetric,
 } from "@/types/seo-health";
+import type { CrawlFunnelResponse } from "@/types/seo";
 
 class SeoHealthAPI {
   async getHealth(): Promise<SeoHealthResponse> {
@@ -13,6 +14,13 @@ class SeoHealthAPI {
 
   async getSchemaQuality(): Promise<SchemaQualityResponse> {
     return apiGet<SchemaQualityResponse>("/api/admin/seo/schema-quality");
+  }
+
+  async getCrawlFunnel(params: { period?: number } = {}): Promise<CrawlFunnelResponse> {
+    const query = new URLSearchParams();
+    if (params.period) query.set("period", String(params.period));
+    const qs = query.toString();
+    return apiGet<CrawlFunnelResponse>(`/api/admin/seo/crawl-funnel${qs ? `?${qs}` : ""}`);
   }
 
   async getHealthDetail(

@@ -7,10 +7,11 @@ import CoverageTabContent from "@/components/admin/seo-health/CoverageTabContent
 import DuplicatesTabContent from "@/components/admin/seo-health/DuplicatesTabContent";
 import BotLogsTabContent from "@/components/admin/seo-health/BotLogsTabContent";
 import CrawlerDashboard from "@/components/admin/seo-health/CrawlerDashboard";
+import CrawlFunnelPanel from "@/components/admin/seo-health/CrawlFunnelPanel";
 import AffiliatesTabContent from "@/components/admin/seo-health/AffiliatesTabContent";
 
 export default function SeoHealthPage() {
-  const [activeTab, setActiveTab] = useState<"health" | "coverage" | "duplicates" | "bot-logs" | "affiliates">("health");
+  const [activeTab, setActiveTab] = useState<"health" | "coverage" | "duplicates" | "bot-logs" | "funnel" | "affiliates">("health");
   const { data: duplicatesData, isPending: duplicatesPending } = useDuplicateJobs();
 
   return (
@@ -83,6 +84,16 @@ export default function SeoHealthPage() {
             Bot Traffic Logs
           </button>
           <button
+            onClick={() => setActiveTab("funnel")}
+            className={`whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium ${
+              activeTab === "funnel"
+                ? "border-primary-500 text-primary-600 dark:border-primary-400 dark:text-primary-400"
+                : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:border-gray-700 dark:hover:text-gray-300"
+            }`}
+          >
+            Crawl Funnel
+          </button>
+          <button
             onClick={() => setActiveTab("affiliates")}
             className={`whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium ${
               activeTab === "affiliates"
@@ -113,6 +124,11 @@ export default function SeoHealthPage() {
       {/* Tab Content: Bot Logs */}
       <div className={`animate-in fade-in slide-in-from-bottom-2 ${activeTab === "bot-logs" ? "block" : "hidden"}`}>
         <CrawlerDashboard />
+      </div>
+
+      {/* Tab Content: Crawl Funnel */}
+      <div className={`animate-in fade-in slide-in-from-bottom-2 ${activeTab === "funnel" ? "block" : "hidden"}`}>
+        <CrawlFunnelPanel />
       </div>
 
       {/* Tab Content: Affiliate Jobs */}
