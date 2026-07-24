@@ -26,6 +26,14 @@ export function useSchemaQuality() {
   });
 }
 
+export function useCrawlFunnel(params?: { period?: number }) {
+  return useQuery({
+    queryKey: ["seo", "crawlFunnel", params],
+    queryFn: () => seoHealthAPI.getCrawlFunnel(params),
+    staleTime: 1000 * 60 * 2,
+  });
+}
+
 export function useHealthDetail(
   metric: SeoHealthMetric,
   params: { page?: number; issue?: string; filter?: string; daysFrom?: number; daysTo?: number } = {}
