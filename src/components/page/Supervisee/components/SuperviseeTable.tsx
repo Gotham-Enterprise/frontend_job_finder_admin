@@ -1,6 +1,6 @@
 import React from "react";
-import { Eye, Mail, Pencil } from "lucide-react";
-import { formatDate } from "@/services/utils/dateUtils";
+import { formatDate, formatDateTimeLocal } from "@/services/utils/dateUtils";
+import { TimeIcon } from "@/icons";
 import { formatUsStateCodeForDisplay } from "@/services/utils/formatUsStateLicensure";
 import { formatUSPhoneNationalDisplay } from "@/services/utils/phoneNumberUtils";
 import {
@@ -11,23 +11,32 @@ import { Table, TableBody, TableCell, TableRow } from "../../../ui/table";
 import Avatar from "../../../ui/avatar/Avatar";
 import TableHeading from "../../../tables/tableHeader";
 import EmailVerifiedBadge from "../../../ui/badge/EmailVerifiedBadge";
+import VisibilityBadge from "../../../ui/badge/VisibilityBadge";
+import SuperviseeRowActions from "./SuperviseeRowActions";
 import { SuperviseeTableProps } from "@/services/types/SuperviseeTypes";
-
-const ACTION_ICON_PX = 16;
-const actionIconProps = { size: ACTION_ICON_PX, className: "shrink-0" } as const;
 
 const SuperviseeTable: React.FC<SuperviseeTableProps> = ({
   data,
   isLoading,
   tableColumns,
+  sortBy,
+  sortOrder,
+  onSort,
   onViewSupervisee,
   onEditSupervisee,
   onResendVerification,
+  onApproveEmailVerification,
+  onToggleHideProfile,
 }) => {
   return (
     <div className="overflow-x-auto">
       <Table className="min-w-full">
-        <TableHeading columns={tableColumns} />
+        <TableHeading
+          columns={tableColumns}
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          onSort={onSort}
+        />
         <TableBody>
           {isLoading ? (
             <TableRow>
@@ -64,6 +73,7 @@ const SuperviseeTable: React.FC<SuperviseeTableProps> = ({
                       src={supervisee.profilePhotoUrl || undefined}
                       name={supervisee.fullName || "?"}
                       size="small"
+                      enablePreview
                     />
                     <div className="min-w-0">
                       <p className="text-sm font-medium text-gray-900 dark:text-white truncate max-w-[160px]">
@@ -104,40 +114,43 @@ const SuperviseeTable: React.FC<SuperviseeTableProps> = ({
                   <EmailVerifiedBadge verified={supervisee.emailVerified} />
                 </TableCell>
 
+                {/* Visibility in Find a Supervisor app */}
+                <TableCell className="px-4 py-3 whitespace-nowrap">
+                  <VisibilityBadge hidden={supervisee.hideProfile} />
+                </TableCell>
+
                 <TableCell className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                  {formatDate(supervisee.createdAt)}
+                  {supervisee.createdAt ? (
+                    (() => {
+                      const registered = formatDateTimeLocal(supervisee.createdAt);
+                      if (typeof registered === "string") {
+                        return <p>{registered}</p>;
+                      }
+                      return (
+                        <div>
+                          <div>{registered.date}</div>
+                          <div className="flex items-center mt-1">
+                            <TimeIcon className="mr-1" />
+                            <span>{registered.time}</span>
+                          </div>
+                        </div>
+                      );
+                    })()
+                  ) : (
+                    formatDate(supervisee.createdAt)
+                  )}
                 </TableCell>
 
                 <TableCell className="px-4 py-3 whitespace-nowrap text-right">
-                  <div className="flex items-center justify-end gap-1">
-                    <button
-                      onClick={() => onViewSupervisee(supervisee.id)}
-                      title="View details"
-                      className="p-1.5 text-gray-500 hover:text-brand-600 dark:text-gray-400 dark:hover:text-brand-400 rounded transition-colors"
-                    >
-                      <Eye {...actionIconProps} />
-                    </button>
-
-                    {!supervisee.emailVerified && (
-                      <button
-                        onClick={() =>
-                          onResendVerification(supervisee.id, supervisee.fullName || supervisee.email)
-                        }
-                        title="Resend verification email"
-                        className="p-1.5 text-gray-500 hover:text-warning-600 dark:text-gray-400 dark:hover:text-warning-400 rounded transition-colors"
-                      >
-                        <Mail {...actionIconProps} />
-                      </button>
-                    )}
-                    <button
-                      onClick={() =>
-                        onEditSupervisee(supervisee.id, supervisee.fullName || supervisee.email)
-                      }
-                      title="Edit supervisee"
-                      className="p-1.5 text-gray-500 hover:text-brand-600 dark:text-gray-400 dark:hover:text-brand-400 rounded transition-colors"
-                    >
-                      <Pencil {...actionIconProps} />
-                    </button>
+                  <div className="flex items-center justify-end">
+                    <SuperviseeRowActions
+                      supervisee={supervisee}
+                      onView={onViewSupervisee}
+                      onEdit={onEditSupervisee}
+                      onResendVerification={onResendVerification}
+                      onApproveEmailVerification={onApproveEmailVerification}
+                      onToggleHideProfile={onToggleHideProfile}
+                    />
                   </div>
                 </TableCell>
               </TableRow>

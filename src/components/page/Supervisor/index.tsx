@@ -14,6 +14,8 @@ import {
   ApproveSupervisorModal,
   EditSupervisorModal,
   ResendVerificationModal,
+  ApproveEmailVerificationModal,
+  HideProfileModal,
 } from "./components";
 
 const Supervisors: React.FC<SupervisorsProps> = ({ className = "" }) => {
@@ -39,6 +41,9 @@ const Supervisors: React.FC<SupervisorsProps> = ({ className = "" }) => {
     tableColumns,
     statusOptions,
     itemsPerPageOptions,
+    sortBy,
+    sortOrder,
+    handleSort,
     filterChange,
     initPageChange,
     viewSupervisor,
@@ -70,6 +75,18 @@ const Supervisors: React.FC<SupervisorsProps> = ({ className = "" }) => {
     openResendModal,
     closeResendModal,
     confirmResend,
+
+    approveEmailModal,
+    isApprovingEmail,
+    openApproveEmailModal,
+    closeApproveEmailModal,
+    confirmApproveEmail,
+
+    hideProfileModal,
+    isHidingProfile,
+    openHideProfileModal,
+    closeHideProfileModal,
+    confirmHideProfile,
   } = useSupervisorLogic();
 
   if (error && !isPending) {
@@ -114,11 +131,16 @@ const Supervisors: React.FC<SupervisorsProps> = ({ className = "" }) => {
           data={data}
           isLoading={isLoading}
           tableColumns={tableColumns}
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          onSort={handleSort}
           onViewSupervisor={viewSupervisor}
           onEditSupervisor={openEditModal}
           onApproveSupervisor={openApproveModal}
           onRejectSupervisor={openRejectModal}
           onResendVerification={openResendModal}
+          onApproveEmailVerification={openApproveEmailModal}
+          onToggleHideProfile={openHideProfileModal}
           onRefresh={refetch}
         />
 
@@ -165,6 +187,23 @@ const Supervisors: React.FC<SupervisorsProps> = ({ className = "" }) => {
         onConfirm={confirmResend}
         onCancel={closeResendModal}
         isLoading={isResending}
+      />
+
+      <ApproveEmailVerificationModal
+        isOpen={approveEmailModal.isOpen}
+        fullName={approveEmailModal.fullName}
+        onConfirm={confirmApproveEmail}
+        onCancel={closeApproveEmailModal}
+        isLoading={isApprovingEmail}
+      />
+
+      <HideProfileModal
+        isOpen={hideProfileModal.isOpen}
+        fullName={hideProfileModal.fullName}
+        currentlyHidden={hideProfileModal.currentlyHidden}
+        onConfirm={confirmHideProfile}
+        onCancel={closeHideProfileModal}
+        isLoading={isHidingProfile}
       />
     </>
   );

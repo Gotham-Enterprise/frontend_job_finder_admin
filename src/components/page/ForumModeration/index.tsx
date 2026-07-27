@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { authUtils } from '@/services/utils/authUtils'
 import { getModerationStats } from '@/services/api/forumModerationApi'
 import type { ModerationStats } from '@/services/api/forumModerationApi'
@@ -14,14 +15,36 @@ import DeletedContentTab from './components/DeletedContentTab'
 
 type TabType = 'reports' | 'contents' | 'flagged' | 'users' | 'deleted' | 'logs'
 
+const VALID_TABS: TabType[] = ['reports', 'contents', 'flagged', 'users', 'deleted', 'logs']
+
+const isValidTab = (tab: string | null): tab is TabType =>
+  tab !== null && VALID_TABS.includes(tab as TabType)
+
 export default function ForumModeration() {
-  const [activeTab, setActiveTab] = useState<TabType>('contents')
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const tabFromUrl = searchParams.get('tab')
+
+  const [activeTab, setActiveTab] = useState<TabType>(() =>
+    isValidTab(tabFromUrl) ? tabFromUrl : 'contents'
+  )
   const [stats, setStats] = useState<ModerationStats | null>(null)
   const [isLoadingStats, setIsLoadingStats] = useState(true)
 
   useEffect(() => {
     loadStats()
   }, [])
+
+  useEffect(() => {
+    if (isValidTab(tabFromUrl) && tabFromUrl !== activeTab) {
+      setActiveTab(tabFromUrl)
+    }
+  }, [tabFromUrl])
+
+  const handleTabChange = (tab: TabType) => {
+    setActiveTab(tab)
+    router.push(`?tab=${tab}`, { scroll: false })
+  }
 
   const loadStats = async () => {
     const token = authUtils.getToken()
@@ -139,7 +162,7 @@ export default function ForumModeration() {
             return (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => handleTabChange(tab.id)}
                 className={`flex items-center gap-2 px-4 py-2 font-medium border-b-2 transition-colors ${
                   activeTab === tab.id
                     ? 'border-primary text-primary'

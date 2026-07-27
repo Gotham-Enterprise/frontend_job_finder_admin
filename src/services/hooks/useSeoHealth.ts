@@ -2,12 +2,17 @@ import { useQuery } from "@tanstack/react-query";
 import { seoHealthAPI } from "../api/seoHealthAPI";
 import type { SeoHealthMetric } from "@/types/seo-health";
 
+const SEO_STALE_TIME = Infinity;
+const SEO_REFETCH_ON_MOUNT = false;
+const SEO_REFETCH_ON_WINDOW_FOCUS = false;
+
 export function useSeoHealth() {
   return useQuery({
     queryKey: ["seoHealth"],
     queryFn: () => seoHealthAPI.getHealth(),
-    staleTime: 1000 * 60 * 5,
-    refetchOnWindowFocus: false,
+    staleTime: SEO_STALE_TIME,
+    refetchOnMount: SEO_REFETCH_ON_MOUNT,
+    refetchOnWindowFocus: SEO_REFETCH_ON_WINDOW_FOCUS,
   });
 }
 
@@ -15,8 +20,17 @@ export function useSchemaQuality() {
   return useQuery({
     queryKey: ["seoSchemaQuality"],
     queryFn: () => seoHealthAPI.getSchemaQuality(),
-    staleTime: 1000 * 60 * 5,
-    refetchOnWindowFocus: false,
+    staleTime: SEO_STALE_TIME,
+    refetchOnMount: SEO_REFETCH_ON_MOUNT,
+    refetchOnWindowFocus: SEO_REFETCH_ON_WINDOW_FOCUS,
+  });
+}
+
+export function useCrawlFunnel(params?: { period?: number }) {
+  return useQuery({
+    queryKey: ["seo", "crawlFunnel", params],
+    queryFn: () => seoHealthAPI.getCrawlFunnel(params),
+    staleTime: 1000 * 60 * 2,
   });
 }
 

@@ -27,7 +27,7 @@ function Badge({ children, color }: { children: React.ReactNode; color: string }
   );
 }
 
-const FRONTEND_URL = process.env.NEXT_PUBLIC_FRONTEND_URL || "https://gothamenterprisesltd.com";
+const FRONTEND_URL = process.env.NEXT_PUBLIC_FRONTEND_URL || "https://www.gothamenterprisesltd.com";
 
 function slugify(s: string): string {
   return s.toLowerCase().replace(/[^\w\s]/gi, "").replace(/\s+/g, "-");
@@ -351,7 +351,7 @@ function SeoPageTable({ items }: { items: HealthDetailSeoPage[] }) {
                   <td className="px-6 py-4 text-gray-600 dark:text-gray-400">{fmtDate(page.updatedAt)}</td>
                   <td className="px-6 py-4">
                     <a
-                      href={`${FRONTEND_URL}/${page.slug}`}
+                      href={`${FRONTEND_URL}/jobs/${page.slug}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"

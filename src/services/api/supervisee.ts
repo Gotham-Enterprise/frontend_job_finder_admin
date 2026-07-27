@@ -2,10 +2,12 @@ import {
   SuperviseeDetailsResponse,
   SuperviseeFilters,
   SuperviseeResendVerificationResponse,
+  SuperviseeApproveEmailVerificationResponse,
   SuperviseeUpdatePayload,
   SuperviseeUpdateResponse,
   SuperviseesResponse,
 } from "../types/supervisee";
+import { HideProfileResponse } from "../types/supervisor";
 import { apiGet, apiPatch, apiPost } from "./apiUtils";
 import { buildSuperviseeUpdateFormData } from "../utils/superviseeProfileForm";
 import { showToast } from "../utils/toast";
@@ -18,6 +20,8 @@ export const superviseeApi = {
       if (filters.page) queryParams.append("page", filters.page.toString());
       if (filters.limit) queryParams.append("limit", filters.limit.toString());
       if (filters.keyword) queryParams.append("keyword", filters.keyword);
+      if (filters.sortBy) queryParams.append("sortBy", filters.sortBy);
+      if (filters.sortOrder) queryParams.append("sortOrder", filters.sortOrder);
 
       const endpoint = `/api/supervision/admin/supervisees?${queryParams.toString()}`;
       return apiGet<SuperviseesResponse>(endpoint);
@@ -43,6 +47,18 @@ export const superviseeApi = {
     );
   },
 
+  /**
+   * Approve a supervisee's pending email verification on their behalf,
+   * bypassing the standard verification link.
+   * `id` is the supervision user id (the same id used by the list/detail endpoints).
+   * Backend returns 400 if the user's email is already verified.
+   */
+  async approveEmailVerification(id: string): Promise<SuperviseeApproveEmailVerificationResponse> {
+    return apiPatch<SuperviseeApproveEmailVerificationResponse>(
+      `/api/supervision/admin/users/${id}/approve-email-verification`,
+    );
+  },
+
   async updateSupervisee(
     id: string,
     payload: SuperviseeUpdatePayload,
@@ -51,6 +67,17 @@ export const superviseeApi = {
     return apiPatch<SuperviseeUpdateResponse>(
       `/api/supervision/admin/supervisees/${id}`,
       formData,
+    );
+  },
+
+  /**
+   * Hide or show a supervisee's public profile.
+   * `id` is the supervision user id. Note the endpoint has no `/supervisees/` segment.
+   */
+  async setHideProfile(id: string, hideProfile: boolean): Promise<HideProfileResponse> {
+    return apiPatch<HideProfileResponse>(
+      `/api/supervision/admin/${id}/hide-profile`,
+      { hideProfile },
     );
   },
 };

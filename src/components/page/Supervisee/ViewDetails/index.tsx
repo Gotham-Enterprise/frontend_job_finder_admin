@@ -3,7 +3,7 @@
 import React, { useMemo, useState } from "react";
 import { Mail, Pencil } from "lucide-react";
 import { useSuperviseeDetails, useResendSuperviseeVerification } from "@/services/hooks/useSupervisees";
-import { formatDate } from "@/services/utils/dateUtils";
+import { formatDate, formatDateTime } from "@/services/utils/dateUtils";
 import { formatStateOfLicensureForDisplay, formatUsStateCodeForDisplay } from "@/services/utils/formatUsStateLicensure";
 import { formatUSPhoneNationalDisplay } from "@/services/utils/phoneNumberUtils";
 import {
@@ -17,7 +17,7 @@ import BackToListButton from "@/components/ui/BackToListButton";
 import EmailVerifiedBadge from "@/components/ui/badge/EmailVerifiedBadge";
 import Avatar from "@/components/ui/avatar/Avatar";
 import { EditSuperviseeModal } from "../components/EditSuperviseeModal";
-import ResendVerificationModal from "../components/ResendVerificationModal";
+import ResendVerificationModal from "@/components/common/ResendVerificationModal";
 
 interface ViewDetailsProps {
   id: string;
@@ -149,7 +149,7 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
         </div>
 
         <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 mb-6 flex flex-col sm:flex-row gap-5 items-start">
-          <Avatar src={s.profilePhotoUrl || undefined} name={displayName || "?"} size="xlarge" />
+          <Avatar src={s.profilePhotoUrl || undefined} name={displayName || "?"} size="xlarge" enablePreview />
           <div className="flex-1 min-w-0">
             <div className="flex flex-wrap items-center gap-3 mb-1">
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white">{displayName || "—"}</h2>
@@ -177,7 +177,7 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
             />
             <FieldRow
               label="Email Verified At"
-              value={s.emailVerified ? formatDate(s.emailVerifiedAt) : null}
+              value={s.emailVerified ? formatDateTime(s.emailVerifiedAt, "Not specified") : null}
             />
             <FieldRow
               label="Phone"
@@ -191,7 +191,7 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
             <FieldRow label="Zip Code" value={s.zipcode} />
             <FieldRow label="Account Status" value={s.status} />
             <FieldRow label="Active" value={s.isActive ? "Yes" : "No"} />
-            <FieldRow label="Registered" value={formatDate(s.createdAt)} />
+            <FieldRow label="Registered" value={formatDateTime(s.createdAt, "Not specified")} />
           </SectionCard>
 
           <SectionCard title="Occupation & Licensure">

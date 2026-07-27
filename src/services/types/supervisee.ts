@@ -30,16 +30,27 @@ export interface Supervisee {
   budgetRangeEnd: number | null;
   superviseeOccupation: string | null;
   superviseeSpecialty: string | null;
+  /** Whether the supervisee's profile is hidden from public listings; drives the Hide/Show action. */
+  hideProfile: boolean;
   createdAt: string;
 }
+
+export type SuperviseeSortBy = "fullName" | "state" | "hideProfile" | "createdAt";
 
 export interface SuperviseeFilters {
   page?: number;
   limit?: number;
   keyword?: string;
+  sortBy?: SuperviseeSortBy;
+  sortOrder?: "asc" | "desc";
 }
 
 export interface SuperviseeResendVerificationResponse {
+  success: boolean;
+  message: string;
+}
+
+export interface SuperviseeApproveEmailVerificationResponse {
   success: boolean;
   message: string;
 }

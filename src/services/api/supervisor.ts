@@ -4,8 +4,10 @@ import {
   SupervisorDetailsResponse,
   SupervisorActionResponse,
   SupervisorResendVerificationResponse,
+  SupervisorApproveEmailVerificationResponse,
   SupervisorUpdatePayload,
   SupervisorUpdateResponse,
+  HideProfileResponse,
 } from "../types/supervisor";
 import { buildSupervisorUpdateFormData } from "../utils/supervisorProfileForm";
 import { apiGet, apiPatch, apiPost } from "./apiUtils";
@@ -21,6 +23,8 @@ export const supervisorApi = {
       if (filters.keyword) queryParams.append("keyword", filters.keyword);
       // Only send verificationStatus when a specific one is selected; omitting it returns all statuses
       if (filters.verificationStatus) queryParams.append("verificationStatus", filters.verificationStatus);
+      if (filters.sortBy) queryParams.append("sortBy", filters.sortBy);
+      if (filters.sortOrder) queryParams.append("sortOrder", filters.sortOrder);
 
       const endpoint = `/api/supervision/admin/supervisors?${queryParams.toString()}`;
       return apiGet<SupervisorsResponse>(endpoint);
@@ -68,11 +72,34 @@ export const supervisorApi = {
     );
   },
 
+  /**
+   * Approve a supervisor's pending email verification on their behalf,
+   * bypassing the standard verification link.
+   * `id` is the supervision user id (the same id used by the list/detail endpoints).
+   * Backend returns 400 if the user's email is already verified.
+   */
+  async approveEmailVerification(id: string): Promise<SupervisorApproveEmailVerificationResponse> {
+    return apiPatch<SupervisorApproveEmailVerificationResponse>(
+      `/api/supervision/admin/users/${id}/approve-email-verification`,
+    );
+  },
+
   async updateSupervisor(id: string, payload: SupervisorUpdatePayload): Promise<SupervisorUpdateResponse> {
     const formData = buildSupervisorUpdateFormData(payload);
     return apiPatch<SupervisorUpdateResponse>(
       `/api/supervision/admin/supervisors/${id}`,
       formData,
+    );
+  },
+
+  /**
+   * Hide or show a supervisor's public profile.
+   * `id` is the supervision user id. Note the endpoint has no `/supervisors/` segment.
+   */
+  async setHideProfile(id: string, hideProfile: boolean): Promise<HideProfileResponse> {
+    return apiPatch<HideProfileResponse>(
+      `/api/supervision/admin/${id}/hide-profile`,
+      { hideProfile },
     );
   },
 };

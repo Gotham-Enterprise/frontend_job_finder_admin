@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
+import ImagePreviewModal from "../ImagePreviewModal";
 
 interface AvatarProps {
   src?: string;
@@ -10,6 +11,8 @@ interface AvatarProps {
   size?: "xsmall" | "small" | "medium" | "large" | "xlarge" | "xxlarge";
   status?: "online" | "offline" | "busy" | "none";
   className?: string;
+  /** When true and an image is shown, clicking the avatar opens a zoomed preview modal */
+  enablePreview?: boolean;
 }
 
 const sizeClasses = {
@@ -43,8 +46,10 @@ const Avatar: React.FC<AvatarProps> = ({
   size = "medium",
   status = "none",
   className = "",
+  enablePreview = false,
 }) => {
   const [imageFailed, setImageFailed] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   useEffect(() => {
     setImageFailed(false);
@@ -61,8 +66,9 @@ const Avatar: React.FC<AvatarProps> = ({
   };
 
   const showImage = Boolean(src) && !imageFailed;
+  const clickable = enablePreview && showImage;
 
-  return (
+  const avatar = (
     <div className={`relative rounded-full overflow-hidden ${sizeClasses[size]} ${className}`}>
       {showImage ? (
         <Image
@@ -87,6 +93,23 @@ const Avatar: React.FC<AvatarProps> = ({
         ></span>
       )}
     </div>
+  );
+
+  if (!clickable) return avatar;
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setPreviewOpen(true)}
+        className="block cursor-pointer rounded-full transition-opacity hover:opacity-90"
+        aria-label={`View ${name}'s photo`}
+        title="Click to view photo"
+      >
+        {avatar}
+      </button>
+      <ImagePreviewModal isOpen={previewOpen} onClose={() => setPreviewOpen(false)} src={src!} alt={name} />
+    </>
   );
 };
 

@@ -12,6 +12,8 @@ import {
   SuperviseeTablePagination,
   EditSuperviseeModal,
   ResendVerificationModal,
+  ApproveEmailVerificationModal,
+  HideProfileModal,
 } from "./components";
 
 const Supervisees: React.FC<SuperviseesProps> = ({ className = "" }) => {
@@ -32,6 +34,9 @@ const Supervisees: React.FC<SuperviseesProps> = ({ className = "" }) => {
     refetch,
     tableColumns,
     itemsPerPageOptions,
+    sortBy,
+    sortOrder,
+    handleSort,
     filterChange,
     initPageChange,
     viewSupervisee,
@@ -44,6 +49,18 @@ const Supervisees: React.FC<SuperviseesProps> = ({ className = "" }) => {
     openResendModal,
     closeResendModal,
     confirmResend,
+
+    approveEmailModal,
+    isApprovingEmail,
+    openApproveEmailModal,
+    closeApproveEmailModal,
+    confirmApproveEmail,
+
+    hideProfileModal,
+    isHidingProfile,
+    openHideProfileModal,
+    closeHideProfileModal,
+    confirmHideProfile,
   } = useSuperviseeLogic();
 
   if (error && !isPending) {
@@ -73,9 +90,14 @@ const Supervisees: React.FC<SuperviseesProps> = ({ className = "" }) => {
           data={data}
           isLoading={isLoading}
           tableColumns={tableColumns}
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          onSort={handleSort}
           onViewSupervisee={viewSupervisee}
           onEditSupervisee={openEditModal}
           onResendVerification={openResendModal}
+          onApproveEmailVerification={openApproveEmailModal}
+          onToggleHideProfile={openHideProfileModal}
         />
 
         <SuperviseeTablePagination
@@ -101,6 +123,23 @@ const Supervisees: React.FC<SuperviseesProps> = ({ className = "" }) => {
         onConfirm={confirmResend}
         onCancel={closeResendModal}
         isLoading={isResending}
+      />
+
+      <ApproveEmailVerificationModal
+        isOpen={approveEmailModal.isOpen}
+        fullName={approveEmailModal.fullName}
+        onConfirm={confirmApproveEmail}
+        onCancel={closeApproveEmailModal}
+        isLoading={isApprovingEmail}
+      />
+
+      <HideProfileModal
+        isOpen={hideProfileModal.isOpen}
+        fullName={hideProfileModal.fullName}
+        currentlyHidden={hideProfileModal.currentlyHidden}
+        onConfirm={confirmHideProfile}
+        onCancel={closeHideProfileModal}
+        isLoading={isHidingProfile}
       />
     </>
   );

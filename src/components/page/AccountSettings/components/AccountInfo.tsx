@@ -12,6 +12,7 @@ import Button from '@/components/ui/button/Button';
 import Input from '@/components/ui/input/Input';
 import Label from '@/components/form/Label';
 import FullScreenSpinner from '@/components/ui/FullScreenSpinner';
+import ImagePreviewModal from '@/components/ui/ImagePreviewModal';
 import { EyeIcon, EyeCloseIcon } from '@/icons';
 
 interface PersonalInformationFormData {
@@ -64,6 +65,7 @@ const AccountInfo: React.FC<AccountInfoProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedAvatar, setSelectedAvatar] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [avatarModalOpen, setAvatarModalOpen] = useState(false);
   const [showPasswords, setShowPasswords] = useState({
     current: false,
     new: false,
@@ -307,18 +309,20 @@ const AccountInfo: React.FC<AccountInfoProps> = ({
             <div className="flex items-start gap-6 mb-6">
               <div className="flex-shrink-0">
                 <div className="relative">
-                  {avatarPreview ? (
-                    <img 
-                      src={avatarPreview} 
-                      alt="Avatar preview"
-                      className="w-16 h-16 rounded-full object-cover"
-                    />
-                  ) : (authStorageData.user?.adminProfile?.avatarUrl || user?.adminProfile?.avatarUrl) ? (
-                    <img 
-                      src={(authStorageData.user?.adminProfile?.avatarUrl || user?.adminProfile?.avatarUrl) || ''} 
-                      alt="Current avatar"
-                      className="w-16 h-16 rounded-full object-cover"
-                    />
+                  {(avatarPreview || authStorageData.user?.adminProfile?.avatarUrl || user?.adminProfile?.avatarUrl) ? (
+                    <button
+                      type="button"
+                      onClick={() => setAvatarModalOpen(true)}
+                      className="block cursor-pointer rounded-full transition-opacity hover:opacity-90"
+                      aria-label="View profile photo"
+                      title="Click to view photo"
+                    >
+                      <img
+                        src={(avatarPreview || authStorageData.user?.adminProfile?.avatarUrl || user?.adminProfile?.avatarUrl) || ''}
+                        alt={avatarPreview ? 'Avatar preview' : 'Current avatar'}
+                        className="w-16 h-16 rounded-full object-cover"
+                      />
+                    </button>
                   ) : (
                     <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center">
                       <span className="text-lg font-semibold text-white">
@@ -349,6 +353,15 @@ const AccountInfo: React.FC<AccountInfoProps> = ({
                 />
               </div>
             </div>
+
+            {(avatarPreview || authStorageData.user?.adminProfile?.avatarUrl || user?.adminProfile?.avatarUrl) && (
+              <ImagePreviewModal
+                isOpen={avatarModalOpen}
+                onClose={() => setAvatarModalOpen(false)}
+                src={(avatarPreview || authStorageData.user?.adminProfile?.avatarUrl || user?.adminProfile?.avatarUrl) || ''}
+                alt={displayName && displayName.trim() !== '' ? displayName : 'Profile photo'}
+              />
+            )}
 
             {/* Form Fields */}
             <div className="space-y-4">

@@ -1,9 +1,9 @@
 import React from "react";
-import { Mail } from "lucide-react";
+import { MailCheck } from "lucide-react";
 import { Modal } from "@/components/ui/modal";
 import Button from "@/components/ui/button/Button";
 
-interface ResendVerificationModalProps {
+interface ApproveEmailVerificationModalProps {
   isOpen: boolean;
   fullName: string;
   onConfirm: () => void;
@@ -11,7 +11,7 @@ interface ResendVerificationModalProps {
   isLoading: boolean;
 }
 
-const ResendVerificationModal: React.FC<ResendVerificationModalProps> = ({
+const ApproveEmailVerificationModal: React.FC<ApproveEmailVerificationModalProps> = ({
   isOpen,
   fullName,
   onConfirm,
@@ -29,17 +29,17 @@ const ResendVerificationModal: React.FC<ResendVerificationModalProps> = ({
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl overflow-hidden">
         <div className="px-6 pt-6 pb-4">
           <div className="flex items-start gap-4">
-            <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-brand-50 dark:bg-brand-500/20">
-              <Mail className="h-6 w-6 text-brand-600 dark:text-brand-400" aria-hidden />
+            <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-success-50 dark:bg-success-500/10">
+              <MailCheck className="h-6 w-6 text-success-600 dark:text-success-400" aria-hidden />
             </div>
             <div className="flex-1 min-w-0">
               <h3 className="text-lg font-semibold leading-6 text-gray-900 dark:text-white mb-1">
-                Resend Verification Email
+                Approve Email Verification
               </h3>
               <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
-                Resend the email verification link to{" "}
-                <span className="font-medium">{fullName}</span>? They&apos;ll receive a new email
-                prompting them to confirm their address.
+                Mark <span className="font-medium">{fullName}</span>&apos;s email as verified? This
+                bypasses the standard verification email and immediately verifies their account on
+                their behalf.
               </p>
             </div>
           </div>
@@ -74,10 +74,10 @@ const ResendVerificationModal: React.FC<ResendVerificationModalProps> = ({
                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                   />
                 </svg>
-                Sending…
+                Approving…
               </div>
             ) : (
-              "Resend Email"
+              "Approve Verification"
             )}
           </Button>
         </div>
@@ -86,4 +86,4 @@ const ResendVerificationModal: React.FC<ResendVerificationModalProps> = ({
   );
 };
 
-export default ResendVerificationModal;
+export default ApproveEmailVerificationModal;
