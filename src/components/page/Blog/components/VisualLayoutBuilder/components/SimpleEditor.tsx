@@ -372,7 +372,12 @@ const SimpleEditor: React.FC<SimpleEditorProps> = ({
                   placeholder="https://example.com"
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   autoFocus
-                  onKeyDown={(e) => { if (e.key === 'Enter') saveLink(); if (e.key === 'Escape') cancelLink(); }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && (editor?.getAttributes('link').href || linkUrl.trim())) {
+                      saveLink();
+                    }
+                    if (e.key === 'Escape') cancelLink();
+                  }}
                 />
               </div>
             </div>
@@ -385,7 +390,7 @@ const SimpleEditor: React.FC<SimpleEditorProps> = ({
               </button>
               <button
                 onClick={saveLink}
-                disabled={!linkUrl.trim()}
+                disabled={!editor?.getAttributes('link').href && !linkUrl.trim()}
                 className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {editor?.getAttributes('link').href ? 'Update' : 'Add'}
