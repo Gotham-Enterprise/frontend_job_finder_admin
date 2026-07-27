@@ -37,14 +37,6 @@ const ContentControls: React.FC<ContentControlsProps> = memo(({
     const cleaned = { ...block };
     let hasChanges = false;
     
-    if (cleaned.content?.text && typeof cleaned.content.text === 'string') {
-      const cleanedText = cleanHtmlEntities(cleaned.content.text);
-      if (cleanedText !== cleaned.content.text) {
-        cleaned.content = { ...cleaned.content, text: cleanedText };
-        hasChanges = true;
-      }
-    }
-    
     if (cleaned.type === 'quote') {
       if ((cleaned.content as any)?.author && typeof (cleaned.content as any).author === 'string') {
         const cleanedAuthor = cleanHtmlEntities((cleaned.content as any).author);
@@ -60,24 +52,6 @@ const ContentControls: React.FC<ContentControlsProps> = memo(({
           cleaned.content = { ...cleaned.content, citation: cleanedCitation };
           hasChanges = true;
         }
-      }
-    }
-    
-    if (cleaned.type === 'list' && (cleaned.content as any)?.items) {
-      const items = (cleaned.content as any).items;
-      const cleanedItems = items.map((item: string) => cleanHtmlEntities(item));
-      const itemsChanged = cleanedItems.some((cleanedItem: string, index: number) => cleanedItem !== items[index]);
-      if (itemsChanged) {
-        cleaned.content = { ...cleaned.content, items: cleanedItems };
-        hasChanges = true;
-      }
-    }
-    
-    if ((cleaned.content as any)?.url && typeof (cleaned.content as any).url === 'string') {
-      const cleanedUrl = cleanHtmlEntities((cleaned.content as any).url);
-      if (cleanedUrl !== (cleaned.content as any).url) {
-        cleaned.content = { ...cleaned.content, url: cleanedUrl };
-        hasChanges = true;
       }
     }
     
@@ -115,10 +89,10 @@ const ContentControls: React.FC<ContentControlsProps> = memo(({
   // Use cleaned block for the rest of the component
   const workingBlock = cleanedBlock;
 
-  // Helper function to clean content for display
+  // Helper function to get content for display
   const getCleanedContent = (content: string | undefined, fallback: string = ''): string => {
     if (!content) return fallback;
-    return cleanHtmlEntities(content);
+    return content;
   };
   const [showLinkModal, setShowLinkModal] = useState(false);
   const [showFullscreenEditor, setShowFullscreenEditor] = useState(false);
@@ -147,48 +121,22 @@ const ContentControls: React.FC<ContentControlsProps> = memo(({
 
   // Clean existing content of HTML entities on mount and block changes
   useEffect(() => {
-    const cleanContentField = (field: string, value: any) => {
-      if (typeof value === 'string') {
-        const cleanedValue = cleanHtmlEntities(value);
-        if (cleanedValue !== value) {
-          onContentUpdate(field, cleanedValue);
-        }
-      }
-    };
-
-    // Clean text content
-    if (workingBlock.content?.text) {
-      cleanContentField('text', workingBlock.content.text);
-    }
-
-    // Clean author content for quotes
+    // Clean author content for quotes (plain text only)
     if (workingBlock.type === 'quote' && (workingBlock.content as any)?.author) {
-      cleanContentField('author', (workingBlock.content as any).author);
-    }
-
-    // Clean citation content for quotes
-    if (workingBlock.type === 'quote' && (workingBlock.content as any)?.citation) {
-      cleanContentField('citation', (workingBlock.content as any).citation);
-    }
-
-    // Clean list items
-    if (workingBlock.type === 'list' && (workingBlock.content as any)?.items) {
-      const items = (workingBlock.content as any).items;
-      const cleanedItems = items.map((item: string) => cleanHtmlEntities(item));
-      const hasChanges = cleanedItems.some((cleanedItem: string, index: number) => cleanedItem !== items[index]);
-      if (hasChanges) {
-        onContentUpdate('items', cleanedItems);
+      const author = (workingBlock.content as any).author;
+      const cleanedAuthor = cleanHtmlEntities(author);
+      if (cleanedAuthor !== author) {
+        onContentUpdate('author', cleanedAuthor);
       }
     }
 
-    // Clean button text
-    if (workingBlock.type === 'button' && (workingBlock.content as any)?.text) {
-      cleanContentField('text', (workingBlock.content as any).text);
-    }
-
-    // Clean URL fields
-    if ((workingBlock.content as any)?.url) {
-      cleanContentField('url', (workingBlock.content as any).url);
+    // Clean citation content for quotes (plain text only)
+    if (workingBlock.type === 'quote' && (workingBlock.content as any)?.citation) {
+      const citation = (workingBlock.content as any).citation;
+      const cleanedCitation = cleanHtmlEntities(citation);
+      if (cleanedCitation !== citation) {
+        onContentUpdate('citation', cleanedCitation);
+      }
     }
   }, [workingBlock.content, onContentUpdate]);
 
