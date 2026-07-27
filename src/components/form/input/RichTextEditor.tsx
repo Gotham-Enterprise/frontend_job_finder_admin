@@ -191,6 +191,8 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
   const [showFormatDropdown, setShowFormatDropdown] = useState(false);
   const [showListDropdown, setShowListDropdown] = useState(false);
   const [showMergeTagDropdown, setShowMergeTagDropdown] = useState(false);
+  const [showLinkModal, setShowLinkModal] = useState(false);
+  const [linkUrl, setLinkUrl] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const getCurrentFormat = () => {
@@ -304,11 +306,43 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
     }
   };
 
-  const addLink = () => {
-    const url = prompt("Enter URL:");
-    if (url && editor) {
-      editor.chain().focus().setLink({ href: url }).run();
+  const openLinkModal = () => {
+    const previousUrl = editor?.getAttributes('link').href || '';
+    setLinkUrl(previousUrl);
+    setShowLinkModal(true);
+  };
+
+  const saveLink = () => {
+    const url = linkUrl.trim();
+    if (!url) {
+      editor?.chain().focus().extendMarkRange('link').unsetLink().run();
+    } else if (editor) {
+      const { state, dispatch } = editor.view;
+      const { doc, selection } = state;
+      const linkMarkType = state.schema.marks.link;
+      let from = selection.from;
+      let to = selection.to;
+      doc.nodesBetween(from, to, (node, pos) => {
+        if (node.marks.length) {
+          node.marks.forEach(mark => {
+            if (mark.type === linkMarkType) {
+              from = Math.min(from, pos);
+              to = Math.max(to, pos + node.nodeSize);
+            }
+          });
+        }
+      });
+      const mark = linkMarkType.create({ href: url });
+      const tr = state.tr.removeMark(from, to, linkMarkType).addMark(from, to, mark);
+      dispatch(tr);
     }
+    setShowLinkModal(false);
+    setLinkUrl('');
+  };
+
+  const cancelLink = () => {
+    setShowLinkModal(false);
+    setLinkUrl('');
   };   
   useEffect(() => {
     if (!editor) return;
@@ -609,7 +643,8 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
 
           <div className="flex gap-1">
             <ToolbarButton
-              onClick={addLink}
+              onClick={openLinkModal}
+              isActive={editor.isActive('link')}
               title="Add Link"
             >
               <LinkIcon className="w-5 h-5" />           
@@ -787,6 +822,46 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
         onImageSelect={handleProcessedImageSelect}
         title="Upload and Resize Image for Blog"
       />
+
+      {/* Link Modal */}
+      {showLinkModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 w-96 max-w-[90vw]">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+              {editor?.getAttributes('link').href ? 'Edit Link' : 'Add Link'}
+            </h3>
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">URL</label>
+                <input
+                  type="text"
+                  value={linkUrl}
+                  onChange={(e) => setLinkUrl(e.target.value)}
+                  placeholder="https://example.com"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+                  autoFocus
+                  onKeyDown={(e) => { if (e.key === 'Enter') saveLink(); if (e.key === 'Escape') cancelLink(); }}
+                />
+              </div>
+            </div>
+            <div className="flex gap-2 mt-5 justify-end">
+              <button
+                onClick={cancelLink}
+                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={saveLink}
+                disabled={!linkUrl.trim()}
+                className="px-4 py-2 text-sm font-medium text-white bg-brand-500 rounded-lg hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {editor?.getAttributes('link').href ? 'Update' : 'Add'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
