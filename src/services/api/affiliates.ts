@@ -30,6 +30,9 @@ export interface AffiliateLink {
   name: string;
   url: string;
   type?: string;
+  targetAudience?: string;
+  contentLevel?: string;
+  overview?: string;
   occupations?: string[];
   affiliateId: string;
   affiliate?: {
@@ -166,6 +169,9 @@ export interface CreateLinkData {
   name: string;
   url: string;
   type?: string;
+  targetAudience?: string;
+  contentLevel?: string;
+  overview?: string;
   occupations?: string[];
   affiliateId: string;
 }
@@ -174,6 +180,9 @@ export interface UpdateLinkData {
   name?: string;
   url?: string;
   type?: string;
+  targetAudience?: string;
+  contentLevel?: string;
+  overview?: string;
   occupations?: string[];
   affiliateId?: string;
 }
