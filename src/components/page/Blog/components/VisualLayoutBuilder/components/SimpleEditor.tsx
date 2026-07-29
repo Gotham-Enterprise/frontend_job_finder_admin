@@ -23,6 +23,8 @@ const SimpleEditor: React.FC<SimpleEditorProps> = ({
   style
 }) => {
   const [, forceUpdate] = useState({});
+  const [showLinkModal, setShowLinkModal] = useState(false);
+  const [linkUrl, setLinkUrl] = useState('');
 
   const editor = useEditor({
     extensions: [
@@ -85,20 +87,43 @@ const SimpleEditor: React.FC<SimpleEditorProps> = ({
     );
   }
 
-  const setLink = () => {
-    const previousUrl = editor.getAttributes('link').href;
-    const url = window.prompt('URL', previousUrl);
+  const openLinkModal = () => {
+    const previousUrl = editor.getAttributes('link').href || '';
+    setLinkUrl(previousUrl);
+    setShowLinkModal(true);
+  };
 
-    if (url === null) {
-      return;
-    }
-
-    if (url === '') {
+  const saveLink = () => {
+    const url = linkUrl.trim();
+    if (!url) {
       editor.chain().focus().extendMarkRange('link').unsetLink().run();
-      return;
+    } else if (editor) {
+      const { state, dispatch } = editor.view;
+      const { doc, selection } = state;
+      const linkMarkType = state.schema.marks.link;
+      let from = selection.from;
+      let to = selection.to;
+      doc.nodesBetween(from, to, (node, pos) => {
+        if (node.marks.length) {
+          node.marks.forEach(mark => {
+            if (mark.type === linkMarkType) {
+              from = Math.min(from, pos);
+              to = Math.max(to, pos + node.nodeSize);
+            }
+          });
+        }
+      });
+      const mark = linkMarkType.create({ href: url });
+      const tr = state.tr.removeMark(from, to, linkMarkType).addMark(from, to, mark);
+      dispatch(tr);
     }
+    setShowLinkModal(false);
+    setLinkUrl('');
+  };
 
-    editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
+  const cancelLink = () => {
+    setShowLinkModal(false);
+    setLinkUrl('');
   };
 
   const ToolbarButton = ({ 
@@ -271,7 +296,7 @@ const SimpleEditor: React.FC<SimpleEditorProps> = ({
         {/* Link */}
         <div className="flex items-center gap-1 mr-4">
           <ToolbarButton
-            onClick={setLink}
+            onClick={openLinkModal}
             isActive={() => editor?.isActive('link') || false}
             title="Add Link"
           >
@@ -329,6 +354,51 @@ const SimpleEditor: React.FC<SimpleEditorProps> = ({
           }}
         />
       </div>
+
+      {/* Link Modal */}
+      {showLinkModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-xl shadow-xl p-6 w-96 max-w-[90vw]">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              {editor?.getAttributes('link').href ? 'Edit Link' : 'Add Link'}
+            </h3>
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">URL</label>
+                <input
+                  type="text"
+                  value={linkUrl}
+                  onChange={(e) => setLinkUrl(e.target.value)}
+                  placeholder="https://example.com"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  autoFocus
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && (editor?.getAttributes('link').href || linkUrl.trim())) {
+                      saveLink();
+                    }
+                    if (e.key === 'Escape') cancelLink();
+                  }}
+                />
+              </div>
+            </div>
+            <div className="flex gap-2 mt-5 justify-end">
+              <button
+                onClick={cancelLink}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={saveLink}
+                disabled={!editor?.getAttributes('link').href && !linkUrl.trim()}
+                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {editor?.getAttributes('link').href ? 'Update' : 'Add'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <style jsx global>{`
         .ProseMirror {
