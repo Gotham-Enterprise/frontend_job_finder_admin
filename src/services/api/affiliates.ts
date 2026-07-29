@@ -33,6 +33,8 @@ export interface AffiliateLink {
   targetAudience?: string;
   contentLevel?: string;
   overview?: string;
+  ceHours?: number;
+  ceCredits?: number;
   occupations?: string[];
   affiliateId: string;
   affiliate?: {
@@ -172,6 +174,8 @@ export interface CreateLinkData {
   targetAudience?: string;
   contentLevel?: string;
   overview?: string;
+  ceHours?: number;
+  ceCredits?: number;
   occupations?: string[];
   affiliateId: string;
 }
@@ -183,6 +187,8 @@ export interface UpdateLinkData {
   targetAudience?: string;
   contentLevel?: string;
   overview?: string;
+  ceHours?: number;
+  ceCredits?: number;
   occupations?: string[];
   affiliateId?: string;
 }

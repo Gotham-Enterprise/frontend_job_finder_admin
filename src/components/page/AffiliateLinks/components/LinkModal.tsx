@@ -21,6 +21,8 @@ export default function LinkModal({ isOpen, onClose, link, onSubmit, isSubmittin
     targetAudience: '',
     contentLevel: '',
     overview: '',
+    ceHours: undefined,
+    ceCredits: undefined,
     occupations: [],
     affiliateId: '',
   })
@@ -54,6 +56,8 @@ export default function LinkModal({ isOpen, onClose, link, onSubmit, isSubmittin
         targetAudience: link.targetAudience || '',
         contentLevel: link.contentLevel || '',
         overview: link.overview || '',
+        ceHours: link.ceHours,
+        ceCredits: link.ceCredits,
         occupations: link.occupations || [],
         affiliateId: link.affiliateId,
       })
@@ -65,6 +69,8 @@ export default function LinkModal({ isOpen, onClose, link, onSubmit, isSubmittin
         targetAudience: '',
         contentLevel: '',
         overview: '',
+        ceHours: undefined,
+        ceCredits: undefined,
         occupations: [],
         affiliateId: '',
       })
@@ -213,6 +219,36 @@ export default function LinkModal({ isOpen, onClose, link, onSubmit, isSubmittin
                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent transition-all resize-y min-h-[120px]"
                 placeholder="Brief overview of the course content..."
               />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  CE Hours
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={formData.ceHours === undefined ? '' : formData.ceHours}
+                  onChange={(e) => setFormData({ ...formData, ceHours: e.target.value ? parseFloat(e.target.value) : undefined })}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                  placeholder="e.g. 1.5"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  CE Credits
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={formData.ceCredits === undefined ? '' : formData.ceCredits}
+                  onChange={(e) => setFormData({ ...formData, ceCredits: e.target.value ? parseFloat(e.target.value) : undefined })}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                  placeholder="e.g. 15.0"
+                />
+              </div>
             </div>
 
           <div>
