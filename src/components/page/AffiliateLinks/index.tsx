@@ -100,6 +100,12 @@ export default function AffiliateLinks() {
                   Overview
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  CE Hours
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  CE Credits
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Occupations
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
@@ -150,6 +156,16 @@ export default function AffiliateLinks() {
                   <td className="px-6 py-4">
                     <div className="text-sm text-gray-500 dark:text-gray-400 max-w-[220px] line-clamp-2" title={link.overview || ''}>
                       {link.overview || '—'}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-500 dark:text-gray-400">
+                      {link.ceHours !== undefined && link.ceHours !== null ? link.ceHours : '—'}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-500 dark:text-gray-400">
+                      {link.ceCredits !== undefined && link.ceCredits !== null ? link.ceCredits : '—'}
                     </div>
                   </td>
                   <td className="px-6 py-4">

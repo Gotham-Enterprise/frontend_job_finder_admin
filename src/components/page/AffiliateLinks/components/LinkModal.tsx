@@ -229,7 +229,7 @@ export default function LinkModal({ isOpen, onClose, link, onSubmit, isSubmittin
                 <input
                   type="number"
                   step="0.01"
-                  value={formData.ceHours === undefined ? '' : formData.ceHours}
+                  value={formData.ceHours ?? ''}
                   onChange={(e) => setFormData({ ...formData, ceHours: e.target.value ? parseFloat(e.target.value) : undefined })}
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
                   placeholder="e.g. 1.5"
@@ -243,7 +243,7 @@ export default function LinkModal({ isOpen, onClose, link, onSubmit, isSubmittin
                 <input
                   type="number"
                   step="0.01"
-                  value={formData.ceCredits === undefined ? '' : formData.ceCredits}
+                  value={formData.ceCredits ?? ''}
                   onChange={(e) => setFormData({ ...formData, ceCredits: e.target.value ? parseFloat(e.target.value) : undefined })}
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
                   placeholder="e.g. 15.0"
