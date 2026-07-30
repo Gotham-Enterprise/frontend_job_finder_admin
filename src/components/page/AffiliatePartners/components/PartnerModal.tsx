@@ -171,8 +171,8 @@ export default function PartnerModal({
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-800 dark:text-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
               />
               {partner?.logoUrl && (
-                <div className="mt-2 text-sm text-gray-500">
-                  Current Logo: <a href={partner.logoUrl} target="_blank" rel="noreferrer" className="text-primary hover:underline">View Image</a>
+                <div className="mt-2">
+                  <img src={partner.logoUrl} alt={`${partner.name} logo`} className="h-12 object-contain rounded border border-gray-200" />
                 </div>
               )}
             </div>
