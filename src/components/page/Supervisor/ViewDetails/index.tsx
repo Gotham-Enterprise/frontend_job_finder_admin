@@ -205,6 +205,10 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
   const verificationStatus: VerificationStatus = profile?.verificationStatus || "PENDING";
 
   const displayName = s.fullName || [s.firstName, s.lastName].filter(Boolean).join(" ") || s.userName;
+  // "Jane Smith, Ph.D., NCC" — no comma when credentials are empty
+  const displayNameWithCredentials = [displayName?.trim(), profile?.professionalCredentials?.trim()]
+    .filter(Boolean)
+    .join(", ");
   const location = [s.city, s.state, s.zipcode].filter(Boolean).join(", ");
 
   /** Among ACTIVE subscriptions, show only the most recently created (e.g. upgraded plan vs stale free tier). */
@@ -302,7 +306,7 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
           />
           <div className="flex-1 min-w-0">
             <div className="flex flex-wrap items-center gap-3 mb-1">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">{displayName || "—"}</h2>
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">{displayNameWithCredentials || "—"}</h2>
               <SupervisorStatusBadge status={verificationStatus} />
             </div>
             <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">{s.email}</p>
@@ -341,6 +345,7 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
 
           {/* Professional Info */}
           <SectionCard title="Professional Info">
+            <FieldRow label="Professional Credentials" value={profile?.professionalCredentials} />
             <FieldRow label="Supervisor Type" value={profile?.supervisorType} />
             <FieldRow label="Occupation" value={s.supervisorOccupation} />
             <FieldRow label="Specialty" value={s.supervisorSpecialty} />

@@ -27,6 +27,8 @@ export interface Supervisor {
   verificationStatus: VerificationStatus;
   licenseType: string | null;
   degreeType: string | null;
+  /** Post-nominal letters displayed after the full name, e.g. "Ph.D., NCC, LPC-S (AL)" */
+  professionalCredentials: string | null;
   yearsOfExperience: string | null;
   createdAt: string;
   /** Email confirmation status; used to gate the "Resend verification email" action. */
@@ -109,6 +111,8 @@ export interface SupervisorProfile {
   supervisionFeeType: string | null;
   supervisionFeeAmount: number | null;
   professionalSummary: string | null;
+  /** Post-nominal letters displayed after the full name, e.g. "Ph.D., NCC, LPC-S (AL)" */
+  professionalCredentials: string | null;
   website: string | null;
   /** Hierarchy-based plain strings */
   supervisorType: string | null;
@@ -203,6 +207,8 @@ export interface SupervisorApproveEmailVerificationResponse {
 
 export interface SupervisorUpdatePayload {
   fullName?: string;
+  /** Post-nominal letters after the name; empty string clears the stored value. */
+  professionalCredentials?: string;
   contactNumber?: string;
   city?: string;
   state?: string;
