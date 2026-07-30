@@ -3,6 +3,7 @@
 import { ApexOptions } from 'apexcharts'
 import dynamic from 'next/dynamic'
 import { useEffect, useState, useRef, useMemo, useCallback } from 'react'
+import { ChevronDown } from 'lucide-react'
 import { useSurveyJobTrends } from '@/services/hooks/useSurveyJobs'
 import type { Period, GroupBy } from '@/types/analytics'
 import { buildCustomDateRange, formatDateForDisplay } from '@/utils/chartDateUtils'
@@ -15,6 +16,8 @@ const ReactApexChart = dynamic(() => import('react-apexcharts'), {
 
 interface SurveyJobTrendsProps {
   affiliatePartnerId?: string
+  partners?: { id: string; name: string }[]
+  onPartnerChange?: (partnerId: string) => void
   /** Defer fetching until true — set to false while the main table is still loading. */
   enabled?: boolean
 }
@@ -45,7 +48,12 @@ const GROUP_BY_LABELS: Record<GroupBy, string> = {
 
 const GROUPBY_ELIGIBLE_PERIODS = new Set<Period>(['3m', '6m', '9m', '1y', 'custom'])
 
-export default function SurveyJobTrends({ affiliatePartnerId, enabled = true }: SurveyJobTrendsProps) {
+export default function SurveyJobTrends({
+  affiliatePartnerId,
+  partners,
+  onPartnerChange,
+  enabled = true,
+}: SurveyJobTrendsProps) {
   const [period, setPeriod] = useState<Period>('3m')
   const [groupBy, setGroupBy] = useState<GroupBy>('monthly')
   const [showCustomDatePicker, setShowCustomDatePicker] = useState(false)
@@ -63,9 +71,13 @@ export default function SurveyJobTrends({ affiliatePartnerId, enabled = true }: 
     period,
     groupBy: effectiveGroupBy,
     customDateRange: period === 'custom' ? customDateRange : undefined,
-    affiliatePartnerId,
+    affiliatePartnerId: affiliatePartnerId || undefined,
     enabled,
   })
+
+  const selectedPartnerName = affiliatePartnerId
+    ? partners?.find((p) => p.id === affiliatePartnerId)?.name
+    : undefined
 
   const categories = response?.data?.categories ?? []
   const clicksData = response?.data?.clicks?.data ?? []
@@ -203,21 +215,45 @@ export default function SurveyJobTrends({ affiliatePartnerId, enabled = true }: 
 
   return (
     <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white px-5 pt-5 dark:border-gray-800 dark:bg-white/[0.03] sm:px-6 sm:pt-6">
-      <div className="mb-4">
-        <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
-          Survey Job Analytics
-        </h3>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-          Total Clicks:{' '}
-          <span className="font-semibold text-gray-800 dark:text-white/90">
-            {totalClicks.toLocaleString()}
-          </span>
-          <span className="mx-2 text-gray-300 dark:text-gray-600">|</span>
-          Total Views:{' '}
-          <span className="font-semibold text-gray-800 dark:text-white/90">
-            {totalViews.toLocaleString()}
-          </span>
-        </p>
+      <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
+            Survey Job Analytics
+            {selectedPartnerName && (
+              <span className="font-normal text-gray-500 dark:text-gray-400">
+                {' '}— {selectedPartnerName}
+              </span>
+            )}
+          </h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            Total Clicks:{' '}
+            <span className="font-semibold text-gray-800 dark:text-white/90">
+              {totalClicks.toLocaleString()}
+            </span>
+            <span className="mx-2 text-gray-300 dark:text-gray-600">|</span>
+            Total Views:{' '}
+            <span className="font-semibold text-gray-800 dark:text-white/90">
+              {totalViews.toLocaleString()}
+            </span>
+          </p>
+        </div>
+
+        {partners && onPartnerChange && (
+          <div className="relative">
+            <select
+              value={affiliatePartnerId ?? ''}
+              onChange={(e) => onPartnerChange(e.target.value)}
+              aria-label="Filter analytics by partner"
+              className="appearance-none pl-3 pr-8 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary cursor-pointer"
+            >
+              <option value="">All Partners</option>
+              {partners.map((p) => (
+                <option key={p.id} value={p.id}>{p.name}</option>
+              ))}
+            </select>
+            <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+          </div>
+        )}
       </div>
 
       <div className="flex flex-wrap gap-3 mb-4 items-center justify-between">

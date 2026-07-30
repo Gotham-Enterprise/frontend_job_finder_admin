@@ -21,6 +21,29 @@ export interface AffiliatePartner {
   isRunning?: boolean; // Real-time sync status from getSyncStatus
   activeBatch?: AffiliateBatch; // Current processing batch
   logoUrl?: string;
+  outboundFeedEnabled?: boolean;
+  outboundFeedSlug?: string;
+  outboundFeedFilename?: string;
+  outboundFeedCronExpression?: string;
+  outboundFeedTimezone?: string;
+  outboundFeedUrl?: string | null;
+  outboundFeedLastBuiltAt?: string;
+  outboundFeedLastBuildStatus?: "success" | "failed" | "in_progress";
+  outboundFeedLastBuildError?: string;
+  outboundFeedJobCount?: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AffiliatePartnerFeedRule {
+  id: string;
+  affiliatePartnerId: string;
+  ruleGroupLabel?: string | null;
+  occupationName: string;
+  specialtyName?: string | null;
+  states: string[];
+  cpc?: number | null;
+  isActive: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -96,6 +119,16 @@ export interface AffiliateAnalytics {
   guestClicks: number;
   autoRedirectClicks: number;
   manualClicks: number;
+  partnerFeedClicks?: number;
+  estimatedSpend?: number;
+  partnerFeedConversions?: number;
+  partnerFeedConversionRate?: number;
+  costPerConversion?: number | null;
+  clicksBySource?: {
+    manual: number;
+    autoRedirect: number;
+    partnerFeed: number;
+  };
   uniqueCandidates: number;
   uniqueIpAddresses: number;
   topJobs: Array<{
@@ -118,6 +151,7 @@ export interface AffiliateAnalytics {
     uniqueIpAddresses: number;
     authenticatedClicks: number;
     guestClicks: number;
+    estimatedSpend?: number;
   }>;
   redirectsByJobTitle: Array<{
     jobTitle: string;
@@ -147,6 +181,10 @@ export interface CreatePartnerData {
   syncEnabled?: boolean;
   syncIntervalHours?: number;
   logo?: File;
+  outboundFeedEnabled?: boolean;
+  outboundFeedCronExpression?: string;
+  outboundFeedTimezone?: string;
+  outboundFeedFilename?: string;
 }
 
 export interface UpdatePartnerData {
@@ -160,6 +198,28 @@ export interface UpdatePartnerData {
   syncEnabled?: boolean;
   syncIntervalHours?: number;
   logo?: File;
+  outboundFeedEnabled?: boolean;
+  outboundFeedCronExpression?: string;
+  outboundFeedTimezone?: string;
+  outboundFeedFilename?: string;
+}
+
+export interface CreateFeedRuleData {
+  ruleGroupLabel?: string;
+  occupationName: string;
+  specialtyName?: string | null;
+  states?: string[];
+  cpc?: number | null;
+  isActive?: boolean;
+}
+
+export interface UpdateFeedRuleData {
+  ruleGroupLabel?: string | null;
+  occupationName?: string;
+  specialtyName?: string | null;
+  states?: string[];
+  cpc?: number | null;
+  isActive?: boolean;
 }
 
 export interface CreateLinkData {
@@ -353,16 +413,64 @@ export const getAffiliateAnalytics = async (params?: {
   affiliateId?: string;
   startDate?: string;
   endDate?: string;
+  source?: "manual" | "auto-redirect" | "partner-feed";
 }): Promise<AffiliateAnalytics> => {
   const queryParams = new URLSearchParams();
   if (params?.affiliateId) queryParams.append("affiliateId", params.affiliateId);
   if (params?.startDate) queryParams.append("startDate", params.startDate);
   if (params?.endDate) queryParams.append("endDate", params.endDate);
+  if (params?.source) queryParams.append("source", params.source);
   const queryString = queryParams.toString();
   const response = await apiGet<{ success: boolean; data: AffiliateAnalytics }>(
     `/api/admin/affiliates/analytics${queryString ? `?${queryString}` : ""}`
   );
   return response.data;
+};
+
+// Outbound Feed APIs
+export const rebuildOutboundFeed = async (
+  partnerId: string
+): Promise<{ jobCount: number; s3Key: string; outboundFeedLastBuiltAt: string }> => {
+  const response = await apiPost<{
+    success: boolean;
+    data: { jobCount: number; s3Key: string; outboundFeedLastBuiltAt: string };
+  }>(`/api/admin/affiliates/partners/${partnerId}/rebuild-feed`, {});
+  return response.data;
+};
+
+export const getPartnerFeedRules = async (
+  partnerId: string
+): Promise<AffiliatePartnerFeedRule[]> => {
+  const response = await apiGet<{ success: boolean; data: AffiliatePartnerFeedRule[] }>(
+    `/api/admin/affiliates/partners/${partnerId}/feed-rules`
+  );
+  return response.data;
+};
+
+export const createPartnerFeedRule = async (
+  partnerId: string,
+  data: CreateFeedRuleData
+): Promise<AffiliatePartnerFeedRule> => {
+  const response = await apiPost<{ success: boolean; data: AffiliatePartnerFeedRule }>(
+    `/api/admin/affiliates/partners/${partnerId}/feed-rules`,
+    data
+  );
+  return response.data;
+};
+
+export const updatePartnerFeedRule = async (
+  ruleId: string,
+  data: UpdateFeedRuleData
+): Promise<AffiliatePartnerFeedRule> => {
+  const response = await apiPut<{ success: boolean; data: AffiliatePartnerFeedRule }>(
+    `/api/admin/affiliates/feed-rules/${ruleId}`,
+    data
+  );
+  return response.data;
+};
+
+export const deletePartnerFeedRule = async (ruleId: string): Promise<void> => {
+  return apiDelete(`/api/admin/affiliates/feed-rules/${ruleId}`);
 };
 
 // ===== Co-Registration APIs (multi-partner) =====
