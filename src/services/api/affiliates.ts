@@ -37,6 +37,7 @@ export interface AffiliateLink {
   ceHours?: number;
   ceCredits?: number;
   occupations?: string[];
+  courseThumbnail?: string | null;
   city?: string;
   state?: string;
   zipCode?: string;
@@ -176,6 +177,7 @@ export interface CreateLinkData {
   url: string;
   type?: string;
   format?: string;
+  courseThumbnail?: string | null;
   city?: string;
   state?: string;
   zipCode?: string;
@@ -193,6 +195,7 @@ export interface UpdateLinkData {
   url?: string;
   type?: string;
   format?: string;
+  courseThumbnail?: string | null;
   city?: string;
   state?: string;
   zipCode?: string;

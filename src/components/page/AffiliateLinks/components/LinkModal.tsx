@@ -58,6 +58,7 @@ export default function LinkModal({ isOpen, onClose, link, onSubmit, isSubmittin
     targetAudience: '',
     contentLevel: '',
     overview: '',
+    courseThumbnail: '',
     ceHours: undefined,
     ceCredits: undefined,
     occupations: [],
@@ -97,6 +98,7 @@ export default function LinkModal({ isOpen, onClose, link, onSubmit, isSubmittin
         targetAudience: link.targetAudience || '',
         contentLevel: link.contentLevel || '',
         overview: link.overview || '',
+        courseThumbnail: link.courseThumbnail || '',
         ceHours: link.ceHours,
         ceCredits: link.ceCredits,
         occupations: link.occupations || [],
@@ -114,6 +116,7 @@ export default function LinkModal({ isOpen, onClose, link, onSubmit, isSubmittin
         targetAudience: '',
         contentLevel: '',
         overview: '',
+        courseThumbnail: '',
         ceHours: undefined,
         ceCredits: undefined,
         occupations: [],
@@ -317,6 +320,22 @@ export default function LinkModal({ isOpen, onClose, link, onSubmit, isSubmittin
                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent transition-all resize-y min-h-[120px]"
                 placeholder="Brief overview of the course content..."
               />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Course Thumbnail URL
+              </label>
+              <input
+                type="url"
+                value={formData.courseThumbnail || ''}
+                onChange={(e) => setFormData({ ...formData, courseThumbnail: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                placeholder="https://example.com/thumbnail.jpg"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Optional URL for a thumbnail image shown on the Career Center card
+              </p>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
