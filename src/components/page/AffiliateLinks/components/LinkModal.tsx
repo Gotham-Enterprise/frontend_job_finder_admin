@@ -1,9 +1,42 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { X } from 'lucide-react'
 import { AffiliateLink, CreateLinkData, UpdateLinkData } from '@/services/api/affiliates'
 import { useAffiliatePartners } from '@/services/hooks/useAffiliates'
 import { occupationApi } from '@/services/api/occupation'
 import type { Occupation } from '@/services/types/occupation'
+import SingleSelect from '@/components/molecules/SingleSelect'
+import SelectCity from '@/components/molecules/SelectCity'
+
+const US_STATES = [
+  { value: 'AL', label: 'Alabama' }, { value: 'AK', label: 'Alaska' },
+  { value: 'AZ', label: 'Arizona' }, { value: 'AR', label: 'Arkansas' },
+  { value: 'CA', label: 'California' }, { value: 'CO', label: 'Colorado' },
+  { value: 'CT', label: 'Connecticut' }, { value: 'DE', label: 'Delaware' },
+  { value: 'FL', label: 'Florida' }, { value: 'GA', label: 'Georgia' },
+  { value: 'HI', label: 'Hawaii' }, { value: 'ID', label: 'Idaho' },
+  { value: 'IL', label: 'Illinois' }, { value: 'IN', label: 'Indiana' },
+  { value: 'IA', label: 'Iowa' }, { value: 'KS', label: 'Kansas' },
+  { value: 'KY', label: 'Kentucky' }, { value: 'LA', label: 'Louisiana' },
+  { value: 'ME', label: 'Maine' }, { value: 'MD', label: 'Maryland' },
+  { value: 'MA', label: 'Massachusetts' }, { value: 'MI', label: 'Michigan' },
+  { value: 'MN', label: 'Minnesota' }, { value: 'MS', label: 'Mississippi' },
+  { value: 'MO', label: 'Missouri' }, { value: 'MT', label: 'Montana' },
+  { value: 'NE', label: 'Nebraska' }, { value: 'NV', label: 'Nevada' },
+  { value: 'NH', label: 'New Hampshire' }, { value: 'NJ', label: 'New Jersey' },
+  { value: 'NM', label: 'New Mexico' }, { value: 'NY', label: 'New York' },
+  { value: 'NC', label: 'North Carolina' }, { value: 'ND', label: 'North Dakota' },
+  { value: 'OH', label: 'Ohio' }, { value: 'OK', label: 'Oklahoma' },
+  { value: 'OR', label: 'Oregon' }, { value: 'PA', label: 'Pennsylvania' },
+  { value: 'RI', label: 'Rhode Island' }, { value: 'SC', label: 'South Carolina' },
+  { value: 'SD', label: 'South Dakota' }, { value: 'TN', label: 'Tennessee' },
+  { value: 'TX', label: 'Texas' }, { value: 'UT', label: 'Utah' },
+  { value: 'VT', label: 'Vermont' }, { value: 'VA', label: 'Virginia' },
+  { value: 'WA', label: 'Washington' }, { value: 'WV', label: 'West Virginia' },
+  { value: 'WI', label: 'Wisconsin' }, { value: 'WY', label: 'Wyoming' },
+  { value: 'DC', label: 'District of Columbia' },
+  { value: 'PR', label: 'Puerto Rico' }, { value: 'GU', label: 'Guam' },
+  { value: 'VI', label: 'U.S. Virgin Islands' },
+]
 
 interface LinkModalProps {
   isOpen: boolean
@@ -18,6 +51,10 @@ export default function LinkModal({ isOpen, onClose, link, onSubmit, isSubmittin
     name: '',
     url: '',
     type: '',
+    format: '',
+    city: '',
+    state: '',
+    zipCode: '',
     targetAudience: '',
     contentLevel: '',
     overview: '',
@@ -53,6 +90,10 @@ export default function LinkModal({ isOpen, onClose, link, onSubmit, isSubmittin
         name: link.name,
         url: link.url,
         type: link.type || '',
+        format: link.format || '',
+        city: link.city || '',
+        state: link.state || '',
+        zipCode: link.zipCode || '',
         targetAudience: link.targetAudience || '',
         contentLevel: link.contentLevel || '',
         overview: link.overview || '',
@@ -66,6 +107,10 @@ export default function LinkModal({ isOpen, onClose, link, onSubmit, isSubmittin
         name: '',
         url: '',
         type: '',
+        format: '',
+        city: '',
+        state: '',
+        zipCode: '',
         targetAudience: '',
         contentLevel: '',
         overview: '',
@@ -180,6 +225,59 @@ export default function LinkModal({ isOpen, onClose, link, onSubmit, isSubmittin
               <p className="text-xs text-gray-500 mt-1">
                 Used to categorize this link on the Career Center page
               </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Format
+              </label>
+              <select
+                value={formData.format || ''}
+                onChange={(e) => setFormData({ ...formData, format: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+              >
+                <option value="">Select format</option>
+                <option value="IN_PERSON">In-Person</option>
+                <option value="VIRTUAL">Virtual</option>
+                <option value="HYBRID">Hybrid</option>
+                <option value="ONLINE_COURSE">Online Course</option>
+              </select>
+              <p className="text-xs text-gray-500 mt-1">
+                Delivery format shown on the Career Center filter
+              </p>
+            </div>
+
+            <div>
+              <SelectCity
+                stateValue={formData.state}
+                value={formData.city || ''}
+                onChange={(val) => setFormData({ ...formData, city: val })}
+                placeholder="City"
+              />
+            </div>
+
+            <div>
+              <SingleSelect
+                label="State"
+                options={US_STATES}
+                value={formData.state || ''}
+                onChange={(val) => setFormData({ ...formData, state: val, city: '' })}
+                placeholder="Select state"
+                searchable
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Zip Code
+              </label>
+              <input
+                type="text"
+                value={formData.zipCode || ''}
+                onChange={(e) => setFormData({ ...formData, zipCode: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                placeholder="e.g. 40202"
+              />
             </div>
 
             <div>

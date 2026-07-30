@@ -30,12 +30,16 @@ export interface AffiliateLink {
   name: string;
   url: string;
   type?: string;
+  format?: string;
   targetAudience?: string;
   contentLevel?: string;
   overview?: string;
   ceHours?: number;
   ceCredits?: number;
   occupations?: string[];
+  city?: string;
+  state?: string;
+  zipCode?: string;
   affiliateId: string;
   affiliate?: {
     id: string;
@@ -171,6 +175,10 @@ export interface CreateLinkData {
   name: string;
   url: string;
   type?: string;
+  format?: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
   targetAudience?: string;
   contentLevel?: string;
   overview?: string;
@@ -184,6 +192,10 @@ export interface UpdateLinkData {
   name?: string;
   url?: string;
   type?: string;
+  format?: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
   targetAudience?: string;
   contentLevel?: string;
   overview?: string;

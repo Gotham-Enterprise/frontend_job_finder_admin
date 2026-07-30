@@ -91,6 +91,12 @@ export default function AffiliateLinks() {
                   Category
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Format
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Location
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Target Audience
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
@@ -142,6 +148,22 @@ export default function AffiliateLinks() {
                     <span className="inline-block px-2.5 py-0.5 bg-primary/10 text-primary text-xs font-medium rounded-full">
                       {link.type || 'Uncategorized'}
                     </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {link.format ? (
+                      <span className="inline-block px-2.5 py-0.5 bg-primary/10 text-primary text-xs font-medium rounded-full">
+                        {link.format === 'IN_PERSON' ? 'In-Person' : link.format === 'VIRTUAL' ? 'Virtual' : link.format === 'HYBRID' ? 'Hybrid' : link.format === 'ONLINE_COURSE' ? 'Online Course' : link.format}
+                      </span>
+                    ) : (
+                      <span className="text-sm text-gray-400">—</span>
+                    )}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-500 dark:text-gray-400">
+                      {link.city || link.state || link.zipCode
+                        ? [link.city, link.state, link.zipCode].filter(Boolean).join(', ')
+                        : '—'}
+                    </div>
                   </td>
                   <td className="px-6 py-4">
                     <div className="text-sm text-gray-500 dark:text-gray-400 max-w-[180px] truncate" title={link.targetAudience || ''}>
