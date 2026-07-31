@@ -1,5 +1,4 @@
-import { apiGet, apiPost } from "./apiUtils";
-import { emailCampaignSettingsApi } from "./emailCampaignSettings";
+import { apiGet, apiPatch, apiPost } from "./apiUtils";
 import type {
   NewsletterSubscribersResponse,
   NewsletterSubscriberFilters,
@@ -38,10 +37,9 @@ export const newsletterSubscriberApi = {
   },
 
   async updateCampaignEnabled(isEnabled: boolean) {
-    return emailCampaignSettingsApi.updateEmailCampaignSetting(
-      "jobSeekerNewsletterEmail",
-      { isEnabled }
-    );
+    return apiPatch("/api/admin/newsletter-subscribers/settings", {
+      isEnabled,
+    });
   },
 
   async unsubscribeSubscriber(
