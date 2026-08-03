@@ -38,3 +38,6 @@ next-env.d.ts
 
 .env
 .env.local
+
+# graphify generated graph artifacts (rebuildable via graphify extract --code-only .)
+graphify-out/
