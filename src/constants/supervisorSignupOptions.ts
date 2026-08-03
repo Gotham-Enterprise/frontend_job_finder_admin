@@ -16,6 +16,12 @@ export const supervisorYearsOfExperienceSelectOptions =
 export const SUPERVISOR_PROFILE_TEXT_MIN_LENGTH = 20;
 export const SUPERVISOR_PROFILE_TEXT_MAX_LENGTH = 500;
 
+/** Post-nominal letters after the name, e.g. "Ph.D., NCC, LPC-S (AL)" — mirrors the backend validator. */
+export const PROFESSIONAL_CREDENTIALS_MAX_LENGTH = 150;
+export const PROFESSIONAL_CREDENTIALS_PATTERN = /^[A-Za-z0-9 .,()-]*$/;
+export const PROFESSIONAL_CREDENTIALS_HELPER_TEXT =
+  "Enter degrees, licenses, and certifications that appear after your name. Example: Ph.D., NCC, LPC-S (AL), LPC (MI)";
+
 /** Supervisor types that do not use the certifications field. */
 export const SUPERVISOR_TYPES_WITHOUT_CERTIFICATIONS = [
   "Collaborating Physician",

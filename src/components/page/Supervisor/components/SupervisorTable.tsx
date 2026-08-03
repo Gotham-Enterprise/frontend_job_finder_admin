@@ -12,6 +12,14 @@ import SupervisorStatusBadge from "./SupervisorStatusBadge";
 import SupervisorRowActions from "./SupervisorRowActions";
 import { SupervisorTableProps } from "@/services/types/SupervisorTypes";
 
+/** "Jane Smith, Ph.D., NCC" — no comma when either part is missing. */
+function formatNameWithCredentials(
+  fullName: string | null | undefined,
+  credentials: string | null | undefined,
+) {
+  return [fullName?.trim(), credentials?.trim()].filter(Boolean).join(", ");
+}
+
 function renderOptionalCredential(value: string | null | undefined) {
   return value?.trim() ? (
     value
@@ -110,7 +118,10 @@ const SupervisorTable: React.FC<SupervisorTableProps> = ({
                     />
                     <div className="min-w-0">
                       <p className="text-sm font-medium text-gray-900 dark:text-white truncate max-w-[220px]">
-                        {supervisor.fullName || "—"}
+                        {formatNameWithCredentials(
+                          supervisor.fullName,
+                          supervisor.professionalCredentials,
+                        ) || "—"}
                       </p>
                       <p className="text-xs text-gray-500 dark:text-gray-400 truncate max-w-[220px]">
                         {supervisor.email}
