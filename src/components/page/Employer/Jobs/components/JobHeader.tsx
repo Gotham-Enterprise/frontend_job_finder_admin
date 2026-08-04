@@ -97,10 +97,12 @@ export default function JobHeader({ job, getJobStatusVariant, formatSalaryRange 
       {/* Job Description Section */}
       <div>
         <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Job Description</h3>
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg p-6">
+        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg p-6 overflow-hidden">
           <div
-            className="text-gray-700 dark:text-gray-300 leading-relaxed prose prose-lg max-w-none dark:prose-invert"
-            dangerouslySetInnerHTML={{ __html: job.jobDescription }}
+            className="text-gray-700 dark:text-gray-300 leading-relaxed prose prose-lg max-w-none dark:prose-invert break-words"
+            // Job descriptions are stored with &nbsp; between words, which
+            // prevents line wrapping and makes the text overflow the card.
+            dangerouslySetInnerHTML={{ __html: job.jobDescription.replace(/&nbsp;| /g, " ") }}
           />
         </div>
       </div>
