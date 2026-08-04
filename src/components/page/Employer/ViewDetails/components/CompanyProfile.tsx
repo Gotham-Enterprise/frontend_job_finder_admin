@@ -21,7 +21,9 @@ interface CompanyProfileProps {
 
 export default function CompanyProfile({ employer, contactInfo, onSeeReviews, overview }: CompanyProfileProps) {
     const [isPhotoPreviewOpen, setIsPhotoPreviewOpen] = useState(false);
+    const [isOverviewExpanded, setIsOverviewExpanded] = useState(false);
     const photoUrl = employer.profilePicture?.url || employer.avatarUrl;
+    const isLongOverview = (overview?.replace(/<[^>]*>/g, "").length ?? 0) > 300;
 
     return (
         <div className="mb-6 rounded-xl bg-white p-6 shadow-lg border border-gray-100 dark:bg-gray-800 dark:border-gray-700 sm:p-8">
@@ -91,11 +93,22 @@ export default function CompanyProfile({ employer, contactInfo, onSeeReviews, ov
                     <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Company Overview</h3>
                     
                     {overview ? (
-                        <div className="bg-gradient-to-r rounded-lg">
-                            <div 
-                                className="text-gray-700 dark:text-gray-300 leading-relaxed prose prose-sm max-w-none dark:prose-invert"
+                        <div className="bg-gradient-to-r rounded-lg overflow-hidden">
+                            <div
+                                className={`text-gray-700 dark:text-gray-300 leading-relaxed prose prose-sm max-w-none dark:prose-invert break-words ${
+                                    isLongOverview && !isOverviewExpanded ? "max-h-40 overflow-hidden" : ""
+                                }`}
                                 dangerouslySetInnerHTML={{ __html: overview }}
                             />
+                            {isLongOverview && (
+                                <button
+                                    type="button"
+                                    onClick={() => setIsOverviewExpanded(!isOverviewExpanded)}
+                                    className="mt-2 text-sm font-medium text-blue-600 dark:text-blue-300 hover:underline"
+                                >
+                                    {isOverviewExpanded ? "See less" : "See more details"}
+                                </button>
+                            )}
                         </div>
                     ) : (
                         <NotFoundState 
