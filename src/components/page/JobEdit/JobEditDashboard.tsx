@@ -1,10 +1,13 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { jobCreationApi } from '@/services/api/jobCreation';
 import { jobsAdminApi } from '@/services/api/jobsAdmin';
+import { employerQueryKeys } from '@/services/hooks/useEmployers';
+import { jobsAdminQueryKeys } from '@/services/hooks/useJobsAdmin';
 import { showToast } from '@/services/utils/toast';
+import { ApiError } from '@/services/utils/errorUtils';
 import { useWorkTypes } from '@/services/hooks/useWorkTypes';
 import { useWorkSettings } from '@/services/hooks/useWorkSettings';
 import { useWorkFacilities } from '@/services/hooks/useWorkFacilities';
@@ -17,7 +20,7 @@ import FullScreenSpinner from '@/components/ui/FullScreenSpinner';
 import StepProgress from '../JobCreation/StepProgress';
 import StepForm from '../JobCreation/StepForm';
 import JobPostingTips from '../JobCreation/JobPostingTips';
-import { FormData } from '@/services/types/stepForm';
+import { FormData, JobFormAddress, createEmptyAddress } from '@/services/types/stepForm';
 import { mapApiQuestionToJobCreationQuestion, mapJobCreationQuestionToApiPayload, JobCreationDocument } from '@/services/types/jobCreationSteps';
 import { ApiJobQuestion } from '@/services/types/jobQuestions';
 
@@ -116,10 +119,7 @@ const JobEditDashboard: React.FC = () => {
     occupationId: '',
     specialtyId: '',
     country: 'US',
-    address: '',
-    city: '',
-    state: '',
-    zipCode: '',
+    addresses: [createEmptyAddress()],
     workType: 'full-time',
     workSetting: 'onsite',
     shiftType: '',
@@ -127,10 +127,6 @@ const JobEditDashboard: React.FC = () => {
     language: [],
     clinicSize: '',
     workFacility: '',
-    currency: 'USD',
-    salaryFrom: 0,
-    salaryTo: 0,
-    salaryType: 'yearly',
     postingDate: 'today',
     autoRenew: false,
     questions: [],
@@ -146,6 +142,12 @@ const JobEditDashboard: React.FC = () => {
     queryKey: ['job-edit', jobId],
     queryFn: () => jobsAdminApi.getJobForEdit(jobId!),
     enabled: !!jobId,
+    retry: (failureCount, error) => {
+      if (error instanceof ApiError && (error.status === 404 || error.status === 410)) {
+        return false;
+      }
+      return failureCount < 3;
+    },
   });
 
   const { data: occupationsData, isLoading: isLoadingOccupations } = useQuery({
@@ -163,16 +165,22 @@ const JobEditDashboard: React.FC = () => {
   const { data: statesData } = useStates();
 
 
+  const queryClient = useQueryClient();
+
   const updateJobMutation = useMutation({
     mutationFn: ({ companyId, payload }: { companyId: string; payload: any }) =>
       jobsAdminApi.updateJob(companyId, jobId!, payload),
     onMutate: () => {
       setIsUpdating(true);
     },
-    onSuccess: (response) => {
+    onSuccess: (response, { companyId }) => {
       setIsUpdating(false);
       if (response.success) {
         showToast.success('Job Updated', 'Job updated successfully!');
+        queryClient.invalidateQueries({ queryKey: employerQueryKeys.detail(companyId) });
+        queryClient.invalidateQueries({ queryKey: jobsAdminQueryKeys.lists() });
+        queryClient.invalidateQueries({ queryKey: jobsAdminQueryKeys.detail(jobId!) });
+        queryClient.invalidateQueries({ queryKey: ['job-details', jobId] });
         setIsRefetching(true);
         refetchJob();
       } else {
@@ -386,10 +394,18 @@ const JobEditDashboard: React.FC = () => {
         occupationId: occupationId,
         specialtyId: job.specialtyId?.toString() || '',
         country: job.locationCountry === 'USA' || job.locationCountry === 'United States' ? 'US' : job.locationCountry || 'US',
-        address: job.address || '',
-        city: job.locationCity || '',
-        state: formatStateForDropdown(job.locationState || ''),
-        zipCode: job.locationZipCode || '',
+        // Edit is always single-location: the job's one location lives in addresses[0]
+        addresses: [{
+          ...createEmptyAddress(),
+          address: job.address || '',
+          city: job.locationCity || '',
+          state: formatStateForDropdown(job.locationState || ''),
+          zipCode: job.locationZipCode || '',
+          salaryFrom: job.salaryRangeStart || 0,
+          salaryTo: job.salaryRangeEnd || 0,
+          salaryType: job.salaryType || 'yearly',
+          currency: job.salaryCurrency || 'USD',
+        }],
         workType: findWorkTypeId(job.workType),
         workSetting: findWorkSettingId(job.workSetting),
         shiftType: findShiftTypeId(job.shiftType),
@@ -397,10 +413,6 @@ const JobEditDashboard: React.FC = () => {
         language: mappedLanguages,
         clinicSize: findClinicSizeId(job.companySize),
         workFacility: findWorkFacilityId(job.workFacility),
-        currency: job.salaryCurrency || 'USD',
-        salaryFrom: job.salaryRangeStart || 0,
-        salaryTo: job.salaryRangeEnd || 0,
-        salaryType: job.salaryType || 'yearly',
         postingDate: 'today',
         autoRenew: false,
         questions: mappedQuestions,
@@ -517,8 +529,10 @@ const JobEditDashboard: React.FC = () => {
       return documentPayload;
     }) || [];
 
+    // Edit is single-location: everything sources from addresses[0]
+    const first = formData.addresses[0];
     // Strip the "(AB)" dropdown suffix — backend stores the full state name
-    const stateName = formData.state.replace(/\s*\([A-Z]{2}\)\s*$/, '');
+    const stateName = first.state.replace(/\s*\([A-Z]{2}\)\s*$/, '');
     const countryName =
       formData.country === 'US' || formData.country === 'USA'
         ? 'United States'
@@ -531,29 +545,29 @@ const JobEditDashboard: React.FC = () => {
       specialtyId: formData.specialtyId ? parseInt(formData.specialtyId) : undefined,
       locationCountry: formData.country,
       locationState: stateName,
-      locationCity: formData.city,
-      locationZipCode: formData.zipCode,
-      locationAddress: formData.address,
+      locationCity: first.city,
+      locationZipCode: first.zipCode,
+      locationAddress: first.address,
       addresses: [
         {
           locationCountry: countryName,
-          locationAddress: formData.address,
-          locationCity: formData.city,
+          locationAddress: first.address,
+          locationCity: first.city,
           locationState: stateName,
-          locationZipCode: formData.zipCode,
-          salaryRangeStart: Number(formData.salaryFrom),
-          salaryRangeEnd: Number(formData.salaryTo),
-          salaryType: formData.salaryType,
-          salaryCurrency: formData.currency,
+          locationZipCode: first.zipCode,
+          salaryRangeStart: Number(first.salaryFrom),
+          salaryRangeEnd: Number(first.salaryTo),
+          salaryType: first.salaryType,
+          salaryCurrency: first.currency,
         },
       ],
       workType: getWorkTypeName(formData.workType),
       workSetting: getWorkSettingName(formData.workSetting),
       workFacility: getWorkFacilityName(formData.workFacility),
-      salaryCurrency: formData.currency,
-      salaryRangeStart: formData.salaryFrom,
-      salaryRangeEnd: formData.salaryTo,
-      salaryType: formData.salaryType,
+      salaryCurrency: first.currency,
+      salaryRangeStart: first.salaryFrom,
+      salaryRangeEnd: first.salaryTo,
+      salaryType: first.salaryType,
       autoRenew: formData.autoRenew,
       shiftType: getShiftTypeName(formData.shiftType),
       languages: languageIds,
@@ -605,12 +619,22 @@ const JobEditDashboard: React.FC = () => {
 
   const updateField = (field: keyof FormData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    
+
     if (field === 'occupationId' && value) {
       setSelectedOccupation(parseInt(value));
       setFormData(prev => ({ ...prev, specialtyId: '' }));
     }
   };
+
+  const updateAddressField = (index: number, field: keyof JobFormAddress, value: any) => {
+    setFormData(prev => ({
+      ...prev,
+      addresses: prev.addresses.map((a, i) => (i === index ? { ...a, [field]: value } : a)),
+    }));
+  };
+
+  // Edit is single-location — the multi-location UI is hidden via isEditMode, so these never fire
+  const noopAddressAction = () => undefined;
 
   if (!jobId) {
     return (
@@ -688,6 +712,10 @@ const JobEditDashboard: React.FC = () => {
                 formData={formData}
                 description={description}
                 onUpdateField={updateField}
+                onUpdateAddressField={updateAddressField}
+                onAddAddress={noopAddressAction}
+                onRemoveAddress={noopAddressAction}
+                onToggleMultipleLocations={noopAddressAction}
                 onUpdateDescription={setDescription}
                 occupationOptions={occupationOptions}
                 specialtyOptions={specialtyOptions}

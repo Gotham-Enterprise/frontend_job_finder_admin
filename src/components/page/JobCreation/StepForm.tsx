@@ -2,7 +2,7 @@ import React from 'react';
 import CombinedJobDetailsStep from './steps/CombinedJobDetailsStep';
 import JobDescriptionStep from './steps/JobDescriptionStep';
 import ManageStep from './steps/ManageStep';
-import { FormData, StepFormProps } from '@/services/types/stepForm';
+import { StepFormProps } from '@/services/types/stepForm';
 
 
 const StepForm: React.FC<StepFormProps> = ({
@@ -10,6 +10,10 @@ const StepForm: React.FC<StepFormProps> = ({
   formData,
   description,
   onUpdateField,
+  onUpdateAddressField,
+  onAddAddress,
+  onRemoveAddress,
+  onToggleMultipleLocations,
   onUpdateDescription,
   occupationOptions,
   specialtyOptions,
@@ -22,13 +26,20 @@ const StepForm: React.FC<StepFormProps> = ({
       <CombinedJobDetailsStep
         formData={formData}
         onUpdateField={onUpdateField}
+        onUpdateAddressField={onUpdateAddressField}
+        onAddAddress={onAddAddress}
+        onRemoveAddress={onRemoveAddress}
+        onToggleMultipleLocations={onToggleMultipleLocations}
         occupationOptions={occupationOptions}
         specialtyOptions={specialtyOptions}
         isLoadingOccupations={isLoadingOccupations}
         selectedOccupation={selectedOccupation}
+        isEditMode={isEditMode}
       />
     );
   }  if (step === 2) {
+    // The AI description context uses the first address (employer app parity)
+    const firstAddress = formData.addresses[0];
     return (
       <JobDescriptionStep
         description={description}
@@ -39,15 +50,15 @@ const StepForm: React.FC<StepFormProps> = ({
         workType={formData.workType}
         workSetting={formData.workSetting}
         locationCountry={formData.country}
-        locationState={formData.state}
-        locationCity={formData.city}
-        locationZipCode={formData.zipCode}
-        locationAddress={formData.address}
+        locationState={firstAddress?.state ?? ''}
+        locationCity={firstAddress?.city}
+        locationZipCode={firstAddress?.zipCode ?? ''}
+        locationAddress={firstAddress?.address}
         workFacility={formData.workFacility}
-        salaryCurrency={formData.currency}
-        salaryRangeStart={formData.salaryFrom}
-        salaryRangeEnd={formData.salaryTo}
-        salaryType={formData.salaryType}
+        salaryCurrency={firstAddress?.currency}
+        salaryRangeStart={firstAddress?.salaryFrom}
+        salaryRangeEnd={firstAddress?.salaryTo}
+        salaryType={firstAddress?.salaryType}
         shiftType={formData.shiftType}
         languages={formData.language}
         companySize={formData.clinicSize}

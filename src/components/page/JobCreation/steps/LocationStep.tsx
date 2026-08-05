@@ -5,32 +5,32 @@ import Label from '@/components/form/Label';
 import { useStatesCities, useCitiesByState } from '@/lib/useStatesCities';
 import { useLocationValidation } from '@/services/hooks/useLocationValidation';
 import { useToast } from '@/context/ToastContext';
-
-interface FormData {
-  country: string;
-  address: string;
-  city: string;
-  state: string;
-  zipCode: string;
-}
+import { JobFormAddress } from '@/services/types/stepForm';
 
 interface LocationStepProps {
-  formData: FormData;
-  onUpdateField: (field: keyof FormData, value: any) => void;
+  country: string;
+  address: JobFormAddress;
+  index: number;
+  onUpdateAddressField: (index: number, field: keyof JobFormAddress, value: any) => void;
+  // Renders without its own card chrome when inside the multi-location card
+  embedded?: boolean;
 }
 
 const LocationStep: React.FC<LocationStepProps> = ({
-  formData,
-  onUpdateField
+  country,
+  address: addressData,
+  index,
+  onUpdateAddressField,
+  embedded = false
 }) => {
   const { data: statesCities, isLoading: isLoadingStates } = useStatesCities();
   const { validateLocation, isValidating, validationErrors, clearValidationErrors } = useLocationValidation();
-  const { addToast } = useToast();  
-  
+  const { addToast } = useToast();
+
   // City search state
   const [citySearch, setCitySearch] = useState('');
   const [isCityDropdownOpen, setIsCityDropdownOpen] = useState(false);
-  
+
   const [fieldLoadingStates, setFieldLoadingStates] = useState({
     address: false,
     city: false,
@@ -45,25 +45,20 @@ const LocationStep: React.FC<LocationStepProps> = ({
     const match = formattedState.match(/\(([^)]+)\)$/);
     return match ? match[1] : formattedState;
   };
-  
-  const stateAbbr = formData.state ? getStateAbbreviation(formData.state) : '';
+
+  const stateAbbr = addressData.state ? getStateAbbreviation(addressData.state) : '';
   const { data: cities, isLoading: isLoadingCities } = useCitiesByState(stateAbbr);
-  
+
   // Filter cities based on search
-  const filteredCities = cities?.filter(city => 
+  const filteredCities = cities?.filter(city =>
     city.toLowerCase().includes(citySearch.toLowerCase())
   ) || [];
 
+  const validateLocationFields = useCallback(async (updatedData?: Partial<JobFormAddress>) => {
+     const dataToValidate = updatedData ? { ...addressData, ...updatedData } : addressData;
 
-  useEffect(() => {
-    if (!formData.country) {
-      onUpdateField('country', 'US');
-    }
-  }, [formData.country, onUpdateField]);   const validateLocationFields = useCallback(async (updatedData?: Partial<FormData>) => {
-     const dataToValidate = updatedData ? { ...formData, ...updatedData } : formData;
-   
     if (dataToValidate.address?.trim() && dataToValidate.city?.trim() && dataToValidate.zipCode?.trim()) {
- 
+
       const result = await validateLocation({
         address: dataToValidate.address.trim(),
         city: dataToValidate.city.trim(),
@@ -76,7 +71,7 @@ const LocationStep: React.FC<LocationStepProps> = ({
         if (invalidFields.length > 0) {
           const now = Date.now();
           const timeSinceLastToast = now - lastToastTimeRef.current;
-          
+
           if (timeSinceLastToast > 2000) {
             lastToastTimeRef.current = now;
             addToast({
@@ -89,18 +84,20 @@ const LocationStep: React.FC<LocationStepProps> = ({
         }
       }
     }
-  }, [formData, validateLocation, addToast]);  const addressChange = useCallback(async (value: string) => {
-    onUpdateField('address', value);
+  }, [addressData, validateLocation, addToast]);
+
+  const addressChange = useCallback(async (value: string) => {
+    onUpdateAddressField(index, 'address', value);
     clearValidationErrors();
 
     if (addressTimeoutRef.current) {
       clearTimeout(addressTimeoutRef.current);
     }
-    
+
     if (value.trim()) {
       setFieldLoadingStates(prev => ({ ...prev, address: true }));
-      
-    
+
+
       addressTimeoutRef.current = setTimeout(async () => {
         setFieldLoadingStates(prev => ({ ...prev, address: false }));
         await validateLocationFields({ address: value });
@@ -108,26 +105,26 @@ const LocationStep: React.FC<LocationStepProps> = ({
     } else {
       setFieldLoadingStates(prev => ({ ...prev, address: false }));
     }
-  }, [onUpdateField, clearValidationErrors, validateLocationFields]);
+  }, [index, onUpdateAddressField, clearValidationErrors, validateLocationFields]);
 
   const stateChange = useCallback(async (value: string) => {
-    onUpdateField('state', value); // value is already formatted as "State Name (AB)"
-    onUpdateField('city', ''); // Reset city when state changes
+    onUpdateAddressField(index, 'state', value); // value is already formatted as "State Name (AB)"
+    onUpdateAddressField(index, 'city', ''); // Reset city when state changes
     setCitySearch(''); // Reset city search
     setIsCityDropdownOpen(false); // Close city dropdown
     clearValidationErrors();
-    
+
     // Don't validate immediately since city will be empty after state change
-  }, [onUpdateField, clearValidationErrors]);
+  }, [index, onUpdateAddressField, clearValidationErrors]);
 
   const handleSelectCity = useCallback(async (value: string) => {
-    onUpdateField('city', value);
+    onUpdateAddressField(index, 'city', value);
     setCitySearch(''); // Clear search after selection
     setIsCityDropdownOpen(false); // Close dropdown after selection
     clearValidationErrors();
-    
+
     await validateLocationFields({ city: value });
-  }, [onUpdateField, clearValidationErrors, validateLocationFields]);
+  }, [index, onUpdateAddressField, clearValidationErrors, validateLocationFields]);
 
   const handleCitySearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setCitySearch(e.target.value);
@@ -143,13 +140,13 @@ const LocationStep: React.FC<LocationStepProps> = ({
 
 
   const zipCodeChange = useCallback(async (value: string) => {
-    onUpdateField('zipCode', value);
+    onUpdateAddressField(index, 'zipCode', value);
     clearValidationErrors();
-    
+
     if (value.trim()) {
       await validateLocationFields({ zipCode: value });
     }
-  }, [onUpdateField, clearValidationErrors, validateLocationFields]);
+  }, [index, onUpdateAddressField, clearValidationErrors, validateLocationFields]);
 
   const countryOptions = [
     { value: 'US', label: 'United States' },
@@ -177,125 +174,132 @@ const LocationStep: React.FC<LocationStepProps> = ({
     };
   }, []);
 
+  const fields = (
+    <div className="space-y-6">
+       <div>
+        <Label>Country *</Label>
+        <Select
+          options={countryOptions}
+          onChange={() => undefined}
+          defaultValue={country || 'US'}
+          disabled={true}
+        />
+      </div>        <div>
+        <Label>Address *</Label>
+        <Input
+          placeholder="123 Main Street"
+          defaultValue={addressData.address}
+          onChange={(e) => addressChange(e.target.value)}
+          error={!!validationErrors.address}
+          hint={validationErrors.address}
+        />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+         <div>
+          <Label>City *</Label>
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => stateAbbr && !isLoadingCities && setIsCityDropdownOpen(!isCityDropdownOpen)}
+              disabled={!stateAbbr || isLoadingCities}
+              className={`w-full h-11 rounded-lg border bg-transparent text-gray-800 border-gray-300 focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-800 px-4 py-2.5 text-sm shadow-theme-xs focus:outline-hidden text-left flex items-center justify-between disabled:bg-gray-50 disabled:text-gray-500 ${addressData.city ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-500'} ${validationErrors.city ? 'border-red-500' : ''}`}
+            >
+              <span>{addressData.city || (!stateAbbr ? "Select state first" : isLoadingCities ? "Loading cities..." : "Select City")}</span>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+
+            {isCityDropdownOpen && stateAbbr && !isLoadingCities && (
+              <div className="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                <div className="p-2 border-b border-gray-200 dark:border-gray-700">
+                  <div className="flex items-center">
+                    <input
+                      type="text"
+                      placeholder="Type to search cities..."
+                      value={citySearch}
+                      onChange={handleCitySearchChange}
+                      className="flex-1 px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 dark:bg-gray-700 dark:text-white"
+                      autoFocus
+                    />
+                    {citySearch && (
+                      <button
+                        type="button"
+                        onClick={clearCitySearch}
+                        className="ml-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                      >
+                        ×
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                <div className="max-h-48 overflow-y-auto">
+                  {filteredCities.length > 0 ? (
+                    filteredCities.slice(0, 100).map((city) => (
+                      <button
+                        key={city}
+                        type="button"
+                        onClick={() => handleSelectCity(city)}
+                        className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 text-sm"
+                      >
+                        {city}
+                      </button>
+                    ))
+                  ) : (
+                    <div className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                      {citySearch ? 'No cities found' : 'No cities available'}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {isCityDropdownOpen && (
+              <div
+                className="fixed inset-0 z-40"
+                onClick={() => setIsCityDropdownOpen(false)}
+              />
+            )}
+          </div>
+          {validationErrors.city && (
+            <p className="text-red-500 text-sm mt-1">{validationErrors.city}</p>
+          )}
+        </div><div>
+          <Label>State/Province *</Label>
+          <Select
+            options={stateOptions}
+            onChange={(value: string) => stateChange(value)}
+            value={addressData.state}
+            disabled={isLoadingStates}
+            placeholder={isLoadingStates ? "Loading states..." : "Select State"}
+          />
+        </div>
+        <div>
+          <Label>ZIP/Postal Code *</Label>
+          <Input
+            placeholder="12345"
+            defaultValue={addressData.zipCode}
+            onChange={(e) => zipCodeChange(e.target.value)}
+            error={!!validationErrors.zipCode}
+            hint={validationErrors.zipCode}
+          />
+        </div>
+      </div>
+    </div>
+  );
+
+  if (embedded) {
+    return fields;
+  }
+
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
       <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">
         Location
       </h2>
-      
-      <div className="space-y-6">       
-         <div>
-          <Label>Country *</Label>
-          <Select
-            options={countryOptions}
-            onChange={(value: string) => onUpdateField('country', value)}
-            defaultValue="US"
-            disabled={true}
-          />
-        </div>        <div>
-          <Label>Address *</Label>
-          <Input
-            placeholder="123 Main Street"
-            defaultValue={formData.address}
-            onChange={(e) => addressChange(e.target.value)}
-            error={!!validationErrors.address}
-            hint={validationErrors.address}
-          />
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">           
-           <div>
-            <Label>City *</Label>
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => stateAbbr && !isLoadingCities && setIsCityDropdownOpen(!isCityDropdownOpen)}
-                disabled={!stateAbbr || isLoadingCities}
-                className={`w-full h-11 rounded-lg border bg-transparent text-gray-800 border-gray-300 focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-800 px-4 py-2.5 text-sm shadow-theme-xs focus:outline-hidden text-left flex items-center justify-between disabled:bg-gray-50 disabled:text-gray-500 ${formData.city ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-500'} ${validationErrors.city ? 'border-red-500' : ''}`}
-              >
-                <span>{formData.city || (!stateAbbr ? "Select state first" : isLoadingCities ? "Loading cities..." : "Select City")}</span>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-
-              {isCityDropdownOpen && stateAbbr && !isLoadingCities && (
-                <div className="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                  <div className="p-2 border-b border-gray-200 dark:border-gray-700">
-                    <div className="flex items-center">
-                      <input
-                        type="text"
-                        placeholder="Type to search cities..."
-                        value={citySearch}
-                        onChange={handleCitySearchChange}
-                        className="flex-1 px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-500 dark:bg-gray-700 dark:text-white"
-                        autoFocus
-                      />
-                      {citySearch && (
-                        <button
-                          type="button"
-                          onClick={clearCitySearch}
-                          className="ml-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                        >
-                          ×
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                  
-                  <div className="max-h-48 overflow-y-auto">
-                    {filteredCities.length > 0 ? (
-                      filteredCities.slice(0, 100).map((city) => (
-                        <button
-                          key={city}
-                          type="button"
-                          onClick={() => handleSelectCity(city)}
-                          className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 text-sm"
-                        >
-                          {city}
-                        </button>
-                      ))
-                    ) : (
-                      <div className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
-                        {citySearch ? 'No cities found' : 'No cities available'}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {isCityDropdownOpen && (
-                <div 
-                  className="fixed inset-0 z-40" 
-                  onClick={() => setIsCityDropdownOpen(false)}
-                />
-              )}
-            </div>
-            {validationErrors.city && (
-              <p className="text-red-500 text-sm mt-1">{validationErrors.city}</p>
-            )}
-          </div><div>
-            <Label>State/Province *</Label>
-            <Select
-              options={stateOptions}
-              onChange={(value: string) => stateChange(value)}
-              value={formData.state}
-              disabled={isLoadingStates}
-              placeholder={isLoadingStates ? "Loading states..." : "Select State"}
-            />
-          </div>          
-          <div>
-            <Label>ZIP/Postal Code *</Label>
-            <Input
-              placeholder="12345"
-              defaultValue={formData.zipCode}
-              onChange={(e) => zipCodeChange(e.target.value)}
-              error={!!validationErrors.zipCode}
-              hint={validationErrors.zipCode}
-            />
-          </div>
-        </div>
-      </div>
+      {fields}
     </div>
   );
 };
