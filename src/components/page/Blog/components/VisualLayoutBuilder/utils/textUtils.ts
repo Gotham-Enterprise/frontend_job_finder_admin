@@ -98,13 +98,21 @@ export const cleanHtmlEntities = (text: string): string => {
   return cleanedText;
 };
 
+const encodeHtmlAttribute = (value: string): string => {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+};
+
 export const createLinkHtml = (
   text: string, 
   url: string, 
   target: string = '_self'
 ): string => {
   const relAttribute = target === '_blank' ? ' rel="noopener noreferrer"' : '';
-  return `<a href="${url}" target="${target}"${relAttribute}>${text}</a>`;
+  return `<a href="${encodeHtmlAttribute(url)}" target="${encodeHtmlAttribute(target)}"${relAttribute}>${text}</a>`;
 };
 
 export const removeAllLinksFromText = (text: string): string => {

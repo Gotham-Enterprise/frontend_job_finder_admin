@@ -29,6 +29,8 @@ import {
 import { useSupervisorTypesData } from "@/services/hooks/useSupervisees";
 import { useStates } from "@/services/hooks/useStates";
 import {
+  PROFESSIONAL_CREDENTIALS_HELPER_TEXT,
+  PROFESSIONAL_CREDENTIALS_MAX_LENGTH,
   SUPERVISOR_PROFILE_TEXT_MAX_LENGTH,
   SUPERVISOR_CERTIFICATIONS_DISABLED_MESSAGE,
   getSupervisorCredentialTypeLabel,
@@ -48,6 +50,7 @@ interface EditSupervisorModalProps {
 
 const emptyForm = (): SupervisorEditFormData => ({
   fullName: "",
+  professionalCredentials: "",
   contactNumber: "",
   city: "",
   state: "",
@@ -453,6 +456,21 @@ export const EditSupervisorModal: React.FC<EditSupervisorModalProps> = ({
                       placeholder="Enter full name"
                       error={!!fieldErrors.fullName}
                     />
+                  </FormField>
+                  <FormField
+                    label="Professional Credentials"
+                    error={fieldErrors.professionalCredentials}
+                  >
+                    <Input
+                      value={formData.professionalCredentials}
+                      onChange={(e) => updateField("professionalCredentials", e.target.value)}
+                      placeholder="Ph.D., NCC, LPC-S (AL)"
+                      maxLength={PROFESSIONAL_CREDENTIALS_MAX_LENGTH}
+                      error={!!fieldErrors.professionalCredentials}
+                    />
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                      {PROFESSIONAL_CREDENTIALS_HELPER_TEXT}
+                    </p>
                   </FormField>
                   <FormField label="Contact Number" required error={fieldErrors.contactNumber}>
                     <USPhoneInput

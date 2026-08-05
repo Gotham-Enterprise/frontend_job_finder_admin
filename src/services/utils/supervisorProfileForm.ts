@@ -1,4 +1,6 @@
 import {
+  PROFESSIONAL_CREDENTIALS_MAX_LENGTH,
+  PROFESSIONAL_CREDENTIALS_PATTERN,
   SUPERVISOR_PROFILE_TEXT_MAX_LENGTH,
   SUPERVISOR_PROFILE_TEXT_MIN_LENGTH,
   SUPERVISOR_YEARS_OF_EXPERIENCE_OPTIONS,
@@ -16,6 +18,7 @@ export type SupervisorFieldErrors = Partial<
 
 export interface SupervisorEditFormData {
   fullName: string;
+  professionalCredentials: string;
   contactNumber: string;
   city: string;
   state: string;
@@ -45,6 +48,14 @@ export function validateSupervisorEditForm(form: SupervisorEditFormData): Superv
 
   if (!form.fullName.trim()) {
     errors.fullName = "Full name is required";
+  }
+
+  const credentials = form.professionalCredentials.trim();
+  if (credentials.length > PROFESSIONAL_CREDENTIALS_MAX_LENGTH) {
+    errors.professionalCredentials = `Professional credentials must be ${PROFESSIONAL_CREDENTIALS_MAX_LENGTH} characters or less`;
+  } else if (credentials && !PROFESSIONAL_CREDENTIALS_PATTERN.test(credentials)) {
+    errors.professionalCredentials =
+      "Only letters, numbers, spaces, commas, periods, parentheses, and hyphens are allowed";
   }
 
   const phoneDigits = form.contactNumber.replace(/\D/g, "");
@@ -119,6 +130,7 @@ export function mapSupervisorDetailsToFormData(
 
   return {
     fullName: details.fullName ?? "",
+    professionalCredentials: profile?.professionalCredentials ?? "",
     contactNumber: details.contactNumber
       ? formatUSPhoneForDisplay(details.contactNumber)
       : "",
@@ -167,6 +179,7 @@ export function buildSupervisorUpdateFormData(payload: SupervisorUpdatePayload):
     patientPopulation,
     certification,
     acceptingSupervisees,
+    professionalCredentials,
     ...rest
   } = payload;
 
@@ -178,6 +191,11 @@ export function buildSupervisorUpdateFormData(payload: SupervisorUpdatePayload):
 
   if (acceptingSupervisees !== undefined) {
     fd.append("acceptingSupervisees", String(acceptingSupervisees));
+  }
+
+  // Sent even when empty so the backend can clear the optional value.
+  if (professionalCredentials !== undefined) {
+    fd.append("professionalCredentials", professionalCredentials);
   }
 
   stateOfLicensure?.forEach((s) => fd.append("stateOfLicensure[]", s));
@@ -203,6 +221,8 @@ export function formDataToUpdatePayload(
 
   return {
     fullName: form.fullName.trim() || undefined,
+    // Always sent (empty string clears the stored value on the backend).
+    professionalCredentials: form.professionalCredentials.trim(),
     contactNumber: contactDigits || form.contactNumber.trim() || undefined,
     city: form.city.trim() || undefined,
     state: form.state.trim() || undefined,

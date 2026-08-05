@@ -10,6 +10,7 @@ import DatePicker from '@/components/form/date-picker'
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false })
 
 export default function AnalyticsTab() {
+  const [viewMode, setViewMode] = useState<'inbound' | 'outbound'>('inbound')
   const [selectedPartnerId, setSelectedPartnerId] = useState<string>('')
   const [dateRange, setDateRange] = useState({
     startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
@@ -21,7 +22,10 @@ export default function AnalyticsTab() {
     affiliateId: selectedPartnerId || undefined,
     startDate: dateRange.startDate,
     endDate: dateRange.endDate,
+    source: viewMode === 'outbound' ? 'partner-feed' : undefined,
   })
+
+  const isOutboundView = viewMode === 'outbound'
 
   // Show loading state
   if (isLoading) {
@@ -66,13 +70,28 @@ export default function AnalyticsTab() {
         },
       },
     },
-    yaxis: {
-      labels: {
-        style: {
-          colors: '#9ca3af',
+    yaxis: isOutboundView
+      ? [
+          {
+            title: { text: 'Clicks', style: { color: '#9ca3af' } },
+            labels: { style: { colors: '#9ca3af' } },
+          },
+          {
+            opposite: true,
+            title: { text: 'Spend ($)', style: { color: '#9ca3af' } },
+            labels: {
+              style: { colors: '#9ca3af' },
+              formatter: (val: number) => `$${val.toFixed(2)}`,
+            },
+          },
+        ]
+      : {
+          labels: {
+            style: {
+              colors: '#9ca3af',
+            },
+          },
         },
-      },
-    },
     grid: {
       borderColor: '#374151',
       strokeDashArray: 3,
@@ -123,7 +142,9 @@ export default function AnalyticsTab() {
         return tooltipHtml;
       }
     },
-    colors: ['#3b82f6', '#8b5cf6', '#10b981', '#f97316'],
+    colors: isOutboundView
+      ? ['#3b82f6', '#f59e0b']
+      : ['#3b82f6', '#8b5cf6', '#10b981', '#f97316'],
     legend: {
       show: true,
       position: 'top',
@@ -138,29 +159,64 @@ export default function AnalyticsTab() {
     },
   }
 
-  const chartSeries = [
-    {
-      name: 'Total Clicks',
-      data: analytics?.clicksOverTime?.map((d) => d.clicks) || [],
-    },
-    {
-      name: 'Unique IP Addresses',
-      data: analytics?.clicksOverTime?.map((d) => d.uniqueIpAddresses) || [],
-    },
-    {
-      name: 'Logged In Users',
-      data: analytics?.clicksOverTime?.map((d) => d.authenticatedClicks) || [],
-    },
-    {
-      name: 'Guest Users',
-      data: analytics?.clicksOverTime?.map((d) => d.guestClicks) || [],
-    },
-  ]
+  const chartSeries = isOutboundView
+    ? [
+        {
+          name: 'Outbound Feed Clicks',
+          type: 'area' as const,
+          data: analytics?.clicksOverTime?.map((d) => d.clicks) || [],
+        },
+        {
+          name: 'Estimated Spend',
+          type: 'line' as const,
+          data: analytics?.clicksOverTime?.map((d) => d.estimatedSpend || 0) || [],
+        },
+      ]
+    : [
+        {
+          name: 'Total Clicks',
+          data: analytics?.clicksOverTime?.map((d) => d.clicks) || [],
+        },
+        {
+          name: 'Unique IP Addresses',
+          data: analytics?.clicksOverTime?.map((d) => d.uniqueIpAddresses) || [],
+        },
+        {
+          name: 'Logged In Users',
+          data: analytics?.clicksOverTime?.map((d) => d.authenticatedClicks) || [],
+        },
+        {
+          name: 'Guest Users',
+          data: analytics?.clicksOverTime?.map((d) => d.guestClicks) || [],
+        },
+      ]
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Analytics Dashboard</h2>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setViewMode('inbound')}
+            className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+              viewMode === 'inbound'
+                ? 'bg-primary text-white'
+                : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+            }`}
+          >
+            Inbound Traffic
+          </button>
+          <button
+            onClick={() => setViewMode('outbound')}
+            className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+              viewMode === 'outbound'
+                ? 'bg-primary text-white'
+                : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+            }`}
+          >
+            Outbound Traffic
+          </button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -240,6 +296,7 @@ export default function AnalyticsTab() {
       </div>
 
       {/* Job Count Cards */}
+      {!isOutboundView && (
       <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
         <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-6">
           <div className="flex items-center justify-between">
@@ -256,7 +313,87 @@ export default function AnalyticsTab() {
           </div>
         </div>
       </div>
+      )}
 
+      {isOutboundView ? (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-blue-700 dark:text-blue-400 font-medium">Outbound Feed Clicks</p>
+                  <p className="text-3xl font-bold text-blue-900 dark:text-blue-300 mt-2">
+                    {analytics?.totalClicks?.toLocaleString() || 0}
+                  </p>
+                </div>
+                <MousePointerClick className="w-12 h-12 text-blue-600 dark:text-blue-500" />
+              </div>
+            </div>
+            <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-amber-700 dark:text-amber-400 font-medium">Estimated Spend</p>
+                  <p className="text-3xl font-bold text-amber-900 dark:text-amber-300 mt-2">
+                    ${(analytics?.estimatedSpend ?? 0).toFixed(2)}
+                  </p>
+                </div>
+                <DollarSign className="w-12 h-12 text-amber-600 dark:text-amber-500" />
+              </div>
+            </div>
+            <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-emerald-700 dark:text-emerald-400 font-medium">Conversions</p>
+                  <p className="text-3xl font-bold text-emerald-900 dark:text-emerald-300 mt-2">
+                    {analytics?.totalConversions?.toLocaleString() ?? 0}
+                  </p>
+                  <p className="text-xs text-emerald-600 dark:text-emerald-500 mt-1">
+                    {analytics?.conversionRate ?? 0}% conversion rate
+                  </p>
+                </div>
+                <CheckCircle className="w-12 h-12 text-emerald-600 dark:text-emerald-500" />
+              </div>
+            </div>
+            <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-purple-700 dark:text-purple-400 font-medium">Cost / Conversion</p>
+                  <p className="text-3xl font-bold text-purple-900 dark:text-purple-300 mt-2">
+                    {analytics?.costPerConversion != null
+                      ? `$${analytics.costPerConversion.toFixed(2)}`
+                      : '—'}
+                  </p>
+                </div>
+                <BarChart2 className="w-12 h-12 text-purple-600 dark:text-purple-500" />
+              </div>
+            </div>
+          </div>
+
+          {analytics?.clicksBySource && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="border border-gray-200 dark:border-gray-800 rounded-lg p-4">
+                <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">Manual</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                  {analytics.clicksBySource.manual.toLocaleString()}
+                </p>
+              </div>
+              <div className="border border-gray-200 dark:border-gray-800 rounded-lg p-4">
+                <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">Auto-Redirect</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                  {analytics.clicksBySource.autoRedirect.toLocaleString()}
+                </p>
+              </div>
+              <div className="border border-gray-200 dark:border-gray-800 rounded-lg p-4">
+                <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">Outbound Feed</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                  {analytics.clicksBySource.partnerFeed.toLocaleString()}
+                </p>
+              </div>
+            </div>
+          )}
+        </>
+      ) : (
+      <>
       {/* Metrics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
@@ -388,12 +525,16 @@ export default function AnalyticsTab() {
           </div>
         </div>
       </div>
+      </>
+      )}
 
       {/* Clicks Over Time Chart */}
       <div className="border border-gray-200 dark:border-gray-800 rounded-lg p-6">
         <div className="flex items-center gap-2 mb-4">
           <TrendingUp className="w-5 h-5 text-primary" />
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Clicks Over Time</h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+            {isOutboundView ? 'Outbound Traffic Over Time' : 'Clicks Over Time'}
+          </h3>
         </div>
         {analytics?.clicksOverTime && analytics.clicksOverTime.length > 0 ? (
           <Chart
@@ -502,7 +643,7 @@ export default function AnalyticsTab() {
       </div>
 
       {/* Redirects by Job Title */}
-      {analytics?.redirectsByJobTitle && analytics.redirectsByJobTitle.length > 0 && (
+      {!isOutboundView && analytics?.redirectsByJobTitle && analytics.redirectsByJobTitle.length > 0 && (
         <div className="border border-gray-200 dark:border-gray-800 rounded-lg">
           <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-800">
             <div className="flex items-center gap-2">
