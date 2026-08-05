@@ -184,6 +184,18 @@ export interface JobCreationPayload {
     documentType: string;
     documentDescription: string;
   }>;
+  // Multi-address model expected by the backend validators/controllers
+  addresses: Array<{
+    locationCountry: string;
+    locationAddress: string;
+    locationCity: string;
+    locationState: string;
+    locationZipCode: string;
+    salaryRangeStart: number;
+    salaryRangeEnd: number;
+    salaryType: string;
+    salaryCurrency: string;
+  }>;
 }
 
 export interface AIJobDescriptionPayload {

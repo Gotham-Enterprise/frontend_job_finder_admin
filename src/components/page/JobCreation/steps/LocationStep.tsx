@@ -279,7 +279,7 @@ const LocationStep: React.FC<LocationStepProps> = ({
             <Select
               options={stateOptions}
               onChange={(value: string) => stateChange(value)}
-              defaultValue={formData.state}
+              value={formData.state}
               disabled={isLoadingStates}
               placeholder={isLoadingStates ? "Loading states..." : "Select State"}
             />

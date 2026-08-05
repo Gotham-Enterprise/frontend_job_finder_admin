@@ -259,17 +259,18 @@ const JobEditDashboard: React.FC = () => {
         return clinicSize?.id.toString() || '';
       };
 
-      const findStateAbbreviation = (stateName: string): string => {
+      // Format to the "State Name (AB)" option value used by the state dropdown
+      const formatStateForDropdown = (stateName: string): string => {
         if (!statesData?.success || !stateName) {
-         
+
           return '';
         }
-        const state = statesData.data.states.find(s => 
+        const state = statesData.data.states.find(s =>
           s.name.toLowerCase() === stateName.toLowerCase() ||
           s.abbreviation.toLowerCase() === stateName.toLowerCase()
         );
-      
-        return state?.abbreviation || stateName; 
+
+        return state ? `${state.name} (${state.abbreviation})` : stateName;
       };
 
  
@@ -387,7 +388,7 @@ const JobEditDashboard: React.FC = () => {
         country: job.locationCountry === 'USA' || job.locationCountry === 'United States' ? 'US' : job.locationCountry || 'US',
         address: job.address || '',
         city: job.locationCity || '',
-        state: findStateAbbreviation(job.locationState || ''),
+        state: formatStateForDropdown(job.locationState || ''),
         zipCode: job.locationZipCode || '',
         workType: findWorkTypeId(job.workType),
         workSetting: findWorkSettingId(job.workSetting),
@@ -516,16 +517,36 @@ const JobEditDashboard: React.FC = () => {
       return documentPayload;
     }) || [];
 
+    // Strip the "(AB)" dropdown suffix — backend stores the full state name
+    const stateName = formData.state.replace(/\s*\([A-Z]{2}\)\s*$/, '');
+    const countryName =
+      formData.country === 'US' || formData.country === 'USA'
+        ? 'United States'
+        : formData.country || 'United States';
+
     const payload = {
       companyId: selectedCompany.id,
       jobTitle: formData.title,
       occupationId: parseInt(formData.occupationId) || 1,
       specialtyId: formData.specialtyId ? parseInt(formData.specialtyId) : undefined,
       locationCountry: formData.country,
-      locationState: formData.state,
+      locationState: stateName,
       locationCity: formData.city,
       locationZipCode: formData.zipCode,
       locationAddress: formData.address,
+      addresses: [
+        {
+          locationCountry: countryName,
+          locationAddress: formData.address,
+          locationCity: formData.city,
+          locationState: stateName,
+          locationZipCode: formData.zipCode,
+          salaryRangeStart: Number(formData.salaryFrom),
+          salaryRangeEnd: Number(formData.salaryTo),
+          salaryType: formData.salaryType,
+          salaryCurrency: formData.currency,
+        },
+      ],
       workType: getWorkTypeName(formData.workType),
       workSetting: getWorkSettingName(formData.workSetting),
       workFacility: getWorkFacilityName(formData.workFacility),
@@ -539,6 +560,8 @@ const JobEditDashboard: React.FC = () => {
       companySize: getClinicSizeName(formData.clinicSize),
       postingDate: formData.postingDate,
       status: status,
+      // Backend validator requires a step when saving as Draft
+      step: status === 'Draft' ? currentStep : undefined,
       jobDescription: description,
       questions: apiQuestions,
       documents: apiDocuments,

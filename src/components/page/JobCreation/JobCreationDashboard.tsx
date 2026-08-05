@@ -397,6 +397,12 @@ const JobCreationDashboard: React.FC = () => {
     const workFacilityName = getWorkFacilityNameSafe(formData.workFacility);
     const shiftTypeName = getShiftTypeNameSafe(formData.shiftType);
     const companySize = getClinicSizeNameSafe(formData.clinicSize);
+    // Strip the "(AB)" dropdown suffix — backend stores the full state name
+    const stateName = formData.state.replace(/\s*\([A-Z]{2}\)\s*$/, '');
+    const countryName =
+      formData.country === 'US' || formData.country === 'USA'
+        ? 'United States'
+        : formData.country || 'United States';
 
     return {
       companyId: selectedCompany!.id,
@@ -404,10 +410,23 @@ const JobCreationDashboard: React.FC = () => {
       occupationId: Number(formData.occupationId) || 0,
       specialtyId: Number(formData.specialtyId) || 0,
       locationCountry: formData.country || 'USA',
-      locationState: formData.state,
+      locationState: stateName,
       locationCity: formData.city,
       locationZipCode: formData.zipCode,
       locationAddress: formData.address,
+      addresses: [
+        {
+          locationCountry: countryName,
+          locationAddress: formData.address,
+          locationCity: formData.city,
+          locationState: stateName,
+          locationZipCode: formData.zipCode,
+          salaryRangeStart: Number(formData.salaryFrom),
+          salaryRangeEnd: Number(formData.salaryTo),
+          salaryType: formData.salaryType,
+          salaryCurrency: formData.currency,
+        },
+      ],
       workType: workTypeName,
       workSetting: workSettingName,
       workFacility: workFacilityName,
