@@ -7,7 +7,7 @@ import Button from "@/components/ui/button/Button";
 import { getJobStatusVariant, getEmploymentTypeVariant } from "@/services/utils/statusVariants";
 import NotFoundState from "@/components/common/NotFoundState";
 import Pagination from "@/components/tables/Pagination";
-import { LocationIcon, DollarIcon, ExperienceIcon, EyeIcon } from "@/components/ui/icons";
+import { EyeIcon } from "@/components/ui/icons";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import TableHeading from "@/components/tables/tableHeader";
 import PermissionWrapper from "@/components/common/PermissionWrapper";
@@ -87,7 +87,7 @@ export default function JobPosts({ jobPosts, formatDate }: JobPostsProps) {
                     key={job.id}
                     className="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/50"
                   >
-                    <TableCell className="py-4 px-6">
+                    <TableCell className="py-4 px-6 min-w-[220px]">
                       <div className="flex flex-col">
                         <h4 className="font-semibold text-gray-900 dark:text-white mb-1">{job.title}</h4>
                         {job.description && (
@@ -95,62 +95,47 @@ export default function JobPosts({ jobPosts, formatDate }: JobPostsProps) {
                         )}
                       </div>
                     </TableCell>
-                    <TableCell className="py-4 px-6">
-                      <div className="flex items-center gap-2">
-                        {job.location ? (
-                          <>
-                            <LocationIcon className="w-4 h-4 text-gray-400" />
-                            <span className="text-sm text-gray-900 dark:text-white">{job.location}</span>
-                          </>
-                        ) : (
-                          <span className="text-sm text-gray-400 dark:text-gray-500">Not specified</span>
-                        )}
-                      </div>
+                    <TableCell className="py-4 px-6 whitespace-nowrap">
+                      {job.location ? (
+                        <span className="text-sm text-gray-900 dark:text-white">{job.location}</span>
+                      ) : (
+                        <span className="text-sm text-gray-400 dark:text-gray-500">Not specified</span>
+                      )}
                     </TableCell>
-                    <TableCell className="py-4 px-6">
-                      <div className="flex items-center gap-2">
-                        {job.salaryRange ? (
-                          <>
-                            <DollarIcon className="w-4 h-4 text-gray-400" />
-                            <span className="text-sm text-gray-900 dark:text-white">{job.salaryRange}</span>
-                          </>
-                        ) : (
-                          <span className="text-sm text-gray-400 dark:text-gray-500">Not specified</span>
-                        )}
-                      </div>
+                    <TableCell className="py-4 px-6 whitespace-nowrap">
+                      {job.salaryRange ? (
+                        <span className="text-sm text-gray-900 dark:text-white">{job.salaryRange}</span>
+                      ) : (
+                        <span className="text-sm text-gray-400 dark:text-gray-500">Not specified</span>
+                      )}
                     </TableCell>
-                    <TableCell className="py-4 px-6">
-                      <div className="flex items-center gap-2">
-                        {job.experienceLevel ? (
-                          <>
-                            <ExperienceIcon className="w-4 h-4 text-gray-400" />
-                            <span className="text-sm text-gray-900 dark:text-white">{job.experienceLevel}</span>
-                          </>
-                        ) : (
-                          <span className="text-sm text-gray-400 dark:text-gray-500">Not specified</span>
-                        )}
-                      </div>
+                    <TableCell className="py-4 px-6 whitespace-nowrap">
+                      {job.experienceLevel ? (
+                        <span className="text-sm text-gray-900 dark:text-white">{job.experienceLevel}</span>
+                      ) : (
+                        <span className="text-sm text-gray-400 dark:text-gray-500">Not specified</span>
+                      )}
                     </TableCell>
                     <TableCell className="py-4 px-6 text-center">
                       <span className="text-sm font-medium text-gray-900 dark:text-white">
                         {job._count?.applicants || 0}
                       </span>
                     </TableCell>
-                    <TableCell className="py-4 px-6">
+                    <TableCell className="py-4 px-6 whitespace-nowrap">
                       <p className="text-sm text-gray-900 dark:text-white">{formatPostingDate(job.postingDate)}</p>
                     </TableCell>
                     <TableCell className="py-4 px-6">
                       <div className="flex flex-wrap gap-2">
                         {job.status && (
                           <span
-                            className={`inline-flex items-center px-3 py-1 text-xs font-medium rounded-full ${getJobStatusVariant(job.status)}`}
+                            className={`inline-flex items-center whitespace-nowrap px-3 py-1 text-xs font-medium rounded-full ${getJobStatusVariant(job.status)}`}
                           >
                             {job.status}
                           </span>
                         )}
                         {job.employmentType && (
                           <span
-                            className={`inline-flex items-center px-3 py-1 text-xs font-medium rounded-full ${getEmploymentTypeVariant(job.employmentType)}`}
+                            className={`inline-flex items-center whitespace-nowrap px-3 py-1 text-xs font-medium rounded-full ${getEmploymentTypeVariant(job.employmentType)}`}
                           >
                             {job.employmentType}
                           </span>

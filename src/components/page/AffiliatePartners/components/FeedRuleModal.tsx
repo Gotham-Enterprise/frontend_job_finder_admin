@@ -29,6 +29,7 @@ export default function FeedRuleModal({
     specialtyName: '',
     states: [],
     cpc: null,
+    cpa: null,
     isActive: true,
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -50,6 +51,7 @@ export default function FeedRuleModal({
         specialtyName: rule.specialtyName || '',
         states: rule.states || [],
         cpc: rule.cpc ?? null,
+        cpa: rule.cpa ?? null,
         isActive: rule.isActive,
       })
     } else {
@@ -59,6 +61,7 @@ export default function FeedRuleModal({
         specialtyName: '',
         states: [],
         cpc: null,
+        cpa: null,
         isActive: true,
       })
     }
@@ -102,6 +105,9 @@ export default function FeedRuleModal({
       cpc: form.cpc === null || form.cpc === undefined || form.cpc === ('' as unknown as number)
         ? null
         : Number(form.cpc),
+      cpa: form.cpa === null || form.cpa === undefined || form.cpa === ('' as unknown as number)
+        ? null
+        : Number(form.cpa),
     })
   }
 
@@ -193,21 +199,40 @@ export default function FeedRuleModal({
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                CPC Rate ($)
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                value={form.cpc ?? ''}
-                onChange={(e) =>
-                  set('cpc', e.target.value === '' ? null : parseFloat(e.target.value))
-                }
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-800 dark:text-white"
-                placeholder="0.00"
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  CPC Rate ($)
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={form.cpc ?? ''}
+                  onChange={(e) =>
+                    set('cpc', e.target.value === '' ? null : parseFloat(e.target.value))
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-800 dark:text-white"
+                  placeholder="0.00"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  CPA Rate ($)
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={form.cpa ?? ''}
+                  onChange={(e) =>
+                    set('cpa', e.target.value === '' ? null : parseFloat(e.target.value))
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-800 dark:text-white"
+                  placeholder="0.00"
+                />
+              </div>
             </div>
 
             <label className="flex items-center gap-3 cursor-pointer">

@@ -18,9 +18,9 @@ export default function CompanyOverview({ overview }: CompanyOverviewProps) {
                 {overview ? (
                     <div>
                       
-                         <div className="bg-gradient-to-r rounded-lg">
-                            <div 
-                                className="text-gray-700 dark:text-gray-300 leading-relaxed flex-col gap-10 prose prose-sm max-w-none dark:prose-invert"
+                         <div className="bg-gradient-to-r rounded-lg overflow-hidden">
+                            <div
+                                className="text-gray-700 dark:text-gray-300 leading-relaxed flex-col gap-10 prose prose-sm max-w-none dark:prose-invert break-words"
                                 dangerouslySetInnerHTML={{ __html: overview }}
                             />
                         </div>
