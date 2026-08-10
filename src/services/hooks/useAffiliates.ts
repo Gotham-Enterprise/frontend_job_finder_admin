@@ -23,6 +23,12 @@ import {
   deleteAffiliateLink,
   CreateLinkData,
   UpdateLinkData,
+  getAffiliateLinkTypes,
+  createAffiliateLinkType,
+  updateAffiliateLinkType,
+  deleteAffiliateLinkType,
+  reorderAffiliateLinkTypes,
+  AffiliateLinkType,
 } from "../api/affiliates";
 import { showToast } from "../utils/toast";
 
@@ -31,6 +37,7 @@ export const affiliateQueryKeys = {
   partners: () => [...affiliateQueryKeys.all, "partners"] as const,
   partner: (id: string) => [...affiliateQueryKeys.partners(), id] as const,
   links: () => [...affiliateQueryKeys.all, "links"] as const,
+  linkTypes: () => [...affiliateQueryKeys.all, "linkTypes"] as const,
   batches: () => [...affiliateQueryKeys.all, "batches"] as const,
   batch: (id: string) => [...affiliateQueryKeys.batches(), id] as const,
   batchStatus: (id: string) => [...affiliateQueryKeys.batches(), id, "status"] as const,
@@ -161,6 +168,79 @@ export const useDeleteAffiliateLink = () => {
     onError: (error: any) => {
       const errorMessage = error.response?.data?.message || error.message || "Failed to delete link";
       showToast.error("Deletion Failed", errorMessage);
+    },
+  });
+};
+
+// Link Type Configuration Hooks
+export const useAffiliateLinkTypes = () => {
+  return useQuery({
+    queryKey: affiliateQueryKeys.linkTypes(),
+    queryFn: () => getAffiliateLinkTypes(),
+    staleTime: 1000 * 60 * 5,
+  });
+};
+
+export const useCreateAffiliateLinkType = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { name: string }) => createAffiliateLinkType(data),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: affiliateQueryKeys.linkTypes() });
+      queryClient.invalidateQueries({ queryKey: affiliateQueryKeys.links() });
+      showToast.success("Link Type Added!", `"${data.name}" has been added.`);
+    },
+    onError: (error: any) => {
+      const errorMessage = error.response?.data?.message || error.message || "Failed to add link type";
+      showToast.error("Creation Failed", errorMessage);
+    },
+  });
+};
+
+export const useUpdateAffiliateLinkType = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: { name?: string; isActive?: boolean; sortOrder?: number } }) =>
+      updateAffiliateLinkType(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: affiliateQueryKeys.linkTypes() });
+      queryClient.invalidateQueries({ queryKey: affiliateQueryKeys.links() });
+      showToast.success("Link Type Updated!", "The link type has been updated.");
+    },
+    onError: (error: any) => {
+      const errorMessage = error.response?.data?.message || error.message || "Failed to update link type";
+      showToast.error("Update Failed", errorMessage);
+    },
+  });
+};
+
+export const useDeleteAffiliateLinkType = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => deleteAffiliateLinkType(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: affiliateQueryKeys.linkTypes() });
+      queryClient.invalidateQueries({ queryKey: affiliateQueryKeys.links() });
+      showToast.success("Link Type Deleted!", "The link type has been deleted.");
+    },
+    onError: (error: any) => {
+      const errorMessage = error.response?.data?.message || error.message || "Failed to delete link type";
+      showToast.error("Deletion Failed", errorMessage);
+    },
+  });
+};
+
+export const useReorderAffiliateLinkTypes = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (ids: string[]) => reorderAffiliateLinkTypes(ids),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: affiliateQueryKeys.linkTypes() });
+      showToast.success("Order Saved!", "Link types reordered.");
+    },
+    onError: (error: any) => {
+      const errorMessage = error.response?.data?.message || error.message || "Failed to reorder link types";
+      showToast.error("Reorder Failed", errorMessage);
     },
   });
 };

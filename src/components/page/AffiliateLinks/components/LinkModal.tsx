@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { X } from 'lucide-react'
 import { AffiliateLink, CreateLinkData, UpdateLinkData } from '@/services/api/affiliates'
-import { useAffiliatePartners } from '@/services/hooks/useAffiliates'
+import { useAffiliatePartners, useAffiliateLinkTypes } from '@/services/hooks/useAffiliates'
 import { occupationApi } from '@/services/api/occupation'
 import type { Occupation } from '@/services/types/occupation'
 import SingleSelect from '@/components/molecules/SingleSelect'
@@ -68,6 +68,7 @@ export default function LinkModal({ isOpen, onClose, link, onSubmit, isSubmittin
   const [occupationsLoading, setOccupationsLoading] = useState(false)
 
   const { data: partnersData } = useAffiliatePartners({ limit: 1000, status: 'active' })
+  const { data: linkTypes = [] } = useAffiliateLinkTypes()
 
   useEffect(() => {
     if (isOpen) {
@@ -218,13 +219,20 @@ export default function LinkModal({ isOpen, onClose, link, onSubmit, isSubmittin
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Category / Type
               </label>
-              <input
-                type="text"
+              <select
                 value={formData.type || ''}
                 onChange={(e) => setFormData({ ...formData, type: e.target.value })}
                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
-                placeholder="e.g. Continuing Education, Conference, College Degree"
-              />
+              >
+                <option value="">Uncategorized</option>
+                {linkTypes
+                  .filter((t) => t.isActive || t.name === formData.type)
+                  .map((t) => (
+                    <option key={t.id} value={t.name}>
+                      {t.name}
+                    </option>
+                  ))}
+              </select>
               <p className="text-xs text-gray-500 mt-1">
                 Used to categorize this link on the Career Center page
               </p>

@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { Plus, Edit2, Trash2, Link as LinkIcon, Building2, Calendar } from 'lucide-react'
+import { Plus, Edit2, Trash2, Link as LinkIcon, Building2, Calendar, Settings2 } from 'lucide-react'
 import {
   useAffiliateLinks,
   useCreateAffiliateLink,
@@ -10,10 +10,12 @@ import {
 } from '@/services/hooks/useAffiliates'
 import type { AffiliateLink, CreateLinkData, UpdateLinkData } from '@/services/api/affiliates'
 import LinkModal from './components/LinkModal'
+import LinkTypesConfigModal from './components/LinkTypesConfigModal'
 
 export default function AffiliateLinks() {
   const [page, setPage] = useState(1)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isConfigOpen, setIsConfigOpen] = useState(false)
   const [editingLink, setEditingLink] = useState<AffiliateLink | null>(null)
 
   const { data: linksData, isLoading } = useAffiliateLinks({ page, limit: 10 })
@@ -67,13 +69,22 @@ export default function AffiliateLinks() {
             Manage your internal affiliate links connecting to partner feeds.
           </p>
         </div>
-        <button
-          onClick={handleCreate}
-          className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          Add Link
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setIsConfigOpen(true)}
+            className="p-2.5 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-500 hover:text-primary hover:border-primary/50 transition-colors"
+            title="Link Types configuration"
+          >
+            <Settings2 className="w-4 h-4" />
+          </button>
+          <button
+            onClick={handleCreate}
+            className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            Add Link
+          </button>
+        </div>
       </div>
 
       <div className="p-6">
@@ -289,6 +300,8 @@ export default function AffiliateLinks() {
         onSubmit={handleSubmit}
         isSubmitting={createMutation.isPending || updateMutation.isPending}
       />
+
+      <LinkTypesConfigModal isOpen={isConfigOpen} onClose={() => setIsConfigOpen(false)} />
     </div>
   )
 }

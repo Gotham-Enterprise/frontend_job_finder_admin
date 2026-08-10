@@ -298,6 +298,43 @@ export const deleteAffiliateLink = async (id: string): Promise<void> => {
   return apiDelete(`/api/admin/affiliates/links/${id}`);
 };
 
+export interface AffiliateLinkType {
+  id: string;
+  name: string;
+  isActive: boolean;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Link Type Configuration APIs
+export const getAffiliateLinkTypes = async (): Promise<AffiliateLinkType[]> => {
+  const res = await apiGet<{ success: boolean; data: AffiliateLinkType[] }>("/api/admin/affiliates/link-types");
+  return res.data || [];
+};
+
+export const createAffiliateLinkType = async (data: { name: string }): Promise<AffiliateLinkType> => {
+  const res = await apiPost<{ success: boolean; data: AffiliateLinkType }>("/api/admin/affiliates/link-types", data);
+  return res.data;
+};
+
+export const updateAffiliateLinkType = async (
+  id: string,
+  data: { name?: string; isActive?: boolean; sortOrder?: number },
+): Promise<AffiliateLinkType> => {
+  const res = await apiPut<{ success: boolean; data: AffiliateLinkType }>(`/api/admin/affiliates/link-types/${id}`, data);
+  return res.data;
+};
+
+export const deleteAffiliateLinkType = async (id: string): Promise<void> => {
+  await apiDelete(`/api/admin/affiliates/link-types/${id}`);
+};
+
+export const reorderAffiliateLinkTypes = async (ids: string[]): Promise<AffiliateLinkType[]> => {
+  const res = await apiPut<{ success: boolean; data: AffiliateLinkType[] }>("/api/admin/affiliates/link-types/reorder", { ids });
+  return res.data || [];
+};
+
 // Upload & Batch Management APIs
 export const uploadAffiliateXML = async (
   file: File,
