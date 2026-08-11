@@ -25,6 +25,11 @@ export interface AffiliatePartner {
   updatedAt: string;
 }
 
+export interface AffiliateFaq {
+  question: string;
+  answer: string;
+}
+
 export interface AffiliateLink {
   id: string;
   name: string;
@@ -34,6 +39,10 @@ export interface AffiliateLink {
   targetAudience?: string;
   contentLevel?: string;
   overview?: string;
+  whoShouldEnroll?: string;
+  whatYoullLearn?: string[];
+  careerOutlook?: string;
+  faqs?: AffiliateFaq[];
   ceHours?: number;
   ceCredits?: number;
   occupations?: string[];
@@ -184,6 +193,10 @@ export interface CreateLinkData {
   targetAudience?: string;
   contentLevel?: string;
   overview?: string;
+  whoShouldEnroll?: string;
+  whatYoullLearn?: string[];
+  careerOutlook?: string;
+  faqs?: AffiliateFaq[];
   ceHours?: number;
   ceCredits?: number;
   occupations?: string[];
@@ -202,6 +215,10 @@ export interface UpdateLinkData {
   targetAudience?: string;
   contentLevel?: string;
   overview?: string;
+  whoShouldEnroll?: string;
+  whatYoullLearn?: string[];
+  careerOutlook?: string;
+  faqs?: AffiliateFaq[];
   ceHours?: number;
   ceCredits?: number;
   occupations?: string[];

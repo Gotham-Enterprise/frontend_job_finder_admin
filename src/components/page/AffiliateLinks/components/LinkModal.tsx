@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react'
-import { X } from 'lucide-react'
+import { X, Plus, Trash2 } from 'lucide-react'
 import { AffiliateLink, CreateLinkData, UpdateLinkData } from '@/services/api/affiliates'
 import { useAffiliatePartners, useAffiliateLinkTypes } from '@/services/hooks/useAffiliates'
 import { occupationApi } from '@/services/api/occupation'
@@ -58,6 +58,10 @@ export default function LinkModal({ isOpen, onClose, link, onSubmit, isSubmittin
     targetAudience: '',
     contentLevel: '',
     overview: '',
+    whoShouldEnroll: '',
+    whatYoullLearn: [],
+    careerOutlook: '',
+    faqs: [],
     courseThumbnail: '',
     ceHours: undefined,
     ceCredits: undefined,
@@ -99,6 +103,10 @@ export default function LinkModal({ isOpen, onClose, link, onSubmit, isSubmittin
         targetAudience: link.targetAudience || '',
         contentLevel: link.contentLevel || '',
         overview: link.overview || '',
+        whoShouldEnroll: link.whoShouldEnroll || '',
+        whatYoullLearn: link.whatYoullLearn || [],
+        careerOutlook: link.careerOutlook || '',
+        faqs: link.faqs || [],
         courseThumbnail: link.courseThumbnail || '',
         ceHours: link.ceHours,
         ceCredits: link.ceCredits,
@@ -117,6 +125,10 @@ export default function LinkModal({ isOpen, onClose, link, onSubmit, isSubmittin
         targetAudience: '',
         contentLevel: '',
         overview: '',
+        whoShouldEnroll: '',
+        whatYoullLearn: [],
+        careerOutlook: '',
+        faqs: [],
         courseThumbnail: '',
         ceHours: undefined,
         ceCredits: undefined,
@@ -136,9 +148,55 @@ export default function LinkModal({ isOpen, onClose, link, onSubmit, isSubmittin
     })
   }
 
+  const updateBullet = (index: number, value: string) => {
+    setFormData((prev) => {
+      const list = [...(prev.whatYoullLearn || [])]
+      list[index] = value
+      return { ...prev, whatYoullLearn: list }
+    })
+  }
+
+  const addBullet = () => {
+    setFormData((prev) => ({ ...prev, whatYoullLearn: [...(prev.whatYoullLearn || []), ''] }))
+  }
+
+  const removeBullet = (index: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      whatYoullLearn: (prev.whatYoullLearn || []).filter((_, i) => i !== index),
+    }))
+  }
+
+  const updateFaq = (index: number, field: 'question' | 'answer', value: string) => {
+    setFormData((prev) => {
+      const list = [...(prev.faqs || [])]
+      list[index] = { ...list[index], [field]: value }
+      return { ...prev, faqs: list }
+    })
+  }
+
+  const addFaq = () => {
+    setFormData((prev) => ({
+      ...prev,
+      faqs: [...(prev.faqs || []), { question: '', answer: '' }],
+    }))
+  }
+
+  const removeFaq = (index: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      faqs: (prev.faqs || []).filter((_, i) => i !== index),
+    }))
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    await onSubmit(formData)
+    const payload: CreateLinkData = {
+      ...formData,
+      whatYoullLearn: (formData.whatYoullLearn || []).map((b) => b.trim()).filter(Boolean),
+      faqs: (formData.faqs || []).filter((f) => f.question.trim() && f.answer.trim()),
+    }
+    await onSubmit(payload)
   }
 
   return (
@@ -328,6 +386,125 @@ export default function LinkModal({ isOpen, onClose, link, onSubmit, isSubmittin
                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent transition-all resize-y min-h-[120px]"
                 placeholder="Brief overview of the course content..."
               />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Who Should Enroll
+              </label>
+              <textarea
+                rows={4}
+                value={formData.whoShouldEnroll || ''}
+                onChange={(e) => setFormData({ ...formData, whoShouldEnroll: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent transition-all resize-y min-h-[100px]"
+                placeholder="Who is this course designed for?"
+              />
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  What You'll Learn
+                </label>
+                <button
+                  type="button"
+                  onClick={addBullet}
+                  className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:text-primary/80 transition-colors"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  Add point
+                </button>
+              </div>
+              <div className="space-y-2">
+                {(formData.whatYoullLearn || []).map((bullet, index) => (
+                  <div key={index} className="flex items-center gap-2">
+                    <span className="shrink-0 w-1.5 h-1.5 rounded-full bg-primary/60" />
+                    <input
+                      type="text"
+                      value={bullet}
+                      onChange={(e) => updateBullet(index, e.target.value)}
+                      className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                      placeholder="e.g. Identify diagnostic criteria and treatment protocols"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeBullet(index)}
+                      className="p-2 text-gray-400 hover:text-red-500 transition-colors shrink-0"
+                      aria-label="Remove point"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+              {(formData.whatYoullLearn || []).length === 0 && (
+                <p className="text-xs text-gray-500 mt-1">No learning outcomes added yet.</p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Career Outlook
+              </label>
+              <textarea
+                rows={4}
+                value={formData.careerOutlook || ''}
+                onChange={(e) => setFormData({ ...formData, careerOutlook: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent transition-all resize-y min-h-[100px]"
+                placeholder="Job growth, earning potential, and career paths for this specialty"
+              />
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  FAQs
+                </label>
+                <button
+                  type="button"
+                  onClick={addFaq}
+                  className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:text-primary/80 transition-colors"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  Add FAQ
+                </button>
+              </div>
+              <div className="space-y-3">
+                {(formData.faqs || []).map((faq, index) => (
+                  <div key={index} className="p-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800/50 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                        FAQ {index + 1}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => removeFaq(index)}
+                        className="p-1 text-gray-400 hover:text-red-500 transition-colors"
+                        aria-label="Remove FAQ"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <input
+                      type="text"
+                      value={faq.question}
+                      onChange={(e) => updateFaq(index, 'question', e.target.value)}
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                      placeholder="Question"
+                    />
+                    <textarea
+                      rows={2}
+                      value={faq.answer}
+                      onChange={(e) => updateFaq(index, 'answer', e.target.value)}
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent transition-all resize-y min-h-[60px]"
+                      placeholder="Answer"
+                    />
+                  </div>
+                ))}
+              </div>
+              {(formData.faqs || []).length === 0 && (
+                <p className="text-xs text-gray-500 mt-1">No FAQs added yet.</p>
+              )}
             </div>
 
             <div>
