@@ -69,7 +69,7 @@ export const transformApiUserToFormData = (user: AdminUser, apiRoles: { id: numb
     // Check if user has "all" permissions (admin/super admin case)
     if (user.access.all && typeof user.access.all === 'object') {
       const allPerms = user.access.all;
-      const standardModules = ['tickets', 'jobSeekers', 'employers', 'applications', 'coupons', 'blog', 'careers'];
+      const standardModules = ['tickets', 'jobSeekers', 'employers', 'applications', 'coupons', 'blog', 'medicalLibrary', 'careers'];
       
       // Apply "all" permissions to all standard modules
       standardModules.forEach(module => {
@@ -93,6 +93,7 @@ export const transformApiUserToFormData = (user: AdminUser, apiRoles: { id: numb
           'Blog': 'blog',
           'Careers': 'careers',
           'Jobs': 'jobs',
+          'Medical Library': 'medicalLibrary',
         };
         
         const mappedKey = keyMap[moduleKey] || moduleKey.toLowerCase().replace(/\s+/g, '');

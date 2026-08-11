@@ -91,6 +91,7 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ onSubmit, onCancel, isL
             'tickets',
             'coupons',
             'blog',
+            'medicalLibrary',
           ];
 
           standardModules.forEach((module) => {
@@ -273,6 +274,7 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ onSubmit, onCancel, isL
       'tickets',
       'coupons',
       'blog',
+      'medicalLibrary',
       'unlockRequest',
     ];
 

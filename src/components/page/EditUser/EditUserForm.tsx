@@ -75,6 +75,7 @@ const EditUserForm: React.FC<EditUserFormProps> = ({ onSubmit, onCancel, isLoadi
         'tickets',
         'coupons',
         'blog',
+        'medicalLibrary',
       ];
       const enhancedPermissions = { ...transformedData.permissions };
 
@@ -137,6 +138,7 @@ const EditUserForm: React.FC<EditUserFormProps> = ({ onSubmit, onCancel, isLoadi
             'tickets',
             'coupons',
             'blog',
+            'medicalLibrary',
           ];
 
           standardModules.forEach((module) => {
@@ -316,6 +318,7 @@ const EditUserForm: React.FC<EditUserFormProps> = ({ onSubmit, onCancel, isLoadi
       'tickets',
       'coupons',
       'blog',
+      'medicalLibrary',
       'unlockRequest',
     ];
 
@@ -342,6 +345,7 @@ const EditUserForm: React.FC<EditUserFormProps> = ({ onSubmit, onCancel, isLoadi
           Blog: 'blog',
           Careers: 'careers',
           Jobs: 'jobs',
+          'Medical Library': 'medicalLibrary',
           'Unlock Requests': 'unlockRequest',
         };
 

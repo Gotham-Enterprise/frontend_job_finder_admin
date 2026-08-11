@@ -133,6 +133,18 @@ const MedicalLibraryForm: React.FC<MedicalLibraryFormProps> = ({ initialData, on
       return;
     }
 
+    for (let i = 0; i < tabs.length; i++) {
+      const tab = tabs[i];
+      if (!tab.tabName.trim()) {
+        showToast.error("Missing fields", `Please enter a name for Tab ${i + 1}.`);
+        return;
+      }
+      if (!tab.sections.some((s) => s.html.trim())) {
+        showToast.error("Missing fields", `Please add content to the "${tab.tabName.trim()}" tab.`);
+        return;
+      }
+    }
+
     setIsSubmitting(true);
     const payload = {
       title: title.trim(),
@@ -284,7 +296,9 @@ const MedicalLibraryForm: React.FC<MedicalLibraryFormProps> = ({ initialData, on
           {/* Tabs Builder */}
           <div>
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Content Structure</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                Content Structure <span className="text-red-500">*</span>
+              </h3>
               <button
                 type="button"
                 onClick={addTab}
@@ -313,7 +327,7 @@ const MedicalLibraryForm: React.FC<MedicalLibraryFormProps> = ({ initialData, on
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700/50">
                     <div className="flex-1 w-full relative">
                       <label className="absolute -top-2 left-2 px-1 bg-white dark:bg-gray-800 text-xs font-medium text-blue-600 dark:text-blue-400">
-                        Tab Name
+                        Tab Name <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="text"

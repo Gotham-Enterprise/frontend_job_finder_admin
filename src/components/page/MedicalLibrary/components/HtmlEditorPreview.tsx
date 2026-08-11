@@ -442,6 +442,7 @@ const HtmlEditorPreview: React.FC<HtmlEditorPreviewProps> = ({
         placeholder="https://example.com"
         inputType="text"
         confirmText="Add Link"
+        validate={(value) => (/^https:\/\/.+/.test(value) ? null : "URL must start with https://")}
         onConfirm={(value) => {
           if (editor) {
             editor.chain().focus().extendMarkRange("link").setLink({ href: value }).run();
