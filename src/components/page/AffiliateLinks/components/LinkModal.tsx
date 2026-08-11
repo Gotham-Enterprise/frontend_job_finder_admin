@@ -6,6 +6,12 @@ import { occupationApi } from '@/services/api/occupation'
 import type { Occupation } from '@/services/types/occupation'
 import SingleSelect from '@/components/molecules/SingleSelect'
 import SelectCity from '@/components/molecules/SelectCity'
+import RichTextEditor from '@/components/form/input/RichTextEditor'
+
+const isHtmlEmpty = (html: string): boolean => {
+    const text = html.replace(/<[^>]*>/g, ' ').replace(/&nbsp;/g, ' ').trim()
+    return text === ''
+}
 
 const US_STATES = [
   { value: 'AL', label: 'Alabama' }, { value: 'AK', label: 'Alaska' },
@@ -194,7 +200,7 @@ export default function LinkModal({ isOpen, onClose, link, onSubmit, isSubmittin
     const payload: CreateLinkData = {
       ...formData,
       whatYoullLearn: (formData.whatYoullLearn || []).map((b) => b.trim()).filter(Boolean),
-      faqs: (formData.faqs || []).filter((f) => f.question.trim() && f.answer.trim()),
+      faqs: (formData.faqs || []).filter((f) => f.question.trim() && !isHtmlEmpty(f.answer)),
     }
     await onSubmit(payload)
   }
@@ -492,13 +498,15 @@ export default function LinkModal({ isOpen, onClose, link, onSubmit, isSubmittin
                       className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
                       placeholder="Question"
                     />
-                    <textarea
-                      rows={2}
-                      value={faq.answer}
-                      onChange={(e) => updateFaq(index, 'answer', e.target.value)}
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent transition-all resize-y min-h-[60px]"
-                      placeholder="Answer"
-                    />
+                    <div className="border border-gray-300 dark:border-gray-700 rounded-lg overflow-hidden bg-white dark:bg-gray-800">
+                      <RichTextEditor
+                        content={faq.answer}
+                        onChange={(html) => updateFaq(index, 'answer', html)}
+                        placeholder="Answer"
+                        minHeight={100}
+                        hideImageButton
+                      />
+                    </div>
                   </div>
                 ))}
               </div>
