@@ -644,9 +644,14 @@ export default function AnalyticsTab() {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="text-sm font-medium text-gray-900 dark:text-white">
+                      <a
+                        href={`/admin/jobs?name=${job.jobId}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-sm font-medium text-primary hover:underline"
+                      >
                         {job.title}
-                      </div>
+                      </a>
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-sm text-gray-700 dark:text-gray-300 capitalize">
@@ -773,7 +778,7 @@ export default function AnalyticsTab() {
                   <tr key={c.id} className="hover:bg-gray-50 dark:hover:bg-gray-900/30 transition-colors">
                     <td className="px-6 py-4">
                       <a
-                        href={`/admin/jobs/details/${c.jobPostId}`}
+                        href={`/admin/jobs?name=${c.jobPostId}`}
                         target="_blank"
                         rel="noreferrer"
                         className="text-sm font-medium text-primary hover:underline"
