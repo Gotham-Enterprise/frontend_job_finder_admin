@@ -294,6 +294,7 @@ export const useAffiliateAnalytics = (params?: {
   startDate?: string;
   endDate?: string;
   source?: "manual" | "auto-redirect" | "partner-feed";
+  partnerType?: "selling" | "buying";
 }) => {
   return useQuery({
     queryKey: affiliateQueryKeys.analytics(params || {}),
