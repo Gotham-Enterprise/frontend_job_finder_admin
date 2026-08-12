@@ -26,6 +26,11 @@ export default function AnalyticsTab() {
   })
 
   const isBuyingView = viewMode === 'buying'
+  const filteredPartners = (partnersData?.data ?? []).filter((partner) =>
+    viewMode === 'selling'
+      ? !partner.outboundFeedSlug
+      : !!partner.outboundFeedSlug
+  )
 
   // Show loading state
   if (isLoading) {
@@ -197,7 +202,10 @@ export default function AnalyticsTab() {
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Analytics Dashboard</h2>
         <div className="flex gap-2">
           <button
-            onClick={() => setViewMode('selling')}
+            onClick={() => {
+              setViewMode('selling')
+              setSelectedPartnerId('')
+            }}
             className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
               viewMode === 'selling'
                 ? 'bg-primary text-white'
@@ -207,7 +215,10 @@ export default function AnalyticsTab() {
             Traffic Selling
           </button>
           <button
-            onClick={() => setViewMode('buying')}
+            onClick={() => {
+              setViewMode('buying')
+              setSelectedPartnerId('')
+            }}
             className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
               viewMode === 'buying'
                 ? 'bg-primary text-white'
@@ -232,7 +243,7 @@ export default function AnalyticsTab() {
             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-800 dark:text-white"
           >
             <option value="">All Partners</option>
-            {partnersData?.data.map((partner) => (
+            {filteredPartners.map((partner) => (
               <option key={partner.id} value={partner.id}>
                 {partner.name}
               </option>
