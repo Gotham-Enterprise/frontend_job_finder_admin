@@ -10,7 +10,7 @@ import DatePicker from '@/components/form/date-picker'
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false })
 
 export default function AnalyticsTab() {
-  const [viewMode, setViewMode] = useState<'inbound' | 'outbound'>('inbound')
+  const [viewMode, setViewMode] = useState<'selling' | 'buying'>('selling')
   const [selectedPartnerId, setSelectedPartnerId] = useState<string>('')
   const [dateRange, setDateRange] = useState({
     startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
@@ -22,10 +22,10 @@ export default function AnalyticsTab() {
     affiliateId: selectedPartnerId || undefined,
     startDate: dateRange.startDate,
     endDate: dateRange.endDate,
-    source: viewMode === 'outbound' ? 'partner-feed' : undefined,
+    source: viewMode === 'buying' ? 'partner-feed' : undefined,
   })
 
-  const isOutboundView = viewMode === 'outbound'
+  const isBuyingView = viewMode === 'buying'
 
   // Show loading state
   if (isLoading) {
@@ -70,7 +70,7 @@ export default function AnalyticsTab() {
         },
       },
     },
-    yaxis: isOutboundView
+    yaxis: isBuyingView
       ? [
           {
             title: { text: 'Clicks', style: { color: '#9ca3af' } },
@@ -142,7 +142,7 @@ export default function AnalyticsTab() {
         return tooltipHtml;
       }
     },
-    colors: isOutboundView
+    colors: isBuyingView
       ? ['#3b82f6', '#f59e0b']
       : ['#3b82f6', '#8b5cf6', '#10b981', '#f97316'],
     legend: {
@@ -159,10 +159,10 @@ export default function AnalyticsTab() {
     },
   }
 
-  const chartSeries = isOutboundView
+  const chartSeries = isBuyingView
     ? [
         {
-          name: 'Outbound Feed Clicks',
+          name: 'Partner Feed Clicks',
           type: 'area' as const,
           data: analytics?.clicksOverTime?.map((d) => d.clicks) || [],
         },
@@ -197,24 +197,24 @@ export default function AnalyticsTab() {
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Analytics Dashboard</h2>
         <div className="flex gap-2">
           <button
-            onClick={() => setViewMode('inbound')}
+            onClick={() => setViewMode('selling')}
             className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-              viewMode === 'inbound'
+              viewMode === 'selling'
                 ? 'bg-primary text-white'
                 : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
             }`}
           >
-            Inbound Traffic
+            Traffic Selling
           </button>
           <button
-            onClick={() => setViewMode('outbound')}
+            onClick={() => setViewMode('buying')}
             className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-              viewMode === 'outbound'
+              viewMode === 'buying'
                 ? 'bg-primary text-white'
                 : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
             }`}
           >
-            Outbound Traffic
+            Traffic Buying
           </button>
         </div>
       </div>
@@ -296,7 +296,7 @@ export default function AnalyticsTab() {
       </div>
 
       {/* Job Count Cards */}
-      {!isOutboundView && (
+      {!isBuyingView && (
       <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
         <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-6">
           <div className="flex items-center justify-between">
@@ -315,13 +315,13 @@ export default function AnalyticsTab() {
       </div>
       )}
 
-      {isOutboundView ? (
+      {isBuyingView ? (
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-blue-700 dark:text-blue-400 font-medium">Outbound Feed Clicks</p>
+                  <p className="text-sm text-blue-700 dark:text-blue-400 font-medium">Partner Feed Clicks</p>
                   <p className="text-3xl font-bold text-blue-900 dark:text-blue-300 mt-2">
                     {analytics?.totalClicks?.toLocaleString() || 0}
                   </p>
@@ -384,7 +384,7 @@ export default function AnalyticsTab() {
                 </p>
               </div>
               <div className="border border-gray-200 dark:border-gray-800 rounded-lg p-4">
-                <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">Outbound Feed</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">Partner Feed</p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
                   {analytics.clicksBySource.partnerFeed.toLocaleString()}
                 </p>
@@ -533,7 +533,7 @@ export default function AnalyticsTab() {
         <div className="flex items-center gap-2 mb-4">
           <TrendingUp className="w-5 h-5 text-primary" />
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-            {isOutboundView ? 'Outbound Traffic Over Time' : 'Clicks Over Time'}
+            {isBuyingView ? 'Traffic Buying Over Time' : 'Traffic Selling Over Time'}
           </h3>
         </div>
         {analytics?.clicksOverTime && analytics.clicksOverTime.length > 0 ? (
@@ -643,7 +643,7 @@ export default function AnalyticsTab() {
       </div>
 
       {/* Redirects by Job Title */}
-      {!isOutboundView && analytics?.redirectsByJobTitle && analytics.redirectsByJobTitle.length > 0 && (
+      {!isBuyingView && analytics?.redirectsByJobTitle && analytics.redirectsByJobTitle.length > 0 && (
         <div className="border border-gray-200 dark:border-gray-800 rounded-lg">
           <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-800">
             <div className="flex items-center gap-2">
