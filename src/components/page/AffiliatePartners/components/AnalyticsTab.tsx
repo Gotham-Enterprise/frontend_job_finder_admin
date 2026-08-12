@@ -34,6 +34,7 @@ export default function AnalyticsTab() {
     startDate: dateRange.startDate,
     endDate: dateRange.endDate,
     source: viewMode === 'buying' ? 'partner-feed' : undefined,
+    partnerType: viewMode,
   })
 
   const isBuyingView = viewMode === 'buying'
@@ -758,6 +759,8 @@ export default function AnalyticsTab() {
             <thead className="bg-gray-50 dark:bg-gray-900/50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Job Title</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Application ID</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Candidate ID</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Partner</th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Payout</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Partner Conv. ID</th>
@@ -769,7 +772,42 @@ export default function AnalyticsTab() {
                 analytics.conversions.map((c) => (
                   <tr key={c.id} className="hover:bg-gray-50 dark:hover:bg-gray-900/30 transition-colors">
                     <td className="px-6 py-4">
-                      <span className="text-sm font-medium text-gray-900 dark:text-white">{c.jobTitle}</span>
+                      <a
+                        href={`/admin/jobs/details/${c.jobPostId}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-sm font-medium text-primary hover:underline"
+                      >
+                        {c.jobTitle}
+                      </a>
+                    </td>
+                    <td className="px-6 py-4">
+                      {c.applicationId ? (
+                        <a
+                          href={`/admin/applications/details/${c.applicationId}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-sm font-mono text-primary hover:underline"
+                        >
+                          {c.applicationId}
+                        </a>
+                      ) : (
+                        <span className="text-sm text-gray-400 dark:text-gray-600">&mdash;</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4">
+                      {c.candidateId ? (
+                        <a
+                          href={`/admin/job-seekers/details/${c.candidateId}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-sm font-mono text-primary hover:underline"
+                        >
+                          {c.candidateId}
+                        </a>
+                      ) : (
+                        <span className="text-sm text-gray-400 dark:text-gray-600">&mdash;</span>
+                      )}
                     </td>
                     <td className="px-6 py-4">
                       <span className="text-sm text-gray-700 dark:text-gray-300 capitalize">{c.partner}</span>
@@ -798,7 +836,7 @@ export default function AnalyticsTab() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={5} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                  <td colSpan={7} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
                     No conversions recorded yet
                   </td>
                 </tr>
