@@ -4,6 +4,7 @@ import {
   SUPERVISOR_PROFILE_TEXT_MAX_LENGTH,
   SUPERVISOR_PROFILE_TEXT_MIN_LENGTH,
   SUPERVISOR_YEARS_OF_EXPERIENCE_OPTIONS,
+  isMonthlyOnlySupervisorType,
   isSupervisorTypeWithoutCertifications,
   isValidPhysicianDegreeType,
 } from "@/constants/supervisorSignupOptions";
@@ -89,6 +90,15 @@ export function validateSupervisorEditForm(form: SupervisorEditFormData): Superv
   }
   if (!form.stateOfLicensure.length) {
     errors.stateOfLicensure = "At least one state of licensure is required";
+  }
+
+  if (
+    isMonthlyOnlySupervisorType(form.supervisorType) &&
+    form.supervisionFeeType &&
+    form.supervisionFeeType !== "MONTHLY"
+  ) {
+    errors.supervisionFeeType =
+      "Only the Monthly fee type is available for this supervisor type";
   }
 
   if (!form.professionalSummary.trim()) {
