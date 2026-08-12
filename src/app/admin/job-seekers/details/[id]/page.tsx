@@ -7,10 +7,10 @@ interface JobSeekersDetailsProps {
 
 export default async function JobSeekersDetails({ params }: JobSeekersDetailsProps) {
   const { id } = await params;
-  
+
   return (
-      <>
+    <>
       <ViewDetails id={id} />
-      </>
+    </>
   );
 }
