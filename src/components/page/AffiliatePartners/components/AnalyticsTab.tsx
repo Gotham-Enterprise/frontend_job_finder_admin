@@ -1,16 +1,27 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useAffiliateAnalytics, useAffiliatePartners } from '@/services/hooks/useAffiliates'
 import dynamic from 'next/dynamic'
 import { TrendingUp, Users, MousePointerClick, Trophy, DollarSign, CheckCircle, BarChart2, Briefcase } from 'lucide-react'
 import DatePicker from '@/components/form/date-picker'
 
+type ViewMode = 'selling' | 'buying'
+
+const isValidViewMode = (value: string | null): value is ViewMode =>
+  value === 'selling' || value === 'buying'
+
 // Dynamically import ApexCharts to avoid SSR issues
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false })
 
 export default function AnalyticsTab() {
-  const [viewMode, setViewMode] = useState<'selling' | 'buying'>('selling')
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const viewFromUrl = searchParams.get('view')
+  const [viewMode, setViewMode] = useState<ViewMode>(() =>
+    isValidViewMode(viewFromUrl) ? viewFromUrl : 'selling'
+  )
   const [selectedPartnerId, setSelectedPartnerId] = useState<string>('')
   const [dateRange, setDateRange] = useState({
     startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
@@ -31,6 +42,26 @@ export default function AnalyticsTab() {
       ? !partner.outboundFeedSlug
       : !!partner.outboundFeedSlug
   )
+
+  useEffect(() => {
+    const modeFromUrl: ViewMode = viewFromUrl === 'buying' ? 'buying' : 'selling'
+    if (modeFromUrl !== viewMode) {
+      setViewMode(modeFromUrl)
+    }
+  }, [viewFromUrl])
+
+  const handleViewModeChange = (mode: ViewMode) => {
+    setViewMode(mode)
+    setSelectedPartnerId('')
+    const params = new URLSearchParams(searchParams.toString())
+    params.set('tab', 'analytics')
+    if (mode === 'buying') {
+      params.set('view', 'buying')
+    } else {
+      params.delete('view')
+    }
+    router.replace(`?${params.toString()}`, { scroll: false })
+  }
 
   // Show loading state
   if (isLoading) {
@@ -202,10 +233,7 @@ export default function AnalyticsTab() {
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Analytics Dashboard</h2>
         <div className="flex gap-2">
           <button
-            onClick={() => {
-              setViewMode('selling')
-              setSelectedPartnerId('')
-            }}
+            onClick={() => handleViewModeChange('selling')}
             className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
               viewMode === 'selling'
                 ? 'bg-primary text-white'
@@ -215,10 +243,7 @@ export default function AnalyticsTab() {
             Traffic Selling
           </button>
           <button
-            onClick={() => {
-              setViewMode('buying')
-              setSelectedPartnerId('')
-            }}
+            onClick={() => handleViewModeChange('buying')}
             className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
               viewMode === 'buying'
                 ? 'bg-primary text-white'
