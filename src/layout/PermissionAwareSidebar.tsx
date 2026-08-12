@@ -11,6 +11,7 @@ import { hasAnyModulePermission, hasPermission } from "../utils/permissionUtils"
 import { authUtils } from "../services/utils/authUtils";
 import SidebarSkeleton from "../components/common/SidebarSkeleton";
 import {
+  CalenderIcon,
   ChevronDownIcon,
   GridIcon,
   GroupIcon,
@@ -198,6 +199,12 @@ const navItems: NavItem[] = [
     path: "/admin/unlock-requests",
     permissionKey: "unlockRequest",
     //subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
+  },
+  {
+    icon: <CalenderIcon />,
+    name: "Appointments",
+    path: "/admin/appointments",
+    isAccessible: true,
   },
   {
     icon: <ShootingStarIcon />,
