@@ -193,7 +193,7 @@ export const useEmployerLogic = () => {
       { key: "companyName", label: "Company" },
       { key: "email", label: "Email" },
       { key: "state", label: "Location" },
-      { key: "jobPostCount", label: "Job Posts" },
+      { key: "jobPostCount", label: "Active Job Post" },
       { key: "totalJobViews", label: "Total Job Views" },
       { key: "totalApplications", label: "Total Applications" },
       { key: "dateJoined", label: "Registration date" },

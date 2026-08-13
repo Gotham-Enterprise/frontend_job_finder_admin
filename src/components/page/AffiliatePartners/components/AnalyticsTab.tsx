@@ -1,15 +1,27 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useAffiliateAnalytics, useAffiliatePartners } from '@/services/hooks/useAffiliates'
 import dynamic from 'next/dynamic'
 import { TrendingUp, Users, MousePointerClick, Trophy, DollarSign, CheckCircle, BarChart2, Briefcase } from 'lucide-react'
 import DatePicker from '@/components/form/date-picker'
 
+type ViewMode = 'selling' | 'buying'
+
+const isValidViewMode = (value: string | null): value is ViewMode =>
+  value === 'selling' || value === 'buying'
+
 // Dynamically import ApexCharts to avoid SSR issues
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false })
 
 export default function AnalyticsTab() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const viewFromUrl = searchParams.get('view')
+  const [viewMode, setViewMode] = useState<ViewMode>(() =>
+    isValidViewMode(viewFromUrl) ? viewFromUrl : 'selling'
+  )
   const [selectedPartnerId, setSelectedPartnerId] = useState<string>('')
   const [dateRange, setDateRange] = useState({
     startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
@@ -21,7 +33,36 @@ export default function AnalyticsTab() {
     affiliateId: selectedPartnerId || undefined,
     startDate: dateRange.startDate,
     endDate: dateRange.endDate,
+    source: viewMode === 'buying' ? 'partner-feed' : undefined,
+    partnerType: viewMode,
   })
+
+  const isBuyingView = viewMode === 'buying'
+  const filteredPartners = (partnersData?.data ?? []).filter((partner) =>
+    viewMode === 'selling'
+      ? !partner.outboundFeedSlug
+      : !!partner.outboundFeedSlug
+  )
+
+  useEffect(() => {
+    const modeFromUrl: ViewMode = viewFromUrl === 'buying' ? 'buying' : 'selling'
+    if (modeFromUrl !== viewMode) {
+      setViewMode(modeFromUrl)
+    }
+  }, [viewFromUrl])
+
+  const handleViewModeChange = (mode: ViewMode) => {
+    setViewMode(mode)
+    setSelectedPartnerId('')
+    const params = new URLSearchParams(searchParams.toString())
+    params.set('tab', 'analytics')
+    if (mode === 'buying') {
+      params.set('view', 'buying')
+    } else {
+      params.delete('view')
+    }
+    router.replace(`?${params.toString()}`, { scroll: false })
+  }
 
   // Show loading state
   if (isLoading) {
@@ -66,13 +107,28 @@ export default function AnalyticsTab() {
         },
       },
     },
-    yaxis: {
-      labels: {
-        style: {
-          colors: '#9ca3af',
+    yaxis: isBuyingView
+      ? [
+          {
+            title: { text: 'Clicks', style: { color: '#9ca3af' } },
+            labels: { style: { colors: '#9ca3af' } },
+          },
+          {
+            opposite: true,
+            title: { text: 'Spend ($)', style: { color: '#9ca3af' } },
+            labels: {
+              style: { colors: '#9ca3af' },
+              formatter: (val: number) => `$${val.toFixed(2)}`,
+            },
+          },
+        ]
+      : {
+          labels: {
+            style: {
+              colors: '#9ca3af',
+            },
+          },
         },
-      },
-    },
     grid: {
       borderColor: '#374151',
       strokeDashArray: 3,
@@ -123,7 +179,9 @@ export default function AnalyticsTab() {
         return tooltipHtml;
       }
     },
-    colors: ['#3b82f6', '#8b5cf6', '#10b981', '#f97316'],
+    colors: isBuyingView
+      ? ['#3b82f6', '#f59e0b']
+      : ['#3b82f6', '#8b5cf6', '#10b981', '#f97316'],
     legend: {
       show: true,
       position: 'top',
@@ -138,29 +196,64 @@ export default function AnalyticsTab() {
     },
   }
 
-  const chartSeries = [
-    {
-      name: 'Total Clicks',
-      data: analytics?.clicksOverTime?.map((d) => d.clicks) || [],
-    },
-    {
-      name: 'Unique IP Addresses',
-      data: analytics?.clicksOverTime?.map((d) => d.uniqueIpAddresses) || [],
-    },
-    {
-      name: 'Logged In Users',
-      data: analytics?.clicksOverTime?.map((d) => d.authenticatedClicks) || [],
-    },
-    {
-      name: 'Guest Users',
-      data: analytics?.clicksOverTime?.map((d) => d.guestClicks) || [],
-    },
-  ]
+  const chartSeries = isBuyingView
+    ? [
+        {
+          name: 'Partner Feed Clicks',
+          type: 'area' as const,
+          data: analytics?.clicksOverTime?.map((d) => d.clicks) || [],
+        },
+        {
+          name: 'Estimated Spend',
+          type: 'line' as const,
+          data: analytics?.clicksOverTime?.map((d) => d.estimatedSpend || 0) || [],
+        },
+      ]
+    : [
+        {
+          name: 'Total Clicks',
+          data: analytics?.clicksOverTime?.map((d) => d.clicks) || [],
+        },
+        {
+          name: 'Unique IP Addresses',
+          data: analytics?.clicksOverTime?.map((d) => d.uniqueIpAddresses) || [],
+        },
+        {
+          name: 'Logged In Users',
+          data: analytics?.clicksOverTime?.map((d) => d.authenticatedClicks) || [],
+        },
+        {
+          name: 'Guest Users',
+          data: analytics?.clicksOverTime?.map((d) => d.guestClicks) || [],
+        },
+      ]
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Analytics Dashboard</h2>
+        <div className="flex gap-2">
+          <button
+            onClick={() => handleViewModeChange('selling')}
+            className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+              viewMode === 'selling'
+                ? 'bg-primary text-white'
+                : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+            }`}
+          >
+            Traffic Selling
+          </button>
+          <button
+            onClick={() => handleViewModeChange('buying')}
+            className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+              viewMode === 'buying'
+                ? 'bg-primary text-white'
+                : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+            }`}
+          >
+            Traffic Buying
+          </button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -176,7 +269,7 @@ export default function AnalyticsTab() {
             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-800 dark:text-white"
           >
             <option value="">All Partners</option>
-            {partnersData?.data.map((partner) => (
+            {filteredPartners.map((partner) => (
               <option key={partner.id} value={partner.id}>
                 {partner.name}
               </option>
@@ -240,6 +333,7 @@ export default function AnalyticsTab() {
       </div>
 
       {/* Job Count Cards */}
+      {!isBuyingView && (
       <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
         <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-6">
           <div className="flex items-center justify-between">
@@ -256,7 +350,87 @@ export default function AnalyticsTab() {
           </div>
         </div>
       </div>
+      )}
 
+      {isBuyingView ? (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-blue-700 dark:text-blue-400 font-medium">Partner Feed Clicks</p>
+                  <p className="text-3xl font-bold text-blue-900 dark:text-blue-300 mt-2">
+                    {analytics?.totalClicks?.toLocaleString() || 0}
+                  </p>
+                </div>
+                <MousePointerClick className="w-12 h-12 text-blue-600 dark:text-blue-500" />
+              </div>
+            </div>
+            <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-amber-700 dark:text-amber-400 font-medium">Estimated Spend</p>
+                  <p className="text-3xl font-bold text-amber-900 dark:text-amber-300 mt-2">
+                    ${(analytics?.estimatedSpend ?? 0).toFixed(2)}
+                  </p>
+                </div>
+                <DollarSign className="w-12 h-12 text-amber-600 dark:text-amber-500" />
+              </div>
+            </div>
+            <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-emerald-700 dark:text-emerald-400 font-medium">Conversions</p>
+                  <p className="text-3xl font-bold text-emerald-900 dark:text-emerald-300 mt-2">
+                    {analytics?.totalConversions?.toLocaleString() ?? 0}
+                  </p>
+                  <p className="text-xs text-emerald-600 dark:text-emerald-500 mt-1">
+                    {analytics?.conversionRate ?? 0}% conversion rate
+                  </p>
+                </div>
+                <CheckCircle className="w-12 h-12 text-emerald-600 dark:text-emerald-500" />
+              </div>
+            </div>
+            <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-purple-700 dark:text-purple-400 font-medium">Cost / Conversion</p>
+                  <p className="text-3xl font-bold text-purple-900 dark:text-purple-300 mt-2">
+                    {analytics?.costPerConversion != null
+                      ? `$${analytics.costPerConversion.toFixed(2)}`
+                      : '—'}
+                  </p>
+                </div>
+                <BarChart2 className="w-12 h-12 text-purple-600 dark:text-purple-500" />
+              </div>
+            </div>
+          </div>
+
+          {analytics?.clicksBySource && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="border border-gray-200 dark:border-gray-800 rounded-lg p-4">
+                <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">Manual</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                  {analytics.clicksBySource.manual.toLocaleString()}
+                </p>
+              </div>
+              <div className="border border-gray-200 dark:border-gray-800 rounded-lg p-4">
+                <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">Auto-Redirect</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                  {analytics.clicksBySource.autoRedirect.toLocaleString()}
+                </p>
+              </div>
+              <div className="border border-gray-200 dark:border-gray-800 rounded-lg p-4">
+                <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">Partner Feed</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                  {analytics.clicksBySource.partnerFeed.toLocaleString()}
+                </p>
+              </div>
+            </div>
+          )}
+        </>
+      ) : (
+      <>
       {/* Metrics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
@@ -388,12 +562,16 @@ export default function AnalyticsTab() {
           </div>
         </div>
       </div>
+      </>
+      )}
 
       {/* Clicks Over Time Chart */}
       <div className="border border-gray-200 dark:border-gray-800 rounded-lg p-6">
         <div className="flex items-center gap-2 mb-4">
           <TrendingUp className="w-5 h-5 text-primary" />
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Clicks Over Time</h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+            {isBuyingView ? 'Traffic Buying Over Time' : 'Traffic Selling Over Time'}
+          </h3>
         </div>
         {analytics?.clicksOverTime && analytics.clicksOverTime.length > 0 ? (
           <Chart
@@ -466,9 +644,14 @@ export default function AnalyticsTab() {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="text-sm font-medium text-gray-900 dark:text-white">
+                      <a
+                        href={`/admin/jobs?name=${job.jobId}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-sm font-medium text-primary hover:underline"
+                      >
                         {job.title}
-                      </div>
+                      </a>
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-sm text-gray-700 dark:text-gray-300 capitalize">
@@ -594,7 +777,7 @@ export default function AnalyticsTab() {
       </div>
 
       {/* Redirects by Job Title */}
-      {analytics?.redirectsByJobTitle && analytics.redirectsByJobTitle.length > 0 && (
+      {!isBuyingView && analytics?.redirectsByJobTitle && analytics.redirectsByJobTitle.length > 0 && (
         <div className="border border-gray-200 dark:border-gray-800 rounded-lg">
           <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-800">
             <div className="flex items-center gap-2">
@@ -673,6 +856,8 @@ export default function AnalyticsTab() {
             <thead className="bg-gray-50 dark:bg-gray-900/50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Job Title</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Application ID</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Candidate ID</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Partner</th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Payout</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Partner Conv. ID</th>
@@ -684,7 +869,42 @@ export default function AnalyticsTab() {
                 analytics.conversions.map((c) => (
                   <tr key={c.id} className="hover:bg-gray-50 dark:hover:bg-gray-900/30 transition-colors">
                     <td className="px-6 py-4">
-                      <span className="text-sm font-medium text-gray-900 dark:text-white">{c.jobTitle}</span>
+                      <a
+                        href={`/admin/jobs?name=${c.jobPostId}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-sm font-medium text-primary hover:underline"
+                      >
+                        {c.jobTitle}
+                      </a>
+                    </td>
+                    <td className="px-6 py-4">
+                      {c.applicationId ? (
+                        <a
+                          href={`/admin/applications/details/${c.applicationId}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-sm font-mono text-primary hover:underline"
+                        >
+                          {c.applicationId}
+                        </a>
+                      ) : (
+                        <span className="text-sm text-gray-400 dark:text-gray-600">&mdash;</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4">
+                      {c.candidateId ? (
+                        <a
+                          href={`/admin/job-seekers/details/${c.candidateId}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-sm font-mono text-primary hover:underline"
+                        >
+                          {c.candidateId}
+                        </a>
+                      ) : (
+                        <span className="text-sm text-gray-400 dark:text-gray-600">&mdash;</span>
+                      )}
                     </td>
                     <td className="px-6 py-4">
                       <span className="text-sm text-gray-700 dark:text-gray-300 capitalize">{c.partner}</span>
@@ -713,7 +933,7 @@ export default function AnalyticsTab() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={5} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                  <td colSpan={7} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
                     No conversions recorded yet
                   </td>
                 </tr>

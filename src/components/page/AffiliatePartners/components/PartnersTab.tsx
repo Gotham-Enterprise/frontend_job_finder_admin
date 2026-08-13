@@ -8,9 +8,10 @@ import {
   useDeleteAffiliatePartner,
   useTriggerAffiliateSync,
   useAffiliateSyncStatus,
+  useRebuildOutboundFeed,
 } from '@/services/hooks/useAffiliates'
 import type { AffiliatePartner, CreatePartnerData } from '@/services/api/affiliates'
-import { Edit2, Trash2, Plus, Mail, Phone, Globe, DollarSign, CheckCircle, XCircle, AlertCircle, Building2, RefreshCw, Clock, AlertTriangle } from 'lucide-react'
+import { Edit2, Trash2, Plus, Mail, Phone, Globe, CheckCircle, XCircle, AlertCircle, Building2, RefreshCw, Clock, AlertTriangle, Rss } from 'lucide-react'
 import PartnerModal from './PartnerModal'
 
 export default function PartnersTab() {
@@ -24,6 +25,7 @@ export default function PartnersTab() {
   const updateMutation = useUpdateAffiliatePartner()
   const deleteMutation = useDeleteAffiliatePartner()
   const syncMutation = useTriggerAffiliateSync()
+  const rebuildMutation = useRebuildOutboundFeed()
 
   // Merge sync status with partners data
   const partnersWithStatus = useMemo(() => {
@@ -86,6 +88,41 @@ export default function PartnersTab() {
     }
   }
 
+  const handleRebuildFeed = async (id: string, name: string) => {
+    if (confirm(`Rebuild outbound feed for ${name}?`)) {
+      await rebuildMutation.mutateAsync(id)
+    }
+  }
+
+  const getOutboundFeedBadge = (partner: AffiliatePartner) => {
+    if (!partner.outboundFeedEnabled) {
+      return <span className="text-sm text-gray-500">Disabled</span>
+    }
+
+    const status = partner.outboundFeedLastBuildStatus
+    return (
+      <div className="space-y-1">
+        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
+          <Rss className="w-3 h-3" />
+          Enabled
+        </span>
+        {status && (
+          <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
+            {status === 'success' && <CheckCircle className="w-3 h-3 text-green-500" />}
+            {status === 'failed' && <XCircle className="w-3 h-3 text-red-500" />}
+            {status === 'in_progress' && <RefreshCw className="w-3 h-3 text-blue-500 animate-spin" />}
+            <span className="capitalize">{status.replace('_', ' ')}</span>
+          </div>
+        )}
+        {partner.outboundFeedJobCount != null && (
+          <div className="text-xs text-gray-500 dark:text-gray-400">
+            {partner.outboundFeedJobCount.toLocaleString()} jobs
+          </div>
+        )}
+      </div>
+    )
+  }
+
   const getStatusBadge = (status: string) => {
     const styles = {
       active: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
@@ -144,6 +181,9 @@ export default function PartnersTab() {
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 Sync Status
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                Outbound Feed
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 Status
@@ -261,12 +301,26 @@ export default function PartnersTab() {
                     )}
                   </div>
                 </td>
+                <td className="px-6 py-4">{getOutboundFeedBadge(partner)}</td>
                 <td className="px-6 py-4 whitespace-nowrap">{getStatusBadge(partner.status)}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                   {new Date(partner.createdAt).toLocaleDateString()}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <div className="flex items-center justify-end gap-2">
+                    {partner.outboundFeedEnabled && (
+                      <button
+                        onClick={() => handleRebuildFeed(partner.id, partner.name)}
+                        disabled={
+                          rebuildMutation.isPending ||
+                          partner.outboundFeedLastBuildStatus === 'in_progress'
+                        }
+                        className="p-2 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg transition-colors disabled:opacity-50"
+                        title="Rebuild Outbound Feed"
+                      >
+                        <Rss className={`w-4 h-4 ${rebuildMutation.isPending ? 'animate-pulse' : ''}`} />
+                      </button>
+                    )}
                     {partner.syncEnabled && (
                       <button
                         onClick={() => handleSync(partner.id, partner.name)}

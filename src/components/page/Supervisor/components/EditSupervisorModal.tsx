@@ -29,10 +29,13 @@ import {
 import { useSupervisorTypesData } from "@/services/hooks/useSupervisees";
 import { useStates } from "@/services/hooks/useStates";
 import {
+  PROFESSIONAL_CREDENTIALS_HELPER_TEXT,
+  PROFESSIONAL_CREDENTIALS_MAX_LENGTH,
   SUPERVISOR_PROFILE_TEXT_MAX_LENGTH,
   SUPERVISOR_CERTIFICATIONS_DISABLED_MESSAGE,
   getSupervisorCredentialTypeLabel,
   getSupervisorCredentialSelectOptions,
+  isMonthlyOnlySupervisorType,
   isSupervisorTypeWithoutCertifications,
   supervisorYearsOfExperienceSelectOptions,
 } from "@/constants/supervisorSignupOptions";
@@ -47,6 +50,7 @@ interface EditSupervisorModalProps {
 
 const emptyForm = (): SupervisorEditFormData => ({
   fullName: "",
+  professionalCredentials: "",
   contactNumber: "",
   city: "",
   state: "",
@@ -149,6 +153,18 @@ export const EditSupervisorModal: React.FC<EditSupervisorModalProps> = ({
     () => supervisorTypesData.find((t) => t.name === formData.supervisorType),
     [formData.supervisorType, supervisorTypesData],
   );
+
+  const monthlyFeeOnly = isMonthlyOnlySupervisorType(formData.supervisorType);
+  const feeTypeChoices = useMemo(() => {
+    const base =
+      choicesOnly(feeTypeOptions).length > 0
+        ? choicesOnly(feeTypeOptions)
+        : [
+            { value: "HOURLY", label: "Hourly" },
+            { value: "MONTHLY", label: "Monthly" },
+          ];
+    return monthlyFeeOnly ? base.filter((o) => o.value === "MONTHLY") : base;
+  }, [feeTypeOptions, monthlyFeeOnly]);
 
   const occupationChoices = useMemo(
     () =>
@@ -279,6 +295,9 @@ export const EditSupervisorModal: React.FC<EditSupervisorModalProps> = ({
         next.degreeType = "";
         if (isSupervisorTypeWithoutCertifications(value as string)) {
           next.certification = [];
+        }
+        if (isMonthlyOnlySupervisorType(value as string)) {
+          next.supervisionFeeType = "MONTHLY";
         }
       }
       if (field === "occupation") {
@@ -437,6 +456,21 @@ export const EditSupervisorModal: React.FC<EditSupervisorModalProps> = ({
                       placeholder="Enter full name"
                       error={!!fieldErrors.fullName}
                     />
+                  </FormField>
+                  <FormField
+                    label="Professional Credentials"
+                    error={fieldErrors.professionalCredentials}
+                  >
+                    <Input
+                      value={formData.professionalCredentials}
+                      onChange={(e) => updateField("professionalCredentials", e.target.value)}
+                      placeholder="Ph.D., NCC, LPC-S (AL)"
+                      maxLength={PROFESSIONAL_CREDENTIALS_MAX_LENGTH}
+                      error={!!fieldErrors.professionalCredentials}
+                    />
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                      {PROFESSIONAL_CREDENTIALS_HELPER_TEXT}
+                    </p>
                   </FormField>
                   <FormField label="Contact Number" required error={fieldErrors.contactNumber}>
                     <USPhoneInput
@@ -714,14 +748,7 @@ export const EditSupervisorModal: React.FC<EditSupervisorModalProps> = ({
                     <Select
                       value={formData.supervisionFeeType}
                       onChange={(v) => updateField("supervisionFeeType", v)}
-                      options={
-                        choicesOnly(feeTypeOptions).length > 0
-                          ? choicesOnly(feeTypeOptions)
-                          : [
-                              { value: "HOURLY", label: "Hourly" },
-                              { value: "MONTHLY", label: "Monthly" },
-                            ]
-                      }
+                      options={feeTypeChoices}
                       placeholder="Select fee type"
                     />
                   </FormField>

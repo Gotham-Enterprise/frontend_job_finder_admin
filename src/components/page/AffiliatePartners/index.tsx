@@ -2,15 +2,16 @@
 
 import React, { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { FolderOpen, BarChart3, Handshake, UserCheck, ClipboardList, Shield } from 'lucide-react'
+import { FolderOpen, BarChart3, Handshake, UserCheck, ClipboardList, Shield, ListChecks } from 'lucide-react'
 import PartnersTab from './components/PartnersTab'
 import BatchesTab from './components/BatchesTab'
 import AnalyticsTab from './components/AnalyticsTab'
 import CoRegistrationTab from './components/CoRegistrationTab'
 import SurveyJobsTab from './components/SurveyJobsTab'
 import InsuranceTab from './components/InsuranceTab'
+import FeedRulesTab from './components/FeedRulesTab'
 
-type TabType = 'partners' | 'batches' | 'analytics' | 'coreg' | 'survey' | 'insurance'
+type TabType = 'partners' | 'batches' | 'analytics' | 'coreg' | 'survey' | 'insurance' | 'feed-rules'
 
 export default function AffiliatePartners() {
   const router = useRouter()
@@ -27,8 +28,12 @@ export default function AffiliatePartners() {
 
   const handleTabChange = (tab: TabType) => {
     setActiveTab(tab)
-    // Update URL with the new tab
-    router.push(`?tab=${tab}`, { scroll: false })
+    const params = new URLSearchParams(searchParams.toString())
+    params.set('tab', tab)
+    if (tab !== 'analytics') {
+      params.delete('view')
+    }
+    router.push(`?${params.toString()}`, { scroll: false })
   }
 
   const tabs = [
@@ -41,6 +46,11 @@ export default function AffiliatePartners() {
       id: 'partners' as TabType,
       label: 'Partners',
       icon: Handshake,
+    },
+    {
+      id: 'feed-rules' as TabType,
+      label: 'Feed Rules',
+      icon: ListChecks,
     },
     {
       id: 'batches' as TabType,
@@ -68,6 +78,8 @@ export default function AffiliatePartners() {
     switch (activeTab) {
       case 'partners':
         return <PartnersTab />
+      case 'feed-rules':
+        return <FeedRulesTab />
       case 'batches':
         return <BatchesTab />
       case 'analytics':

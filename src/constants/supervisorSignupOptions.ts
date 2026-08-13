@@ -16,10 +16,17 @@ export const supervisorYearsOfExperienceSelectOptions =
 export const SUPERVISOR_PROFILE_TEXT_MIN_LENGTH = 20;
 export const SUPERVISOR_PROFILE_TEXT_MAX_LENGTH = 500;
 
+/** Post-nominal letters after the name, e.g. "Ph.D., NCC, LPC-S (AL)" — mirrors the backend validator. */
+export const PROFESSIONAL_CREDENTIALS_MAX_LENGTH = 150;
+export const PROFESSIONAL_CREDENTIALS_PATTERN = /^[A-Za-z0-9 .,()-]*$/;
+export const PROFESSIONAL_CREDENTIALS_HELPER_TEXT =
+  "Enter degrees, licenses, and certifications that appear after your name. Example: Ph.D., NCC, LPC-S (AL), LPC (MI)";
+
 /** Supervisor types that do not use the certifications field. */
 export const SUPERVISOR_TYPES_WITHOUT_CERTIFICATIONS = [
   "Collaborating Physician",
   "Supervising Physician",
+  "Medical Director",
 ] as const;
 
 export function isSupervisorTypeWithoutCertifications(supervisorType: string): boolean {
@@ -28,8 +35,15 @@ export function isSupervisorTypeWithoutCertifications(supervisorType: string): b
   );
 }
 
+/** Supervisor types restricted to the MONTHLY supervision fee type. */
+export const MONTHLY_ONLY_SUPERVISOR_TYPES = ["Medical Director"] as const;
+
+export function isMonthlyOnlySupervisorType(supervisorType: string): boolean {
+  return (MONTHLY_ONLY_SUPERVISOR_TYPES as readonly string[]).includes(supervisorType);
+}
+
 export const SUPERVISOR_CERTIFICATIONS_DISABLED_MESSAGE =
-  "Certifications are not required for Collaborating or Supervising Physicians.";
+  "Certifications are not required for Collaborating Physicians, Supervising Physicians, or Medical Directors.";
 
 export function getSupervisorCredentialTypeLabel(supervisorType: string): string {
   return isSupervisorTypeWithoutCertifications(supervisorType) ? "Degree Type" : "License Type";

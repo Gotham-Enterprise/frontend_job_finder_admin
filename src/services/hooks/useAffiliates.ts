@@ -14,9 +14,16 @@ import {
   getAffiliateAnalytics,
   triggerAffiliateSync,
   getAffiliateSyncStatus,
+  rebuildOutboundFeed,
+  getPartnerFeedRules,
+  createPartnerFeedRule,
+  updatePartnerFeedRule,
+  deletePartnerFeedRule,
   getCoRegs,
   CreatePartnerData,
   UpdatePartnerData,
+  CreateFeedRuleData,
+  UpdateFeedRuleData,
   getAffiliateLinks,
   createAffiliateLink,
   updateAffiliateLink,
@@ -43,6 +50,7 @@ export const affiliateQueryKeys = {
   batchStatus: (id: string) => [...affiliateQueryKeys.batches(), id, "status"] as const,
   batchJobs: (id: string, page: number) => [...affiliateQueryKeys.batches(), id, "jobs", page] as const,
   analytics: (filters: any) => [...affiliateQueryKeys.all, "analytics", filters] as const,
+  feedRules: (partnerId: string) => [...affiliateQueryKeys.all, "feed-rules", partnerId] as const,
   coReg: (partner: string, filters: any) => [...affiliateQueryKeys.all, "coreg", partner, filters] as const,
 };
 
@@ -361,12 +369,103 @@ export const useCancelAffiliateBatch = () => {
 };
 
 // Analytics Hooks
-export const useAffiliateAnalytics = (params?: { affiliateId?: string; startDate?: string; endDate?: string }) => {
+export const useAffiliateAnalytics = (params?: {
+  affiliateId?: string;
+  startDate?: string;
+  endDate?: string;
+  source?: "manual" | "auto-redirect" | "partner-feed";
+  partnerType?: "selling" | "buying";
+}) => {
   return useQuery({
     queryKey: affiliateQueryKeys.analytics(params || {}),
     queryFn: () => getAffiliateAnalytics(params),
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 1000 * 60 * 5,
     gcTime: 1000 * 60 * 10,
+  });
+};
+
+// Outbound Feed Hooks
+export const useRebuildOutboundFeed = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (partnerId: string) => rebuildOutboundFeed(partnerId),
+    onSuccess: (_data, partnerId) => {
+      queryClient.invalidateQueries({ queryKey: affiliateQueryKeys.partners() });
+      queryClient.invalidateQueries({ queryKey: affiliateQueryKeys.partner(partnerId) });
+      showToast.success("Feed Rebuilt!", "Outbound feed has been rebuilt successfully.");
+    },
+    onError: (error: any) => {
+      const errorMessage = error.response?.data?.message || error.message || "Failed to rebuild feed";
+      showToast.error("Rebuild Failed", errorMessage);
+    },
+  });
+};
+
+export const usePartnerFeedRules = (partnerId: string) => {
+  return useQuery({
+    queryKey: affiliateQueryKeys.feedRules(partnerId),
+    queryFn: () => getPartnerFeedRules(partnerId),
+    enabled: !!partnerId,
+    staleTime: 1000 * 60 * 2,
+  });
+};
+
+export const useCreateFeedRule = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ partnerId, data }: { partnerId: string; data: CreateFeedRuleData }) =>
+      createPartnerFeedRule(partnerId, data),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: affiliateQueryKeys.feedRules(variables.partnerId) });
+      showToast.success("Rule Created!", "Feed rule has been created successfully.");
+    },
+    onError: (error: any) => {
+      const errorMessage = error.response?.data?.message || error.message || "Failed to create feed rule";
+      showToast.error("Creation Failed", errorMessage);
+    },
+  });
+};
+
+export const useUpdateFeedRule = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      ruleId,
+      partnerId,
+      data,
+    }: {
+      ruleId: string;
+      partnerId: string;
+      data: UpdateFeedRuleData;
+    }) => updatePartnerFeedRule(ruleId, data),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: affiliateQueryKeys.feedRules(variables.partnerId) });
+      showToast.success("Rule Updated!", "Feed rule has been updated successfully.");
+    },
+    onError: (error: any) => {
+      const errorMessage = error.response?.data?.message || error.message || "Failed to update feed rule";
+      showToast.error("Update Failed", errorMessage);
+    },
+  });
+};
+
+export const useDeleteFeedRule = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ ruleId }: { ruleId: string; partnerId: string }) =>
+      deletePartnerFeedRule(ruleId),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: affiliateQueryKeys.feedRules(variables.partnerId) });
+      showToast.success("Rule Deleted!", "Feed rule has been deleted successfully.");
+    },
+    onError: (error: any) => {
+      const errorMessage = error.response?.data?.message || error.message || "Failed to delete feed rule";
+      showToast.error("Deletion Failed", errorMessage);
+    },
   });
 };
 
