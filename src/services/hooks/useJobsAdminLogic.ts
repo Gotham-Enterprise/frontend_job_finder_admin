@@ -270,9 +270,15 @@ export const useJobsAdminLogic = () => {
   const { data: occupationsData, isLoading: isOccupationsLoading } = useJobsAdminOccupations();
   const { data: statesData, isLoading: isStatesLoading } = useStates();
 
-  const getStateAbbreviation = (formattedState: string) => {
-    const match = formattedState.match(/\(([^)]+)\)$/);
-    return match ? match[1] : formattedState;
+  // Resolve a state filter value (full name, "Name (AB)", or bare code) to its abbreviation for the cities lookup
+  const getStateAbbreviation = (stateValue: string) => {
+    const match = stateValue.match(/\(([^)]+)\)$/);
+    const parsed = match ? match[1] : stateValue;
+    if (/^[A-Za-z]{2}$/.test(parsed)) return parsed.toUpperCase();
+    const found = statesData?.data?.states.find(
+      (s) => s.name.toLowerCase() === parsed.toLowerCase()
+    );
+    return found?.abbreviation || parsed;
   };
   const stateAbbr = filters.state ? getStateAbbreviation(filters.state) : "";
   const { data: cities, isLoading: isLoadingCities } = useCitiesByState(stateAbbr);
@@ -438,8 +444,9 @@ export const useJobsAdminLogic = () => {
     const baseOptions = [{ value: "", label: "All States" }];
 
     if (statesData?.success && statesData.data) {
+      // Use the full state name — JobPost.locationState stores full names, and the API filter is an exact match
       const dynamicOptions = statesData.data.states.map((state) => ({
-        value: state.abbreviation,
+        value: state.name,
         label: state.name,
       }));
       return [...baseOptions, ...dynamicOptions];

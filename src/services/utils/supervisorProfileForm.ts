@@ -8,13 +8,31 @@ import {
   isSupervisorTypeWithoutCertifications,
   isValidPhysicianDegreeType,
 } from "@/constants/supervisorSignupOptions";
-import type { SupervisorDetails, SupervisorUpdatePayload } from "@/services/types/supervisor";
+import type {
+  SupervisorDetails,
+  SupervisorLicenseEntryPayload,
+  SupervisorUpdatePayload,
+} from "@/services/types/supervisor";
 import { formatUSPhoneForDisplay } from "@/services/utils/phoneNumberUtils";
 import { resolveStateToAbbreviation } from "./superviseeProfileForm";
 
+export interface SupervisorLicenseEntryFormData {
+  licenseType: string;
+  licenseNumber: string;
+  state: string;
+  licenseExpiration: string;
+}
+
+export type SupervisorLicenseEntryErrors = Partial<
+  Record<keyof SupervisorLicenseEntryFormData, string>
+>;
+
 export type SupervisorFieldErrors = Partial<
   Record<keyof SupervisorEditFormData | "uploadProfilePhoto" | "uploadLicense", string>
->;
+> & {
+  /** Per-entry errors for the `licenses` repeater, aligned by index. */
+  licenseEntries?: SupervisorLicenseEntryErrors[];
+};
 
 export interface SupervisorEditFormData {
   fullName: string;
@@ -26,12 +44,9 @@ export interface SupervisorEditFormData {
   supervisorType: string;
   occupation: string;
   specialty: string;
-  licenseType: string;
   degreeType: string;
-  licenseNumber: string;
-  licenseExpiration: string;
+  licenses: SupervisorLicenseEntryFormData[];
   yearsOfExperience: string;
-  stateOfLicensure: string[];
   patientPopulation: string[];
   certification: string[];
   supervisionFormat: string;
@@ -41,6 +56,22 @@ export interface SupervisorEditFormData {
   acceptingSupervisees: boolean;
   supervisionFeeType: string;
   supervisionFeeAmount: string;
+}
+
+export const emptySupervisorLicenseEntry = (): SupervisorLicenseEntryFormData => ({
+  licenseType: "",
+  licenseNumber: "",
+  state: "",
+  licenseExpiration: "",
+});
+
+function isBlankLicenseEntry(entry: SupervisorLicenseEntryFormData): boolean {
+  return (
+    !entry.licenseType.trim() &&
+    !entry.licenseNumber.trim() &&
+    !entry.state.trim() &&
+    !entry.licenseExpiration.trim()
+  );
 }
 
 export function validateSupervisorEditForm(form: SupervisorEditFormData): SupervisorFieldErrors {
@@ -79,17 +110,39 @@ export function validateSupervisorEditForm(form: SupervisorEditFormData): Superv
   if (!form.occupation) {
     errors.occupation = "Occupation is required";
   }
-  if (isSupervisorTypeWithoutCertifications(form.supervisorType)) {
+  const physicianSupervisor = isSupervisorTypeWithoutCertifications(form.supervisorType);
+  if (physicianSupervisor) {
     if (!form.degreeType) {
       errors.degreeType = "Degree type is required";
     } else if (!isValidPhysicianDegreeType(form.degreeType)) {
       errors.degreeType = "Degree type must be MD or DO";
     }
-  } else if (!form.licenseType) {
-    errors.licenseType = "License type is required";
   }
-  if (!form.stateOfLicensure.length) {
-    errors.stateOfLicensure = "At least one state of licensure is required";
+
+  // Entirely blank entries are dropped from the payload; a partially-filled
+  // entry must be complete (each license is tied to its own state). Legacy
+  // records without license data can still be saved — the payload then omits
+  // `licenses` and the backend leaves license rows untouched.
+  const licenseEntries: SupervisorLicenseEntryErrors[] = form.licenses.map((entry) => {
+    if (isBlankLicenseEntry(entry)) return {};
+    const entryErrors: SupervisorLicenseEntryErrors = {};
+    if (!physicianSupervisor && !entry.licenseType.trim()) {
+      entryErrors.licenseType = "License type is required";
+    }
+    if (!entry.licenseNumber.trim()) {
+      entryErrors.licenseNumber = "License number is required";
+    }
+    if (!entry.state.trim()) {
+      entryErrors.state = "State is required";
+    }
+    if (!entry.licenseExpiration.trim()) {
+      entryErrors.licenseExpiration = "Expiration date is required";
+    }
+    return entryErrors;
+  });
+  if (licenseEntries.some((entryErrors) => Object.keys(entryErrors).length > 0)) {
+    errors.licenseEntries = licenseEntries;
+    errors.licenses = "Complete or remove the highlighted license entries";
   }
 
   if (
@@ -120,6 +173,59 @@ export function validateSupervisorEditForm(form: SupervisorEditFormData): Superv
   return errors;
 }
 
+/**
+ * Prefilled license entries plus per-entry "needs review" flags, aligned by
+ * index. Entries come from the profile's license rows; unmigrated legacy
+ * records fall back to the flat mirror columns, and each licensed state
+ * without a license row appends a mostly-blank entry so state coverage is
+ * visible to the admin.
+ */
+export function getSupervisorLicenseEntryDefaults(details: SupervisorDetails): {
+  entries: SupervisorLicenseEntryFormData[];
+  entriesNeedingReview: boolean[];
+} {
+  const profile = details.supervisorProfile;
+  const physicianSupervisor = isSupervisorTypeWithoutCertifications(profile?.supervisorType ?? "");
+  const toDateInput = (value: string | null | undefined) => (value ? value.slice(0, 10) : "");
+
+  const rows = profile?.licenses ?? [];
+  const entries: SupervisorLicenseEntryFormData[] = rows.map((row) => ({
+    licenseType: physicianSupervisor ? "" : row.licenseType ?? "",
+    licenseNumber: row.licenseNumber ?? "",
+    state: row.state ?? "",
+    licenseExpiration: toDateInput(row.licenseExpiration),
+  }));
+  const entriesNeedingReview = rows.map(
+    (row) => Boolean(row.needsReview) || !row.state?.trim() || !row.licenseNumber?.trim(),
+  );
+
+  // Unmigrated legacy record: synthesize one entry from the flat mirror columns.
+  if (entries.length === 0 && profile?.licenseNumber?.trim()) {
+    entries.push({
+      licenseType: physicianSupervisor ? "" : profile.licenseType ?? "",
+      licenseNumber: profile.licenseNumber,
+      state: profile.stateLicense ?? "",
+      licenseExpiration: toDateInput(profile.licenseExpiration),
+    });
+    entriesNeedingReview.push(!profile.stateLicense?.trim());
+  }
+
+  const coveredStates = new Set(entries.map((entry) => entry.state).filter(Boolean));
+  for (const state of details.stateOfLicensure ?? []) {
+    if (!state || coveredStates.has(state)) continue;
+    coveredStates.add(state);
+    entries.push({ ...emptySupervisorLicenseEntry(), state });
+    entriesNeedingReview.push(true);
+  }
+
+  if (entries.length === 0) {
+    entries.push(emptySupervisorLicenseEntry());
+    entriesNeedingReview.push(false);
+  }
+
+  return { entries, entriesNeedingReview };
+}
+
 export function mapSupervisorDetailsToFormData(
   details: SupervisorDetails,
   states: { abbreviation: string; name: string }[] = [],
@@ -140,21 +246,16 @@ export function mapSupervisorDetailsToFormData(
     supervisorType: profile?.supervisorType ?? "",
     occupation: profile?.occupation ?? details.supervisorOccupation ?? "",
     specialty: profile?.specialty ?? details.supervisorSpecialty ?? "",
-    licenseType: physicianSupervisor ? "" : profile?.licenseType ?? "",
     degreeType: physicianSupervisor
       ? profile?.degreeType ?? profile?.licenseType ?? ""
       : "",
-    licenseNumber: profile?.licenseNumber ?? "",
-    licenseExpiration: profile?.licenseExpiration
-      ? profile.licenseExpiration.slice(0, 10)
-      : "",
+    licenses: getSupervisorLicenseEntryDefaults(details).entries,
     yearsOfExperience: (() => {
       const raw = profile?.yearsOfExperience?.trim() ?? "";
       return (SUPERVISOR_YEARS_OF_EXPERIENCE_OPTIONS as readonly string[]).includes(raw)
         ? raw
         : "";
     })(),
-    stateOfLicensure: details.stateOfLicensure ?? [],
     patientPopulation: profile?.patientPopulation ?? [],
     certification: isSupervisorTypeWithoutCertifications(profile?.supervisorType ?? "")
       ? []
@@ -175,7 +276,7 @@ export function buildSupervisorUpdateFormData(payload: SupervisorUpdatePayload):
   const {
     uploadProfilePhoto,
     uploadLicense,
-    stateOfLicensure,
+    licenses,
     patientPopulation,
     certification,
     acceptingSupervisees,
@@ -198,7 +299,12 @@ export function buildSupervisorUpdateFormData(payload: SupervisorUpdatePayload):
     fd.append("professionalCredentials", professionalCredentials);
   }
 
-  stateOfLicensure?.forEach((s) => fd.append("stateOfLicensure[]", s));
+  // Single JSON field (nested objects are unreliable via multipart bracket
+  // keys); the backend replaces all license rows and re-derives
+  // stateOfLicensure from them.
+  if (licenses) {
+    fd.append("licenses", JSON.stringify(licenses));
+  }
   patientPopulation?.forEach((p) => fd.append("patientPopulation[]", p));
   certification?.forEach((c) => fd.append("certification[]", c));
 
@@ -232,11 +338,22 @@ export function formDataToUpdatePayload(
     specialty: form.specialty || null,
     ...(isSupervisorTypeWithoutCertifications(form.supervisorType)
       ? { degreeType: form.degreeType || undefined }
-      : { licenseType: form.licenseType || undefined }),
-    licenseNumber: form.licenseNumber.trim() || undefined,
-    licenseExpiration: form.licenseExpiration || undefined,
+      : {}),
+    licenses: (() => {
+      const physicianSupervisor = isSupervisorTypeWithoutCertifications(form.supervisorType);
+      const complete = form.licenses
+        .filter((entry) => !isBlankLicenseEntry(entry))
+        .map<SupervisorLicenseEntryPayload>((entry) => ({
+          ...(physicianSupervisor ? {} : { licenseType: entry.licenseType.trim() }),
+          licenseNumber: entry.licenseNumber.trim(),
+          state: entry.state.trim(),
+          licenseExpiration: entry.licenseExpiration,
+        }));
+      // Omit when no complete entries: the backend then leaves license rows
+      // untouched (legacy records without license data stay editable).
+      return complete.length ? complete : undefined;
+    })(),
     yearsOfExperience: form.yearsOfExperience || undefined,
-    stateOfLicensure: form.stateOfLicensure.length ? form.stateOfLicensure : undefined,
     patientPopulation: form.patientPopulation.length ? form.patientPopulation : undefined,
     certification: isSupervisorTypeWithoutCertifications(form.supervisorType)
       ? []
