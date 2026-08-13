@@ -12,6 +12,7 @@ export interface UserPermissions {
   applications: Permission;
   coupons: Permission;
   blog: Permission;
+  medicalLibrary: Permission;
   careers: Permission;
   forum: Permission;
 }
@@ -45,6 +46,7 @@ export const PERMISSION_MODULES: PermissionModule[] = [
   { key: "applications", label: "Applications" },
   { key: "coupons", label: "Coupons" },
   { key: "blog", label: "Blog" },
+  { key: "medicalLibrary", label: "Medical Library" },
   { key: "careers", label: "Careers" },
   { key: "forum", label: "Forum" },
 ];
@@ -56,6 +58,7 @@ export const DEFAULT_PERMISSIONS: FlexiblePermissions = {
   applications: { view: false, add: false, edit: false, delete: false },
   coupons: { view: false, add: false, edit: false, delete: false },
   blog: { view: false, add: false, edit: false, delete: false },
+  medicalLibrary: { view: false, add: false, edit: false, delete: false },
   careers: { view: false, add: false, edit: false, delete: false },
   forum: { view: false, add: false, edit: false, delete: false },
 };

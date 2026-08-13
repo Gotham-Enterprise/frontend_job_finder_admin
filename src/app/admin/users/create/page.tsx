@@ -46,6 +46,7 @@ export default function CreateUserPage() {
         'blog': 'Blog',
         'careers': 'Careers',
         'jobs': 'Jobs',
+        'medicalLibrary': 'Medical Library',
       };
       
       Object.keys(userData.permissions).forEach(permissionKey => {
