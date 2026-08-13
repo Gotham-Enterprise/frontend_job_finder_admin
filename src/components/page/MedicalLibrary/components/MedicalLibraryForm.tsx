@@ -123,7 +123,7 @@ const MedicalLibraryForm: React.FC<MedicalLibraryFormProps> = ({ initialData, on
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim() || !slug.trim() || !category.trim()) {
+    if (!title.trim() || !slug.trim() || !category.trim() || !description.trim()) {
       showToast.error("Missing fields", "Please fill in all required fields");
       return;
     }
@@ -169,7 +169,6 @@ const MedicalLibraryForm: React.FC<MedicalLibraryFormProps> = ({ initialData, on
           <Button
             onClick={handleBackClick}
             variant="ghost"
-            size="sm"
             className="text-gray-500 hover:text-gray-900 dark:hover:text-white"
           >
             <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -280,10 +279,13 @@ const MedicalLibraryForm: React.FC<MedicalLibraryFormProps> = ({ initialData, on
             </div>
 
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Description</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                Description <span className="text-red-500">*</span>
+              </label>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
+                required
                 placeholder="Short summary shown in listings"
                 rows={2}
                 className="w-full px-4 py-3 text-sm border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"

@@ -50,11 +50,18 @@ export default function CreateUserPage() {
       };
       
       Object.keys(userData.permissions).forEach(permissionKey => {
-        const apiModuleName = keyToApiNameMap[permissionKey] || permissionKey;
+        const apiModuleName = keyToApiNameMap[permissionKey];
         const permissions = userData.permissions[permissionKey];
-        
+
+        // The backend rejects the whole request when any access key doesn't
+        // match a permission row, so only send modules with a known API name.
+        if (!apiModuleName) {
+          console.warn(`Skipping permission module with no matching API permission: ${permissionKey}`);
+          return;
+        }
+
         console.log(`Processing permission: ${permissionKey} -> ${apiModuleName}`, permissions);
-        
+
         // Backend expects permission NAMES as keys
         access[apiModuleName] = {
           add: permissions?.add || false,
