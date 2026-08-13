@@ -2,13 +2,15 @@ import React from 'react';
 import Input from '@/components/form/input/InputField';
 import Select from '@/components/form/Select';
 import Label from '@/components/form/Label';
-import {FormData, CompensationStepProps} from '@/services/types/compensation';
+import { CompensationStepProps } from '@/services/types/compensation';
 import { numericOnly, validateNumericInput } from '@/services/utils';
 
 
 const CompensationStep: React.FC<CompensationStepProps> = ({
-  formData,
-  onUpdateField
+  address,
+  index,
+  onUpdateAddressField,
+  embedded = false
 }) => {
   const salaryTypeOptions = [
     { value: 'hourly', label: 'Hourly' },
@@ -16,24 +18,21 @@ const CompensationStep: React.FC<CompensationStepProps> = ({
     { value: 'yearly', label: 'Yearly' },
   ];
 
-  return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-      <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">
-      Salary Range
-      </h2>
+  const fields = (
+    <>
       <p className="mb-4">Provide a salary range for candidates. If the pay is a fixed amount, enter the same figure in both fields.</p>
-        <div className="space-y-6">        
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">          
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
             <Label>From *</Label>
             <Input
               type="text"
               placeholder="50000"
               min="0"
-              defaultValue={formData.salaryFrom.toString()}
+              defaultValue={address.salaryFrom.toString()}
               onChange={(e) => {
                 const value = e.target.value;
-                onUpdateField('salaryFrom', validateNumericInput(value));
+                onUpdateAddressField(index, 'salaryFrom', validateNumericInput(value));
               }}
               onKeyDown={numericOnly}
             />
@@ -44,10 +43,10 @@ const CompensationStep: React.FC<CompensationStepProps> = ({
               type="text"
               placeholder="80000"
               min="0"
-              defaultValue={formData.salaryTo.toString()}
+              defaultValue={address.salaryTo.toString()}
               onChange={(e) => {
                 const value = e.target.value;
-                onUpdateField('salaryTo', validateNumericInput(value));
+                onUpdateAddressField(index, 'salaryTo', validateNumericInput(value));
               }}
               onKeyDown={numericOnly}
             />
@@ -56,12 +55,32 @@ const CompensationStep: React.FC<CompensationStepProps> = ({
             <Label>Salary Type *</Label>
             <Select
               options={salaryTypeOptions}
-              onChange={(value: string) => onUpdateField('salaryType', value)}
-              defaultValue={formData.salaryType}
+              onChange={(value: string) => onUpdateAddressField(index, 'salaryType', value)}
+              defaultValue={address.salaryType}
             />
           </div>
         </div>
       </div>
+    </>
+  );
+
+  if (embedded) {
+    return (
+      <div className="mt-6">
+        <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-2">
+          Salary Range
+        </h3>
+        {fields}
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+      <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">
+      Salary Range
+      </h2>
+      {fields}
     </div>
   );
 };

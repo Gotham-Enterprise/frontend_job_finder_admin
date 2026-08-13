@@ -329,16 +329,36 @@ export const buildJobCreationPayload = (
     documents?: any[];
   }
 ): JobCreationPayload => {
+  // Strip the "(AB)" dropdown suffix — backend stores the full state name
+  const stateName = formData.locationState.replace(/\s*\([A-Z]{2}\)\s*$/, '');
+  const countryName =
+    formData.locationCountry === 'US' || formData.locationCountry === 'USA'
+      ? 'United States'
+      : formData.locationCountry || 'United States';
+
   return {
     companyId,
     jobTitle: formData.jobTitle,
     occupationId: formData.occupationId || 0,
     specialtyId: formData.specialtyId || 0,
     locationCountry: formData.locationCountry || '',
-    locationState: formData.locationState,
+    locationState: stateName,
     locationCity: formData.locationCity || '',
     locationZipCode: formData.locationZipCode,
     locationAddress: formData.locationAddress || '',
+    addresses: [
+      {
+        locationCountry: countryName,
+        locationAddress: formData.locationAddress || '',
+        locationCity: formData.locationCity || '',
+        locationState: stateName,
+        locationZipCode: formData.locationZipCode,
+        salaryRangeStart: formData.salaryRangeStart || 0,
+        salaryRangeEnd: formData.salaryRangeEnd || 0,
+        salaryType: formData.salaryType || '',
+        salaryCurrency: formData.salaryCurrency || 'USD',
+      },
+    ],
     workType: formData.workType || '',
     workSetting: formData.workSetting || '',
     workFacility: formData.workFacility || '',

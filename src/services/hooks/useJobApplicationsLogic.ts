@@ -151,10 +151,15 @@ export const useJobApplicationsLogic = () => {
   const { data, isLoading, error, refetch } = useJobApplications(filters);
   const { data: statesData, isLoading: isStatesLoading } = useStates();
 
-  // Extract state abbreviation from formatted state string "State Name (AB)" -> "AB"
-  const getStateAbbreviation = (formattedState: string) => {
-    const match = formattedState.match(/\(([^)]+)\)$/);
-    return match ? match[1] : formattedState;
+  // Resolve a state filter value (full name, "Name (AB)", or bare code) to its abbreviation for the cities lookup
+  const getStateAbbreviation = (stateValue: string) => {
+    const match = stateValue.match(/\(([^)]+)\)$/);
+    const parsed = match ? match[1] : stateValue;
+    if (/^[A-Za-z]{2}$/.test(parsed)) return parsed.toUpperCase();
+    const found = statesData?.data?.states.find(
+      (s: any) => s.name.toLowerCase() === parsed.toLowerCase()
+    );
+    return found?.abbreviation || parsed;
   };
 
   const stateAbbr = filters.state ? getStateAbbreviation(filters.state) : "";
@@ -252,8 +257,9 @@ export const useJobApplicationsLogic = () => {
 
     return [
       { value: "", label: "All States" },
+      // Use the full state name — JobPost.locationState stores full names, and the API matches against it
       ...statesData.data.states.map((state: any) => ({
-        value: state.abbreviation,
+        value: state.name,
         label: state.name,
       })),
     ];
