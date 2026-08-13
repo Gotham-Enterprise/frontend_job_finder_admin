@@ -86,17 +86,38 @@ export interface SupervisorsResponse {
   message?: string;
 }
 
+/**
+ * One license row, each tied to its own state. Admin endpoints return full
+ * entries including license numbers. `needsReview` marks legacy-migrated rows
+ * whose state association still awaits the supervisor's confirmation.
+ */
+export interface SupervisorLicenseEntry {
+  id?: string;
+  licenseType: string | null;
+  licenseNumber: string | null;
+  state: string | null;
+  licenseExpiration: string | null;
+  needsReview?: boolean;
+  sortOrder?: number;
+}
+
 /** Supervisor profile from the detail endpoint */
 export interface SupervisorProfile {
   id: string;
   userId: string;
+  /** @deprecated Legacy mirror of the primary license — prefer `licenses`. */
   licenseType: string | null;
   degreeType: string | null;
   profession: string | null;
   professionOther: string | null;
+  /** @deprecated Legacy mirror of the primary license — prefer `licenses`. */
   licenseNumber: string | null;
+  /** @deprecated Legacy mirror of the primary license — prefer `licenses`. */
   stateLicense: string | null;
+  /** @deprecated Legacy mirror of the primary license — prefer `licenses`. */
   licenseExpiration: string | null;
+  /** All licenses, ordered by sortOrder (first = primary). Empty for unmigrated legacy records. */
+  licenses?: SupervisorLicenseEntry[];
   yearsOfExperience: string | null;
   npiNumber: string | null;
   certification: string[];
@@ -205,6 +226,14 @@ export interface SupervisorApproveEmailVerificationResponse {
   message: string;
 }
 
+/** One license per entry; `licenseType` is omitted for physicians (degreeType is shared). */
+export interface SupervisorLicenseEntryPayload {
+  licenseType?: string;
+  licenseNumber: string;
+  state: string;
+  licenseExpiration: string;
+}
+
 export interface SupervisorUpdatePayload {
   fullName?: string;
   /** Post-nominal letters after the name; empty string clears the stored value. */
@@ -216,12 +245,14 @@ export interface SupervisorUpdatePayload {
   supervisorType?: string;
   occupation?: string | null;
   specialty?: string | null;
-  licenseType?: string;
   degreeType?: string;
-  licenseNumber?: string;
-  licenseExpiration?: string;
+  /**
+   * Full replace of the supervisor's licenses (each entry carries its state);
+   * the backend re-derives stateOfLicensure from them. Omit to leave license
+   * rows untouched.
+   */
+  licenses?: SupervisorLicenseEntryPayload[];
   yearsOfExperience?: string;
-  stateOfLicensure?: string[];
   patientPopulation?: string[];
   certification?: string[];
   supervisionFormat?: string;
