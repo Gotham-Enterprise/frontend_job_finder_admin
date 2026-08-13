@@ -1,11 +1,9 @@
-export interface FormData {
-  currency: string;
-  salaryFrom: number;
-  salaryTo: number;
-  salaryType: string;
-}
+import { JobFormAddress } from './stepForm';
 
 export interface CompensationStepProps {
-  formData: FormData;
-  onUpdateField: (field: keyof FormData, value: any) => void;
+  address: JobFormAddress;
+  index: number;
+  onUpdateAddressField: (index: number, field: keyof JobFormAddress, value: any) => void;
+  // Renders without its own card chrome when inside the multi-location card
+  embedded?: boolean;
 }

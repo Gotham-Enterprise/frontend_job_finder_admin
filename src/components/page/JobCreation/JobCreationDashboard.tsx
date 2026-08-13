@@ -19,7 +19,7 @@ import CompanySearch from './CompanySearch';
 import StepProgress from './StepProgress';
 import StepForm from './StepForm';
 import JobPostingTips from './JobPostingTips';
-import { FormData } from '@/services/types/stepForm';
+import { FormData, JobFormAddress, createEmptyAddress, ADDRESS_LIMIT } from '@/services/types/stepForm';
 
 interface Company {
   id: string;
@@ -46,11 +46,8 @@ const JobCreationDashboard: React.FC = () => {
     title: '',
     occupationId: '',
     specialtyId: '',
-    country: '',
-    address: '',
-    city: '',
-    state: '',
-    zipCode: '',
+    country: 'US',
+    addresses: [createEmptyAddress()],
     workType: 'full-time',
     workSetting: 'onsite',
     shiftType: '',
@@ -58,10 +55,6 @@ const JobCreationDashboard: React.FC = () => {
     language: [],
     clinicSize: '',
     workFacility: '',
-    currency: 'USD',
-    salaryFrom: 0,
-    salaryTo: 0,
-    salaryType: 'yearly',
     postingDate: 'today',
     autoRenew: false,
     questions: [],
@@ -95,9 +88,12 @@ const JobCreationDashboard: React.FC = () => {
       setIsPublishing(false);
       
       if (response.success) {
-        const message = isDraft 
+        const jobCount = payload.addresses?.length || 1;
+        const message = isDraft
           ? `Job saved as draft at step ${payload.step || currentStep}!`
-          : 'Job published successfully!';
+          : jobCount > 1
+            ? `${jobCount} job posts published successfully — one per location!`
+            : 'Job published successfully!';
         showToast.success(isDraft ? 'Draft Saved' : 'Job Created', message);
         if (!isDraft) {
           resetForm();
@@ -160,6 +156,31 @@ const JobCreationDashboard: React.FC = () => {
   const updateFormField = (field: keyof FormData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
+  const updateAddressField = (index: number, field: keyof JobFormAddress, value: any) => {
+    setFormData(prev => ({
+      ...prev,
+      addresses: prev.addresses.map((a, i) => (i === index ? { ...a, [field]: value } : a)),
+    }));
+  };
+  const addAddress = () => {
+    setFormData(prev =>
+      prev.addresses.length >= ADDRESS_LIMIT
+        ? prev
+        : { ...prev, addresses: [...prev.addresses, createEmptyAddress()] });
+  };
+  const removeAddress = (index: number) => {
+    setFormData(prev =>
+      prev.addresses.length <= 1
+        ? prev
+        : { ...prev, addresses: prev.addresses.filter((_, i) => i !== index) });
+  };
+  const toggleMultipleLocations = (checked: boolean) => {
+    setFormData(prev => ({
+      ...prev,
+      addresses: checked ? [...prev.addresses, createEmptyAddress()] : [prev.addresses[0]],
+    }));
+  };
+  const isMultipleLocations = formData.addresses.length > 1;
   const getWorkTypeName = (id: string): string => {
     if (!workTypesData?.success || !id) return '';
     const workType = workTypesData.data.find(wt => wt.id.toString() === id);
@@ -288,26 +309,42 @@ const JobCreationDashboard: React.FC = () => {
           return false;
         }
         
-        // Location validation
+        // Location + salary validation (per address)
         if (!formData.country) {
           showToast.error('Validation Error', 'Country is required');
           return false;
         }
-        if (!formData.address.trim()) {
-          showToast.error('Validation Error', 'Address is required');
-          return false;
-        }
-        if (!formData.city.trim()) {
-          showToast.error('Validation Error', 'City is required');
-          return false;
-        }
-        if (!formData.state.trim()) {
-          showToast.error('Validation Error', 'State is required');
-          return false;
-        }
-        if (!formData.zipCode.trim()) {
-          showToast.error('Validation Error', 'Zip code is required');
-          return false;
+        for (let i = 0; i < formData.addresses.length; i++) {
+          const a = formData.addresses[i];
+          const prefix = formData.addresses.length > 1 ? `Location ${i + 1}: ` : '';
+          if (!a.address.trim()) {
+            showToast.error('Validation Error', `${prefix}Address is required`);
+            return false;
+          }
+          if (!a.city.trim()) {
+            showToast.error('Validation Error', `${prefix}City is required`);
+            return false;
+          }
+          if (!a.state.trim()) {
+            showToast.error('Validation Error', `${prefix}State is required`);
+            return false;
+          }
+          if (!a.zipCode.trim()) {
+            showToast.error('Validation Error', `${prefix}Zip code is required`);
+            return false;
+          }
+          if (a.salaryFrom <= 0) {
+            showToast.error('Validation Error', `${prefix}Minimum salary must be greater than 0`);
+            return false;
+          }
+          if (a.salaryTo <= 0) {
+            showToast.error('Validation Error', `${prefix}Maximum salary must be greater than 0`);
+            return false;
+          }
+          if (a.salaryFrom >= a.salaryTo) {
+            showToast.error('Validation Error', `${prefix}Maximum salary must be greater than minimum salary`);
+            return false;
+          }
         }
 
         // Work details validation
@@ -329,20 +366,6 @@ const JobCreationDashboard: React.FC = () => {
         }
         if (!formData.clinicSize.trim()) {
           showToast.error('Validation Error', 'Company size is required');
-          return false;
-        }
-
-        // Salary validation
-        if (formData.salaryFrom <= 0) {
-          showToast.error('Validation Error', 'Minimum salary must be greater than 0');
-          return false;
-        }
-        if (formData.salaryTo <= 0) {
-          showToast.error('Validation Error', 'Maximum salary must be greater than 0');
-          return false;
-        }
-        if (formData.salaryFrom >= formData.salaryTo) {
-          showToast.error('Validation Error', 'Maximum salary must be greater than minimum salary');
           return false;
         }
         break;
@@ -371,18 +394,21 @@ const JobCreationDashboard: React.FC = () => {
           formData.title.trim() &&
           formData.occupationId &&
           formData.country &&
-          formData.address.trim() &&
-          formData.city.trim() &&
-          formData.state.trim() &&
-          formData.zipCode.trim() &&
           formData.workType &&
           formData.workSetting &&
           formData.workFacility &&
           formData.shiftType.trim() &&
           formData.clinicSize.trim() &&
-          formData.salaryFrom > 0 &&
-          formData.salaryTo > 0 &&
-          formData.salaryFrom < formData.salaryTo
+          formData.addresses.length > 0 &&
+          formData.addresses.every(a =>
+            a.address.trim() &&
+            a.city.trim() &&
+            a.state.trim() &&
+            a.zipCode.trim() &&
+            a.salaryFrom > 0 &&
+            a.salaryTo > 0 &&
+            a.salaryFrom < a.salaryTo
+          )
         );
       case 2:
         return !!description.trim();
@@ -397,24 +423,44 @@ const JobCreationDashboard: React.FC = () => {
     const workFacilityName = getWorkFacilityNameSafe(formData.workFacility);
     const shiftTypeName = getShiftTypeNameSafe(formData.shiftType);
     const companySize = getClinicSizeNameSafe(formData.clinicSize);
+    // Strip the "(AB)" dropdown suffix — backend stores the full state name
+    const stripState = (s: string) => s.replace(/\s*\([A-Z]{2}\)\s*$/, '');
+    const countryName =
+      formData.country === 'US' || formData.country === 'USA'
+        ? 'United States'
+        : formData.country || 'United States';
+    const first = formData.addresses[0];
 
     return {
       companyId: selectedCompany!.id,
       jobTitle: formData.title,
       occupationId: Number(formData.occupationId) || 0,
       specialtyId: Number(formData.specialtyId) || 0,
+      // Legacy flat fields mirror the first address (backend validator still requires them)
       locationCountry: formData.country || 'USA',
-      locationState: formData.state,
-      locationCity: formData.city,
-      locationZipCode: formData.zipCode,
-      locationAddress: formData.address,
+      locationState: stripState(first.state),
+      locationCity: first.city,
+      locationZipCode: first.zipCode,
+      locationAddress: first.address,
+      // One job post gets created per address
+      addresses: formData.addresses.map(a => ({
+        locationCountry: countryName,
+        locationAddress: a.address,
+        locationCity: a.city,
+        locationState: stripState(a.state),
+        locationZipCode: a.zipCode,
+        salaryRangeStart: Number(a.salaryFrom),
+        salaryRangeEnd: Number(a.salaryTo),
+        salaryType: a.salaryType,
+        salaryCurrency: a.currency,
+      })),
       workType: workTypeName,
       workSetting: workSettingName,
       workFacility: workFacilityName,
-      salaryCurrency: formData.currency,
-      salaryRangeStart: formData.salaryFrom,
-      salaryRangeEnd: formData.salaryTo,
-      salaryType: formData.salaryType,
+      salaryCurrency: first.currency,
+      salaryRangeStart: first.salaryFrom,
+      salaryRangeEnd: first.salaryTo,
+      salaryType: first.salaryType,
       autoRenew: formData.autoRenew,
       shiftType: shiftTypeName,
       languages: Array.isArray(formData.language) 
@@ -491,6 +537,10 @@ const JobCreationDashboard: React.FC = () => {
   };
 
   const saveAsDraft = () => {
+    if (isMultipleLocations) {
+      showToast.error('Error', 'Save as Draft is not available for multiple locations.');
+      return;
+    }
     if (!selectedCompany?.id) {
       showToast.error('Error', 'No company selected');
       return;
@@ -574,27 +624,20 @@ const JobCreationDashboard: React.FC = () => {
       title: '',
       occupationId: '',
       specialtyId: '',
-      country: '',
-      address: '',
-      city: '',
-      state: '',
-      zipCode: '',
+      country: 'US',
+      addresses: [createEmptyAddress()],
       workType: 'full-time',
-      workSetting: 'onsite',      
+      workSetting: 'onsite',
       shiftType: '',
       timezone: '',
       language: [],
       clinicSize: '',
       workFacility: '',
-      currency: 'USD',
-      salaryFrom: 0,
-      salaryTo: 0,
-      salaryType: 'yearly',
       postingDate: 'today',
       autoRenew: false,
       questions: [],
       documents: []
-    });    
+    });
     
     setDescription('');
     setSelectedOccupation(null);
@@ -636,11 +679,6 @@ const JobCreationDashboard: React.FC = () => {
       label: 'Specialty', 
       value: specialtyOptions.find(opt => opt.value === formData.specialtyId)?.label || formData.specialtyId || 'Not specified' 
     },
-    { label: 'Country', value: formData.country },
-    { label: 'Address', value: formData.address },
-    { label: 'City', value: formData.city },
-    { label: 'State', value: formData.state },
-    { label: 'Zip Code', value: formData.zipCode },
     { label: 'Work Type', value: formData.workType },
     { label: 'Work Setting', value: formData.workSetting },
     { label: 'Work Facility', value: formData.workFacility },
@@ -650,11 +688,6 @@ const JobCreationDashboard: React.FC = () => {
       value: Array.isArray(formData.language) ? formData.language.join(', ') : formData.language || 'Not specified' 
     },
     { label: 'Company Size', value: formData.clinicSize },
-    { 
-      label: 'Salary', 
-      value: `${formData.currency} ${formData.salaryFrom.toLocaleString()} - ${formData.salaryTo.toLocaleString()} (${formData.salaryType})`,
-      fullWidth: true 
-    }
   ];
 
   if (!selectedCompany && currentStep === 0 && !employerId && !isLoadingEmployer) {
@@ -720,11 +753,40 @@ const JobCreationDashboard: React.FC = () => {
                 </h3>                  
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                   {jobDetailsFields.map((field, index) => (
-                    <div key={index} className={field.fullWidth ? "md:col-span-2" : ""}>
+                    <div key={index}>
                       <span className="font-medium text-gray-700 dark:text-gray-300">{field.label}:</span>{" "}
                       <span className="text-gray-900 dark:text-white">{field.value}</span>
                     </div>
                   ))}
+                </div>
+
+                {/* Locations & Compensation */}
+                <div className="mt-6">
+                  <h4 className="font-medium text-gray-900 dark:text-white mb-3">
+                    Locations & Compensation ({formData.addresses.length})
+                  </h4>
+                  <div className="space-y-3">
+                    {formData.addresses.map((a, index) => (
+                      <div key={a.uiId} className="border border-gray-200 dark:border-gray-600 rounded-lg p-3 text-sm">
+                        {isMultipleLocations && (
+                          <p className="font-medium text-gray-900 dark:text-white mb-1">
+                            Location {index + 1} of {formData.addresses.length}
+                          </p>
+                        )}
+                        <p className="text-gray-900 dark:text-white">
+                          {a.address}, {a.city}, {a.state} {a.zipCode}, United States
+                        </p>
+                        <p className="text-gray-600 dark:text-gray-400">
+                          {a.currency} {a.salaryFrom.toLocaleString()} - {a.salaryTo.toLocaleString()} ({a.salaryType})
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                  {isMultipleLocations && (
+                    <p className="mt-3 text-xs text-blue-600 dark:text-blue-400">
+                      Publishing will create {formData.addresses.length} job posts — one per location.
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -840,10 +902,12 @@ const JobCreationDashboard: React.FC = () => {
                   Previous
                 </Button>
                </div>
-                <div className="space-x-4">                
-                    <Button variant="outline" onClick={saveAsDraft} disabled={createJobMutation.isPending}>
+                <div className="space-x-4">
+                    <span title={isMultipleLocations ? 'Save as Draft is not available for multiple locations.' : undefined}>
+                    <Button variant="outline" onClick={saveAsDraft} disabled={createJobMutation.isPending || isMultipleLocations}>
                     {isDraftSaving ? 'Saving Draft...' : 'Save as Draft'}
-                  </Button>                  
+                  </Button>
+                  </span>
                   <Button 
                     onClick={publishedJob} 
                     disabled={createJobMutation.isPending}
@@ -905,6 +969,10 @@ const JobCreationDashboard: React.FC = () => {
               formData={formData}
               description={description}
               onUpdateField={updateFormField}
+              onUpdateAddressField={updateAddressField}
+              onAddAddress={addAddress}
+              onRemoveAddress={removeAddress}
+              onToggleMultipleLocations={toggleMultipleLocations}
               onUpdateDescription={setDescription}
               occupationOptions={occupationOptions}
               specialtyOptions={specialtyOptions}
@@ -928,13 +996,15 @@ const JobCreationDashboard: React.FC = () => {
                 </Button>
               </div>
                 <div className="flex space-x-4">
-                <Button 
-                  variant="outline" 
+                <span title={isMultipleLocations ? 'Save as Draft is not available for multiple locations.' : undefined}>
+                <Button
+                  variant="outline"
                   onClick={saveAsDraft}
-                  disabled={createJobMutation.isPending}
+                  disabled={createJobMutation.isPending || isMultipleLocations}
                 >
                   {isDraftSaving ? 'Saving Draft...' : 'Save as Draft'}
                 </Button>
+                </span>
                 {currentStep < 3 ? (
                   <Button 
                     onClick={nextStep}

@@ -1,17 +1,21 @@
 import React from 'react';
 import BasicInfoStep from './BasicInfoStep';
-import LocationStep from './LocationStep';
+import LocationSalarySection from './LocationSalarySection';
 import WorkDetailsStep from './WorkDetailsStep';
-import CompensationStep from './CompensationStep';
-import {FormData, CombinedJobDetailsStepProps } from '@/services/types/combinedJobDetail';
+import { CombinedJobDetailsStepProps } from '@/services/types/combinedJobDetail';
 
 const CombinedJobDetailsStep: React.FC<CombinedJobDetailsStepProps> = ({
   formData,
   onUpdateField,
+  onUpdateAddressField,
+  onAddAddress,
+  onRemoveAddress,
+  onToggleMultipleLocations,
   occupationOptions,
   specialtyOptions,
   isLoadingOccupations,
-  selectedOccupation
+  selectedOccupation,
+  isEditMode = false
 }) => {
   return (
     <div className="space-y-8">
@@ -28,15 +32,15 @@ const CombinedJobDetailsStep: React.FC<CombinedJobDetailsStepProps> = ({
         selectedOccupation={selectedOccupation}
       />
 
-      <LocationStep
-        formData={{
-          country: formData.country,
-          address: formData.address,
-          city: formData.city,
-          state: formData.state,
-          zipCode: formData.zipCode
-        }}
+      <LocationSalarySection
+        country={formData.country}
+        addresses={formData.addresses}
         onUpdateField={onUpdateField}
+        onUpdateAddressField={onUpdateAddressField}
+        onAddAddress={onAddAddress}
+        onRemoveAddress={onRemoveAddress}
+        onToggleMultipleLocations={onToggleMultipleLocations}
+        isEditMode={isEditMode}
       />
 
       <WorkDetailsStep
@@ -48,16 +52,6 @@ const CombinedJobDetailsStep: React.FC<CombinedJobDetailsStepProps> = ({
           language: formData.language,
           clinicSize: formData.clinicSize,
           workFacility: formData.workFacility
-        }}
-        onUpdateField={onUpdateField}
-      />
-
-      <CompensationStep
-        formData={{
-          currency: formData.currency,
-          salaryFrom: formData.salaryFrom,
-          salaryTo: formData.salaryTo,
-          salaryType: formData.salaryType
         }}
         onUpdateField={onUpdateField}
       />
