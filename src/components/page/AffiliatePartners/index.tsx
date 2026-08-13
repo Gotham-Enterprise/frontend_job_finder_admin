@@ -28,8 +28,12 @@ export default function AffiliatePartners() {
 
   const handleTabChange = (tab: TabType) => {
     setActiveTab(tab)
-    // Update URL with the new tab
-    router.push(`?tab=${tab}`, { scroll: false })
+    const params = new URLSearchParams(searchParams.toString())
+    params.set('tab', tab)
+    if (tab !== 'analytics') {
+      params.delete('view')
+    }
+    router.push(`?${params.toString()}`, { scroll: false })
   }
 
   const tabs = [
