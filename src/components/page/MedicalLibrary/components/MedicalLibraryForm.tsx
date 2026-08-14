@@ -10,7 +10,7 @@ import { showToast } from "@/services/utils/toast";
 
 interface MedicalLibraryFormProps {
   initialData?: MedicalLibraryTopic | null;
-  onSave: (data: any, onDone: () => void) => void;
+  onSave: (data: any, onDone: (apiErrorMessage?: string) => void) => void;
   isSaving: boolean;
 }
 
@@ -46,6 +46,41 @@ const MedicalLibraryForm: React.FC<MedicalLibraryFormProps> = ({ initialData, on
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
   const [status, setStatus] = useState("published");
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const clearError = (key: string) =>
+    setErrors((prev) => {
+      if (!prev[key]) return prev;
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
+
+  // Tab errors are keyed by index, so drop them whenever tabs are added or
+  // removed and the indices shift.
+  const clearTabErrors = () =>
+    setErrors((prev) => Object.fromEntries(Object.entries(prev).filter(([key]) => !key.startsWith("tab-"))));
+
+  const scrollToFirstError = () =>
+    requestAnimationFrame(() => {
+      document.querySelector("[data-field-error]")?.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+
+  // Server-side rejections (e.g. a duplicate slug) name the offending field in
+  // their message — surface those on the field itself, not just in the toast.
+  const applyApiError = (message: string) => {
+    const lower = message.toLowerCase();
+    const key = lower.includes("slug")
+      ? "slug"
+      : lower.includes("description")
+        ? "description"
+        : lower.includes("title")
+          ? "title"
+          : null;
+    if (!key) return;
+    setErrors((prev) => ({ ...prev, [key]: message }));
+    scrollToFirstError();
+  };
 
   // Categories allowed per user request
   const CATEGORY_OPTIONS = [
@@ -81,6 +116,7 @@ const MedicalLibraryForm: React.FC<MedicalLibraryFormProps> = ({ initialData, on
   useEffect(() => {
     if (!slugManuallyEdited && title) {
       setSlug(slugify(title));
+      clearError("slug");
     }
   }, [title, slugManuallyEdited]);
 
@@ -91,13 +127,19 @@ const MedicalLibraryForm: React.FC<MedicalLibraryFormProps> = ({ initialData, on
       showToast.error("Limit Reached", "You can only add a maximum of 3 content tabs.");
       return;
     }
+    clearTabErrors();
     setTabs((prev) => [...prev, defaultTab()]);
   };
 
-  const removeTab = (tabIdx: number) => setTabs((prev) => prev.filter((_, i) => i !== tabIdx));
+  const removeTab = (tabIdx: number) => {
+    clearTabErrors();
+    setTabs((prev) => prev.filter((_, i) => i !== tabIdx));
+  };
 
-  const updateTabName = (tabIdx: number, name: string) =>
+  const updateTabName = (tabIdx: number, name: string) => {
+    clearError(`tab-${tabIdx}-name`);
     setTabs((prev) => prev.map((t, i) => (i === tabIdx ? { ...t, tabName: name } : t)));
+  };
 
   const addSection = (tabIdx: number) =>
     setTabs((prev) => prev.map((t, i) => (i === tabIdx ? { ...t, sections: [...t.sections, defaultSection()] } : t)));
@@ -107,8 +149,9 @@ const MedicalLibraryForm: React.FC<MedicalLibraryFormProps> = ({ initialData, on
       prev.map((t, i) => (i === tabIdx ? { ...t, sections: t.sections.filter((_, si) => si !== secIdx) } : t))
     );
 
-  const updateSection = (tabIdx: number, secIdx: number, field: keyof MedicalLibrarySection, value: string) =>
-    setTabs((prev) =>
+  const updateSection = (tabIdx: number, secIdx: number, field: keyof MedicalLibrarySection, value: string) => {
+    if (field === "html" && value.trim()) clearError(`tab-${tabIdx}-content`);
+    return setTabs((prev) =>
       prev.map((t, i) =>
         i === tabIdx
           ? {
@@ -118,31 +161,35 @@ const MedicalLibraryForm: React.FC<MedicalLibraryFormProps> = ({ initialData, on
           : t
       )
     );
+  };
 
   // ── Submit ────────────────────────────────────────────────────────────────
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim() || !slug.trim() || !category.trim() || !description.trim()) {
-      showToast.error("Missing fields", "Please fill in all required fields");
-      return;
-    }
 
     if (tabs.length > 3) {
       showToast.error("Limit Exceeded", "You cannot exceed the maximum limit of 3 content tabs.");
       return;
     }
 
-    for (let i = 0; i < tabs.length; i++) {
-      const tab = tabs[i];
-      if (!tab.tabName.trim()) {
-        showToast.error("Missing fields", `Please enter a name for Tab ${i + 1}.`);
-        return;
-      }
+    const nextErrors: Record<string, string> = {};
+    if (!title.trim()) nextErrors.title = "Title is required";
+    if (!slug.trim()) nextErrors.slug = "Slug is required";
+    if (!category.trim()) nextErrors.category = "Category is required";
+    if (!description.trim()) nextErrors.description = "Description is required";
+    tabs.forEach((tab, i) => {
+      if (!tab.tabName.trim()) nextErrors[`tab-${i}-name`] = "Tab name is required";
       if (!tab.sections.some((s) => s.html.trim())) {
-        showToast.error("Missing fields", `Please add content to the "${tab.tabName.trim()}" tab.`);
-        return;
+        nextErrors[`tab-${i}-content`] = "Add content to at least one section in this tab";
       }
+    });
+
+    setErrors(nextErrors);
+    if (Object.keys(nextErrors).length > 0) {
+      showToast.error("Missing fields", "Please fill in the highlighted fields");
+      scrollToFirstError();
+      return;
     }
 
     setIsSubmitting(true);
@@ -155,7 +202,10 @@ const MedicalLibraryForm: React.FC<MedicalLibraryFormProps> = ({ initialData, on
       content: { tabs },
     };
 
-    onSave(payload, () => setIsSubmitting(false));
+    onSave(payload, (apiErrorMessage?: string) => {
+      setIsSubmitting(false);
+      if (apiErrorMessage) applyApiError(apiErrorMessage);
+    });
   };
 
   const handleBackClick = () => {
@@ -201,21 +251,26 @@ const MedicalLibraryForm: React.FC<MedicalLibraryFormProps> = ({ initialData, on
         <form onSubmit={handleSubmit} className="p-6 md:p-8 space-y-8">
           {/* Basic Fields */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
+            <div data-field-error={errors.title ? true : undefined}>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                 Title <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                required
+                onChange={(e) => {
+                  setTitle(e.target.value);
+                  clearError("title");
+                }}
                 placeholder="e.g. Anxiety Disorders"
-                className="w-full px-4 py-3 text-sm border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={`w-full px-4 py-3 text-sm border rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 ${
+                  errors.title ? "border-red-500 focus:ring-red-500" : "border-gray-200 dark:border-gray-700 focus:ring-blue-500"
+                }`}
               />
+              {errors.title && <p className="text-xs text-red-500 mt-1.5 ml-1">{errors.title}</p>}
             </div>
 
-            <div>
+            <div data-field-error={errors.slug ? true : undefined}>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                 Slug <span className="text-red-500">*</span>
               </label>
@@ -225,11 +280,14 @@ const MedicalLibraryForm: React.FC<MedicalLibraryFormProps> = ({ initialData, on
                 onChange={(e) => {
                   setSlugManuallyEdited(true);
                   setSlug(e.target.value);
+                  clearError("slug");
                 }}
-                required
                 placeholder="e.g. anxiety-disorders"
-                className="w-full px-4 py-3 text-sm border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
+                className={`w-full px-4 py-3 text-sm border rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 font-mono ${
+                  errors.slug ? "border-red-500 focus:ring-red-500" : "border-gray-200 dark:border-gray-700 focus:ring-blue-500"
+                }`}
               />
+              {errors.slug && <p className="text-xs text-red-500 mt-1.5 ml-1">{errors.slug}</p>}
               <p className="text-xs text-gray-400 mt-1.5 ml-1">Used in the URL. Auto-generated from title.</p>
             </div>
 
@@ -278,18 +336,23 @@ const MedicalLibraryForm: React.FC<MedicalLibraryFormProps> = ({ initialData, on
               </div>
             </div>
 
-            <div className="md:col-span-2">
+            <div className="md:col-span-2" data-field-error={errors.description ? true : undefined}>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                 Description <span className="text-red-500">*</span>
               </label>
               <textarea
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                required
+                onChange={(e) => {
+                  setDescription(e.target.value);
+                  clearError("description");
+                }}
                 placeholder="Short summary shown in listings"
                 rows={2}
-                className="w-full px-4 py-3 text-sm border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
+                className={`w-full px-4 py-3 text-sm border rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 resize-y ${
+                  errors.description ? "border-red-500 focus:ring-red-500" : "border-gray-200 dark:border-gray-700 focus:ring-blue-500"
+                }`}
               />
+              {errors.description && <p className="text-xs text-red-500 mt-1.5 ml-1">{errors.description}</p>}
             </div>
           </div>
 
@@ -323,11 +386,14 @@ const MedicalLibraryForm: React.FC<MedicalLibraryFormProps> = ({ initialData, on
               {tabs.map((tab, tabIdx) => (
                 <div
                   key={tabIdx}
-                  className="border border-gray-200 dark:border-gray-700 rounded-2xl overflow-hidden bg-gray-50 dark:bg-gray-800/20"
+                  data-field-error={errors[`tab-${tabIdx}-content`] ? true : undefined}
+                  className={`border rounded-2xl overflow-hidden bg-gray-50 dark:bg-gray-800/20 ${
+                    errors[`tab-${tabIdx}-content`] ? "border-red-500" : "border-gray-200 dark:border-gray-700"
+                  }`}
                 >
                   {/* Tab Header */}
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700/50">
-                    <div className="flex-1 w-full relative">
+                    <div className="flex-1 w-full relative" data-field-error={errors[`tab-${tabIdx}-name`] ? true : undefined}>
                       <label className="absolute -top-2 left-2 px-1 bg-white dark:bg-gray-800 text-xs font-medium text-blue-600 dark:text-blue-400">
                         Tab Name <span className="text-red-500">*</span>
                       </label>
@@ -336,8 +402,13 @@ const MedicalLibraryForm: React.FC<MedicalLibraryFormProps> = ({ initialData, on
                         value={tab.tabName}
                         onChange={(e) => updateTabName(tabIdx, e.target.value)}
                         placeholder={`e.g. Overview or Symptoms`}
-                        className="w-full px-4 py-2.5 text-sm font-semibold bg-transparent text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:border-blue-500"
+                        className={`w-full px-4 py-2.5 text-sm font-semibold bg-transparent text-gray-900 dark:text-white border rounded-lg focus:outline-none ${
+                          errors[`tab-${tabIdx}-name`] ? "border-red-500 focus:border-red-500" : "border-gray-300 dark:border-gray-600 focus:border-blue-500"
+                        }`}
                       />
+                      {errors[`tab-${tabIdx}-name`] && (
+                        <p className="text-xs text-red-500 mt-1.5 ml-1">{errors[`tab-${tabIdx}-name`]}</p>
+                      )}
                     </div>
                     {tabs.length > 1 && (
                       <button
@@ -360,6 +431,9 @@ const MedicalLibraryForm: React.FC<MedicalLibraryFormProps> = ({ initialData, on
 
                   {/* Sections */}
                   <div className="p-5 space-y-6">
+                    {errors[`tab-${tabIdx}-content`] && (
+                      <p className="text-xs text-red-500">{errors[`tab-${tabIdx}-content`]}</p>
+                    )}
                     {tab.sections.map((section, secIdx) => (
                       <div
                         key={section.id}

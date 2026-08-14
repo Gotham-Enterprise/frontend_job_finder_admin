@@ -16,7 +16,7 @@ export default function EditMedicalLibraryTopic() {
   const { data: topicData, isLoading, error, refetch } = useMedicalLibraryTopicById(topicId);
   const { mutate: updateTopic, isPending } = useUpdateMedicalLibraryTopic();
 
-  const handleSave = (payload: any, onDone: () => void) => {
+  const handleSave = (payload: any, onDone: (apiErrorMessage?: string) => void) => {
     updateTopic(
       { id: topicId, data: payload },
       {
@@ -27,7 +27,7 @@ export default function EditMedicalLibraryTopic() {
         },
         onError: (error: any) => {
           showToast.error("Error", error?.message || "Failed to update topic.");
-          onDone();
+          onDone(error?.message);
         },
       }
     );

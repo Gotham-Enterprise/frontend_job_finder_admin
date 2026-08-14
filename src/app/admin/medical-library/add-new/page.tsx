@@ -10,7 +10,7 @@ export default function AddNewMedicalLibraryTopic() {
   const router = useRouter();
   const { mutate: createTopic, isPending } = useCreateMedicalLibraryTopic();
 
-  const handleSave = (payload: any, onDone: () => void) => {
+  const handleSave = (payload: any, onDone: (apiErrorMessage?: string) => void) => {
     createTopic(payload, {
       onSuccess: () => {
         showToast.success("Success", "Medical Library topic created successfully.");
@@ -19,7 +19,7 @@ export default function AddNewMedicalLibraryTopic() {
       },
       onError: (error: any) => {
         showToast.error("Error", error?.message || "Failed to create topic.");
-        onDone();
+        onDone(error?.message);
       },
     });
   };
