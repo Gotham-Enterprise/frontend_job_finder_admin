@@ -28,7 +28,9 @@ import {
   useSpecialtiesByOccupation,
 } from "@/services/hooks/useSupervisees";
 import {
+  filterSuperviseeOccupationChoices,
   getEligibleSupervisorTypes,
+  isMedicalDirectorType,
   isSupervisorTypeEligibleForSupervisee,
 } from "@/services/utils/superviseeEligibility";
 import { useStates } from "@/services/hooks/useStates";
@@ -54,8 +56,10 @@ const emptyForm = (): SuperviseeEditFormData => ({
   occupation: "",
   specialty: "",
   title: "",
+  licensureState: "",
   stateOfLicensure: [],
   typeOfSupervisorNeeded: "",
+  needsMedicalDirector: false,
   superviseeOccupation: "",
   superviseeSpecialty: "",
   howSoonLooking: "",
@@ -63,7 +67,6 @@ const emptyForm = (): SuperviseeEditFormData => ({
   preferredFormat: "",
   availability: "",
   idealSupervisor: "",
-  stateTheyAreLookingIn: [],
   budgetRangeType: "",
   budgetRangeStart: "",
   budgetRangeEnd: "",
@@ -98,7 +101,7 @@ export const EditSuperviseeModal: React.FC<EditSuperviseeModalProps> = ({
   const { data: statesData, isLoading: statesLoading } = useStates();
   const stateAbbr = formData.state?.trim() || null;
   const { data: cities = [], isLoading: citiesLoading } = useCitiesByState(stateAbbr);
-  const { data: occupationsData } = useOccupationsWithSpecialties();
+  const { data: occupationsData } = useOccupationsWithSpecialties({ includeAll: true });
   const { data: profileSpecialtyOptions = [], isLoading: profileSpecialtiesLoading } =
     useSpecialtiesByOccupation(formData.occupation);
 
@@ -140,6 +143,18 @@ export const EditSuperviseeModal: React.FC<EditSuperviseeModalProps> = ({
     [occupationsData],
   );
 
+  // Only supervisee-eligible occupations can be picked; a legacy occupation saved
+  // before this rule is kept in the list so the stored value still renders.
+  // (`profileOccupationChoices` stays unfiltered for occupation-name lookups.)
+  const superviseeOccupationChoices = useMemo(
+    () =>
+      filterSuperviseeOccupationChoices(
+        profileOccupationChoices,
+        (o) => o.value === formData.occupation,
+      ),
+    [profileOccupationChoices, formData.occupation],
+  );
+
   const profileSpecialtyChoices = useMemo(
     () => choicesOnly(formData.occupation ? profileSpecialtyOptions : []),
     [formData.occupation, profileSpecialtyOptions],
@@ -152,29 +167,27 @@ export const EditSuperviseeModal: React.FC<EditSuperviseeModalProps> = ({
     return "Select specialty (optional)";
   }, [formData.occupation, profileSpecialtiesLoading, profileSpecialtyOptions.length]);
 
-  // Eligibility for the supervision type is driven by the supervisee's own
-  // occupation + credential title. Mirrors the signup flow; the backend enforces
-  // the same rules on save.
-  const eligibilityCtx = useMemo(
-    () => ({
-      occupationName:
-        profileOccupationChoices.find((o) => o.value === formData.occupation)?.label ?? "",
-      credentialTitle: formData.title,
-    }),
-    [profileOccupationChoices, formData.occupation, formData.title],
+  // Eligibility for the supervision type is driven solely by the supervisee's own
+  // occupation. Mirrors the signup flow; the backend enforces the same rules on save.
+  const eligibilityOccupationName = useMemo(
+    () => profileOccupationChoices.find((o) => o.value === formData.occupation)?.label ?? "",
+    [profileOccupationChoices, formData.occupation],
   );
-  const eligibilityComplete =
-    formData.title.trim().length > 0 && formData.occupation.trim().length > 0;
+  const eligibilityComplete = formData.occupation.trim().length > 0;
 
+  // Medical Director is excluded from the dropdown — it is requested via the
+  // checkbox below instead, since it can combine with any type (or stand alone).
   const supervisorTypeChoices = useMemo(
     () =>
       choicesOnly(
-        getEligibleSupervisorTypes(supervisorTypesData, eligibilityCtx).map((t) => ({
-          label: t.name,
-          value: t.name,
-        })),
+        getEligibleSupervisorTypes(supervisorTypesData, eligibilityOccupationName)
+          .filter((t) => !isMedicalDirectorType(t))
+          .map((t) => ({
+            label: t.name,
+            value: t.name,
+          })),
       ),
-    [supervisorTypesData, eligibilityCtx],
+    [supervisorTypesData, eligibilityOccupationName],
   );
 
   const supervisionOccupationChoices = useMemo(() => {
@@ -267,9 +280,9 @@ export const EditSuperviseeModal: React.FC<EditSuperviseeModalProps> = ({
       }
       if (field === "superviseeOccupation") next.superviseeSpecialty = "";
       if (field === "state") next.city = "";
-      // Changing the occupation or credential can make the selected supervision
-      // type ineligible — clear it (and its dependents) so it can't be saved.
-      if ((field === "occupation" || field === "title") && next.typeOfSupervisorNeeded) {
+      // Changing the occupation can make the selected supervision type
+      // ineligible — clear it (and its dependents) so it can't be saved.
+      if (field === "occupation" && next.typeOfSupervisorNeeded) {
         const selectedType = supervisorTypesData.find(
           (t) => t.name === next.typeOfSupervisorNeeded,
         );
@@ -277,10 +290,7 @@ export const EditSuperviseeModal: React.FC<EditSuperviseeModalProps> = ({
           profileOccupationChoices.find((o) => o.value === next.occupation)?.label ?? "";
         if (
           selectedType &&
-          !isSupervisorTypeEligibleForSupervisee(selectedType, {
-            occupationName,
-            credentialTitle: next.title,
-          })
+          !isSupervisorTypeEligibleForSupervisee(selectedType, occupationName)
         ) {
           next.typeOfSupervisorNeeded = "";
           next.superviseeOccupation = "";
@@ -452,7 +462,7 @@ export const EditSuperviseeModal: React.FC<EditSuperviseeModalProps> = ({
                     <Select
                       value={formData.occupation}
                       onChange={(v) => updateField("occupation", v)}
-                      options={profileOccupationChoices}
+                      options={superviseeOccupationChoices}
                       placeholder="Select occupation"
                     />
                   </FormField>
@@ -464,12 +474,7 @@ export const EditSuperviseeModal: React.FC<EditSuperviseeModalProps> = ({
                       placeholder={profileSpecialtyPlaceholder}
                     />
                   </FormField>
-                  <FormField
-                    className="sm:col-span-2"
-                    label={CREDENTIAL_TITLE_LABEL}
-                    required
-                    error={fieldErrors.title}
-                  >
+                  <FormField label={CREDENTIAL_TITLE_LABEL} required error={fieldErrors.title}>
                     <Input
                       value={formData.title}
                       onChange={(e) => updateField("title", e.target.value)}
@@ -477,16 +482,17 @@ export const EditSuperviseeModal: React.FC<EditSuperviseeModalProps> = ({
                       error={!!fieldErrors.title}
                     />
                   </FormField>
+                  {/* State tied to the credential (e.g. "AMFT (TX)") — matches signup */}
+                  <FormField label="State of Licensure" required error={fieldErrors.licensureState}>
+                    <Select
+                      value={formData.licensureState}
+                      onChange={(v) => updateField("licensureState", v)}
+                      options={choicesOnly(stateOptions)}
+                      placeholder={statesLoading ? "Loading…" : "Select state"}
+                      disabled={statesLoading}
+                    />
+                  </FormField>
                 </div>
-                <FormField label="States of Licensure" required error={fieldErrors.stateOfLicensure}>
-                  <MultiSelect
-                    label=""
-                    options={stateMultiOptions}
-                    value={formData.stateOfLicensure}
-                    onChange={(selected) => updateField("stateOfLicensure", selected)}
-                    placeholder="Select states..."
-                  />
-                </FormField>
               </section>
 
               <section className="space-y-4">
@@ -500,7 +506,7 @@ export const EditSuperviseeModal: React.FC<EditSuperviseeModalProps> = ({
                   <FormField
                     className="sm:col-span-2"
                     label="Type of Supervision Needed"
-                    required
+                    required={!formData.needsMedicalDirector}
                     error={fieldErrors.typeOfSupervisorNeeded}
                   >
                     <Select
@@ -511,13 +517,45 @@ export const EditSuperviseeModal: React.FC<EditSuperviseeModalProps> = ({
                         supervisorTypesLoading
                           ? "Loading…"
                           : !eligibilityComplete
-                            ? "Enter credential and occupation first"
+                            ? "Select an occupation first"
                             : "Select type of supervision"
                       }
                       disabled={supervisorTypesLoading || !eligibilityComplete}
                     />
                   </FormField>
-                  <FormField label="Occupation" required error={fieldErrors.superviseeOccupation}>
+                  {/* Medical Director — combinable with any supervision type, or standalone */}
+                  <FormField className="sm:col-span-2" label="" error={undefined}>
+                    <label className="flex items-start gap-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={formData.needsMedicalDirector}
+                        onChange={(e) => {
+                          updateField("needsMedicalDirector", e.target.checked);
+                          if (e.target.checked) {
+                            setFieldErrors((prev) => {
+                              if (!prev.typeOfSupervisorNeeded) return prev;
+                              const { typeOfSupervisorNeeded: _typeErr, ...rest } = prev;
+                              return rest;
+                            });
+                          }
+                        }}
+                        className="mt-1 h-4 w-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500"
+                      />
+                      <span>
+                        <span className="block text-sm font-medium text-gray-800 dark:text-white/90">
+                          Needs a Medical Director
+                        </span>
+                        <span className="block text-sm text-gray-500 dark:text-gray-400">
+                          Can be combined with a supervision type above, or selected on its own.
+                        </span>
+                      </span>
+                    </label>
+                  </FormField>
+                  <FormField
+                    label="Occupation"
+                    required={Boolean(formData.typeOfSupervisorNeeded)}
+                    error={fieldErrors.superviseeOccupation}
+                  >
                     <Select
                       value={formData.superviseeOccupation}
                       onChange={(v) => updateField("superviseeOccupation", v)}
@@ -531,6 +569,20 @@ export const EditSuperviseeModal: React.FC<EditSuperviseeModalProps> = ({
                       onChange={(v) => updateField("superviseeSpecialty", v)}
                       options={supervisionSpecialtyChoices}
                       placeholder={supervisionSpecialtyPlaceholder}
+                    />
+                  </FormField>
+                  <FormField
+                    className="sm:col-span-2"
+                    label="States of Licensure"
+                    required
+                    error={fieldErrors.stateOfLicensure}
+                  >
+                    <MultiSelect
+                      label=""
+                      options={stateMultiOptions}
+                      value={formData.stateOfLicensure}
+                      onChange={(selected) => updateField("stateOfLicensure", selected)}
+                      placeholder="Select states..."
                     />
                   </FormField>
                   <FormField
@@ -579,38 +631,48 @@ export const EditSuperviseeModal: React.FC<EditSuperviseeModalProps> = ({
                       placeholder="Select budget type"
                     />
                   </FormField>
-                  <FormField label="Budget Start ($)" required error={fieldErrors.budgetRangeStart}>
-                    <Input
-                      type="number"
-                      min={0}
-                      value={formData.budgetRangeStart}
-                      onChange={(e) => updateField("budgetRangeStart", e.target.value)}
-                      error={!!fieldErrors.budgetRangeStart}
-                    />
-                  </FormField>
-                  <FormField label="Budget End ($)" required error={fieldErrors.budgetRangeEnd}>
-                    <Input
-                      type="number"
-                      min={0}
-                      value={formData.budgetRangeEnd}
-                      onChange={(e) => updateField("budgetRangeEnd", e.target.value)}
-                      error={!!fieldErrors.budgetRangeEnd}
-                    />
-                  </FormField>
+                  {formData.budgetRangeType === "MONTHLY" ? (
+                    /* Monthly budgets are a single amount stored in budgetRangeEnd (start is 0) */
+                    <FormField
+                      label="Monthly Budget ($)"
+                      required
+                      error={fieldErrors.budgetRangeEnd}
+                    >
+                      <Input
+                        type="number"
+                        min={0}
+                        value={formData.budgetRangeEnd}
+                        onChange={(e) => updateField("budgetRangeEnd", e.target.value)}
+                        error={!!fieldErrors.budgetRangeEnd}
+                      />
+                    </FormField>
+                  ) : (
+                    <>
+                      <FormField
+                        label="Budget Start ($)"
+                        required
+                        error={fieldErrors.budgetRangeStart}
+                      >
+                        <Input
+                          type="number"
+                          min={0}
+                          value={formData.budgetRangeStart}
+                          onChange={(e) => updateField("budgetRangeStart", e.target.value)}
+                          error={!!fieldErrors.budgetRangeStart}
+                        />
+                      </FormField>
+                      <FormField label="Budget End ($)" required error={fieldErrors.budgetRangeEnd}>
+                        <Input
+                          type="number"
+                          min={0}
+                          value={formData.budgetRangeEnd}
+                          onChange={(e) => updateField("budgetRangeEnd", e.target.value)}
+                          error={!!fieldErrors.budgetRangeEnd}
+                        />
+                      </FormField>
+                    </>
+                  )}
                 </div>
-                <FormField
-                  label="States They Are Looking In"
-                  required
-                  error={fieldErrors.stateTheyAreLookingIn}
-                >
-                  <MultiSelect
-                    label=""
-                    options={stateMultiOptions}
-                    value={formData.stateTheyAreLookingIn}
-                    onChange={(selected) => updateField("stateTheyAreLookingIn", selected)}
-                    placeholder="Select states..."
-                  />
-                </FormField>
                 <FormField
                   label="Description of Ideal Supervisor"
                   required

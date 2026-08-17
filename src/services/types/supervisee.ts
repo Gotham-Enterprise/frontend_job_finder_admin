@@ -24,7 +24,6 @@ export interface Supervisee {
   specialty: SuperviseeSpecialty | null;
   preferredFormat: string | null;
   howSoonLooking: string | null;
-  stateTheyAreLookingIn: string[];
   budgetRangeType: string | null;
   budgetRangeStart: number | null;
   budgetRangeEnd: number | null;
@@ -80,11 +79,12 @@ export interface SuperviseeProfile {
   lookingDate: string | null;
   preferredFormat: string | null;
   title: string | null;
+  /** State tied to the credential/title (US state abbreviation, e.g. "TX") */
+  licensureState: string | null;
   superviseeOccupation: string | null;
   superviseeSpecialty: string | null;
   availability: string | null;
   idealSupervisor: string | null;
-  stateTheyAreLookingIn: string[];
   budgetRangeType: string | null;
   budgetRangeStart: number | null;
   budgetRangeEnd: number | null;
@@ -155,6 +155,7 @@ export interface SuperviseeUpdatePayload {
   occupation?: string;
   specialty?: string;
   title?: string;
+  licensureState?: string;
   stateOfLicensure?: string[];
   typeOfSupervisorNeeded?: string[];
   superviseeOccupation?: string;
@@ -164,7 +165,6 @@ export interface SuperviseeUpdatePayload {
   preferredFormat?: string;
   availability?: string;
   idealSupervisor?: string;
-  stateTheyAreLookingIn?: string[];
   budgetRangeType?: string;
   budgetRangeStart?: number;
   budgetRangeEnd?: number;
