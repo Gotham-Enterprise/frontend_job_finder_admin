@@ -30,7 +30,7 @@ export default function PartnersTab() {
   // Merge sync status with partners data
   const partnersWithStatus = useMemo(() => {
     if (!partnersData?.data || !syncStatusData) return partnersData?.data || []
-    
+
     return partnersData.data.map(partner => {
       const syncStatus = syncStatusData.find((s: any) => s.id === partner.id)
       return {
@@ -136,9 +136,8 @@ export default function PartnersTab() {
     }
     return (
       <span
-        className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
-          styles[status as keyof typeof styles] || styles.inactive
-        }`}
+        className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${styles[status as keyof typeof styles] || styles.inactive
+          }`}
       >
         {icons[status as keyof typeof icons]}
         {status.charAt(0).toUpperCase() + status.slice(1)}

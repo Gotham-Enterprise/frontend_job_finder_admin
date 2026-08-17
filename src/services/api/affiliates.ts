@@ -171,6 +171,7 @@ export interface AffiliateAnalytics {
     partner: string;
     payout: number | null;
     partnerConversionId: string | null;
+    ipAddress: string | null;
     convertedAt: string;
   }>;
 }
