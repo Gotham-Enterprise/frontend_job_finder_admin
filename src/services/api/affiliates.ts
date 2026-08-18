@@ -121,10 +121,13 @@ export interface AffiliateAnalytics {
   autoRedirectClicks: number;
   manualClicks: number;
   partnerFeedClicks?: number;
+  cpcSpend?: number;
   estimatedSpend?: number;
   partnerFeedConversions?: number;
   partnerFeedConversionRate?: number;
   costPerConversion?: number | null;
+  totalCpaSpend?: number;
+  avgCpaPerConversion?: number | null;
   clicksBySource?: {
     manual: number;
     autoRedirect: number;

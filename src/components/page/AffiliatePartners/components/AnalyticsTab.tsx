@@ -371,6 +371,9 @@ export default function AnalyticsTab() {
                   <p className="text-3xl font-bold text-amber-900 dark:text-amber-300 mt-2">
                     ${(analytics?.estimatedSpend ?? 0).toFixed(2)}
                   </p>
+                  <p className="text-xs text-amber-600 dark:text-amber-500 mt-1">
+                    CPC ${(analytics?.cpcSpend ?? 0).toFixed(2)} + CPA ${(analytics?.totalCpaSpend ?? 0).toFixed(2)}
+                  </p>
                 </div>
                 <DollarSign className="w-12 h-12 text-amber-600 dark:text-amber-500" />
               </div>
