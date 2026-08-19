@@ -101,6 +101,34 @@ export interface SupervisorLicenseEntry {
   sortOrder?: number;
 }
 
+/** Medical Director secondary offering (Supervising/Collaborating Physician) with its own credentials. */
+export interface SupervisorOfferingEntry {
+  id?: string;
+  supervisorType: string;
+  occupation?: string | null;
+  specialty?: string | null;
+  degreeType?: string | null;
+  sortOrder?: number;
+  licenses?: {
+    id?: string;
+    licenseNumber?: string | null;
+    state?: string | null;
+    licenseExpiration?: string | null;
+    sortOrder?: number;
+  }[];
+}
+
+/** Medical Director board certification (admin endpoints return full entries). */
+export interface SupervisorBoardCertificationEntry {
+  id?: string;
+  certifyingBoard: string;
+  specialty?: string | null;
+  subspecialty?: string | null;
+  certificationNumber?: string | null;
+  expirationDate?: string | null;
+  sortOrder?: number;
+}
+
 /** Supervisor profile from the detail endpoint */
 export interface SupervisorProfile {
   id: string;
@@ -118,6 +146,10 @@ export interface SupervisorProfile {
   licenseExpiration: string | null;
   /** All licenses, ordered by sortOrder (first = primary). Empty for unmigrated legacy records. */
   licenses?: SupervisorLicenseEntry[];
+  /** Medical Director only: secondary service offerings. */
+  offerings?: SupervisorOfferingEntry[];
+  /** Medical Director only: board certifications. */
+  boardCertifications?: SupervisorBoardCertificationEntry[];
   yearsOfExperience: string | null;
   npiNumber: string | null;
   certification: string[];
@@ -234,6 +266,23 @@ export interface SupervisorLicenseEntryPayload {
   licenseExpiration: string;
 }
 
+/** Medical Director secondary offering — same shape the register endpoint accepts. */
+export interface SupervisorOfferingPayload {
+  supervisorType: string;
+  occupation: string;
+  specialty?: string;
+  degreeType: string;
+  licenses: { licenseNumber: string; state: string; licenseExpiration: string }[];
+}
+
+export interface SupervisorBoardCertificationPayload {
+  certifyingBoard: string;
+  specialty: string;
+  subspecialty?: string;
+  certificationNumber?: string;
+  expirationDate?: string;
+}
+
 export interface SupervisorUpdatePayload {
   fullName?: string;
   /** Post-nominal letters after the name; empty string clears the stored value. */
@@ -252,6 +301,10 @@ export interface SupervisorUpdatePayload {
    * rows untouched.
    */
   licenses?: SupervisorLicenseEntryPayload[];
+  /** Medical Director only — full replace; empty array clears all offerings. */
+  offerings?: SupervisorOfferingPayload[];
+  /** Medical Director only — full replace; empty array clears all certifications. */
+  boardCertifications?: SupervisorBoardCertificationPayload[];
   yearsOfExperience?: string;
   patientPopulation?: string[];
   certification?: string[];

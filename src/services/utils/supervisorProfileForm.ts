@@ -1,16 +1,23 @@
 import {
+  ABMS_CERTIFYING_BOARDS,
+  MEDICAL_DIRECTOR_OFFERING_TYPE_NAMES,
+  type MedicalDirectorOfferingKey,
+  OTHER_CERTIFYING_BOARD_VALUE,
   PROFESSIONAL_CREDENTIALS_MAX_LENGTH,
   PROFESSIONAL_CREDENTIALS_PATTERN,
   SUPERVISOR_PROFILE_TEXT_MAX_LENGTH,
   SUPERVISOR_PROFILE_TEXT_MIN_LENGTH,
   SUPERVISOR_YEARS_OF_EXPERIENCE_OPTIONS,
+  isMedicalDirectorSupervisorType,
   isMonthlyOnlySupervisorType,
   isSupervisorTypeWithoutCertifications,
   isValidPhysicianDegreeType,
 } from "@/constants/supervisorSignupOptions";
 import type {
+  SupervisorBoardCertificationPayload,
   SupervisorDetails,
   SupervisorLicenseEntryPayload,
+  SupervisorOfferingPayload,
   SupervisorUpdatePayload,
 } from "@/services/types/supervisor";
 import { formatUSPhoneForDisplay } from "@/services/utils/phoneNumberUtils";
@@ -27,11 +34,43 @@ export type SupervisorLicenseEntryErrors = Partial<
   Record<keyof SupervisorLicenseEntryFormData, string>
 >;
 
+export interface SupervisorOfferingFormData {
+  occupation: string;
+  specialty: string;
+  degreeType: string;
+  licenses: SupervisorLicenseEntryFormData[];
+}
+
+export interface SupervisorBoardCertificationFormData {
+  certifyingBoard: string;
+  /** Free-text board name when the select is "Other". */
+  certifyingBoardOther: string;
+  specialty: string;
+  subspecialty: string;
+  certificationNumber: string;
+  expirationDate: string;
+}
+
+export interface SupervisorOfferingErrors {
+  occupation?: string;
+  degreeType?: string;
+  licenses?: string;
+  licenseEntries?: SupervisorLicenseEntryErrors[];
+}
+
+export type SupervisorBoardCertificationEntryErrors = Partial<
+  Record<keyof SupervisorBoardCertificationFormData, string>
+>;
+
 export type SupervisorFieldErrors = Partial<
   Record<keyof SupervisorEditFormData | "uploadProfilePhoto" | "uploadLicense", string>
 > & {
   /** Per-entry errors for the `licenses` repeater, aligned by index. */
   licenseEntries?: SupervisorLicenseEntryErrors[];
+  /** Per-offering errors for the Medical Director offering blocks. */
+  offeringErrors?: Partial<Record<MedicalDirectorOfferingKey, SupervisorOfferingErrors>>;
+  /** Per-entry errors for the board-certification repeater, aligned by index. */
+  boardCertificationEntries?: SupervisorBoardCertificationEntryErrors[];
 };
 
 export interface SupervisorEditFormData {
@@ -56,6 +95,12 @@ export interface SupervisorEditFormData {
   acceptingSupervisees: boolean;
   supervisionFeeType: string;
   supervisionFeeAmount: string;
+  // Medical Director only — blank/false for other supervisor types.
+  offerSupervisingPhysician: boolean;
+  offerCollaboratingPhysician: boolean;
+  offerings: Record<MedicalDirectorOfferingKey, SupervisorOfferingFormData>;
+  boardCertified: boolean;
+  boardCertifications: SupervisorBoardCertificationFormData[];
 }
 
 export const emptySupervisorLicenseEntry = (): SupervisorLicenseEntryFormData => ({
@@ -63,6 +108,22 @@ export const emptySupervisorLicenseEntry = (): SupervisorLicenseEntryFormData =>
   licenseNumber: "",
   state: "",
   licenseExpiration: "",
+});
+
+export const emptySupervisorOffering = (): SupervisorOfferingFormData => ({
+  occupation: "",
+  specialty: "",
+  degreeType: "",
+  licenses: [emptySupervisorLicenseEntry()],
+});
+
+export const emptySupervisorBoardCertification = (): SupervisorBoardCertificationFormData => ({
+  certifyingBoard: "",
+  certifyingBoardOther: "",
+  specialty: "",
+  subspecialty: "",
+  certificationNumber: "",
+  expirationDate: "",
 });
 
 function isBlankLicenseEntry(entry: SupervisorLicenseEntryFormData): boolean {
@@ -154,6 +215,77 @@ export function validateSupervisorEditForm(form: SupervisorEditFormData): Superv
       "Only the Monthly fee type is available for this supervisor type";
   }
 
+  // Medical Director extras — validated only for checked offerings / Board
+  // Certified Yes (hidden blocks keep their blank defaults).
+  if (isMedicalDirectorSupervisorType(form.supervisorType)) {
+    const offeringErrors: SupervisorFieldErrors["offeringErrors"] = {};
+    const checkedKeys: MedicalDirectorOfferingKey[] = [];
+    if (form.offerSupervisingPhysician) checkedKeys.push("supervising");
+    if (form.offerCollaboratingPhysician) checkedKeys.push("collaborating");
+
+    for (const key of checkedKeys) {
+      const block = form.offerings[key];
+      const blockErrors: SupervisorOfferingErrors = {};
+      if (!block.occupation.trim()) {
+        blockErrors.occupation = "Occupation is required";
+      }
+      if (!block.degreeType.trim()) {
+        blockErrors.degreeType = "Degree type is required";
+      } else if (!isValidPhysicianDegreeType(block.degreeType)) {
+        blockErrors.degreeType = "Degree type must be MD or DO";
+      }
+
+      const entryErrorsList: SupervisorLicenseEntryErrors[] = block.licenses.map((entry) => {
+        if (isBlankLicenseEntry(entry)) return {};
+        const entryErrors: SupervisorLicenseEntryErrors = {};
+        if (!entry.licenseNumber.trim()) entryErrors.licenseNumber = "License number is required";
+        if (!entry.state.trim()) entryErrors.state = "State is required";
+        if (!entry.licenseExpiration.trim())
+          entryErrors.licenseExpiration = "Expiration date is required";
+        return entryErrors;
+      });
+      const completeEntries = block.licenses.filter((entry) => !isBlankLicenseEntry(entry));
+      if (completeEntries.length === 0) {
+        blockErrors.licenses = "Add at least one license";
+      } else if (entryErrorsList.some((entryErrors) => Object.keys(entryErrors).length > 0)) {
+        blockErrors.licenseEntries = entryErrorsList;
+        blockErrors.licenses = "Complete or remove the highlighted license entries";
+      }
+
+      if (Object.keys(blockErrors).length > 0) {
+        offeringErrors[key] = blockErrors;
+      }
+    }
+    if (Object.keys(offeringErrors).length > 0) {
+      errors.offeringErrors = offeringErrors;
+    }
+
+    if (form.boardCertified) {
+      const certErrors: SupervisorBoardCertificationEntryErrors[] =
+        form.boardCertifications.map((entry) => {
+          const entryErrors: SupervisorBoardCertificationEntryErrors = {};
+          if (!entry.certifyingBoard.trim()) {
+            entryErrors.certifyingBoard = "Certifying board is required";
+          } else if (
+            entry.certifyingBoard === OTHER_CERTIFYING_BOARD_VALUE &&
+            !entry.certifyingBoardOther.trim()
+          ) {
+            entryErrors.certifyingBoardOther = "Please enter the certifying board name";
+          }
+          if (!entry.specialty.trim()) {
+            entryErrors.specialty = "Specialty is required";
+          }
+          return entryErrors;
+        });
+      if (form.boardCertifications.length === 0) {
+        errors.boardCertifications = "Add at least one board certification";
+      } else if (certErrors.some((entryErrors) => Object.keys(entryErrors).length > 0)) {
+        errors.boardCertificationEntries = certErrors;
+        errors.boardCertifications = "Complete the highlighted certifications";
+      }
+    }
+  }
+
   if (!form.professionalSummary.trim()) {
     errors.professionalSummary = "Professional summary is required";
   } else if (form.professionalSummary.trim().length < SUPERVISOR_PROFILE_TEXT_MIN_LENGTH) {
@@ -226,6 +358,74 @@ export function getSupervisorLicenseEntryDefaults(details: SupervisorDetails): {
   return { entries, entriesNeedingReview };
 }
 
+/** Stored offering rows → checkbox flags + keyed credential blocks. */
+export function getSupervisorOfferingDefaults(details: SupervisorDetails): {
+  offerSupervisingPhysician: boolean;
+  offerCollaboratingPhysician: boolean;
+  offerings: Record<MedicalDirectorOfferingKey, SupervisorOfferingFormData>;
+} {
+  const toDateInput = (value: string | null | undefined) => (value ? value.slice(0, 10) : "");
+  const blocks: Record<MedicalDirectorOfferingKey, SupervisorOfferingFormData> = {
+    supervising: emptySupervisorOffering(),
+    collaborating: emptySupervisorOffering(),
+  };
+  const flags = { supervising: false, collaborating: false };
+
+  for (const offering of details.supervisorProfile?.offerings ?? []) {
+    const key = (
+      Object.entries(MEDICAL_DIRECTOR_OFFERING_TYPE_NAMES) as [MedicalDirectorOfferingKey, string][]
+    ).find(([, typeName]) => typeName === offering.supervisorType)?.[0];
+    if (!key) continue;
+    flags[key] = true;
+    const licenses = (offering.licenses ?? []).map((license) => ({
+      licenseType: "",
+      licenseNumber: license.licenseNumber ?? "",
+      state: license.state ?? "",
+      licenseExpiration: toDateInput(license.licenseExpiration),
+    }));
+    blocks[key] = {
+      occupation: offering.occupation ?? "",
+      specialty: offering.specialty ?? "",
+      degreeType: offering.degreeType ?? "",
+      licenses: licenses.length > 0 ? licenses : [emptySupervisorLicenseEntry()],
+    };
+  }
+
+  return {
+    offerSupervisingPhysician: flags.supervising,
+    offerCollaboratingPhysician: flags.collaborating,
+    offerings: blocks,
+  };
+}
+
+/** Stored board-certification rows → Yes/No flag + entries ("Other" detected against the ABMS list). */
+export function getSupervisorBoardCertificationDefaults(details: SupervisorDetails): {
+  boardCertified: boolean;
+  boardCertifications: SupervisorBoardCertificationFormData[];
+} {
+  const toDateInput = (value: string | null | undefined) => (value ? value.slice(0, 10) : "");
+  const rows = details.supervisorProfile?.boardCertifications ?? [];
+
+  const entries: SupervisorBoardCertificationFormData[] = rows.map((row) => {
+    const isKnownBoard = (ABMS_CERTIFYING_BOARDS as readonly string[]).includes(
+      row.certifyingBoard,
+    );
+    return {
+      certifyingBoard: isKnownBoard ? row.certifyingBoard : OTHER_CERTIFYING_BOARD_VALUE,
+      certifyingBoardOther: isKnownBoard ? "" : row.certifyingBoard,
+      specialty: row.specialty ?? "",
+      subspecialty: row.subspecialty ?? "",
+      certificationNumber: row.certificationNumber ?? "",
+      expirationDate: toDateInput(row.expirationDate),
+    };
+  });
+
+  return {
+    boardCertified: entries.length > 0,
+    boardCertifications: entries.length > 0 ? entries : [emptySupervisorBoardCertification()],
+  };
+}
+
 export function mapSupervisorDetailsToFormData(
   details: SupervisorDetails,
   states: { abbreviation: string; name: string }[] = [],
@@ -268,6 +468,8 @@ export function mapSupervisorDetailsToFormData(
     supervisionFeeType: profile?.supervisionFeeType ?? "",
     supervisionFeeAmount:
       profile?.supervisionFeeAmount != null ? String(profile.supervisionFeeAmount) : "",
+    ...getSupervisorOfferingDefaults(details),
+    ...getSupervisorBoardCertificationDefaults(details),
   };
 }
 
@@ -277,6 +479,8 @@ export function buildSupervisorUpdateFormData(payload: SupervisorUpdatePayload):
     uploadProfilePhoto,
     uploadLicense,
     licenses,
+    offerings,
+    boardCertifications,
     patientPopulation,
     certification,
     acceptingSupervisees,
@@ -305,6 +509,15 @@ export function buildSupervisorUpdateFormData(payload: SupervisorUpdatePayload):
   if (licenses) {
     fd.append("licenses", JSON.stringify(licenses));
   }
+
+  // Full replace — an empty array clears the rows, so key on presence.
+  if (offerings !== undefined) {
+    fd.append("offerings", JSON.stringify(offerings));
+  }
+  if (boardCertifications !== undefined) {
+    fd.append("boardCertifications", JSON.stringify(boardCertifications));
+  }
+
   patientPopulation?.forEach((p) => fd.append("patientPopulation[]", p));
   certification?.forEach((c) => fd.append("certification[]", c));
 
@@ -370,7 +583,61 @@ export function formDataToUpdatePayload(
       form.supervisionFeeAmount !== "" ? parseInt(form.supervisionFeeAmount, 10) : undefined,
     uploadProfilePhoto,
     uploadLicense,
+    // Medical Director only: full replace — unchecked boxes / "No" send empty
+    // arrays so removed offerings/certifications are cleared server-side.
+    ...(isMedicalDirectorSupervisorType(form.supervisorType)
+      ? {
+          offerings: buildSupervisorOfferingsPayload(form),
+          boardCertifications: buildSupervisorBoardCertificationsPayload(form),
+        }
+      : {}),
   };
+}
+
+/** One payload entry per CHECKED offering; blank license entries are dropped. */
+export function buildSupervisorOfferingsPayload(
+  form: SupervisorEditFormData,
+): SupervisorOfferingPayload[] {
+  const checkedKeys: MedicalDirectorOfferingKey[] = [];
+  if (form.offerSupervisingPhysician) checkedKeys.push("supervising");
+  if (form.offerCollaboratingPhysician) checkedKeys.push("collaborating");
+
+  return checkedKeys.map((key) => {
+    const block = form.offerings[key];
+    return {
+      supervisorType: MEDICAL_DIRECTOR_OFFERING_TYPE_NAMES[key],
+      occupation: block.occupation.trim(),
+      ...(block.specialty.trim() ? { specialty: block.specialty.trim() } : {}),
+      degreeType: block.degreeType.trim(),
+      licenses: block.licenses
+        .filter((entry) => !isBlankLicenseEntry(entry))
+        .map((entry) => ({
+          licenseNumber: entry.licenseNumber.trim(),
+          state: entry.state.trim(),
+          licenseExpiration: entry.licenseExpiration,
+        })),
+    };
+  });
+}
+
+/** One payload entry per certification when Board Certified is Yes; "Other" resolves to the free text. */
+export function buildSupervisorBoardCertificationsPayload(
+  form: SupervisorEditFormData,
+): SupervisorBoardCertificationPayload[] {
+  if (!form.boardCertified) return [];
+
+  return form.boardCertifications.map((entry) => ({
+    certifyingBoard:
+      entry.certifyingBoard === OTHER_CERTIFYING_BOARD_VALUE
+        ? entry.certifyingBoardOther.trim()
+        : entry.certifyingBoard,
+    specialty: entry.specialty.trim(),
+    ...(entry.subspecialty.trim() ? { subspecialty: entry.subspecialty.trim() } : {}),
+    ...(entry.certificationNumber.trim()
+      ? { certificationNumber: entry.certificationNumber.trim() }
+      : {}),
+    ...(entry.expirationDate.trim() ? { expirationDate: entry.expirationDate } : {}),
+  }));
 }
 
 export const SUPERVISION_FORMAT_LABELS: Record<string, string> = {
