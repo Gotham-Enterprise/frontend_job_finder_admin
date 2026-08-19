@@ -152,6 +152,7 @@ const navItems: NavItem[] = [
       { name: "All Newsletters", path: "/admin/newsletters" },
       { name: "Create New", path: "/admin/newsletters/create" },
       { name: "Contacts", path: "/admin/newsletters/contacts" },
+      { name: "Job Seeker Newsletter", path: "/admin/newsletters/job-seeker" },
     ],
   },
   {

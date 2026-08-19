@@ -7,7 +7,7 @@ interface JobDetailsPageProps {
 
 export default async function JobDetailsPage({ params }: JobDetailsPageProps) {
   const { id } = await params;
-  
+
   return (
     <>
       <JobsAdminViewDetails id={id} />

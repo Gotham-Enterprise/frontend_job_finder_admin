@@ -121,10 +121,13 @@ export interface AffiliateAnalytics {
   autoRedirectClicks: number;
   manualClicks: number;
   partnerFeedClicks?: number;
+  cpcSpend?: number;
   estimatedSpend?: number;
   partnerFeedConversions?: number;
   partnerFeedConversionRate?: number;
   costPerConversion?: number | null;
+  totalCpaSpend?: number;
+  avgCpaPerConversion?: number | null;
   clicksBySource?: {
     manual: number;
     autoRedirect: number;
@@ -164,10 +167,14 @@ export interface AffiliateAnalytics {
   totalPayout: number;
   conversions: Array<{
     id: string;
+    jobPostId: string;
     jobTitle: string;
+    candidateId: string | null;
+    applicationId: string | null;
     partner: string;
     payout: number | null;
     partnerConversionId: string | null;
+    ipAddress: string | null;
     convertedAt: string;
   }>;
 }
@@ -417,12 +424,14 @@ export const getAffiliateAnalytics = async (params?: {
   startDate?: string;
   endDate?: string;
   source?: "manual" | "auto-redirect" | "partner-feed";
+  partnerType?: "selling" | "buying";
 }): Promise<AffiliateAnalytics> => {
   const queryParams = new URLSearchParams();
   if (params?.affiliateId) queryParams.append("affiliateId", params.affiliateId);
   if (params?.startDate) queryParams.append("startDate", params.startDate);
   if (params?.endDate) queryParams.append("endDate", params.endDate);
   if (params?.source) queryParams.append("source", params.source);
+  if (params?.partnerType) queryParams.append("partnerType", params.partnerType);
   const queryString = queryParams.toString();
   const response = await apiGet<{ success: boolean; data: AffiliateAnalytics }>(
     `/api/admin/affiliates/analytics${queryString ? `?${queryString}` : ""}`
