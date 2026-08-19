@@ -1,6 +1,8 @@
 /**
  * Eligibility rules for which supervision types a supervisee may request,
- * based on their own occupation and credential/license type (title).
+ * based solely on their occupation. The occupation dropdown offers only
+ * allowlisted supervisee occupations, so the occupation name is an exact
+ * signal — no credential-text matching.
  *
  * Keep in sync with:
  *  - frontend_find_supervisor_next `src/lib/utils/supervisee-eligibility.ts`
@@ -23,102 +25,105 @@ const SUPERVISOR_TYPE_NAME_TO_CODE: Record<string, string> = {
   "medical director": SUPERVISOR_TYPE_CODES.MEDICAL_DIRECTOR,
 };
 
-export type SuperviseeEligibilityContext = {
-  /** Display name of the supervisee's occupation (from the occupations list). */
-  occupationName: string;
-  /** Free-text credential or license type, e.g. "AMFT", "LPC-Associate". */
-  credentialTitle: string;
-};
-
 type SupervisorTypeLike = { code?: string; name?: string };
 
-const NURSE_PRACTITIONER_PHRASES = ["nurse practitioner"];
-const NURSE_PRACTITIONER_TOKENS = ["np", "aprn", "fnp", "pmhnp", "agnp", "crnp", "dnp"];
-
-const PHYSICIAN_ASSISTANT_PHRASES = ["physician assistant", "physician associate"];
-const PHYSICIAN_ASSISTANT_TOKENS = ["pa", "pa-c", "apa-c"];
-
-/** Pre-licensed / associate-level mental health credentials (per product eligibility rules). */
-const MENTAL_HEALTH_PHRASES = [
-  "associate",
-  "intern",
-  "limited permit",
-  "trainee",
-  "provisional",
-  "pre-licensed",
-  "psychological assistant",
-  "postdoc",
-];
-const MENTAL_HEALTH_TOKENS = [
-  "amft",
-  "acsw",
-  "lsw",
-  "apc",
-  "apcc",
-  "lmhca",
-  "lmsw",
-  "lgsw",
-  "cswa",
-  "plpc",
-  "lpca",
-  "lpc-a",
-  "lac",
-  "alc",
-  "lcmhca",
-  "lmfta",
-  "lamft",
-  "mfti",
-  "rmfti",
-  "rmhci",
-  "mhc-lp",
-  "lpc-it",
-  "lgpc",
-  "lapc",
-  "lswaic",
-  "lpa",
-];
+const NURSE_PRACTITIONER_OCCUPATION = "Nurse Practitioner";
+const PHYSICIAN_ASSISTANT_OCCUPATION = "Physician Assistant";
 
 function normalize(value: string): string {
   return value.trim().toLowerCase();
 }
 
-/** Splits on anything that is not a letter, digit, or hyphen ("LPC-Associate" → ["lpc-associate"]). */
-function tokenize(value: string): string[] {
-  return normalize(value)
-    .split(/[^a-z0-9-]+/)
-    .filter(Boolean);
+/**
+ * The only occupations a supervisee may sign up under (per product rules):
+ * one entry per allowlisted associate/intern-level mental health credential,
+ * plus Nurse Practitioners and Physician Assistants. Names must match the
+ * backend occupations list — the mental-health entries are supervision-only
+ * rows (`isDropdown=false`) seeded by backend_job_finder
+ * `prisma/seedSuperviseeOccupations.js`.
+ */
+export const SUPERVISEE_ALLOWED_OCCUPATIONS = [
+  // Mental health — supervised by a Licensed Mental Health Counselor Supervisor.
+  // LPCA (KY) and LPC-A (TX) share the "Licensed Professional Counselor Associate" entry.
+  // Counseling
+  "Associate Professional Counselor",
+  "Associate Professional Clinical Counselor",
+  "Licensed Mental Health Counselor Associate",
+  "Licensed Clinical Mental Health Counselor Associate",
+  "Licensed Professional Counselor Associate",
+  "Provisional Licensed Professional Counselor",
+  "Licensed Associate Counselor",
+  "Associate Licensed Counselor",
+  "Licensed Associate Professional Counselor",
+  "Licensed Graduate Professional Counselor",
+  "Licensed Professional Counselor In Training",
+  "Registered Mental Health Counselor Intern",
+  "Mental Health Counselor, Limited Permit",
+  // Marriage & Family Therapy
+  "Associate Marriage and Family Therapist",
+  "Licensed Marriage and Family Therapist Associate",
+  "Licensed Associate Marriage and Family Therapist",
+  "Marriage and Family Therapist Intern",
+  "Registered Marriage and Family Therapist Intern",
+  // Social Work
+  "Associate Clinical Social Worker",
+  "Clinical Social Work Associate",
+  "Licensed Social Worker",
+  "Licensed Master Social Worker",
+  "Licensed Graduate Social Worker",
+  "Licensed Social Worker Associate Independent Clinical",
+  // Psychology
+  "Licensed Psychological Associate",
+  "Psychologist Intern",
+  // Healthcare — supervised by a Supervising/Collaborating Physician
+  PHYSICIAN_ASSISTANT_OCCUPATION,
+  NURSE_PRACTITIONER_OCCUPATION,
+] as const;
+
+const ALLOWED_OCCUPATIONS_NORMALIZED = new Set(
+  SUPERVISEE_ALLOWED_OCCUPATIONS.map((name) => normalize(name)),
+);
+
+/** Allowlisted mental-health occupations (everything except NP and PA). */
+const MENTAL_HEALTH_OCCUPATIONS_NORMALIZED = new Set(
+  SUPERVISEE_ALLOWED_OCCUPATIONS.filter(
+    (name) => name !== PHYSICIAN_ASSISTANT_OCCUPATION && name !== NURSE_PRACTITIONER_OCCUPATION,
+  ).map((name) => normalize(name)),
+);
+
+export function isAllowedSuperviseeOccupation(occupationName: string): boolean {
+  return ALLOWED_OCCUPATIONS_NORMALIZED.has(normalize(occupationName));
 }
 
-function matchesAny(
-  ctx: SuperviseeEligibilityContext,
-  phrases: string[],
-  tokens: string[],
-): boolean {
-  const haystacks = [normalize(ctx.occupationName), normalize(ctx.credentialTitle)];
-  if (haystacks.some((text) => phrases.some((phrase) => text.includes(phrase)))) return true;
-
-  const allTokens = new Set([
-    ...tokenize(ctx.occupationName),
-    ...tokenize(ctx.credentialTitle),
-    // "LPC-Associate" should also match the "associate"/"lpc" halves
-    ...tokenize(ctx.credentialTitle.replace(/-/g, " ")),
-  ]);
-  return tokens.some((token) => allTokens.has(token));
+/**
+ * Restricts a supervisee "Occupation" dropdown to `SUPERVISEE_ALLOWED_OCCUPATIONS`.
+ * `keep` retains extra options regardless of the allowlist — used on edit forms so a
+ * legacy occupation saved before this rule still renders as the selected value.
+ */
+export function filterSuperviseeOccupationChoices<T extends { label: string }>(
+  options: T[],
+  keep?: (option: T) => boolean,
+): T[] {
+  return options.filter((option) => isAllowedSuperviseeOccupation(option.label) || keep?.(option));
 }
 
-export function isNursePractitioner(ctx: SuperviseeEligibilityContext): boolean {
-  return matchesAny(ctx, NURSE_PRACTITIONER_PHRASES, NURSE_PRACTITIONER_TOKENS);
+export function isNursePractitionerOccupation(occupationName: string): boolean {
+  return normalize(occupationName) === normalize(NURSE_PRACTITIONER_OCCUPATION);
 }
 
-export function isPhysicianAssistant(ctx: SuperviseeEligibilityContext): boolean {
-  return matchesAny(ctx, PHYSICIAN_ASSISTANT_PHRASES, PHYSICIAN_ASSISTANT_TOKENS);
+export function isPhysicianAssistantOccupation(occupationName: string): boolean {
+  return normalize(occupationName) === normalize(PHYSICIAN_ASSISTANT_OCCUPATION);
 }
 
-export function isEligibleMentalHealthSupervisee(ctx: SuperviseeEligibilityContext): boolean {
-  // NPs and PAs never qualify for mental-health supervision, even when their title
-  // hits a generic phrase (e.g. "Physician Associate" contains "associate").
-  if (isNursePractitioner(ctx) || isPhysicianAssistant(ctx)) return false;
-  return matchesAny(ctx, MENTAL_HEALTH_PHRASES, MENTAL_HEALTH_TOKENS);
+export function isMentalHealthSuperviseeOccupation(occupationName: string): boolean {
+  return MENTAL_HEALTH_OCCUPATIONS_NORMALIZED.has(normalize(occupationName));
+}
+
+/** Display name of the Medical Director type as seeded in the backend. */
+export const MEDICAL_DIRECTOR_TYPE_NAME = "Medical Director";
+
+export function isMedicalDirectorType(type: SupervisorTypeLike): boolean {
+  return resolveSupervisorTypeCode(type) === SUPERVISOR_TYPE_CODES.MEDICAL_DIRECTOR;
 }
 
 export function resolveSupervisorTypeCode(type: SupervisorTypeLike): string {
@@ -132,15 +137,15 @@ export function resolveSupervisorTypeCode(type: SupervisorTypeLike): string {
  */
 export function isSupervisorTypeEligibleForSupervisee(
   type: SupervisorTypeLike,
-  ctx: SuperviseeEligibilityContext,
+  occupationName: string,
 ): boolean {
   switch (resolveSupervisorTypeCode(type)) {
     case SUPERVISOR_TYPE_CODES.COLLABORATING_PHYSICIAN:
-      return isNursePractitioner(ctx);
+      return isNursePractitionerOccupation(occupationName);
     case SUPERVISOR_TYPE_CODES.SUPERVISING_PHYSICIAN:
-      return isPhysicianAssistant(ctx);
+      return isPhysicianAssistantOccupation(occupationName);
     case SUPERVISOR_TYPE_CODES.MENTAL_HEALTH_COUNSELORS:
-      return isEligibleMentalHealthSupervisee(ctx);
+      return isMentalHealthSuperviseeOccupation(occupationName);
     case SUPERVISOR_TYPE_CODES.MEDICAL_DIRECTOR:
       return true;
     default:
@@ -150,7 +155,7 @@ export function isSupervisorTypeEligibleForSupervisee(
 
 export function getEligibleSupervisorTypes<T extends SupervisorTypeLike>(
   typesData: T[],
-  ctx: SuperviseeEligibilityContext,
+  occupationName: string,
 ): T[] {
-  return typesData.filter((type) => isSupervisorTypeEligibleForSupervisee(type, ctx));
+  return typesData.filter((type) => isSupervisorTypeEligibleForSupervisee(type, occupationName));
 }

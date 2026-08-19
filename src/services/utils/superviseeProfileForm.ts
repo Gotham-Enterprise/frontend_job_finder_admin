@@ -1,5 +1,9 @@
 import type { SuperviseeDetails, SuperviseeUpdatePayload } from "@/services/types/supervisee";
 import { formatUSPhoneForDisplay } from "@/services/utils/phoneNumberUtils";
+import {
+  isMedicalDirectorType,
+  MEDICAL_DIRECTOR_TYPE_NAME,
+} from "@/services/utils/superviseeEligibility";
 
 export const SUPERVISEE_IDEAL_SUPERVISOR_MAX_LENGTH = 500;
 
@@ -35,14 +39,19 @@ export function validateSuperviseeEditForm(form: SuperviseeEditFormData): Superv
   if (!form.title.trim()) {
     errors.title = "Credential or license type is required";
   }
+  if (!form.licensureState.trim()) {
+    errors.licensureState = "State of licensure is required";
+  }
   if (!form.stateOfLicensure.length) {
     errors.stateOfLicensure = "At least one state of licensure is required";
   }
 
-  if (!form.typeOfSupervisorNeeded) {
-    errors.typeOfSupervisorNeeded = "Type of supervision is required";
+  if (!form.typeOfSupervisorNeeded && !form.needsMedicalDirector) {
+    errors.typeOfSupervisorNeeded =
+      'Select a type of supervision or check "Needs a Medical Director"';
   }
-  if (!form.superviseeOccupation) {
+  // The occupation cascades from the type — a Medical Director-only request has none.
+  if (form.typeOfSupervisorNeeded && !form.superviseeOccupation) {
     errors.superviseeOccupation = "Occupation is required";
   }
   if (!form.howSoonLooking) {
@@ -60,14 +69,13 @@ export function validateSuperviseeEditForm(form: SuperviseeEditFormData): Superv
   if (!form.budgetRangeType) {
     errors.budgetRangeType = "Budget type is required";
   }
-  if (form.budgetRangeStart === "") {
+  // Monthly budgets are a single amount (stored in budgetRangeEnd; start is 0)
+  if (form.budgetRangeType !== "MONTHLY" && form.budgetRangeStart === "") {
     errors.budgetRangeStart = "Budget start is required";
   }
   if (form.budgetRangeEnd === "") {
-    errors.budgetRangeEnd = "Budget end is required";
-  }
-  if (!form.stateTheyAreLookingIn.length) {
-    errors.stateTheyAreLookingIn = "Select at least one state you are looking in";
+    errors.budgetRangeEnd =
+      form.budgetRangeType === "MONTHLY" ? "Monthly budget is required" : "Budget end is required";
   }
   if (!form.idealSupervisor.trim()) {
     errors.idealSupervisor = "Description of ideal supervisor is required";
@@ -89,8 +97,11 @@ export interface SuperviseeEditFormData {
   occupation: string;
   specialty: string;
   title: string;
+  licensureState: string;
   stateOfLicensure: string[];
   typeOfSupervisorNeeded: string;
+  /** Medical Director is a checkbox — it can combine with any type or stand alone. */
+  needsMedicalDirector: boolean;
   superviseeOccupation: string;
   superviseeSpecialty: string;
   howSoonLooking: string;
@@ -98,7 +109,6 @@ export interface SuperviseeEditFormData {
   preferredFormat: string;
   availability: string;
   idealSupervisor: string;
-  stateTheyAreLookingIn: string[];
   budgetRangeType: string;
   budgetRangeStart: string;
   budgetRangeEnd: string;
@@ -141,8 +151,17 @@ export function mapSuperviseeDetailsToFormData(
     occupation: occupationId ? String(occupationId) : "",
     specialty: specialtyId ? String(specialtyId) : "",
     title: profile?.title ?? "",
+    licensureState: profile?.licensureState ?? "",
     stateOfLicensure: details.stateOfLicensure ?? [],
-    typeOfSupervisorNeeded: coerceStringList(profile?.typeOfSupervisorNeeded)[0] ?? "",
+    // The stored array holds at most one supervision type plus, optionally, Medical
+    // Director — split back into the dropdown value and the checkbox.
+    typeOfSupervisorNeeded:
+      coerceStringList(profile?.typeOfSupervisorNeeded).find(
+        (name) => !isMedicalDirectorType({ name }),
+      ) ?? "",
+    needsMedicalDirector: coerceStringList(profile?.typeOfSupervisorNeeded).some((name) =>
+      isMedicalDirectorType({ name }),
+    ),
     superviseeOccupation: profile?.superviseeOccupation ?? "",
     superviseeSpecialty: profile?.superviseeSpecialty ?? "",
     howSoonLooking: profile?.howSoonLooking ?? "",
@@ -150,7 +169,6 @@ export function mapSuperviseeDetailsToFormData(
     preferredFormat: profile?.preferredFormat ?? "",
     availability: profile?.availability ?? "",
     idealSupervisor: profile?.idealSupervisor ?? "",
-    stateTheyAreLookingIn: profile?.stateTheyAreLookingIn ?? [],
     budgetRangeType: profile?.budgetRangeType ?? "",
     budgetRangeStart:
       profile?.budgetRangeStart != null ? String(profile.budgetRangeStart) : "",
@@ -166,7 +184,6 @@ export function buildSuperviseeUpdateFormData(
     uploadProfilePhoto,
     stateOfLicensure,
     typeOfSupervisorNeeded,
-    stateTheyAreLookingIn,
     budgetRangeStart,
     budgetRangeEnd,
     ...rest
@@ -187,7 +204,6 @@ export function buildSuperviseeUpdateFormData(
 
   stateOfLicensure?.forEach((s) => fd.append("stateOfLicensure[]", s));
   typeOfSupervisorNeeded?.forEach((t) => fd.append("typeOfSupervisorNeeded[]", t));
-  stateTheyAreLookingIn?.forEach((s) => fd.append("stateTheyAreLookingIn[]", s));
 
   if (uploadProfilePhoto) {
     fd.append("uploadProfilePhoto", uploadProfilePhoto);
@@ -211,10 +227,19 @@ export function formDataToUpdatePayload(
     occupation: form.occupation || undefined,
     specialty: form.specialty || undefined,
     title: form.title.trim() || undefined,
+    licensureState: form.licensureState || undefined,
     stateOfLicensure: form.stateOfLicensure.length ? form.stateOfLicensure : undefined,
-    typeOfSupervisorNeeded: form.typeOfSupervisorNeeded
-      ? [form.typeOfSupervisorNeeded]
-      : undefined,
+    typeOfSupervisorNeeded: (() => {
+      const types = [
+        ...new Set(
+          [
+            form.typeOfSupervisorNeeded,
+            form.needsMedicalDirector ? MEDICAL_DIRECTOR_TYPE_NAME : "",
+          ].filter(Boolean),
+        ),
+      ];
+      return types.length > 0 ? types : undefined;
+    })(),
     superviseeOccupation: form.superviseeOccupation.trim() || undefined,
     superviseeSpecialty: form.superviseeSpecialty.trim() || undefined,
     howSoonLooking: form.howSoonLooking || undefined,
@@ -223,11 +248,14 @@ export function formDataToUpdatePayload(
     preferredFormat: form.preferredFormat || undefined,
     availability: form.availability || undefined,
     idealSupervisor: form.idealSupervisor.trim() || undefined,
-    stateTheyAreLookingIn: form.stateTheyAreLookingIn.length
-      ? form.stateTheyAreLookingIn
-      : undefined,
     budgetRangeType: form.budgetRangeType || undefined,
-    budgetRangeStart: form.budgetRangeStart !== "" ? parseInt(form.budgetRangeStart, 10) : undefined,
+    // Monthly budgets are a single amount stored in budgetRangeEnd; start is 0
+    budgetRangeStart:
+      form.budgetRangeType === "MONTHLY"
+        ? 0
+        : form.budgetRangeStart !== ""
+          ? parseInt(form.budgetRangeStart, 10)
+          : undefined,
     budgetRangeEnd: form.budgetRangeEnd !== "" ? parseInt(form.budgetRangeEnd, 10) : undefined,
     uploadProfilePhoto,
   };
@@ -249,6 +277,6 @@ export const FORMAT_LABELS: Record<string, string> = {
 };
 
 export const BUDGET_TYPE_LABELS: Record<string, string> = {
-  PER_SESSION: "Per Session",
+  HOURLY: "Hourly",
   MONTHLY: "Monthly",
 };

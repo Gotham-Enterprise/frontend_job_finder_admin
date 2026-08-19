@@ -111,11 +111,6 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
       ? s.stateOfLicensure.map(formatStateOfLicensureForDisplay).join(", ")
       : null;
 
-  const statesLookingDisplay =
-    profile?.stateTheyAreLookingIn && profile.stateTheyAreLookingIn.length > 0
-      ? profile.stateTheyAreLookingIn.map(formatStateOfLicensureForDisplay).join(", ")
-      : null;
-
   return (
     <>
       <div className="px-4 pt-4 pb-2">
@@ -197,7 +192,16 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
           <SectionCard title="Occupation & Licensure">
             <FieldRow label="Occupation" value={s.occupation?.name} />
             <FieldRow label="Specialty" value={s.specialty?.name} />
-            <FieldRow label="Credential / License Type" value={profile?.title} />
+            <FieldRow
+              label="Credential / License Type"
+              value={
+                profile?.title
+                  ? profile.licensureState
+                    ? `${profile.title} (${profile.licensureState})`
+                    : profile.title
+                  : null
+              }
+            />
             <FieldRow label="States of Licensure" value={statesOfLicensureDisplay} />
           </SectionCard>
 
@@ -228,16 +232,18 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
               }
             />
             <FieldRow label="Availability" value={profile?.availability} />
-            <FieldRow label="States Looking In" value={statesLookingDisplay} />
             <FieldRow
               label="Budget"
               value={
                 profile?.budgetRangeType
-                  ? `${BUDGET_TYPE_LABELS[profile.budgetRangeType] ?? profile.budgetRangeType}${
-                      profile.budgetRangeStart != null || profile.budgetRangeEnd != null
-                        ? ` — $${profile.budgetRangeStart ?? 0}–$${profile.budgetRangeEnd ?? 0}`
-                        : ""
-                    }`
+                  ? profile.budgetRangeType === "MONTHLY"
+                    ? // Monthly budgets are a single amount (stored in budgetRangeEnd)
+                      `Monthly — $${profile.budgetRangeEnd ?? 0}/month`
+                    : `${BUDGET_TYPE_LABELS[profile.budgetRangeType] ?? profile.budgetRangeType}${
+                        profile.budgetRangeStart != null || profile.budgetRangeEnd != null
+                          ? ` — $${profile.budgetRangeStart ?? 0}–$${profile.budgetRangeEnd ?? 0}`
+                          : ""
+                      }`
                   : null
               }
             />
