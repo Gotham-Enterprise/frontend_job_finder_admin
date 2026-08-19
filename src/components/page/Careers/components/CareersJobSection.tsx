@@ -97,17 +97,18 @@ const CareersJobSection: React.FC<CareersJobSectionProps> = ({
                         // Fall back to salary range
                         const start = job.salaryRangeStart;
                         const end = job.salaryRangeEnd;
+                        const unit = job.salaryType === 'hourly' ? ' /hour' : job.salaryType === 'yearly' ? ' /year' : '';
                         if (start && end) {
                           const fmt = (v: number) => v.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-                          return `$${fmt(start)} - $${fmt(end)}`;
+                          return `$${fmt(start)} - $${fmt(end)}${unit}`;
                         }
                         if (start && !end) {
                           const fmt = (v: number) => v.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-                          return `$${fmt(start)}`;
+                          return `$${fmt(start)}${unit}`;
                         }
                         if (!start && end) {
                           const fmt = (v: number) => v.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-                          return `$${fmt(end)}`;
+                          return `$${fmt(end)}${unit}`;
                         }
                         return 'Not specified';
                       })()}

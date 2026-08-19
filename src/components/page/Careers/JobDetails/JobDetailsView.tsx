@@ -315,7 +315,10 @@ const JobDetailsView: React.FC<JobDetailsViewProps> = ({ jobId }) => {
           </div>
           <div className="flex items-center gap-2">
             <DollarSign className="w-4 h-4 text-gray-500" />
-            <span>{formatCurrency(job.salaryRange)}</span>
+            <span>
+              {formatCurrency(job.salaryRange)}
+              {job.salaryRange && job.salaryType ? (job.salaryType === 'hourly' ? ' /hour' : ' /year') : ''}
+            </span>
           </div>
           {job.department && (
             <div className="flex items-center gap-2">

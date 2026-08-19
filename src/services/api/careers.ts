@@ -17,8 +17,9 @@ export interface Career {
   jobType: string;
   workPlaceType: string;
   salaryRange?: string;
-  salaryRangeStart?: number;
-  salaryRangeEnd?: number;
+  salaryRangeStart?: number | null;
+  salaryRangeEnd?: number | null;
+  salaryType?: 'yearly' | 'hourly' | null;
   jobDescription?: string; // preferred
   description?: string; // legacy
   requirements?: string[];
@@ -84,8 +85,9 @@ export interface CreateCareerPayload {
   departmentId?: string;
   unitId?: string;
   timezone: string;
-  salaryRangeStart?: number;
-  salaryRangeEnd: number;
+  salaryRangeStart?: number | null;
+  salaryRangeEnd?: number | null;
+  salaryType?: 'yearly' | 'hourly' | null;
   jobDescription: string;
 }
 
