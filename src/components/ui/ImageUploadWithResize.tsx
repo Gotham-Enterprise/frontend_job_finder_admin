@@ -1,9 +1,9 @@
 "use client";
-import React, { useState, useRef, useCallback } from 'react';
-import { Modal } from '@/components/ui/modal';
-import Button from '@/components/ui/button/Button';
-import { ImageResizer, RESIZE_PRESETS, ProcessedImage, ResizeOptions } from '@/services/utils/imageResizer';
-import { ImageIcon, DownloadIcon } from '@/icons';
+import React, { useState, useRef, useCallback } from "react";
+import { Modal } from "@/components/ui/modal";
+import Button from "@/components/ui/button/Button";
+import { ImageResizer, RESIZE_PRESETS, ProcessedImage, ResizeOptions } from "@/services/utils/imageResizer";
+import { ImageIcon, DownloadIcon } from "@/icons";
 
 interface ImageUploadWithResizeProps {
   isOpen: boolean;
@@ -25,18 +25,18 @@ const ImageUploadWithResize: React.FC<ImageUploadWithResizeProps> = ({
   onClose,
   onImageSelect,
   title = "Upload and Resize Image",
-  allowMultipleResizes = true
+  allowMultipleResizes = true,
 }) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewImage, setPreviewImage] = useState<PreviewImage | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [selectedPreset, setSelectedPreset] = useState<keyof typeof RESIZE_PRESETS>('large');
+  const [selectedPreset, setSelectedPreset] = useState<keyof typeof RESIZE_PRESETS>("large");
   const [customResize, setCustomResize] = useState<ResizeOptions>({
     width: 800,
     height: 600,
     quality: 0.9,
-    format: 'jpeg',
-    maintainAspectRatio: true
+    format: "jpeg",
+    maintainAspectRatio: true,
   });
   const [useCustomResize, setUseCustomResize] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -49,7 +49,7 @@ const ImageUploadWithResize: React.FC<ImageUploadWithResizeProps> = ({
       // Validate image
       const validation = ImageResizer.validateImage(file);
       if (!validation.isValid) {
-        setError(validation.error || 'Invalid image file');
+        setError(validation.error || "Invalid image file");
         setIsProcessing(false);
         return;
       }
@@ -57,13 +57,13 @@ const ImageUploadWithResize: React.FC<ImageUploadWithResizeProps> = ({
       // Get original image data
       const originalDimensions = await ImageResizer.getImageDimensions(file);
       const reader = new FileReader();
-      
+
       reader.onload = (e) => {
         const original: ProcessedImage = {
           file,
           dataUrl: e.target?.result as string,
           dimensions: originalDimensions,
-          size: file.size
+          size: file.size,
         };
 
         setSelectedFile(file);
@@ -73,38 +73,44 @@ const ImageUploadWithResize: React.FC<ImageUploadWithResizeProps> = ({
 
       reader.readAsDataURL(file);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to process image');
+      setError(err instanceof Error ? err.message : "Failed to process image");
       setIsProcessing(false);
     }
   }, []);
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    const file = e.dataTransfer.files[0];
-    if (file && file.type.startsWith('image/')) {
-      handleFileSelect(file);
-    }
-  }, [handleFileSelect]);
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      const file = e.dataTransfer.files[0];
+      if (file && file.type.startsWith("image/")) {
+        handleFileSelect(file);
+      }
+    },
+    [handleFileSelect]
+  );
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
   }, []);
 
-  const processWithPreset = useCallback(async (preset: keyof typeof RESIZE_PRESETS) => {
-    if (!selectedFile) return;
+  const processWithPreset = useCallback(
+    async (preset: keyof typeof RESIZE_PRESETS) => {
+      if (!selectedFile) return;
 
-    setIsProcessing(true);
-    setError(null);
+      setIsProcessing(true);
+      setError(null);
 
-    try {
-      const resized = await ImageResizer.resizeImage(selectedFile, RESIZE_PRESETS[preset]);
-      setPreviewImage(prev => prev ? { ...prev, resized, selectedPreset: preset } : null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to resize image');
-    }
+      try {
+        const resized = await ImageResizer.resizeImage(selectedFile, RESIZE_PRESETS[preset]);
+        setPreviewImage((prev) => (prev ? { ...prev, resized, selectedPreset: preset } : null));
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to resize image");
+      }
 
-    setIsProcessing(false);
-  }, [selectedFile]);
+      setIsProcessing(false);
+    },
+    [selectedFile]
+  );
 
   const processWithCustomSettings = useCallback(async () => {
     if (!selectedFile) return;
@@ -114,9 +120,9 @@ const ImageUploadWithResize: React.FC<ImageUploadWithResizeProps> = ({
 
     try {
       const resized = await ImageResizer.resizeImage(selectedFile, customResize);
-      setPreviewImage(prev => prev ? { ...prev, resized, customResize } : null);
+      setPreviewImage((prev) => (prev ? { ...prev, resized, customResize } : null));
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to resize image');
+      setError(err instanceof Error ? err.message : "Failed to resize image");
     }
 
     setIsProcessing(false);
@@ -127,7 +133,7 @@ const ImageUploadWithResize: React.FC<ImageUploadWithResizeProps> = ({
 
     const imageToInsert = previewImage.resized || previewImage.original;
     onImageSelect(imageToInsert);
-    
+
     // Reset state
     setSelectedFile(null);
     setPreviewImage(null);
@@ -136,11 +142,11 @@ const ImageUploadWithResize: React.FC<ImageUploadWithResizeProps> = ({
   }, [previewImage, onImageSelect, onClose]);
 
   const formatFileSize = (bytes: number): string => {
-    if (bytes === 0) return '0 Bytes';
+    if (bytes === 0) return "0 Bytes";
     const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const sizes = ["Bytes", "KB", "MB", "GB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   };
 
   const resetModal = useCallback(() => {
@@ -148,7 +154,7 @@ const ImageUploadWithResize: React.FC<ImageUploadWithResizeProps> = ({
     setPreviewImage(null);
     setError(null);
     setUseCustomResize(false);
-    setSelectedPreset('large');
+    setSelectedPreset("large");
   }, []);
 
   const handleClose = useCallback(() => {
@@ -159,9 +165,7 @@ const ImageUploadWithResize: React.FC<ImageUploadWithResizeProps> = ({
   return (
     <Modal isOpen={isOpen} onClose={handleClose} className="max-w-4xl">
       <div className="p-6">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
-          {title}
-        </h3>
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">{title}</h3>
 
         {error && (
           <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
@@ -174,21 +178,28 @@ const ImageUploadWithResize: React.FC<ImageUploadWithResizeProps> = ({
           <div
             onDrop={handleDrop}
             onDragOver={handleDragOver}
-            className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8 text-center transition-colors"
+            className="relative border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8 text-center transition-colors hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20"
           >
-            <div className="space-y-4">
+            <input
+              type="file"
+              id="image-file-upload"
+              className="hidden"
+              accept="image/jpeg, image/png, image/webp, image/gif"
+              onChange={(e) => {
+                if (e.target.files && e.target.files[0]) {
+                  handleFileSelect(e.target.files[0]);
+                }
+              }}
+            />
+            <label htmlFor="image-file-upload" className="cursor-pointer space-y-4 block w-full h-full">
               <div className="mx-auto h-12 w-12 text-gray-400">
                 <ImageIcon />
               </div>
               <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Drop files here
-                </p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Click or drag files here to upload</p>
               </div>
-              <p className="text-xs text-gray-400">
-                Supports JPEG, PNG, WebP, GIF up to 10MB
-              </p>
-            </div>
+              <p className="text-xs text-gray-400">Supports JPEG, PNG, WebP, GIF up to 10MB</p>
+            </label>
           </div>
         ) : (
           // Image Processing Area
@@ -197,16 +208,10 @@ const ImageUploadWithResize: React.FC<ImageUploadWithResizeProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Original Image */}
               <div>
-                <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Original Image
-                </h4>
+                <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Original Image</h4>
                 <div className="border border-gray-200 dark:border-gray-600 rounded-lg overflow-hidden">
                   {previewImage && (
-                    <img
-                      src={previewImage.original.dataUrl}
-                      alt="Original"
-                      className="w-full h-48 object-cover"
-                    />
+                    <img src={previewImage.original.dataUrl} alt="Original" className="w-full h-48 object-cover" />
                   )}
                 </div>
                 {previewImage && (
@@ -222,15 +227,9 @@ const ImageUploadWithResize: React.FC<ImageUploadWithResizeProps> = ({
               {/* Resized Image */}
               {previewImage?.resized && (
                 <div>
-                  <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Resized Image
-                  </h4>
+                  <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Resized Image</h4>
                   <div className="border border-gray-200 dark:border-gray-600 rounded-lg overflow-hidden">
-                    <img
-                      src={previewImage.resized.dataUrl}
-                      alt="Resized"
-                      className="w-full h-48 object-cover"
-                    />
+                    <img src={previewImage.resized.dataUrl} alt="Resized" className="w-full h-48 object-cover" />
                   </div>
                   <div className="mt-2 text-xs text-gray-500 space-y-1">
                     <div>Size: {formatFileSize(previewImage.resized.size)}</div>
@@ -238,7 +237,11 @@ const ImageUploadWithResize: React.FC<ImageUploadWithResizeProps> = ({
                       Dimensions: {previewImage.resized.dimensions.width} × {previewImage.resized.dimensions.height}
                     </div>
                     <div className="text-green-600">
-                      Reduced by: {Math.round(((previewImage.original.size - previewImage.resized.size) / previewImage.original.size) * 100)}%
+                      Reduced by:{" "}
+                      {Math.round(
+                        ((previewImage.original.size - previewImage.resized.size) / previewImage.original.size) * 100
+                      )}
+                      %
                     </div>
                   </div>
                 </div>
@@ -285,8 +288,8 @@ const ImageUploadWithResize: React.FC<ImageUploadWithResizeProps> = ({
                         disabled={isProcessing}
                         className={`p-2 text-xs rounded border transition-colors ${
                           selectedPreset === key
-                            ? 'bg-blue-500 text-white border-blue-500'
-                            : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 hover:border-blue-400'
+                            ? "bg-blue-500 text-white border-blue-500"
+                            : "bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 hover:border-blue-400"
                         }`}
                       >
                         <div className="font-medium capitalize">{key}</div>
@@ -301,51 +304,49 @@ const ImageUploadWithResize: React.FC<ImageUploadWithResizeProps> = ({
                 // Custom Settings
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Width
-                    </label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Width</label>
                     <input
                       type="number"
-                      value={customResize.width || ''}
-                      onChange={(e) => setCustomResize(prev => ({ ...prev, width: parseInt(e.target.value) || undefined }))}
+                      value={customResize.width || ""}
+                      onChange={(e) =>
+                        setCustomResize((prev) => ({ ...prev, width: parseInt(e.target.value) || undefined }))
+                      }
                       className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded"
                       placeholder="800"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Height
-                    </label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Height</label>
                     <input
                       type="number"
-                      value={customResize.height || ''}
-                      onChange={(e) => setCustomResize(prev => ({ ...prev, height: parseInt(e.target.value) || undefined }))}
+                      value={customResize.height || ""}
+                      onChange={(e) =>
+                        setCustomResize((prev) => ({ ...prev, height: parseInt(e.target.value) || undefined }))
+                      }
                       className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded"
                       placeholder="600"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Quality
-                    </label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Quality</label>
                     <input
                       type="range"
                       min="0.1"
                       max="1"
                       step="0.1"
                       value={customResize.quality || 0.9}
-                      onChange={(e) => setCustomResize(prev => ({ ...prev, quality: parseFloat(e.target.value) }))}
+                      onChange={(e) => setCustomResize((prev) => ({ ...prev, quality: parseFloat(e.target.value) }))}
                       className="w-full"
                     />
                     <div className="text-xs text-gray-500">{Math.round((customResize.quality || 0.9) * 100)}%</div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Format
-                    </label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Format</label>
                     <select
-                      value={customResize.format || 'jpeg'}
-                      onChange={(e) => setCustomResize(prev => ({ ...prev, format: e.target.value as 'jpeg' | 'png' | 'webp' }))}
+                      value={customResize.format || "jpeg"}
+                      onChange={(e) =>
+                        setCustomResize((prev) => ({ ...prev, format: e.target.value as "jpeg" | "png" | "webp" }))
+                      }
                       className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded"
                     >
                       <option value="jpeg">JPEG</option>
@@ -362,16 +363,12 @@ const ImageUploadWithResize: React.FC<ImageUploadWithResizeProps> = ({
                     <input
                       type="checkbox"
                       checked={customResize.maintainAspectRatio !== false}
-                      onChange={(e) => setCustomResize(prev => ({ ...prev, maintainAspectRatio: e.target.checked }))}
+                      onChange={(e) => setCustomResize((prev) => ({ ...prev, maintainAspectRatio: e.target.checked }))}
                       className="text-blue-600"
                     />
                     <span className="text-sm">Maintain aspect ratio</span>
                   </label>
-                  <Button
-                    onClick={processWithCustomSettings}
-                    disabled={isProcessing}
-                    size="sm"
-                  >
+                  <Button onClick={processWithCustomSettings} disabled={isProcessing} size="sm">
                     Apply Settings
                   </Button>
                 </div>
@@ -388,11 +385,7 @@ const ImageUploadWithResize: React.FC<ImageUploadWithResizeProps> = ({
                 Drop Different Image
               </Button>
               <div className="flex gap-3">
-                <Button
-                  variant="ghost"
-                  onClick={handleClose}
-                  className="dark:text-white"
-                >
+                <Button variant="ghost" onClick={handleClose} className="dark:text-white">
                   Cancel
                 </Button>
                 <Button
@@ -400,7 +393,7 @@ const ImageUploadWithResize: React.FC<ImageUploadWithResizeProps> = ({
                   disabled={isProcessing}
                   startIcon={isProcessing ? undefined : <DownloadIcon />}
                 >
-                  {isProcessing ? 'Processing...' : 'Insert Image'}
+                  {isProcessing ? "Processing..." : "Insert Image"}
                 </Button>
               </div>
             </div>

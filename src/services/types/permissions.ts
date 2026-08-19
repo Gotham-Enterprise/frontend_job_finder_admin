@@ -13,6 +13,7 @@ export interface UserPermissions {
   applications: Permission;
   coupons: Permission;
   blog: Permission;
+  medicalLibrary: Permission;
   careers: Permission;
   // forum: Permission;
   unlockRequest: Permission;
@@ -41,6 +42,7 @@ export const PERMISSION_MODULES: PermissionModule[] = [
   { key: "coupons", label: "Coupons" },
   // { key: "forum", label: "Forum" },
   { key: "blog", label: "Blog" },
+  { key: "medicalLibrary", label: "Medical Library" },
   { key: "careers", label: "Careers" },
   { key: "unlockRequest", label: "Unlock Requests" },
 ];
@@ -53,6 +55,7 @@ export const DEFAULT_PERMISSIONS: UserPermissions = {
   applications: { view: true, create: false, update: false, delete: false },
   coupons: { view: true, create: false, update: false, delete: false },
   blog: { view: true, create: false, update: false, delete: false },
+  medicalLibrary: { view: true, create: true, update: true, delete: true },
   careers: { view: true, create: false, update: false, delete: false },
   // forum: { view: true, create: false, update: false, delete: false },
   unlockRequest: { view: true, create: false, update: false, delete: false },
