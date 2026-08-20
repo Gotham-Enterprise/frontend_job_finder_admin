@@ -28,14 +28,14 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
     isFilterOpen,
     setIsFilterOpen,
     isPending,
-    
+
     data,
     isLoading,
     error,
     refetch,
     isViewingResume,
     isExporting,
-    
+
     tableColumns,
     statusOptions,
     occupationOptions,
@@ -115,11 +115,11 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
           onFilterChange={filterChange}
         />
       </div>
-      
+
       {/* Export Loading Overlay */}
-      <FullScreenSpinner 
-        isVisible={isExporting} 
-        message="Exporting Job Seekers" 
+      <FullScreenSpinner
+        isVisible={isExporting}
+        message="Exporting Job Seekers"
       />
     </>
   );

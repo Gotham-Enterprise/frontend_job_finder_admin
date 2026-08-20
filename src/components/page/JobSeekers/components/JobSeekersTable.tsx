@@ -4,6 +4,7 @@ import { formatDateTimeEST, formatDateTimeLocal } from "@/services/utils/dateUti
 import { Table, TableBody, TableCell, TableRow } from "../../../ui/table";
 import StatusBadge from "../../../ui/badge/StatusBadge";
 import EmailVerifiedBadge from "../../../ui/badge/EmailVerifiedBadge";
+import Badge from "../../../ui/badge/Badge";
 import Button from "../../../ui/button/Button";
 import TableHeading from "../../../tables/tableHeader";
 import { TimeIcon, FileIcon, DownloadIcon, PaperPlaneIcon, IdCardIcon, CheckCircleIcon } from "@/icons";
@@ -1089,6 +1090,23 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
                     ) : (
                       <span className="text-gray-400 dark:text-gray-500 italic">Not specified</span>
                     )}
+                  </TableCell>
+                  <TableCell className="py-4 px-6 whitespace-nowrap">
+                    {(() => {
+                      const source = jobSeeker.source || "Direct";
+                      if (source === "Direct") {
+                        return (
+                          <span className="text-sm text-gray-400 dark:text-gray-500">
+                            Direct
+                          </span>
+                        );
+                      }
+                      return (
+                        <Badge variant="light" color="info" size="sm">
+                          {source}
+                        </Badge>
+                      );
+                    })()}
                   </TableCell>
                   <TableCell className="py-4 px-6 whitespace-nowrap">
                     {jobSeeker.lastActivity ? (
