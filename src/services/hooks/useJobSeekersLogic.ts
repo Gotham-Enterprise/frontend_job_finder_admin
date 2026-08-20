@@ -257,6 +257,7 @@ export const useJobSeekersLogic = () => {
       { key: "certifications", label: "Certifications" },
       { key: "resume", label: "Resume" },
       { key: "dateJoined", label: "Registration date" },
+      { key: "source", label: "Source" },
       { key: "lastActivity", label: "Last Activity" },
       { key: "status", label: "Status" },
       { key: "emailVerified", label: "Email Verified" },
