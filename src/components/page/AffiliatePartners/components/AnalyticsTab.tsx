@@ -109,26 +109,26 @@ export default function AnalyticsTab() {
     },
     yaxis: isBuyingView
       ? [
-          {
-            title: { text: 'Clicks', style: { color: '#9ca3af' } },
-            labels: { style: { colors: '#9ca3af' } },
-          },
-          {
-            opposite: true,
-            title: { text: 'Spend ($)', style: { color: '#9ca3af' } },
-            labels: {
-              style: { colors: '#9ca3af' },
-              formatter: (val: number) => `$${val.toFixed(2)}`,
-            },
-          },
-        ]
-      : {
+        {
+          title: { text: 'Clicks', style: { color: '#9ca3af' } },
+          labels: { style: { colors: '#9ca3af' } },
+        },
+        {
+          opposite: true,
+          title: { text: 'Spend ($)', style: { color: '#9ca3af' } },
           labels: {
-            style: {
-              colors: '#9ca3af',
-            },
+            style: { colors: '#9ca3af' },
+            formatter: (val: number) => `$${val.toFixed(2)}`,
           },
         },
+      ]
+      : {
+        labels: {
+          style: {
+            colors: '#9ca3af',
+          },
+        },
+      },
     grid: {
       borderColor: '#374151',
       strokeDashArray: 3,
@@ -139,7 +139,7 @@ export default function AnalyticsTab() {
         format: 'dd MMM yyyy',
       },
       y: {
-        formatter: function(value) {
+        formatter: function (value) {
           return value !== undefined && value !== null ? value.toString() : '0';
         }
       },
@@ -150,18 +150,18 @@ export default function AnalyticsTab() {
       marker: {
         show: true,
       },
-      custom: function({ series, seriesIndex, dataPointIndex, w }) {
+      custom: function ({ series, seriesIndex, dataPointIndex, w }) {
         const date = w.globals.categoryLabels[dataPointIndex];
         const seriesNames = ['Total Clicks', 'Unique IP Addresses', 'Logged In Users', 'Guest Users'];
         const colors = ['#3b82f6', '#8b5cf6', '#10b981', '#f97316'];
-        
+
         let tooltipHtml = `
           <div style="background: #1f2937; border: 1px solid #374151; border-radius: 8px; padding: 12px; min-width: 200px;">
             <div style="color: #f3f4f6; font-weight: 600; margin-bottom: 8px; font-size: 13px;">
               ${date}
             </div>
         `;
-        
+
         series.forEach((s: number[], idx: number) => {
           const value = s[dataPointIndex];
           tooltipHtml += `
@@ -174,7 +174,7 @@ export default function AnalyticsTab() {
             </div>
           `;
         });
-        
+
         tooltipHtml += `</div>`;
         return tooltipHtml;
       }
@@ -198,35 +198,35 @@ export default function AnalyticsTab() {
 
   const chartSeries = isBuyingView
     ? [
-        {
-          name: 'Partner Feed Clicks',
-          type: 'area' as const,
-          data: analytics?.clicksOverTime?.map((d) => d.clicks) || [],
-        },
-        {
-          name: 'Estimated Spend',
-          type: 'line' as const,
-          data: analytics?.clicksOverTime?.map((d) => d.estimatedSpend || 0) || [],
-        },
-      ]
+      {
+        name: 'Partner Feed Clicks',
+        type: 'area' as const,
+        data: analytics?.clicksOverTime?.map((d) => d.clicks) || [],
+      },
+      {
+        name: 'Estimated Spend',
+        type: 'line' as const,
+        data: analytics?.clicksOverTime?.map((d) => d.estimatedSpend || 0) || [],
+      },
+    ]
     : [
-        {
-          name: 'Total Clicks',
-          data: analytics?.clicksOverTime?.map((d) => d.clicks) || [],
-        },
-        {
-          name: 'Unique IP Addresses',
-          data: analytics?.clicksOverTime?.map((d) => d.uniqueIpAddresses) || [],
-        },
-        {
-          name: 'Logged In Users',
-          data: analytics?.clicksOverTime?.map((d) => d.authenticatedClicks) || [],
-        },
-        {
-          name: 'Guest Users',
-          data: analytics?.clicksOverTime?.map((d) => d.guestClicks) || [],
-        },
-      ]
+      {
+        name: 'Total Clicks',
+        data: analytics?.clicksOverTime?.map((d) => d.clicks) || [],
+      },
+      {
+        name: 'Unique IP Addresses',
+        data: analytics?.clicksOverTime?.map((d) => d.uniqueIpAddresses) || [],
+      },
+      {
+        name: 'Logged In Users',
+        data: analytics?.clicksOverTime?.map((d) => d.authenticatedClicks) || [],
+      },
+      {
+        name: 'Guest Users',
+        data: analytics?.clicksOverTime?.map((d) => d.guestClicks) || [],
+      },
+    ]
 
   return (
     <div className="space-y-6">
@@ -235,21 +235,19 @@ export default function AnalyticsTab() {
         <div className="flex gap-2">
           <button
             onClick={() => handleViewModeChange('selling')}
-            className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-              viewMode === 'selling'
+            className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${viewMode === 'selling'
                 ? 'bg-primary text-white'
                 : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
-            }`}
+              }`}
           >
             Traffic Selling
           </button>
           <button
             onClick={() => handleViewModeChange('buying')}
-            className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-              viewMode === 'buying'
+            className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${viewMode === 'buying'
                 ? 'bg-primary text-white'
                 : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
-            }`}
+              }`}
           >
             Traffic Buying
           </button>
@@ -334,22 +332,22 @@ export default function AnalyticsTab() {
 
       {/* Job Count Cards */}
       {!isBuyingView && (
-      <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
-        <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-green-700 dark:text-green-400 font-medium">Active Jobs</p>
-              <p className="text-3xl font-bold text-green-900 dark:text-green-300 mt-2">
-                {analytics?.publishedAffiliateJobs?.toLocaleString() ?? 0}
-              </p>
-              <p className="text-xs text-green-600 dark:text-green-500 mt-1">
-                {selectedPartnerId ? 'Live jobs from this partner' : 'Live jobs across all partners'}
-              </p>
+        <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
+          <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-green-700 dark:text-green-400 font-medium">Active Jobs</p>
+                <p className="text-3xl font-bold text-green-900 dark:text-green-300 mt-2">
+                  {analytics?.publishedAffiliateJobs?.toLocaleString() ?? 0}
+                </p>
+                <p className="text-xs text-green-600 dark:text-green-500 mt-1">
+                  {selectedPartnerId ? 'Live jobs from this partner' : 'Live jobs across all partners'}
+                </p>
+              </div>
+              <Briefcase className="w-12 h-12 text-green-600 dark:text-green-500" />
             </div>
-            <Briefcase className="w-12 h-12 text-green-600 dark:text-green-500" />
           </div>
         </div>
-      </div>
       )}
 
       {isBuyingView ? (
@@ -372,6 +370,9 @@ export default function AnalyticsTab() {
                   <p className="text-sm text-amber-700 dark:text-amber-400 font-medium">Estimated Spend</p>
                   <p className="text-3xl font-bold text-amber-900 dark:text-amber-300 mt-2">
                     ${(analytics?.estimatedSpend ?? 0).toFixed(2)}
+                  </p>
+                  <p className="text-xs text-amber-600 dark:text-amber-500 mt-1">
+                    CPC ${(analytics?.cpcSpend ?? 0).toFixed(2)} + CPA ${(analytics?.totalCpaSpend ?? 0).toFixed(2)}
                   </p>
                 </div>
                 <DollarSign className="w-12 h-12 text-amber-600 dark:text-amber-500" />
@@ -430,139 +431,139 @@ export default function AnalyticsTab() {
           )}
         </>
       ) : (
-      <>
-      {/* Metrics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-blue-700 dark:text-blue-400 font-medium">Total Clicks</p>
-              <p className="text-3xl font-bold text-blue-900 dark:text-blue-300 mt-2">
-                {analytics?.totalClicks?.toLocaleString() || 0}
-              </p>
+        <>
+          {/* Metrics Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-blue-700 dark:text-blue-400 font-medium">Total Clicks</p>
+                  <p className="text-3xl font-bold text-blue-900 dark:text-blue-300 mt-2">
+                    {analytics?.totalClicks?.toLocaleString() || 0}
+                  </p>
+                </div>
+                <MousePointerClick className="w-12 h-12 text-blue-600 dark:text-blue-500" />
+              </div>
             </div>
-            <MousePointerClick className="w-12 h-12 text-blue-600 dark:text-blue-500" />
-          </div>
-        </div>
 
-        <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-green-700 dark:text-green-400 font-medium">
-                Logged In User Clicks
-              </p>
-              <p className="text-3xl font-bold text-green-900 dark:text-green-300 mt-2">
-                {analytics?.authenticatedClicks?.toLocaleString() || 0}
-              </p>
+            <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-green-700 dark:text-green-400 font-medium">
+                    Logged In User Clicks
+                  </p>
+                  <p className="text-3xl font-bold text-green-900 dark:text-green-300 mt-2">
+                    {analytics?.authenticatedClicks?.toLocaleString() || 0}
+                  </p>
+                </div>
+                <MousePointerClick className="w-12 h-12 text-green-600 dark:text-green-500" />
+              </div>
             </div>
-            <MousePointerClick className="w-12 h-12 text-green-600 dark:text-green-500" />
-          </div>
-        </div>
 
-        <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-orange-700 dark:text-orange-400 font-medium">
-                Guest User Clicks
-              </p>
-              <p className="text-3xl font-bold text-orange-900 dark:text-orange-300 mt-2">
-                {analytics?.guestClicks?.toLocaleString() || 0}
-              </p>
+            <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-orange-700 dark:text-orange-400 font-medium">
+                    Guest User Clicks
+                  </p>
+                  <p className="text-3xl font-bold text-orange-900 dark:text-orange-300 mt-2">
+                    {analytics?.guestClicks?.toLocaleString() || 0}
+                  </p>
+                </div>
+                <MousePointerClick className="w-12 h-12 text-orange-600 dark:text-orange-500" />
+              </div>
             </div>
-            <MousePointerClick className="w-12 h-12 text-orange-600 dark:text-orange-500" />
-          </div>
-        </div>
 
-        <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-purple-700 dark:text-purple-400 font-medium">
-                Unique IP Address Clicks
-              </p>
-              <p className="text-3xl font-bold text-purple-900 dark:text-purple-300 mt-2">
-                {analytics?.uniqueIpAddresses?.toLocaleString() || 0}
-              </p>
+            <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-purple-700 dark:text-purple-400 font-medium">
+                    Unique IP Address Clicks
+                  </p>
+                  <p className="text-3xl font-bold text-purple-900 dark:text-purple-300 mt-2">
+                    {analytics?.uniqueIpAddresses?.toLocaleString() || 0}
+                  </p>
+                </div>
+                <MousePointerClick className="w-12 h-12 text-purple-600 dark:text-purple-500" />
+              </div>
             </div>
-            <MousePointerClick className="w-12 h-12 text-purple-600 dark:text-purple-500" />
           </div>
-        </div>
-      </div>
 
-      {/* Redirect Metrics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-indigo-700 dark:text-indigo-400 font-medium">Auto-Redirects</p>
-              <p className="text-3xl font-bold text-indigo-900 dark:text-indigo-300 mt-2">
-                {analytics?.autoRedirectClicks?.toLocaleString() || 0}
-              </p>
-              <p className="text-xs text-indigo-600 dark:text-indigo-500 mt-1">
-                Automated job redirects
-              </p>
+          {/* Redirect Metrics Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-indigo-700 dark:text-indigo-400 font-medium">Auto-Redirects</p>
+                  <p className="text-3xl font-bold text-indigo-900 dark:text-indigo-300 mt-2">
+                    {analytics?.autoRedirectClicks?.toLocaleString() || 0}
+                  </p>
+                  <p className="text-xs text-indigo-600 dark:text-indigo-500 mt-1">
+                    Automated job redirects
+                  </p>
+                </div>
+                <TrendingUp className="w-12 h-12 text-indigo-600 dark:text-indigo-500" />
+              </div>
             </div>
-            <TrendingUp className="w-12 h-12 text-indigo-600 dark:text-indigo-500" />
-          </div>
-        </div>
 
-        <div className="bg-cyan-50 dark:bg-cyan-900/20 border border-cyan-200 dark:border-cyan-800 rounded-lg p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-cyan-700 dark:text-cyan-400 font-medium">Manual Clicks</p>
-              <p className="text-3xl font-bold text-cyan-900 dark:text-cyan-300 mt-2">
-                {analytics?.manualClicks?.toLocaleString() || 0}
-              </p>
-              <p className="text-xs text-cyan-600 dark:text-cyan-500 mt-1">
-                User-initiated clicks
-              </p>
+            <div className="bg-cyan-50 dark:bg-cyan-900/20 border border-cyan-200 dark:border-cyan-800 rounded-lg p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-cyan-700 dark:text-cyan-400 font-medium">Manual Clicks</p>
+                  <p className="text-3xl font-bold text-cyan-900 dark:text-cyan-300 mt-2">
+                    {analytics?.manualClicks?.toLocaleString() || 0}
+                  </p>
+                  <p className="text-xs text-cyan-600 dark:text-cyan-500 mt-1">
+                    User-initiated clicks
+                  </p>
+                </div>
+                <MousePointerClick className="w-12 h-12 text-cyan-600 dark:text-cyan-500" />
+              </div>
             </div>
-            <MousePointerClick className="w-12 h-12 text-cyan-600 dark:text-cyan-500" />
           </div>
-        </div>
-      </div>
 
-      {/* Conversion Metrics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-emerald-700 dark:text-emerald-400 font-medium">Total Conversions</p>
-              <p className="text-3xl font-bold text-emerald-900 dark:text-emerald-300 mt-2">
-                {analytics?.totalConversions?.toLocaleString() ?? 0}
-              </p>
-              <p className="text-xs text-emerald-600 dark:text-emerald-500 mt-1">S2S postback receipts</p>
+          {/* Conversion Metrics Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-emerald-700 dark:text-emerald-400 font-medium">Total Conversions</p>
+                  <p className="text-3xl font-bold text-emerald-900 dark:text-emerald-300 mt-2">
+                    {analytics?.totalConversions?.toLocaleString() ?? 0}
+                  </p>
+                  <p className="text-xs text-emerald-600 dark:text-emerald-500 mt-1">S2S postback receipts</p>
+                </div>
+                <CheckCircle className="w-12 h-12 text-emerald-600 dark:text-emerald-500" />
+              </div>
             </div>
-            <CheckCircle className="w-12 h-12 text-emerald-600 dark:text-emerald-500" />
-          </div>
-        </div>
 
-        <div className="bg-teal-50 dark:bg-teal-900/20 border border-teal-200 dark:border-teal-800 rounded-lg p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-teal-700 dark:text-teal-400 font-medium">Conversion Rate</p>
-              <p className="text-3xl font-bold text-teal-900 dark:text-teal-300 mt-2">
-                {analytics?.conversionRate ?? 0}%
-              </p>
-              <p className="text-xs text-teal-600 dark:text-teal-500 mt-1">Conversions / Clicks</p>
+            <div className="bg-teal-50 dark:bg-teal-900/20 border border-teal-200 dark:border-teal-800 rounded-lg p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-teal-700 dark:text-teal-400 font-medium">Conversion Rate</p>
+                  <p className="text-3xl font-bold text-teal-900 dark:text-teal-300 mt-2">
+                    {analytics?.conversionRate ?? 0}%
+                  </p>
+                  <p className="text-xs text-teal-600 dark:text-teal-500 mt-1">Conversions / Clicks</p>
+                </div>
+                <BarChart2 className="w-12 h-12 text-teal-600 dark:text-teal-500" />
+              </div>
             </div>
-            <BarChart2 className="w-12 h-12 text-teal-600 dark:text-teal-500" />
-          </div>
-        </div>
 
-        <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-yellow-700 dark:text-yellow-400 font-medium">Total Payout</p>
-              <p className="text-3xl font-bold text-yellow-900 dark:text-yellow-300 mt-2">
-                ${(analytics?.totalPayout ?? 0).toFixed(2)}
-              </p>
-              <p className="text-xs text-yellow-600 dark:text-yellow-500 mt-1">Earned from conversions</p>
+            <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-yellow-700 dark:text-yellow-400 font-medium">Total Payout</p>
+                  <p className="text-3xl font-bold text-yellow-900 dark:text-yellow-300 mt-2">
+                    ${(analytics?.totalPayout ?? 0).toFixed(2)}
+                  </p>
+                  <p className="text-xs text-yellow-600 dark:text-yellow-500 mt-1">Earned from conversions</p>
+                </div>
+                <DollarSign className="w-12 h-12 text-yellow-600 dark:text-yellow-500" />
+              </div>
             </div>
-            <DollarSign className="w-12 h-12 text-yellow-600 dark:text-yellow-500" />
           </div>
-        </div>
-      </div>
-      </>
+        </>
       )}
 
       {/* Clicks Over Time Chart */}
@@ -766,6 +767,7 @@ export default function AnalyticsTab() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Job Title</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Application ID</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Candidate ID</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">IP Address</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Partner</th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Payout</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Partner Conv. ID</th>
@@ -814,6 +816,15 @@ export default function AnalyticsTab() {
                         <span className="text-sm text-gray-400 dark:text-gray-600">&mdash;</span>
                       )}
                     </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {c.ipAddress ? (
+                        <span className="text-sm font-mono text-gray-700 dark:text-gray-300">
+                          {c.ipAddress}
+                        </span>
+                      ) : (
+                        <span className="text-sm text-gray-400 dark:text-gray-600">&mdash;</span>
+                      )}
+                    </td>
                     <td className="px-6 py-4">
                       <span className="text-sm text-gray-700 dark:text-gray-300 capitalize">{c.partner}</span>
                     </td>
@@ -841,7 +852,7 @@ export default function AnalyticsTab() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                  <td colSpan={8} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
                     No conversions recorded yet
                   </td>
                 </tr>

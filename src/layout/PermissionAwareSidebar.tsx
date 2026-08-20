@@ -48,6 +48,7 @@ type NavItem = {
     | "tickets"
     | "coupons"
     | "blog"
+    | "medicalLibrary"
     // | "forum"
     | "unlockRequest";
   isAccessible?: boolean;
@@ -131,6 +132,17 @@ const navItems: NavItem[] = [
       { name: "Archives", path: "/admin/blog/archives", requiredAction: "view" },
     ],
   },
+  {
+    icon: <BlogIcon />,
+    name: "Medical Library",
+    path: "/admin/medical-library",
+    permissionKey: "medicalLibrary",
+    subItems: [
+      { name: "All Topics", path: "/admin/medical-library", requiredAction: "view" },
+      { name: "Add New", path: "/admin/medical-library/add-new", requiredAction: "add" },
+    ],
+  },
+
   {
     icon: <MailIcon />,
     name: "Newsletter Manager",
@@ -317,7 +329,7 @@ const AppSidebar: React.FC = () => {
     if (item.permissionKey && permissions) {
       const hasPermission = hasAnyModulePermission(permissions, item.permissionKey);
 
-      // Special handling for Unlock Requests - show if user is Super Admin
+      // Special handling for Unlock Requests & Medical Library - show if user is Super Admin or Admin
       if (item.permissionKey === "unlockRequest" && !hasPermission) {
         const user = typeof window !== "undefined" ? authUtils.getUser() : null;
         const isSuperAdmin = user?.adminRoleAccess?.roleName?.toLowerCase() === "super admin";
@@ -328,7 +340,6 @@ const AppSidebar: React.FC = () => {
           return true;
         }
       }
-
       console.log(
         `[Sidebar] Checking accessibility for "${item.name}" (${item.permissionKey}):`,
         hasPermission,
@@ -454,6 +465,7 @@ const AppSidebar: React.FC = () => {
                 <ul className="mt-2 space-y-1">
                   {nav.subItems
                     .filter((subItem) => {
+
                       // Filter submenu items based on required permissions
                       if (subItem.requiredAction && nav.permissionKey && permissions) {
                         const actionMap: Record<string, keyof (typeof permissions)[keyof typeof permissions]> = {
