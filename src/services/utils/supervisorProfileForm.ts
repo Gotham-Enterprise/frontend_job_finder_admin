@@ -275,6 +275,12 @@ export function validateSupervisorEditForm(form: SupervisorEditFormData): Superv
           if (!entry.specialty.trim()) {
             entryErrors.specialty = "Specialty is required";
           }
+          if (!entry.certificationNumber.trim()) {
+            entryErrors.certificationNumber = "Certification number is required";
+          }
+          if (!entry.expirationDate.trim()) {
+            entryErrors.expirationDate = "Expiration date is required";
+          }
           return entryErrors;
         });
       if (form.boardCertifications.length === 0) {

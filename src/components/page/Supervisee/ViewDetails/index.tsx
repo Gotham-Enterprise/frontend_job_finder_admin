@@ -247,6 +247,40 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
                   : null
               }
             />
+            {/* Medical Director need preferences (md* columns) */}
+            <FieldRow label="MD Preferred Occupation" value={profile?.mdPreferredOccupation} />
+            <FieldRow label="MD Preferred Specialty" value={profile?.mdPreferredSpecialty} />
+            <FieldRow
+              label="How Soon (Medical Director)"
+              value={
+                profile?.mdHowSoonLooking
+                  ? HOW_SOON_LABELS[profile.mdHowSoonLooking] ?? profile.mdHowSoonLooking
+                  : null
+              }
+            />
+            {profile?.mdHowSoonLooking === "CUSTOM_DATE" && (
+              <FieldRow label="MD Looking Date" value={formatDate(profile.mdLookingDate)} />
+            )}
+            <FieldRow
+              label="MD Monthly Budget"
+              value={profile?.mdMonthlyBudget ? `$${profile.mdMonthlyBudget}/month` : null}
+            />
+            <FieldRow
+              label="Ideal Medical Director"
+              value={
+                profile?.mdIdealDescription ? (
+                  <span className="whitespace-pre-line">{profile.mdIdealDescription}</span>
+                ) : null
+              }
+            />
+            <FieldRow
+              label="Introduction"
+              value={
+                profile?.introduction ? (
+                  <span className="whitespace-pre-line">{profile.introduction}</span>
+                ) : null
+              }
+            />
             <FieldRow
               label="Ideal Supervisor"
               value={

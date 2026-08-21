@@ -70,6 +70,13 @@ const emptyForm = (): SuperviseeEditFormData => ({
   budgetRangeType: "",
   budgetRangeStart: "",
   budgetRangeEnd: "",
+  mdPreferredOccupation: "",
+  mdPreferredSpecialty: "",
+  mdHowSoonLooking: "",
+  mdLookingDate: "",
+  mdMonthlyBudget: "",
+  mdIdealDescription: "",
+  introduction: "",
 });
 
 type SelectChoice = { label: string; value: string };
@@ -229,6 +236,28 @@ export const EditSuperviseeModal: React.FC<EditSuperviseeModalProps> = ({
     return "Select specialty";
   }, [formData.superviseeOccupation, supervisionSpecialtyChoices.length]);
 
+  // Medical Director hierarchy — feeds the optional MD preference selects.
+  const medicalDirectorType = useMemo(
+    () => supervisorTypesData.find((t) => isMedicalDirectorType(t)),
+    [supervisorTypesData],
+  );
+  const mdOccupationChoices = useMemo(
+    () =>
+      choicesOnly(
+        medicalDirectorType?.occupations.map((o) => ({ label: o.name, value: o.name })) ?? [],
+      ),
+    [medicalDirectorType],
+  );
+  const mdSpecialtyChoices = useMemo(() => {
+    if (!formData.mdPreferredOccupation) return [];
+    const selectedOccupation = medicalDirectorType?.occupations.find(
+      (o) => o.name === formData.mdPreferredOccupation,
+    );
+    return choicesOnly(
+      selectedOccupation?.specialties.map((sp) => ({ label: sp.name, value: sp.name })) ?? [],
+    );
+  }, [medicalDirectorType, formData.mdPreferredOccupation]);
+
   const handleClose = () => {
     setSelectedFile(null);
     if (previewUrl) URL.revokeObjectURL(previewUrl);
@@ -352,6 +381,9 @@ export const EditSuperviseeModal: React.FC<EditSuperviseeModalProps> = ({
   };
 
   const isCustomDate = formData.howSoonLooking === "CUSTOM_DATE";
+  const isMdCustomDate = formData.mdHowSoonLooking === "CUSTOM_DATE";
+  // MD-only profile: the supervision-only preference fields are hidden and skipped.
+  const isMdOnly = formData.needsMedicalDirector && !formData.typeOfSupervisorNeeded;
   const optionsStillLoading = optionsLoading || supervisorTypesLoading;
 
   return (
@@ -523,54 +555,30 @@ export const EditSuperviseeModal: React.FC<EditSuperviseeModalProps> = ({
                       disabled={supervisorTypesLoading || !eligibilityComplete}
                     />
                   </FormField>
-                  {/* Medical Director — combinable with any supervision type, or standalone */}
-                  <FormField className="sm:col-span-2" label="" error={undefined}>
-                    <label className="flex items-start gap-3 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={formData.needsMedicalDirector}
-                        onChange={(e) => {
-                          updateField("needsMedicalDirector", e.target.checked);
-                          if (e.target.checked) {
-                            setFieldErrors((prev) => {
-                              if (!prev.typeOfSupervisorNeeded) return prev;
-                              const { typeOfSupervisorNeeded: _typeErr, ...rest } = prev;
-                              return rest;
-                            });
-                          }
-                        }}
-                        className="mt-1 h-4 w-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500"
-                      />
-                      <span>
-                        <span className="block text-sm font-medium text-gray-800 dark:text-white/90">
-                          Needs a Medical Director
-                        </span>
-                        <span className="block text-sm text-gray-500 dark:text-gray-400">
-                          Can be combined with a supervision type above, or selected on its own.
-                        </span>
-                      </span>
-                    </label>
-                  </FormField>
-                  <FormField
-                    label="Occupation"
-                    required={Boolean(formData.typeOfSupervisorNeeded)}
-                    error={fieldErrors.superviseeOccupation}
-                  >
-                    <Select
-                      value={formData.superviseeOccupation}
-                      onChange={(v) => updateField("superviseeOccupation", v)}
-                      options={supervisionOccupationChoices}
-                      placeholder={supervisionOccupationPlaceholder}
-                    />
-                  </FormField>
-                  <FormField label="Specialty">
-                    <Select
-                      value={formData.superviseeSpecialty}
-                      onChange={(v) => updateField("superviseeSpecialty", v)}
-                      options={supervisionSpecialtyChoices}
-                      placeholder={supervisionSpecialtyPlaceholder}
-                    />
-                  </FormField>
+                  {isMdOnly ? null : (
+                    <>
+                      <FormField
+                        label="Occupation"
+                        required={Boolean(formData.typeOfSupervisorNeeded)}
+                        error={fieldErrors.superviseeOccupation}
+                      >
+                        <Select
+                          value={formData.superviseeOccupation}
+                          onChange={(v) => updateField("superviseeOccupation", v)}
+                          options={supervisionOccupationChoices}
+                          placeholder={supervisionOccupationPlaceholder}
+                        />
+                      </FormField>
+                      <FormField label="Specialty">
+                        <Select
+                          value={formData.superviseeSpecialty}
+                          onChange={(v) => updateField("superviseeSpecialty", v)}
+                          options={supervisionSpecialtyChoices}
+                          placeholder={supervisionSpecialtyPlaceholder}
+                        />
+                      </FormField>
+                    </>
+                  )}
                   <FormField
                     className="sm:col-span-2"
                     label="States of Licensure"
@@ -585,27 +593,31 @@ export const EditSuperviseeModal: React.FC<EditSuperviseeModalProps> = ({
                       placeholder="Select states..."
                     />
                   </FormField>
-                  <FormField
-                    label="How Soon Do You Need Supervision?"
-                    required
-                    error={fieldErrors.howSoonLooking}
-                  >
-                    <Select
-                      value={formData.howSoonLooking}
-                      onChange={(v) => updateField("howSoonLooking", v)}
-                      options={choicesOnly(howSoonOptions)}
-                      placeholder={optionsStillLoading ? "Loading…" : "Select timeline"}
-                    />
-                  </FormField>
-                  {isCustomDate && (
-                    <FormField label="Looking Date" required error={fieldErrors.lookingDate}>
-                      <Input
-                        type="date"
-                        value={formData.lookingDate}
-                        onChange={(e) => updateField("lookingDate", e.target.value)}
-                        error={!!fieldErrors.lookingDate}
-                      />
-                    </FormField>
+                  {isMdOnly ? null : (
+                    <>
+                      <FormField
+                        label="How Soon Do You Need Supervision?"
+                        required
+                        error={fieldErrors.howSoonLooking}
+                      >
+                        <Select
+                          value={formData.howSoonLooking}
+                          onChange={(v) => updateField("howSoonLooking", v)}
+                          options={choicesOnly(howSoonOptions)}
+                          placeholder={optionsStillLoading ? "Loading…" : "Select timeline"}
+                        />
+                      </FormField>
+                      {isCustomDate && (
+                        <FormField label="Looking Date" required error={fieldErrors.lookingDate}>
+                          <Input
+                            type="date"
+                            value={formData.lookingDate}
+                            onChange={(e) => updateField("lookingDate", e.target.value)}
+                            error={!!fieldErrors.lookingDate}
+                          />
+                        </FormField>
+                      )}
+                    </>
                   )}
                   <FormField label="Preferred Format" required error={fieldErrors.preferredFormat}>
                     <Select
@@ -623,6 +635,8 @@ export const EditSuperviseeModal: React.FC<EditSuperviseeModalProps> = ({
                       placeholder="Select availability"
                     />
                   </FormField>
+                  {isMdOnly ? null : (
+                  <>
                   <FormField label="Budget Type" required error={fieldErrors.budgetRangeType}>
                     <Select
                       value={formData.budgetRangeType}
@@ -672,6 +686,8 @@ export const EditSuperviseeModal: React.FC<EditSuperviseeModalProps> = ({
                       </FormField>
                     </>
                   )}
+                  </>
+                  )}
                 </div>
                 <FormField
                   label="Description of Ideal Supervisor"
@@ -691,6 +707,146 @@ export const EditSuperviseeModal: React.FC<EditSuperviseeModalProps> = ({
                     characters
                   </p>
                 </FormField>
+                <FormField
+                  label="Introduce Yourself (optional)"
+                  error={fieldErrors.introduction}
+                >
+                  <TextArea
+                    value={formData.introduction}
+                    onChange={(v) => updateField("introduction", v)}
+                    rows={4}
+                    maxLength={SUPERVISEE_IDEAL_SUPERVISOR_MAX_LENGTH}
+                    error={!!fieldErrors.introduction}
+                  />
+                </FormField>
+              </section>
+
+              {/* Medical director — own section; checking the box reveals the
+                  MD-specific required fields (md* columns) */}
+              <section className="space-y-4">
+                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                  Medical director
+                </h3>
+                <FormField label="" error={undefined}>
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.needsMedicalDirector}
+                      onChange={(e) => {
+                        updateField("needsMedicalDirector", e.target.checked);
+                        setFieldErrors((prev) => {
+                          if (e.target.checked) {
+                            if (!prev.typeOfSupervisorNeeded) return prev;
+                            const { typeOfSupervisorNeeded: _typeErr, ...rest } = prev;
+                            return rest;
+                          }
+                          const {
+                            mdPreferredOccupation: _a,
+                            mdPreferredSpecialty: _b,
+                            mdHowSoonLooking: _c,
+                            mdLookingDate: _d,
+                            mdMonthlyBudget: _e,
+                            mdIdealDescription: _f,
+                            ...rest
+                          } = prev;
+                          return rest;
+                        });
+                      }}
+                      className="mt-1 h-4 w-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500"
+                    />
+                    <span>
+                      <span className="block text-sm font-medium text-gray-800 dark:text-white/90">
+                        Needs a Medical Director
+                      </span>
+                      <span className="block text-sm text-gray-500 dark:text-gray-400">
+                        Can be combined with a supervision type above, or selected on its own.
+                      </span>
+                    </span>
+                  </label>
+                </FormField>
+
+                {formData.needsMedicalDirector && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <FormField label="Preferred Occupation (optional)">
+                      <Select
+                        value={formData.mdPreferredOccupation}
+                        onChange={(v) => {
+                          updateField("mdPreferredOccupation", v);
+                          updateField("mdPreferredSpecialty", "");
+                        }}
+                        options={mdOccupationChoices}
+                        placeholder={
+                          mdOccupationChoices.length === 0 && !supervisorTypesLoading
+                            ? "No occupations available"
+                            : "Select preferred occupation"
+                        }
+                      />
+                    </FormField>
+                    <FormField label="Preferred Specialty (optional)">
+                      <Select
+                        value={formData.mdPreferredSpecialty}
+                        onChange={(v) => updateField("mdPreferredSpecialty", v)}
+                        options={mdSpecialtyChoices}
+                        placeholder={
+                          !formData.mdPreferredOccupation
+                            ? "Select a preferred occupation first"
+                            : mdSpecialtyChoices.length === 0
+                              ? "No specialties available"
+                              : "Select specialty"
+                        }
+                      />
+                    </FormField>
+                    <FormField
+                      label="How Soon Is a Medical Director Needed?"
+                      required
+                      error={fieldErrors.mdHowSoonLooking}
+                    >
+                      <Select
+                        value={formData.mdHowSoonLooking}
+                        onChange={(v) => updateField("mdHowSoonLooking", v)}
+                        options={choicesOnly(howSoonOptions)}
+                        placeholder={optionsStillLoading ? "Loading…" : "Select timeline"}
+                      />
+                    </FormField>
+                    {isMdCustomDate && (
+                      <FormField label="Looking Date" required error={fieldErrors.mdLookingDate}>
+                        <Input
+                          type="date"
+                          value={formData.mdLookingDate}
+                          onChange={(e) => updateField("mdLookingDate", e.target.value)}
+                          error={!!fieldErrors.mdLookingDate}
+                        />
+                      </FormField>
+                    )}
+                    <FormField
+                      label="Monthly Budget for Medical Director ($)"
+                      required
+                      error={fieldErrors.mdMonthlyBudget}
+                    >
+                      <Input
+                        type="number"
+                        min={1}
+                        value={formData.mdMonthlyBudget}
+                        onChange={(e) => updateField("mdMonthlyBudget", e.target.value)}
+                        error={!!fieldErrors.mdMonthlyBudget}
+                      />
+                    </FormField>
+                    <FormField
+                      className="sm:col-span-2"
+                      label="Describe Your Ideal Medical Director"
+                      required
+                      error={fieldErrors.mdIdealDescription}
+                    >
+                      <TextArea
+                        value={formData.mdIdealDescription}
+                        onChange={(v) => updateField("mdIdealDescription", v)}
+                        rows={4}
+                        maxLength={SUPERVISEE_IDEAL_SUPERVISOR_MAX_LENGTH}
+                        error={!!fieldErrors.mdIdealDescription}
+                      />
+                    </FormField>
+                  </div>
+                )}
               </section>
             </div>
           )}

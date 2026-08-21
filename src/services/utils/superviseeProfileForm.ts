@@ -54,7 +54,8 @@ export function validateSuperviseeEditForm(form: SuperviseeEditFormData): Superv
   if (form.typeOfSupervisorNeeded && !form.superviseeOccupation) {
     errors.superviseeOccupation = "Occupation is required";
   }
-  if (!form.howSoonLooking) {
+  // Supervision-only preferences — hidden (and skipped) for an MD-only profile.
+  if (form.typeOfSupervisorNeeded && !form.howSoonLooking) {
     errors.howSoonLooking = "Please select how soon you need supervision";
   }
   if (form.howSoonLooking === "CUSTOM_DATE" && !form.lookingDate) {
@@ -66,16 +67,43 @@ export function validateSuperviseeEditForm(form: SuperviseeEditFormData): Superv
   if (!form.availability) {
     errors.availability = "Availability is required";
   }
-  if (!form.budgetRangeType) {
-    errors.budgetRangeType = "Budget type is required";
+  if (form.typeOfSupervisorNeeded) {
+    if (!form.budgetRangeType) {
+      errors.budgetRangeType = "Budget type is required";
+    }
+    // Monthly budgets are a single amount (stored in budgetRangeEnd; start is 0)
+    if (form.budgetRangeType !== "MONTHLY" && form.budgetRangeStart === "") {
+      errors.budgetRangeStart = "Budget start is required";
+    }
+    if (form.budgetRangeEnd === "") {
+      errors.budgetRangeEnd =
+        form.budgetRangeType === "MONTHLY"
+          ? "Monthly budget is required"
+          : "Budget end is required";
+    }
   }
-  // Monthly budgets are a single amount (stored in budgetRangeEnd; start is 0)
-  if (form.budgetRangeType !== "MONTHLY" && form.budgetRangeStart === "") {
-    errors.budgetRangeStart = "Budget start is required";
+  // Medical Director need — its own required block (md* columns).
+  if (form.needsMedicalDirector) {
+    if (!form.mdHowSoonLooking) {
+      errors.mdHowSoonLooking = "Please select how soon a medical director is needed";
+    }
+    if (form.mdHowSoonLooking === "CUSTOM_DATE" && !form.mdLookingDate) {
+      errors.mdLookingDate = "Please select a date";
+    }
+    const mdBudget = form.mdMonthlyBudget === "" ? NaN : Number(form.mdMonthlyBudget);
+    if (!Number.isFinite(mdBudget) || mdBudget < 1) {
+      errors.mdMonthlyBudget = "Monthly budget for the medical director is required";
+    }
+    if (!form.mdIdealDescription.trim()) {
+      errors.mdIdealDescription = "Description of ideal medical director is required";
+    } else if (form.mdIdealDescription.trim().length < 20) {
+      errors.mdIdealDescription = "Description must be at least 20 characters";
+    } else if (form.mdIdealDescription.length > SUPERVISEE_IDEAL_SUPERVISOR_MAX_LENGTH) {
+      errors.mdIdealDescription = `Description must be ${SUPERVISEE_IDEAL_SUPERVISOR_MAX_LENGTH} characters or less`;
+    }
   }
-  if (form.budgetRangeEnd === "") {
-    errors.budgetRangeEnd =
-      form.budgetRangeType === "MONTHLY" ? "Monthly budget is required" : "Budget end is required";
+  if (form.introduction.length > SUPERVISEE_IDEAL_SUPERVISOR_MAX_LENGTH) {
+    errors.introduction = `Introduction must be ${SUPERVISEE_IDEAL_SUPERVISOR_MAX_LENGTH} characters or less`;
   }
   if (!form.idealSupervisor.trim()) {
     errors.idealSupervisor = "Description of ideal supervisor is required";
@@ -112,6 +140,13 @@ export interface SuperviseeEditFormData {
   budgetRangeType: string;
   budgetRangeStart: string;
   budgetRangeEnd: string;
+  mdPreferredOccupation: string;
+  mdPreferredSpecialty: string;
+  mdHowSoonLooking: string;
+  mdLookingDate: string;
+  mdMonthlyBudget: string;
+  mdIdealDescription: string;
+  introduction: string;
 }
 
 export function resolveStateToAbbreviation(
@@ -173,6 +208,14 @@ export function mapSuperviseeDetailsToFormData(
     budgetRangeStart:
       profile?.budgetRangeStart != null ? String(profile.budgetRangeStart) : "",
     budgetRangeEnd: profile?.budgetRangeEnd != null ? String(profile.budgetRangeEnd) : "",
+    mdPreferredOccupation: profile?.mdPreferredOccupation ?? "",
+    mdPreferredSpecialty: profile?.mdPreferredSpecialty ?? "",
+    mdHowSoonLooking: profile?.mdHowSoonLooking ?? "",
+    mdLookingDate: profile?.mdLookingDate ? profile.mdLookingDate.slice(0, 10) : "",
+    // 0 is the column default, not a real budget
+    mdMonthlyBudget: profile?.mdMonthlyBudget ? String(profile.mdMonthlyBudget) : "",
+    mdIdealDescription: profile?.mdIdealDescription ?? "",
+    introduction: profile?.introduction ?? "",
   };
 }
 
@@ -186,6 +229,9 @@ export function buildSuperviseeUpdateFormData(
     typeOfSupervisorNeeded,
     budgetRangeStart,
     budgetRangeEnd,
+    mdPreferredOccupation,
+    mdPreferredSpecialty,
+    introduction,
     ...rest
   } = payload;
 
@@ -200,6 +246,17 @@ export function buildSuperviseeUpdateFormData(
   }
   if (budgetRangeEnd !== undefined) {
     fd.append("budgetRangeEnd", String(budgetRangeEnd));
+  }
+  // Present-but-empty clears the stored MD preference (undefined leaves it untouched).
+  if (mdPreferredOccupation !== undefined) {
+    fd.append("mdPreferredOccupation", mdPreferredOccupation);
+  }
+  if (mdPreferredSpecialty !== undefined) {
+    fd.append("mdPreferredSpecialty", mdPreferredSpecialty);
+  }
+  // Present-but-empty clears the stored introduction (optional and erasable).
+  if (introduction !== undefined) {
+    fd.append("introduction", introduction);
   }
 
   stateOfLicensure?.forEach((s) => fd.append("stateOfLicensure[]", s));
@@ -242,21 +299,41 @@ export function formDataToUpdatePayload(
     })(),
     superviseeOccupation: form.superviseeOccupation.trim() || undefined,
     superviseeSpecialty: form.superviseeSpecialty.trim() || undefined,
-    howSoonLooking: form.howSoonLooking || undefined,
+    // Supervision-side preferences are sent only while a supervision type is
+    // selected — for an MD-only profile the hidden fields stay untouched.
+    howSoonLooking: form.typeOfSupervisorNeeded ? form.howSoonLooking || undefined : undefined,
     lookingDate:
-      form.howSoonLooking === "CUSTOM_DATE" ? form.lookingDate || undefined : undefined,
+      form.typeOfSupervisorNeeded && form.howSoonLooking === "CUSTOM_DATE"
+        ? form.lookingDate || undefined
+        : undefined,
     preferredFormat: form.preferredFormat || undefined,
     availability: form.availability || undefined,
     idealSupervisor: form.idealSupervisor.trim() || undefined,
-    budgetRangeType: form.budgetRangeType || undefined,
+    budgetRangeType: form.typeOfSupervisorNeeded ? form.budgetRangeType || undefined : undefined,
     // Monthly budgets are a single amount stored in budgetRangeEnd; start is 0
-    budgetRangeStart:
-      form.budgetRangeType === "MONTHLY"
+    budgetRangeStart: !form.typeOfSupervisorNeeded
+      ? undefined
+      : form.budgetRangeType === "MONTHLY"
         ? 0
         : form.budgetRangeStart !== ""
           ? parseInt(form.budgetRangeStart, 10)
           : undefined,
-    budgetRangeEnd: form.budgetRangeEnd !== "" ? parseInt(form.budgetRangeEnd, 10) : undefined,
+    budgetRangeEnd:
+      form.typeOfSupervisorNeeded && form.budgetRangeEnd !== ""
+        ? parseInt(form.budgetRangeEnd, 10)
+        : undefined,
+    // Medical Director preferences — the backend clears the md* columns itself
+    // when the submitted needs no longer include Medical Director.
+    mdPreferredOccupation: form.mdPreferredOccupation.trim(),
+    mdPreferredSpecialty: form.mdPreferredSpecialty.trim(),
+    mdHowSoonLooking: form.mdHowSoonLooking || undefined,
+    mdLookingDate:
+      form.mdHowSoonLooking === "CUSTOM_DATE" ? form.mdLookingDate || undefined : undefined,
+    mdMonthlyBudget:
+      form.mdMonthlyBudget !== "" ? parseInt(form.mdMonthlyBudget, 10) : undefined,
+    mdIdealDescription: form.mdIdealDescription.trim() || undefined,
+    // '' (not undefined) so an erased introduction clears the stored value
+    introduction: form.introduction.trim(),
     uploadProfilePhoto,
   };
 }

@@ -65,6 +65,8 @@ export interface SupervisorFilters {
   limit?: number;
   keyword?: string;
   verificationStatus?: VerificationStatus | "";
+  /** Filter by the supervisor's primary type (e.g. "Medical Director"). */
+  supervisorType?: string;
   sortBy?: SupervisorSortBy;
   sortOrder?: "asc" | "desc";
 }

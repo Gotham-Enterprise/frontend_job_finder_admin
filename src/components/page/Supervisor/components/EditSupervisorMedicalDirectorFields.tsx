@@ -328,16 +328,17 @@ export const EditSupervisorMedicalDirectorFields: React.FC<
                         placeholder="Enter subspecialty"
                       />
                     </FormField>
-                    <FormField label="Certification Number (optional)">
+                    <FormField label="Certification Number" required error={entryErrors.certificationNumber}>
                       <Input
                         value={entry.certificationNumber}
                         onChange={(e) =>
                           updateBoardCertification(index, "certificationNumber", e.target.value)
                         }
                         placeholder="Enter certification number"
+                        error={!!entryErrors.certificationNumber}
                       />
                     </FormField>
-                    <FormField label="Expiration / Valid Through (optional)">
+                    <FormField label="Expiration Date" required error={entryErrors.expirationDate}>
                       <DatePicker
                         key={`board-cert-expiration-${supervisorId}-${index}-${entry.expirationDate || "empty"}`}
                         id={`supervisor-board-cert-expiration-${supervisorId}-${index}`}

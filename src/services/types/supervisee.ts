@@ -88,6 +88,16 @@ export interface SuperviseeProfile {
   budgetRangeType: string | null;
   budgetRangeStart: number | null;
   budgetRangeEnd: number | null;
+  /** Medical Director need preferences — set only when typeOfSupervisorNeeded
+   *  includes "Medical Director"; the fields above stay supervision-only. */
+  mdPreferredOccupation?: string | null;
+  mdPreferredSpecialty?: string | null;
+  mdHowSoonLooking?: string | null;
+  mdLookingDate?: string | null;
+  mdMonthlyBudget?: number | null;
+  mdIdealDescription?: string | null;
+  /** Optional self introduction (separate from idealSupervisor) */
+  introduction?: string | null;
   completedCount: number;
   leftCount: number;
   createdAt: string;
@@ -168,6 +178,13 @@ export interface SuperviseeUpdatePayload {
   budgetRangeType?: string;
   budgetRangeStart?: number;
   budgetRangeEnd?: number;
+  mdPreferredOccupation?: string;
+  mdPreferredSpecialty?: string;
+  mdHowSoonLooking?: string;
+  mdLookingDate?: string;
+  mdMonthlyBudget?: number;
+  mdIdealDescription?: string;
+  introduction?: string;
   uploadProfilePhoto?: File;
 }
 
