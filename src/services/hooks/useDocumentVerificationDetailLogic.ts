@@ -26,6 +26,7 @@ export const useDocumentVerificationDetailLogic = (
         {
           onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: documentVerificationQueryKeys.detail(kind, id) });
+            queryClient.invalidateQueries({ queryKey: documentVerificationQueryKeys.lists() });
             onToggleReview();
           },
         }
