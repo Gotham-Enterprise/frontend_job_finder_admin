@@ -539,3 +539,32 @@ export const getCoRegs = async (params?: {
   const queryString = queryParams.toString();
   return apiGet<CoRegListResponse>(`/api/admin/affiliates/coreg${queryString ? `?${queryString}` : ""}`);
 };
+
+// ===== Report Recipients APIs =====
+
+export interface AffiliateReportRecipient {
+  id: string;
+  affiliatePartnerId: string;
+  email: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export const getReportRecipients = async (partnerId: string): Promise<AffiliateReportRecipient[]> => {
+  const res = await apiGet<{ success: boolean; data: AffiliateReportRecipient[] }>(
+    `/api/admin/affiliates/partners/${partnerId}/report-recipients`
+  );
+  return res.data;
+};
+
+export const addReportRecipient = async (partnerId: string, email: string): Promise<AffiliateReportRecipient> => {
+  const res = await apiPost<{ success: boolean; data: AffiliateReportRecipient }>(
+    `/api/admin/affiliates/partners/${partnerId}/report-recipients`,
+    { email }
+  );
+  return res.data;
+};
+
+export const removeReportRecipient = async (partnerId: string, recipientId: string): Promise<void> => {
+  return apiDelete(`/api/admin/affiliates/partners/${partnerId}/report-recipients/${recipientId}`);
+};
