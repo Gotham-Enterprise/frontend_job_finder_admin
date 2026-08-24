@@ -685,6 +685,98 @@ export default function AnalyticsTab() {
         </div>
       </div>
 
+      {/* Top Performing Links */}
+      <div className="border border-gray-200 dark:border-gray-800 rounded-lg">
+        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-800">
+          <div className="flex items-center gap-2">
+            <Trophy className="w-5 h-5 text-yellow-500" />
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              Top Performing Links
+            </h3>
+          </div>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50 dark:bg-gray-900/50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Rank
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Link Name
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Partner
+                </th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Total Clicks
+                </th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Unique IPs
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white dark:bg-transparent divide-y divide-gray-200 dark:divide-gray-800">
+              {analytics?.topLinks && analytics.topLinks.length > 0 ? (
+                analytics.topLinks.map((link: any, index: number) => (
+                  <tr
+                    key={link.linkId}
+                    className="hover:bg-gray-50 dark:hover:bg-gray-900/30 transition-colors"
+                  >
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        {index === 0 && (
+                          <span className="text-yellow-500 font-bold text-lg">🥇</span>
+                        )}
+                        {index === 1 && (
+                          <span className="text-gray-400 font-bold text-lg">🥈</span>
+                        )}
+                        {index === 2 && (
+                          <span className="text-orange-600 font-bold text-lg">🥉</span>
+                        )}
+                        {index > 2 && (
+                          <span className="text-gray-500 dark:text-gray-400 font-medium">
+                            {index + 1}
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-sm font-medium text-gray-900 dark:text-white">
+                        {link.name}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-sm text-gray-700 dark:text-gray-300 capitalize">
+                        {link.affiliate?.name || 'N/A'}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right">
+                      <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-full text-sm font-medium">
+                        <MousePointerClick className="w-3 h-3" />
+                        {link.clicks}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right">
+                      <span className="inline-flex items-center gap-1 px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 rounded-full text-sm font-medium">
+                        <MousePointerClick className="w-3 h-3" />
+                        {link.uniqueIpAddresses || 0}
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={5} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                    No data available
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       {/* Redirects by Job Title */}
       {!isBuyingView && analytics?.redirectsByJobTitle && analytics.redirectsByJobTitle.length > 0 && (
         <div className="border border-gray-200 dark:border-gray-800 rounded-lg">

@@ -49,12 +49,31 @@ export interface AffiliatePartnerFeedRule {
   updatedAt: string;
 }
 
+export interface AffiliateFaq {
+  question: string;
+  answer: string;
+}
+
 export interface AffiliateLink {
   id: string;
   name: string;
   url: string;
   type?: string;
+  format?: string;
+  targetAudience?: string;
+  contentLevel?: string;
+  overview?: string;
+  whoShouldEnroll?: string;
+  whatYoullLearn?: string[];
+  careerOutlook?: string;
+  faqs?: AffiliateFaq[];
+  ceHours?: number;
+  ceCredits?: number;
   occupations?: string[];
+  courseThumbnail?: string | null;
+  city?: string;
+  state?: string;
+  zipCode?: string;
   affiliateId: string;
   affiliate?: {
     id: string;
@@ -236,6 +255,20 @@ export interface CreateLinkData {
   name: string;
   url: string;
   type?: string;
+  format?: string;
+  courseThumbnail?: string | null;
+  city?: string;
+  state?: string;
+  zipCode?: string;
+  targetAudience?: string;
+  contentLevel?: string;
+  overview?: string;
+  whoShouldEnroll?: string;
+  whatYoullLearn?: string[];
+  careerOutlook?: string;
+  faqs?: AffiliateFaq[];
+  ceHours?: number;
+  ceCredits?: number;
   occupations?: string[];
   affiliateId: string;
 }
@@ -244,6 +277,20 @@ export interface UpdateLinkData {
   name?: string;
   url?: string;
   type?: string;
+  format?: string;
+  courseThumbnail?: string | null;
+  city?: string;
+  state?: string;
+  zipCode?: string;
+  targetAudience?: string;
+  contentLevel?: string;
+  overview?: string;
+  whoShouldEnroll?: string;
+  whatYoullLearn?: string[];
+  careerOutlook?: string;
+  faqs?: AffiliateFaq[];
+  ceHours?: number;
+  ceCredits?: number;
   occupations?: string[];
   affiliateId?: string;
 }
@@ -336,6 +383,43 @@ export const updateAffiliateLink = async (id: string, data: UpdateLinkData): Pro
 
 export const deleteAffiliateLink = async (id: string): Promise<void> => {
   return apiDelete(`/api/admin/affiliates/links/${id}`);
+};
+
+export interface AffiliateLinkType {
+  id: string;
+  name: string;
+  isActive: boolean;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Link Type Configuration APIs
+export const getAffiliateLinkTypes = async (): Promise<AffiliateLinkType[]> => {
+  const res = await apiGet<{ success: boolean; data: AffiliateLinkType[] }>("/api/admin/affiliates/link-types");
+  return res.data || [];
+};
+
+export const createAffiliateLinkType = async (data: { name: string }): Promise<AffiliateLinkType> => {
+  const res = await apiPost<{ success: boolean; data: AffiliateLinkType }>("/api/admin/affiliates/link-types", data);
+  return res.data;
+};
+
+export const updateAffiliateLinkType = async (
+  id: string,
+  data: { name?: string; isActive?: boolean; sortOrder?: number },
+): Promise<AffiliateLinkType> => {
+  const res = await apiPut<{ success: boolean; data: AffiliateLinkType }>(`/api/admin/affiliates/link-types/${id}`, data);
+  return res.data;
+};
+
+export const deleteAffiliateLinkType = async (id: string): Promise<void> => {
+  await apiDelete(`/api/admin/affiliates/link-types/${id}`);
+};
+
+export const reorderAffiliateLinkTypes = async (ids: string[]): Promise<AffiliateLinkType[]> => {
+  const res = await apiPut<{ success: boolean; data: AffiliateLinkType[] }>("/api/admin/affiliates/link-types/reorder", { ids });
+  return res.data || [];
 };
 
 // Upload & Batch Management APIs
