@@ -847,7 +847,7 @@ export default function AnalyticsTab() {
             </thead>
             <tbody className="bg-white dark:bg-transparent divide-y divide-gray-200 dark:divide-gray-800">
               {analytics?.topLinks && analytics.topLinks.length > 0 ? (
-                analytics.topLinks.map((link: any, index: number) => (
+                analytics.topLinks.map((link, index) => (
                   <tr
                     key={link.linkId}
                     className="hover:bg-gray-50 dark:hover:bg-gray-900/30 transition-colors"
