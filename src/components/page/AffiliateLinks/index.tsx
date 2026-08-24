@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { Plus, Edit2, Trash2, Link as LinkIcon, Building2, Calendar } from 'lucide-react'
+import { Plus, Edit2, Trash2, Link as LinkIcon, Building2, Calendar, Settings2 } from 'lucide-react'
 import {
   useAffiliateLinks,
   useCreateAffiliateLink,
@@ -10,10 +10,12 @@ import {
 } from '@/services/hooks/useAffiliates'
 import type { AffiliateLink, CreateLinkData, UpdateLinkData } from '@/services/api/affiliates'
 import LinkModal from './components/LinkModal'
+import LinkTypesConfigModal from './components/LinkTypesConfigModal'
 
 export default function AffiliateLinks() {
   const [page, setPage] = useState(1)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isConfigOpen, setIsConfigOpen] = useState(false)
   const [editingLink, setEditingLink] = useState<AffiliateLink | null>(null)
 
   const { data: linksData, isLoading } = useAffiliateLinks({ page, limit: 10 })
@@ -67,13 +69,22 @@ export default function AffiliateLinks() {
             Manage your internal affiliate links connecting to partner feeds.
           </p>
         </div>
-        <button
-          onClick={handleCreate}
-          className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          Add Link
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setIsConfigOpen(true)}
+            className="p-2.5 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-500 hover:text-primary hover:border-primary/50 transition-colors"
+            title="Link Types configuration"
+          >
+            <Settings2 className="w-4 h-4" />
+          </button>
+          <button
+            onClick={handleCreate}
+            className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            Add Link
+          </button>
+        </div>
       </div>
 
       <div className="p-6">
@@ -89,6 +100,27 @@ export default function AffiliateLinks() {
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Category
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Format
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Location
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Target Audience
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Content Level
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Overview
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  CE Hours
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  CE Credits
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Occupations
@@ -127,6 +159,47 @@ export default function AffiliateLinks() {
                     <span className="inline-block px-2.5 py-0.5 bg-primary/10 text-primary text-xs font-medium rounded-full">
                       {link.type || 'Uncategorized'}
                     </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {link.format ? (
+                      <span className="inline-block px-2.5 py-0.5 bg-primary/10 text-primary text-xs font-medium rounded-full">
+                        {link.format === 'IN_PERSON' ? 'In-Person' : link.format === 'VIRTUAL' ? 'Virtual' : link.format === 'HYBRID' ? 'Hybrid' : link.format === 'ONLINE_COURSE' ? 'Online Course' : link.format}
+                      </span>
+                    ) : (
+                      <span className="text-sm text-gray-400">—</span>
+                    )}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-500 dark:text-gray-400">
+                      {link.city || link.state || link.zipCode
+                        ? [link.city, link.state, link.zipCode].filter(Boolean).join(', ')
+                        : '—'}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="text-sm text-gray-500 dark:text-gray-400 max-w-[180px] truncate" title={link.targetAudience || ''}>
+                      {link.targetAudience || '—'}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-500 dark:text-gray-400">
+                      {link.contentLevel || '—'}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="text-sm text-gray-500 dark:text-gray-400 max-w-[220px] line-clamp-2" title={link.overview || ''}>
+                      {link.overview || '—'}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-500 dark:text-gray-400">
+                      {link.ceHours !== undefined && link.ceHours !== null ? link.ceHours : '—'}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-500 dark:text-gray-400">
+                      {link.ceCredits !== undefined && link.ceCredits !== null ? link.ceCredits : '—'}
+                    </div>
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex flex-wrap gap-1 max-w-[200px]">
@@ -227,6 +300,8 @@ export default function AffiliateLinks() {
         onSubmit={handleSubmit}
         isSubmitting={createMutation.isPending || updateMutation.isPending}
       />
+
+      <LinkTypesConfigModal isOpen={isConfigOpen} onClose={() => setIsConfigOpen(false)} />
     </div>
   )
 }
