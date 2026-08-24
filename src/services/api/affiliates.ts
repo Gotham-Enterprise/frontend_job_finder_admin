@@ -509,6 +509,8 @@ export const getAffiliateAnalytics = async (params?: {
   endDate?: string;
   source?: "manual" | "auto-redirect" | "partner-feed";
   partnerType?: "selling" | "buying";
+  deduplicate?: boolean;
+  requireApplication?: boolean;
 }): Promise<AffiliateAnalytics> => {
   const queryParams = new URLSearchParams();
   if (params?.affiliateId) queryParams.append("affiliateId", params.affiliateId);
@@ -516,6 +518,8 @@ export const getAffiliateAnalytics = async (params?: {
   if (params?.endDate) queryParams.append("endDate", params.endDate);
   if (params?.source) queryParams.append("source", params.source);
   if (params?.partnerType) queryParams.append("partnerType", params.partnerType);
+  if (params?.deduplicate !== undefined) queryParams.append("deduplicate", String(params.deduplicate));
+  if (params?.requireApplication !== undefined) queryParams.append("requireApplication", String(params.requireApplication));
   const queryString = queryParams.toString();
   const response = await apiGet<{ success: boolean; data: AffiliateAnalytics }>(
     `/api/admin/affiliates/analytics${queryString ? `?${queryString}` : ""}`
@@ -618,4 +622,33 @@ export const getCoRegs = async (params?: {
   if (params?.partner) queryParams.append("partner", params.partner);
   const queryString = queryParams.toString();
   return apiGet<CoRegListResponse>(`/api/admin/affiliates/coreg${queryString ? `?${queryString}` : ""}`);
+};
+
+// ===== Report Recipients APIs =====
+
+export interface AffiliateReportRecipient {
+  id: string;
+  affiliatePartnerId: string;
+  email: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export const getReportRecipients = async (partnerId: string): Promise<AffiliateReportRecipient[]> => {
+  const res = await apiGet<{ success: boolean; data: AffiliateReportRecipient[] }>(
+    `/api/admin/affiliates/partners/${partnerId}/report-recipients`
+  );
+  return res.data;
+};
+
+export const addReportRecipient = async (partnerId: string, email: string): Promise<AffiliateReportRecipient> => {
+  const res = await apiPost<{ success: boolean; data: AffiliateReportRecipient }>(
+    `/api/admin/affiliates/partners/${partnerId}/report-recipients`,
+    { email }
+  );
+  return res.data;
+};
+
+export const removeReportRecipient = async (partnerId: string, recipientId: string): Promise<void> => {
+  return apiDelete(`/api/admin/affiliates/partners/${partnerId}/report-recipients/${recipientId}`);
 };

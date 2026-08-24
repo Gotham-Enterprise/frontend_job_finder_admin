@@ -20,6 +20,9 @@ import {
   updatePartnerFeedRule,
   deletePartnerFeedRule,
   getCoRegs,
+  getReportRecipients,
+  addReportRecipient,
+  removeReportRecipient,
   CreatePartnerData,
   UpdatePartnerData,
   CreateFeedRuleData,
@@ -52,6 +55,7 @@ export const affiliateQueryKeys = {
   analytics: (filters: any) => [...affiliateQueryKeys.all, "analytics", filters] as const,
   feedRules: (partnerId: string) => [...affiliateQueryKeys.all, "feed-rules", partnerId] as const,
   coReg: (partner: string, filters: any) => [...affiliateQueryKeys.all, "coreg", partner, filters] as const,
+  reportRecipients: (partnerId: string) => [...affiliateQueryKeys.all, "report-recipients", partnerId] as const,
 };
 
 // Partner Management Hooks
@@ -375,6 +379,8 @@ export const useAffiliateAnalytics = (params?: {
   endDate?: string;
   source?: "manual" | "auto-redirect" | "partner-feed";
   partnerType?: "selling" | "buying";
+  deduplicate?: boolean;
+  requireApplication?: boolean;
 }) => {
   return useQuery({
     queryKey: affiliateQueryKeys.analytics(params || {}),
@@ -484,5 +490,49 @@ export const useCoRegs = (params?: {
     queryFn: () => getCoRegs(params),
     staleTime: 1000 * 60 * 2, // 2 minutes
     gcTime: 1000 * 60 * 5,
+  });
+};
+
+// Report Recipients Hooks
+export const useReportRecipients = (partnerId: string) => {
+  return useQuery({
+    queryKey: affiliateQueryKeys.reportRecipients(partnerId),
+    queryFn: () => getReportRecipients(partnerId),
+    enabled: !!partnerId,
+    staleTime: 1000 * 60 * 5,
+  });
+};
+
+export const useAddReportRecipient = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ partnerId, email }: { partnerId: string; email: string }) =>
+      addReportRecipient(partnerId, email),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: affiliateQueryKeys.reportRecipients(variables.partnerId) });
+      showToast.success("Recipient Added!", "Report recipient has been added successfully.");
+    },
+    onError: (error: any) => {
+      const errorMessage = error.response?.data?.message || error.message || "Failed to add recipient";
+      showToast.error("Add Failed", errorMessage);
+    },
+  });
+};
+
+export const useRemoveReportRecipient = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ partnerId, recipientId }: { partnerId: string; recipientId: string }) =>
+      removeReportRecipient(partnerId, recipientId),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: affiliateQueryKeys.reportRecipients(variables.partnerId) });
+      showToast.success("Recipient Removed!", "Report recipient has been removed successfully.");
+    },
+    onError: (error: any) => {
+      const errorMessage = error.response?.data?.message || error.message || "Failed to remove recipient";
+      showToast.error("Remove Failed", errorMessage);
+    },
   });
 };
