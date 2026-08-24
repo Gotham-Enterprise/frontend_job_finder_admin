@@ -168,6 +168,16 @@ export interface AffiliateAnalytics {
       name: string;
     } | null;
   }>;
+  topLinks?: Array<{
+    linkId: string;
+    id: string;
+    name: string;
+    url: string;
+    type: string;
+    affiliate: { id: string; name: string } | null;
+    clicks: number;
+    uniqueIpAddresses: number;
+  }>;
   clicksOverTime: Array<{
     date: string;
     clicks: number;
