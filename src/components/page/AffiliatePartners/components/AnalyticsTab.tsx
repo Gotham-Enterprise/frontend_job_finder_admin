@@ -4,16 +4,116 @@ import React, { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAffiliateAnalytics, useAffiliatePartners } from '@/services/hooks/useAffiliates'
 import dynamic from 'next/dynamic'
-import { TrendingUp, Users, MousePointerClick, Trophy, DollarSign, CheckCircle, BarChart2, Briefcase } from 'lucide-react'
+import { TrendingUp, Users, MousePointerClick, Trophy, DollarSign, CheckCircle, BarChart2, Briefcase, HelpCircle, Download } from 'lucide-react'
 import DatePicker from '@/components/form/date-picker'
+import type { AffiliateAnalytics } from '@/services/api/affiliates'
 
 type ViewMode = 'selling' | 'buying'
 
 const isValidViewMode = (value: string | null): value is ViewMode =>
   value === 'selling' || value === 'buying'
 
+function escapeCsvField(value: string | number): string {
+  const str = String(value)
+  if (/[",\n\r]/.test(str)) {
+    return `"${str.replace(/"/g, '""')}"`
+  }
+  return str
+}
+
+function slugifyForFilename(value: string): string {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'all-partners'
+}
+
+function downloadBuyingAnalyticsCsv({
+  partnerName,
+  startDate,
+  endDate,
+  analytics,
+}: {
+  partnerName: string
+  startDate: string
+  endDate: string
+  analytics: AffiliateAnalytics
+}) {
+  const headers = [
+    'Partner name',
+    'Date Range',
+    'Total Clicks',
+    'Total Conversions',
+    'Total Estimated Spend',
+    'Total CPC Spend',
+    'Total CPA Spend',
+  ]
+  const row = [
+    partnerName,
+    `${startDate} to ${endDate}`,
+    analytics.totalClicks ?? 0,
+    analytics.totalConversions ?? 0,
+    (analytics.estimatedSpend ?? 0).toFixed(2),
+    (analytics.cpcSpend ?? 0).toFixed(2),
+    (analytics.totalCpaSpend ?? 0).toFixed(2),
+  ]
+  const csv = [headers.map(escapeCsvField).join(','), row.map(escapeCsvField).join(',')].join('\n')
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = `affiliate-buying-report-${slugifyForFilename(partnerName)}-${startDate}-${endDate}.csv`
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  URL.revokeObjectURL(url)
+}
+
 // Dynamically import ApexCharts to avoid SSR issues
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false })
+
+function ToggleWithTooltip({
+  label,
+  checked,
+  onChange,
+  tooltip,
+}: {
+  label: string
+  checked: boolean
+  onChange: (value: boolean) => void
+  tooltip: string
+}) {
+  return (
+    <div className="flex items-center gap-2">
+      <button
+        type="button"
+        role="switch"
+        aria-checked={checked}
+        onClick={() => onChange(!checked)}
+        className="flex items-center gap-2 cursor-pointer group/toggle"
+      >
+        <div
+          className={`relative w-10 h-5 rounded-full transition-colors duration-200 ${
+            checked ? 'bg-primary' : 'bg-gray-300 dark:bg-gray-600'
+          }`}
+        >
+          <span
+            className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ${
+              checked ? 'translate-x-5' : 'translate-x-0'
+            }`}
+          />
+        </div>
+        <span className="text-sm font-medium text-gray-700 dark:text-gray-300 select-none">
+          {label}
+        </span>
+      </button>
+      <div className="relative group/tip">
+        <HelpCircle className="w-4 h-4 text-gray-400 dark:text-gray-500 cursor-help" />
+        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover/tip:block w-72 p-3 bg-gray-900 dark:bg-gray-800 text-white text-xs rounded-lg shadow-xl z-20 leading-relaxed pointer-events-none">
+          {tooltip}
+          <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900 dark:border-t-gray-800" />
+        </div>
+      </div>
+    </div>
+  )
+}
 
 export default function AnalyticsTab() {
   const router = useRouter()
@@ -27,6 +127,8 @@ export default function AnalyticsTab() {
     startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     endDate: new Date().toISOString().split('T')[0],
   })
+  const [deduplicate, setDeduplicate] = useState(true)
+  const [requireApplication, setRequireApplication] = useState(true)
 
   const { data: partnersData } = useAffiliatePartners({ limit: 100 })
   const { data: analytics, isLoading } = useAffiliateAnalytics({
@@ -35,6 +137,8 @@ export default function AnalyticsTab() {
     endDate: dateRange.endDate,
     source: viewMode === 'buying' ? 'partner-feed' : undefined,
     partnerType: viewMode,
+    deduplicate,
+    requireApplication,
   })
 
   const isBuyingView = viewMode === 'buying'
@@ -196,15 +300,28 @@ export default function AnalyticsTab() {
     },
   }
 
+  const selectedPartnerName =
+    filteredPartners.find((partner) => partner.id === selectedPartnerId)?.name || 'All Partners'
+
+  const handleDownloadReport = () => {
+    if (!analytics) return
+    downloadBuyingAnalyticsCsv({
+      partnerName: selectedPartnerName,
+      startDate: dateRange.startDate,
+      endDate: dateRange.endDate,
+      analytics,
+    })
+  }
+
   const chartSeries = isBuyingView
     ? [
       {
-        name: 'Partner Feed Clicks',
+        name: 'Total Clicks',
         type: 'area' as const,
         data: analytics?.clicksOverTime?.map((d) => d.clicks) || [],
       },
       {
-        name: 'Estimated Spend',
+        name: 'Total Estimated Spend',
         type: 'line' as const,
         data: analytics?.clicksOverTime?.map((d) => d.estimatedSpend || 0) || [],
       },
@@ -232,7 +349,18 @@ export default function AnalyticsTab() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Analytics Dashboard</h2>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          {isBuyingView && (
+            <button
+              type="button"
+              onClick={handleDownloadReport}
+              disabled={!analytics}
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Download className="w-4 h-4" />
+              Download report
+            </button>
+          )}
           <button
             onClick={() => handleViewModeChange('selling')}
             className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${viewMode === 'selling'
@@ -330,6 +458,22 @@ export default function AnalyticsTab() {
         </div>
       </div>
 
+      {/* Deduplication & Application filter toggles */}
+      <div className="flex flex-wrap items-center gap-6 px-1">
+        <ToggleWithTooltip
+          label="Deduplicate"
+          checked={deduplicate}
+          onChange={setDeduplicate}
+          tooltip="Clicks: counts only the first click per unique IP address. Conversions: keeps only the earliest conversion per unique IP + user name combination. Conversions without a recorded IP address are always included."
+        />
+        <ToggleWithTooltip
+          label="Require Application"
+          checked={requireApplication}
+          onChange={setRequireApplication}
+          tooltip="Only shows conversions that are linked to a confirmed job application. Conversions recorded via S2S postback or other means without a matching application are excluded."
+        />
+      </div>
+
       {/* Job Count Cards */}
       {!isBuyingView && (
         <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
@@ -351,85 +495,70 @@ export default function AnalyticsTab() {
       )}
 
       {isBuyingView ? (
-        <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="border border-gray-200 dark:border-gray-800 rounded-lg p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-blue-700 dark:text-blue-400 font-medium">Partner Feed Clicks</p>
-                  <p className="text-3xl font-bold text-blue-900 dark:text-blue-300 mt-2">
+                  <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Total Clicks</p>
+                  <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">
                     {analytics?.totalClicks?.toLocaleString() || 0}
                   </p>
                 </div>
-                <MousePointerClick className="w-12 h-12 text-blue-600 dark:text-blue-500" />
+                <MousePointerClick className="w-12 h-12 text-gray-400 dark:text-gray-500" />
               </div>
             </div>
-            <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-6">
+            <div className="border border-gray-200 dark:border-gray-800 rounded-lg p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-amber-700 dark:text-amber-400 font-medium">Estimated Spend</p>
-                  <p className="text-3xl font-bold text-amber-900 dark:text-amber-300 mt-2">
-                    ${(analytics?.estimatedSpend ?? 0).toFixed(2)}
-                  </p>
-                  <p className="text-xs text-amber-600 dark:text-amber-500 mt-1">
-                    CPC ${(analytics?.cpcSpend ?? 0).toFixed(2)} + CPA ${(analytics?.totalCpaSpend ?? 0).toFixed(2)}
-                  </p>
-                </div>
-                <DollarSign className="w-12 h-12 text-amber-600 dark:text-amber-500" />
-              </div>
-            </div>
-            <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-emerald-700 dark:text-emerald-400 font-medium">Conversions</p>
-                  <p className="text-3xl font-bold text-emerald-900 dark:text-emerald-300 mt-2">
+                  <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Total Conversions</p>
+                  <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">
                     {analytics?.totalConversions?.toLocaleString() ?? 0}
                   </p>
-                  <p className="text-xs text-emerald-600 dark:text-emerald-500 mt-1">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                     {analytics?.conversionRate ?? 0}% conversion rate
                   </p>
                 </div>
-                <CheckCircle className="w-12 h-12 text-emerald-600 dark:text-emerald-500" />
-              </div>
-            </div>
-            <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-purple-700 dark:text-purple-400 font-medium">Cost / Conversion</p>
-                  <p className="text-3xl font-bold text-purple-900 dark:text-purple-300 mt-2">
-                    {analytics?.costPerConversion != null
-                      ? `$${analytics.costPerConversion.toFixed(2)}`
-                      : '—'}
-                  </p>
-                </div>
-                <BarChart2 className="w-12 h-12 text-purple-600 dark:text-purple-500" />
+                <CheckCircle className="w-12 h-12 text-gray-400 dark:text-gray-500" />
               </div>
             </div>
           </div>
-
-          {analytics?.clicksBySource && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="border border-gray-200 dark:border-gray-800 rounded-lg p-4">
-                <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">Manual</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
-                  {analytics.clicksBySource.manual.toLocaleString()}
-                </p>
-              </div>
-              <div className="border border-gray-200 dark:border-gray-800 rounded-lg p-4">
-                <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">Auto-Redirect</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
-                  {analytics.clicksBySource.autoRedirect.toLocaleString()}
-                </p>
-              </div>
-              <div className="border border-gray-200 dark:border-gray-800 rounded-lg p-4">
-                <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">Partner Feed</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
-                  {analytics.clicksBySource.partnerFeed.toLocaleString()}
-                </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="border border-gray-200 dark:border-gray-800 rounded-lg p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Total Estimated Spend</p>
+                  <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">
+                    ${(analytics?.estimatedSpend ?? 0).toFixed(2)}
+                  </p>
+                </div>
+                <DollarSign className="w-12 h-12 text-gray-400 dark:text-gray-500" />
               </div>
             </div>
-          )}
-        </>
+            <div className="border border-gray-200 dark:border-gray-800 rounded-lg p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Total CPC Spend</p>
+                  <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">
+                    ${(analytics?.cpcSpend ?? 0).toFixed(2)}
+                  </p>
+                </div>
+                <DollarSign className="w-12 h-12 text-gray-400 dark:text-gray-500" />
+              </div>
+            </div>
+            <div className="border border-gray-200 dark:border-gray-800 rounded-lg p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Total CPA Spend</p>
+                  <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">
+                    ${(analytics?.totalCpaSpend ?? 0).toFixed(2)}
+                  </p>
+                </div>
+                <DollarSign className="w-12 h-12 text-gray-400 dark:text-gray-500" />
+              </div>
+            </div>
+          </div>
+        </div>
       ) : (
         <>
           {/* Metrics Cards */}
@@ -669,6 +798,98 @@ export default function AnalyticsTab() {
                       <span className="inline-flex items-center gap-1 px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 rounded-full text-sm font-medium">
                         <MousePointerClick className="w-3 h-3" />
                         {job.uniqueIpAddresses || 0}
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={5} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                    No data available
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Top Performing Links */}
+      <div className="border border-gray-200 dark:border-gray-800 rounded-lg">
+        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-800">
+          <div className="flex items-center gap-2">
+            <Trophy className="w-5 h-5 text-yellow-500" />
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              Top Performing Links
+            </h3>
+          </div>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50 dark:bg-gray-900/50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Rank
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Link Name
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Partner
+                </th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Total Clicks
+                </th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Unique IPs
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white dark:bg-transparent divide-y divide-gray-200 dark:divide-gray-800">
+              {analytics?.topLinks && analytics.topLinks.length > 0 ? (
+                analytics.topLinks.map((link: any, index: number) => (
+                  <tr
+                    key={link.linkId}
+                    className="hover:bg-gray-50 dark:hover:bg-gray-900/30 transition-colors"
+                  >
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        {index === 0 && (
+                          <span className="text-yellow-500 font-bold text-lg">🥇</span>
+                        )}
+                        {index === 1 && (
+                          <span className="text-gray-400 font-bold text-lg">🥈</span>
+                        )}
+                        {index === 2 && (
+                          <span className="text-orange-600 font-bold text-lg">🥉</span>
+                        )}
+                        {index > 2 && (
+                          <span className="text-gray-500 dark:text-gray-400 font-medium">
+                            {index + 1}
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-sm font-medium text-gray-900 dark:text-white">
+                        {link.name}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-sm text-gray-700 dark:text-gray-300 capitalize">
+                        {link.affiliate?.name || 'N/A'}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right">
+                      <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-full text-sm font-medium">
+                        <MousePointerClick className="w-3 h-3" />
+                        {link.clicks}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right">
+                      <span className="inline-flex items-center gap-1 px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 rounded-full text-sm font-medium">
+                        <MousePointerClick className="w-3 h-3" />
+                        {link.uniqueIpAddresses || 0}
                       </span>
                     </td>
                   </tr>

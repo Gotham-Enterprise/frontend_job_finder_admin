@@ -49,12 +49,31 @@ export interface AffiliatePartnerFeedRule {
   updatedAt: string;
 }
 
+export interface AffiliateFaq {
+  question: string;
+  answer: string;
+}
+
 export interface AffiliateLink {
   id: string;
   name: string;
   url: string;
   type?: string;
+  format?: string;
+  targetAudience?: string;
+  contentLevel?: string;
+  overview?: string;
+  whoShouldEnroll?: string;
+  whatYoullLearn?: string[];
+  careerOutlook?: string;
+  faqs?: AffiliateFaq[];
+  ceHours?: number;
+  ceCredits?: number;
   occupations?: string[];
+  courseThumbnail?: string | null;
+  city?: string;
+  state?: string;
+  zipCode?: string;
   affiliateId: string;
   affiliate?: {
     id: string;
@@ -236,6 +255,20 @@ export interface CreateLinkData {
   name: string;
   url: string;
   type?: string;
+  format?: string;
+  courseThumbnail?: string | null;
+  city?: string;
+  state?: string;
+  zipCode?: string;
+  targetAudience?: string;
+  contentLevel?: string;
+  overview?: string;
+  whoShouldEnroll?: string;
+  whatYoullLearn?: string[];
+  careerOutlook?: string;
+  faqs?: AffiliateFaq[];
+  ceHours?: number;
+  ceCredits?: number;
   occupations?: string[];
   affiliateId: string;
 }
@@ -244,6 +277,20 @@ export interface UpdateLinkData {
   name?: string;
   url?: string;
   type?: string;
+  format?: string;
+  courseThumbnail?: string | null;
+  city?: string;
+  state?: string;
+  zipCode?: string;
+  targetAudience?: string;
+  contentLevel?: string;
+  overview?: string;
+  whoShouldEnroll?: string;
+  whatYoullLearn?: string[];
+  careerOutlook?: string;
+  faqs?: AffiliateFaq[];
+  ceHours?: number;
+  ceCredits?: number;
   occupations?: string[];
   affiliateId?: string;
 }
@@ -338,6 +385,43 @@ export const deleteAffiliateLink = async (id: string): Promise<void> => {
   return apiDelete(`/api/admin/affiliates/links/${id}`);
 };
 
+export interface AffiliateLinkType {
+  id: string;
+  name: string;
+  isActive: boolean;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Link Type Configuration APIs
+export const getAffiliateLinkTypes = async (): Promise<AffiliateLinkType[]> => {
+  const res = await apiGet<{ success: boolean; data: AffiliateLinkType[] }>("/api/admin/affiliates/link-types");
+  return res.data || [];
+};
+
+export const createAffiliateLinkType = async (data: { name: string }): Promise<AffiliateLinkType> => {
+  const res = await apiPost<{ success: boolean; data: AffiliateLinkType }>("/api/admin/affiliates/link-types", data);
+  return res.data;
+};
+
+export const updateAffiliateLinkType = async (
+  id: string,
+  data: { name?: string; isActive?: boolean; sortOrder?: number },
+): Promise<AffiliateLinkType> => {
+  const res = await apiPut<{ success: boolean; data: AffiliateLinkType }>(`/api/admin/affiliates/link-types/${id}`, data);
+  return res.data;
+};
+
+export const deleteAffiliateLinkType = async (id: string): Promise<void> => {
+  await apiDelete(`/api/admin/affiliates/link-types/${id}`);
+};
+
+export const reorderAffiliateLinkTypes = async (ids: string[]): Promise<AffiliateLinkType[]> => {
+  const res = await apiPut<{ success: boolean; data: AffiliateLinkType[] }>("/api/admin/affiliates/link-types/reorder", { ids });
+  return res.data || [];
+};
+
 // Upload & Batch Management APIs
 export const uploadAffiliateXML = async (
   file: File,
@@ -425,6 +509,8 @@ export const getAffiliateAnalytics = async (params?: {
   endDate?: string;
   source?: "manual" | "auto-redirect" | "partner-feed";
   partnerType?: "selling" | "buying";
+  deduplicate?: boolean;
+  requireApplication?: boolean;
 }): Promise<AffiliateAnalytics> => {
   const queryParams = new URLSearchParams();
   if (params?.affiliateId) queryParams.append("affiliateId", params.affiliateId);
@@ -432,6 +518,8 @@ export const getAffiliateAnalytics = async (params?: {
   if (params?.endDate) queryParams.append("endDate", params.endDate);
   if (params?.source) queryParams.append("source", params.source);
   if (params?.partnerType) queryParams.append("partnerType", params.partnerType);
+  if (params?.deduplicate !== undefined) queryParams.append("deduplicate", String(params.deduplicate));
+  if (params?.requireApplication !== undefined) queryParams.append("requireApplication", String(params.requireApplication));
   const queryString = queryParams.toString();
   const response = await apiGet<{ success: boolean; data: AffiliateAnalytics }>(
     `/api/admin/affiliates/analytics${queryString ? `?${queryString}` : ""}`
@@ -534,4 +622,33 @@ export const getCoRegs = async (params?: {
   if (params?.partner) queryParams.append("partner", params.partner);
   const queryString = queryParams.toString();
   return apiGet<CoRegListResponse>(`/api/admin/affiliates/coreg${queryString ? `?${queryString}` : ""}`);
+};
+
+// ===== Report Recipients APIs =====
+
+export interface AffiliateReportRecipient {
+  id: string;
+  affiliatePartnerId: string;
+  email: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export const getReportRecipients = async (partnerId: string): Promise<AffiliateReportRecipient[]> => {
+  const res = await apiGet<{ success: boolean; data: AffiliateReportRecipient[] }>(
+    `/api/admin/affiliates/partners/${partnerId}/report-recipients`
+  );
+  return res.data;
+};
+
+export const addReportRecipient = async (partnerId: string, email: string): Promise<AffiliateReportRecipient> => {
+  const res = await apiPost<{ success: boolean; data: AffiliateReportRecipient }>(
+    `/api/admin/affiliates/partners/${partnerId}/report-recipients`,
+    { email }
+  );
+  return res.data;
+};
+
+export const removeReportRecipient = async (partnerId: string, recipientId: string): Promise<void> => {
+  return apiDelete(`/api/admin/affiliates/partners/${partnerId}/report-recipients/${recipientId}`);
 };

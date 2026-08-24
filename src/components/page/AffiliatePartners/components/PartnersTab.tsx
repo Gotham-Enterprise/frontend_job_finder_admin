@@ -13,11 +13,13 @@ import {
 import type { AffiliatePartner, CreatePartnerData } from '@/services/api/affiliates'
 import { Edit2, Trash2, Plus, Mail, Phone, Globe, CheckCircle, XCircle, AlertCircle, Building2, RefreshCw, Clock, AlertTriangle, Rss } from 'lucide-react'
 import PartnerModal from './PartnerModal'
+import ReportRecipientsModal from './ReportRecipientsModal'
 
 export default function PartnersTab() {
   const [page, setPage] = useState(1)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingPartner, setEditingPartner] = useState<AffiliatePartner | null>(null)
+  const [reportRecipientsPartner, setReportRecipientsPartner] = useState<AffiliatePartner | null>(null)
 
   const { data: partnersData, isLoading } = useAffiliatePartners({ page, limit: 10 })
   const { data: syncStatusData } = useAffiliateSyncStatus()
@@ -320,6 +322,15 @@ export default function PartnersTab() {
                         <Rss className={`w-4 h-4 ${rebuildMutation.isPending ? 'animate-pulse' : ''}`} />
                       </button>
                     )}
+                    {partner.outboundFeedEnabled && (
+                      <button
+                        onClick={() => setReportRecipientsPartner(partner)}
+                        className="p-2 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                        title="Manage Report Recipients"
+                      >
+                        <Mail className="w-4 h-4" />
+                      </button>
+                    )}
                     {partner.syncEnabled && (
                       <button
                         onClick={() => handleSync(partner.id, partner.name)}
@@ -399,6 +410,16 @@ export default function PartnersTab() {
         onSubmit={handleSubmit}
         isSubmitting={createMutation.isPending || updateMutation.isPending}
       />
+
+      {/* Report Recipients Modal */}
+      {reportRecipientsPartner && (
+        <ReportRecipientsModal
+          isOpen={!!reportRecipientsPartner}
+          onClose={() => setReportRecipientsPartner(null)}
+          partnerId={reportRecipientsPartner.id}
+          partnerName={reportRecipientsPartner.name}
+        />
+      )}
     </div>
   )
 }
