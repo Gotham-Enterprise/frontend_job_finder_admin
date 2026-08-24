@@ -295,6 +295,8 @@ export const useAffiliateAnalytics = (params?: {
   endDate?: string;
   source?: "manual" | "auto-redirect" | "partner-feed";
   partnerType?: "selling" | "buying";
+  deduplicate?: boolean;
+  requireApplication?: boolean;
 }) => {
   return useQuery({
     queryKey: affiliateQueryKeys.analytics(params || {}),

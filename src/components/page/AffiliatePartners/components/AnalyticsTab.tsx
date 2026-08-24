@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAffiliateAnalytics, useAffiliatePartners } from '@/services/hooks/useAffiliates'
 import dynamic from 'next/dynamic'
-import { TrendingUp, Users, MousePointerClick, Trophy, DollarSign, CheckCircle, BarChart2, Briefcase } from 'lucide-react'
+import { TrendingUp, Users, MousePointerClick, Trophy, DollarSign, CheckCircle, BarChart2, Briefcase, HelpCircle } from 'lucide-react'
 import DatePicker from '@/components/form/date-picker'
 
 type ViewMode = 'selling' | 'buying'
@@ -14,6 +14,52 @@ const isValidViewMode = (value: string | null): value is ViewMode =>
 
 // Dynamically import ApexCharts to avoid SSR issues
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false })
+
+function ToggleWithTooltip({
+  label,
+  checked,
+  onChange,
+  tooltip,
+}: {
+  label: string
+  checked: boolean
+  onChange: (value: boolean) => void
+  tooltip: string
+}) {
+  return (
+    <div className="flex items-center gap-2">
+      <button
+        type="button"
+        role="switch"
+        aria-checked={checked}
+        onClick={() => onChange(!checked)}
+        className="flex items-center gap-2 cursor-pointer group/toggle"
+      >
+        <div
+          className={`relative w-10 h-5 rounded-full transition-colors duration-200 ${
+            checked ? 'bg-primary' : 'bg-gray-300 dark:bg-gray-600'
+          }`}
+        >
+          <span
+            className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ${
+              checked ? 'translate-x-5' : 'translate-x-0'
+            }`}
+          />
+        </div>
+        <span className="text-sm font-medium text-gray-700 dark:text-gray-300 select-none">
+          {label}
+        </span>
+      </button>
+      <div className="relative group/tip">
+        <HelpCircle className="w-4 h-4 text-gray-400 dark:text-gray-500 cursor-help" />
+        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover/tip:block w-72 p-3 bg-gray-900 dark:bg-gray-800 text-white text-xs rounded-lg shadow-xl z-20 leading-relaxed pointer-events-none">
+          {tooltip}
+          <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900 dark:border-t-gray-800" />
+        </div>
+      </div>
+    </div>
+  )
+}
 
 export default function AnalyticsTab() {
   const router = useRouter()
@@ -27,6 +73,8 @@ export default function AnalyticsTab() {
     startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     endDate: new Date().toISOString().split('T')[0],
   })
+  const [deduplicate, setDeduplicate] = useState(true)
+  const [requireApplication, setRequireApplication] = useState(true)
 
   const { data: partnersData } = useAffiliatePartners({ limit: 100 })
   const { data: analytics, isLoading } = useAffiliateAnalytics({
@@ -35,6 +83,8 @@ export default function AnalyticsTab() {
     endDate: dateRange.endDate,
     source: viewMode === 'buying' ? 'partner-feed' : undefined,
     partnerType: viewMode,
+    deduplicate,
+    requireApplication,
   })
 
   const isBuyingView = viewMode === 'buying'
@@ -328,6 +378,22 @@ export default function AnalyticsTab() {
             }}
           />
         </div>
+      </div>
+
+      {/* Deduplication & Application filter toggles */}
+      <div className="flex flex-wrap items-center gap-6 px-1">
+        <ToggleWithTooltip
+          label="Deduplicate"
+          checked={deduplicate}
+          onChange={setDeduplicate}
+          tooltip="Clicks: counts only the first click per unique IP address. Conversions: keeps only the earliest conversion per unique IP + user name combination. Conversions without a recorded IP address are always included."
+        />
+        <ToggleWithTooltip
+          label="Require Application"
+          checked={requireApplication}
+          onChange={setRequireApplication}
+          tooltip="Only shows conversions that are linked to a confirmed job application. Conversions recorded via S2S postback or other means without a matching application are excluded."
+        />
       </div>
 
       {/* Job Count Cards */}
