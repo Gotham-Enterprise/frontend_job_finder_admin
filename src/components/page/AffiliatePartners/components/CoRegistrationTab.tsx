@@ -120,7 +120,7 @@ function ErrorCell({ message }: { message: string | null }) {
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-type PartnerType = 'adzuna' | 'lensa' | 'disqo' | 'cv_library' | 'talent_inc'
+type PartnerType = 'adzuna' | 'lensa' | 'disqo' | 'cv_library' | 'talent_inc' | 'health_jobs_nationwide'
 
 const PARTNER_OPTIONS: { value: PartnerType; label: string }[] = [
   { value: 'adzuna', label: 'Adzuna' },
@@ -128,6 +128,7 @@ const PARTNER_OPTIONS: { value: PartnerType; label: string }[] = [
   { value: 'disqo', label: 'Disqo' },
   { value: 'cv_library', label: 'CV Library' },
   { value: 'talent_inc', label: 'Talent Inc' },
+  { value: 'health_jobs_nationwide', label: 'HealthJobsNationwide' },
 ]
 
 export default function CoRegistrationTab() {
