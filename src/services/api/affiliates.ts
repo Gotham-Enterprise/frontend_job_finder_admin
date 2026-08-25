@@ -316,7 +316,14 @@ export const getAffiliatePartners = async (params?: {
   if (params?.limit) queryParams.append("limit", params.limit.toString());
   if (params?.status) queryParams.append("status", params.status);
   const queryString = queryParams.toString();
-  return apiGet(`/api/admin/affiliates/partners${queryString ? `?${queryString}` : ""}`);
+  const res = await apiGet<{
+    data: AffiliatePartner[];
+    pagination: { page: number; limit: number; total: number; totalPages: number };
+  }>(`/api/admin/affiliates/partners${queryString ? `?${queryString}` : ""}`);
+  return {
+    data: res.data,
+    ...res.pagination,
+  };
 };
 
 export const getAffiliatePartner = async (id: string): Promise<AffiliatePartner> => {
