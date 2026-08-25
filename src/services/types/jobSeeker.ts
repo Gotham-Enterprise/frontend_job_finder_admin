@@ -114,6 +114,8 @@ export interface JobSeekerDetails {
   licenses?: License[];
   skills?: Skill[];
   languages?: Language[];
+  occupation?: string;
+  specialty?: string;
   occupationId?: number;
   specialtyId?: number;
   isPermanentlyDeleted?: boolean;
