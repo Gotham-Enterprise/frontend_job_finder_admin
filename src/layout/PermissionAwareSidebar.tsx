@@ -23,6 +23,7 @@ import {
   MailIcon,
   ShootingStarIcon,
   DocsIcon,
+  BoxIcon,
 } from "../icons/index";
 import { BriefcaseIcon, CareerLadderIcon, TicketIcon, BlogIcon, CouponIcon } from "../components/ui/icons/index";
 
@@ -222,6 +223,15 @@ const navItems: NavItem[] = [
     name: "Indexing Logs",
     path: "/admin/indexing-logs",
     isAccessible: true,
+  },
+  {
+    icon: <BoxIcon />,
+    name: "Office Spaces",
+    isAccessible: true,
+    subItems: [
+      { name: "All Listings", path: "/admin/office-spaces", requiredAction: "view" },
+      { name: "Inquiries", path: "/admin/office-spaces/inquiries", requiredAction: "view" },
+    ],
   },
 ];
 
