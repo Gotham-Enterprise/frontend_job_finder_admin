@@ -19,13 +19,13 @@ export const officeSpaceAdminApi = {
     if (filters.search) queryParams.append("search", filters.search);
     if (filters.sortBy) queryParams.append("sortBy", filters.sortBy);
     if (filters.sort) queryParams.append("sort", filters.sort);
-    const endpoint = `/api/office-spaces/admin/listings?${queryParams.toString()}`;
+    const endpoint = `/api/admin/office-spaces?${queryParams.toString()}`;
     return apiGet<OfficeSpaceAdminListingsResponse>(endpoint);
   },
 
   async getListingById(id: string): Promise<OfficeSpaceAdminDetailResponse> {
     return apiGet<OfficeSpaceAdminDetailResponse>(
-      `/api/office-spaces/${id}`
+      `/api/admin/office-spaces/${id}`
     );
   },
 
@@ -34,14 +34,14 @@ export const officeSpaceAdminApi = {
     status: string
   ): Promise<OfficeSpaceAdminStatusResponse> {
     return apiPut<OfficeSpaceAdminStatusResponse>(
-      `/api/office-spaces/admin/listings/${id}/status`,
+      `/api/admin/office-spaces/${id}/status`,
       { status }
     );
   },
 
   async getStats(): Promise<OfficeSpaceAdminStatsResponse> {
     return apiGet<OfficeSpaceAdminStatsResponse>(
-      "/api/office-spaces/admin/stats"
+      "/api/admin/office-spaces/stats"
     );
   },
 
@@ -53,7 +53,7 @@ export const officeSpaceAdminApi = {
     queryParams.append("page", page.toString());
     queryParams.append("limit", limit.toString());
     return apiGet<OfficeSpaceAdminInquiriesResponse>(
-      `/api/office-spaces/admin/inquiries?${queryParams.toString()}`
+      `/api/admin/office-spaces/inquiries?${queryParams.toString()}`
     );
   },
 };

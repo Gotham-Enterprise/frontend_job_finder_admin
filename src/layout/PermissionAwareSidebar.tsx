@@ -229,8 +229,8 @@ const navItems: NavItem[] = [
     name: "Office Spaces",
     isAccessible: true,
     subItems: [
-      { name: "All Listings", path: "/admin/office-spaces", requiredAction: "view" },
-      { name: "Inquiries", path: "/admin/office-spaces/inquiries", requiredAction: "view" },
+      { name: "All Listings", path: "/admin/office-spaces" },
+      { name: "Inquiries", path: "/admin/office-spaces/inquiries" },
     ],
   },
 ];

@@ -27,6 +27,7 @@ export enum InquiryType {
 }
 
 export enum InquiryStatus {
+  NEW = "NEW",
   PENDING = "PENDING",
   CONTACTED = "CONTACTED",
   TOUR_SCHEDULED = "TOUR_SCHEDULED",
@@ -50,37 +51,48 @@ export interface OfficeSpaceListing {
   id: string;
   landlordId: string;
   title: string;
-  description: string;
-  propertyType: PropertyType;
-  status: ListingStatus;
+  description: string | null;
+  slug: string | null;
+  propertyType: string;
+  status: string;
   address: string;
+  address2: string | null;
   city: string;
   state: string;
   zipCode: string;
   country: string;
-  latitude: number;
-  longitude: number;
-  squareFootage: number | null;
-  pricePerSqFt: number | null;
-  monthlyRent: number | null;
-  leaseTermMonths: number | null;
-  yearBuilt: number | null;
-  floorsAvailable: number | null;
-  parkingSpaces: number | null;
-  isFurnished: boolean;
-  hasAC: boolean;
-  hasHighSpeedInternet: boolean;
-  hasConferenceRooms: boolean;
-  hasKitchen: boolean;
-  hasRestrooms: boolean;
-  hasElevator: boolean;
-  hasSecuritySystem: boolean;
-  isWheelchairAccessible: boolean;
-  allowsPets: boolean;
-  utilitiesIncluded: boolean;
+  latitude: number | null;
+  longitude: number | null;
+  squareFootage: number;
+  rentPrice: number;
+  monthlyRent: number;
+  rentCurrency: string;
+  rentType: string;
+  leaseTermMin: number | null;
+  leaseTermMax: number | null;
   availableFrom: string | null;
+  isFurnished: boolean;
+  numExamRooms: number | null;
+  numOffices: number | null;
+  numRestrooms: number | null;
+  numParkingSpots: number | null;
+  hasReception: boolean;
+  hasWaitingRoom: boolean;
+  hasKitchen: boolean;
+  hasStorage: boolean;
+  contactName: string | null;
+  contactEmail: string | null;
+  contactPhone: string | null;
+  contactUrl: string | null;
+  floorPlanUrl: string | null;
+  virtualTourUrl: string | null;
+  isPublished: boolean;
+  isFeatured: boolean;
+  viewsCount: number;
+  inquiriesCount: number;
   photos: OfficeSpacePhoto[] | null;
-  features: string[] | null;
+  amenities: string[] | null;
+  landlord: { id: string; businessName: string | null; avatarUrl: string | null } | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -116,9 +128,13 @@ export interface OfficeSpaceAdminStats {
   totalListings: number;
   activeListings: number;
   pendingReview: number;
+  inactiveListings: number;
   totalInquiries: number;
+  newInquiries: number;
   totalLandlords: number;
   totalRevenue: number;
+  byPropertyType: Array<{ propertyType: string; _count: number }>;
+  topCities: Array<{ city: string; _count: number }>;
 }
 
 // ─── API Response Types ──────────────────────────────────────────────────────

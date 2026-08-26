@@ -5,7 +5,7 @@ import { ListingStatus, InquiryStatus } from "@/services/types/officeSpace";
 type StatusValue = ListingStatus | InquiryStatus;
 
 interface OfficeSpaceStatusBadgeProps {
-  status: StatusValue;
+  status: string;
   className?: string;
 }
 
@@ -19,6 +19,7 @@ const STATUS_CONFIG: Record<
   [ListingStatus.INACTIVE]: { color: "error", label: "Inactive" },
   [ListingStatus.ARCHIVED]: { color: "light", label: "Archived" },
   [ListingStatus.RENTED]: { color: "info", label: "Rented" },
+  [InquiryStatus.NEW]: { color: "warning", label: "New" },
   [InquiryStatus.PENDING]: { color: "warning", label: "Pending" },
   [InquiryStatus.CONTACTED]: { color: "info", label: "Contacted" },
   [InquiryStatus.TOUR_SCHEDULED]: { color: "info", label: "Tour Scheduled" },

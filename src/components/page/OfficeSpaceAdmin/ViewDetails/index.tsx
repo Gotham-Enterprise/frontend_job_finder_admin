@@ -37,16 +37,10 @@ const STATUS_OPTIONS = [
 
 const AMENITY_LIST = [
   { key: "isFurnished", label: "Furnished" },
-  { key: "hasAC", label: "Air Conditioning" },
-  { key: "hasHighSpeedInternet", label: "High-Speed Internet" },
-  { key: "hasConferenceRooms", label: "Conference Rooms" },
+  { key: "hasReception", label: "Reception" },
+  { key: "hasWaitingRoom", label: "Waiting Room" },
   { key: "hasKitchen", label: "Kitchen" },
-  { key: "hasRestrooms", label: "Restrooms" },
-  { key: "hasElevator", label: "Elevator" },
-  { key: "hasSecuritySystem", label: "Security System" },
-  { key: "isWheelchairAccessible", label: "Wheelchair Accessible" },
-  { key: "allowsPets", label: "Pets Allowed" },
-  { key: "utilitiesIncluded", label: "Utilities Included" },
+  { key: "hasStorage", label: "Storage" },
 ];
 
 export default function OfficeSpaceViewDetails({ id }: ViewDetailsProps) {
@@ -154,34 +148,24 @@ export default function OfficeSpaceViewDetails({ id }: ViewDetailsProps) {
                     : "N/A"
                 }
               />
-              <DetailItem
-                icon={<DollarSign className="w-4 h-4" />}
-                label="Price/sq ft"
-                value={
-                  listing.pricePerSqFt != null
-                    ? `$${listing.pricePerSqFt}`
-                    : "N/A"
-                }
-              />
-              {listing.leaseTermMonths && (
+              {listing.leaseTermMin && (
                 <DetailItem
                   icon={<Calendar className="w-4 h-4" />}
                   label="Lease Term"
-                  value={`${listing.leaseTermMonths} months`}
+                  value={listing.leaseTermMax ? `${listing.leaseTermMin}-${listing.leaseTermMax} months` : `${listing.leaseTermMin} months`}
                 />
               )}
-              {listing.yearBuilt && (
-                <DetailItem
-                  icon={<Calendar className="w-4 h-4" />}
-                  label="Year Built"
-                  value={String(listing.yearBuilt)}
-                />
+              {listing.numExamRooms != null && (
+                <DetailItem label="Exam Rooms" value={String(listing.numExamRooms)} />
               )}
-              {listing.floorsAvailable && (
-                <DetailItem label="Floors" value={String(listing.floorsAvailable)} />
+              {listing.numOffices != null && (
+                <DetailItem label="Offices" value={String(listing.numOffices)} />
               )}
-              {listing.parkingSpaces != null && (
-                <DetailItem label="Parking" value={`${listing.parkingSpaces} spaces`} />
+              {listing.numRestrooms != null && (
+                <DetailItem label="Restrooms" value={String(listing.numRestrooms)} />
+              )}
+              {listing.numParkingSpots != null && (
+                <DetailItem label="Parking" value={`${listing.numParkingSpots} spots`} />
               )}
               {listing.availableFrom && (
                 <DetailItem
@@ -223,18 +207,18 @@ export default function OfficeSpaceViewDetails({ id }: ViewDetailsProps) {
             </div>
           </div>
 
-          {listing.features && listing.features.length > 0 && (
+          {listing.amenities && listing.amenities.length > 0 && (
             <div className="rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-white/[0.03]">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                Features
+                Amenities & Tags
               </h3>
               <div className="flex flex-wrap gap-2">
-                {listing.features.map((feature, idx) => (
+                {listing.amenities.map((amenity, idx) => (
                   <span
                     key={idx}
                     className="inline-flex items-center px-3 py-1 text-xs font-medium bg-blue-50 text-blue-700 rounded-full dark:bg-blue-900/30 dark:text-blue-300"
                   >
-                    {feature}
+                    {amenity}
                   </span>
                 ))}
               </div>
