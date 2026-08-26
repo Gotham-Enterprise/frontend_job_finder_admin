@@ -3,6 +3,7 @@ import { Modal } from "@/components/ui/modal";
 import Button from "@/components/ui/button/Button";
 import Input from "@/components/ui/input/Input";
 import Select from "@/components/form/Select";
+import MultiSelect from "@/components/form/MultiSelect";
 import DatePicker from "@/components/form/date-picker";
 import { jobSeekerApi } from "@/services/api/jobSeeker";
 import { JobSeekerLicensePayload, JobSeekerUpdateData } from "@/services/types/jobSeeker";
@@ -236,7 +237,7 @@ export const EditJobSeekerModal: React.FC<EditJobSeekerModalProps> = ({ isOpen, 
       zipCode: "",
       phoneNumber: "",
       occupationId: 0,
-      specialtyId: undefined,
+      specialtyIds: [],
     });
     setLicenseRows([]);
 
@@ -253,7 +254,7 @@ export const EditJobSeekerModal: React.FC<EditJobSeekerModalProps> = ({ isOpen, 
     zipCode: "",
     phoneNumber: "",
     occupationId: 0,
-    specialtyId: undefined,
+    specialtyIds: [],
   });
   const [licenseRows, setLicenseRows] = useState<LicenseFormRow[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -331,10 +332,10 @@ export const EditJobSeekerModal: React.FC<EditJobSeekerModalProps> = ({ isOpen, 
       : []),
   ];
 
-  // Get specialties for selected occupation
-  const getSpecialtyOptions = () => {
+  // Get specialties for selected occupation (multi-select options)
+  const specialtyOptions = useMemo(() => {
     if (!formData.occupationId || !occupationsData?.success || !occupationsData.data) {
-      return [{ value: "", label: "Select occupation first" }];
+      return [];
     }
 
     const selectedOccupation = occupationsData.data.find(
@@ -342,17 +343,15 @@ export const EditJobSeekerModal: React.FC<EditJobSeekerModalProps> = ({ isOpen, 
     );
 
     if (!selectedOccupation || !selectedOccupation.specialty) {
-      return [{ value: "", label: "No specialties available" }];
+      return [];
     }
 
-    return [
-      { value: "", label: "Select specialty (optional)" },
-      ...selectedOccupation.specialty.map((specialty) => ({
-        value: specialty.id.toString(),
-        label: specialty.name,
-      })),
-    ];
-  };
+    return selectedOccupation.specialty.map((specialty) => ({
+      value: specialty.id.toString(),
+      text: specialty.name,
+      selected: false,
+    }));
+  }, [formData.occupationId, occupationsData]);
 
   // Profile picture handling functions
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -420,7 +419,7 @@ export const EditJobSeekerModal: React.FC<EditJobSeekerModalProps> = ({ isOpen, 
           zipCode: jobSeeker.zipCode || "",
           phoneNumber: jobSeeker.phoneNumber || "",
           occupationId: jobSeeker.occupationId || 0,
-          specialtyId: jobSeeker.specialtyId || undefined,
+          specialtyIds: (jobSeeker.specialties ?? []).map((s) => s.id),
         });
 
         if (jobSeeker.licenses && jobSeeker.licenses.length > 0) {
@@ -529,7 +528,7 @@ export const EditJobSeekerModal: React.FC<EditJobSeekerModalProps> = ({ isOpen, 
     setLicenseRows((prev) => prev.filter((r) => r.key !== key));
   }, []);
 
-  const updateField = (field: keyof JobSeekerUpdateData, value: string | number | undefined) => {
+  const updateField = (field: keyof JobSeekerUpdateData, value: string | number | number[] | undefined) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
@@ -546,12 +545,12 @@ export const EditJobSeekerModal: React.FC<EditJobSeekerModalProps> = ({ isOpen, 
       setError(null);
     }
 
-    // Reset specialty when occupation changes
+    // Reset specialties when occupation changes
     if (field === "occupationId") {
       setFormData((prev) => ({
         ...prev,
         occupationId: value as number,
-        specialtyId: undefined,
+        specialtyIds: [],
       }));
     }
   };
@@ -830,15 +829,23 @@ export const EditJobSeekerModal: React.FC<EditJobSeekerModalProps> = ({ isOpen, 
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Specialty</label>
-                <Select
-                  options={getSpecialtyOptions()}
-                  value={formData.specialtyId?.toString() || ""}
-                  onChange={(value: string) => updateField("specialtyId", value ? parseInt(value) : undefined)}
-                  placeholder="Select specialty (optional)"
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Specialties</label>
+                <MultiSelect
+                  label=""
+                  options={specialtyOptions}
+                  value={(formData.specialtyIds ?? []).map((id) => id.toString())}
+                  onChange={(selected: string[]) =>
+                    updateField(
+                      "specialtyIds",
+                      selected.map((v) => parseInt(v, 10)).filter((n) => !Number.isNaN(n))
+                    )
+                  }
+                  placeholder={
+                    !formData.occupationId || formData.occupationId === 0
+                      ? "Select occupation first"
+                      : "Select specialties (optional)"
+                  }
                   disabled={!formData.occupationId || formData.occupationId === 0}
-                  searchable={true}
-                  searchPlaceholder="Search specialties..."
                 />
               </div>
 
