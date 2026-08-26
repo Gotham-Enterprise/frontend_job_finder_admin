@@ -10,7 +10,7 @@ import {
 export const documentVerificationQueryKeys = {
   all: ["documentVerifications"] as const,
   lists: () => [...documentVerificationQueryKeys.all, "list"] as const,
-  list: () => [...documentVerificationQueryKeys.lists()] as const,
+  list: (filters: DocumentVerificationFilters) => [...documentVerificationQueryKeys.lists(), filters] as const,
   details: () => [...documentVerificationQueryKeys.all, "details"] as const,
   detail: (kind: string, id: string) => [...documentVerificationQueryKeys.details(), kind, id] as const,
 };
@@ -29,7 +29,7 @@ export const useGetDocumentVerifications = (filters: DocumentVerificationFilters
     retry,
     retryDelay,
     staleTime,
-    queryKey: documentVerificationQueryKeys.list(),
+    queryKey: documentVerificationQueryKeys.list(filters),
     queryFn: () => {
       return documentVerificationApi.getDocumentVerifications(filters);
     },
