@@ -3,7 +3,7 @@ import { FC } from "react";
 import { useDocumentVerificationDetailLogic } from "@/services/hooks/useDocumentVerificationDetailLogic";
 import { DocumentVerificationDetailResponse } from "@/services/types/documentVerification";
 
-import { CandidateInfo, DocumentInfo, Actions } from ".";
+import { CandidateInfo, DocumentInfo, Actions, History } from ".";
 
 interface Props {
   data: DocumentVerificationDetailResponse;
@@ -20,6 +20,7 @@ const DetailWrapper: FC<Props> = ({ data }) => {
       </div>
       <div className="col-span-2 space-y-6">
         <DocumentInfo document={document} />
+        <History history={document.history} />
         <Actions
           document={document}
           isLoading={isLoading}

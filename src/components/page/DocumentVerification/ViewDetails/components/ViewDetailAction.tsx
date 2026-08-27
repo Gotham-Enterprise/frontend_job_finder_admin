@@ -7,6 +7,7 @@ import { useModal } from "@/hooks/useModal";
 import { AccountCheckCircleIcon } from "@/icons";
 import { DocumentVerificationDetailResponse, UseDocumentVerificationDetailLogic } from "@/services/types/documentVerification";
 import RejectionReasonModal from "../../components/RejectionReasonModal";
+import { displayableFieldEntries, fieldLabel, formatFieldValue } from "./documentFieldLabels";
 
 interface Props {
   document: UseDocumentVerificationDetailLogic["document"];
@@ -116,6 +117,16 @@ const ViewDetailActionReview: FC<Props> = ({
           </div>
           <div className="flex flex-col gap-2">
             <h3 className="text-gray-900 text-xl font-semibold">{document.documentName}</h3>
+            {displayableFieldEntries(document.fields).length > 0 && (
+              <dl className="grid grid-cols-2 gap-x-6 gap-y-2 rounded-lg bg-gray-50 p-4">
+                {displayableFieldEntries(document.fields).map(([key, value]) => (
+                  <div key={key}>
+                    <dt className="text-xs font-medium uppercase text-gray-500">{fieldLabel(key)}</dt>
+                    <dd className="text-sm font-medium text-gray-900">{formatFieldValue(key, value)}</dd>
+                  </div>
+                ))}
+              </dl>
+            )}
             {document.documentUrl ? (
               <a
                 href={document.documentUrl}

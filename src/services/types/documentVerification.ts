@@ -44,6 +44,38 @@ export interface DocumentVerificationFilters {
   status?: string;
 }
 
+// The AI/candidate-entered field values for this record — shape varies by kind
+// (see backend document_verification_service.js#getDocumentVerification), so this
+// stays a loose record rather than a discriminated union; consumers look up only
+// the keys they know how to label/format.
+export type DocumentVerificationFields = Record<string, string | null | undefined>;
+
+export interface DocumentVerificationHistoryChange {
+  field: string;
+  from: string | null;
+  to: string | null;
+}
+
+export interface DocumentVerificationHistoryEntry {
+  id: string;
+  action: string;
+  details: {
+    documentName?: string;
+    category?: string;
+    status?: string;
+    rejectionReason?: string | null;
+    reQueuedForReview?: boolean;
+    changes?: DocumentVerificationHistoryChange[];
+    fields?: DocumentVerificationFields;
+  } | null;
+  timestamp: string;
+  actor: {
+    role: string;
+    name: string;
+    email?: string;
+  };
+}
+
 export interface DocumentVerificationDetailResponse {
   success: boolean;
   data: {
@@ -53,15 +85,18 @@ export interface DocumentVerificationDetailResponse {
     documentName: string;
     fileName: string | null;
     documentUrl: string | null;
+    fields: DocumentVerificationFields;
     verificationStatus: DocumentVerificationStatus;
     verificationReviewedAt: string | null;
     verificationRejectionReason: string | null;
     createdAt: string;
+    updatedAt: string;
     candidate: {
       id: string;
       name: string;
       email: string;
     };
+    history: DocumentVerificationHistoryEntry[];
   };
 }
 

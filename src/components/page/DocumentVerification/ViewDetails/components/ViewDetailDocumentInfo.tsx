@@ -4,6 +4,7 @@ import { FileText } from "lucide-react";
 import { DocumentVerificationDetailResponse } from "@/services/types/documentVerification";
 import Status from "../../components/Status";
 import { formatDateTime } from "@/services/utils";
+import { displayableFieldEntries, fieldLabel, formatFieldValue } from "./documentFieldLabels";
 
 interface Props {
   document: DocumentVerificationDetailResponse["data"];
@@ -27,6 +28,24 @@ const ViewDetailDocumentInfo: FC<Props> = ({ document }) => {
           </div>
           <Status status={document.verificationStatus} />
         </div>
+
+        {displayableFieldEntries(document.fields).length > 0 && (
+          <div className="rounded-lg border border-gray-200 dark:border-gray-800">
+            <p className="border-b border-gray-200 px-4 py-2 text-xs font-medium uppercase text-gray-500 dark:border-gray-800">
+              Submitted Details
+            </p>
+            <dl className="divide-y divide-gray-100 dark:divide-gray-800">
+              {displayableFieldEntries(document.fields).map(([key, value]) => (
+                <div key={key} className="flex items-center justify-between gap-4 px-4 py-2.5">
+                  <dt className="text-sm text-gray-500 dark:text-gray-400">{fieldLabel(key)}</dt>
+                  <dd className="text-sm font-medium text-gray-900 dark:text-white">
+                    {formatFieldValue(key, value)}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+        )}
 
         {document.verificationStatus === "rejected" && document.verificationRejectionReason && (
           <div className="rounded-lg bg-red-50 dark:bg-red-500/10 p-4">
