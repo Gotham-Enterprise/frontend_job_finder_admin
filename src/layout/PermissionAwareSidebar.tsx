@@ -212,6 +212,13 @@ const navItems: NavItem[] = [
     //subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
   },
   {
+    icon: <DocsIcon />,
+    name: "Document Verifications",
+    path: "/admin/document-verifications",
+    // No permissionKey — accessible to any authenticated admin, matching the
+    // backend's auth(["admin"]) gate (no granular permission scoping yet).
+  },
+  {
     icon: <ShootingStarIcon />,
     name: "SEO Health",
     path: "/admin/seo-health",
