@@ -107,6 +107,37 @@ export function filterSuperviseeOccupationChoices<T extends { label: string }>(
   return options.filter((option) => isAllowedSuperviseeOccupation(option.label) || keep?.(option));
 }
 
+/**
+ * Splits the (already filtered) supervisee occupation choices into labeled dropdown
+ * groups: "Medical" (NP + PA) first, then "Mental Health". Anything outside the
+ * allowlist (e.g. a kept legacy occupation on edit) falls into "Other".
+ * Empty groups are omitted.
+ */
+export function groupSuperviseeOccupationChoices<T extends { label: string }>(
+  options: readonly T[],
+): { label: string; options: T[] }[] {
+  const medical: T[] = [];
+  const mentalHealth: T[] = [];
+  const other: T[] = [];
+  for (const option of options) {
+    if (
+      isNursePractitionerOccupation(option.label) ||
+      isPhysicianAssistantOccupation(option.label)
+    ) {
+      medical.push(option);
+    } else if (isMentalHealthSuperviseeOccupation(option.label)) {
+      mentalHealth.push(option);
+    } else {
+      other.push(option);
+    }
+  }
+  return [
+    { label: "Medical", options: medical },
+    { label: "Mental Health", options: mentalHealth },
+    { label: "Other", options: other },
+  ].filter((group) => group.options.length > 0);
+}
+
 export function isNursePractitionerOccupation(occupationName: string): boolean {
   return normalize(occupationName) === normalize(NURSE_PRACTITIONER_OCCUPATION);
 }

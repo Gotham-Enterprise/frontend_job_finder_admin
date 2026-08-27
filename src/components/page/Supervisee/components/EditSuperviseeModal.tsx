@@ -30,6 +30,7 @@ import {
 import {
   filterSuperviseeOccupationChoices,
   getEligibleSupervisorTypes,
+  groupSuperviseeOccupationChoices,
   isMedicalDirectorType,
   isSupervisorTypeEligibleForSupervisee,
 } from "@/services/utils/superviseeEligibility";
@@ -160,6 +161,12 @@ export const EditSuperviseeModal: React.FC<EditSuperviseeModalProps> = ({
         (o) => o.value === formData.occupation,
       ),
     [profileOccupationChoices, formData.occupation],
+  );
+
+  // Medical (NP/PA) on top, Mental Health below; a kept legacy occupation lands in "Other".
+  const superviseeOccupationGroups = useMemo(
+    () => groupSuperviseeOccupationChoices(superviseeOccupationChoices),
+    [superviseeOccupationChoices],
   );
 
   const profileSpecialtyChoices = useMemo(
@@ -494,7 +501,8 @@ export const EditSuperviseeModal: React.FC<EditSuperviseeModalProps> = ({
                     <Select
                       value={formData.occupation}
                       onChange={(v) => updateField("occupation", v)}
-                      options={superviseeOccupationChoices}
+                      groups={superviseeOccupationGroups}
+                      searchable
                       placeholder="Select occupation"
                     />
                   </FormField>
