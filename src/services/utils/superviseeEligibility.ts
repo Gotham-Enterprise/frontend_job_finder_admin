@@ -157,6 +157,85 @@ export function isMedicalDirectorType(type: SupervisorTypeLike): boolean {
   return resolveSupervisorTypeCode(type) === SUPERVISOR_TYPE_CODES.MEDICAL_DIRECTOR;
 }
 
+/**
+ * Labels for the enum-code values the original signup stored in
+ * typeOfSupervisorNeeded (backend commit 5f941bfa's supervisorTypeOptions).
+ * Legacy accounts still carry these codes, so they must render as the label
+ * the user actually picked — the generic humanizer below would mangle the
+ * acronym-based ones (e.g. LPC_SUPERVISOR → "Lpc Supervisor").
+ */
+const LEGACY_SUPERVISION_TYPE_LABELS: Record<string, string> = {
+  LPC_SUPERVISOR: "LPC Supervisor",
+  LPCC_SUPERVISOR: "LPCC Supervisor",
+  LMHC_SUPERVISOR: "LMHC Supervisor",
+  LMFT_SUPERVISOR: "LMFT Supervisor",
+  LCSW_SUPERVISOR: "LCSW Supervisor",
+  LICSW_SUPERVISOR: "LICSW Supervisor",
+  CLINICAL_SUPERVISOR: "Clinical Supervisor",
+  ACS: "Approved Clinical Supervisor (ACS)",
+  BOARD_APPROVED_SUPERVISOR: "Board Approved Supervisor",
+  FIELD_SUPERVISOR: "Field Supervisor",
+  PRECEPTOR: "Preceptor",
+  MENTAL_HEALTH_COUNSELORS: "Mental Health Counselors",
+  SUPERVISING_PHYSICIAN: "Supervising Physician",
+  COLLABORATING_PHYSICIAN: "Collaborating Physician",
+  MEDICAL_DIRECTOR: "Medical Director",
+};
+
+/** "SOME_OLD_CODE" → "Some Old Code" — last resort for unlisted legacy codes. */
+function humanizeEnumCode(code: string): string {
+  return code
+    .toLowerCase()
+    .split("_")
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
+/**
+ * Display-only label overrides, mirroring the find-supervisor app's
+ * supervisee-facing copy. The stored value stays the backend type name.
+ */
+const SUPERVISION_TYPE_DISPLAY_LABELS: Record<string, string> = {
+  "mental health counselors": "Supervising Mental Health Counselors",
+};
+
+/**
+ * Human-readable label for a stored typeOfSupervisorNeeded value. Current
+ * accounts store the display name; legacy accounts store an enum code, which
+ * is mapped to its original signup label. Display overrides are applied last
+ * so admin copy matches what supervisees see in the find-supervisor app.
+ */
+export function supervisionTypeDisplayLabel(typeName: string): string {
+  const trimmed = typeName.trim();
+  const resolved = /^[A-Z0-9_]+$/.test(trimmed)
+    ? (LEGACY_SUPERVISION_TYPE_LABELS[trimmed] ?? humanizeEnumCode(trimmed))
+    : trimmed;
+  return SUPERVISION_TYPE_DISPLAY_LABELS[normalize(resolved)] ?? resolved;
+}
+
+/**
+ * For edit forms: maps a legacy enum code onto the current SupervisorType
+ * display name when one exists, so the stored value matches the dropdown
+ * options (and legacy MEDICAL_DIRECTOR still checks the MD checkbox). Retired
+ * types (PRECEPTOR, LPC_SUPERVISOR, …) have no current equivalent and are
+ * returned unchanged.
+ */
+export function normalizeLegacySupervisionTypeName(typeName: string): string {
+  switch (typeName.trim()) {
+    case "MENTAL_HEALTH_COUNSELORS":
+      return "Mental Health Counselors";
+    case "SUPERVISING_PHYSICIAN":
+      return "Supervising Physician";
+    case "COLLABORATING_PHYSICIAN":
+      return "Collaborating Physician";
+    case "MEDICAL_DIRECTOR":
+      return MEDICAL_DIRECTOR_TYPE_NAME;
+    default:
+      return typeName;
+  }
+}
+
 export function resolveSupervisorTypeCode(type: SupervisorTypeLike): string {
   if (type.code?.trim()) return type.code.trim().toUpperCase();
   return SUPERVISOR_TYPE_NAME_TO_CODE[normalize(type.name ?? "")] ?? "";

@@ -11,6 +11,7 @@ import {
   FORMAT_LABELS,
   HOW_SOON_LABELS,
 } from "@/services/utils/superviseeProfileForm";
+import { supervisionTypeDisplayLabel } from "@/services/utils/superviseeEligibility";
 import ErrorState from "../../../common/ErrorState";
 import FullScreenSpinner from "../../../ui/FullScreenSpinner";
 import BackToListButton from "@/components/ui/BackToListButton";
@@ -208,7 +209,7 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
           <SectionCard title="Supervision Needs">
             <FieldRow
               label="Type of Supervision Needed"
-              value={profile?.typeOfSupervisorNeeded?.join(", ")}
+              value={profile?.typeOfSupervisorNeeded?.map(supervisionTypeDisplayLabel).join(", ")}
             />
             <FieldRow label="Occupation" value={profile?.superviseeOccupation} />
             <FieldRow label="Specialty" value={profile?.superviseeSpecialty} />

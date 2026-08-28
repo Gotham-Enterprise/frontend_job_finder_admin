@@ -3,6 +3,7 @@ import { formatUSPhoneForDisplay } from "@/services/utils/phoneNumberUtils";
 import {
   isMedicalDirectorType,
   MEDICAL_DIRECTOR_TYPE_NAME,
+  normalizeLegacySupervisionTypeName,
 } from "@/services/utils/superviseeEligibility";
 
 export const SUPERVISEE_IDEAL_SUPERVISOR_MAX_LENGTH = 500;
@@ -189,14 +190,16 @@ export function mapSuperviseeDetailsToFormData(
     licensureState: profile?.licensureState ?? "",
     stateOfLicensure: details.stateOfLicensure ?? [],
     // The stored array holds at most one supervision type plus, optionally, Medical
-    // Director — split back into the dropdown value and the checkbox.
+    // Director — split back into the dropdown value and the checkbox. Legacy
+    // accounts stored enum codes; normalize so current types match the dropdown
+    // options and a legacy MEDICAL_DIRECTOR still checks the MD checkbox.
     typeOfSupervisorNeeded:
-      coerceStringList(profile?.typeOfSupervisorNeeded).find(
-        (name) => !isMedicalDirectorType({ name }),
-      ) ?? "",
-    needsMedicalDirector: coerceStringList(profile?.typeOfSupervisorNeeded).some((name) =>
-      isMedicalDirectorType({ name }),
-    ),
+      coerceStringList(profile?.typeOfSupervisorNeeded)
+        .map(normalizeLegacySupervisionTypeName)
+        .find((name) => !isMedicalDirectorType({ name })) ?? "",
+    needsMedicalDirector: coerceStringList(profile?.typeOfSupervisorNeeded)
+      .map(normalizeLegacySupervisionTypeName)
+      .some((name) => isMedicalDirectorType({ name })),
     superviseeOccupation: profile?.superviseeOccupation ?? "",
     superviseeSpecialty: profile?.superviseeSpecialty ?? "",
     howSoonLooking: profile?.howSoonLooking ?? "",

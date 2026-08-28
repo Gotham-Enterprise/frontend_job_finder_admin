@@ -33,6 +33,7 @@ import {
   groupSuperviseeOccupationChoices,
   isMedicalDirectorType,
   isSupervisorTypeEligibleForSupervisee,
+  supervisionTypeDisplayLabel,
 } from "@/services/utils/superviseeEligibility";
 import { useStates } from "@/services/hooks/useStates";
 import { useOccupationsWithSpecialties } from "@/services/hooks/useJobCreation";
@@ -197,7 +198,9 @@ export const EditSuperviseeModal: React.FC<EditSuperviseeModalProps> = ({
         getEligibleSupervisorTypes(supervisorTypesData, eligibilityOccupationName)
           .filter((t) => !isMedicalDirectorType(t))
           .map((t) => ({
-            label: t.name,
+            // Same supervisee-facing label as the find-supervisor app; the
+            // stored value stays the backend type name.
+            label: supervisionTypeDisplayLabel(t.name),
             value: t.name,
           })),
       ),
