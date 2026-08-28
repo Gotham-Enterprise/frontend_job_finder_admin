@@ -42,6 +42,7 @@ export interface AffiliatePartnerFeedRule {
   occupationName: string;
   specialtyName?: string | null;
   states: string[];
+  workSetting?: string | null;
   cpc?: number | null;
   cpa?: number | null;
   isActive: boolean;
@@ -246,6 +247,7 @@ export interface CreateFeedRuleData {
   occupationName: string;
   specialtyName?: string | null;
   states?: string[];
+  workSetting?: string | null;
   cpc?: number | null;
   cpa?: number | null;
   isActive?: boolean;
@@ -256,6 +258,7 @@ export interface UpdateFeedRuleData {
   occupationName?: string;
   specialtyName?: string | null;
   states?: string[];
+  workSetting?: string | null;
   cpc?: number | null;
   cpa?: number | null;
   isActive?: boolean;
