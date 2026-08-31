@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
 import {
   getAffiliatePartners,
   getAffiliatePartner,
@@ -12,6 +12,7 @@ import {
   reprocessAffiliateBatch,
   cancelAffiliateBatch,
   getAffiliateAnalytics,
+  getAffiliateConversions,
   triggerAffiliateSync,
   getAffiliateSyncStatus,
   rebuildOutboundFeed,
@@ -53,6 +54,7 @@ export const affiliateQueryKeys = {
   batchStatus: (id: string) => [...affiliateQueryKeys.batches(), id, "status"] as const,
   batchJobs: (id: string, page: number) => [...affiliateQueryKeys.batches(), id, "jobs", page] as const,
   analytics: (filters: any) => [...affiliateQueryKeys.all, "analytics", filters] as const,
+  conversions: (filters: any) => [...affiliateQueryKeys.all, "conversions", filters] as const,
   feedRules: (partnerId: string) => [...affiliateQueryKeys.all, "feed-rules", partnerId] as const,
   coReg: (partner: string, filters: any) => [...affiliateQueryKeys.all, "coreg", partner, filters] as const,
   reportRecipients: (partnerId: string) => [...affiliateQueryKeys.all, "report-recipients", partnerId] as const,
@@ -385,6 +387,54 @@ export const useAffiliateAnalytics = (params?: {
   return useQuery({
     queryKey: affiliateQueryKeys.analytics(params || {}),
     queryFn: () => getAffiliateAnalytics(params),
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 10,
+  });
+};
+
+const CONVERSIONS_PAGE_SIZE = 50;
+
+export const useInfiniteAffiliateConversions = (params?: {
+  affiliateId?: string;
+  startDate?: string;
+  endDate?: string;
+  source?: "manual" | "auto-redirect" | "partner-feed";
+  partnerType?: "selling" | "buying";
+  deduplicate?: boolean;
+  requireApplication?: boolean;
+}) => {
+  const { affiliateId, startDate, endDate, source, partnerType, deduplicate, requireApplication } =
+    params || {};
+
+  return useInfiniteQuery({
+    queryKey: affiliateQueryKeys.conversions({
+      affiliateId,
+      startDate,
+      endDate,
+      source,
+      partnerType,
+      deduplicate,
+      requireApplication,
+    }),
+    queryFn: ({ pageParam }) =>
+      getAffiliateConversions({
+        affiliateId,
+        startDate,
+        endDate,
+        source,
+        partnerType,
+        deduplicate,
+        requireApplication,
+        page: pageParam as number,
+        limit: CONVERSIONS_PAGE_SIZE,
+      }),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => {
+      const page = lastPage.pagination?.page;
+      const totalPages = lastPage.pagination?.totalPages;
+      if (!page || !totalPages) return undefined;
+      return page < totalPages ? page + 1 : undefined;
+    },
     staleTime: 1000 * 60 * 5,
     gcTime: 1000 * 60 * 10,
   });
