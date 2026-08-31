@@ -1,8 +1,8 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useAffiliateAnalytics, useAffiliatePartners } from '@/services/hooks/useAffiliates'
+import { useAffiliateAnalytics, useAffiliatePartners, useInfiniteAffiliateConversions } from '@/services/hooks/useAffiliates'
 import dynamic from 'next/dynamic'
 import { TrendingUp, Users, MousePointerClick, Trophy, DollarSign, CheckCircle, BarChart2, Briefcase, HelpCircle, Download } from 'lucide-react'
 import DatePicker from '@/components/form/date-picker'
@@ -131,15 +131,50 @@ export default function AnalyticsTab() {
   const [requireApplication, setRequireApplication] = useState(true)
 
   const { data: partnersData } = useAffiliatePartners({ limit: 100 })
-  const { data: analytics, isLoading } = useAffiliateAnalytics({
+  const analyticsFilters = {
     affiliateId: selectedPartnerId || undefined,
     startDate: dateRange.startDate,
     endDate: dateRange.endDate,
-    source: viewMode === 'buying' ? 'partner-feed' : undefined,
+    source: viewMode === 'buying' ? ('partner-feed' as const) : undefined,
     partnerType: viewMode,
     deduplicate,
     requireApplication,
-  })
+  }
+  const { data: analytics, isLoading } = useAffiliateAnalytics(analyticsFilters)
+  const {
+    data: conversionPages,
+    isLoading: conversionsLoading,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
+  } = useInfiniteAffiliateConversions(analyticsFilters)
+
+  const conversions = conversionPages?.pages.flatMap((page) => page.data) ?? []
+  const conversionTotal = conversionPages?.pages[0]?.pagination.total ?? 0
+  const conversionSentinelRef = useRef<HTMLDivElement | null>(null)
+  const conversionScrollRef = useRef<HTMLDivElement | null>(null)
+
+  const handleConversionObserver = useCallback(
+    (entries: IntersectionObserverEntry[]) => {
+      const [entry] = entries
+      if (entry.isIntersecting && hasNextPage && !isFetchingNextPage) {
+        fetchNextPage()
+      }
+    },
+    [hasNextPage, isFetchingNextPage, fetchNextPage]
+  )
+
+  useEffect(() => {
+    const sentinel = conversionSentinelRef.current
+    const root = conversionScrollRef.current
+    if (!sentinel || !root) return
+    const observer = new IntersectionObserver(handleConversionObserver, {
+      root,
+      threshold: 0.1,
+    })
+    observer.observe(sentinel)
+    return () => observer.disconnect()
+  }, [handleConversionObserver, conversions.length, isLoading])
 
   const isBuyingView = viewMode === 'buying'
   const filteredPartners = (partnersData?.data ?? []).filter((partner) =>
@@ -978,12 +1013,16 @@ export default function AnalyticsTab() {
           <div className="flex items-center gap-2">
             <CheckCircle className="w-5 h-5 text-emerald-500" />
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Conversions</h3>
-            <span className="ml-auto text-sm text-gray-500 dark:text-gray-400">Latest 100</span>
+            <span className="ml-auto text-sm text-gray-500 dark:text-gray-400">
+              {conversionsLoading
+                ? 'Loading…'
+                : `${conversions.length.toLocaleString()} of ${conversionTotal.toLocaleString()}`}
+            </span>
           </div>
         </div>
-        <div className="overflow-x-auto">
+        <div ref={conversionScrollRef} className="overflow-auto max-h-[32rem]">
           <table className="w-full">
-            <thead className="bg-gray-50 dark:bg-gray-900/50">
+            <thead className="bg-gray-50 dark:bg-gray-900/50 sticky top-0 z-10">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Job Title</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Application ID</th>
@@ -996,8 +1035,16 @@ export default function AnalyticsTab() {
               </tr>
             </thead>
             <tbody className="bg-white dark:bg-transparent divide-y divide-gray-200 dark:divide-gray-800">
-              {analytics?.conversions && analytics.conversions.length > 0 ? (
-                analytics.conversions.map((c) => (
+              {conversionsLoading && conversions.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                    <div className="flex items-center justify-center">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+                    </div>
+                  </td>
+                </tr>
+              ) : conversions.length > 0 ? (
+                conversions.map((c) => (
                   <tr key={c.id} className="hover:bg-gray-50 dark:hover:bg-gray-900/30 transition-colors">
                     <td className="px-6 py-4">
                       <a
@@ -1080,6 +1127,12 @@ export default function AnalyticsTab() {
               )}
             </tbody>
           </table>
+          <div ref={conversionSentinelRef} className="h-1" />
+          {isFetchingNextPage && (
+            <div className="flex justify-center py-3">
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary" />
+            </div>
+          )}
         </div>
       </div>
     </div>

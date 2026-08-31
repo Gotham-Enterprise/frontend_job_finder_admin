@@ -195,18 +195,29 @@ export interface AffiliateAnalytics {
   totalConversions: number;
   conversionRate: number; // percentage: conversions/clicks * 100
   totalPayout: number;
-  conversions: Array<{
-    id: string;
-    jobPostId: string;
-    jobTitle: string;
-    candidateId: string | null;
-    applicationId: string | null;
-    partner: string;
-    payout: number | null;
-    partnerConversionId: string | null;
-    ipAddress: string | null;
-    convertedAt: string;
-  }>;
+}
+
+export interface AffiliateConversionRow {
+  id: string;
+  jobPostId: string;
+  jobTitle: string;
+  candidateId: string | null;
+  applicationId: string | null;
+  partner: string;
+  payout: number | null;
+  partnerConversionId: string | null;
+  ipAddress: string | null;
+  convertedAt: string;
+}
+
+export interface AffiliateConversionsResponse {
+  data: AffiliateConversionRow[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
 }
 
 export interface CreatePartnerData {
@@ -545,6 +556,45 @@ export const getAffiliateAnalytics = async (params?: {
     `/api/admin/affiliates/analytics${queryString ? `?${queryString}` : ""}`
   );
   return response.data;
+};
+
+export type AffiliateConversionsParams = {
+  affiliateId?: string;
+  startDate?: string;
+  endDate?: string;
+  source?: "manual" | "auto-redirect" | "partner-feed";
+  partnerType?: "selling" | "buying";
+  deduplicate?: boolean;
+  requireApplication?: boolean;
+  page?: number;
+  limit?: number;
+};
+
+export const getAffiliateConversions = async (
+  params?: AffiliateConversionsParams
+): Promise<AffiliateConversionsResponse> => {
+  const queryParams = new URLSearchParams();
+  if (params?.affiliateId) queryParams.append("affiliateId", params.affiliateId);
+  if (params?.startDate) queryParams.append("startDate", params.startDate);
+  if (params?.endDate) queryParams.append("endDate", params.endDate);
+  if (params?.source) queryParams.append("source", params.source);
+  if (params?.partnerType) queryParams.append("partnerType", params.partnerType);
+  if (params?.deduplicate !== undefined) queryParams.append("deduplicate", String(params.deduplicate));
+  if (params?.requireApplication !== undefined) {
+    queryParams.append("requireApplication", String(params.requireApplication));
+  }
+  if (params?.page) queryParams.append("page", String(params.page));
+  if (params?.limit) queryParams.append("limit", String(params.limit));
+  const queryString = queryParams.toString();
+  const response = await apiGet<{
+    success: boolean;
+    data: AffiliateConversionRow[];
+    pagination: AffiliateConversionsResponse["pagination"];
+  }>(`/api/admin/affiliates/analytics/conversions${queryString ? `?${queryString}` : ""}`);
+  return {
+    data: response.data || [],
+    pagination: response.pagination ?? { page: 1, limit: 50, total: 0, totalPages: 0 },
+  };
 };
 
 // Outbound Feed APIs
