@@ -13,6 +13,8 @@ import {
   cancelAffiliateBatch,
   getAffiliateAnalytics,
   getAffiliateConversions,
+  getConversionAudit,
+  enqueueConversionAudits,
   triggerAffiliateSync,
   getAffiliateSyncStatus,
   rebuildOutboundFeed,
@@ -55,6 +57,7 @@ export const affiliateQueryKeys = {
   batchJobs: (id: string, page: number) => [...affiliateQueryKeys.batches(), id, "jobs", page] as const,
   analytics: (filters: any) => [...affiliateQueryKeys.all, "analytics", filters] as const,
   conversions: (filters: any) => [...affiliateQueryKeys.all, "conversions", filters] as const,
+  conversionAudit: (id: string) => [...affiliateQueryKeys.all, "conversion-audit", id] as const,
   feedRules: (partnerId: string) => [...affiliateQueryKeys.all, "feed-rules", partnerId] as const,
   coReg: (partner: string, filters: any) => [...affiliateQueryKeys.all, "coreg", partner, filters] as const,
   reportRecipients: (partnerId: string) => [...affiliateQueryKeys.all, "report-recipients", partnerId] as const,
@@ -395,16 +398,25 @@ export const useAffiliateAnalytics = (params?: {
 const CONVERSIONS_PAGE_SIZE = 50;
 
 export const useInfiniteAffiliateConversions = (params?: {
-  affiliateId?: string;
-  startDate?: string;
-  endDate?: string;
-  source?: "manual" | "auto-redirect" | "partner-feed";
-  partnerType?: "selling" | "buying";
-  deduplicate?: boolean;
-  requireApplication?: boolean;
+  affiliateId?: string
+  startDate?: string
+  endDate?: string
+  source?: "manual" | "auto-redirect" | "partner-feed"
+  partnerType?: "selling" | "buying"
+  deduplicate?: boolean
+  requireApplication?: boolean
+  auditResult?: "pass" | "flagged" | "incomplete" | "pending" | "failed" | "unaudited"
 }) => {
-  const { affiliateId, startDate, endDate, source, partnerType, deduplicate, requireApplication } =
-    params || {};
+  const {
+    affiliateId,
+    startDate,
+    endDate,
+    source,
+    partnerType,
+    deduplicate,
+    requireApplication,
+    auditResult,
+  } = params || {}
 
   return useInfiniteQuery({
     queryKey: affiliateQueryKeys.conversions({
@@ -415,6 +427,7 @@ export const useInfiniteAffiliateConversions = (params?: {
       partnerType,
       deduplicate,
       requireApplication,
+      auditResult,
     }),
     queryFn: ({ pageParam }) =>
       getAffiliateConversions({
@@ -425,20 +438,63 @@ export const useInfiniteAffiliateConversions = (params?: {
         partnerType,
         deduplicate,
         requireApplication,
+        auditResult,
         page: pageParam as number,
         limit: CONVERSIONS_PAGE_SIZE,
       }),
     initialPageParam: 1,
     getNextPageParam: (lastPage) => {
-      const page = lastPage.pagination?.page;
-      const totalPages = lastPage.pagination?.totalPages;
-      if (!page || !totalPages) return undefined;
-      return page < totalPages ? page + 1 : undefined;
+      const page = lastPage.pagination?.page
+      const totalPages = lastPage.pagination?.totalPages
+      if (!page || !totalPages) return undefined
+      return page < totalPages ? page + 1 : undefined
     },
     staleTime: 1000 * 60 * 5,
     gcTime: 1000 * 60 * 10,
-  });
-};
+    refetchInterval: (query) => {
+      const rows = query.state.data?.pages.flatMap((p) => p.data) ?? []
+      return rows.some((r) => r.audit?.status === "pending") ? 4000 : false
+    },
+  })
+}
+
+export const useConversionAudit = (conversionId: string | null) => {
+  return useQuery({
+    queryKey: affiliateQueryKeys.conversionAudit(conversionId || ""),
+    queryFn: () => getConversionAudit(conversionId as string),
+    enabled: !!conversionId,
+    retry: 1,
+    refetchInterval: (query) =>
+      query.state.data?.status === "pending" ? 3000 : false,
+  })
+}
+
+export const useEnqueueConversionAudits = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: enqueueConversionAudits,
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ queryKey: [...affiliateQueryKeys.all, "conversions"] })
+      if (variables.conversionId) {
+        queryClient.invalidateQueries({
+          queryKey: affiliateQueryKeys.conversionAudit(variables.conversionId),
+        })
+      }
+      const skippedNote =
+        data.skipped > 0 ? ` ${data.skipped} already audited were skipped.` : ""
+      showToast.success(
+        "Audit queued",
+        `Queued ${data.queued} conversion${data.queued === 1 ? "" : "s"} of ${data.totalMatching}.${skippedNote}`
+      )
+    },
+    onError: (error: any) => {
+      const errorMessage =
+        error.response?.data?.message || error.message || "Failed to queue conversion audits"
+      showToast.error("Audit Failed", errorMessage)
+    },
+  })
+}
 
 // Outbound Feed Hooks
 export const useRebuildOutboundFeed = () => {

@@ -2,11 +2,12 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useAffiliateAnalytics, useAffiliatePartners, useInfiniteAffiliateConversions } from '@/services/hooks/useAffiliates'
+import { useAffiliateAnalytics, useAffiliatePartners, useInfiniteAffiliateConversions, useEnqueueConversionAudits } from '@/services/hooks/useAffiliates'
 import dynamic from 'next/dynamic'
-import { TrendingUp, Users, MousePointerClick, Trophy, DollarSign, CheckCircle, BarChart2, Briefcase, HelpCircle, Download } from 'lucide-react'
+import { TrendingUp, Users, MousePointerClick, Trophy, DollarSign, CheckCircle, BarChart2, Briefcase, HelpCircle, Download, ShieldCheck } from 'lucide-react'
 import DatePicker from '@/components/form/date-picker'
-import type { AffiliateAnalytics } from '@/services/api/affiliates'
+import type { AffiliateAnalytics, AffiliateConversionRow } from '@/services/api/affiliates'
+import ConversionAuditDrawer, { AuditBadge, AUDIT_FILTERS } from './ConversionAuditDrawer'
 
 type ViewMode = 'selling' | 'buying'
 
@@ -129,6 +130,10 @@ export default function AnalyticsTab() {
   })
   const [deduplicate, setDeduplicate] = useState(true)
   const [requireApplication, setRequireApplication] = useState(true)
+  const [auditResult, setAuditResult] = useState<'' | 'pass' | 'flagged' | 'incomplete' | 'pending' | 'failed' | 'unaudited'>('')
+  const [auditConversion, setAuditConversion] = useState<AffiliateConversionRow | null>(null)
+  const isBuyingView = viewMode === 'buying'
+  const enqueueAudits = useEnqueueConversionAudits()
 
   const { data: partnersData } = useAffiliatePartners({ limit: 100 })
   const analyticsFilters = {
@@ -140,6 +145,10 @@ export default function AnalyticsTab() {
     deduplicate,
     requireApplication,
   }
+  const conversionFilters = {
+    ...analyticsFilters,
+    auditResult: isBuyingView && auditResult ? auditResult : undefined,
+  }
   const { data: analytics, isLoading } = useAffiliateAnalytics(analyticsFilters)
   const {
     data: conversionPages,
@@ -147,7 +156,7 @@ export default function AnalyticsTab() {
     isFetchingNextPage,
     hasNextPage,
     fetchNextPage,
-  } = useInfiniteAffiliateConversions(analyticsFilters)
+  } = useInfiniteAffiliateConversions(conversionFilters)
 
   const conversions = conversionPages?.pages.flatMap((page) => page.data) ?? []
   const conversionTotal = conversionPages?.pages[0]?.pagination.total ?? 0
@@ -176,7 +185,6 @@ export default function AnalyticsTab() {
     return () => observer.disconnect()
   }, [handleConversionObserver, conversions.length, isLoading])
 
-  const isBuyingView = viewMode === 'buying'
   const filteredPartners = (partnersData?.data ?? []).filter((partner) =>
     viewMode === 'selling'
       ? !partner.outboundFeedSlug
@@ -193,6 +201,8 @@ export default function AnalyticsTab() {
   const handleViewModeChange = (mode: ViewMode) => {
     setViewMode(mode)
     setSelectedPartnerId('')
+    setAuditResult('')
+    setAuditConversion(null)
     const params = new URLSearchParams(searchParams.toString())
     params.set('tab', 'analytics')
     if (mode === 'buying') {
@@ -201,6 +211,26 @@ export default function AnalyticsTab() {
       params.delete('view')
     }
     router.replace(`?${params.toString()}`, { scroll: false })
+  }
+
+  const handleRunAudit = async () => {
+    if (
+      !confirm(
+        'Queue occupation audits for conversions in the current filter? Unaudited, incomplete, failed, and pending rows will be queued (up to 200). Already passing/flagged rows are skipped.'
+      )
+    ) {
+      return
+    }
+    await enqueueAudits.mutateAsync({
+      affiliateId: selectedPartnerId || undefined,
+      startDate: dateRange.startDate,
+      endDate: dateRange.endDate,
+      source: 'partner-feed',
+      partnerType: 'buying',
+      deduplicate,
+      requireApplication,
+      force: false,
+    }).catch(() => undefined)
   }
 
   // Show loading state
@@ -1009,7 +1039,7 @@ export default function AnalyticsTab() {
 
       {/* Conversions Table */}
       <div className="border border-gray-200 dark:border-gray-800 rounded-lg">
-        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-800">
+        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-800 space-y-3">
           <div className="flex items-center gap-2">
             <CheckCircle className="w-5 h-5 text-emerald-500" />
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Conversions</h3>
@@ -1018,7 +1048,36 @@ export default function AnalyticsTab() {
                 ? 'Loading…'
                 : `${conversions.length.toLocaleString()} of ${conversionTotal.toLocaleString()}`}
             </span>
+            {isBuyingView && (
+              <button
+                type="button"
+                onClick={handleRunAudit}
+                disabled={enqueueAudits.isPending}
+                className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
+              >
+                <ShieldCheck className={`w-4 h-4 ${enqueueAudits.isPending ? 'animate-pulse' : ''}`} />
+                Run Audit
+              </button>
+            )}
           </div>
+          {isBuyingView && (
+            <div className="flex flex-wrap gap-2">
+              {AUDIT_FILTERS.map((filter) => (
+                <button
+                  key={filter.id || 'all'}
+                  type="button"
+                  onClick={() => setAuditResult(filter.id)}
+                  className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                    auditResult === filter.id
+                      ? 'bg-primary text-white'
+                      : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                  }`}
+                >
+                  {filter.label}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
         <div ref={conversionScrollRef} className="overflow-auto max-h-[32rem]">
           <table className="w-full">
@@ -1032,12 +1091,15 @@ export default function AnalyticsTab() {
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Payout</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Partner Conv. ID</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Converted At</th>
+                {isBuyingView && (
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Audit</th>
+                )}
               </tr>
             </thead>
             <tbody className="bg-white dark:bg-transparent divide-y divide-gray-200 dark:divide-gray-800">
               {conversionsLoading && conversions.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                  <td colSpan={isBuyingView ? 9 : 8} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
                     <div className="flex items-center justify-center">
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
                     </div>
@@ -1116,11 +1178,19 @@ export default function AnalyticsTab() {
                         {new Date(c.convertedAt).toLocaleString()}
                       </span>
                     </td>
+                    {isBuyingView && (
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <AuditBadge
+                          audit={c.audit}
+                          onClick={c.audit ? () => setAuditConversion(c) : undefined}
+                        />
+                      </td>
+                    )}
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan={8} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                  <td colSpan={isBuyingView ? 9 : 8} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
                     No conversions recorded yet
                   </td>
                 </tr>
@@ -1135,6 +1205,13 @@ export default function AnalyticsTab() {
           )}
         </div>
       </div>
+
+      {isBuyingView && (
+        <ConversionAuditDrawer
+          conversion={auditConversion}
+          onClose={() => setAuditConversion(null)}
+        />
+      )}
     </div>
   )
 }
