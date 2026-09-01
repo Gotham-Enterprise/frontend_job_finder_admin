@@ -130,6 +130,7 @@ export default function AnalyticsTab() {
   })
   const [deduplicate, setDeduplicate] = useState(true)
   const [requireApplication, setRequireApplication] = useState(true)
+  const [excludeFlaggedConversions, setExcludeFlaggedConversions] = useState(true)
   const [auditResult, setAuditResult] = useState<'' | 'pass' | 'flagged' | 'incomplete' | 'pending' | 'failed' | 'unaudited'>('')
   const [auditConversion, setAuditConversion] = useState<AffiliateConversionRow | null>(null)
   const isBuyingView = viewMode === 'buying'
@@ -144,6 +145,7 @@ export default function AnalyticsTab() {
     partnerType: viewMode,
     deduplicate,
     requireApplication,
+    excludeFlaggedConversions,
   }
   const conversionFilters = {
     ...analyticsFilters,
@@ -229,6 +231,7 @@ export default function AnalyticsTab() {
       partnerType: 'buying',
       deduplicate,
       requireApplication,
+      excludeFlaggedConversions,
       force: false,
     }).catch(() => undefined)
   }
@@ -536,6 +539,12 @@ export default function AnalyticsTab() {
           checked={requireApplication}
           onChange={setRequireApplication}
           tooltip="Only shows conversions that are linked to a confirmed job application. Conversions recorded via S2S postback or other means without a matching application are excluded."
+        />
+        <ToggleWithTooltip
+          label="Exclude Flagged Conversions"
+          checked={excludeFlaggedConversions}
+          onChange={setExcludeFlaggedConversions}
+          tooltip="Removes conversions whose occupation audit result is Flagged from counts, CPA spend, and the conversions table. Unaudited, incomplete, pending, failed, and passing conversions are kept. The Flagged chip will show no rows while this is on."
         />
       </div>
 

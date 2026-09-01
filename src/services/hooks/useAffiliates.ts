@@ -386,6 +386,7 @@ export const useAffiliateAnalytics = (params?: {
   partnerType?: "selling" | "buying";
   deduplicate?: boolean;
   requireApplication?: boolean;
+  excludeFlaggedConversions?: boolean;
 }) => {
   return useQuery({
     queryKey: affiliateQueryKeys.analytics(params || {}),
@@ -405,6 +406,7 @@ export const useInfiniteAffiliateConversions = (params?: {
   partnerType?: "selling" | "buying"
   deduplicate?: boolean
   requireApplication?: boolean
+  excludeFlaggedConversions?: boolean
   auditResult?: "pass" | "flagged" | "incomplete" | "pending" | "failed" | "unaudited"
 }) => {
   const {
@@ -415,6 +417,7 @@ export const useInfiniteAffiliateConversions = (params?: {
     partnerType,
     deduplicate,
     requireApplication,
+    excludeFlaggedConversions,
     auditResult,
   } = params || {}
 
@@ -427,6 +430,7 @@ export const useInfiniteAffiliateConversions = (params?: {
       partnerType,
       deduplicate,
       requireApplication,
+      excludeFlaggedConversions,
       auditResult,
     }),
     queryFn: ({ pageParam }) =>
@@ -438,6 +442,7 @@ export const useInfiniteAffiliateConversions = (params?: {
         partnerType,
         deduplicate,
         requireApplication,
+        excludeFlaggedConversions,
         auditResult,
         page: pageParam as number,
         limit: CONVERSIONS_PAGE_SIZE,

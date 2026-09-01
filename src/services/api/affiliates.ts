@@ -254,6 +254,7 @@ export interface EnqueueConversionAuditsPayload {
   partnerType?: "selling" | "buying";
   deduplicate?: boolean;
   requireApplication?: boolean;
+  excludeFlaggedConversions?: boolean;
 }
 
 export interface EnqueueConversionAuditsResult {
@@ -594,6 +595,7 @@ export const getAffiliateAnalytics = async (params?: {
   partnerType?: "selling" | "buying";
   deduplicate?: boolean;
   requireApplication?: boolean;
+  excludeFlaggedConversions?: boolean;
 }): Promise<AffiliateAnalytics> => {
   const queryParams = new URLSearchParams();
   if (params?.affiliateId) queryParams.append("affiliateId", params.affiliateId);
@@ -603,6 +605,9 @@ export const getAffiliateAnalytics = async (params?: {
   if (params?.partnerType) queryParams.append("partnerType", params.partnerType);
   if (params?.deduplicate !== undefined) queryParams.append("deduplicate", String(params.deduplicate));
   if (params?.requireApplication !== undefined) queryParams.append("requireApplication", String(params.requireApplication));
+  if (params?.excludeFlaggedConversions !== undefined) {
+    queryParams.append("excludeFlaggedConversions", String(params.excludeFlaggedConversions));
+  }
   const queryString = queryParams.toString();
   const response = await apiGet<{ success: boolean; data: AffiliateAnalytics }>(
     `/api/admin/affiliates/analytics${queryString ? `?${queryString}` : ""}`
@@ -618,6 +623,7 @@ export type AffiliateConversionsParams = {
   partnerType?: "selling" | "buying";
   deduplicate?: boolean;
   requireApplication?: boolean;
+  excludeFlaggedConversions?: boolean;
   auditResult?: "pass" | "flagged" | "incomplete" | "pending" | "failed" | "unaudited";
   page?: number;
   limit?: number;
@@ -635,6 +641,9 @@ export const getAffiliateConversions = async (
   if (params?.deduplicate !== undefined) queryParams.append("deduplicate", String(params.deduplicate));
   if (params?.requireApplication !== undefined) {
     queryParams.append("requireApplication", String(params.requireApplication));
+  }
+  if (params?.excludeFlaggedConversions !== undefined) {
+    queryParams.append("excludeFlaggedConversions", String(params.excludeFlaggedConversions));
   }
   if (params?.auditResult) queryParams.append("auditResult", params.auditResult);
   if (params?.page) queryParams.append("page", String(params.page));
