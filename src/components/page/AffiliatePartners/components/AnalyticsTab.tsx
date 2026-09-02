@@ -532,7 +532,7 @@ export default function AnalyticsTab() {
           label="Deduplicate"
           checked={deduplicate}
           onChange={setDeduplicate}
-          tooltip="Clicks: counts only the first click per unique IP address. Conversions: keeps only the earliest conversion per unique IP + user name combination. Conversions without a recorded IP address are always included."
+          tooltip="Clicks: counts only the first click per unique IP address. CPC spend: sums the cost of that first click per IP (clicks with no recorded IP are excluded). Conversions: keeps only the earliest conversion per unique IP + user name combination. Conversions without a recorded IP address are always included."
         />
         <ToggleWithTooltip
           label="Require Application"
