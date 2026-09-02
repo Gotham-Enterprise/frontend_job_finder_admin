@@ -76,16 +76,21 @@ export default function LinkModal({ isOpen, onClose, link, onSubmit, isSubmittin
   })
   const [occupations, setOccupations] = useState<Occupation[]>([])
   const [occupationsLoading, setOccupationsLoading] = useState(false)
+  const [occupationSearch, setOccupationSearch] = useState('')
 
   const { data: partnersData } = useAffiliatePartners({ limit: 1000, status: 'active' })
   const { data: linkTypes = [] } = useAffiliateLinkTypes()
 
   useEffect(() => {
     if (isOpen) {
+      setOccupationSearch('')
       setOccupationsLoading(true)
       occupationApi.getOccupationList()
         .then((res) => {
-          setOccupations(res.data || [])
+          const sorted = [...(res.data || [])].sort((a, b) =>
+            a.name.toLowerCase().localeCompare(b.name.toLowerCase()),
+          )
+          setOccupations(sorted)
         })
         .catch(() => {
           setOccupations([])
@@ -153,6 +158,17 @@ export default function LinkModal({ isOpen, onClose, link, onSubmit, isSubmittin
       return { ...prev, occupations: [...selected, occupationName] }
     })
   }
+
+  const visibleOccupations = useMemo(() => {
+    const term = occupationSearch.trim().toLowerCase()
+    if (!term) return occupations
+    const selected = formData.occupations || []
+    const isSelected = (name: string) => selected.includes(name)
+    const matches = occupations.filter(
+      (occ) => !isSelected(occ.name) && occ.name.toLowerCase().includes(term),
+    )
+    return [...occupations.filter((occ) => isSelected(occ.name)), ...matches]
+  }, [occupations, occupationSearch, formData.occupations])
 
   const updateBullet = (index: number, value: string) => {
     setFormData((prev) => {
@@ -565,6 +581,13 @@ export default function LinkModal({ isOpen, onClose, link, onSubmit, isSubmittin
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Related Occupations
               </label>
+              <input
+                type="text"
+                value={occupationSearch}
+                onChange={(e) => setOccupationSearch(e.target.value)}
+                placeholder="Search occupations..."
+                className="w-full mb-2 px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+              />
               <div className="max-h-48 overflow-y-auto border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800">
                 {occupationsLoading ? (
                   <div className="flex items-center justify-center py-8">
@@ -572,9 +595,11 @@ export default function LinkModal({ isOpen, onClose, link, onSubmit, isSubmittin
                   </div>
                 ) : occupations.length === 0 ? (
                   <p className="text-gray-500 text-sm text-center py-4">No occupations available</p>
+                ) : visibleOccupations.length === 0 ? (
+                  <p className="text-gray-500 text-sm text-center py-4">No occupations match your search</p>
                 ) : (
                   <div className="p-2 space-y-0.5">
-                    {occupations.map((occ) => {
+                    {visibleOccupations.map((occ) => {
                       const isSelected = (formData.occupations || []).includes(occ.name)
                       return (
                         <label
