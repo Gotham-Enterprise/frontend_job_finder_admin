@@ -12,12 +12,15 @@ import {
 } from '@/services/hooks/useAffiliates'
 import type { AffiliatePartner, CreatePartnerData } from '@/services/api/affiliates'
 import { Edit2, Trash2, Plus, Mail, Phone, Globe, CheckCircle, XCircle, AlertCircle, Building2, RefreshCw, Clock, AlertTriangle, Rss } from 'lucide-react'
+import Pagination from '@/components/tables/Pagination'
 import PartnerModal from './PartnerModal'
+import ReportRecipientsModal from './ReportRecipientsModal'
 
 export default function PartnersTab() {
   const [page, setPage] = useState(1)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingPartner, setEditingPartner] = useState<AffiliatePartner | null>(null)
+  const [reportRecipientsPartner, setReportRecipientsPartner] = useState<AffiliatePartner | null>(null)
 
   const { data: partnersData, isLoading } = useAffiliatePartners({ page, limit: 10 })
   const { data: syncStatusData } = useAffiliateSyncStatus()
@@ -320,6 +323,15 @@ export default function PartnersTab() {
                         <Rss className={`w-4 h-4 ${rebuildMutation.isPending ? 'animate-pulse' : ''}`} />
                       </button>
                     )}
+                    {partner.outboundFeedEnabled && (
+                      <button
+                        onClick={() => setReportRecipientsPartner(partner)}
+                        className="p-2 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                        title="Manage Report Recipients"
+                      >
+                        <Mail className="w-4 h-4" />
+                      </button>
+                    )}
                     {partner.syncEnabled && (
                       <button
                         onClick={() => handleSync(partner.id, partner.name)}
@@ -368,26 +380,15 @@ export default function PartnersTab() {
 
       {/* Pagination */}
       {partnersData && partnersData.totalPages > 1 && (
-        <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200 dark:border-gray-800">
+        <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/30">
           <div className="text-sm text-gray-700 dark:text-gray-300">
-            Showing page {partnersData.page} of {partnersData.totalPages}
+            Page {partnersData.page} of {partnersData.totalPages} ({partnersData.total} total partners)
           </div>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setPage(page - 1)}
-              disabled={page === 1}
-              className="px-3 py-1 text-sm border border-gray-300 dark:border-gray-700 rounded hover:bg-gray-50 dark:hover:bg-gray-900 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Previous
-            </button>
-            <button
-              onClick={() => setPage(page + 1)}
-              disabled={page === partnersData.totalPages}
-              className="px-3 py-1 text-sm border border-gray-300 dark:border-gray-700 rounded hover:bg-gray-50 dark:hover:bg-gray-900 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Next
-            </button>
-          </div>
+          <Pagination
+            currentPage={page}
+            totalPages={partnersData.totalPages}
+            onPageChange={setPage}
+          />
         </div>
       )}
 
@@ -399,6 +400,16 @@ export default function PartnersTab() {
         onSubmit={handleSubmit}
         isSubmitting={createMutation.isPending || updateMutation.isPending}
       />
+
+      {/* Report Recipients Modal */}
+      {reportRecipientsPartner && (
+        <ReportRecipientsModal
+          isOpen={!!reportRecipientsPartner}
+          onClose={() => setReportRecipientsPartner(null)}
+          partnerId={reportRecipientsPartner.id}
+          partnerName={reportRecipientsPartner.name}
+        />
+      )}
     </div>
   )
 }

@@ -37,6 +37,7 @@ export interface JobSeeker {
   zipCode: string;
   jobApplications: number;
   dateJoined: string;
+  source?: string; // AffiliatePartner name or "Direct"
   documents?: Document[];
   lastActivity: string;
   status: "active" | "inactive" | "suspended" | "pending";
@@ -113,6 +114,8 @@ export interface JobSeekerDetails {
   licenses?: License[];
   skills?: Skill[];
   languages?: Language[];
+  occupation?: string;
+  specialty?: string;
   occupationId?: number;
   specialtyId?: number;
   isPermanentlyDeleted?: boolean;

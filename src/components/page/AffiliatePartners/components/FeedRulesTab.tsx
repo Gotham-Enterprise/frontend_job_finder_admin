@@ -119,6 +119,9 @@ export default function FeedRulesTab() {
                 Specialty
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                Work Setting
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 States
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
@@ -138,13 +141,13 @@ export default function FeedRulesTab() {
           <tbody className="bg-white dark:bg-transparent divide-y divide-gray-200 dark:divide-gray-800">
             {loadingRules ? (
               <tr>
-                <td colSpan={8} className="px-6 py-12 text-center">
+                <td colSpan={9} className="px-6 py-12 text-center">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
                 </td>
               </tr>
             ) : !selectedPartnerId ? (
               <tr>
-                <td colSpan={8} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                <td colSpan={9} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
                   Select a partner to view feed rules
                 </td>
               </tr>
@@ -161,6 +164,9 @@ export default function FeedRulesTab() {
                     {rule.specialtyName || '—'}
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
+                    {rule.workSetting || '—'}
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
                     {rule.states.length === 0 ? 'All' : rule.states.join(', ')}
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
@@ -171,11 +177,10 @@ export default function FeedRulesTab() {
                   </td>
                   <td className="px-6 py-4">
                     <span
-                      className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
-                        rule.isActive
+                      className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${rule.isActive
                           ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
                           : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400'
-                      }`}
+                        }`}
                     >
                       {rule.isActive ? 'Active' : 'Inactive'}
                     </span>
@@ -203,7 +208,7 @@ export default function FeedRulesTab() {
               ))
             ) : (
               <tr>
-                <td colSpan={8} className="px-6 py-12 text-center">
+                <td colSpan={9} className="px-6 py-12 text-center">
                   <ListChecks className="w-12 h-12 text-gray-400 mx-auto mb-3" />
                   <p className="text-gray-500 dark:text-gray-400">No feed rules for this partner</p>
                   <button

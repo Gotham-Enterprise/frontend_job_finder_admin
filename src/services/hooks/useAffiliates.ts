@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
 import {
   getAffiliatePartners,
   getAffiliatePartner,
@@ -12,6 +12,9 @@ import {
   reprocessAffiliateBatch,
   cancelAffiliateBatch,
   getAffiliateAnalytics,
+  getAffiliateConversions,
+  getConversionAudit,
+  enqueueConversionAudits,
   triggerAffiliateSync,
   getAffiliateSyncStatus,
   rebuildOutboundFeed,
@@ -20,6 +23,9 @@ import {
   updatePartnerFeedRule,
   deletePartnerFeedRule,
   getCoRegs,
+  getReportRecipients,
+  addReportRecipient,
+  removeReportRecipient,
   CreatePartnerData,
   UpdatePartnerData,
   CreateFeedRuleData,
@@ -30,6 +36,12 @@ import {
   deleteAffiliateLink,
   CreateLinkData,
   UpdateLinkData,
+  getAffiliateLinkTypes,
+  createAffiliateLinkType,
+  updateAffiliateLinkType,
+  deleteAffiliateLinkType,
+  reorderAffiliateLinkTypes,
+  AffiliateLinkType,
 } from "../api/affiliates";
 import { showToast } from "../utils/toast";
 
@@ -38,13 +50,17 @@ export const affiliateQueryKeys = {
   partners: () => [...affiliateQueryKeys.all, "partners"] as const,
   partner: (id: string) => [...affiliateQueryKeys.partners(), id] as const,
   links: () => [...affiliateQueryKeys.all, "links"] as const,
+  linkTypes: () => [...affiliateQueryKeys.all, "linkTypes"] as const,
   batches: () => [...affiliateQueryKeys.all, "batches"] as const,
   batch: (id: string) => [...affiliateQueryKeys.batches(), id] as const,
   batchStatus: (id: string) => [...affiliateQueryKeys.batches(), id, "status"] as const,
   batchJobs: (id: string, page: number) => [...affiliateQueryKeys.batches(), id, "jobs", page] as const,
   analytics: (filters: any) => [...affiliateQueryKeys.all, "analytics", filters] as const,
+  conversions: (filters: any) => [...affiliateQueryKeys.all, "conversions", filters] as const,
+  conversionAudit: (id: string) => [...affiliateQueryKeys.all, "conversion-audit", id] as const,
   feedRules: (partnerId: string) => [...affiliateQueryKeys.all, "feed-rules", partnerId] as const,
   coReg: (partner: string, filters: any) => [...affiliateQueryKeys.all, "coreg", partner, filters] as const,
+  reportRecipients: (partnerId: string) => [...affiliateQueryKeys.all, "report-recipients", partnerId] as const,
 };
 
 // Partner Management Hooks
@@ -173,6 +189,79 @@ export const useDeleteAffiliateLink = () => {
   });
 };
 
+// Link Type Configuration Hooks
+export const useAffiliateLinkTypes = () => {
+  return useQuery({
+    queryKey: affiliateQueryKeys.linkTypes(),
+    queryFn: () => getAffiliateLinkTypes(),
+    staleTime: 1000 * 60 * 5,
+  });
+};
+
+export const useCreateAffiliateLinkType = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { name: string }) => createAffiliateLinkType(data),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: affiliateQueryKeys.linkTypes() });
+      queryClient.invalidateQueries({ queryKey: affiliateQueryKeys.links() });
+      showToast.success("Link Type Added!", `"${data.name}" has been added.`);
+    },
+    onError: (error: any) => {
+      const errorMessage = error.response?.data?.message || error.message || "Failed to add link type";
+      showToast.error("Creation Failed", errorMessage);
+    },
+  });
+};
+
+export const useUpdateAffiliateLinkType = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: { name?: string; isActive?: boolean; sortOrder?: number } }) =>
+      updateAffiliateLinkType(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: affiliateQueryKeys.linkTypes() });
+      queryClient.invalidateQueries({ queryKey: affiliateQueryKeys.links() });
+      showToast.success("Link Type Updated!", "The link type has been updated.");
+    },
+    onError: (error: any) => {
+      const errorMessage = error.response?.data?.message || error.message || "Failed to update link type";
+      showToast.error("Update Failed", errorMessage);
+    },
+  });
+};
+
+export const useDeleteAffiliateLinkType = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => deleteAffiliateLinkType(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: affiliateQueryKeys.linkTypes() });
+      queryClient.invalidateQueries({ queryKey: affiliateQueryKeys.links() });
+      showToast.success("Link Type Deleted!", "The link type has been deleted.");
+    },
+    onError: (error: any) => {
+      const errorMessage = error.response?.data?.message || error.message || "Failed to delete link type";
+      showToast.error("Deletion Failed", errorMessage);
+    },
+  });
+};
+
+export const useReorderAffiliateLinkTypes = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (ids: string[]) => reorderAffiliateLinkTypes(ids),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: affiliateQueryKeys.linkTypes() });
+      showToast.success("Order Saved!", "Link types reordered.");
+    },
+    onError: (error: any) => {
+      const errorMessage = error.response?.data?.message || error.message || "Failed to reorder link types";
+      showToast.error("Reorder Failed", errorMessage);
+    },
+  });
+};
+
 // Sync Management Hooks
 export const useTriggerAffiliateSync = () => {
   const queryClient = useQueryClient();
@@ -295,6 +384,9 @@ export const useAffiliateAnalytics = (params?: {
   endDate?: string;
   source?: "manual" | "auto-redirect" | "partner-feed";
   partnerType?: "selling" | "buying";
+  deduplicate?: boolean;
+  requireApplication?: boolean;
+  excludeFlaggedConversions?: boolean;
 }) => {
   return useQuery({
     queryKey: affiliateQueryKeys.analytics(params || {}),
@@ -303,6 +395,111 @@ export const useAffiliateAnalytics = (params?: {
     gcTime: 1000 * 60 * 10,
   });
 };
+
+const CONVERSIONS_PAGE_SIZE = 50;
+
+export const useInfiniteAffiliateConversions = (params?: {
+  affiliateId?: string
+  startDate?: string
+  endDate?: string
+  source?: "manual" | "auto-redirect" | "partner-feed"
+  partnerType?: "selling" | "buying"
+  deduplicate?: boolean
+  requireApplication?: boolean
+  excludeFlaggedConversions?: boolean
+  auditResult?: "pass" | "flagged" | "incomplete" | "pending" | "failed" | "unaudited"
+}) => {
+  const {
+    affiliateId,
+    startDate,
+    endDate,
+    source,
+    partnerType,
+    deduplicate,
+    requireApplication,
+    excludeFlaggedConversions,
+    auditResult,
+  } = params || {}
+
+  return useInfiniteQuery({
+    queryKey: affiliateQueryKeys.conversions({
+      affiliateId,
+      startDate,
+      endDate,
+      source,
+      partnerType,
+      deduplicate,
+      requireApplication,
+      excludeFlaggedConversions,
+      auditResult,
+    }),
+    queryFn: ({ pageParam }) =>
+      getAffiliateConversions({
+        affiliateId,
+        startDate,
+        endDate,
+        source,
+        partnerType,
+        deduplicate,
+        requireApplication,
+        excludeFlaggedConversions,
+        auditResult,
+        page: pageParam as number,
+        limit: CONVERSIONS_PAGE_SIZE,
+      }),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => {
+      const page = lastPage.pagination?.page
+      const totalPages = lastPage.pagination?.totalPages
+      if (!page || !totalPages) return undefined
+      return page < totalPages ? page + 1 : undefined
+    },
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 10,
+    refetchInterval: (query) => {
+      const rows = query.state.data?.pages.flatMap((p) => p.data) ?? []
+      return rows.some((r) => r.audit?.status === "pending") ? 4000 : false
+    },
+  })
+}
+
+export const useConversionAudit = (conversionId: string | null) => {
+  return useQuery({
+    queryKey: affiliateQueryKeys.conversionAudit(conversionId || ""),
+    queryFn: () => getConversionAudit(conversionId as string),
+    enabled: !!conversionId,
+    retry: 1,
+    refetchInterval: (query) =>
+      query.state.data?.status === "pending" ? 3000 : false,
+  })
+}
+
+export const useEnqueueConversionAudits = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: enqueueConversionAudits,
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ queryKey: [...affiliateQueryKeys.all, "conversions"] })
+      if (variables.conversionId) {
+        queryClient.invalidateQueries({
+          queryKey: affiliateQueryKeys.conversionAudit(variables.conversionId),
+        })
+      }
+      const skippedNote =
+        data.skipped > 0 ? ` ${data.skipped} already audited were skipped.` : ""
+      showToast.success(
+        "Audit queued",
+        `Queued ${data.queued} conversion${data.queued === 1 ? "" : "s"} of ${data.totalMatching}.${skippedNote}`
+      )
+    },
+    onError: (error: any) => {
+      const errorMessage =
+        error.response?.data?.message || error.message || "Failed to queue conversion audits"
+      showToast.error("Audit Failed", errorMessage)
+    },
+  })
+}
 
 // Outbound Feed Hooks
 export const useRebuildOutboundFeed = () => {
@@ -404,5 +601,49 @@ export const useCoRegs = (params?: {
     queryFn: () => getCoRegs(params),
     staleTime: 1000 * 60 * 2, // 2 minutes
     gcTime: 1000 * 60 * 5,
+  });
+};
+
+// Report Recipients Hooks
+export const useReportRecipients = (partnerId: string) => {
+  return useQuery({
+    queryKey: affiliateQueryKeys.reportRecipients(partnerId),
+    queryFn: () => getReportRecipients(partnerId),
+    enabled: !!partnerId,
+    staleTime: 1000 * 60 * 5,
+  });
+};
+
+export const useAddReportRecipient = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ partnerId, email }: { partnerId: string; email: string }) =>
+      addReportRecipient(partnerId, email),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: affiliateQueryKeys.reportRecipients(variables.partnerId) });
+      showToast.success("Recipient Added!", "Report recipient has been added successfully.");
+    },
+    onError: (error: any) => {
+      const errorMessage = error.response?.data?.message || error.message || "Failed to add recipient";
+      showToast.error("Add Failed", errorMessage);
+    },
+  });
+};
+
+export const useRemoveReportRecipient = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ partnerId, recipientId }: { partnerId: string; recipientId: string }) =>
+      removeReportRecipient(partnerId, recipientId),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: affiliateQueryKeys.reportRecipients(variables.partnerId) });
+      showToast.success("Recipient Removed!", "Report recipient has been removed successfully.");
+    },
+    onError: (error: any) => {
+      const errorMessage = error.response?.data?.message || error.message || "Failed to remove recipient";
+      showToast.error("Remove Failed", errorMessage);
+    },
   });
 };

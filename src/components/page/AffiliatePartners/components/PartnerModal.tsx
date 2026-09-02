@@ -114,9 +114,8 @@ export default function PartnerModal({
     }
     return (
       <span
-        className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
-          styles[status] || styles.success
-        }`}
+        className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${styles[status] || styles.success
+          }`}
       >
         {icons[status]}
         {status.replace('_', ' ')}
@@ -226,162 +225,165 @@ export default function PartnerModal({
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-800 dark:text-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
               />
               {partner?.logoUrl && (
-                <div className="mt-2 text-sm text-gray-500">
-                  Current Logo:{' '}
-                  <a href={partner.logoUrl} target="_blank" rel="noreferrer" className="text-primary hover:underline">
-                    View Image
-                  </a>
+                <div className="mt-2">
+                  <img src={partner.logoUrl} alt={`${partner.name} logo`} className="h-12 object-contain rounded border border-gray-200" />
+                  <div className="mt-2 text-sm text-gray-500">
+                    Current Logo:{' '}
+                    <a href={partner.logoUrl} target="_blank" rel="noreferrer" className="text-primary hover:underline">
+                      View Image
+                    </a>
+                  </div>
                 </div>
               )}
             </div>
 
             {/* Outbound Feed Section */}
-            <div className="pt-4 border-t border-gray-200 dark:border-gray-800">
-              <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">Outbound Feed</h4>
+              <div className="pt-4 border-t border-gray-200 dark:border-gray-800">
+                <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">Outbound Feed</h4>
 
-              {!partner ? (
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Save the partner first to configure outbound feed settings.
-                </p>
-              ) : (
-                <div className="space-y-4">
-                  <label className="flex items-center gap-3 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      {...register('outboundFeedEnabled')}
-                      className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
-                    />
-                    <span className="text-sm text-gray-700 dark:text-gray-300">
-                      Enable outbound XML job feed
-                    </span>
-                  </label>
+                {!partner ? (
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    Save the partner first to configure outbound feed settings.
+                  </p>
+                ) : (
+                  <div className="space-y-4">
+                    <label className="flex items-center gap-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        {...register('outboundFeedEnabled')}
+                        className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
+                      />
+                      <span className="text-sm text-gray-700 dark:text-gray-300">
+                        Enable outbound XML job feed
+                      </span>
+                    </label>
 
-                  {outboundEnabled && (
-                    <>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                          Feed URL
-                        </label>
-                        <div className="flex gap-2">
-                          <input
-                            type="text"
-                            readOnly
-                            value={feedUrl || 'Will be generated after save'}
-                            className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800/50 text-gray-600 dark:text-gray-400 text-sm"
-                          />
-                          {feedUrl && (
-                            <button
-                              type="button"
-                              onClick={handleCopyUrl}
-                              className="px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-                              title="Copy URL"
-                            >
-                              <Copy className="w-4 h-4" />
-                            </button>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {outboundEnabled && (
+                      <>
                         <div>
                           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            Cron Schedule
+                            Feed URL
                           </label>
-                          <input
-                            {...register('outboundFeedCronExpression')}
-                            type="text"
-                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-800 dark:text-white"
-                            placeholder="0 5 * * *"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            Timezone
-                          </label>
-                          <input
-                            {...register('outboundFeedTimezone')}
-                            type="text"
-                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-800 dark:text-white"
-                            placeholder="UTC"
-                          />
-                        </div>
-                      </div>
-
-                      <div className="rounded-lg border border-gray-200 dark:border-gray-700 p-4 space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                            Build Status
-                          </span>
-                          {getBuildStatusBadge(partner.outboundFeedLastBuildStatus)}
-                        </div>
-                        {partner.outboundFeedLastBuiltAt && (
-                          <p className="text-xs text-gray-500 dark:text-gray-400">
-                            Last built: {new Date(partner.outboundFeedLastBuiltAt).toLocaleString()}
-                          </p>
-                        )}
-                        {partner.outboundFeedJobCount != null && (
-                          <p className="text-xs text-gray-500 dark:text-gray-400">
-                            Jobs in feed: {partner.outboundFeedJobCount.toLocaleString()}
-                          </p>
-                        )}
-                        {partner.outboundFeedLastBuildError && (
-                          <div className="text-xs text-red-600 dark:text-red-400">
-                            <p className={showFullError ? '' : 'line-clamp-2'}>
-                              {partner.outboundFeedLastBuildError}
-                            </p>
-                            {partner.outboundFeedLastBuildError.length > 120 && (
+                          <div className="flex gap-2">
+                            <input
+                              type="text"
+                              readOnly
+                              value={feedUrl || 'Will be generated after save'}
+                              className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800/50 text-gray-600 dark:text-gray-400 text-sm"
+                            />
+                            {feedUrl && (
                               <button
                                 type="button"
-                                onClick={() => setShowFullError(!showFullError)}
-                                className="text-primary hover:underline mt-1"
+                                onClick={handleCopyUrl}
+                                className="px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                                title="Copy URL"
                               >
-                                {showFullError ? 'Show less' : 'Show more'}
+                                <Copy className="w-4 h-4" />
                               </button>
                             )}
                           </div>
-                        )}
-                        <button
-                          type="button"
-                          onClick={handleRebuild}
-                          disabled={
-                            rebuildMutation.isPending ||
-                            partner.outboundFeedLastBuildStatus === 'in_progress'
-                          }
-                          className="mt-2 flex items-center gap-2 px-3 py-2 text-sm bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
-                        >
-                          <RefreshCw
-                            className={`w-4 h-4 ${rebuildMutation.isPending ? 'animate-spin' : ''}`}
-                          />
-                          Rebuild Now
-                        </button>
-                      </div>
-                    </>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
+                        </div>
 
-          <div className="flex justify-end gap-3 mt-6 pt-6 border-t border-gray-200 dark:border-gray-800">
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={isSubmitting}
-              className="px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center gap-2"
-            >
-              {isSubmitting && (
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-              )}
-              {partner ? 'Update Partner' : 'Create Partner'}
-            </button>
-          </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                              Cron Schedule
+                            </label>
+                            <input
+                              {...register('outboundFeedCronExpression')}
+                              type="text"
+                              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-800 dark:text-white"
+                              placeholder="0 5 * * *"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                              Timezone
+                            </label>
+                            <input
+                              {...register('outboundFeedTimezone')}
+                              type="text"
+                              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-800 dark:text-white"
+                              placeholder="UTC"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="rounded-lg border border-gray-200 dark:border-gray-700 p-4 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                              Build Status
+                            </span>
+                            {getBuildStatusBadge(partner.outboundFeedLastBuildStatus)}
+                          </div>
+                          {partner.outboundFeedLastBuiltAt && (
+                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                              Last built: {new Date(partner.outboundFeedLastBuiltAt).toLocaleString()}
+                            </p>
+                          )}
+                          {partner.outboundFeedJobCount != null && (
+                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                              Jobs in feed: {partner.outboundFeedJobCount.toLocaleString()}
+                            </p>
+                          )}
+                          {partner.outboundFeedLastBuildError && (
+                            <div className="text-xs text-red-600 dark:text-red-400">
+                              <p className={showFullError ? '' : 'line-clamp-2'}>
+                                {partner.outboundFeedLastBuildError}
+                              </p>
+                              {partner.outboundFeedLastBuildError.length > 120 && (
+                                <button
+                                  type="button"
+                                  onClick={() => setShowFullError(!showFullError)}
+                                  className="text-primary hover:underline mt-1"
+                                >
+                                  {showFullError ? 'Show less' : 'Show more'}
+                                </button>
+                              )}
+                            </div>
+                          )}
+                          <button
+                            type="button"
+                            onClick={handleRebuild}
+                            disabled={
+                              rebuildMutation.isPending ||
+                              partner.outboundFeedLastBuildStatus === 'in_progress'
+                            }
+                            className="mt-2 flex items-center gap-2 px-3 py-2 text-sm bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
+                          >
+                            <RefreshCw
+                              className={`w-4 h-4 ${rebuildMutation.isPending ? 'animate-spin' : ''}`}
+                            />
+                            Rebuild Now
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 mt-6 pt-6 border-t border-gray-200 dark:border-gray-800">
+              <button
+                type="button"
+                onClick={onClose}
+                disabled={isSubmitting}
+                className="px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center gap-2"
+              >
+                {isSubmitting && (
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                )}
+                {partner ? 'Update Partner' : 'Create Partner'}
+              </button>
+            </div>
         </form>
       </div>
     </div>
