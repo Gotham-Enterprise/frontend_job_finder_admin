@@ -197,6 +197,11 @@ export interface AffiliateAnalytics {
   totalPayout: number;
 }
 
+export interface AffiliateConversionAuditSummary {
+  status: "pending" | "completed" | "failed";
+  overallResult: "pass" | "flagged" | "incomplete" | null;
+}
+
 export interface AffiliateConversionRow {
   id: string;
   jobPostId: string;
@@ -208,6 +213,54 @@ export interface AffiliateConversionRow {
   partnerConversionId: string | null;
   ipAddress: string | null;
   convertedAt: string;
+  audit?: AffiliateConversionAuditSummary | null;
+}
+
+export interface AffiliateConversionAuditDetail {
+  id: string;
+  conversionId: string;
+  status: "pending" | "completed" | "failed";
+  overallResult: "pass" | "flagged" | "incomplete" | null;
+  candidateOccupationName: string | null;
+  jobTitle: string | null;
+  jobOccupationName: string | null;
+  resumeId: string | null;
+  resumeInferredOccupationName: string | null;
+  resumeOccupationMatch: boolean | null;
+  resumeOccupationReason: string | null;
+  jobTitleOccupationMatch: boolean | null;
+  jobTitleOccupationReason: string | null;
+  jobTitleCandidateMatch: boolean | null;
+  jobTitleCandidateReason: string | null;
+  errorMessage: string | null;
+  auditedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  conversion: {
+    id: string;
+    jobPostId: string | null;
+    candidateId: string | null;
+    convertedAt: string;
+  };
+}
+
+export interface EnqueueConversionAuditsPayload {
+  conversionId?: string;
+  force?: boolean;
+  affiliateId?: string;
+  startDate?: string;
+  endDate?: string;
+  source?: "manual" | "auto-redirect" | "partner-feed";
+  partnerType?: "selling" | "buying";
+  deduplicate?: boolean;
+  requireApplication?: boolean;
+  excludeFlaggedConversions?: boolean;
+}
+
+export interface EnqueueConversionAuditsResult {
+  queued: number;
+  skipped: number;
+  totalMatching: number;
 }
 
 export interface AffiliateConversionsResponse {
@@ -542,6 +595,7 @@ export const getAffiliateAnalytics = async (params?: {
   partnerType?: "selling" | "buying";
   deduplicate?: boolean;
   requireApplication?: boolean;
+  excludeFlaggedConversions?: boolean;
 }): Promise<AffiliateAnalytics> => {
   const queryParams = new URLSearchParams();
   if (params?.affiliateId) queryParams.append("affiliateId", params.affiliateId);
@@ -551,6 +605,9 @@ export const getAffiliateAnalytics = async (params?: {
   if (params?.partnerType) queryParams.append("partnerType", params.partnerType);
   if (params?.deduplicate !== undefined) queryParams.append("deduplicate", String(params.deduplicate));
   if (params?.requireApplication !== undefined) queryParams.append("requireApplication", String(params.requireApplication));
+  if (params?.excludeFlaggedConversions !== undefined) {
+    queryParams.append("excludeFlaggedConversions", String(params.excludeFlaggedConversions));
+  }
   const queryString = queryParams.toString();
   const response = await apiGet<{ success: boolean; data: AffiliateAnalytics }>(
     `/api/admin/affiliates/analytics${queryString ? `?${queryString}` : ""}`
@@ -566,6 +623,8 @@ export type AffiliateConversionsParams = {
   partnerType?: "selling" | "buying";
   deduplicate?: boolean;
   requireApplication?: boolean;
+  excludeFlaggedConversions?: boolean;
+  auditResult?: "pass" | "flagged" | "incomplete" | "pending" | "failed" | "unaudited";
   page?: number;
   limit?: number;
 };
@@ -583,6 +642,10 @@ export const getAffiliateConversions = async (
   if (params?.requireApplication !== undefined) {
     queryParams.append("requireApplication", String(params.requireApplication));
   }
+  if (params?.excludeFlaggedConversions !== undefined) {
+    queryParams.append("excludeFlaggedConversions", String(params.excludeFlaggedConversions));
+  }
+  if (params?.auditResult) queryParams.append("auditResult", params.auditResult);
   if (params?.page) queryParams.append("page", String(params.page));
   if (params?.limit) queryParams.append("limit", String(params.limit));
   const queryString = queryParams.toString();
@@ -595,6 +658,25 @@ export const getAffiliateConversions = async (
     data: response.data || [],
     pagination: response.pagination ?? { page: 1, limit: 50, total: 0, totalPages: 0 },
   };
+};
+
+export const getConversionAudit = async (
+  conversionId: string
+): Promise<AffiliateConversionAuditDetail> => {
+  const response = await apiGet<{ success: boolean; data: AffiliateConversionAuditDetail }>(
+    `/api/admin/affiliates/analytics/conversions/${conversionId}/audit`
+  );
+  return response.data;
+};
+
+export const enqueueConversionAudits = async (
+  payload: EnqueueConversionAuditsPayload
+): Promise<EnqueueConversionAuditsResult> => {
+  const response = await apiPost<{ success: boolean; data: EnqueueConversionAuditsResult }>(
+    "/api/admin/affiliates/analytics/conversions/audit",
+    payload
+  );
+  return response.data;
 };
 
 // Outbound Feed APIs
