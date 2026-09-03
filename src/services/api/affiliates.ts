@@ -442,11 +442,13 @@ export const getAffiliateLinks = async (params?: {
   page?: number;
   limit?: number;
   affiliateId?: string;
+  q?: string;
 }): Promise<{ data: AffiliateLink[]; total: number; page: number; totalPages: number }> => {
   const queryParams = new URLSearchParams();
   if (params?.page) queryParams.append("page", params.page.toString());
   if (params?.limit) queryParams.append("limit", params.limit.toString());
   if (params?.affiliateId) queryParams.append("affiliateId", params.affiliateId);
+  if (params?.q) queryParams.append("q", params.q);
   const queryString = queryParams.toString();
   const res = await apiGet<{ data: AffiliateLink[]; pagination: { page: number; limit: number; total: number; totalPages: number } }>(`/api/admin/affiliates/links${queryString ? `?${queryString}` : ""}`);
   return {
