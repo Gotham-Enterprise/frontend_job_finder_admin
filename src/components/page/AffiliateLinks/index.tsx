@@ -163,7 +163,7 @@ export default function AffiliateLinks() {
                   <td className="px-6 py-4 whitespace-nowrap">
                     {link.format ? (
                       <span className="inline-block px-2.5 py-0.5 bg-primary/10 text-primary text-xs font-medium rounded-full">
-                        {link.format === 'IN_PERSON' ? 'In-Person' : link.format === 'VIRTUAL' ? 'Virtual' : link.format === 'HYBRID' ? 'Hybrid' : link.format === 'ONLINE_COURSE' ? 'Online Course' : link.format}
+                        {link.format === 'IN_PERSON' ? 'In-Person' : link.format === 'VIRTUAL' ? 'Virtual' : link.format === 'HYBRID' ? 'Hybrid' : link.format === 'ONLINE_COURSE' ? 'Online Course' : link.format === 'DIRECTORY' ? 'Directory' : link.format}
                       </span>
                     ) : (
                       <span className="text-sm text-gray-400">—</span>
