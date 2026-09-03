@@ -280,6 +280,19 @@ const PermissionGuard: React.FC<PermissionGuardProps> = ({
     const hasRequiredPermission = hasPermission(permissions, module, action);
 
     if (!hasRequiredPermission) {
+      // Same Admin/Super Admin bypass as the path-derived branch below —
+      // medicalLibrary isn't yet in the DB role for other roles.
+      if (module === "medicalLibrary") {
+        const user = authUtils.getUser();
+        const baseRole = user?.role?.toLowerCase();
+        const roleName = user?.adminRoleAccess?.roleName?.toLowerCase();
+        const isSuperAdmin =
+          baseRole === "admin" || baseRole === "super admin" || roleName === "admin" || roleName === "super admin";
+        if (isSuperAdmin) {
+          return <>{children}</>;
+        }
+      }
+
       const fallbackContent = fallback || (
         <div className="min-h-screen flex items-center justify-center">
           <NotFoundState title="Access Denied" message="You don't have permission to access this page." />

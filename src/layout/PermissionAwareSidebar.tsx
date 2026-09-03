@@ -140,6 +140,7 @@ const navItems: NavItem[] = [
     subItems: [
       { name: "All Topics", path: "/admin/medical-library", requiredAction: "view" },
       { name: "Add New", path: "/admin/medical-library/add-new", requiredAction: "add" },
+      { name: "Scraper Runs", path: "/admin/medical-library/scraper-runs", requiredAction: "view" },
     ],
   },
 
@@ -323,11 +324,14 @@ const AppSidebar: React.FC = () => {
       const hasPermission = hasAnyModulePermission(permissions, item.permissionKey);
 
       // Special handling for Unlock Requests & Medical Library - show if user is Super Admin or Admin
-      if (item.permissionKey === "unlockRequest" && !hasPermission) {
+      if (
+        (item.permissionKey === "unlockRequest" || item.permissionKey === "medicalLibrary") &&
+        !hasPermission
+      ) {
         const user = typeof window !== "undefined" ? authUtils.getUser() : null;
         const isSuperAdmin = user?.adminRoleAccess?.roleName?.toLowerCase() === "super admin";
         console.log(
-          `[Sidebar] Special check for Unlock Requests - isSuperAdmin: ${isSuperAdmin}, roleName: ${user?.adminRoleAccess?.roleName}`
+          `[Sidebar] Special check for ${item.name} - isSuperAdmin: ${isSuperAdmin}, roleName: ${user?.adminRoleAccess?.roleName}`
         );
         if (isSuperAdmin) {
           return true;
@@ -469,7 +473,16 @@ const AppSidebar: React.FC = () => {
                         };
                         const mappedAction = actionMap[subItem.requiredAction];
                         const hasRequiredPermission = hasPermission(permissions, nav.permissionKey, mappedAction);
-                        return hasRequiredPermission;
+                        if (hasRequiredPermission) return true;
+
+                        // Same Super Admin bypass as the parent item (see isItemAccessible) —
+                        // unlockRequest/medicalLibrary aren't yet in the DB role for other roles.
+                        if (nav.permissionKey === "unlockRequest" || nav.permissionKey === "medicalLibrary") {
+                          const user = typeof window !== "undefined" ? authUtils.getUser() : null;
+                          return user?.adminRoleAccess?.roleName?.toLowerCase() === "super admin";
+                        }
+
+                        return false;
                       }
 
                       // If we have permissions loaded but no specific permission requirement, show the item
