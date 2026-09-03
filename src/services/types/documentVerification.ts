@@ -1,4 +1,4 @@
-export type DocumentVerificationKind = "walletCredential" | "education";
+export type DocumentVerificationKind = "walletCredential" | "education" | "ceuDocument";
 export type DocumentVerificationStatus = "pending" | "verified" | "rejected";
 
 export interface DocumentVerification {

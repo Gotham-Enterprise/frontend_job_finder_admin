@@ -1,5 +1,6 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { documentVerificationApi } from "../api/documentVerification";
+import { errorUtils } from "../utils/errorUtils";
 import {
   DocumentVerification,
   DocumentVerificationBatchUpdate,
@@ -17,7 +18,13 @@ export const documentVerificationQueryKeys = {
 
 const staleTime = 1000 * 60 * 5; // 5 minutes
 const retry = (failureCount: number, error: Error) => {
-  if (error.message.includes("HTTP 401")) {
+  // Retrying a 401/404 just repeats the same failure with backoff delay in
+  // between — neither resolves by trying again. Was previously checking
+  // error.message.includes("HTTP 401"), which never matched: apiError only
+  // formats messages that way when the response has no JSON body: with one
+  // (the normal case here, e.g. {"error":"Document not found"}) the message
+  // is just that string, so 401s were always being retried too.
+  if (errorUtils.isAuthError(error) || errorUtils.isNotFoundError(error)) {
     return false;
   }
   return failureCount < 3;

@@ -16,7 +16,7 @@ interface Props {
 }
 
 const isValidKind = (kind: string): kind is DocumentVerificationKind =>
-  kind === "walletCredential" || kind === "education";
+  kind === "walletCredential" || kind === "education" || kind === "ceuDocument";
 
 const ViewDetails: FC<Props> = ({ kind, id }) => {
   const validKind = isValidKind(kind) ? kind : "walletCredential";
