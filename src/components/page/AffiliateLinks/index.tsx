@@ -1,7 +1,7 @@
 'use client'
 
-import React, { useState } from 'react'
-import { Plus, Edit2, Trash2, Link as LinkIcon, Building2, Calendar, Settings2 } from 'lucide-react'
+import React, { useState, useEffect, useRef } from 'react'
+import { Plus, Edit2, Trash2, Link as LinkIcon, Building2, Calendar, Settings2, Search, X } from 'lucide-react'
 import {
   useAffiliateLinks,
   useCreateAffiliateLink,
@@ -17,11 +17,32 @@ export default function AffiliateLinks() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isConfigOpen, setIsConfigOpen] = useState(false)
   const [editingLink, setEditingLink] = useState<AffiliateLink | null>(null)
+  const [searchInput, setSearchInput] = useState('')
+  const [searchQuery, setSearchQuery] = useState('')
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const { data: linksData, isLoading } = useAffiliateLinks({ page, limit: 10 })
+  const { data: linksData, isLoading } = useAffiliateLinks({ page, limit: 10, q: searchQuery || undefined })
   const createMutation = useCreateAffiliateLink()
   const updateMutation = useUpdateAffiliateLink()
   const deleteMutation = useDeleteAffiliateLink()
+
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => {
+      setSearchQuery(searchInput)
+      setPage(1)
+    }, 400)
+
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current)
+    }
+  }, [searchInput])
+
+  const handleSearchClear = () => {
+    setSearchInput('')
+    setSearchQuery('')
+    setPage(1)
+  }
 
   const handleCreate = () => {
     setEditingLink(null)
@@ -70,6 +91,25 @@ export default function AffiliateLinks() {
           </p>
         </div>
         <div className="flex items-center gap-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              placeholder="Search links..."
+              className="pl-9 pr-8 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm bg-transparent dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/50"
+            />
+            {searchInput && (
+              <button
+                onClick={handleSearchClear}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                aria-label="Clear search"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
           <button
             onClick={() => setIsConfigOpen(true)}
             className="p-2.5 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-500 hover:text-primary hover:border-primary/50 transition-colors"
