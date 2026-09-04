@@ -132,7 +132,7 @@ export const useDeleteAffiliatePartner = () => {
 };
 
 // Link Management Hooks
-export const useAffiliateLinks = (params?: { page?: number; limit?: number; affiliateId?: string }) => {
+export const useAffiliateLinks = (params?: { page?: number; limit?: number; affiliateId?: string; q?: string }) => {
   return useQuery({
     queryKey: [...affiliateQueryKeys.links(), params || {}],
     queryFn: () => getAffiliateLinks(params),
