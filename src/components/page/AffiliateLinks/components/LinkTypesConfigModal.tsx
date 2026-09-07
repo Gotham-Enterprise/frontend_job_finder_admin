@@ -10,6 +10,7 @@ import {
   useReorderAffiliateLinkTypes,
 } from '@/services/hooks/useAffiliates'
 import type { AffiliateLinkType } from '@/services/api/affiliates'
+import { useAffiliatePermissions } from '@/hooks/useAffiliatePermissions'
 
 interface LinkTypesConfigModalProps {
   isOpen: boolean
@@ -17,6 +18,7 @@ interface LinkTypesConfigModalProps {
 }
 
 export default function LinkTypesConfigModal({ isOpen, onClose }: LinkTypesConfigModalProps) {
+  const { canCreate, canUpdate, canDelete } = useAffiliatePermissions()
   const { data: types = [], isLoading } = useAffiliateLinkTypes()
   const createMutation = useCreateAffiliateLinkType()
   const updateMutation = useUpdateAffiliateLinkType()
@@ -91,26 +93,28 @@ export default function LinkTypesConfigModal({ isOpen, onClose }: LinkTypesConfi
             creating or editing a link.
           </p>
 
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={newName}
-              onChange={(e) => setNewName(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') handleCreate()
-              }}
-              placeholder="New type name"
-              className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
-            />
-            <button
-              onClick={handleCreate}
-              disabled={createMutation.isPending || !newName.trim()}
-              className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
-            >
-              <Plus className="w-4 h-4" />
-              Add
-            </button>
-          </div>
+          {canCreate && (
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleCreate()
+                }}
+                placeholder="New type name"
+                className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+              />
+              <button
+                onClick={handleCreate}
+                disabled={createMutation.isPending || !newName.trim()}
+                className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
+              >
+                <Plus className="w-4 h-4" />
+                Add
+              </button>
+            </div>
+          )}
 
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
@@ -125,22 +129,24 @@ export default function LinkTypesConfigModal({ isOpen, onClose }: LinkTypesConfi
                   key={type.id}
                   className="flex items-center gap-2 px-3 py-2.5 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800"
                 >
-                  <div className="flex flex-col">
-                    <button
-                      onClick={() => move(index, -1)}
-                      disabled={index === 0 || reorderMutation.isPending}
-                      className="text-gray-400 hover:text-primary disabled:opacity-30 transition-colors"
-                    >
-                      <ArrowUp className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => move(index, 1)}
-                      disabled={index === types.length - 1 || reorderMutation.isPending}
-                      className="text-gray-400 hover:text-primary disabled:opacity-30 transition-colors"
-                    >
-                      <ArrowDown className="w-4 h-4" />
-                    </button>
-                  </div>
+                  {canUpdate && (
+                    <div className="flex flex-col">
+                      <button
+                        onClick={() => move(index, -1)}
+                        disabled={index === 0 || reorderMutation.isPending}
+                        className="text-gray-400 hover:text-primary disabled:opacity-30 transition-colors"
+                      >
+                        <ArrowUp className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => move(index, 1)}
+                        disabled={index === types.length - 1 || reorderMutation.isPending}
+                        className="text-gray-400 hover:text-primary disabled:opacity-30 transition-colors"
+                      >
+                        <ArrowDown className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
 
                   <div className="flex-1 min-w-0">
                     {editingId === type.id ? (
@@ -159,26 +165,29 @@ export default function LinkTypesConfigModal({ isOpen, onClose }: LinkTypesConfi
                     )}
                   </div>
 
-                  <button
-                    onClick={() => {
-                      if (editingId === type.id) {
-                        handleRename(type.id)
-                      } else {
-                        setEditingId(type.id)
-                        setEditName(type.name)
-                      }
-                    }}
-                    className="text-gray-400 hover:text-primary transition-colors"
-                    title="Rename"
-                  >
-                    {editingId === type.id ? <Check className="w-4 h-4" /> : <Pencil className="w-4 h-4" />}
-                  </button>
+                  {canUpdate && (
+                    <button
+                      onClick={() => {
+                        if (editingId === type.id) {
+                          handleRename(type.id)
+                        } else {
+                          setEditingId(type.id)
+                          setEditName(type.name)
+                        }
+                      }}
+                      className="text-gray-400 hover:text-primary transition-colors"
+                      title="Rename"
+                    >
+                      {editingId === type.id ? <Check className="w-4 h-4" /> : <Pencil className="w-4 h-4" />}
+                    </button>
+                  )}
 
                   <button
                     onClick={() => handleToggleActive(type)}
+                    disabled={!canUpdate}
                     className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
                       type.isActive ? 'bg-primary' : 'bg-gray-300 dark:bg-gray-600'
-                    }`}
+                    } disabled:opacity-50`}
                     title={type.isActive ? 'Active' : 'Inactive'}
                   >
                     <span
@@ -188,14 +197,16 @@ export default function LinkTypesConfigModal({ isOpen, onClose }: LinkTypesConfi
                     />
                   </button>
 
-                  <button
-                    onClick={() => handleDelete(type)}
-                    disabled={deleteMutation.isPending}
-                    className="text-red-500 hover:text-red-600 transition-colors"
-                    title="Delete"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  {canDelete && (
+                    <button
+                      onClick={() => handleDelete(type)}
+                      disabled={deleteMutation.isPending}
+                      className="text-red-500 hover:text-red-600 transition-colors"
+                      title="Delete"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
