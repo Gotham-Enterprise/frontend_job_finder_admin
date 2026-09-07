@@ -347,13 +347,14 @@ export default function CoRegistrationTab() {
                   <th className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 whitespace-nowrap">Response Code</th>
                   <th className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 whitespace-nowrap">Attempts</th>
                   <th className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 whitespace-nowrap">Error Reason</th>
+                  <th className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 whitespace-nowrap">Registration Date</th>
                   <th className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 whitespace-nowrap">Sent At</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
                 {data?.records.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="px-4 py-10 text-center text-gray-500 dark:text-gray-400">
+                    <td colSpan={9} className="px-4 py-10 text-center text-gray-500 dark:text-gray-400">
                       No co-registration records found for the selected filters.
                     </td>
                   </tr>
@@ -396,6 +397,13 @@ export default function CoRegistrationTab() {
                       </td>
                       <td className="px-4 py-3">
                         <ErrorCell message={record.errorMessage} />
+                      </td>
+                      <td className="px-4 py-3 text-gray-600 dark:text-gray-400 text-xs whitespace-nowrap">
+                        {record.registrationDate ? (
+                          formatDateDisplay(record.registrationDate)
+                        ) : (
+                          <span className="text-gray-400 dark:text-gray-600">—</span>
+                        )}
                       </td>
                       <td className="px-4 py-3 text-gray-600 dark:text-gray-400 text-xs whitespace-nowrap">
                         {formatDateDisplay(record.sentAt)}
