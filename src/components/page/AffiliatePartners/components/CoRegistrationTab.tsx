@@ -347,13 +347,14 @@ export default function CoRegistrationTab() {
                   <th className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 whitespace-nowrap">Response Code</th>
                   <th className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 whitespace-nowrap">Attempts</th>
                   <th className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 whitespace-nowrap">Error Reason</th>
+                  <th className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 whitespace-nowrap">Registration Date</th>
                   <th className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 whitespace-nowrap">Sent At</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
                 {data?.records.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="px-4 py-10 text-center text-gray-500 dark:text-gray-400">
+                    <td colSpan={9} className="px-4 py-10 text-center text-gray-500 dark:text-gray-400">
                       No co-registration records found for the selected filters.
                     </td>
                   </tr>
@@ -378,13 +379,12 @@ export default function CoRegistrationTab() {
                       <td className="px-4 py-3 text-gray-700 dark:text-gray-300 whitespace-nowrap">
                         {record.responseCode != null ? (
                           <span
-                            className={`font-mono text-xs px-1.5 py-0.5 rounded ${
-                              record.status === 'success'
+                            className={`font-mono text-xs px-1.5 py-0.5 rounded ${record.status === 'success'
                                 ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
                                 : record.status === 'duplicate'
                                   ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
                                   : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-                            }`}
+                              }`}
                           >
                             {record.responseCode}
                           </span>
@@ -397,6 +397,13 @@ export default function CoRegistrationTab() {
                       </td>
                       <td className="px-4 py-3">
                         <ErrorCell message={record.errorMessage} />
+                      </td>
+                      <td className="px-4 py-3 text-gray-600 dark:text-gray-400 text-xs whitespace-nowrap">
+                        {record.registrationDate ? (
+                          formatDateDisplay(record.registrationDate)
+                        ) : (
+                          <span className="text-gray-400 dark:text-gray-600">—</span>
+                        )}
                       </td>
                       <td className="px-4 py-3 text-gray-600 dark:text-gray-400 text-xs whitespace-nowrap">
                         {formatDateDisplay(record.sentAt)}
