@@ -378,13 +378,12 @@ export default function CoRegistrationTab() {
                       <td className="px-4 py-3 text-gray-700 dark:text-gray-300 whitespace-nowrap">
                         {record.responseCode != null ? (
                           <span
-                            className={`font-mono text-xs px-1.5 py-0.5 rounded ${
-                              record.status === 'success'
+                            className={`font-mono text-xs px-1.5 py-0.5 rounded ${record.status === 'success'
                                 ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
                                 : record.status === 'duplicate'
                                   ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
                                   : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-                            }`}
+                              }`}
                           >
                             {record.responseCode}
                           </span>
