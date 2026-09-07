@@ -2,7 +2,7 @@
 import React from "react";
 import { usePathname } from "next/navigation";
 import { authUtils } from "@/services/utils/authUtils";
-import { useAuthPermissions } from "@/hooks/useAuthPermissions";
+import { usePermissions } from "@/context/PermissionProvider";
 import { hasPermission, hasAnyModulePermission, hasGeneralAdminAccess } from "@/utils/permissionUtils";
 import { UserPermissions } from "@/services/types/permissions";
 import NotFoundState from "@/components/common/NotFoundState";
@@ -271,7 +271,7 @@ const PermissionGuard: React.FC<PermissionGuardProps> = ({
   showFallback = false,
 }) => {
   const pathname = usePathname();
-  const { permissions, loading, error } = useAuthPermissions();
+  const { permissions, loading, error } = usePermissions();
 
   // Show loading state
   if (loading) {
@@ -426,7 +426,7 @@ export function withPermission<P extends object>(
  * Hook to check permissions conditionally
  */
 export const usePermissionCheck = () => {
-  const { permissions, loading, error } = useAuthPermissions();
+  const { permissions, loading, error } = usePermissions();
 
   const checkPermission = (
     module: keyof UserPermissions,

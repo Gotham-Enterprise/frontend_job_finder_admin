@@ -29,25 +29,7 @@ export const useLogin = () => {
       }
       
       queryClient.invalidateQueries({ queryKey: ['currentUser'] });
-      
-      // Navigate to admin with a slight delay to ensure auth state is fully processed
-      setTimeout(() => {
-        queryClient.prefetchQuery({
-          queryKey: ['currentUser'],
-          queryFn: () => authApi.getCurrentUser(),
-          staleTime: 0, 
-        });
-        
-        router.push('/admin');
-        
-        // Auto-reload after login to ensure permissions are fully loaded
-        // This prevents the sidebar timing issues on first login
-        setTimeout(() => {
-       
-          window.location.reload();
-        }, 800);
-        
-      }, 200); // Slightly longer delay to ensure everything is processed
+      router.push('/admin');
     }
   });
 };
@@ -124,7 +106,8 @@ export const useCurrentUser = () => {
       return response;
     },
     enabled: isAuthenticated,
-    staleTime: 1 * 60 * 1000, // Reduce stale time to 1 minute for more frequent updates
+    staleTime: 0,
+    refetchOnMount: 'always' as const,
     gcTime: 10 * 60 * 1000, // 10 minutes
     retry: (failureCount, error: any) => {
       // Don't retry if it's an auth error
