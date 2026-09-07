@@ -7,7 +7,7 @@ import { useSidebar } from "../context/SidebarContext";
 import { useAuthPermissions } from "../hooks/useAuthPermissions";
 import { useUnlockRequestContext } from "../context/UnlockRequestContext";
 import { usePendingSupervisorContext } from "../context/PendingSupervisorContext";
-import { hasAnyModulePermission, hasPermission } from "../utils/permissionUtils";
+import { hasAnyModulePermission, hasPermission, hasGeneralAdminAccess } from "../utils/permissionUtils";
 import { authUtils } from "../services/utils/authUtils";
 import SidebarSkeleton from "../components/common/SidebarSkeleton";
 import {
@@ -50,7 +50,8 @@ type NavItem = {
     | "blog"
     | "medicalLibrary"
     // | "forum"
-    | "unlockRequest";
+    | "unlockRequest"
+    | "affiliates";
   isAccessible?: boolean;
 };
 
@@ -85,7 +86,7 @@ const navItems: NavItem[] = [
     icon: <HandShake />,
     name: "Affiliates",
     path: "/admin/affiliates",
-    isAccessible: true,
+    permissionKey: "affiliates",
     subItems: [
       { name: "Partners", path: "/admin/affiliates/partners" },
       { name: "Links", path: "/admin/affiliates/links" },
@@ -313,8 +314,20 @@ const AppSidebar: React.FC = () => {
 
   // Check if item is accessible based on permissions
   const isItemAccessible = (item: NavItem): boolean => {
-    // If item has explicit isAccessible, use that
+    // Dashboard is always accessible to every authenticated admin
+    if (item.path === "/" || item.path === "/admin") {
+      return true;
+    }
+
+    // If item has explicit isAccessible, check general admin access first.
+    // Users with only a single restricted module (e.g. affiliates-only) should
+    // not see items that are "always accessible" for full admins.
     if (item.isAccessible !== undefined) {
+      if (!item.isAccessible) return false;
+      // isAccessible: true — also require general admin access when permissions are loaded
+      if (permissions) {
+        return hasGeneralAdminAccess(permissions);
+      }
       return item.isAccessible;
     }
 
@@ -349,6 +362,13 @@ const AppSidebar: React.FC = () => {
     // If we're authenticated but don't have permissions yet, don't show items
     if (isAuthenticated && hasUserData && !permissions) {
       return false; // Don't show items if we don't have permission data
+    }
+
+    // Items with no permissionKey and no isAccessible flag: apply general access check
+    // (e.g. Forum Moderation, which has no explicit permission but should not be visible
+    // to restricted users such as affiliates-only admins)
+    if (permissions) {
+      return hasGeneralAdminAccess(permissions);
     }
 
     // Only default to accessible if no permission key is required

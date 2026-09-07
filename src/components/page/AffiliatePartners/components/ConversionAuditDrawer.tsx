@@ -8,6 +8,7 @@ import {
 } from '@/services/hooks/useAffiliates'
 import type { AffiliateConversionRow } from '@/services/api/affiliates'
 import { CheckCircle, XCircle, MinusCircle, AlertTriangle, RefreshCw, Loader2 } from 'lucide-react'
+import { useAffiliatePermissions } from '@/hooks/useAffiliatePermissions'
 
 type AuditFilter = 'pass' | 'flagged' | 'incomplete' | 'pending' | 'failed' | 'unaudited'
 
@@ -125,6 +126,7 @@ export default function ConversionAuditDrawer({
   conversion: AffiliateConversionRow | null
   onClose: () => void
 }) {
+  const { canUpdate } = useAffiliatePermissions()
   const conversionId = conversion?.id ?? null
   const { data: audit, isLoading, isError, error } = useConversionAudit(conversionId)
   const enqueueMutation = useEnqueueConversionAudits()
@@ -263,15 +265,17 @@ export default function ConversionAuditDrawer({
           </>
         )}
 
-        <button
-          type="button"
-          onClick={handleReaudit}
-          disabled={!conversionId || enqueueMutation.isPending}
-          className="flex items-center justify-center gap-2 w-full px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
-        >
-          <RefreshCw className={`w-4 h-4 ${enqueueMutation.isPending ? 'animate-spin' : ''}`} />
-          Re-audit this conversion
-        </button>
+        {canUpdate && (
+          <button
+            type="button"
+            onClick={handleReaudit}
+            disabled={!conversionId || enqueueMutation.isPending}
+            className="flex items-center justify-center gap-2 w-full px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
+          >
+            <RefreshCw className={`w-4 h-4 ${enqueueMutation.isPending ? 'animate-spin' : ''}`} />
+            Re-audit this conversion
+          </button>
+        )}
       </div>
     </Drawer>
   )

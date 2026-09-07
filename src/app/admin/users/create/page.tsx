@@ -36,7 +36,9 @@ export default function CreateUserPage() {
       
       const access: any = {};
       
-      // Map frontend permission keys to API permission names
+      // Map frontend permission keys to API permission names.
+      // Only include keys that have a matching row in AdminPermissions (DB).
+      // 'medicalLibrary' has NO DB row → omit it (backend would reject it).
       const keyToApiNameMap: { [key: string]: string } = {
         'tickets': 'Tickets',
         'jobSeekers': 'Job Seekers',
@@ -46,7 +48,8 @@ export default function CreateUserPage() {
         'blog': 'Blog',
         'careers': 'Careers',
         'jobs': 'Jobs',
-        'medicalLibrary': 'Medical Library',
+        'unlockRequest': 'Unlock Requests',
+        'affiliates': 'Affiliates',
       };
       
       Object.keys(userData.permissions).forEach(permissionKey => {
