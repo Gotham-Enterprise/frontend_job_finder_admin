@@ -740,6 +740,7 @@ export interface CoRegRecord {
   attempts: number;
   errorMessage: string | null;
   sentAt: string;
+  registrationDate: string | null;
   updatedAt: string;
 }
 
