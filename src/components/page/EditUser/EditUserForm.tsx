@@ -77,6 +77,8 @@ const EditUserForm: React.FC<EditUserFormProps> = ({ onSubmit, onCancel, isLoadi
         'coupons',
         'blog',
         'medicalLibrary',
+        'unlockRequest',
+        'affiliates',
       ];
       const enhancedPermissions = { ...transformedData.permissions };
 
@@ -130,6 +132,8 @@ const EditUserForm: React.FC<EditUserFormProps> = ({ onSubmit, onCancel, isLoadi
             'coupons',
             'blog',
             'medicalLibrary',
+            'unlockRequest',
+            'affiliates',
           ];
 
           standardModules.forEach((module) => {
@@ -311,6 +315,7 @@ const EditUserForm: React.FC<EditUserFormProps> = ({ onSubmit, onCancel, isLoadi
       'blog',
       'medicalLibrary',
       'unlockRequest',
+      'affiliates',
     ];
 
     // Get all available modules from various sources
