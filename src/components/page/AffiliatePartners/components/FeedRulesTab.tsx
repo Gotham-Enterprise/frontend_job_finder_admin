@@ -11,8 +11,10 @@ import {
 import type { AffiliatePartnerFeedRule, CreateFeedRuleData } from '@/services/api/affiliates'
 import { Plus, Edit2, Trash2, ListChecks } from 'lucide-react'
 import FeedRuleModal from './FeedRuleModal'
+import { useAffiliatePermissions } from '@/hooks/useAffiliatePermissions'
 
 export default function FeedRulesTab() {
+  const { canCreate, canUpdate, canDelete } = useAffiliatePermissions()
   const [selectedPartnerId, setSelectedPartnerId] = useState<string>('')
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingRule, setEditingRule] = useState<AffiliatePartnerFeedRule | null>(null)
@@ -76,14 +78,16 @@ export default function FeedRulesTab() {
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Feed Rules</h2>
-        <button
-          onClick={handleCreate}
-          disabled={!selectedPartnerId}
-          className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
-        >
-          <Plus className="w-4 h-4" />
-          Add Rule
-        </button>
+        {canCreate && (
+          <button
+            onClick={handleCreate}
+            disabled={!selectedPartnerId}
+            className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
+          >
+            <Plus className="w-4 h-4" />
+            Add Rule
+          </button>
+        )}
       </div>
 
       <div className="max-w-md">
@@ -187,21 +191,25 @@ export default function FeedRulesTab() {
                   </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end gap-2">
-                      <button
-                        onClick={() => handleEdit(rule)}
-                        className="text-primary hover:text-primary/80 transition-colors"
-                        title="Edit"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(rule)}
-                        className="text-red-600 hover:text-red-700 dark:text-red-400 transition-colors"
-                        title="Delete"
-                        disabled={deleteMutation.isPending}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      {canUpdate && (
+                        <button
+                          onClick={() => handleEdit(rule)}
+                          className="text-primary hover:text-primary/80 transition-colors"
+                          title="Edit"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                      )}
+                      {canDelete && (
+                        <button
+                          onClick={() => handleDelete(rule)}
+                          className="text-red-600 hover:text-red-700 dark:text-red-400 transition-colors"
+                          title="Delete"
+                          disabled={deleteMutation.isPending}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -211,12 +219,14 @@ export default function FeedRulesTab() {
                 <td colSpan={9} className="px-6 py-12 text-center">
                   <ListChecks className="w-12 h-12 text-gray-400 mx-auto mb-3" />
                   <p className="text-gray-500 dark:text-gray-400">No feed rules for this partner</p>
-                  <button
-                    onClick={handleCreate}
-                    className="mt-4 text-primary hover:text-primary/80 text-sm font-medium"
-                  >
-                    Add your first rule
-                  </button>
+                  {canCreate && (
+                    <button
+                      onClick={handleCreate}
+                      className="mt-4 text-primary hover:text-primary/80 text-sm font-medium"
+                    >
+                      Add your first rule
+                    </button>
+                  )}
                 </td>
               </tr>
             )}

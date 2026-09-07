@@ -41,6 +41,7 @@ export function convertApiPermissionsToUserPermissions(userData: ApiUserData): U
     careers: { view: false, create: false, update: false, delete: false },
     // forum: { view: false, create: false, update: false, delete: false },
     unlockRequest: { view: false, create: false, update: false, delete: false },
+    affiliates: { view: false, create: false, update: false, delete: false },
   };
 
   const permissionMapping: Record<string, keyof UserPermissions> = {
@@ -66,6 +67,8 @@ export function convertApiPermissionsToUserPermissions(userData: ApiUserData): U
     Coupons: "coupons",
     "Unlock Requests": "unlockRequest",
     "Unlock Request": "unlockRequest",
+    "Affiliates Management": "affiliates",
+    Affiliates: "affiliates",
   };
 
   // Convert API permissions to our format
@@ -108,6 +111,29 @@ export function hasAnyModulePermission(permissions: UserPermissions, module: key
     return false;
   }
   return Object.values(modulePermissions).some((permission) => permission);
+}
+
+/**
+ * Returns true if the user has "general admin" access — i.e. view permission
+ * for at least one core module beyond affiliates-only.
+ *
+ * Users whose only permission is affiliates.view (e.g. Affiliate Partners role)
+ * will return false and should be blocked from unrestricted pages.
+ */
+const CORE_ADMIN_MODULES: (keyof UserPermissions)[] = [
+  "tickets",
+  "jobSeekers",
+  "employers",
+  "jobs",
+  "applications",
+  "coupons",
+  "blog",
+  "careers",
+  "unlockRequest",
+];
+
+export function hasGeneralAdminAccess(permissions: UserPermissions): boolean {
+  return CORE_ADMIN_MODULES.some((mod) => hasAnyModulePermission(permissions, mod));
 }
 
 export function hasPermission(

@@ -11,8 +11,10 @@ import {
 import type { AffiliateLink, CreateLinkData, UpdateLinkData } from '@/services/api/affiliates'
 import LinkModal from './components/LinkModal'
 import LinkTypesConfigModal from './components/LinkTypesConfigModal'
+import { useAffiliatePermissions } from '@/hooks/useAffiliatePermissions'
 
 export default function AffiliateLinks() {
+  const { canCreate, canUpdate, canDelete } = useAffiliatePermissions()
   const [page, setPage] = useState(1)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isConfigOpen, setIsConfigOpen] = useState(false)
@@ -110,20 +112,24 @@ export default function AffiliateLinks() {
               </button>
             )}
           </div>
-          <button
-            onClick={() => setIsConfigOpen(true)}
-            className="p-2.5 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-500 hover:text-primary hover:border-primary/50 transition-colors"
-            title="Link Types configuration"
-          >
-            <Settings2 className="w-4 h-4" />
-          </button>
-          <button
-            onClick={handleCreate}
-            className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            Add Link
-          </button>
+          {canUpdate && (
+            <button
+              onClick={() => setIsConfigOpen(true)}
+              className="p-2.5 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-500 hover:text-primary hover:border-primary/50 transition-colors"
+              title="Link Types configuration"
+            >
+              <Settings2 className="w-4 h-4" />
+            </button>
+          )}
+          {canCreate && (
+            <button
+              onClick={handleCreate}
+              className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+              Add Link
+            </button>
+          )}
         </div>
       </div>
 
@@ -271,21 +277,25 @@ export default function AffiliateLinks() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <div className="flex items-center justify-end gap-2">
-                      <button
-                        onClick={() => handleEdit(link)}
-                        className="text-primary hover:text-primary/80 transition-colors"
-                        title="Edit"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(link.id)}
-                        className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-colors"
-                        title="Delete"
-                        disabled={deleteMutation.isPending}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      {canUpdate && (
+                        <button
+                          onClick={() => handleEdit(link)}
+                          className="text-primary hover:text-primary/80 transition-colors"
+                          title="Edit"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                      )}
+                      {canDelete && (
+                        <button
+                          onClick={() => handleDelete(link.id)}
+                          className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-colors"
+                          title="Delete"
+                          disabled={deleteMutation.isPending}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -297,12 +307,14 @@ export default function AffiliateLinks() {
             <div className="text-center py-12">
               <LinkIcon className="w-12 h-12 text-gray-400 mx-auto mb-3" />
               <p className="text-gray-500 dark:text-gray-400">No affiliate links found</p>
-              <button
-                onClick={handleCreate}
-                className="mt-4 text-primary hover:text-primary/80 text-sm font-medium"
-              >
-                Add your first link
-              </button>
+              {canCreate && (
+                <button
+                  onClick={handleCreate}
+                  className="mt-4 text-primary hover:text-primary/80 text-sm font-medium"
+                >
+                  Add your first link
+                </button>
+              )}
             </div>
           )}
         </div>

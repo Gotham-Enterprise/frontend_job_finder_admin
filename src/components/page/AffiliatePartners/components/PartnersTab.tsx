@@ -15,8 +15,10 @@ import { Edit2, Trash2, Plus, Mail, Phone, Globe, CheckCircle, XCircle, AlertCir
 import Pagination from '@/components/tables/Pagination'
 import PartnerModal from './PartnerModal'
 import ReportRecipientsModal from './ReportRecipientsModal'
+import { useAffiliatePermissions } from '@/hooks/useAffiliatePermissions'
 
 export default function PartnersTab() {
+  const { canCreate, canUpdate, canDelete } = useAffiliatePermissions()
   const [page, setPage] = useState(1)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingPartner, setEditingPartner] = useState<AffiliatePartner | null>(null)
@@ -161,13 +163,15 @@ export default function PartnersTab() {
       {/* Header with Create Button */}
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Affiliate Partners</h2>
-        <button
-          onClick={handleCreate}
-          className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          Add Partner
-        </button>
+        {canCreate && (
+          <button
+            onClick={handleCreate}
+            className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            Add Partner
+          </button>
+        )}
       </div>
 
       {/* Partners Table */}
@@ -310,7 +314,7 @@ export default function PartnersTab() {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <div className="flex items-center justify-end gap-2">
-                    {partner.outboundFeedEnabled && (
+                    {partner.outboundFeedEnabled && canUpdate && (
                       <button
                         onClick={() => handleRebuildFeed(partner.id, partner.name)}
                         disabled={
@@ -323,7 +327,7 @@ export default function PartnersTab() {
                         <Rss className={`w-4 h-4 ${rebuildMutation.isPending ? 'animate-pulse' : ''}`} />
                       </button>
                     )}
-                    {partner.outboundFeedEnabled && (
+                    {partner.outboundFeedEnabled && canUpdate && (
                       <button
                         onClick={() => setReportRecipientsPartner(partner)}
                         className="p-2 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
@@ -332,7 +336,7 @@ export default function PartnersTab() {
                         <Mail className="w-4 h-4" />
                       </button>
                     )}
-                    {partner.syncEnabled && (
+                    {partner.syncEnabled && canUpdate && (
                       <button
                         onClick={() => handleSync(partner.id, partner.name)}
                         disabled={syncMutation.isPending || partner.isRunning}
@@ -342,21 +346,25 @@ export default function PartnersTab() {
                         <RefreshCw className={`w-4 h-4 ${(syncMutation.isPending || partner.isRunning) ? 'animate-spin' : ''}`} />
                       </button>
                     )}
-                    <button
-                      onClick={() => handleEdit(partner)}
-                      className="text-primary hover:text-primary/80 transition-colors"
-                      title="Edit"
-                    >
-                      <Edit2 className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(partner.id)}
-                      className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-colors"
-                      title="Delete"
-                      disabled={deleteMutation.isPending}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    {canUpdate && (
+                      <button
+                        onClick={() => handleEdit(partner)}
+                        className="text-primary hover:text-primary/80 transition-colors"
+                        title="Edit"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                    )}
+                    {canDelete && (
+                      <button
+                        onClick={() => handleDelete(partner.id)}
+                        className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-colors"
+                        title="Delete"
+                        disabled={deleteMutation.isPending}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
                   </div>
                 </td>
               </tr>
@@ -368,12 +376,14 @@ export default function PartnersTab() {
           <div className="text-center py-12">
             <Building2 className="w-12 h-12 text-gray-400 mx-auto mb-3" />
             <p className="text-gray-500 dark:text-gray-400">No partners found</p>
-            <button
-              onClick={handleCreate}
-              className="mt-4 text-primary hover:text-primary/80 text-sm font-medium"
-            >
-              Create your first partner
-            </button>
+            {canCreate && (
+              <button
+                onClick={handleCreate}
+                className="mt-4 text-primary hover:text-primary/80 text-sm font-medium"
+              >
+                Create your first partner
+              </button>
+            )}
           </div>
         )}
       </div>
