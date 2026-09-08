@@ -179,7 +179,9 @@ const MedicalLibraryForm: React.FC<MedicalLibraryFormProps> = ({ initialData, on
     if (!category.trim()) nextErrors.category = "Category is required";
     if (!description.trim()) nextErrors.description = "Description is required";
     tabs.forEach((tab, i) => {
-      if (!tab.tabName.trim()) nextErrors[`tab-${i}-name`] = "Tab name is required";
+      // Guard against records whose tabName is missing entirely — an undefined
+      // here previously crashed the handler and swallowed all validation feedback.
+      if (!(tab.tabName || "").trim()) nextErrors[`tab-${i}-name`] = "Tab name is required";
       if (!tab.sections.some((s) => s.html.trim())) {
         nextErrors[`tab-${i}-content`] = "Add content to at least one section in this tab";
       }
