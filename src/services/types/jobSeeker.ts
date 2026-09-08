@@ -17,7 +17,7 @@ export interface JobSeekerUpdateData {
   zipCode: string;
   phoneNumber: string;
   occupationId: number;
-  specialtyId?: number;
+  specialtyIds?: number[];
   licenses?: JobSeekerLicensePayload[];
   uploadProfilePicture?: File;
 }
@@ -29,7 +29,7 @@ export interface JobSeeker {
   email?: string;
   emailVerified?: boolean;
   emailVerifiedAt?: string | null;
-  specialty: string[];
+  specialties: { id: number; name: string }[];
   occupation: string;
   address: string;
   city: string;
@@ -115,9 +115,8 @@ export interface JobSeekerDetails {
   skills?: Skill[];
   languages?: Language[];
   occupation?: string;
-  specialty?: string;
+  specialties: { id: number; name: string }[];
   occupationId?: number;
-  specialtyId?: number;
   isPermanentlyDeleted?: boolean;
   permanentlyDeletedAt?: string;
 }
