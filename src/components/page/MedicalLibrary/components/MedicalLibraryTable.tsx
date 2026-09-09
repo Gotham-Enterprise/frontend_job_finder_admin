@@ -102,15 +102,25 @@ const MedicalLibraryTable: React.FC<MedicalLibraryTableProps> = ({
 
                   {/* Status */}
                   <TableCell className="py-4 px-6">
-                    <span
-                      className={`inline-block px-2 py-1 text-xs font-medium rounded-md ${
-                        topic.status === "draft"
-                          ? "bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200"
-                          : "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200"
-                      }`}
-                    >
-                      {topic.status === "draft" ? "Draft" : "Published"}
-                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <span
+                        className={`inline-block px-2 py-1 text-xs font-medium rounded-md ${
+                          topic.status === "draft"
+                            ? "bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200"
+                            : "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200"
+                        }`}
+                      >
+                        {topic.status === "draft" ? "Draft" : "Published"}
+                      </span>
+                      {topic.hasPendingChanges && (
+                        <span
+                          title="A re-import found changes on the source page — open this topic to see old vs new"
+                          className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-md bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-200"
+                        >
+                          Needs Review
+                        </span>
+                      )}
+                    </div>
                   </TableCell>
 
                   {/* Created At */}
