@@ -13,6 +13,21 @@ const MedicalLibraryScraperRuns: React.FC = () => {
   const { data, isLoading } = useScraperRuns({ page, limit });
   const triggerMutation = useTriggerScraperRun();
 
+  // Independent of the table's own pagination — the trigger button is
+  // always visible regardless of which page of run history is showing, so
+  // its disabled state can't depend on `page`. Runs are sorted newest-first,
+  // so this newest-row check always sees a pending/running run if one
+  // exists, no matter what page the admin has the table scrolled to.
+  // triggerMutation.isPending alone only covers the ~instant POST itself,
+  // not the ~2min scrape that follows — without this, the button re-enables
+  // the moment the request settles, well before the resulting run actually
+  // finishes, and a second click fires an entirely separate scrape.
+  const { data: latestRunData } = useScraperRuns({ page: 1, limit: 1 });
+  const hasActiveRun = latestRunData?.data?.[0]
+    ? latestRunData.data[0].status === "pending" || latestRunData.data[0].status === "running"
+    : false;
+  const triggerDisabled = triggerMutation.isPending || hasActiveRun;
+
   const runs = data?.data || [];
   const totalPages = data?.metaData?.totalPages || 1;
 
@@ -27,11 +42,12 @@ const MedicalLibraryScraperRuns: React.FC = () => {
         </div>
         <button
           onClick={() => triggerMutation.mutate()}
-          disabled={triggerMutation.isPending}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors"
+          disabled={triggerDisabled}
+          title={hasActiveRun && !triggerMutation.isPending ? "A scrape is already pending or running" : undefined}
+          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition-colors"
         >
           <RefreshCw className={`w-4 h-4 ${triggerMutation.isPending ? "animate-spin" : ""}`} />
-          Trigger Re-scrape
+          {hasActiveRun && !triggerMutation.isPending ? "Scrape In Progress…" : "Trigger Re-scrape"}
         </button>
       </div>
 
