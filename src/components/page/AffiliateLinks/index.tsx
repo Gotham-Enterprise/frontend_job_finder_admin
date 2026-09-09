@@ -1,7 +1,7 @@
 'use client'
 
-import React, { useState } from 'react'
-import { Plus, Edit2, Trash2, Link as LinkIcon, Building2, Calendar, Settings2 } from 'lucide-react'
+import React, { useState, useEffect, useRef } from 'react'
+import { Plus, Edit2, Trash2, Link as LinkIcon, Building2, Calendar, Settings2, Search, X } from 'lucide-react'
 import {
   useAffiliateLinks,
   useCreateAffiliateLink,
@@ -11,17 +11,40 @@ import {
 import type { AffiliateLink, CreateLinkData, UpdateLinkData } from '@/services/api/affiliates'
 import LinkModal from './components/LinkModal'
 import LinkTypesConfigModal from './components/LinkTypesConfigModal'
+import { useAffiliatePermissions } from '@/hooks/useAffiliatePermissions'
 
 export default function AffiliateLinks() {
+  const { canCreate, canUpdate, canDelete } = useAffiliatePermissions()
   const [page, setPage] = useState(1)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isConfigOpen, setIsConfigOpen] = useState(false)
   const [editingLink, setEditingLink] = useState<AffiliateLink | null>(null)
+  const [searchInput, setSearchInput] = useState('')
+  const [searchQuery, setSearchQuery] = useState('')
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const { data: linksData, isLoading } = useAffiliateLinks({ page, limit: 10 })
+  const { data: linksData, isLoading } = useAffiliateLinks({ page, limit: 10, q: searchQuery || undefined })
   const createMutation = useCreateAffiliateLink()
   const updateMutation = useUpdateAffiliateLink()
   const deleteMutation = useDeleteAffiliateLink()
+
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => {
+      setSearchQuery(searchInput)
+      setPage(1)
+    }, 400)
+
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current)
+    }
+  }, [searchInput])
+
+  const handleSearchClear = () => {
+    setSearchInput('')
+    setSearchQuery('')
+    setPage(1)
+  }
 
   const handleCreate = () => {
     setEditingLink(null)
@@ -70,20 +93,43 @@ export default function AffiliateLinks() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <button
-            onClick={() => setIsConfigOpen(true)}
-            className="p-2.5 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-500 hover:text-primary hover:border-primary/50 transition-colors"
-            title="Link Types configuration"
-          >
-            <Settings2 className="w-4 h-4" />
-          </button>
-          <button
-            onClick={handleCreate}
-            className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            Add Link
-          </button>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              placeholder="Search links..."
+              className="pl-9 pr-8 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm bg-transparent dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/50"
+            />
+            {searchInput && (
+              <button
+                onClick={handleSearchClear}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                aria-label="Clear search"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+          {canUpdate && (
+            <button
+              onClick={() => setIsConfigOpen(true)}
+              className="p-2.5 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-500 hover:text-primary hover:border-primary/50 transition-colors"
+              title="Link Types configuration"
+            >
+              <Settings2 className="w-4 h-4" />
+            </button>
+          )}
+          {canCreate && (
+            <button
+              onClick={handleCreate}
+              className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+              Add Link
+            </button>
+          )}
         </div>
       </div>
 
@@ -163,7 +209,7 @@ export default function AffiliateLinks() {
                   <td className="px-6 py-4 whitespace-nowrap">
                     {link.format ? (
                       <span className="inline-block px-2.5 py-0.5 bg-primary/10 text-primary text-xs font-medium rounded-full">
-                        {link.format === 'IN_PERSON' ? 'In-Person' : link.format === 'VIRTUAL' ? 'Virtual' : link.format === 'HYBRID' ? 'Hybrid' : link.format === 'ONLINE_COURSE' ? 'Online Course' : link.format}
+                        {link.format === 'IN_PERSON' ? 'In-Person' : link.format === 'VIRTUAL' ? 'Virtual' : link.format === 'HYBRID' ? 'Hybrid' : link.format === 'ONLINE_COURSE' ? 'Online Course' : link.format === 'DIRECTORY' ? 'Directory' : link.format}
                       </span>
                     ) : (
                       <span className="text-sm text-gray-400">—</span>
@@ -231,21 +277,25 @@ export default function AffiliateLinks() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <div className="flex items-center justify-end gap-2">
-                      <button
-                        onClick={() => handleEdit(link)}
-                        className="text-primary hover:text-primary/80 transition-colors"
-                        title="Edit"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(link.id)}
-                        className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-colors"
-                        title="Delete"
-                        disabled={deleteMutation.isPending}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      {canUpdate && (
+                        <button
+                          onClick={() => handleEdit(link)}
+                          className="text-primary hover:text-primary/80 transition-colors"
+                          title="Edit"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                      )}
+                      {canDelete && (
+                        <button
+                          onClick={() => handleDelete(link.id)}
+                          className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-colors"
+                          title="Delete"
+                          disabled={deleteMutation.isPending}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -257,12 +307,14 @@ export default function AffiliateLinks() {
             <div className="text-center py-12">
               <LinkIcon className="w-12 h-12 text-gray-400 mx-auto mb-3" />
               <p className="text-gray-500 dark:text-gray-400">No affiliate links found</p>
-              <button
-                onClick={handleCreate}
-                className="mt-4 text-primary hover:text-primary/80 text-sm font-medium"
-              >
-                Add your first link
-              </button>
+              {canCreate && (
+                <button
+                  onClick={handleCreate}
+                  className="mt-4 text-primary hover:text-primary/80 text-sm font-medium"
+                >
+                  Add your first link
+                </button>
+              )}
             </div>
           )}
         </div>

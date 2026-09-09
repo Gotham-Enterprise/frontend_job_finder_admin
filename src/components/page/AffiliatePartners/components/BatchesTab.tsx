@@ -10,8 +10,10 @@ import {
 import type { AffiliateBatch } from '@/services/api/affiliates'
 import { ChevronDown, ChevronRight, RefreshCw, Clock, CheckCircle, XCircle, AlertTriangle, Zap, Eye, EyeOff, Ban } from 'lucide-react'
 import Pagination from '@/components/tables/Pagination'
+import { useAffiliatePermissions } from '@/hooks/useAffiliatePermissions'
 
 export default function BatchesTab() {
+  const { canUpdate } = useAffiliatePermissions()
   const [page, setPage] = useState(1)
   const [limit, setLimit] = useState(10)
   const [expandedBatchId, setExpandedBatchId] = useState<string | null>(null)
@@ -225,7 +227,7 @@ export default function BatchesTab() {
                           Auto-Synced
                         </span>
                       )}
-                      {batch.status === 'pending' || batch.status === 'processing' ? (
+                      {(batch.status === 'pending' || batch.status === 'processing') && canUpdate && (
                         <button
                           onClick={() => handleCancel(batch.id)}
                           disabled={cancelMutation.isPending}
@@ -234,8 +236,8 @@ export default function BatchesTab() {
                         >
                           <Ban className="w-4 h-4" />
                         </button>
-                      ) : null}
-                      {batch.status === 'failed' || batch.status === 'partial' || batch.status === 'cancelled' ? (
+                      )}
+                      {(batch.status === 'failed' || batch.status === 'partial' || batch.status === 'cancelled') && canUpdate && (
                         <button
                           onClick={() => handleReprocess(batch.id)}
                           disabled={reprocessMutation.isPending}
@@ -244,7 +246,7 @@ export default function BatchesTab() {
                         >
                           <RefreshCw className="w-4 h-4" />
                         </button>
-                      ) : null}
+                      )}
                     </div>
                   </td>
                 </tr>

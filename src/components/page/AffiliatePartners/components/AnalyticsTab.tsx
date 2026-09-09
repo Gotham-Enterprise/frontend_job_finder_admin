@@ -8,6 +8,7 @@ import { TrendingUp, Users, MousePointerClick, Trophy, DollarSign, CheckCircle, 
 import DatePicker from '@/components/form/date-picker'
 import type { AffiliateAnalytics, AffiliateConversionRow } from '@/services/api/affiliates'
 import ConversionAuditDrawer, { AuditBadge, AUDIT_FILTERS } from './ConversionAuditDrawer'
+import { useAffiliatePermissions } from '@/hooks/useAffiliatePermissions'
 
 type ViewMode = 'selling' | 'buying'
 
@@ -91,14 +92,12 @@ function ToggleWithTooltip({
         className="flex items-center gap-2 cursor-pointer group/toggle"
       >
         <div
-          className={`relative w-10 h-5 rounded-full transition-colors duration-200 ${
-            checked ? 'bg-primary' : 'bg-gray-300 dark:bg-gray-600'
-          }`}
+          className={`relative w-10 h-5 rounded-full transition-colors duration-200 ${checked ? 'bg-primary' : 'bg-gray-300 dark:bg-gray-600'
+            }`}
         >
           <span
-            className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ${
-              checked ? 'translate-x-5' : 'translate-x-0'
-            }`}
+            className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ${checked ? 'translate-x-5' : 'translate-x-0'
+              }`}
           />
         </div>
         <span className="text-sm font-medium text-gray-700 dark:text-gray-300 select-none">
@@ -117,6 +116,7 @@ function ToggleWithTooltip({
 }
 
 export default function AnalyticsTab() {
+  const { canCreate } = useAffiliatePermissions()
   const router = useRouter()
   const searchParams = useSearchParams()
   const viewFromUrl = searchParams.get('view')
@@ -432,8 +432,8 @@ export default function AnalyticsTab() {
           <button
             onClick={() => handleViewModeChange('selling')}
             className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${viewMode === 'selling'
-                ? 'bg-primary text-white'
-                : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+              ? 'bg-primary text-white'
+              : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
               }`}
           >
             Traffic Selling
@@ -441,8 +441,8 @@ export default function AnalyticsTab() {
           <button
             onClick={() => handleViewModeChange('buying')}
             className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${viewMode === 'buying'
-                ? 'bg-primary text-white'
-                : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+              ? 'bg-primary text-white'
+              : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
               }`}
           >
             Traffic Buying
@@ -532,7 +532,7 @@ export default function AnalyticsTab() {
           label="Deduplicate"
           checked={deduplicate}
           onChange={setDeduplicate}
-          tooltip="Clicks: counts only the first click per unique IP address. Conversions: keeps only the earliest conversion per unique IP + user name combination. Conversions without a recorded IP address are always included."
+          tooltip="Clicks: counts only the first click per unique IP address. CPC spend: sums the cost of that first click per IP (clicks with no recorded IP are excluded). Conversions: keeps only the earliest conversion per unique IP + user name combination. Conversions without a recorded IP address are always included."
         />
         <ToggleWithTooltip
           label="Require Application"
@@ -1057,7 +1057,7 @@ export default function AnalyticsTab() {
                 ? 'Loading…'
                 : `${conversions.length.toLocaleString()} of ${conversionTotal.toLocaleString()}`}
             </span>
-            {isBuyingView && (
+            {isBuyingView && canCreate && (
               <button
                 type="button"
                 onClick={handleRunAudit}
@@ -1076,11 +1076,10 @@ export default function AnalyticsTab() {
                   key={filter.id || 'all'}
                   type="button"
                   onClick={() => setAuditResult(filter.id)}
-                  className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                    auditResult === filter.id
+                  className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${auditResult === filter.id
                       ? 'bg-primary text-white'
                       : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
-                  }`}
+                    }`}
                 >
                   {filter.label}
                 </button>

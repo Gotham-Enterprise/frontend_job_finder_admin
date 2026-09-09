@@ -4,10 +4,10 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useSidebar } from "../context/SidebarContext";
-import { useAuthPermissions } from "../hooks/useAuthPermissions";
+import { usePermissions } from "../context/PermissionProvider";
 import { useUnlockRequestContext } from "../context/UnlockRequestContext";
 import { usePendingSupervisorContext } from "../context/PendingSupervisorContext";
-import { hasAnyModulePermission, hasPermission } from "../utils/permissionUtils";
+import { hasAnyModulePermission, hasPermission, hasGeneralAdminAccess } from "../utils/permissionUtils";
 import { authUtils } from "../services/utils/authUtils";
 import SidebarSkeleton from "../components/common/SidebarSkeleton";
 import {
@@ -50,7 +50,8 @@ type NavItem = {
     | "blog"
     | "medicalLibrary"
     // | "forum"
-    | "unlockRequest";
+    | "unlockRequest"
+    | "affiliates";
   isAccessible?: boolean;
 };
 
@@ -85,7 +86,7 @@ const navItems: NavItem[] = [
     icon: <HandShake />,
     name: "Affiliates",
     path: "/admin/affiliates",
-    isAccessible: true,
+    permissionKey: "affiliates",
     subItems: [
       { name: "Partners", path: "/admin/affiliates/partners" },
       { name: "Links", path: "/admin/affiliates/links" },
@@ -245,7 +246,7 @@ const othersItems: NavItem[] = [
 
 const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
-  const { permissions, loading } = useAuthPermissions();
+  const { permissions } = usePermissions();
 
   // Safely get unlock request context (may not be available during initial render)
   let pendingCount = 0;
@@ -266,100 +267,44 @@ const AppSidebar: React.FC = () => {
   }
 
   const pathname = usePathname();
-  const [isInitialMount, setIsInitialMount] = useState(true);
-  const [forceUpdate, setForceUpdate] = useState(0);
-
-  // Check if user is authenticated to show sidebar immediately
-  // Use state to avoid hydration mismatch
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [hasUserData, setHasUserData] = useState(false);
-
-  // Initialize auth state on client side only
-  useEffect(() => {
-    setIsAuthenticated(authUtils.isAuthenticated());
-    setHasUserData(!!authUtils.getUser());
-  }, []);
-
-  // Handle initial mount timing
-  useEffect(() => {
-    if (permissions && isInitialMount) {
-      // Small delay to ensure everything is properly initialized
-      setTimeout(() => {
-        setIsInitialMount(false);
-      }, 100);
-    }
-  }, [permissions, isInitialMount]);
-
-  // Force re-render when permissions change
-  useEffect(() => {
-    if (permissions) {
-      setForceUpdate((prev) => prev + 1);
-    }
-  }, [permissions]);
-
-  // Listen for permissions loaded event
-  useEffect(() => {
-    const handlePermissionsLoaded = (event: CustomEvent) => {
-      console.log("[Sidebar] Permissions loaded event received:", event.detail);
-      setForceUpdate((prev) => prev + 1);
-    };
-
-    if (typeof window !== "undefined") {
-      window.addEventListener("permissionsLoaded" as any, handlePermissionsLoaded);
-      window.addEventListener("authUpdate", () => {
-        console.log("[Sidebar] Auth update event received");
-        setForceUpdate((prev) => prev + 1);
-      });
-
-      return () => {
-        window.removeEventListener("permissionsLoaded" as any, handlePermissionsLoaded);
-        window.removeEventListener("authUpdate", () => {});
-      };
-    }
-  }, []);
 
   // Check if item is accessible based on permissions
   const isItemAccessible = (item: NavItem): boolean => {
-    // If item has explicit isAccessible, use that
-    if (item.isAccessible !== undefined) {
-      return item.isAccessible;
+    if (!permissions) {
+      return false;
     }
 
-    // If item has permissionKey and we have permissions, check permissions
-    if (item.permissionKey && permissions) {
-      const hasPermission = hasAnyModulePermission(permissions, item.permissionKey);
+    // Dashboard is always accessible to every authenticated admin
+    if (item.path === "/" || item.path === "/admin") {
+      return true;
+    }
 
-      // Special handling for Unlock Requests & Medical Library - show if user is Super Admin or Admin
-      if (item.permissionKey === "unlockRequest" && !hasPermission) {
+    // If item has explicit isAccessible, check general admin access first.
+    // Users with only a single restricted module (e.g. affiliates-only) should
+    // not see items that are "always accessible" for full admins.
+    if (item.isAccessible !== undefined) {
+      if (!item.isAccessible) return false;
+      return hasGeneralAdminAccess(permissions);
+    }
+
+    if (item.permissionKey) {
+      const hasModulePermission = hasAnyModulePermission(permissions, item.permissionKey);
+
+      // Special handling for Unlock Requests - show if user is Super Admin
+      if (item.permissionKey === "unlockRequest" && !hasModulePermission) {
         const user = typeof window !== "undefined" ? authUtils.getUser() : null;
         const isSuperAdmin = user?.adminRoleAccess?.roleName?.toLowerCase() === "super admin";
-        console.log(
-          `[Sidebar] Special check for Unlock Requests - isSuperAdmin: ${isSuperAdmin}, roleName: ${user?.adminRoleAccess?.roleName}`
-        );
         if (isSuperAdmin) {
           return true;
         }
       }
-      console.log(
-        `[Sidebar] Checking accessibility for "${item.name}" (${item.permissionKey}):`,
-        hasPermission,
-        permissions[item.permissionKey]
-      );
-      return hasPermission;
+      return hasModulePermission;
     }
 
-    // If we're authenticated but still loading permissions, show loading state instead of showing all items
-    if (isAuthenticated && hasUserData && loading) {
-      return false; // Don't show items while loading to avoid false positive access
-    }
-
-    // If we're authenticated but don't have permissions yet, don't show items
-    if (isAuthenticated && hasUserData && !permissions) {
-      return false; // Don't show items if we don't have permission data
-    }
-
-    // Only default to accessible if no permission key is required
-    return !item.permissionKey;
+    // Items with no permissionKey and no isAccessible flag: apply general access check
+    // (e.g. Forum Moderation, which has no explicit permission but should not be visible
+    // to restricted users such as affiliates-only admins)
+    return hasGeneralAdminAccess(permissions);
   };
 
   const renderMenuItems = (allNavItems: NavItem[], menuType: "main" | "others") => (
@@ -554,7 +499,9 @@ const AppSidebar: React.FC = () => {
   const [subMenuHeight, setSubMenuHeight] = useState<Record<string, number>>({});
   const subMenuRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const isActive = useCallback((path: string) => path === pathname, [pathname]);
-  const showSidebarSkeleton = loading && !permissions && isAuthenticated && hasUserData;
+  // Hide menu items until converted permissions exist so restricted roles
+  // never flash Super Admin / isAccessible items on first paint.
+  const showSidebarSkeleton = !permissions;
 
   useEffect(() => {
     let submenuMatched = false;
@@ -619,7 +566,7 @@ const AppSidebar: React.FC = () => {
     });
   };
 
-  // Show skeleton if we're loading and don't have permissions yet, but only if authenticated
+  // Keep skeleton until converted permissions exist
   if (showSidebarSkeleton) {
     return (
       <aside
