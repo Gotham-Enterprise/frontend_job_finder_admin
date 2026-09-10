@@ -12,6 +12,7 @@ import {
   reprocessAffiliateBatch,
   cancelAffiliateBatch,
   getAffiliateAnalytics,
+  getAffiliateFeedJobCounts,
   getAffiliateConversions,
   getConversionAudit,
   enqueueConversionAudits,
@@ -58,6 +59,8 @@ export const affiliateQueryKeys = {
   batchStatus: (id: string) => [...affiliateQueryKeys.batches(), id, "status"] as const,
   batchJobs: (id: string, page: number) => [...affiliateQueryKeys.batches(), id, "jobs", page] as const,
   analytics: (filters: any) => [...affiliateQueryKeys.all, "analytics", filters] as const,
+  feedJobCounts: (affiliateId?: string) =>
+    [...affiliateQueryKeys.all, "feed-job-counts", affiliateId || "all"] as const,
   conversions: (filters: any) => [...affiliateQueryKeys.all, "conversions", filters] as const,
   conversionAudit: (id: string) => [...affiliateQueryKeys.all, "conversion-audit", id] as const,
   feedRules: (partnerId: string) => [...affiliateQueryKeys.all, "feed-rules", partnerId] as const,
@@ -394,6 +397,19 @@ export const useAffiliateAnalytics = (params?: {
     queryKey: affiliateQueryKeys.analytics(params || {}),
     queryFn: () => getAffiliateAnalytics(params),
     staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 10,
+  });
+};
+
+export const useAffiliateFeedJobCounts = (
+  affiliateId?: string,
+  options?: { enabled?: boolean }
+) => {
+  return useQuery({
+    queryKey: affiliateQueryKeys.feedJobCounts(affiliateId),
+    queryFn: () => getAffiliateFeedJobCounts({ affiliateId }),
+    enabled: options?.enabled ?? true,
+    staleTime: 1000 * 60 * 2,
     gcTime: 1000 * 60 * 10,
   });
 };
