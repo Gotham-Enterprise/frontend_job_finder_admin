@@ -52,3 +52,18 @@ export const getScraperRun = async (id: string): Promise<ScraperRun> => {
   );
   return response.data;
 };
+
+/**
+ * Mirrors the exact check adminTriggerScraperRun's own 409 guard uses, so the
+ * trigger button's disabled state can never disagree with what a click would
+ * actually do. Deliberately not inferred from the run-history list's newest
+ * row on the frontend: a bare CLI/scheduled run bypasses the guard entirely
+ * and can start and finish *after* an earlier run gets stuck, which can rank
+ * a finished run above a still-stuck one in a startedAt-sorted list.
+ */
+export const getActiveScraperRun = async (): Promise<ScraperRun | null> => {
+  const response = await apiGet<{ success: boolean; data: ScraperRun | null }>(
+    "/api/admin/medical-library/scraper-runs/active"
+  );
+  return response.data;
+};

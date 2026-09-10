@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { RefreshCw } from "lucide-react";
-import { useScraperRuns, useTriggerScraperRun } from "@/services/hooks/useMedicalLibraryScraper";
+import { useActiveScraperRun, useScraperRuns, useTriggerScraperRun } from "@/services/hooks/useMedicalLibraryScraper";
 import Pagination from "@/components/tables/Pagination";
 import RunsTable from "./components/RunsTable";
 
@@ -13,19 +13,20 @@ const MedicalLibraryScraperRuns: React.FC = () => {
   const { data, isLoading } = useScraperRuns({ page, limit });
   const triggerMutation = useTriggerScraperRun();
 
-  // Independent of the table's own pagination — the trigger button is
-  // always visible regardless of which page of run history is showing, so
-  // its disabled state can't depend on `page`. Runs are sorted newest-first,
-  // so this newest-row check always sees a pending/running run if one
-  // exists, no matter what page the admin has the table scrolled to.
-  // triggerMutation.isPending alone only covers the ~instant POST itself,
-  // not the ~2min scrape that follows — without this, the button re-enables
-  // the moment the request settles, well before the resulting run actually
-  // finishes, and a second click fires an entirely separate scrape.
-  const { data: latestRunData } = useScraperRuns({ page: 1, limit: 1 });
-  const hasActiveRun = latestRunData?.data?.[0]
-    ? latestRunData.data[0].status === "pending" || latestRunData.data[0].status === "running"
-    : false;
+  // Backed by the backend's own /scraper-runs/active endpoint, which runs
+  // the exact same check adminTriggerScraperRun's 409 guard does — not
+  // inferred from the run-history list's newest row. That was tried and is
+  // genuinely unreliable: a bare CLI/scheduled run bypasses the guard
+  // entirely, so it can start and finish *after* an earlier run gets stuck,
+  // and a startedAt-sorted "check the top row" heuristic then ranks the
+  // finished run above the still-stuck one and misses it — exactly what let
+  // a zombie "running" row leave this button incorrectly enabled while the
+  // backend kept 409ing every click. triggerMutation.isPending alone only
+  // covers the ~instant POST itself, not the ~2min scrape that follows —
+  // without the active-run check too, the button re-enables the moment the
+  // request settles, well before the resulting run actually finishes.
+  const { data: activeRun } = useActiveScraperRun();
+  const hasActiveRun = Boolean(activeRun);
   const triggerDisabled = triggerMutation.isPending || hasActiveRun;
 
   const runs = data?.data || [];

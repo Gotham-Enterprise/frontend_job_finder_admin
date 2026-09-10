@@ -1,11 +1,18 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { triggerScraperRun, getScraperRuns, getScraperRun, ScraperRun } from "../api/medicalLibraryScraper";
+import {
+  triggerScraperRun,
+  getScraperRuns,
+  getScraperRun,
+  getActiveScraperRun,
+  ScraperRun,
+} from "../api/medicalLibraryScraper";
 import { showToast } from "../utils/toast";
 
 const medicalLibraryScraperQueryKeys = {
   all: ["medical-library-scraper"] as const,
   runs: () => [...medicalLibraryScraperQueryKeys.all, "runs"] as const,
   run: (id: string) => [...medicalLibraryScraperQueryKeys.all, "run", id] as const,
+  active: () => [...medicalLibraryScraperQueryKeys.all, "active"] as const,
 };
 
 const isActive = (status: ScraperRun["status"]) => status === "pending" || status === "running";
@@ -17,12 +24,27 @@ export const useTriggerScraperRun = () => {
     mutationFn: triggerScraperRun,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: medicalLibraryScraperQueryKeys.runs() });
+      queryClient.invalidateQueries({ queryKey: medicalLibraryScraperQueryKeys.active() });
       showToast.success("Re-scrape Triggered!", "The scraper will pick this up within ~30 seconds.");
     },
     onError: (error: any) => {
       const errorMessage = error.response?.data?.message || error.message || "Failed to trigger re-scrape";
       showToast.error("Trigger Failed", errorMessage);
+      // A 409 means the backend's own view of "is a run active" just
+      // changed (or was confirmed) — refresh immediately rather than
+      // waiting for this poll's own interval, so the button's disabled
+      // state and message line up with the toast the admin just saw.
+      queryClient.invalidateQueries({ queryKey: medicalLibraryScraperQueryKeys.active() });
     },
+  });
+};
+
+/** See getActiveScraperRun — the single source of truth for the trigger button's disabled state. */
+export const useActiveScraperRun = () => {
+  return useQuery({
+    queryKey: medicalLibraryScraperQueryKeys.active(),
+    queryFn: getActiveScraperRun,
+    refetchInterval: (query) => (query.state.data ? 3000 : 30000),
   });
 };
 
