@@ -197,6 +197,27 @@ export interface AffiliateAnalytics {
   totalPayout: number;
 }
 
+export interface AffiliateFeedJobTargetCount {
+  ruleId: string;
+  ruleGroupLabel: string | null;
+  occupationName: string;
+  specialtyName: string | null;
+  states: string[];
+  workSetting: string | null;
+  jobCount: number;
+}
+
+export interface AffiliateFeedJobPartnerCount {
+  partnerId: string;
+  partnerName: string;
+  uniqueJobCount: number;
+  targets: AffiliateFeedJobTargetCount[];
+}
+
+export interface AffiliateFeedJobCounts {
+  partners: AffiliateFeedJobPartnerCount[];
+}
+
 export interface AffiliateConversionAuditSummary {
   status: "pending" | "completed" | "failed";
   overallResult: "pass" | "flagged" | "incomplete" | null;
@@ -613,6 +634,18 @@ export const getAffiliateAnalytics = async (params?: {
   const queryString = queryParams.toString();
   const response = await apiGet<{ success: boolean; data: AffiliateAnalytics }>(
     `/api/admin/affiliates/analytics${queryString ? `?${queryString}` : ""}`
+  );
+  return response.data;
+};
+
+export const getAffiliateFeedJobCounts = async (params?: {
+  affiliateId?: string;
+}): Promise<AffiliateFeedJobCounts> => {
+  const queryParams = new URLSearchParams();
+  if (params?.affiliateId) queryParams.append("affiliateId", params.affiliateId);
+  const queryString = queryParams.toString();
+  const response = await apiGet<{ success: boolean; data: AffiliateFeedJobCounts }>(
+    `/api/admin/affiliates/analytics/feed-job-counts${queryString ? `?${queryString}` : ""}`
   );
   return response.data;
 };
