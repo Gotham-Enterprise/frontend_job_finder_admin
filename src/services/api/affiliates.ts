@@ -779,6 +779,32 @@ export const getCoRegs = async (params?: {
   return apiGet<CoRegListResponse>(`/api/admin/affiliates/coreg${queryString ? `?${queryString}` : ""}`);
 };
 
+export interface CoRegResendResult {
+  id: string;
+  email: string | null;
+  status: "success" | "failed" | "duplicate" | "skipped";
+  responseCode: number | null;
+  errorMessage: string | null;
+  skippedReason?: string | null;
+}
+
+export interface CoRegResendResponse {
+  success: boolean;
+  summary: {
+    total: number;
+    successCount: number;
+    failedCount: number;
+    duplicateCount: number;
+    skippedCount: number;
+  };
+  stoppedReason: "rate_limited" | "daily_limit" | null;
+  results: CoRegResendResult[];
+}
+
+export const resendCoRegs = async (ids: string[]): Promise<CoRegResendResponse> => {
+  return apiPost<CoRegResendResponse>("/api/admin/affiliates/coreg/resend", { ids });
+};
+
 // ===== Report Recipients APIs =====
 
 export interface AffiliateReportRecipient {

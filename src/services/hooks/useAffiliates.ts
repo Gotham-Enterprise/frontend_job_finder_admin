@@ -23,6 +23,7 @@ import {
   updatePartnerFeedRule,
   deletePartnerFeedRule,
   getCoRegs,
+  resendCoRegs,
   getReportRecipients,
   addReportRecipient,
   removeReportRecipient,
@@ -601,6 +602,47 @@ export const useCoRegs = (params?: {
     queryFn: () => getCoRegs(params),
     staleTime: 1000 * 60 * 2, // 2 minutes
     gcTime: 1000 * 60 * 5,
+  });
+};
+
+export const useResendCoRegs = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (ids: string[]) => resendCoRegs(ids),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: [...affiliateQueryKeys.all, "coreg"] });
+      const { summary, stoppedReason } = data;
+      const parts = [
+        `${summary.successCount} succeeded`,
+        `${summary.failedCount} failed`,
+      ];
+      if (summary.duplicateCount > 0) {
+        parts.push(`${summary.duplicateCount} duplicate`);
+      }
+      if (summary.skippedCount > 0) {
+        parts.push(`${summary.skippedCount} skipped`);
+      }
+      let message = parts.join(", ");
+      if (stoppedReason === "rate_limited") {
+        message += ". Stopped early: partner rate limit (429).";
+      } else if (stoppedReason === "daily_limit") {
+        message += ". Stopped early: daily partner limit reached.";
+      }
+
+      if (summary.successCount > 0 && summary.failedCount === 0 && summary.skippedCount === 0) {
+        showToast.success("Resend complete", message);
+      } else if (summary.successCount > 0) {
+        showToast.warning("Resend finished with mixed results", message);
+      } else {
+        showToast.error("Resend finished", message);
+      }
+    },
+    onError: (error: any) => {
+      const errorMessage =
+        error.response?.data?.message || error.message || "Failed to resend co-registration submissions";
+      showToast.error("Resend Failed", errorMessage);
+    },
   });
 };
 

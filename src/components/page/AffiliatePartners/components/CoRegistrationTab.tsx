@@ -1,11 +1,13 @@
 'use client'
 
-import React, { useState, useMemo } from 'react'
-import { useCoRegs } from '@/services/hooks/useAffiliates'
+import React, { useState, useMemo, useEffect, useRef } from 'react'
+import { useCoRegs, useResendCoRegs } from '@/services/hooks/useAffiliates'
 import type { CoRegRecord } from '@/services/api/affiliates'
-import { CheckCircle, XCircle, ChevronDown, ChevronUp } from 'lucide-react'
+import { CheckCircle, XCircle, ChevronDown, ChevronUp, RefreshCw } from 'lucide-react'
 import Pagination from '@/components/tables/Pagination'
 import DatePicker from '@/components/form/date-picker'
+import ConfirmationDialog from '@/components/ui/ConfirmationDialog'
+import { useAffiliatePermissions } from '@/hooks/useAffiliatePermissions'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -131,7 +133,25 @@ const PARTNER_OPTIONS: { value: PartnerType; label: string }[] = [
   { value: 'health_jobs_nationwide', label: 'HealthJobsNationwide' },
 ]
 
+const MAX_RESEND_IDS = 50
+
+function getResendConfirmMessage(ids: string[], records: CoRegRecord[]): string {
+  const byId = new Map(records.map((r) => [r.id, r]))
+  const hasSensitive = ids.some((id) => {
+    const status = byId.get(id)?.status
+    return status === 'success' || status === 'duplicate'
+  })
+  const n = ids.length
+  const noun = n === 1 ? 'submission' : 'submissions'
+  if (hasSensitive) {
+    return `This will POST ${n} ${noun} to the partner again, including previously successful or duplicate records. The partner may treat them as duplicates.`
+  }
+  return `Resend ${n} co-registration ${noun} to the partner?`
+}
+
 export default function CoRegistrationTab() {
+  const { canUpdate } = useAffiliatePermissions()
+  const resendMutation = useResendCoRegs()
   const [page, setPage] = useState(1)
   const [limit] = useState(20)
   const [partner, setPartner] = useState<PartnerType>('adzuna')
@@ -139,6 +159,8 @@ export default function CoRegistrationTab() {
   const [timezone, setTimezone] = useState<'local' | 'utc'>('local')
   const [startDate, setStartDate] = useState(getFirstOfMonth())
   const [endDate, setEndDate] = useState(getTodayDate())
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [confirmIds, setConfirmIds] = useState<string[] | null>(null)
 
   const offsetSuffix = timezone === 'utc' ? '+00:00' : getLocalOffsetSuffix()
 
@@ -155,6 +177,55 @@ export default function CoRegistrationTab() {
   )
 
   const { data, isLoading, isError } = useCoRegs(queryParams)
+  const pageRecords = data?.records ?? []
+  const pageIds = pageRecords.map((r) => r.id)
+  const allPageSelected = pageIds.length > 0 && pageIds.every((id) => selectedIds.has(id))
+  const somePageSelected = pageIds.some((id) => selectedIds.has(id))
+  const columnCount = canUpdate ? 11 : 9
+  const bulkOverLimit = selectedIds.size > MAX_RESEND_IDS
+  const selectAllRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    setSelectedIds(new Set())
+  }, [page, partner, statusFilter, startDate, endDate, timezone])
+
+  useEffect(() => {
+    if (selectAllRef.current) {
+      selectAllRef.current.indeterminate = somePageSelected && !allPageSelected
+    }
+  }, [somePageSelected, allPageSelected])
+
+  const toggleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedIds(new Set(pageIds))
+    } else {
+      setSelectedIds(new Set())
+    }
+  }
+
+  const toggleSelectOne = (id: string, checked: boolean) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (checked) next.add(id)
+      else next.delete(id)
+      return next
+    })
+  }
+
+  const openConfirm = (ids: string[]) => {
+    if (ids.length === 0 || resendMutation.isPending) return
+    setConfirmIds(ids)
+  }
+
+  const handleConfirmResend = () => {
+    if (!confirmIds?.length) return
+    resendMutation.mutate(confirmIds, {
+      onSettled: () => {
+        setConfirmIds(null)
+        setSelectedIds(new Set())
+      },
+    })
+  }
 
   const handlePartnerChange = (value: PartnerType) => {
     setPartner(value)
@@ -325,6 +396,38 @@ export default function CoRegistrationTab() {
         </div>
       )}
 
+      {canUpdate && selectedIds.size > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3">
+          <p className="text-sm text-gray-700 dark:text-gray-300">
+            {selectedIds.size} selected
+            {bulkOverLimit && (
+              <span className="ml-2 text-red-600 dark:text-red-400">
+                Select at most {MAX_RESEND_IDS} to resend.
+              </span>
+            )}
+          </p>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setSelectedIds(new Set())}
+              disabled={resendMutation.isPending}
+              className="px-3 py-1.5 text-sm font-medium text-gray-600 dark:text-gray-300 hover:underline disabled:opacity-50"
+            >
+              Clear
+            </button>
+            <button
+              type="button"
+              onClick={() => openConfirm(Array.from(selectedIds))}
+              disabled={resendMutation.isPending || bulkOverLimit}
+              className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg bg-primary text-white hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <RefreshCw className={`w-4 h-4 ${resendMutation.isPending ? 'animate-spin' : ''}`} />
+              Resend selected ({selectedIds.size})
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* ── Table ─────────────────────────────────────────────────────── */}
       {isLoading ? (
         <div className="flex items-center justify-center py-12">
@@ -340,6 +443,19 @@ export default function CoRegistrationTab() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
+                  {canUpdate && (
+                    <th className="px-4 py-3 w-10">
+                      <input
+                        ref={selectAllRef}
+                        type="checkbox"
+                        className="h-4 w-4 rounded border-gray-300 dark:border-gray-600"
+                        checked={allPageSelected}
+                        onChange={(e) => toggleSelectAll(e.target.checked)}
+                        disabled={pageIds.length === 0 || resendMutation.isPending}
+                        aria-label="Select all on this page"
+                      />
+                    </th>
+                  )}
                   <th className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 whitespace-nowrap">Email</th>
                   <th className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 whitespace-nowrap">Occupation</th>
                   <th className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 whitespace-nowrap">Location</th>
@@ -349,12 +465,15 @@ export default function CoRegistrationTab() {
                   <th className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 whitespace-nowrap">Error Reason</th>
                   <th className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 whitespace-nowrap">Registration Date</th>
                   <th className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 whitespace-nowrap">Sent At</th>
+                  {canUpdate && (
+                    <th className="text-right px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 whitespace-nowrap">Actions</th>
+                  )}
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
                 {data?.records.length === 0 ? (
                   <tr>
-                    <td colSpan={9} className="px-4 py-10 text-center text-gray-500 dark:text-gray-400">
+                    <td colSpan={columnCount} className="px-4 py-10 text-center text-gray-500 dark:text-gray-400">
                       No co-registration records found for the selected filters.
                     </td>
                   </tr>
@@ -364,6 +483,18 @@ export default function CoRegistrationTab() {
                       key={record.id}
                       className="hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors"
                     >
+                      {canUpdate && (
+                        <td className="px-4 py-3">
+                          <input
+                            type="checkbox"
+                            className="h-4 w-4 rounded border-gray-300 dark:border-gray-600"
+                            checked={selectedIds.has(record.id)}
+                            onChange={(e) => toggleSelectOne(record.id, e.target.checked)}
+                            disabled={resendMutation.isPending}
+                            aria-label={`Select ${record.email}`}
+                          />
+                        </td>
+                      )}
                       <td className="px-4 py-3 text-gray-800 dark:text-gray-200 font-mono text-xs whitespace-nowrap">
                         {record.email}
                       </td>
@@ -380,10 +511,10 @@ export default function CoRegistrationTab() {
                         {record.responseCode != null ? (
                           <span
                             className={`font-mono text-xs px-1.5 py-0.5 rounded ${record.status === 'success'
-                                ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                                : record.status === 'duplicate'
-                                  ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
-                                  : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                              ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                              : record.status === 'duplicate'
+                                ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
+                                : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
                               }`}
                           >
                             {record.responseCode}
@@ -408,6 +539,19 @@ export default function CoRegistrationTab() {
                       <td className="px-4 py-3 text-gray-600 dark:text-gray-400 text-xs whitespace-nowrap">
                         {formatDateDisplay(record.sentAt)}
                       </td>
+                      {canUpdate && (
+                        <td className="px-4 py-3 text-right whitespace-nowrap">
+                          <button
+                            type="button"
+                            onClick={() => openConfirm([record.id])}
+                            disabled={resendMutation.isPending}
+                            className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors disabled:opacity-50"
+                            title="Resend to partner"
+                          >
+                            <RefreshCw className={`w-4 h-4 ${resendMutation.isPending && confirmIds?.[0] === record.id && confirmIds.length === 1 ? 'animate-spin' : ''}`} />
+                          </button>
+                        </td>
+                      )}
                     </tr>
                   ))
                 )}
@@ -431,6 +575,26 @@ export default function CoRegistrationTab() {
           )}
         </>
       )}
+
+      <ConfirmationDialog
+        isOpen={confirmIds !== null}
+        onClose={() => {
+          if (!resendMutation.isPending) setConfirmIds(null)
+        }}
+        onConfirm={handleConfirmResend}
+        onCancel={() => {
+          if (!resendMutation.isPending) setConfirmIds(null)
+        }}
+        title={confirmIds && confirmIds.length > 1 ? 'Resend selected submissions' : 'Resend submission'}
+        message={
+          confirmIds
+            ? getResendConfirmMessage(confirmIds, pageRecords)
+            : ''
+        }
+        confirmText="Resend"
+        cancelText="Cancel"
+        isLoading={resendMutation.isPending}
+      />
     </div>
   )
 }
