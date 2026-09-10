@@ -23,6 +23,8 @@ import {
   updatePartnerFeedRule,
   deletePartnerFeedRule,
   getCoRegs,
+  resendCoRegs,
+  CoRegResendResponse,
   getReportRecipients,
   addReportRecipient,
   removeReportRecipient,
@@ -601,6 +603,50 @@ export const useCoRegs = (params?: {
     queryFn: () => getCoRegs(params),
     staleTime: 1000 * 60 * 2, // 2 minutes
     gcTime: 1000 * 60 * 5,
+  });
+};
+
+export const useResendCoRegs = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: { partner: string; ids: string[] }) => resendCoRegs(payload),
+    onSuccess: (data: CoRegResendResponse) => {
+      queryClient.invalidateQueries({ queryKey: [...affiliateQueryKeys.all, "coreg"] });
+      const { summary, stoppedReason, dailyLimit, todayCount } = data;
+      const parts = [
+        `${summary.resent} resent`,
+        `${summary.failed} failed`,
+        `${summary.skipped} skipped`,
+      ];
+      const detail = parts.join(", ");
+      if (stoppedReason === "daily_limit") {
+        const capLabel =
+          dailyLimit > 0 ? ` (${todayCount}/${dailyLimit} used today)` : "";
+        if (summary.resent > 0) {
+          showToast.warning(
+            "Resend partially complete",
+            `${detail}. Daily limit reached${capLabel}.`
+          );
+        } else {
+          showToast.warning(
+            "Daily limit reached",
+            `No submissions were resent${capLabel}. Try again tomorrow.`
+          );
+        }
+        return;
+      }
+      if (summary.resent > 0) {
+        showToast.success("Resend complete", detail);
+      } else {
+        showToast.warning("Resend complete", detail);
+      }
+    },
+    onError: (error: any) => {
+      const errorMessage =
+        error.response?.data?.message || error.message || "Failed to resend co-registration records";
+      showToast.error("Resend Failed", errorMessage);
+    },
   });
 };
 
