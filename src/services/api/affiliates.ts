@@ -740,6 +740,7 @@ export interface CoRegRecord {
   attempts: number;
   errorMessage: string | null;
   sentAt: string;
+  resentAt: string | null;
   registrationDate: string | null;
   updatedAt: string;
 }
@@ -777,6 +778,34 @@ export const getCoRegs = async (params?: {
   if (params?.partner) queryParams.append("partner", params.partner);
   const queryString = queryParams.toString();
   return apiGet<CoRegListResponse>(`/api/admin/affiliates/coreg${queryString ? `?${queryString}` : ""}`);
+};
+
+export interface CoRegResendResult {
+  id: string;
+  outcome: "resent" | "skipped" | "failed";
+  reason?: string;
+  status?: string;
+  responseCode?: number | null;
+}
+
+export interface CoRegResendResponse {
+  success: boolean;
+  dailyLimit: number;
+  todayCount: number;
+  stoppedReason: string | null;
+  results: CoRegResendResult[];
+  summary: {
+    resent: number;
+    failed: number;
+    skipped: number;
+  };
+}
+
+export const resendCoRegs = async (payload: {
+  partner: string;
+  ids: string[];
+}): Promise<CoRegResendResponse> => {
+  return apiPost<CoRegResendResponse>("/api/admin/affiliates/coreg/resend", payload);
 };
 
 // ===== Report Recipients APIs =====
