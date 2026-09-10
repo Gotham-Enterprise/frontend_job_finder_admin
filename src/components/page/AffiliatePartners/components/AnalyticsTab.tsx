@@ -2,11 +2,11 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useAffiliateAnalytics, useAffiliatePartners, useInfiniteAffiliateConversions, useEnqueueConversionAudits } from '@/services/hooks/useAffiliates'
+import { useAffiliateAnalytics, useAffiliatePartners, useInfiniteAffiliateConversions, useEnqueueConversionAudits, useAffiliateFeedJobCounts } from '@/services/hooks/useAffiliates'
 import dynamic from 'next/dynamic'
 import { TrendingUp, Users, MousePointerClick, Trophy, DollarSign, CheckCircle, BarChart2, Briefcase, HelpCircle, Download, ShieldCheck } from 'lucide-react'
 import DatePicker from '@/components/form/date-picker'
-import type { AffiliateAnalytics, AffiliateConversionRow } from '@/services/api/affiliates'
+import type { AffiliateAnalytics, AffiliateConversionRow, AffiliateFeedJobCounts } from '@/services/api/affiliates'
 import ConversionAuditDrawer, { AuditBadge, AUDIT_FILTERS } from './ConversionAuditDrawer'
 import { useAffiliatePermissions } from '@/hooks/useAffiliatePermissions'
 
@@ -27,16 +27,22 @@ function slugifyForFilename(value: string): string {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'all-partners'
 }
 
+function formatFeedRuleStates(states: string[]): string {
+  return states.length === 0 ? 'All' : states.join(', ')
+}
+
 function downloadBuyingAnalyticsCsv({
   partnerName,
   startDate,
   endDate,
   analytics,
+  feedJobCounts,
 }: {
   partnerName: string
   startDate: string
   endDate: string
   analytics: AffiliateAnalytics
+  feedJobCounts?: AffiliateFeedJobCounts
 }) {
   const headers = [
     'Partner name',
@@ -56,7 +62,76 @@ function downloadBuyingAnalyticsCsv({
     (analytics.cpcSpend ?? 0).toFixed(2),
     (analytics.totalCpaSpend ?? 0).toFixed(2),
   ]
-  const csv = [headers.map(escapeCsvField).join(','), row.map(escapeCsvField).join(',')].join('\n')
+  const lines = [headers.map(escapeCsvField).join(','), row.map(escapeCsvField).join(',')]
+
+  if (feedJobCounts?.partners?.length) {
+    lines.push('')
+    lines.push(
+      [
+        'Partner name',
+        'Job Target',
+        'Occupation',
+        'Specialty',
+        'Work Setting',
+        'States',
+        'Matching Jobs',
+        'Unique Jobs',
+      ]
+        .map(escapeCsvField)
+        .join(',')
+    )
+    for (const partner of feedJobCounts.partners) {
+      if (partner.targets.length === 0) {
+        lines.push(
+          [
+            partner.partnerName,
+            '',
+            '',
+            '',
+            '',
+            '',
+            0,
+            partner.uniqueJobCount,
+          ]
+            .map(escapeCsvField)
+            .join(',')
+        )
+        continue
+      }
+      for (const target of partner.targets) {
+        lines.push(
+          [
+            partner.partnerName,
+            target.ruleGroupLabel || '',
+            target.occupationName,
+            target.specialtyName || '',
+            target.workSetting || '',
+            formatFeedRuleStates(target.states),
+            target.jobCount,
+            '',
+          ]
+            .map(escapeCsvField)
+            .join(',')
+        )
+      }
+      lines.push(
+        [
+          partner.partnerName,
+          'Unique jobs (deduplicated)',
+          '',
+          '',
+          '',
+          '',
+          '',
+          partner.uniqueJobCount,
+        ]
+          .map(escapeCsvField)
+          .join(',')
+      )
+    }
+  }
+
+  const csv = lines.join('\n')
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
@@ -152,6 +227,10 @@ export default function AnalyticsTab() {
     auditResult: isBuyingView && auditResult ? auditResult : undefined,
   }
   const { data: analytics, isLoading } = useAffiliateAnalytics(analyticsFilters)
+  const { data: feedJobCounts, isLoading: feedJobCountsLoading } = useAffiliateFeedJobCounts(
+    selectedPartnerId || undefined,
+    { enabled: isBuyingView }
+  )
   const {
     data: conversionPages,
     isLoading: conversionsLoading,
@@ -236,8 +315,8 @@ export default function AnalyticsTab() {
     }).catch(() => undefined)
   }
 
-  // Show loading state
-  if (isLoading) {
+  // Show loading state for selling view; buying still renders so feed job counts can load independently
+  if (isLoading && !isBuyingView) {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
@@ -371,6 +450,9 @@ export default function AnalyticsTab() {
   const selectedPartnerName =
     filteredPartners.find((partner) => partner.id === selectedPartnerId)?.name || 'All Partners'
 
+  const uniqueJobsInFeeds =
+    feedJobCounts?.partners.reduce((sum, partner) => sum + partner.uniqueJobCount, 0) ?? 0
+
   const handleDownloadReport = () => {
     if (!analytics) return
     downloadBuyingAnalyticsCsv({
@@ -378,6 +460,7 @@ export default function AnalyticsTab() {
       startDate: dateRange.startDate,
       endDate: dateRange.endDate,
       analytics,
+      feedJobCounts,
     })
   }
 
@@ -596,6 +679,20 @@ export default function AnalyticsTab() {
                 <CheckCircle className="w-12 h-12 text-gray-400 dark:text-gray-500" />
               </div>
             </div>
+            <div className="border border-gray-200 dark:border-gray-800 rounded-lg p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Jobs in XML Feed</p>
+                  <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">
+                    {feedJobCountsLoading ? '—' : uniqueJobsInFeeds.toLocaleString()}
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    Live matching jobs{selectedPartnerId ? ' for this partner' : ' across all partners'}
+                  </p>
+                </div>
+                <Briefcase className="w-12 h-12 text-gray-400 dark:text-gray-500" />
+              </div>
+            </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <div className="border border-gray-200 dark:border-gray-800 rounded-lg p-6">
@@ -630,6 +727,148 @@ export default function AnalyticsTab() {
                 </div>
                 <DollarSign className="w-12 h-12 text-gray-400 dark:text-gray-500" />
               </div>
+            </div>
+          </div>
+
+          <div className="border border-gray-200 dark:border-gray-800 rounded-lg">
+            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-800">
+              <div className="flex items-center gap-2">
+                <Briefcase className="w-5 h-5 text-primary" />
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  Jobs in XML Feed
+                </h3>
+              </div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                Live matching jobs per job target. Rule counts can overlap; unique jobs is the actual XML feed size.
+              </p>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 dark:bg-gray-900/50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      Partner
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      Job Target
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      Occupation
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      Specialty
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      Work Setting
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      States
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      Matching Jobs
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white dark:bg-transparent divide-y divide-gray-200 dark:divide-gray-800">
+                  {feedJobCountsLoading ? (
+                    <tr>
+                      <td colSpan={7} className="px-6 py-12 text-center">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                      </td>
+                    </tr>
+                  ) : feedJobCounts?.partners?.length ? (
+                    feedJobCounts.partners.flatMap((partner) => {
+                      const targetRows =
+                        partner.targets.length > 0
+                          ? partner.targets.map((target) => (
+                            <tr
+                              key={target.ruleId}
+                              className="hover:bg-gray-50 dark:hover:bg-gray-900/30 transition-colors"
+                            >
+                              <td className="px-6 py-4">
+                                <div className="text-sm text-gray-700 dark:text-gray-300 capitalize">
+                                  {partner.partnerName}
+                                </div>
+                              </td>
+                              <td className="px-6 py-4">
+                                <div className="text-sm font-medium text-gray-900 dark:text-white">
+                                  {target.ruleGroupLabel || '—'}
+                                </div>
+                              </td>
+                              <td className="px-6 py-4">
+                                <div className="text-sm text-gray-700 dark:text-gray-300">
+                                  {target.occupationName}
+                                </div>
+                              </td>
+                              <td className="px-6 py-4">
+                                <div className="text-sm text-gray-700 dark:text-gray-300">
+                                  {target.specialtyName || '—'}
+                                </div>
+                              </td>
+                              <td className="px-6 py-4">
+                                <div className="text-sm text-gray-700 dark:text-gray-300">
+                                  {target.workSetting || '—'}
+                                </div>
+                              </td>
+                              <td className="px-6 py-4">
+                                <div className="text-sm text-gray-700 dark:text-gray-300">
+                                  {formatFeedRuleStates(target.states)}
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-right">
+                                <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full text-sm font-medium">
+                                  <Briefcase className="w-3 h-3" />
+                                  {target.jobCount.toLocaleString()}
+                                </span>
+                              </td>
+                            </tr>
+                          ))
+                          : [
+                            <tr key={`${partner.partnerId}-empty`}>
+                              <td className="px-6 py-4">
+                                <div className="text-sm text-gray-700 dark:text-gray-300 capitalize">
+                                  {partner.partnerName}
+                                </div>
+                              </td>
+                              <td colSpan={5} className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
+                                No active job targets
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-right">
+                                <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full text-sm font-medium">
+                                  <Briefcase className="w-3 h-3" />
+                                  0
+                                </span>
+                              </td>
+                            </tr>,
+                          ]
+                      return [
+                        ...targetRows,
+                        <tr
+                          key={`${partner.partnerId}-unique`}
+                          className="bg-gray-50 dark:bg-gray-900/40"
+                        >
+                          <td className="px-6 py-3" colSpan={6}>
+                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                              Unique jobs for {partner.partnerName}
+                            </span>
+                          </td>
+                          <td className="px-6 py-3 whitespace-nowrap text-right">
+                            <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-full text-sm font-medium">
+                              {partner.uniqueJobCount.toLocaleString()}
+                            </span>
+                          </td>
+                        </tr>,
+                      ]
+                    })
+                  ) : (
+                    <tr>
+                      <td colSpan={7} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                        No buying partners with an outbound feed
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
@@ -777,7 +1016,11 @@ export default function AnalyticsTab() {
             {isBuyingView ? 'Traffic Buying Over Time' : 'Traffic Selling Over Time'}
           </h3>
         </div>
-        {analytics?.clicksOverTime && analytics.clicksOverTime.length > 0 ? (
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+          </div>
+        ) : analytics?.clicksOverTime && analytics.clicksOverTime.length > 0 ? (
           <Chart
             options={chartOptions}
             series={chartSeries}
