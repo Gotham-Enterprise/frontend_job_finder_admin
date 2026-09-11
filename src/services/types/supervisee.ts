@@ -24,7 +24,6 @@ export interface Supervisee {
   specialty: SuperviseeSpecialty | null;
   preferredFormat: string | null;
   howSoonLooking: string | null;
-  stateTheyAreLookingIn: string[];
   budgetRangeType: string | null;
   budgetRangeStart: number | null;
   budgetRangeEnd: number | null;
@@ -80,14 +79,25 @@ export interface SuperviseeProfile {
   lookingDate: string | null;
   preferredFormat: string | null;
   title: string | null;
+  /** State tied to the credential/title (US state abbreviation, e.g. "TX") */
+  licensureState: string | null;
   superviseeOccupation: string | null;
   superviseeSpecialty: string | null;
   availability: string | null;
   idealSupervisor: string | null;
-  stateTheyAreLookingIn: string[];
   budgetRangeType: string | null;
   budgetRangeStart: number | null;
   budgetRangeEnd: number | null;
+  /** Medical Director need preferences — set only when typeOfSupervisorNeeded
+   *  includes "Medical Director"; the fields above stay supervision-only. */
+  mdPreferredOccupation?: string | null;
+  mdPreferredSpecialty?: string | null;
+  mdHowSoonLooking?: string | null;
+  mdLookingDate?: string | null;
+  mdMonthlyBudget?: number | null;
+  mdIdealDescription?: string | null;
+  /** Optional self introduction (separate from idealSupervisor) */
+  introduction?: string | null;
   completedCount: number;
   leftCount: number;
   createdAt: string;
@@ -155,6 +165,7 @@ export interface SuperviseeUpdatePayload {
   occupation?: string;
   specialty?: string;
   title?: string;
+  licensureState?: string;
   stateOfLicensure?: string[];
   typeOfSupervisorNeeded?: string[];
   superviseeOccupation?: string;
@@ -164,10 +175,16 @@ export interface SuperviseeUpdatePayload {
   preferredFormat?: string;
   availability?: string;
   idealSupervisor?: string;
-  stateTheyAreLookingIn?: string[];
   budgetRangeType?: string;
   budgetRangeStart?: number;
   budgetRangeEnd?: number;
+  mdPreferredOccupation?: string;
+  mdPreferredSpecialty?: string;
+  mdHowSoonLooking?: string;
+  mdLookingDate?: string;
+  mdMonthlyBudget?: number;
+  mdIdealDescription?: string;
+  introduction?: string;
   uploadProfilePhoto?: File;
 }
 
