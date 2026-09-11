@@ -40,6 +40,7 @@ const Supervisors: React.FC<SupervisorsProps> = ({ className = "" }) => {
 
     tableColumns,
     statusOptions,
+    typeOptions,
     itemsPerPageOptions,
     sortBy,
     sortOrder,
@@ -121,6 +122,7 @@ const Supervisors: React.FC<SupervisorsProps> = ({ className = "" }) => {
               filters={filters}
               onFilterChange={filterChange}
               statusOptions={statusOptions}
+              typeOptions={typeOptions}
               hasActiveFilters={hasActiveFilters}
               clearIndividualFilter={clearIndividualFilter}
             />

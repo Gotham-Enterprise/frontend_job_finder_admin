@@ -441,6 +441,59 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
             )}
           </SectionCard>
 
+          {/* Medical Director credentials — board certifications + physician
+              offerings, so admins can verify without opening the edit modal */}
+          {((profile?.boardCertifications?.length ?? 0) > 0 ||
+            (profile?.offerings?.length ?? 0) > 0) && (
+            <SectionCard title="Medical Director Credentials">
+              {(profile?.boardCertifications ?? []).map((cert, i) => (
+                <FieldRow
+                  key={cert.id ?? `cert-${i}`}
+                  label={`Board Certification ${i + 1}`}
+                  value={[
+                    cert.certifyingBoard,
+                    cert.specialty,
+                    cert.subspecialty,
+                    cert.certificationNumber ? `#${cert.certificationNumber}` : null,
+                    cert.expirationDate
+                      ? `valid through ${formatDate(cert.expirationDate, "")}`
+                      : null,
+                  ]
+                    .filter(Boolean)
+                    .join(" · ")}
+                />
+              ))}
+              {(profile?.offerings ?? []).map((offering, i) => (
+                <FieldRow
+                  key={offering.id ?? `offering-${i}`}
+                  label={`Offered as ${offering.supervisorType}`}
+                  value={
+                    <span className="block space-y-0.5">
+                      <span className="block">
+                        {[offering.occupation, offering.specialty, offering.degreeType]
+                          .filter(Boolean)
+                          .join(" · ") || "—"}
+                      </span>
+                      {(offering.licenses ?? []).map((license, j) => (
+                        <span key={license.id ?? `lic-${j}`} className="block text-xs text-gray-500 dark:text-gray-400">
+                          {[
+                            license.licenseNumber ? `#${license.licenseNumber}` : null,
+                            license.state,
+                            license.licenseExpiration
+                              ? `exp. ${formatDate(license.licenseExpiration, "")}`
+                              : null,
+                          ]
+                            .filter(Boolean)
+                            .join(" · ")}
+                        </span>
+                      ))}
+                    </span>
+                  }
+                />
+              ))}
+            </SectionCard>
+          )}
+
           {/* Supervision Preferences */}
           <SectionCard title="Supervision Preferences">
             <FieldRow label="Supervision Format" value={supervisionFormatDisplay} />
