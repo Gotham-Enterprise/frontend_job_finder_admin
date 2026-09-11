@@ -1,3 +1,5 @@
+"use client";
+
 import React, { createContext, useContext, ReactNode } from 'react';
 import { useAuthPermissions } from '../hooks/useAuthPermissions';
 import { UserPermissions } from '../services/types/permissions';

@@ -28,6 +28,7 @@ export default function FeedRuleModal({
     occupationName: '',
     specialtyName: '',
     states: [],
+    workSetting: null,
     cpc: null,
     cpa: null,
     isActive: true,
@@ -43,6 +44,16 @@ export default function FeedRuleModal({
     enabled: isOpen,
   })
 
+  const { data: workSettingsData, isLoading: loadingWorkSettings } = useQuery({
+    queryKey: ['dropdowns', 'workSettings'],
+    queryFn: () =>
+      apiGet<{ success: boolean; data: { id: number; name: string }[] }>(
+        '/api/categories/workSettings'
+      ),
+    enabled: isOpen,
+    staleTime: 1000 * 60 * 60,
+  })
+
   useEffect(() => {
     if (rule) {
       setForm({
@@ -50,6 +61,7 @@ export default function FeedRuleModal({
         occupationName: rule.occupationName,
         specialtyName: rule.specialtyName || '',
         states: rule.states || [],
+        workSetting: rule.workSetting || null,
         cpc: rule.cpc ?? null,
         cpa: rule.cpa ?? null,
         isActive: rule.isActive,
@@ -60,6 +72,7 @@ export default function FeedRuleModal({
         occupationName: '',
         specialtyName: '',
         states: [],
+        workSetting: null,
         cpc: null,
         cpa: null,
         isActive: true,
@@ -102,6 +115,7 @@ export default function FeedRuleModal({
       ...form,
       ruleGroupLabel: form.ruleGroupLabel || undefined,
       specialtyName: form.specialtyName || null,
+      workSetting: form.workSetting || null,
       cpc: form.cpc === null || form.cpc === undefined || form.cpc === ('' as unknown as number)
         ? null
         : Number(form.cpc),
@@ -115,6 +129,14 @@ export default function FeedRuleModal({
     value: o.name,
     label: o.name,
   }))
+
+  const workSettingOptions = [
+    { value: '', label: 'Any' },
+    ...(workSettingsData?.data ?? []).map((ws) => ({
+      value: ws.name,
+      label: ws.name,
+    })),
+  ]
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
@@ -175,6 +197,23 @@ export default function FeedRuleModal({
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-800 dark:text-white"
                 placeholder="Optional — leave blank for any specialty"
               />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Work Setting
+              </label>
+              <Select
+                searchable
+                searchPlaceholder="Search work settings…"
+                placeholder={loadingWorkSettings ? 'Loading…' : 'Any'}
+                value={form.workSetting || ''}
+                options={workSettingOptions}
+                onChange={(val) => set('workSetting', val || null)}
+              />
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                Leave as Any to match all work settings
+              </p>
             </div>
 
             <div>

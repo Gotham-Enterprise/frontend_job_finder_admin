@@ -1,21 +1,197 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useAffiliateAnalytics, useAffiliatePartners } from '@/services/hooks/useAffiliates'
+import { useAffiliateAnalytics, useAffiliatePartners, useInfiniteAffiliateConversions, useEnqueueConversionAudits, useAffiliateFeedJobCounts } from '@/services/hooks/useAffiliates'
 import dynamic from 'next/dynamic'
-import { TrendingUp, Users, MousePointerClick, Trophy, DollarSign, CheckCircle, BarChart2, Briefcase } from 'lucide-react'
+import { TrendingUp, Users, MousePointerClick, Trophy, DollarSign, CheckCircle, BarChart2, Briefcase, HelpCircle, Download, ShieldCheck } from 'lucide-react'
 import DatePicker from '@/components/form/date-picker'
+import type { AffiliateAnalytics, AffiliateConversionRow, AffiliateFeedJobCounts } from '@/services/api/affiliates'
+import ConversionAuditDrawer, { AuditBadge, AUDIT_FILTERS } from './ConversionAuditDrawer'
+import { useAffiliatePermissions } from '@/hooks/useAffiliatePermissions'
 
 type ViewMode = 'selling' | 'buying'
 
 const isValidViewMode = (value: string | null): value is ViewMode =>
   value === 'selling' || value === 'buying'
 
+function escapeCsvField(value: string | number): string {
+  const str = String(value)
+  if (/[",\n\r]/.test(str)) {
+    return `"${str.replace(/"/g, '""')}"`
+  }
+  return str
+}
+
+function slugifyForFilename(value: string): string {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'all-partners'
+}
+
+function formatFeedRuleStates(states: string[]): string {
+  return states.length === 0 ? 'All' : states.join(', ')
+}
+
+function downloadBuyingAnalyticsCsv({
+  partnerName,
+  startDate,
+  endDate,
+  analytics,
+  feedJobCounts,
+}: {
+  partnerName: string
+  startDate: string
+  endDate: string
+  analytics: AffiliateAnalytics
+  feedJobCounts?: AffiliateFeedJobCounts
+}) {
+  const headers = [
+    'Partner name',
+    'Date Range',
+    'Total Clicks',
+    'Total Conversions',
+    'Total Estimated Spend',
+    'Total CPC Spend',
+    'Total CPA Spend',
+  ]
+  const row = [
+    partnerName,
+    `${startDate} to ${endDate}`,
+    analytics.totalClicks ?? 0,
+    analytics.totalConversions ?? 0,
+    (analytics.estimatedSpend ?? 0).toFixed(2),
+    (analytics.cpcSpend ?? 0).toFixed(2),
+    (analytics.totalCpaSpend ?? 0).toFixed(2),
+  ]
+  const lines = [headers.map(escapeCsvField).join(','), row.map(escapeCsvField).join(',')]
+
+  if (feedJobCounts?.partners?.length) {
+    lines.push('')
+    lines.push(
+      [
+        'Partner name',
+        'Job Target',
+        'Occupation',
+        'Specialty',
+        'Work Setting',
+        'States',
+        'Matching Jobs',
+        'Unique Jobs',
+      ]
+        .map(escapeCsvField)
+        .join(',')
+    )
+    for (const partner of feedJobCounts.partners) {
+      if (partner.targets.length === 0) {
+        lines.push(
+          [
+            partner.partnerName,
+            '',
+            '',
+            '',
+            '',
+            '',
+            0,
+            partner.uniqueJobCount,
+          ]
+            .map(escapeCsvField)
+            .join(',')
+        )
+        continue
+      }
+      for (const target of partner.targets) {
+        lines.push(
+          [
+            partner.partnerName,
+            target.ruleGroupLabel || '',
+            target.occupationName,
+            target.specialtyName || '',
+            target.workSetting || '',
+            formatFeedRuleStates(target.states),
+            target.jobCount,
+            '',
+          ]
+            .map(escapeCsvField)
+            .join(',')
+        )
+      }
+      lines.push(
+        [
+          partner.partnerName,
+          'Unique jobs (deduplicated)',
+          '',
+          '',
+          '',
+          '',
+          '',
+          partner.uniqueJobCount,
+        ]
+          .map(escapeCsvField)
+          .join(',')
+      )
+    }
+  }
+
+  const csv = lines.join('\n')
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = `affiliate-buying-report-${slugifyForFilename(partnerName)}-${startDate}-${endDate}.csv`
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  URL.revokeObjectURL(url)
+}
+
 // Dynamically import ApexCharts to avoid SSR issues
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false })
 
+function ToggleWithTooltip({
+  label,
+  checked,
+  onChange,
+  tooltip,
+}: {
+  label: string
+  checked: boolean
+  onChange: (value: boolean) => void
+  tooltip: string
+}) {
+  return (
+    <div className="flex items-center gap-2">
+      <button
+        type="button"
+        role="switch"
+        aria-checked={checked}
+        onClick={() => onChange(!checked)}
+        className="flex items-center gap-2 cursor-pointer group/toggle"
+      >
+        <div
+          className={`relative w-10 h-5 rounded-full transition-colors duration-200 ${checked ? 'bg-primary' : 'bg-gray-300 dark:bg-gray-600'
+            }`}
+        >
+          <span
+            className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ${checked ? 'translate-x-5' : 'translate-x-0'
+              }`}
+          />
+        </div>
+        <span className="text-sm font-medium text-gray-700 dark:text-gray-300 select-none">
+          {label}
+        </span>
+      </button>
+      <div className="relative group/tip">
+        <HelpCircle className="w-4 h-4 text-gray-400 dark:text-gray-500 cursor-help" />
+        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover/tip:block w-72 p-3 bg-gray-900 dark:bg-gray-800 text-white text-xs rounded-lg shadow-xl z-20 leading-relaxed pointer-events-none">
+          {tooltip}
+          <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900 dark:border-t-gray-800" />
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function AnalyticsTab() {
+  const { canCreate } = useAffiliatePermissions()
   const router = useRouter()
   const searchParams = useSearchParams()
   const viewFromUrl = searchParams.get('view')
@@ -27,17 +203,69 @@ export default function AnalyticsTab() {
     startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     endDate: new Date().toISOString().split('T')[0],
   })
+  const [deduplicate, setDeduplicate] = useState(true)
+  const [requireApplication, setRequireApplication] = useState(true)
+  const [excludeFlaggedConversions, setExcludeFlaggedConversions] = useState(true)
+  const [auditResult, setAuditResult] = useState<'' | 'pass' | 'flagged' | 'incomplete' | 'pending' | 'failed' | 'unaudited'>('')
+  const [auditConversion, setAuditConversion] = useState<AffiliateConversionRow | null>(null)
+  const isBuyingView = viewMode === 'buying'
+  const enqueueAudits = useEnqueueConversionAudits()
 
   const { data: partnersData } = useAffiliatePartners({ limit: 100 })
-  const { data: analytics, isLoading } = useAffiliateAnalytics({
+  const analyticsFilters = {
     affiliateId: selectedPartnerId || undefined,
     startDate: dateRange.startDate,
     endDate: dateRange.endDate,
-    source: viewMode === 'buying' ? 'partner-feed' : undefined,
+    source: viewMode === 'buying' ? ('partner-feed' as const) : undefined,
     partnerType: viewMode,
-  })
+    deduplicate,
+    requireApplication,
+    excludeFlaggedConversions,
+  }
+  const conversionFilters = {
+    ...analyticsFilters,
+    auditResult: isBuyingView && auditResult ? auditResult : undefined,
+  }
+  const { data: analytics, isLoading } = useAffiliateAnalytics(analyticsFilters)
+  const { data: feedJobCounts, isLoading: feedJobCountsLoading } = useAffiliateFeedJobCounts(
+    selectedPartnerId || undefined,
+    { enabled: isBuyingView }
+  )
+  const {
+    data: conversionPages,
+    isLoading: conversionsLoading,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
+  } = useInfiniteAffiliateConversions(conversionFilters)
 
-  const isBuyingView = viewMode === 'buying'
+  const conversions = conversionPages?.pages.flatMap((page) => page.data) ?? []
+  const conversionTotal = conversionPages?.pages[0]?.pagination.total ?? 0
+  const conversionSentinelRef = useRef<HTMLDivElement | null>(null)
+  const conversionScrollRef = useRef<HTMLDivElement | null>(null)
+
+  const handleConversionObserver = useCallback(
+    (entries: IntersectionObserverEntry[]) => {
+      const [entry] = entries
+      if (entry.isIntersecting && hasNextPage && !isFetchingNextPage) {
+        fetchNextPage()
+      }
+    },
+    [hasNextPage, isFetchingNextPage, fetchNextPage]
+  )
+
+  useEffect(() => {
+    const sentinel = conversionSentinelRef.current
+    const root = conversionScrollRef.current
+    if (!sentinel || !root) return
+    const observer = new IntersectionObserver(handleConversionObserver, {
+      root,
+      threshold: 0.1,
+    })
+    observer.observe(sentinel)
+    return () => observer.disconnect()
+  }, [handleConversionObserver, conversions.length, isLoading])
+
   const filteredPartners = (partnersData?.data ?? []).filter((partner) =>
     viewMode === 'selling'
       ? !partner.outboundFeedSlug
@@ -54,6 +282,8 @@ export default function AnalyticsTab() {
   const handleViewModeChange = (mode: ViewMode) => {
     setViewMode(mode)
     setSelectedPartnerId('')
+    setAuditResult('')
+    setAuditConversion(null)
     const params = new URLSearchParams(searchParams.toString())
     params.set('tab', 'analytics')
     if (mode === 'buying') {
@@ -64,8 +294,29 @@ export default function AnalyticsTab() {
     router.replace(`?${params.toString()}`, { scroll: false })
   }
 
-  // Show loading state
-  if (isLoading) {
+  const handleRunAudit = async () => {
+    if (
+      !confirm(
+        'Queue occupation audits for conversions in the current filter? Unaudited, incomplete, failed, and pending rows will be queued (up to 200). Already passing/flagged rows are skipped.'
+      )
+    ) {
+      return
+    }
+    await enqueueAudits.mutateAsync({
+      affiliateId: selectedPartnerId || undefined,
+      startDate: dateRange.startDate,
+      endDate: dateRange.endDate,
+      source: 'partner-feed',
+      partnerType: 'buying',
+      deduplicate,
+      requireApplication,
+      excludeFlaggedConversions,
+      force: false,
+    }).catch(() => undefined)
+  }
+
+  // Show loading state for selling view; buying still renders so feed job counts can load independently
+  if (isLoading && !isBuyingView) {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
@@ -196,15 +447,32 @@ export default function AnalyticsTab() {
     },
   }
 
+  const selectedPartnerName =
+    filteredPartners.find((partner) => partner.id === selectedPartnerId)?.name || 'All Partners'
+
+  const uniqueJobsInFeeds =
+    feedJobCounts?.partners.reduce((sum, partner) => sum + partner.uniqueJobCount, 0) ?? 0
+
+  const handleDownloadReport = () => {
+    if (!analytics) return
+    downloadBuyingAnalyticsCsv({
+      partnerName: selectedPartnerName,
+      startDate: dateRange.startDate,
+      endDate: dateRange.endDate,
+      analytics,
+      feedJobCounts,
+    })
+  }
+
   const chartSeries = isBuyingView
     ? [
       {
-        name: 'Partner Feed Clicks',
+        name: 'Total Clicks',
         type: 'area' as const,
         data: analytics?.clicksOverTime?.map((d) => d.clicks) || [],
       },
       {
-        name: 'Estimated Spend',
+        name: 'Total Estimated Spend',
         type: 'line' as const,
         data: analytics?.clicksOverTime?.map((d) => d.estimatedSpend || 0) || [],
       },
@@ -232,12 +500,23 @@ export default function AnalyticsTab() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Analytics Dashboard</h2>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          {isBuyingView && (
+            <button
+              type="button"
+              onClick={handleDownloadReport}
+              disabled={!analytics}
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Download className="w-4 h-4" />
+              Download report
+            </button>
+          )}
           <button
             onClick={() => handleViewModeChange('selling')}
             className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${viewMode === 'selling'
-                ? 'bg-primary text-white'
-                : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+              ? 'bg-primary text-white'
+              : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
               }`}
           >
             Traffic Selling
@@ -245,8 +524,8 @@ export default function AnalyticsTab() {
           <button
             onClick={() => handleViewModeChange('buying')}
             className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${viewMode === 'buying'
-                ? 'bg-primary text-white'
-                : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+              ? 'bg-primary text-white'
+              : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
               }`}
           >
             Traffic Buying
@@ -330,6 +609,28 @@ export default function AnalyticsTab() {
         </div>
       </div>
 
+      {/* Deduplication & Application filter toggles */}
+      <div className="flex flex-wrap items-center gap-6 px-1">
+        <ToggleWithTooltip
+          label="Deduplicate"
+          checked={deduplicate}
+          onChange={setDeduplicate}
+          tooltip="Clicks: counts only the first click per unique IP address. CPC spend: sums the cost of that first click per IP (clicks with no recorded IP are excluded). Conversions: keeps only the earliest conversion per unique IP + user name combination. Conversions without a recorded IP address are always included."
+        />
+        <ToggleWithTooltip
+          label="Require Application"
+          checked={requireApplication}
+          onChange={setRequireApplication}
+          tooltip="Only shows conversions that are linked to a confirmed job application. Conversions recorded via S2S postback or other means without a matching application are excluded."
+        />
+        <ToggleWithTooltip
+          label="Exclude Flagged Conversions"
+          checked={excludeFlaggedConversions}
+          onChange={setExcludeFlaggedConversions}
+          tooltip="Removes conversions whose occupation audit result is Flagged from counts, CPA spend, and the conversions table. Unaudited, incomplete, pending, failed, and passing conversions are kept. The Flagged chip will show no rows while this is on."
+        />
+      </div>
+
       {/* Job Count Cards */}
       {!isBuyingView && (
         <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
@@ -351,82 +652,226 @@ export default function AnalyticsTab() {
       )}
 
       {isBuyingView ? (
-        <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="border border-gray-200 dark:border-gray-800 rounded-lg p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-blue-700 dark:text-blue-400 font-medium">Partner Feed Clicks</p>
-                  <p className="text-3xl font-bold text-blue-900 dark:text-blue-300 mt-2">
+                  <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Total Clicks</p>
+                  <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">
                     {analytics?.totalClicks?.toLocaleString() || 0}
                   </p>
                 </div>
-                <MousePointerClick className="w-12 h-12 text-blue-600 dark:text-blue-500" />
+                <MousePointerClick className="w-12 h-12 text-gray-400 dark:text-gray-500" />
               </div>
             </div>
-            <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-6">
+            <div className="border border-gray-200 dark:border-gray-800 rounded-lg p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-amber-700 dark:text-amber-400 font-medium">Estimated Spend</p>
-                  <p className="text-3xl font-bold text-amber-900 dark:text-amber-300 mt-2">
-                    ${(analytics?.estimatedSpend ?? 0).toFixed(2)}
-                  </p>
-                </div>
-                <DollarSign className="w-12 h-12 text-amber-600 dark:text-amber-500" />
-              </div>
-            </div>
-            <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-emerald-700 dark:text-emerald-400 font-medium">Conversions</p>
-                  <p className="text-3xl font-bold text-emerald-900 dark:text-emerald-300 mt-2">
+                  <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Total Conversions</p>
+                  <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">
                     {analytics?.totalConversions?.toLocaleString() ?? 0}
                   </p>
-                  <p className="text-xs text-emerald-600 dark:text-emerald-500 mt-1">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                     {analytics?.conversionRate ?? 0}% conversion rate
                   </p>
                 </div>
-                <CheckCircle className="w-12 h-12 text-emerald-600 dark:text-emerald-500" />
+                <CheckCircle className="w-12 h-12 text-gray-400 dark:text-gray-500" />
               </div>
             </div>
-            <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-6">
+            <div className="border border-gray-200 dark:border-gray-800 rounded-lg p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-purple-700 dark:text-purple-400 font-medium">Cost / Conversion</p>
-                  <p className="text-3xl font-bold text-purple-900 dark:text-purple-300 mt-2">
-                    {analytics?.costPerConversion != null
-                      ? `$${analytics.costPerConversion.toFixed(2)}`
-                      : '—'}
+                  <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Jobs in XML Feed</p>
+                  <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">
+                    {feedJobCountsLoading ? '—' : uniqueJobsInFeeds.toLocaleString()}
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    Live matching jobs{selectedPartnerId ? ' for this partner' : ' across all partners'}
                   </p>
                 </div>
-                <BarChart2 className="w-12 h-12 text-purple-600 dark:text-purple-500" />
+                <Briefcase className="w-12 h-12 text-gray-400 dark:text-gray-500" />
+              </div>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="border border-gray-200 dark:border-gray-800 rounded-lg p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Total Estimated Spend</p>
+                  <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">
+                    ${(analytics?.estimatedSpend ?? 0).toFixed(2)}
+                  </p>
+                </div>
+                <DollarSign className="w-12 h-12 text-gray-400 dark:text-gray-500" />
+              </div>
+            </div>
+            <div className="border border-gray-200 dark:border-gray-800 rounded-lg p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Total CPC Spend</p>
+                  <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">
+                    ${(analytics?.cpcSpend ?? 0).toFixed(2)}
+                  </p>
+                </div>
+                <DollarSign className="w-12 h-12 text-gray-400 dark:text-gray-500" />
+              </div>
+            </div>
+            <div className="border border-gray-200 dark:border-gray-800 rounded-lg p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Total CPA Spend</p>
+                  <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">
+                    ${(analytics?.totalCpaSpend ?? 0).toFixed(2)}
+                  </p>
+                </div>
+                <DollarSign className="w-12 h-12 text-gray-400 dark:text-gray-500" />
               </div>
             </div>
           </div>
 
-          {analytics?.clicksBySource && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="border border-gray-200 dark:border-gray-800 rounded-lg p-4">
-                <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">Manual</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
-                  {analytics.clicksBySource.manual.toLocaleString()}
-                </p>
+          <div className="border border-gray-200 dark:border-gray-800 rounded-lg">
+            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-800">
+              <div className="flex items-center gap-2">
+                <Briefcase className="w-5 h-5 text-primary" />
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  Jobs in XML Feed
+                </h3>
               </div>
-              <div className="border border-gray-200 dark:border-gray-800 rounded-lg p-4">
-                <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">Auto-Redirect</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
-                  {analytics.clicksBySource.autoRedirect.toLocaleString()}
-                </p>
-              </div>
-              <div className="border border-gray-200 dark:border-gray-800 rounded-lg p-4">
-                <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">Partner Feed</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
-                  {analytics.clicksBySource.partnerFeed.toLocaleString()}
-                </p>
-              </div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                Live matching jobs per job target. Rule counts can overlap; unique jobs is the actual XML feed size.
+              </p>
             </div>
-          )}
-        </>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 dark:bg-gray-900/50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      Partner
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      Job Target
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      Occupation
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      Specialty
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      Work Setting
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      States
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      Matching Jobs
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white dark:bg-transparent divide-y divide-gray-200 dark:divide-gray-800">
+                  {feedJobCountsLoading ? (
+                    <tr>
+                      <td colSpan={7} className="px-6 py-12 text-center">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                      </td>
+                    </tr>
+                  ) : feedJobCounts?.partners?.length ? (
+                    feedJobCounts.partners.flatMap((partner) => {
+                      const targetRows =
+                        partner.targets.length > 0
+                          ? partner.targets.map((target) => (
+                            <tr
+                              key={target.ruleId}
+                              className="hover:bg-gray-50 dark:hover:bg-gray-900/30 transition-colors"
+                            >
+                              <td className="px-6 py-4">
+                                <div className="text-sm text-gray-700 dark:text-gray-300 capitalize">
+                                  {partner.partnerName}
+                                </div>
+                              </td>
+                              <td className="px-6 py-4">
+                                <div className="text-sm font-medium text-gray-900 dark:text-white">
+                                  {target.ruleGroupLabel || '—'}
+                                </div>
+                              </td>
+                              <td className="px-6 py-4">
+                                <div className="text-sm text-gray-700 dark:text-gray-300">
+                                  {target.occupationName}
+                                </div>
+                              </td>
+                              <td className="px-6 py-4">
+                                <div className="text-sm text-gray-700 dark:text-gray-300">
+                                  {target.specialtyName || '—'}
+                                </div>
+                              </td>
+                              <td className="px-6 py-4">
+                                <div className="text-sm text-gray-700 dark:text-gray-300">
+                                  {target.workSetting || '—'}
+                                </div>
+                              </td>
+                              <td className="px-6 py-4">
+                                <div className="text-sm text-gray-700 dark:text-gray-300">
+                                  {formatFeedRuleStates(target.states)}
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-right">
+                                <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full text-sm font-medium">
+                                  <Briefcase className="w-3 h-3" />
+                                  {target.jobCount.toLocaleString()}
+                                </span>
+                              </td>
+                            </tr>
+                          ))
+                          : [
+                            <tr key={`${partner.partnerId}-empty`}>
+                              <td className="px-6 py-4">
+                                <div className="text-sm text-gray-700 dark:text-gray-300 capitalize">
+                                  {partner.partnerName}
+                                </div>
+                              </td>
+                              <td colSpan={5} className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
+                                No active job targets
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-right">
+                                <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full text-sm font-medium">
+                                  <Briefcase className="w-3 h-3" />
+                                  0
+                                </span>
+                              </td>
+                            </tr>,
+                          ]
+                      return [
+                        ...targetRows,
+                        <tr
+                          key={`${partner.partnerId}-unique`}
+                          className="bg-gray-50 dark:bg-gray-900/40"
+                        >
+                          <td className="px-6 py-3" colSpan={6}>
+                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                              Unique jobs for {partner.partnerName}
+                            </span>
+                          </td>
+                          <td className="px-6 py-3 whitespace-nowrap text-right">
+                            <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-full text-sm font-medium">
+                              {partner.uniqueJobCount.toLocaleString()}
+                            </span>
+                          </td>
+                        </tr>,
+                      ]
+                    })
+                  ) : (
+                    <tr>
+                      <td colSpan={7} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                        No buying partners with an outbound feed
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
       ) : (
         <>
           {/* Metrics Cards */}
@@ -571,7 +1016,11 @@ export default function AnalyticsTab() {
             {isBuyingView ? 'Traffic Buying Over Time' : 'Traffic Selling Over Time'}
           </h3>
         </div>
-        {analytics?.clicksOverTime && analytics.clicksOverTime.length > 0 ? (
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+          </div>
+        ) : analytics?.clicksOverTime && analytics.clicksOverTime.length > 0 ? (
           <Chart
             options={chartOptions}
             series={chartSeries}
@@ -682,6 +1131,98 @@ export default function AnalyticsTab() {
         </div>
       </div>
 
+      {/* Top Performing Links */}
+      <div className="border border-gray-200 dark:border-gray-800 rounded-lg">
+        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-800">
+          <div className="flex items-center gap-2">
+            <Trophy className="w-5 h-5 text-yellow-500" />
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              Top Performing Links
+            </h3>
+          </div>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50 dark:bg-gray-900/50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Rank
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Link Name
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Partner
+                </th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Total Clicks
+                </th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Unique IPs
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white dark:bg-transparent divide-y divide-gray-200 dark:divide-gray-800">
+              {analytics?.topLinks && analytics.topLinks.length > 0 ? (
+                analytics.topLinks.map((link, index) => (
+                  <tr
+                    key={link.linkId}
+                    className="hover:bg-gray-50 dark:hover:bg-gray-900/30 transition-colors"
+                  >
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        {index === 0 && (
+                          <span className="text-yellow-500 font-bold text-lg">🥇</span>
+                        )}
+                        {index === 1 && (
+                          <span className="text-gray-400 font-bold text-lg">🥈</span>
+                        )}
+                        {index === 2 && (
+                          <span className="text-orange-600 font-bold text-lg">🥉</span>
+                        )}
+                        {index > 2 && (
+                          <span className="text-gray-500 dark:text-gray-400 font-medium">
+                            {index + 1}
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-sm font-medium text-gray-900 dark:text-white">
+                        {link.name}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-sm text-gray-700 dark:text-gray-300 capitalize">
+                        {link.affiliate?.name || 'N/A'}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right">
+                      <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-full text-sm font-medium">
+                        <MousePointerClick className="w-3 h-3" />
+                        {link.clicks}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right">
+                      <span className="inline-flex items-center gap-1 px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 rounded-full text-sm font-medium">
+                        <MousePointerClick className="w-3 h-3" />
+                        {link.uniqueIpAddresses || 0}
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={5} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                    No data available
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       {/* Redirects by Job Title */}
       {!isBuyingView && analytics?.redirectsByJobTitle && analytics.redirectsByJobTitle.length > 0 && (
         <div className="border border-gray-200 dark:border-gray-800 rounded-lg">
@@ -750,16 +1291,48 @@ export default function AnalyticsTab() {
 
       {/* Conversions Table */}
       <div className="border border-gray-200 dark:border-gray-800 rounded-lg">
-        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-800">
+        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-800 space-y-3">
           <div className="flex items-center gap-2">
             <CheckCircle className="w-5 h-5 text-emerald-500" />
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Conversions</h3>
-            <span className="ml-auto text-sm text-gray-500 dark:text-gray-400">Latest 100</span>
+            <span className="ml-auto text-sm text-gray-500 dark:text-gray-400">
+              {conversionsLoading
+                ? 'Loading…'
+                : `${conversions.length.toLocaleString()} of ${conversionTotal.toLocaleString()}`}
+            </span>
+            {isBuyingView && canCreate && (
+              <button
+                type="button"
+                onClick={handleRunAudit}
+                disabled={enqueueAudits.isPending}
+                className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
+              >
+                <ShieldCheck className={`w-4 h-4 ${enqueueAudits.isPending ? 'animate-pulse' : ''}`} />
+                Run Audit
+              </button>
+            )}
           </div>
+          {isBuyingView && (
+            <div className="flex flex-wrap gap-2">
+              {AUDIT_FILTERS.map((filter) => (
+                <button
+                  key={filter.id || 'all'}
+                  type="button"
+                  onClick={() => setAuditResult(filter.id)}
+                  className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${auditResult === filter.id
+                      ? 'bg-primary text-white'
+                      : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                    }`}
+                >
+                  {filter.label}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
-        <div className="overflow-x-auto">
+        <div ref={conversionScrollRef} className="overflow-auto max-h-[32rem]">
           <table className="w-full">
-            <thead className="bg-gray-50 dark:bg-gray-900/50">
+            <thead className="bg-gray-50 dark:bg-gray-900/50 sticky top-0 z-10">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Job Title</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Application ID</th>
@@ -769,11 +1342,22 @@ export default function AnalyticsTab() {
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Payout</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Partner Conv. ID</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Converted At</th>
+                {isBuyingView && (
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Audit</th>
+                )}
               </tr>
             </thead>
             <tbody className="bg-white dark:bg-transparent divide-y divide-gray-200 dark:divide-gray-800">
-              {analytics?.conversions && analytics.conversions.length > 0 ? (
-                analytics.conversions.map((c) => (
+              {conversionsLoading && conversions.length === 0 ? (
+                <tr>
+                  <td colSpan={isBuyingView ? 9 : 8} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                    <div className="flex items-center justify-center">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+                    </div>
+                  </td>
+                </tr>
+              ) : conversions.length > 0 ? (
+                conversions.map((c) => (
                   <tr key={c.id} className="hover:bg-gray-50 dark:hover:bg-gray-900/30 transition-colors">
                     <td className="px-6 py-4">
                       <a
@@ -845,19 +1429,40 @@ export default function AnalyticsTab() {
                         {new Date(c.convertedAt).toLocaleString()}
                       </span>
                     </td>
+                    {isBuyingView && (
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <AuditBadge
+                          audit={c.audit}
+                          onClick={c.audit ? () => setAuditConversion(c) : undefined}
+                        />
+                      </td>
+                    )}
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan={8} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                  <td colSpan={isBuyingView ? 9 : 8} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
                     No conversions recorded yet
                   </td>
                 </tr>
               )}
             </tbody>
           </table>
+          <div ref={conversionSentinelRef} className="h-1" />
+          {isFetchingNextPage && (
+            <div className="flex justify-center py-3">
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary" />
+            </div>
+          )}
         </div>
       </div>
+
+      {isBuyingView && (
+        <ConversionAuditDrawer
+          conversion={auditConversion}
+          onClose={() => setAuditConversion(null)}
+        />
+      )}
     </div>
   )
 }

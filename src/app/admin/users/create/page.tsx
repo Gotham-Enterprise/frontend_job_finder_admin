@@ -36,7 +36,9 @@ export default function CreateUserPage() {
       
       const access: any = {};
       
-      // Map frontend permission keys to API permission names
+      // Map frontend permission keys to API permission names.
+      // Only include keys that have a matching row in AdminPermissions (DB).
+      // 'medicalLibrary' has NO DB row → omit it (backend would reject it).
       const keyToApiNameMap: { [key: string]: string } = {
         'tickets': 'Tickets',
         'jobSeekers': 'Job Seekers',
@@ -46,14 +48,23 @@ export default function CreateUserPage() {
         'blog': 'Blog',
         'careers': 'Careers',
         'jobs': 'Jobs',
+        'unlockRequest': 'Unlock Requests',
+        'affiliates': 'Affiliates',
       };
       
       Object.keys(userData.permissions).forEach(permissionKey => {
-        const apiModuleName = keyToApiNameMap[permissionKey] || permissionKey;
+        const apiModuleName = keyToApiNameMap[permissionKey];
         const permissions = userData.permissions[permissionKey];
-        
+
+        // The backend rejects the whole request when any access key doesn't
+        // match a permission row, so only send modules with a known API name.
+        if (!apiModuleName) {
+          console.warn(`Skipping permission module with no matching API permission: ${permissionKey}`);
+          return;
+        }
+
         console.log(`Processing permission: ${permissionKey} -> ${apiModuleName}`, permissions);
-        
+
         // Backend expects permission NAMES as keys
         access[apiModuleName] = {
           add: permissions?.add || false,

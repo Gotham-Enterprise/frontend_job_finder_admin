@@ -15,6 +15,7 @@ interface InputModalProps {
   isLoading?: boolean;
   inputType?: "text" | "textarea";
   required?: boolean;
+  validate?: (value: string) => string | null;
 }
 
 export default function InputModal({
@@ -30,6 +31,7 @@ export default function InputModal({
   isLoading = false,
   inputType = "textarea",
   required = true,
+  validate,
 }: InputModalProps) {
   const [inputValue, setInputValue] = useState("");
   const [error, setError] = useState("");
@@ -43,11 +45,17 @@ export default function InputModal({
   }, [isOpen]);
 
   const handleConfirm = () => {
-    if (required && inputValue.trim() === "") {
+    const trimmedValue = inputValue.trim();
+    if (required && trimmedValue === "") {
       setError("This field is required");
       return;
     }
-    onConfirm(inputValue.trim());
+    const validationError = validate?.(trimmedValue);
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+    onConfirm(trimmedValue);
     setInputValue("");
     setError("");
   };
@@ -135,6 +143,7 @@ export default function InputModal({
         </div>
         <div className="bg-gray-50 dark:bg-gray-700 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6 rounded-b-lg">
           <Button
+            type="button"
             onClick={handleConfirm}
             variant="default"
             className="inline-flex w-full justify-center rounded-md px-3 py-2 text-sm font-semibold sm:ml-3 sm:w-auto !bg-yellow-500 hover:!bg-yellow-600"
@@ -143,6 +152,7 @@ export default function InputModal({
             {isLoading ? "Processing..." : confirmText}
           </Button>
           <Button
+            type="button"
             onClick={handleCancel}
             variant="ghost"
             className="mt-3 inline-flex w-full justify-center rounded-md bg-white dark:bg-gray-600 px-3 py-2 text-sm font-semibold text-gray-900 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-500 hover:bg-gray-50 dark:hover:bg-gray-500 sm:mt-0 sm:w-auto"

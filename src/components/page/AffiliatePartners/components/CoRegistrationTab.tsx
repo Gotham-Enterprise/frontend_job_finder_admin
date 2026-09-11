@@ -1,11 +1,13 @@
 'use client'
 
-import React, { useState, useMemo } from 'react'
-import { useCoRegs } from '@/services/hooks/useAffiliates'
+import React, { useState, useMemo, useEffect } from 'react'
+import { useCoRegs, useResendCoRegs } from '@/services/hooks/useAffiliates'
 import type { CoRegRecord } from '@/services/api/affiliates'
-import { CheckCircle, XCircle, ChevronDown, ChevronUp } from 'lucide-react'
+import { CheckCircle, XCircle, ChevronDown, ChevronUp, RotateCcw } from 'lucide-react'
 import Pagination from '@/components/tables/Pagination'
 import DatePicker from '@/components/form/date-picker'
+import ConfirmationDialog from '@/components/ui/ConfirmationDialog'
+import { useAffiliatePermissions } from '@/hooks/useAffiliatePermissions'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -120,7 +122,7 @@ function ErrorCell({ message }: { message: string | null }) {
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-type PartnerType = 'adzuna' | 'lensa' | 'disqo' | 'cv_library' | 'talent_inc'
+type PartnerType = 'adzuna' | 'lensa' | 'disqo' | 'cv_library' | 'talent_inc' | 'health_jobs_nationwide'
 
 const PARTNER_OPTIONS: { value: PartnerType; label: string }[] = [
   { value: 'adzuna', label: 'Adzuna' },
@@ -128,9 +130,11 @@ const PARTNER_OPTIONS: { value: PartnerType; label: string }[] = [
   { value: 'disqo', label: 'Disqo' },
   { value: 'cv_library', label: 'CV Library' },
   { value: 'talent_inc', label: 'Talent Inc' },
+  { value: 'health_jobs_nationwide', label: 'HealthJobsNationwide' },
 ]
 
 export default function CoRegistrationTab() {
+  const { canUpdate } = useAffiliatePermissions()
   const [page, setPage] = useState(1)
   const [limit] = useState(20)
   const [partner, setPartner] = useState<PartnerType>('adzuna')
@@ -138,6 +142,8 @@ export default function CoRegistrationTab() {
   const [timezone, setTimezone] = useState<'local' | 'utc'>('local')
   const [startDate, setStartDate] = useState(getFirstOfMonth())
   const [endDate, setEndDate] = useState(getTodayDate())
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [pendingResendIds, setPendingResendIds] = useState<string[] | null>(null)
 
   const offsetSuffix = timezone === 'utc' ? '+00:00' : getLocalOffsetSuffix()
 
@@ -154,6 +160,52 @@ export default function CoRegistrationTab() {
   )
 
   const { data, isLoading, isError } = useCoRegs(queryParams)
+  const resendMutation = useResendCoRegs()
+  const isResending = resendMutation.isPending
+
+  useEffect(() => {
+    setSelectedIds(new Set())
+  }, [page, partner, statusFilter, startDate, endDate, timezone])
+
+  const pageIds = data?.records.map((r) => r.id) ?? []
+  const allSelected = pageIds.length > 0 && pageIds.every((id) => selectedIds.has(id))
+
+  const toggleSelectAll = () => {
+    if (allSelected) {
+      setSelectedIds(new Set())
+      return
+    }
+    setSelectedIds(new Set(pageIds))
+  }
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  const requestResend = (ids: string[]) => {
+    if (!ids.length || isResending) return
+    setPendingResendIds(ids)
+  }
+
+  const handleConfirmResend = () => {
+    if (!pendingResendIds?.length) return
+    resendMutation.mutate(
+      { partner, ids: pendingResendIds },
+      {
+        onSuccess: () => {
+          setSelectedIds(new Set())
+          setPendingResendIds(null)
+        },
+      }
+    )
+  }
+
+  const colSpan = canUpdate ? 12 : 10
 
   const handlePartnerChange = (value: PartnerType) => {
     setPartner(value)
@@ -291,6 +343,26 @@ export default function CoRegistrationTab() {
         </div>
       </div>
 
+      {/* ── Bulk actions ────────────────────────────────────────────── */}
+      {canUpdate && (
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            {selectedIds.size > 0
+              ? `${selectedIds.size} selected`
+              : 'Select rows to bulk resend'}
+          </p>
+          <button
+            type="button"
+            onClick={() => requestResend(Array.from(selectedIds))}
+            disabled={selectedIds.size === 0 || isResending}
+            className="inline-flex items-center gap-2 h-10 px-4 rounded-lg bg-primary text-white text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-primary/90"
+          >
+            <RotateCcw className={`w-4 h-4 ${isResending ? 'animate-spin' : ''}`} />
+            Resend selected ({selectedIds.size})
+          </button>
+        </div>
+      )}
+
       {/* ── Summary Cards ─────────────────────────────────────────────── */}
       {data && (
         <div className="grid grid-cols-2 gap-4 sm:max-w-lg sm:grid-cols-3">
@@ -339,6 +411,18 @@ export default function CoRegistrationTab() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
+                  {canUpdate && (
+                    <th className="text-left px-4 py-3 w-10">
+                      <input
+                        type="checkbox"
+                        checked={allSelected}
+                        onChange={toggleSelectAll}
+                        disabled={pageIds.length === 0 || isResending}
+                        className="rounded border-gray-300 dark:border-gray-600"
+                        aria-label="Select all on this page"
+                      />
+                    </th>
+                  )}
                   <th className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 whitespace-nowrap">Email</th>
                   <th className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 whitespace-nowrap">Occupation</th>
                   <th className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 whitespace-nowrap">Location</th>
@@ -346,13 +430,18 @@ export default function CoRegistrationTab() {
                   <th className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 whitespace-nowrap">Response Code</th>
                   <th className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 whitespace-nowrap">Attempts</th>
                   <th className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 whitespace-nowrap">Error Reason</th>
+                  <th className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 whitespace-nowrap">Registration Date</th>
                   <th className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 whitespace-nowrap">Sent At</th>
+                  <th className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 whitespace-nowrap">Resent At</th>
+                  {canUpdate && (
+                    <th className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 whitespace-nowrap">Actions</th>
+                  )}
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
                 {data?.records.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="px-4 py-10 text-center text-gray-500 dark:text-gray-400">
+                    <td colSpan={colSpan} className="px-4 py-10 text-center text-gray-500 dark:text-gray-400">
                       No co-registration records found for the selected filters.
                     </td>
                   </tr>
@@ -362,6 +451,18 @@ export default function CoRegistrationTab() {
                       key={record.id}
                       className="hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors"
                     >
+                      {canUpdate && (
+                        <td className="px-4 py-3">
+                          <input
+                            type="checkbox"
+                            checked={selectedIds.has(record.id)}
+                            onChange={() => toggleSelect(record.id)}
+                            disabled={isResending}
+                            className="rounded border-gray-300 dark:border-gray-600"
+                            aria-label={`Select ${record.email}`}
+                          />
+                        </td>
+                      )}
                       <td className="px-4 py-3 text-gray-800 dark:text-gray-200 font-mono text-xs whitespace-nowrap">
                         {record.email}
                       </td>
@@ -377,13 +478,12 @@ export default function CoRegistrationTab() {
                       <td className="px-4 py-3 text-gray-700 dark:text-gray-300 whitespace-nowrap">
                         {record.responseCode != null ? (
                           <span
-                            className={`font-mono text-xs px-1.5 py-0.5 rounded ${
-                              record.status === 'success'
+                            className={`font-mono text-xs px-1.5 py-0.5 rounded ${record.status === 'success'
                                 ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
                                 : record.status === 'duplicate'
                                   ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
                                   : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-                            }`}
+                              }`}
                           >
                             {record.responseCode}
                           </span>
@@ -398,8 +498,35 @@ export default function CoRegistrationTab() {
                         <ErrorCell message={record.errorMessage} />
                       </td>
                       <td className="px-4 py-3 text-gray-600 dark:text-gray-400 text-xs whitespace-nowrap">
+                        {record.registrationDate ? (
+                          formatDateDisplay(record.registrationDate)
+                        ) : (
+                          <span className="text-gray-400 dark:text-gray-600">—</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-gray-600 dark:text-gray-400 text-xs whitespace-nowrap">
                         {formatDateDisplay(record.sentAt)}
                       </td>
+                      <td className="px-4 py-3 text-gray-600 dark:text-gray-400 text-xs whitespace-nowrap">
+                        {record.resentAt ? (
+                          formatDateDisplay(record.resentAt)
+                        ) : (
+                          <span className="text-gray-400 dark:text-gray-600">—</span>
+                        )}
+                      </td>
+                      {canUpdate && (
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          <button
+                            type="button"
+                            onClick={() => requestResend([record.id])}
+                            disabled={isResending}
+                            className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            <RotateCcw className="w-3.5 h-3.5" />
+                            Resend
+                          </button>
+                        </td>
+                      )}
                     </tr>
                   ))
                 )}
@@ -423,6 +550,26 @@ export default function CoRegistrationTab() {
           )}
         </>
       )}
+
+      <ConfirmationDialog
+        isOpen={!!pendingResendIds}
+        onClose={() => {
+          if (!isResending) setPendingResendIds(null)
+        }}
+        onConfirm={handleConfirmResend}
+        onCancel={() => {
+          if (!isResending) setPendingResendIds(null)
+        }}
+        title="Resend co-registration"
+        message={
+          pendingResendIds?.length === 1
+            ? 'Resend this submission to the partner? This counts toward the partner daily limit.'
+            : `Resend ${pendingResendIds?.length ?? 0} submissions to the partner? This counts toward the partner daily limit.`
+        }
+        confirmText="Resend"
+        cancelText="Cancel"
+        isLoading={isResending}
+      />
     </div>
   )
 }

@@ -66,11 +66,15 @@ export const transformApiUserToFormData = (user: AdminUser, apiRoles: { id: numb
   const permissions: any = {};
   
   if (user.access) {
-    // Check if user has "all" permissions (admin/super admin case)
-    if (user.access.all && typeof user.access.all === 'object') {
-      const allPerms = user.access.all;
-      const standardModules = ['tickets', 'jobSeekers', 'employers', 'applications', 'coupons', 'blog', 'careers'];
-      
+    // Some environments have a legacy permission row literally named "all".
+    // It must never override the real per-module permissions — only honor it
+    // when it is the ONLY key in the access object (old blanket-access shape).
+    const { all: allPerms, ...moduleAccess } = user.access as Record<string, any>;
+    const moduleKeys = Object.keys(moduleAccess);
+
+    if (moduleKeys.length === 0 && allPerms && typeof allPerms === 'object') {
+      const standardModules = ['tickets', 'jobSeekers', 'employers', 'applications', 'coupons', 'blog', 'medicalLibrary', 'careers'];
+
       // Apply "all" permissions to all standard modules
       standardModules.forEach(module => {
         permissions[module] = {
@@ -82,7 +86,7 @@ export const transformApiUserToFormData = (user: AdminUser, apiRoles: { id: numb
       });
     } else {
       // Handle specific module permissions
-      Object.keys(user.access).forEach(moduleKey => {
+      moduleKeys.forEach(moduleKey => {
         // Map API module names to our form structure
         const keyMap: { [key: string]: string } = {
           'Job Seekers': 'jobSeekers',
@@ -93,15 +97,17 @@ export const transformApiUserToFormData = (user: AdminUser, apiRoles: { id: numb
           'Blog': 'blog',
           'Careers': 'careers',
           'Jobs': 'jobs',
+          'Medical Library': 'medicalLibrary',
+          'Unlock Requests': 'unlockRequest',
         };
         
         const mappedKey = keyMap[moduleKey] || moduleKey.toLowerCase().replace(/\s+/g, '');
-        
+
         permissions[mappedKey] = {
-          view: user.access?.[moduleKey]?.view || false,
-          add: user.access?.[moduleKey]?.add || false,
-          edit: user.access?.[moduleKey]?.edit || false,
-          delete: user.access?.[moduleKey]?.delete || false,
+          view: moduleAccess[moduleKey]?.view || false,
+          add: moduleAccess[moduleKey]?.add || false,
+          edit: moduleAccess[moduleKey]?.edit || false,
+          delete: moduleAccess[moduleKey]?.delete || false,
         };
       });
     }

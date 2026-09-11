@@ -76,6 +76,9 @@ const EditUserForm: React.FC<EditUserFormProps> = ({ onSubmit, onCancel, isLoadi
         'tickets',
         'coupons',
         'blog',
+        'medicalLibrary',
+        'unlockRequest',
+        'affiliates',
       ];
       const enhancedPermissions = { ...transformedData.permissions };
 
@@ -128,6 +131,9 @@ const EditUserForm: React.FC<EditUserFormProps> = ({ onSubmit, onCancel, isLoadi
             'tickets',
             'coupons',
             'blog',
+            'medicalLibrary',
+            'unlockRequest',
+            'affiliates',
           ];
 
           standardModules.forEach((module) => {
@@ -307,7 +313,9 @@ const EditUserForm: React.FC<EditUserFormProps> = ({ onSubmit, onCancel, isLoadi
       'tickets',
       'coupons',
       'blog',
+      'medicalLibrary',
       'unlockRequest',
+      'affiliates',
     ];
 
     // Get all available modules from various sources
@@ -324,6 +332,8 @@ const EditUserForm: React.FC<EditUserFormProps> = ({ onSubmit, onCancel, isLoadi
     // Add modules from user data
     if (userData?.access) {
       Object.keys(userData.access).forEach((moduleKey) => {
+        // Legacy "all" permission row is not a real module
+        if (moduleKey === 'all') return;
         const keyMap: { [key: string]: string } = {
           'Job Seekers': 'jobSeekers',
           Tickets: 'tickets',
@@ -333,6 +343,7 @@ const EditUserForm: React.FC<EditUserFormProps> = ({ onSubmit, onCancel, isLoadi
           Blog: 'blog',
           Careers: 'careers',
           Jobs: 'jobs',
+          'Medical Library': 'medicalLibrary',
           'Unlock Requests': 'unlockRequest',
         };
 

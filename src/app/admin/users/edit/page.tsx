@@ -50,8 +50,10 @@ export default function EditUserPage() {
       console.log('Form data received:', JSON.stringify(userData, null, 2));
       
       const access: any = {};
-      
-      // Map frontend permission keys to API permission names
+
+      // Map frontend permission keys to API permission names.
+      // Only include keys that have a matching row in AdminPermissions (DB).
+      // 'medicalLibrary' has NO DB row → omit it (backend would reject it).
       const keyToApiNameMap: { [key: string]: string } = {
         'tickets': 'Tickets',
         'jobSeekers': 'Job Seekers',
@@ -61,14 +63,45 @@ export default function EditUserPage() {
         'blog': 'Blog',
         'careers': 'Careers',
         'jobs': 'Jobs',
+        'unlockRequest': 'Unlock Requests',
+        'affiliates': 'Affiliates',
       };
-      
+
+      // Non-standard modules (e.g. "Unlock Requests") must be sent back with
+      // the exact permission name the API uses — the backend rejects the whole
+      // update when any access key doesn't match a permission row. Build a
+      // reverse map from the names in the user's own access object.
+      const apiNameToFormKeyMap: { [key: string]: string } = {
+        'Job Seekers': 'jobSeekers',
+        'Tickets': 'tickets',
+        'Employers': 'employers',
+        'Applications': 'applications',
+        'Coupons': 'coupons',
+        'Blog': 'blog',
+        'Careers': 'careers',
+        'Jobs': 'jobs',
+        'Medical Library': 'medicalLibrary',
+        'Unlock Requests': 'unlockRequest',
+        'Affiliates': 'affiliates',
+      };
+      const formKeyToExistingApiName: { [key: string]: string } = {};
+      Object.keys(selectedUser.access || {}).forEach(apiName => {
+        if (apiName === 'all') return;
+        const formKey = apiNameToFormKeyMap[apiName] || apiName.toLowerCase().replace(/\s+/g, '');
+        formKeyToExistingApiName[formKey] = apiName;
+      });
+
       Object.keys(userData.permissions).forEach(permissionKey => {
-        const apiModuleName = keyToApiNameMap[permissionKey] || permissionKey;
+        const apiModuleName = keyToApiNameMap[permissionKey] || formKeyToExistingApiName[permissionKey];
         const permissions = userData.permissions[permissionKey];
-        
+
+        if (!apiModuleName) {
+          console.warn(`Skipping permission module with no matching API permission: ${permissionKey}`);
+          return;
+        }
+
         console.log(`Processing permission: ${permissionKey} -> ${apiModuleName}`, permissions);
-        
+
         // Backend expects permission NAMES as keys
         access[apiModuleName] = {
           add: permissions?.add || false,

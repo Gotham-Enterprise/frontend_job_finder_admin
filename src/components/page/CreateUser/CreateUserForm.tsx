@@ -91,6 +91,8 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ onSubmit, onCancel, isL
             'tickets',
             'coupons',
             'blog',
+            'medicalLibrary',
+            'affiliates',
           ];
 
           standardModules.forEach((module) => {
@@ -273,7 +275,9 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ onSubmit, onCancel, isL
       'tickets',
       'coupons',
       'blog',
+      'medicalLibrary',
       'unlockRequest',
+      'affiliates',
     ];
 
     // Get all available modules (including any additional ones from formData.permissions)

@@ -907,3 +907,31 @@ span.flatpickr-weekday,
     box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
   }
 }
+
+
+  .custom-accordion details { 
+    @apply border-b border-gray-200 dark:border-gray-700; 
+  }
+  .custom-accordion details:last-child { 
+    @apply border-b border-gray-200 dark:border-gray-700; 
+  }
+  .custom-accordion summary {
+    list-style: none;
+    @apply flex justify-between items-center py-3 text-lg font-semibold text-gray-900 dark:text-white cursor-pointer;
+  }
+  .custom-accordion summary::-webkit-details-marker {
+    display: none;
+  }
+  .custom-accordion summary svg {
+    width: 20px !important;
+    height: 20px !important;
+    @apply text-gray-500 transition-transform duration-300;
+  }
+  .custom-accordion details[open] summary svg {
+    transform: rotate(90deg);
+  }
+  .custom-accordion p {
+    margin: 0 !important;
+    padding-bottom: 1rem !important;
+    @apply text-gray-600 dark:text-gray-400 text-base leading-relaxed;
+  }
