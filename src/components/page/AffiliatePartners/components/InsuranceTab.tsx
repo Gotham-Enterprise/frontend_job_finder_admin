@@ -75,6 +75,11 @@ function formatUserLabel(user: { email: string; firstName: string | null; lastNa
   return name ? `${name} (${user.email})` : user.email
 }
 
+function formatNullable(value: string | null | undefined): string {
+  if (!value || !value.trim()) return '—'
+  return value
+}
+
 function formatEnumLabel(value: string): string {
   return value
     .toLowerCase()
@@ -412,15 +417,19 @@ export default function InsuranceTab() {
                     <th className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 whitespace-nowrap">Partner</th>
                     <th className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 whitespace-nowrap">Insurance Type</th>
                     <th className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 whitespace-nowrap">Form Type</th>
-                    <th className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 whitespace-nowrap">Form ID</th>
-                    <th className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 whitespace-nowrap">User</th>
+                    <th className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 whitespace-nowrap">First Name</th>
+                    <th className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 whitespace-nowrap">Last Name</th>
+                    <th className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 whitespace-nowrap">Occupation</th>
+                    <th className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 whitespace-nowrap">Email</th>
+                    <th className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 whitespace-nowrap">Phone</th>
+                    <th className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 whitespace-nowrap">Address</th>
                     <th className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 whitespace-nowrap">Submitted At</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
                   {submissionsData?.records.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="px-4 py-10 text-center text-gray-500 dark:text-gray-400">
+                      <td colSpan={10} className="px-4 py-10 text-center text-gray-500 dark:text-gray-400">
                         No submission records found for the selected filters.
                       </td>
                     </tr>
@@ -439,11 +448,23 @@ export default function InsuranceTab() {
                         <td className="px-4 py-3 text-gray-700 dark:text-gray-300 whitespace-nowrap">
                           {formatEnumLabel(record.formType)}
                         </td>
-                        <td className="px-4 py-3 text-gray-600 dark:text-gray-400 font-mono text-xs whitespace-nowrap">
-                          {record.formId.slice(0, 12)}…
+                        <td className="px-4 py-3 text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                          {formatNullable(record.firstName)}
                         </td>
-                        <td className="px-4 py-3 text-gray-700 dark:text-gray-300 text-xs whitespace-nowrap">
-                          {formatUserLabel(record.user)}
+                        <td className="px-4 py-3 text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                          {formatNullable(record.lastName)}
+                        </td>
+                        <td className="px-4 py-3 text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                          {formatNullable(record.occupation)}
+                        </td>
+                        <td className="px-4 py-3 text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                          {formatNullable(record.email)}
+                        </td>
+                        <td className="px-4 py-3 text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                          {formatNullable(record.phone)}
+                        </td>
+                        <td className="px-4 py-3 text-gray-700 dark:text-gray-300 max-w-xs">
+                          {formatNullable(record.address)}
                         </td>
                         <td className="px-4 py-3 text-gray-600 dark:text-gray-400 text-xs whitespace-nowrap">
                           {formatDateDisplay(record.createdAt)}
