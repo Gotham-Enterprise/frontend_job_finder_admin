@@ -20,6 +20,12 @@ export interface InsuranceSubmissionRecord {
   status: InsuranceSubmissionStatus;
   userId: string | null;
   customerId: string;
+  firstName: string | null;
+  lastName: string | null;
+  occupation: string | null;
+  email: string | null;
+  phone: string | null;
+  address: string | null;
   createdAt: string;
   updatedAt: string;
   user: InsuranceUserSummary | null;
