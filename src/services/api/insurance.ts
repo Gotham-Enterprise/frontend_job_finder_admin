@@ -36,6 +36,7 @@ export interface InsuranceRedirectRecord {
   partnerSlug: string;
   insuranceType: InsuranceType;
   userId: string | null;
+  ipAddress: string | null;
   redirectedAt: string;
   user: InsuranceUserSummary | null;
 }
