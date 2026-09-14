@@ -102,6 +102,7 @@ const INSURANCE_TYPE_OPTIONS: { value: InsuranceType | 'all'; label: string }[] 
 const PARTNER_OPTIONS: { value: string; label: string }[] = [
   { value: 'all', label: 'All Partners' },
   { value: 'cmf-group', label: 'CM&F Group' },
+  { value: 'berxi', label: 'Berxi' },
 ]
 
 // ─── Main Component ───────────────────────────────────────────────────────────
@@ -481,13 +482,14 @@ export default function InsuranceTab() {
                     <th className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 whitespace-nowrap">Partner</th>
                     <th className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 whitespace-nowrap">Insurance Type</th>
                     <th className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 whitespace-nowrap">User</th>
+                    <th className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 whitespace-nowrap">IP Address</th>
                     <th className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 whitespace-nowrap">Redirected At</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
                   {redirectsData?.records.length === 0 ? (
                     <tr>
-                      <td colSpan={4} className="px-4 py-10 text-center text-gray-500 dark:text-gray-400">
+                      <td colSpan={5} className="px-4 py-10 text-center text-gray-500 dark:text-gray-400">
                         No redirect records found for the selected filters.
                       </td>
                     </tr>
@@ -505,6 +507,9 @@ export default function InsuranceTab() {
                         </td>
                         <td className="px-4 py-3 text-gray-700 dark:text-gray-300 text-xs whitespace-nowrap">
                           {formatUserLabel(record.user)}
+                        </td>
+                        <td className="px-4 py-3 text-gray-700 dark:text-gray-300 text-xs whitespace-nowrap">
+                          {formatNullable(record.ipAddress)}
                         </td>
                         <td className="px-4 py-3 text-gray-600 dark:text-gray-400 text-xs whitespace-nowrap">
                           {formatDateDisplay(record.redirectedAt)}
