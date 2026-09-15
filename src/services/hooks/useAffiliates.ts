@@ -554,6 +554,7 @@ export const useCreateFeedRule = () => {
       createPartnerFeedRule(partnerId, data),
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: affiliateQueryKeys.feedRules(variables.partnerId) });
+      queryClient.invalidateQueries({ queryKey: [...affiliateQueryKeys.all, "feed-job-counts"] });
       showToast.success("Rule Created!", "Feed rule has been created successfully.");
     },
     onError: (error: any) => {
@@ -578,6 +579,7 @@ export const useUpdateFeedRule = () => {
     }) => updatePartnerFeedRule(ruleId, data),
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: affiliateQueryKeys.feedRules(variables.partnerId) });
+      queryClient.invalidateQueries({ queryKey: [...affiliateQueryKeys.all, "feed-job-counts"] });
       showToast.success("Rule Updated!", "Feed rule has been updated successfully.");
     },
     onError: (error: any) => {
@@ -595,6 +597,7 @@ export const useDeleteFeedRule = () => {
       deletePartnerFeedRule(ruleId),
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: affiliateQueryKeys.feedRules(variables.partnerId) });
+      queryClient.invalidateQueries({ queryKey: [...affiliateQueryKeys.all, "feed-job-counts"] });
       showToast.success("Rule Deleted!", "Feed rule has been deleted successfully.");
     },
     onError: (error: any) => {

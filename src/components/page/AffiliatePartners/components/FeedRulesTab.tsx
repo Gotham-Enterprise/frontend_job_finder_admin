@@ -129,6 +129,9 @@ export default function FeedRulesTab() {
                 States
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                Cities
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 CPC
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
@@ -145,13 +148,13 @@ export default function FeedRulesTab() {
           <tbody className="bg-white dark:bg-transparent divide-y divide-gray-200 dark:divide-gray-800">
             {loadingRules ? (
               <tr>
-                <td colSpan={9} className="px-6 py-12 text-center">
+                <td colSpan={10} className="px-6 py-12 text-center">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
                 </td>
               </tr>
             ) : !selectedPartnerId ? (
               <tr>
-                <td colSpan={9} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                <td colSpan={10} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
                   Select a partner to view feed rules
                 </td>
               </tr>
@@ -172,6 +175,9 @@ export default function FeedRulesTab() {
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
                     {rule.states.length === 0 ? 'All' : rule.states.join(', ')}
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
+                    {!rule.cities?.length ? 'All' : rule.cities.join(', ')}
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
                     {rule.cpc != null ? `$${rule.cpc.toFixed(2)}` : '—'}
@@ -216,7 +222,7 @@ export default function FeedRulesTab() {
               ))
             ) : (
               <tr>
-                <td colSpan={9} className="px-6 py-12 text-center">
+                <td colSpan={10} className="px-6 py-12 text-center">
                   <ListChecks className="w-12 h-12 text-gray-400 mx-auto mb-3" />
                   <p className="text-gray-500 dark:text-gray-400">No feed rules for this partner</p>
                   {canCreate && (
