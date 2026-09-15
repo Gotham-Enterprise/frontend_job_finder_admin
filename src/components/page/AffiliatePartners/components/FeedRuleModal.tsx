@@ -1,12 +1,30 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
-import { X } from 'lucide-react'
+import React, { useEffect, useMemo, useState } from 'react'
+import { Plus, X } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import type { AffiliatePartnerFeedRule, CreateFeedRuleData } from '@/services/api/affiliates'
 import { apiGet } from '@/services/api/apiUtils'
 import Select from '@/components/form/Select'
+import SelectCity from '@/components/molecules/SelectCity'
 import { US_STATES } from '@/constants/usStates'
+import { US_STATE_CODE_TO_NAME } from '@/lib/useStatesCities'
+
+const US_STATE_NAME_TO_CODE: Record<string, string> = Object.fromEntries(
+  Object.entries(US_STATE_CODE_TO_NAME).map(([code, name]) => [name, code])
+)
+
+const EMPTY_FORM: CreateFeedRuleData = {
+  ruleGroupLabel: '',
+  occupationName: '',
+  specialtyName: '',
+  states: [],
+  cities: [],
+  workSetting: null,
+  cpc: null,
+  cpa: null,
+  isActive: true,
+}
 
 interface FeedRuleModalProps {
   isOpen: boolean
@@ -23,17 +41,10 @@ export default function FeedRuleModal({
   onSubmit,
   isSubmitting,
 }: FeedRuleModalProps) {
-  const [form, setForm] = useState<CreateFeedRuleData>({
-    ruleGroupLabel: '',
-    occupationName: '',
-    specialtyName: '',
-    states: [],
-    workSetting: null,
-    cpc: null,
-    cpa: null,
-    isActive: true,
-  })
+  const [form, setForm] = useState<CreateFeedRuleData>(EMPTY_FORM)
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [cityStateName, setCityStateName] = useState('')
+  const [cityName, setCityName] = useState('')
 
   const { data: occupationsData, isLoading: loadingOccupations } = useQuery({
     queryKey: ['dropdowns', 'occupations'],
@@ -61,25 +72,24 @@ export default function FeedRuleModal({
         occupationName: rule.occupationName,
         specialtyName: rule.specialtyName || '',
         states: rule.states || [],
+        cities: rule.cities || [],
         workSetting: rule.workSetting || null,
         cpc: rule.cpc ?? null,
         cpa: rule.cpa ?? null,
         isActive: rule.isActive,
       })
     } else {
-      setForm({
-        ruleGroupLabel: '',
-        occupationName: '',
-        specialtyName: '',
-        states: [],
-        workSetting: null,
-        cpc: null,
-        cpa: null,
-        isActive: true,
-      })
+      setForm(EMPTY_FORM)
     }
+    setCityStateName('')
+    setCityName('')
     setErrors({})
   }, [rule, isOpen])
+
+  const cityStateCode = useMemo(
+    () => (cityStateName ? US_STATE_NAME_TO_CODE[cityStateName] || '' : ''),
+    [cityStateName]
+  )
 
   if (!isOpen) return null
 
@@ -103,6 +113,26 @@ export default function FeedRuleModal({
     )
   }
 
+  const addCity = () => {
+    const city = cityName.trim()
+    if (!city || !cityStateName) return
+    const token = `${city}, ${cityStateName}`
+    const existing = form.cities || []
+    if (existing.some((entry) => entry.toLowerCase() === token.toLowerCase())) {
+      setCityName('')
+      return
+    }
+    set('cities', [...existing, token])
+    setCityName('')
+  }
+
+  const removeCity = (token: string) => {
+    set(
+      'cities',
+      (form.cities || []).filter((entry) => entry !== token)
+    )
+  }
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     const errs: Record<string, string> = {}
@@ -111,10 +141,19 @@ export default function FeedRuleModal({
       setErrors(errs)
       return
     }
+    const cities = [...(form.cities || [])]
+    const pendingCity = cityName.trim()
+    if (pendingCity && cityStateName) {
+      const token = `${pendingCity}, ${cityStateName}`
+      if (!cities.some((entry) => entry.toLowerCase() === token.toLowerCase())) {
+        cities.push(token)
+      }
+    }
     onSubmit({
       ...form,
       ruleGroupLabel: form.ruleGroupLabel || undefined,
       specialtyName: form.specialtyName || null,
+      cities,
       workSetting: form.workSetting || null,
       cpc: form.cpc === null || form.cpc === undefined || form.cpc === ('' as unknown as number)
         ? null
@@ -236,6 +275,70 @@ export default function FeedRuleModal({
                   </label>
                 ))}
               </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Cities
+              </label>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                Optional. Leave empty to match all cities in the selected states
+              </p>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <select
+                  value={cityStateName}
+                  onChange={(e) => {
+                    setCityStateName(e.target.value)
+                    setCityName('')
+                  }}
+                  className="sm:w-44 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-800 dark:text-white"
+                >
+                  <option value="">Select state</option>
+                  {US_STATES.map((state) => (
+                    <option key={state} value={state}>
+                      {state}
+                    </option>
+                  ))}
+                </select>
+                <div className="flex-1">
+                  <SelectCity
+                    value={cityName}
+                    stateValue={cityStateCode}
+                    onChange={setCityName}
+                    inputClassName="!h-10"
+                    placeholder={cityStateCode ? 'Search city' : 'Select a state first'}
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={addCity}
+                  disabled={!cityStateName || !cityName.trim()}
+                  className="inline-flex items-center justify-center gap-1 px-3 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add
+                </button>
+              </div>
+              {(form.cities || []).length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-3">
+                  {(form.cities || []).map((token) => (
+                    <span
+                      key={token}
+                      className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200"
+                    >
+                      {token}
+                      <button
+                        type="button"
+                        onClick={() => removeCity(token)}
+                        className="text-gray-500 hover:text-gray-800 dark:hover:text-white"
+                        aria-label={`Remove ${token}`}
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="grid grid-cols-2 gap-4">
