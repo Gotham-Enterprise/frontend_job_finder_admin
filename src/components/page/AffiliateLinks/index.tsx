@@ -13,6 +13,9 @@ import LinkModal from './components/LinkModal'
 import LinkTypesConfigModal from './components/LinkTypesConfigModal'
 import { useAffiliatePermissions } from '@/hooks/useAffiliatePermissions'
 
+const stripHtml = (html: string): string =>
+  html.replace(/<[^>]*>/g, ' ').replace(/&nbsp;/gi, ' ').replace(/\s+/g, ' ').trim()
+
 export default function AffiliateLinks() {
   const { canCreate, canUpdate, canDelete } = useAffiliatePermissions()
   const [page, setPage] = useState(1)
@@ -233,9 +236,9 @@ export default function AffiliateLinks() {
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    <div className="text-sm text-gray-500 dark:text-gray-400 max-w-[220px] line-clamp-2" title={link.overview || ''}>
-                      {link.overview || '—'}
-                    </div>
+<div className="text-sm text-gray-500 dark:text-gray-400 max-w-[220px] line-clamp-2" title={link.overview || ''}>
+                          {stripHtml(link.overview || '') || '—'}
+                        </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-500 dark:text-gray-400">
