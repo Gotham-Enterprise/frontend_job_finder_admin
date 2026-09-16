@@ -276,7 +276,7 @@ export default function AnalyticsTab() {
 
   const filteredPartners = (partnersData?.data ?? []).filter((partner) =>
     viewMode === 'selling'
-      ? !partner.outboundFeedSlug
+      ? !partner.outboundFeedSlug && !partner.landingEnabled
       : !!partner.outboundFeedSlug
   )
 

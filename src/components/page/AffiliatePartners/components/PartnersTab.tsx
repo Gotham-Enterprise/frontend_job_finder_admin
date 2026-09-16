@@ -11,7 +11,7 @@ import {
   useRebuildOutboundFeed,
 } from '@/services/hooks/useAffiliates'
 import type { AffiliatePartner, CreatePartnerData } from '@/services/api/affiliates'
-import { Edit2, Trash2, Plus, Mail, Phone, Globe, CheckCircle, XCircle, AlertCircle, Building2, RefreshCw, Clock, AlertTriangle, Rss } from 'lucide-react'
+import { Edit2, Trash2, Plus, Mail, Phone, Globe, CheckCircle, XCircle, AlertCircle, Building2, RefreshCw, Clock, AlertTriangle, Rss, MousePointerClick } from 'lucide-react'
 import Pagination from '@/components/tables/Pagination'
 import PartnerModal from './PartnerModal'
 import ReportRecipientsModal from './ReportRecipientsModal'
@@ -128,6 +128,19 @@ export default function PartnersTab() {
     )
   }
 
+  const getLandingBadge = (partner: AffiliatePartner) => {
+    if (!partner.landingEnabled) {
+      return <span className="text-sm text-gray-500">Disabled</span>
+    }
+
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
+        <MousePointerClick className="w-3 h-3" />
+        Enabled
+      </span>
+    )
+  }
+
   const getStatusBadge = (status: string) => {
     const styles = {
       active: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
@@ -190,6 +203,9 @@ export default function PartnersTab() {
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 Outbound Feed
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                Landing
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 Status
@@ -308,6 +324,7 @@ export default function PartnersTab() {
                   </div>
                 </td>
                 <td className="px-6 py-4">{getOutboundFeedBadge(partner)}</td>
+                <td className="px-6 py-4">{getLandingBadge(partner)}</td>
                 <td className="px-6 py-4 whitespace-nowrap">{getStatusBadge(partner.status)}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                   {new Date(partner.createdAt).toLocaleDateString()}
