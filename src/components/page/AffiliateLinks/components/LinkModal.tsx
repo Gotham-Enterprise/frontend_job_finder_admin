@@ -402,13 +402,15 @@ export default function LinkModal({ isOpen, onClose, link, onSubmit, isSubmittin
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Course Overview
               </label>
-              <textarea
-                rows={5}
-                value={formData.overview || ''}
-                onChange={(e) => setFormData({ ...formData, overview: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent transition-all resize-y min-h-[120px]"
-                placeholder="Brief overview of the course content..."
-              />
+              <div className="border border-gray-300 dark:border-gray-700 rounded-lg overflow-hidden bg-white dark:bg-gray-800">
+                <RichTextEditor
+                  content={formData.overview || ''}
+                  onChange={(html) => setFormData({ ...formData, overview: html })}
+                  placeholder="Brief overview of the course content..."
+                  minHeight={120}
+                  hideImageButton
+                />
+              </div>
             </div>
 
             <div>
