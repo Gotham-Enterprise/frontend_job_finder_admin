@@ -31,6 +31,9 @@ export interface AffiliatePartner {
   outboundFeedLastBuildStatus?: "success" | "failed" | "in_progress";
   outboundFeedLastBuildError?: string;
   outboundFeedJobCount?: number;
+  landingEnabled?: boolean;
+  landingSlug?: string | null;
+  landingUrl?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -310,6 +313,8 @@ export interface CreatePartnerData {
   outboundFeedCronExpression?: string;
   outboundFeedTimezone?: string;
   outboundFeedFilename?: string;
+  landingEnabled?: boolean;
+  landingSlug?: string;
 }
 
 export interface UpdatePartnerData {
@@ -327,6 +332,8 @@ export interface UpdatePartnerData {
   outboundFeedCronExpression?: string;
   outboundFeedTimezone?: string;
   outboundFeedFilename?: string;
+  landingEnabled?: boolean;
+  landingSlug?: string;
 }
 
 export interface CreateFeedRuleData {
@@ -402,11 +409,15 @@ export const getAffiliatePartners = async (params?: {
   page?: number;
   limit?: number;
   status?: string;
+  landingEnabled?: boolean;
 }): Promise<{ data: AffiliatePartner[]; total: number; page: number; totalPages: number }> => {
   const queryParams = new URLSearchParams();
   if (params?.page) queryParams.append("page", params.page.toString());
   if (params?.limit) queryParams.append("limit", params.limit.toString());
   if (params?.status) queryParams.append("status", params.status);
+  if (params?.landingEnabled !== undefined) {
+    queryParams.append("landingEnabled", String(params.landingEnabled));
+  }
   const queryString = queryParams.toString();
   const res = await apiGet<{
     data: AffiliatePartner[];
@@ -640,6 +651,88 @@ export const getAffiliateAnalytics = async (params?: {
     `/api/admin/affiliates/analytics${queryString ? `?${queryString}` : ""}`
   );
   return response.data;
+};
+
+export interface LandingAnalytics {
+  totalClicks: number;
+  uniqueIpAddresses: number;
+  clicksOverTime: Array<{
+    date: string;
+    clicks: number;
+    uniqueIpAddresses: number;
+  }>;
+}
+
+export interface LandingClickRow {
+  id: string;
+  clickedAt: string;
+  ipAddress: string | null;
+  userAgent: string | null;
+  referrer: string | null;
+  affiliate: {
+    id: string;
+    name: string;
+  };
+}
+
+export interface LandingClicksResponse {
+  data: LandingClickRow[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
+export type LandingAnalyticsParams = {
+  affiliateId?: string;
+  startDate?: string;
+  endDate?: string;
+  deduplicate?: boolean;
+};
+
+export type LandingClicksParams = LandingAnalyticsParams & {
+  page?: number;
+  limit?: number;
+};
+
+export const getLandingAnalytics = async (
+  params?: LandingAnalyticsParams
+): Promise<LandingAnalytics> => {
+  const queryParams = new URLSearchParams();
+  if (params?.affiliateId) queryParams.append("affiliateId", params.affiliateId);
+  if (params?.startDate) queryParams.append("startDate", params.startDate);
+  if (params?.endDate) queryParams.append("endDate", params.endDate);
+  if (params?.deduplicate !== undefined) {
+    queryParams.append("deduplicate", String(params.deduplicate));
+  }
+  const queryString = queryParams.toString();
+  const response = await apiGet<{ success: boolean; data: LandingAnalytics }>(
+    `/api/admin/affiliates/analytics/landing${queryString ? `?${queryString}` : ""}`
+  );
+  return response.data;
+};
+
+export const getLandingClicks = async (
+  params?: LandingClicksParams
+): Promise<LandingClicksResponse> => {
+  const queryParams = new URLSearchParams();
+  if (params?.affiliateId) queryParams.append("affiliateId", params.affiliateId);
+  if (params?.startDate) queryParams.append("startDate", params.startDate);
+  if (params?.endDate) queryParams.append("endDate", params.endDate);
+  if (params?.page) queryParams.append("page", String(params.page));
+  if (params?.limit) queryParams.append("limit", String(params.limit));
+  const queryString = queryParams.toString();
+  const response = await apiGet<{
+    success: boolean;
+    data: LandingClickRow[];
+    pagination: LandingClicksResponse["pagination"];
+  }>(`/api/admin/affiliates/landing-clicks${queryString ? `?${queryString}` : ""}`);
+  return {
+    data: response.data,
+    pagination: response.pagination,
+  };
 };
 
 export const getAffiliateFeedJobCounts = async (params?: {

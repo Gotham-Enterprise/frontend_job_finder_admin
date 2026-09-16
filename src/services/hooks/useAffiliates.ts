@@ -12,6 +12,8 @@ import {
   reprocessAffiliateBatch,
   cancelAffiliateBatch,
   getAffiliateAnalytics,
+  getLandingAnalytics,
+  getLandingClicks,
   getAffiliateFeedJobCounts,
   getAffiliateConversions,
   getConversionAudit,
@@ -33,6 +35,8 @@ import {
   UpdatePartnerData,
   CreateFeedRuleData,
   UpdateFeedRuleData,
+  LandingAnalyticsParams,
+  LandingClicksParams,
   getAffiliateLinks,
   createAffiliateLink,
   updateAffiliateLink,
@@ -59,6 +63,8 @@ export const affiliateQueryKeys = {
   batchStatus: (id: string) => [...affiliateQueryKeys.batches(), id, "status"] as const,
   batchJobs: (id: string, page: number) => [...affiliateQueryKeys.batches(), id, "jobs", page] as const,
   analytics: (filters: any) => [...affiliateQueryKeys.all, "analytics", filters] as const,
+  landingAnalytics: (filters: any) => [...affiliateQueryKeys.all, "landing-analytics", filters] as const,
+  landingClicks: (filters: any) => [...affiliateQueryKeys.all, "landing-clicks", filters] as const,
   feedJobCounts: (affiliateId?: string) =>
     [...affiliateQueryKeys.all, "feed-job-counts", affiliateId || "all"] as const,
   conversions: (filters: any) => [...affiliateQueryKeys.all, "conversions", filters] as const,
@@ -69,7 +75,12 @@ export const affiliateQueryKeys = {
 };
 
 // Partner Management Hooks
-export const useAffiliatePartners = (params?: { page?: number; limit?: number; status?: string }) => {
+export const useAffiliatePartners = (params?: {
+  page?: number;
+  limit?: number;
+  status?: string;
+  landingEnabled?: boolean;
+}) => {
   return useQuery({
     queryKey: [...affiliateQueryKeys.partners(), params || {}],
     queryFn: () => getAffiliatePartners(params),
@@ -398,6 +409,24 @@ export const useAffiliateAnalytics = (params?: {
     queryFn: () => getAffiliateAnalytics(params),
     staleTime: 1000 * 60 * 5,
     gcTime: 1000 * 60 * 10,
+  });
+};
+
+export const useLandingAnalytics = (params?: LandingAnalyticsParams) => {
+  return useQuery({
+    queryKey: affiliateQueryKeys.landingAnalytics(params || {}),
+    queryFn: () => getLandingAnalytics(params),
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 10,
+  });
+};
+
+export const useLandingClicks = (params?: LandingClicksParams) => {
+  return useQuery({
+    queryKey: affiliateQueryKeys.landingClicks(params || {}),
+    queryFn: () => getLandingClicks(params),
+    staleTime: 1000 * 30,
+    gcTime: 1000 * 60 * 5,
   });
 };
 
