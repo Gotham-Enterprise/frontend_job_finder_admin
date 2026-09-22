@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useEffect, useMemo, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import {
   useAffiliatePartners,
   usePartnerFeedRules,
@@ -14,33 +15,54 @@ import FeedRuleModal from './FeedRuleModal'
 import { useAffiliatePermissions } from '@/hooks/useAffiliatePermissions'
 
 export default function FeedRulesTab() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
   const { canCreate, canUpdate, canDelete } = useAffiliatePermissions()
-  const [selectedPartnerId, setSelectedPartnerId] = useState<string>('')
-  const [outboundOnly, setOutboundOnly] = useState(true)
+  const partnerFromUrl = searchParams.get('partner') ?? ''
+  const outboundOnly = searchParams.get('outbound') !== '0'
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingRule, setEditingRule] = useState<AffiliatePartnerFeedRule | null>(null)
 
   const { data: partnersData, isLoading: loadingPartners } = useAffiliatePartners({ limit: 100 })
-  const { data: rules, isLoading: loadingRules } = usePartnerFeedRules(selectedPartnerId)
-  const createMutation = useCreateFeedRule()
-  const updateMutation = useUpdateFeedRule()
-  const deleteMutation = useDeleteFeedRule()
 
   const visiblePartners = useMemo(() => {
     const all = partnersData?.data ?? []
     return outboundOnly ? all.filter((partner) => partner.outboundFeedEnabled) : all
   }, [partnersData, outboundOnly])
 
+  const selectedPartnerId = useMemo(() => {
+    if (loadingPartners || !partnersData) return partnerFromUrl
+    if (!visiblePartners.length) return ''
+    if (visiblePartners.some((partner) => partner.id === partnerFromUrl)) return partnerFromUrl
+    return visiblePartners[0].id
+  }, [loadingPartners, partnersData, visiblePartners, partnerFromUrl])
+
+  const { data: rules, isLoading: loadingRules } = usePartnerFeedRules(selectedPartnerId)
+  const createMutation = useCreateFeedRule()
+  const updateMutation = useUpdateFeedRule()
+  const deleteMutation = useDeleteFeedRule()
+
+  const replaceFeedRulesParams = (next: { partner?: string; outboundOnly?: boolean }) => {
+    const params = new URLSearchParams(searchParams.toString())
+    params.set('tab', 'feed-rules')
+    const partner = next.partner !== undefined ? next.partner : partnerFromUrl
+    const outbound = next.outboundOnly !== undefined ? next.outboundOnly : outboundOnly
+    if (partner) params.set('partner', partner)
+    else params.delete('partner')
+    if (outbound) params.delete('outbound')
+    else params.set('outbound', '0')
+    router.replace(`?${params.toString()}`, { scroll: false })
+  }
+
   useEffect(() => {
-    if (!visiblePartners.length) {
-      if (selectedPartnerId) setSelectedPartnerId('')
-      return
-    }
-    const stillVisible = visiblePartners.some((partner) => partner.id === selectedPartnerId)
-    if (!stillVisible) {
-      setSelectedPartnerId(visiblePartners[0].id)
-    }
-  }, [visiblePartners, selectedPartnerId])
+    if (loadingPartners || !partnersData) return
+    if (selectedPartnerId === partnerFromUrl) return
+    const params = new URLSearchParams(searchParams.toString())
+    params.set('tab', 'feed-rules')
+    if (selectedPartnerId) params.set('partner', selectedPartnerId)
+    else params.delete('partner')
+    router.replace(`?${params.toString()}`, { scroll: false })
+  }, [loadingPartners, partnersData, selectedPartnerId, partnerFromUrl, searchParams, router])
 
   const handleCreate = () => {
     setEditingRule(null)
@@ -102,7 +124,7 @@ export default function FeedRulesTab() {
           </label>
           <select
             value={selectedPartnerId}
-            onChange={(e) => setSelectedPartnerId(e.target.value)}
+            onChange={(e) => replaceFeedRulesParams({ partner: e.target.value })}
             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-800 dark:text-white"
           >
             <option value="">Select a partner</option>
@@ -118,7 +140,7 @@ export default function FeedRulesTab() {
           <input
             type="checkbox"
             checked={outboundOnly}
-            onChange={(e) => setOutboundOnly(e.target.checked)}
+            onChange={(e) => replaceFeedRulesParams({ outboundOnly: e.target.checked })}
             className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
           />
           <span className="text-sm text-gray-700 dark:text-gray-300">Outbound enabled</span>
