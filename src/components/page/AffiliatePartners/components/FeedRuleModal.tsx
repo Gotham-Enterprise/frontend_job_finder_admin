@@ -65,6 +65,22 @@ export default function FeedRuleModal({
     staleTime: 1000 * 60 * 60,
   })
 
+  const occupationId = useMemo(() => {
+    if (!form.occupationName) return null
+    const match = (occupationsData?.data ?? []).find((o) => o.name === form.occupationName)
+    return match?.id ?? null
+  }, [form.occupationName, occupationsData])
+
+  const { data: specialtiesData, isLoading: loadingSpecialties } = useQuery({
+    queryKey: ['dropdowns', 'specialties', occupationId],
+    queryFn: () =>
+      apiGet<{
+        success: boolean
+        data: { specialty: { id: number; name: string }[] }
+      }>(`/api/categories/specialties/occupation/${occupationId}`),
+    enabled: isOpen && occupationId != null,
+  })
+
   useEffect(() => {
     if (rule) {
       setForm({
@@ -177,6 +193,34 @@ export default function FeedRuleModal({
     })),
   ]
 
+  const specialtyOptions = (() => {
+    const seen = new Set<string>()
+    const options: { value: string; label: string }[] = []
+    const specialtiesReady = Boolean(form.occupationName) && !loadingOccupations && !loadingSpecialties
+    if (specialtiesReady) {
+      options.push({ value: '', label: 'Any' })
+    }
+    for (const specialty of specialtiesData?.data?.specialty ?? []) {
+      const name = specialty.name?.trim()
+      if (!name) continue
+      const key = name.toLowerCase()
+      if (seen.has(key)) continue
+      seen.add(key)
+      options.push({ value: name, label: name })
+    }
+    const current = form.specialtyName?.trim()
+    if (current && !seen.has(current.toLowerCase())) {
+      options.push({ value: current, label: current })
+    }
+    return options
+  })()
+
+  const specialtyPlaceholder = !form.occupationName
+    ? 'Select an occupation first'
+    : loadingOccupations || loadingSpecialties
+      ? 'Loading…'
+      : 'Any'
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="fixed inset-0 bg-black/50" onClick={onClose} />
@@ -218,7 +262,10 @@ export default function FeedRuleModal({
                 placeholder={loadingOccupations ? 'Loading…' : 'Select occupation'}
                 value={form.occupationName || ''}
                 options={occupationOptions}
-                onChange={(val) => set('occupationName', val)}
+                onChange={(val) => {
+                  set('occupationName', val)
+                  if (val !== form.occupationName) set('specialtyName', '')
+                }}
               />
               {errors.occupationName && (
                 <p className="text-red-500 text-xs mt-1">{errors.occupationName}</p>
@@ -229,13 +276,18 @@ export default function FeedRuleModal({
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Specialty
               </label>
-              <input
-                type="text"
+              <Select
+                searchable
+                searchPlaceholder="Search specialties…"
+                placeholder={specialtyPlaceholder}
                 value={form.specialtyName || ''}
-                onChange={(e) => set('specialtyName', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-800 dark:text-white"
-                placeholder="Optional — leave blank for any specialty"
+                options={specialtyOptions}
+                disabled={!form.occupationName || loadingOccupations || loadingSpecialties}
+                onChange={(val) => set('specialtyName', val)}
               />
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                Leave as Any to match all specialties
+              </p>
             </div>
 
             <div>

@@ -80,6 +80,8 @@ export const useAffiliatePartners = (params?: {
   limit?: number;
   status?: string;
   landingEnabled?: boolean;
+  outboundFeedEnabled?: boolean;
+  search?: string;
 }) => {
   return useQuery({
     queryKey: [...affiliateQueryKeys.partners(), params || {}],

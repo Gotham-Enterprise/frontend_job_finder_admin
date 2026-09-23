@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useEffect, useMemo, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import {
   useAffiliatePartners,
   usePartnerFeedRules,
@@ -14,28 +15,54 @@ import FeedRuleModal from './FeedRuleModal'
 import { useAffiliatePermissions } from '@/hooks/useAffiliatePermissions'
 
 export default function FeedRulesTab() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
   const { canCreate, canUpdate, canDelete } = useAffiliatePermissions()
-  const [selectedPartnerId, setSelectedPartnerId] = useState<string>('')
+  const partnerFromUrl = searchParams.get('partner') ?? ''
+  const outboundOnly = searchParams.get('outbound') !== '0'
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingRule, setEditingRule] = useState<AffiliatePartnerFeedRule | null>(null)
 
   const { data: partnersData, isLoading: loadingPartners } = useAffiliatePartners({ limit: 100 })
+
+  const visiblePartners = useMemo(() => {
+    const all = partnersData?.data ?? []
+    return outboundOnly ? all.filter((partner) => partner.outboundFeedEnabled) : all
+  }, [partnersData, outboundOnly])
+
+  const selectedPartnerId = useMemo(() => {
+    if (loadingPartners || !partnersData) return partnerFromUrl
+    if (!visiblePartners.length) return ''
+    if (visiblePartners.some((partner) => partner.id === partnerFromUrl)) return partnerFromUrl
+    return visiblePartners[0].id
+  }, [loadingPartners, partnersData, visiblePartners, partnerFromUrl])
+
   const { data: rules, isLoading: loadingRules } = usePartnerFeedRules(selectedPartnerId)
   const createMutation = useCreateFeedRule()
   const updateMutation = useUpdateFeedRule()
   const deleteMutation = useDeleteFeedRule()
 
-  const defaultPartnerId = useMemo(() => {
-    if (!partnersData?.data?.length) return ''
-    const outboundPartner = partnersData.data.find((p) => p.outboundFeedEnabled)
-    return outboundPartner?.id || partnersData.data[0].id
-  }, [partnersData])
+  const replaceFeedRulesParams = (next: { partner?: string; outboundOnly?: boolean }) => {
+    const params = new URLSearchParams(searchParams.toString())
+    params.set('tab', 'feed-rules')
+    const partner = next.partner !== undefined ? next.partner : partnerFromUrl
+    const outbound = next.outboundOnly !== undefined ? next.outboundOnly : outboundOnly
+    if (partner) params.set('partner', partner)
+    else params.delete('partner')
+    if (outbound) params.delete('outbound')
+    else params.set('outbound', '0')
+    router.replace(`?${params.toString()}`, { scroll: false })
+  }
 
   useEffect(() => {
-    if (!selectedPartnerId && defaultPartnerId) {
-      setSelectedPartnerId(defaultPartnerId)
-    }
-  }, [defaultPartnerId, selectedPartnerId])
+    if (loadingPartners || !partnersData) return
+    if (selectedPartnerId === partnerFromUrl) return
+    const params = new URLSearchParams(searchParams.toString())
+    params.set('tab', 'feed-rules')
+    if (selectedPartnerId) params.set('partner', selectedPartnerId)
+    else params.delete('partner')
+    router.replace(`?${params.toString()}`, { scroll: false })
+  }, [loadingPartners, partnersData, selectedPartnerId, partnerFromUrl, searchParams, router])
 
   const handleCreate = () => {
     setEditingRule(null)
@@ -90,23 +117,34 @@ export default function FeedRulesTab() {
         )}
       </div>
 
-      <div className="max-w-md">
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          Partner
+      <div className="flex flex-col sm:flex-row sm:items-end gap-4 max-w-2xl">
+        <div className="flex-1 max-w-md">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Partner
+          </label>
+          <select
+            value={selectedPartnerId}
+            onChange={(e) => replaceFeedRulesParams({ partner: e.target.value })}
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-800 dark:text-white"
+          >
+            <option value="">Select a partner</option>
+            {visiblePartners.map((partner) => (
+              <option key={partner.id} value={partner.id}>
+                {partner.name}
+                {!outboundOnly && partner.outboundFeedEnabled ? ' (outbound enabled)' : ''}
+              </option>
+            ))}
+          </select>
+        </div>
+        <label className="flex items-center gap-2 pb-2 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={outboundOnly}
+            onChange={(e) => replaceFeedRulesParams({ outboundOnly: e.target.checked })}
+            className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
+          />
+          <span className="text-sm text-gray-700 dark:text-gray-300">Outbound enabled</span>
         </label>
-        <select
-          value={selectedPartnerId}
-          onChange={(e) => setSelectedPartnerId(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-800 dark:text-white"
-        >
-          <option value="">Select a partner</option>
-          {partnersData?.data.map((partner) => (
-            <option key={partner.id} value={partner.id}>
-              {partner.name}
-              {partner.outboundFeedEnabled ? ' (outbound enabled)' : ''}
-            </option>
-          ))}
-        </select>
       </div>
 
       <div className="overflow-x-auto border border-gray-200 dark:border-gray-800 rounded-lg">
@@ -188,8 +226,8 @@ export default function FeedRulesTab() {
                   <td className="px-6 py-4">
                     <span
                       className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${rule.isActive
-                          ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                          : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400'
+                        ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                        : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400'
                         }`}
                     >
                       {rule.isActive ? 'Active' : 'Inactive'}

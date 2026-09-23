@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useRef } from 'react'
 import {
   useAffiliatePartners,
   useCreateAffiliatePartner,
@@ -11,7 +11,7 @@ import {
   useRebuildOutboundFeed,
 } from '@/services/hooks/useAffiliates'
 import type { AffiliatePartner, CreatePartnerData } from '@/services/api/affiliates'
-import { Edit2, Trash2, Plus, Mail, Phone, Globe, CheckCircle, XCircle, AlertCircle, Building2, RefreshCw, Clock, AlertTriangle, Rss, MousePointerClick } from 'lucide-react'
+import { Edit2, Trash2, Plus, Mail, Phone, Globe, CheckCircle, XCircle, AlertCircle, Building2, RefreshCw, Clock, AlertTriangle, Rss, MousePointerClick, Search } from 'lucide-react'
 import Pagination from '@/components/tables/Pagination'
 import PartnerModal from './PartnerModal'
 import ReportRecipientsModal from './ReportRecipientsModal'
@@ -20,11 +20,34 @@ import { useAffiliatePermissions } from '@/hooks/useAffiliatePermissions'
 export default function PartnersTab() {
   const { canCreate, canUpdate, canDelete } = useAffiliatePermissions()
   const [page, setPage] = useState(1)
+  const [searchInput, setSearchInput] = useState('')
+  const [search, setSearch] = useState('')
+  const [outboundEnabledOnly, setOutboundEnabledOnly] = useState(false)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingPartner, setEditingPartner] = useState<AffiliatePartner | null>(null)
   const [reportRecipientsPartner, setReportRecipientsPartner] = useState<AffiliatePartner | null>(null)
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const { data: partnersData, isLoading } = useAffiliatePartners({ page, limit: 10 })
+  const handleSearchChange = (value: string) => {
+    setSearchInput(value)
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => {
+      setSearch(value.trim())
+      setPage(1)
+    }, 300)
+  }
+
+  const handleOutboundFilterChange = (checked: boolean) => {
+    setOutboundEnabledOnly(checked)
+    setPage(1)
+  }
+
+  const { data: partnersData, isLoading } = useAffiliatePartners({
+    page,
+    limit: 10,
+    search: search || undefined,
+    outboundFeedEnabled: outboundEnabledOnly ? true : undefined,
+  })
   const { data: syncStatusData } = useAffiliateSyncStatus()
   const createMutation = useCreateAffiliatePartner()
   const updateMutation = useUpdateAffiliatePartner()
@@ -163,14 +186,6 @@ export default function PartnersTab() {
     )
   }
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
-    )
-  }
-
   return (
     <div className="space-y-4">
       {/* Header with Create Button */}
@@ -187,6 +202,34 @@ export default function PartnersTab() {
         )}
       </div>
 
+      <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+          <input
+            type="text"
+            value={searchInput}
+            onChange={(e) => handleSearchChange(e.target.value)}
+            placeholder="Search by partner name"
+            className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+          />
+        </div>
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={outboundEnabledOnly}
+            onChange={(e) => handleOutboundFilterChange(e.target.checked)}
+            className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
+          />
+          <span className="text-sm text-gray-700 dark:text-gray-300">Outbound enabled</span>
+        </label>
+      </div>
+
+      {isLoading ? (
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        </div>
+      ) : (
+      <>
       {/* Partners Table */}
       <div className="overflow-x-auto border border-gray-200 dark:border-gray-800 rounded-lg">
         <table className="w-full">
@@ -389,11 +432,11 @@ export default function PartnersTab() {
           </tbody>
         </table>
 
-        {partnersWithStatus.length === 0 && !isLoading && (
+        {partnersWithStatus.length === 0 && (
           <div className="text-center py-12">
             <Building2 className="w-12 h-12 text-gray-400 mx-auto mb-3" />
             <p className="text-gray-500 dark:text-gray-400">No partners found</p>
-            {canCreate && (
+            {canCreate && !search && !outboundEnabledOnly && (
               <button
                 onClick={handleCreate}
                 className="mt-4 text-primary hover:text-primary/80 text-sm font-medium"
@@ -417,6 +460,8 @@ export default function PartnersTab() {
             onPageChange={setPage}
           />
         </div>
+      )}
+      </>
       )}
 
       {/* Partner Modal */}

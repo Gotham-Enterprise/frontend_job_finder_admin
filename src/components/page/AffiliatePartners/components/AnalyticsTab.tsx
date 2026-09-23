@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useRef, useCallback } from 'react'
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAffiliateAnalytics, useAffiliatePartners, useInfiniteAffiliateConversions, useEnqueueConversionAudits, useAffiliateFeedJobCounts } from '@/services/hooks/useAffiliates'
 import dynamic from 'next/dynamic'
@@ -14,6 +14,33 @@ type ViewMode = 'selling' | 'buying'
 
 const isValidViewMode = (value: string | null): value is ViewMode =>
   value === 'selling' || value === 'buying'
+
+type AuditResultFilter = (typeof AUDIT_FILTERS)[number]['id']
+
+type AnalyticsFilterPatch = {
+  affiliate?: string
+  start?: string
+  end?: string
+  dedupe?: boolean
+  requireApp?: boolean
+  excludeFlagged?: boolean
+  audit?: AuditResultFilter
+}
+
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/
+
+function isIsoDate(value: string | null): value is string {
+  return !!value && ISO_DATE.test(value)
+}
+
+function parseAuditResult(value: string | null): AuditResultFilter {
+  const match = AUDIT_FILTERS.find((filter) => filter.id === value)
+  return match?.id ?? ''
+}
+
+function defaultAnalyticsDate(offsetDays: number): string {
+  return new Date(Date.now() - offsetDays * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+}
 
 function escapeCsvField(value: string | number): string {
   const str = String(value)
@@ -206,15 +233,17 @@ export default function AnalyticsTab() {
   const [viewMode, setViewMode] = useState<ViewMode>(() =>
     isValidViewMode(viewFromUrl) ? viewFromUrl : 'selling'
   )
-  const [selectedPartnerId, setSelectedPartnerId] = useState<string>('')
-  const [dateRange, setDateRange] = useState({
-    startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    endDate: new Date().toISOString().split('T')[0],
-  })
-  const [deduplicate, setDeduplicate] = useState(true)
-  const [requireApplication, setRequireApplication] = useState(true)
-  const [excludeFlaggedConversions, setExcludeFlaggedConversions] = useState(true)
-  const [auditResult, setAuditResult] = useState<'' | 'pass' | 'flagged' | 'incomplete' | 'pending' | 'failed' | 'unaudited'>('')
+  const selectedPartnerId = searchParams.get('affiliate') ?? ''
+  const startFromUrl = searchParams.get('start')
+  const endFromUrl = searchParams.get('end')
+  const dateRange = {
+    startDate: isIsoDate(startFromUrl) ? startFromUrl : defaultAnalyticsDate(30),
+    endDate: isIsoDate(endFromUrl) ? endFromUrl : defaultAnalyticsDate(0),
+  }
+  const deduplicate = searchParams.get('dedupe') !== '0'
+  const requireApplication = searchParams.get('requireApp') !== '0'
+  const excludeFlaggedConversions = searchParams.get('excludeFlagged') !== '0'
+  const auditResult = parseAuditResult(searchParams.get('audit'))
   const [auditConversion, setAuditConversion] = useState<AffiliateConversionRow | null>(null)
   const isBuyingView = viewMode === 'buying'
   const enqueueAudits = useEnqueueConversionAudits()
@@ -274,10 +303,45 @@ export default function AnalyticsTab() {
     return () => observer.disconnect()
   }, [handleConversionObserver, conversions.length, isLoading])
 
-  const filteredPartners = (partnersData?.data ?? []).filter((partner) =>
-    viewMode === 'selling'
-      ? !partner.outboundFeedSlug && !partner.landingEnabled
-      : !!partner.outboundFeedSlug
+  const filteredPartners = useMemo(
+    () =>
+      (partnersData?.data ?? []).filter((partner) =>
+        viewMode === 'selling'
+          ? !partner.outboundFeedSlug && !partner.landingEnabled
+          : !!partner.outboundFeedSlug
+      ),
+    [partnersData, viewMode]
+  )
+
+  const updateAnalyticsParams = useCallback(
+    (patch: AnalyticsFilterPatch) => {
+      const params = new URLSearchParams(searchParams.toString())
+      params.set('tab', 'analytics')
+      if (patch.affiliate !== undefined) {
+        if (patch.affiliate) params.set('affiliate', patch.affiliate)
+        else params.delete('affiliate')
+      }
+      if (patch.start !== undefined) params.set('start', patch.start)
+      if (patch.end !== undefined) params.set('end', patch.end)
+      if (patch.dedupe !== undefined) {
+        if (patch.dedupe) params.delete('dedupe')
+        else params.set('dedupe', '0')
+      }
+      if (patch.requireApp !== undefined) {
+        if (patch.requireApp) params.delete('requireApp')
+        else params.set('requireApp', '0')
+      }
+      if (patch.excludeFlagged !== undefined) {
+        if (patch.excludeFlagged) params.delete('excludeFlagged')
+        else params.set('excludeFlagged', '0')
+      }
+      if (patch.audit !== undefined) {
+        if (patch.audit) params.set('audit', patch.audit)
+        else params.delete('audit')
+      }
+      router.replace(`?${params.toString()}`, { scroll: false })
+    },
+    [router, searchParams]
   )
 
   useEffect(() => {
@@ -287,13 +351,21 @@ export default function AnalyticsTab() {
     }
   }, [viewFromUrl])
 
+  useEffect(() => {
+    if (!partnersData || !selectedPartnerId) return
+    const modeFromUrl: ViewMode = viewFromUrl === 'buying' ? 'buying' : 'selling'
+    if (modeFromUrl !== viewMode) return
+    if (filteredPartners.some((partner) => partner.id === selectedPartnerId)) return
+    updateAnalyticsParams({ affiliate: '' })
+  }, [partnersData, selectedPartnerId, viewFromUrl, viewMode, filteredPartners, updateAnalyticsParams])
+
   const handleViewModeChange = (mode: ViewMode) => {
     setViewMode(mode)
-    setSelectedPartnerId('')
-    setAuditResult('')
     setAuditConversion(null)
     const params = new URLSearchParams(searchParams.toString())
     params.set('tab', 'analytics')
+    params.delete('affiliate')
+    params.delete('audit')
     if (mode === 'buying') {
       params.set('view', 'buying')
     } else {
@@ -550,7 +622,7 @@ export default function AnalyticsTab() {
           </label>
           <select
             value={selectedPartnerId}
-            onChange={(e) => setSelectedPartnerId(e.target.value)}
+            onChange={(e) => updateAnalyticsParams({ affiliate: e.target.value })}
             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-800 dark:text-white"
           >
             <option value="">All Partners</option>
@@ -575,15 +647,11 @@ export default function AnalyticsTab() {
               if (selectedDates && selectedDates.length > 0) {
                 // Use the dateString directly from flatpickr to avoid timezone issues
                 const dateStr = selectedDates[0] as any
-                if (typeof dateStr === 'string') {
-                  setDateRange({ ...dateRange, startDate: dateStr })
-                } else {
-                  // If it's a Date object, format it in local time
-                  const year = dateStr.getFullYear()
-                  const month = String(dateStr.getMonth() + 1).padStart(2, '0')
-                  const day = String(dateStr.getDate()).padStart(2, '0')
-                  setDateRange({ ...dateRange, startDate: `${year}-${month}-${day}` })
-                }
+                const start =
+                  typeof dateStr === 'string'
+                    ? dateStr
+                    : `${dateStr.getFullYear()}-${String(dateStr.getMonth() + 1).padStart(2, '0')}-${String(dateStr.getDate()).padStart(2, '0')}`
+                if (isIsoDate(start)) updateAnalyticsParams({ start })
               }
             }}
           />
@@ -602,15 +670,11 @@ export default function AnalyticsTab() {
               if (selectedDates && selectedDates.length > 0) {
                 // Use the dateString directly from flatpickr to avoid timezone issues
                 const dateStr = selectedDates[0] as any
-                if (typeof dateStr === 'string') {
-                  setDateRange({ ...dateRange, endDate: dateStr })
-                } else {
-                  // If it's a Date object, format it in local time
-                  const year = dateStr.getFullYear()
-                  const month = String(dateStr.getMonth() + 1).padStart(2, '0')
-                  const day = String(dateStr.getDate()).padStart(2, '0')
-                  setDateRange({ ...dateRange, endDate: `${year}-${month}-${day}` })
-                }
+                const end =
+                  typeof dateStr === 'string'
+                    ? dateStr
+                    : `${dateStr.getFullYear()}-${String(dateStr.getMonth() + 1).padStart(2, '0')}-${String(dateStr.getDate()).padStart(2, '0')}`
+                if (isIsoDate(end)) updateAnalyticsParams({ end })
               }
             }}
           />
@@ -622,19 +686,19 @@ export default function AnalyticsTab() {
         <ToggleWithTooltip
           label="Deduplicate"
           checked={deduplicate}
-          onChange={setDeduplicate}
+          onChange={(value) => updateAnalyticsParams({ dedupe: value })}
           tooltip="Clicks: counts only the first click per unique IP address. CPC spend: sums the cost of that first click per IP (clicks with no recorded IP are excluded). Conversions: keeps only the earliest conversion per unique IP + user name combination. Conversions without a recorded IP address are always included."
         />
         <ToggleWithTooltip
           label="Require Application"
           checked={requireApplication}
-          onChange={setRequireApplication}
+          onChange={(value) => updateAnalyticsParams({ requireApp: value })}
           tooltip="Only shows conversions that are linked to a confirmed job application. Conversions recorded via S2S postback or other means without a matching application are excluded."
         />
         <ToggleWithTooltip
           label="Exclude Flagged Conversions"
           checked={excludeFlaggedConversions}
-          onChange={setExcludeFlaggedConversions}
+          onChange={(value) => updateAnalyticsParams({ excludeFlagged: value })}
           tooltip="Removes conversions whose occupation audit result is Flagged from counts, CPA spend, and the conversions table. Unaudited, incomplete, pending, failed, and passing conversions are kept. The Flagged chip will show no rows while this is on."
         />
       </div>
@@ -1334,10 +1398,10 @@ export default function AnalyticsTab() {
                 <button
                   key={filter.id || 'all'}
                   type="button"
-                  onClick={() => setAuditResult(filter.id)}
+                  onClick={() => updateAnalyticsParams({ audit: filter.id })}
                   className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${auditResult === filter.id
-                      ? 'bg-primary text-white'
-                      : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                    ? 'bg-primary text-white'
+                    : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
                     }`}
                 >
                   {filter.label}
