@@ -6,6 +6,7 @@ import Button from "@/components/ui/button/Button";
 import FullScreenSpinner from "@/components/ui/FullScreenSpinner";
 import { MedicalLibraryTopic, MedicalLibrarySection, MedicalLibraryTab } from "@/services/api/medicalLibrary";
 import HtmlEditorPreview from "./HtmlEditorPreview";
+import PendingChangesPanel from "./PendingChangesPanel";
 import { showToast } from "@/services/utils/toast";
 
 interface MedicalLibraryFormProps {
@@ -246,6 +247,10 @@ const MedicalLibraryForm: React.FC<MedicalLibraryFormProps> = ({ initialData, on
           </Button>
         </div>
       </div>
+
+      {initialData?.previousVersion && (
+        <PendingChangesPanel previousVersion={initialData.previousVersion} current={initialData} />
+      )}
 
       <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl shadow-sm overflow-hidden">
         <form onSubmit={handleSubmit} className="p-6 md:p-8 space-y-8">
