@@ -1,17 +1,46 @@
 'use client'
 
-import React, { useState, useEffect, useRef, useCallback } from 'react'
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useAffiliateAnalytics, useAffiliatePartners, useInfiniteAffiliateConversions } from '@/services/hooks/useAffiliates'
+import { useAffiliateAnalytics, useAffiliatePartners, useInfiniteAffiliateConversions, useEnqueueConversionAudits, useAffiliateFeedJobCounts } from '@/services/hooks/useAffiliates'
 import dynamic from 'next/dynamic'
-import { TrendingUp, Users, MousePointerClick, Trophy, DollarSign, CheckCircle, BarChart2, Briefcase, HelpCircle, Download } from 'lucide-react'
+import { TrendingUp, Users, MousePointerClick, Trophy, DollarSign, CheckCircle, BarChart2, Briefcase, HelpCircle, Download, ShieldCheck } from 'lucide-react'
 import DatePicker from '@/components/form/date-picker'
-import type { AffiliateAnalytics } from '@/services/api/affiliates'
+import type { AffiliateAnalytics, AffiliateConversionRow, AffiliateFeedJobCounts } from '@/services/api/affiliates'
+import ConversionAuditDrawer, { AuditBadge, AUDIT_FILTERS } from './ConversionAuditDrawer'
+import { useAffiliatePermissions } from '@/hooks/useAffiliatePermissions'
 
 type ViewMode = 'selling' | 'buying'
 
 const isValidViewMode = (value: string | null): value is ViewMode =>
   value === 'selling' || value === 'buying'
+
+type AuditResultFilter = (typeof AUDIT_FILTERS)[number]['id']
+
+type AnalyticsFilterPatch = {
+  affiliate?: string
+  start?: string
+  end?: string
+  dedupe?: boolean
+  requireApp?: boolean
+  excludeFlagged?: boolean
+  audit?: AuditResultFilter
+}
+
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/
+
+function isIsoDate(value: string | null): value is string {
+  return !!value && ISO_DATE.test(value)
+}
+
+function parseAuditResult(value: string | null): AuditResultFilter {
+  const match = AUDIT_FILTERS.find((filter) => filter.id === value)
+  return match?.id ?? ''
+}
+
+function defaultAnalyticsDate(offsetDays: number): string {
+  return new Date(Date.now() - offsetDays * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+}
 
 function escapeCsvField(value: string | number): string {
   const str = String(value)
@@ -25,16 +54,26 @@ function slugifyForFilename(value: string): string {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'all-partners'
 }
 
+function formatFeedRuleStates(states: string[]): string {
+  return states.length === 0 ? 'All' : states.join(', ')
+}
+
+function formatFeedRuleCities(cities: string[]): string {
+  return !cities?.length ? 'All' : cities.join(', ')
+}
+
 function downloadBuyingAnalyticsCsv({
   partnerName,
   startDate,
   endDate,
   analytics,
+  feedJobCounts,
 }: {
   partnerName: string
   startDate: string
   endDate: string
   analytics: AffiliateAnalytics
+  feedJobCounts?: AffiliateFeedJobCounts
 }) {
   const headers = [
     'Partner name',
@@ -54,7 +93,80 @@ function downloadBuyingAnalyticsCsv({
     (analytics.cpcSpend ?? 0).toFixed(2),
     (analytics.totalCpaSpend ?? 0).toFixed(2),
   ]
-  const csv = [headers.map(escapeCsvField).join(','), row.map(escapeCsvField).join(',')].join('\n')
+  const lines = [headers.map(escapeCsvField).join(','), row.map(escapeCsvField).join(',')]
+
+  if (feedJobCounts?.partners?.length) {
+    lines.push('')
+    lines.push(
+      [
+        'Partner name',
+        'Job Target',
+        'Occupation',
+        'Specialty',
+        'Work Setting',
+        'States',
+        'Cities',
+        'Matching Jobs',
+        'Unique Jobs',
+      ]
+        .map(escapeCsvField)
+        .join(',')
+    )
+    for (const partner of feedJobCounts.partners) {
+      if (partner.targets.length === 0) {
+        lines.push(
+          [
+            partner.partnerName,
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            0,
+            partner.uniqueJobCount,
+          ]
+            .map(escapeCsvField)
+            .join(',')
+        )
+        continue
+      }
+      for (const target of partner.targets) {
+        lines.push(
+          [
+            partner.partnerName,
+            target.ruleGroupLabel || '',
+            target.occupationName,
+            target.specialtyName || '',
+            target.workSetting || '',
+            formatFeedRuleStates(target.states),
+            formatFeedRuleCities(target.cities),
+            target.jobCount,
+            '',
+          ]
+            .map(escapeCsvField)
+            .join(',')
+        )
+      }
+      lines.push(
+        [
+          partner.partnerName,
+          'Unique jobs (deduplicated)',
+          '',
+          '',
+          '',
+          '',
+          '',
+          '',
+          partner.uniqueJobCount,
+        ]
+          .map(escapeCsvField)
+          .join(',')
+      )
+    }
+  }
+
+  const csv = lines.join('\n')
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
@@ -90,14 +202,12 @@ function ToggleWithTooltip({
         className="flex items-center gap-2 cursor-pointer group/toggle"
       >
         <div
-          className={`relative w-10 h-5 rounded-full transition-colors duration-200 ${
-            checked ? 'bg-primary' : 'bg-gray-300 dark:bg-gray-600'
-          }`}
+          className={`relative w-10 h-5 rounded-full transition-colors duration-200 ${checked ? 'bg-primary' : 'bg-gray-300 dark:bg-gray-600'
+            }`}
         >
           <span
-            className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ${
-              checked ? 'translate-x-5' : 'translate-x-0'
-            }`}
+            className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ${checked ? 'translate-x-5' : 'translate-x-0'
+              }`}
           />
         </div>
         <span className="text-sm font-medium text-gray-700 dark:text-gray-300 select-none">
@@ -116,19 +226,27 @@ function ToggleWithTooltip({
 }
 
 export default function AnalyticsTab() {
+  const { canCreate } = useAffiliatePermissions()
   const router = useRouter()
   const searchParams = useSearchParams()
   const viewFromUrl = searchParams.get('view')
   const [viewMode, setViewMode] = useState<ViewMode>(() =>
     isValidViewMode(viewFromUrl) ? viewFromUrl : 'selling'
   )
-  const [selectedPartnerId, setSelectedPartnerId] = useState<string>('')
-  const [dateRange, setDateRange] = useState({
-    startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    endDate: new Date().toISOString().split('T')[0],
-  })
-  const [deduplicate, setDeduplicate] = useState(true)
-  const [requireApplication, setRequireApplication] = useState(true)
+  const selectedPartnerId = searchParams.get('affiliate') ?? ''
+  const startFromUrl = searchParams.get('start')
+  const endFromUrl = searchParams.get('end')
+  const dateRange = {
+    startDate: isIsoDate(startFromUrl) ? startFromUrl : defaultAnalyticsDate(30),
+    endDate: isIsoDate(endFromUrl) ? endFromUrl : defaultAnalyticsDate(0),
+  }
+  const deduplicate = searchParams.get('dedupe') !== '0'
+  const requireApplication = searchParams.get('requireApp') !== '0'
+  const excludeFlaggedConversions = searchParams.get('excludeFlagged') !== '0'
+  const auditResult = parseAuditResult(searchParams.get('audit'))
+  const [auditConversion, setAuditConversion] = useState<AffiliateConversionRow | null>(null)
+  const isBuyingView = viewMode === 'buying'
+  const enqueueAudits = useEnqueueConversionAudits()
 
   const { data: partnersData } = useAffiliatePartners({ limit: 100 })
   const analyticsFilters = {
@@ -139,15 +257,24 @@ export default function AnalyticsTab() {
     partnerType: viewMode,
     deduplicate,
     requireApplication,
+    excludeFlaggedConversions,
+  }
+  const conversionFilters = {
+    ...analyticsFilters,
+    auditResult: isBuyingView && auditResult ? auditResult : undefined,
   }
   const { data: analytics, isLoading } = useAffiliateAnalytics(analyticsFilters)
+  const { data: feedJobCounts, isLoading: feedJobCountsLoading } = useAffiliateFeedJobCounts(
+    selectedPartnerId || undefined,
+    { enabled: isBuyingView }
+  )
   const {
     data: conversionPages,
     isLoading: conversionsLoading,
     isFetchingNextPage,
     hasNextPage,
     fetchNextPage,
-  } = useInfiniteAffiliateConversions(analyticsFilters)
+  } = useInfiniteAffiliateConversions(conversionFilters)
 
   const conversions = conversionPages?.pages.flatMap((page) => page.data) ?? []
   const conversionTotal = conversionPages?.pages[0]?.pagination.total ?? 0
@@ -176,11 +303,45 @@ export default function AnalyticsTab() {
     return () => observer.disconnect()
   }, [handleConversionObserver, conversions.length, isLoading])
 
-  const isBuyingView = viewMode === 'buying'
-  const filteredPartners = (partnersData?.data ?? []).filter((partner) =>
-    viewMode === 'selling'
-      ? !partner.outboundFeedSlug
-      : !!partner.outboundFeedSlug
+  const filteredPartners = useMemo(
+    () =>
+      (partnersData?.data ?? []).filter((partner) =>
+        viewMode === 'selling'
+          ? !partner.outboundFeedSlug && !partner.landingEnabled
+          : !!partner.outboundFeedSlug
+      ),
+    [partnersData, viewMode]
+  )
+
+  const updateAnalyticsParams = useCallback(
+    (patch: AnalyticsFilterPatch) => {
+      const params = new URLSearchParams(searchParams.toString())
+      params.set('tab', 'analytics')
+      if (patch.affiliate !== undefined) {
+        if (patch.affiliate) params.set('affiliate', patch.affiliate)
+        else params.delete('affiliate')
+      }
+      if (patch.start !== undefined) params.set('start', patch.start)
+      if (patch.end !== undefined) params.set('end', patch.end)
+      if (patch.dedupe !== undefined) {
+        if (patch.dedupe) params.delete('dedupe')
+        else params.set('dedupe', '0')
+      }
+      if (patch.requireApp !== undefined) {
+        if (patch.requireApp) params.delete('requireApp')
+        else params.set('requireApp', '0')
+      }
+      if (patch.excludeFlagged !== undefined) {
+        if (patch.excludeFlagged) params.delete('excludeFlagged')
+        else params.set('excludeFlagged', '0')
+      }
+      if (patch.audit !== undefined) {
+        if (patch.audit) params.set('audit', patch.audit)
+        else params.delete('audit')
+      }
+      router.replace(`?${params.toString()}`, { scroll: false })
+    },
+    [router, searchParams]
   )
 
   useEffect(() => {
@@ -190,11 +351,21 @@ export default function AnalyticsTab() {
     }
   }, [viewFromUrl])
 
+  useEffect(() => {
+    if (!partnersData || !selectedPartnerId) return
+    const modeFromUrl: ViewMode = viewFromUrl === 'buying' ? 'buying' : 'selling'
+    if (modeFromUrl !== viewMode) return
+    if (filteredPartners.some((partner) => partner.id === selectedPartnerId)) return
+    updateAnalyticsParams({ affiliate: '' })
+  }, [partnersData, selectedPartnerId, viewFromUrl, viewMode, filteredPartners, updateAnalyticsParams])
+
   const handleViewModeChange = (mode: ViewMode) => {
     setViewMode(mode)
-    setSelectedPartnerId('')
+    setAuditConversion(null)
     const params = new URLSearchParams(searchParams.toString())
     params.set('tab', 'analytics')
+    params.delete('affiliate')
+    params.delete('audit')
     if (mode === 'buying') {
       params.set('view', 'buying')
     } else {
@@ -203,8 +374,29 @@ export default function AnalyticsTab() {
     router.replace(`?${params.toString()}`, { scroll: false })
   }
 
-  // Show loading state
-  if (isLoading) {
+  const handleRunAudit = async () => {
+    if (
+      !confirm(
+        'Queue occupation audits for conversions in the current filter? Unaudited, incomplete, failed, and pending rows will be queued (up to 200). Already passing/flagged rows are skipped.'
+      )
+    ) {
+      return
+    }
+    await enqueueAudits.mutateAsync({
+      affiliateId: selectedPartnerId || undefined,
+      startDate: dateRange.startDate,
+      endDate: dateRange.endDate,
+      source: 'partner-feed',
+      partnerType: 'buying',
+      deduplicate,
+      requireApplication,
+      excludeFlaggedConversions,
+      force: false,
+    }).catch(() => undefined)
+  }
+
+  // Show loading state for selling view; buying still renders so feed job counts can load independently
+  if (isLoading && !isBuyingView) {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
@@ -338,6 +530,9 @@ export default function AnalyticsTab() {
   const selectedPartnerName =
     filteredPartners.find((partner) => partner.id === selectedPartnerId)?.name || 'All Partners'
 
+  const uniqueJobsInFeeds =
+    feedJobCounts?.partners.reduce((sum, partner) => sum + partner.uniqueJobCount, 0) ?? 0
+
   const handleDownloadReport = () => {
     if (!analytics) return
     downloadBuyingAnalyticsCsv({
@@ -345,6 +540,7 @@ export default function AnalyticsTab() {
       startDate: dateRange.startDate,
       endDate: dateRange.endDate,
       analytics,
+      feedJobCounts,
     })
   }
 
@@ -399,8 +595,8 @@ export default function AnalyticsTab() {
           <button
             onClick={() => handleViewModeChange('selling')}
             className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${viewMode === 'selling'
-                ? 'bg-primary text-white'
-                : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+              ? 'bg-primary text-white'
+              : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
               }`}
           >
             Traffic Selling
@@ -408,8 +604,8 @@ export default function AnalyticsTab() {
           <button
             onClick={() => handleViewModeChange('buying')}
             className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${viewMode === 'buying'
-                ? 'bg-primary text-white'
-                : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+              ? 'bg-primary text-white'
+              : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
               }`}
           >
             Traffic Buying
@@ -426,7 +622,7 @@ export default function AnalyticsTab() {
           </label>
           <select
             value={selectedPartnerId}
-            onChange={(e) => setSelectedPartnerId(e.target.value)}
+            onChange={(e) => updateAnalyticsParams({ affiliate: e.target.value })}
             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-800 dark:text-white"
           >
             <option value="">All Partners</option>
@@ -451,15 +647,11 @@ export default function AnalyticsTab() {
               if (selectedDates && selectedDates.length > 0) {
                 // Use the dateString directly from flatpickr to avoid timezone issues
                 const dateStr = selectedDates[0] as any
-                if (typeof dateStr === 'string') {
-                  setDateRange({ ...dateRange, startDate: dateStr })
-                } else {
-                  // If it's a Date object, format it in local time
-                  const year = dateStr.getFullYear()
-                  const month = String(dateStr.getMonth() + 1).padStart(2, '0')
-                  const day = String(dateStr.getDate()).padStart(2, '0')
-                  setDateRange({ ...dateRange, startDate: `${year}-${month}-${day}` })
-                }
+                const start =
+                  typeof dateStr === 'string'
+                    ? dateStr
+                    : `${dateStr.getFullYear()}-${String(dateStr.getMonth() + 1).padStart(2, '0')}-${String(dateStr.getDate()).padStart(2, '0')}`
+                if (isIsoDate(start)) updateAnalyticsParams({ start })
               }
             }}
           />
@@ -478,15 +670,11 @@ export default function AnalyticsTab() {
               if (selectedDates && selectedDates.length > 0) {
                 // Use the dateString directly from flatpickr to avoid timezone issues
                 const dateStr = selectedDates[0] as any
-                if (typeof dateStr === 'string') {
-                  setDateRange({ ...dateRange, endDate: dateStr })
-                } else {
-                  // If it's a Date object, format it in local time
-                  const year = dateStr.getFullYear()
-                  const month = String(dateStr.getMonth() + 1).padStart(2, '0')
-                  const day = String(dateStr.getDate()).padStart(2, '0')
-                  setDateRange({ ...dateRange, endDate: `${year}-${month}-${day}` })
-                }
+                const end =
+                  typeof dateStr === 'string'
+                    ? dateStr
+                    : `${dateStr.getFullYear()}-${String(dateStr.getMonth() + 1).padStart(2, '0')}-${String(dateStr.getDate()).padStart(2, '0')}`
+                if (isIsoDate(end)) updateAnalyticsParams({ end })
               }
             }}
           />
@@ -498,14 +686,20 @@ export default function AnalyticsTab() {
         <ToggleWithTooltip
           label="Deduplicate"
           checked={deduplicate}
-          onChange={setDeduplicate}
-          tooltip="Clicks: counts only the first click per unique IP address. Conversions: keeps only the earliest conversion per unique IP + user name combination. Conversions without a recorded IP address are always included."
+          onChange={(value) => updateAnalyticsParams({ dedupe: value })}
+          tooltip="Clicks: counts only the first click per unique IP address. CPC spend: sums the cost of that first click per IP (clicks with no recorded IP are excluded). Conversions: keeps only the earliest conversion per unique IP + user name combination. Conversions without a recorded IP address are always included."
         />
         <ToggleWithTooltip
           label="Require Application"
           checked={requireApplication}
-          onChange={setRequireApplication}
+          onChange={(value) => updateAnalyticsParams({ requireApp: value })}
           tooltip="Only shows conversions that are linked to a confirmed job application. Conversions recorded via S2S postback or other means without a matching application are excluded."
+        />
+        <ToggleWithTooltip
+          label="Exclude Flagged Conversions"
+          checked={excludeFlaggedConversions}
+          onChange={(value) => updateAnalyticsParams({ excludeFlagged: value })}
+          tooltip="Removes conversions whose occupation audit result is Flagged from counts, CPA spend, and the conversions table. Unaudited, incomplete, pending, failed, and passing conversions are kept. The Flagged chip will show no rows while this is on."
         />
       </div>
 
@@ -557,6 +751,20 @@ export default function AnalyticsTab() {
                 <CheckCircle className="w-12 h-12 text-gray-400 dark:text-gray-500" />
               </div>
             </div>
+            <div className="border border-gray-200 dark:border-gray-800 rounded-lg p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Jobs in XML Feed</p>
+                  <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">
+                    {feedJobCountsLoading ? '—' : uniqueJobsInFeeds.toLocaleString()}
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    Live matching jobs{selectedPartnerId ? ' for this partner' : ' across all partners'}
+                  </p>
+                </div>
+                <Briefcase className="w-12 h-12 text-gray-400 dark:text-gray-500" />
+              </div>
+            </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <div className="border border-gray-200 dark:border-gray-800 rounded-lg p-6">
@@ -591,6 +799,156 @@ export default function AnalyticsTab() {
                 </div>
                 <DollarSign className="w-12 h-12 text-gray-400 dark:text-gray-500" />
               </div>
+            </div>
+          </div>
+
+          <div className="border border-gray-200 dark:border-gray-800 rounded-lg">
+            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-800">
+              <div className="flex items-center gap-2">
+                <Briefcase className="w-5 h-5 text-primary" />
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  Jobs in XML Feed
+                </h3>
+              </div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                Live matching jobs per job target. Rule counts can overlap; unique jobs is the actual XML feed size.
+              </p>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 dark:bg-gray-900/50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      Partner
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      Job Target
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      Occupation
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      Specialty
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      Work Setting
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      States
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      Cities
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      Matching Jobs
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white dark:bg-transparent divide-y divide-gray-200 dark:divide-gray-800">
+                  {feedJobCountsLoading ? (
+                    <tr>
+                      <td colSpan={8} className="px-6 py-12 text-center">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                      </td>
+                    </tr>
+                  ) : feedJobCounts?.partners?.length ? (
+                    feedJobCounts.partners.flatMap((partner) => {
+                      const targetRows =
+                        partner.targets.length > 0
+                          ? partner.targets.map((target) => (
+                            <tr
+                              key={target.ruleId}
+                              className="hover:bg-gray-50 dark:hover:bg-gray-900/30 transition-colors"
+                            >
+                              <td className="px-6 py-4">
+                                <div className="text-sm text-gray-700 dark:text-gray-300 capitalize">
+                                  {partner.partnerName}
+                                </div>
+                              </td>
+                              <td className="px-6 py-4">
+                                <div className="text-sm font-medium text-gray-900 dark:text-white">
+                                  {target.ruleGroupLabel || '—'}
+                                </div>
+                              </td>
+                              <td className="px-6 py-4">
+                                <div className="text-sm text-gray-700 dark:text-gray-300">
+                                  {target.occupationName}
+                                </div>
+                              </td>
+                              <td className="px-6 py-4">
+                                <div className="text-sm text-gray-700 dark:text-gray-300">
+                                  {target.specialtyName || '—'}
+                                </div>
+                              </td>
+                              <td className="px-6 py-4">
+                                <div className="text-sm text-gray-700 dark:text-gray-300">
+                                  {target.workSetting || '—'}
+                                </div>
+                              </td>
+                              <td className="px-6 py-4">
+                                <div className="text-sm text-gray-700 dark:text-gray-300">
+                                  {formatFeedRuleStates(target.states)}
+                                </div>
+                              </td>
+                              <td className="px-6 py-4">
+                                <div className="text-sm text-gray-700 dark:text-gray-300">
+                                  {formatFeedRuleCities(target.cities)}
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-right">
+                                <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full text-sm font-medium">
+                                  <Briefcase className="w-3 h-3" />
+                                  {target.jobCount.toLocaleString()}
+                                </span>
+                              </td>
+                            </tr>
+                          ))
+                          : [
+                            <tr key={`${partner.partnerId}-empty`}>
+                              <td className="px-6 py-4">
+                                <div className="text-sm text-gray-700 dark:text-gray-300 capitalize">
+                                  {partner.partnerName}
+                                </div>
+                              </td>
+                              <td colSpan={6} className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
+                                No active job targets
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-right">
+                                <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full text-sm font-medium">
+                                  <Briefcase className="w-3 h-3" />
+                                  0
+                                </span>
+                              </td>
+                            </tr>,
+                          ]
+                      return [
+                        ...targetRows,
+                        <tr
+                          key={`${partner.partnerId}-unique`}
+                          className="bg-gray-50 dark:bg-gray-900/40"
+                        >
+                          <td className="px-6 py-3" colSpan={7}>
+                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                              Unique jobs for {partner.partnerName}
+                            </span>
+                          </td>
+                          <td className="px-6 py-3 whitespace-nowrap text-right">
+                            <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-full text-sm font-medium">
+                              {partner.uniqueJobCount.toLocaleString()}
+                            </span>
+                          </td>
+                        </tr>,
+                      ]
+                    })
+                  ) : (
+                    <tr>
+                      <td colSpan={8} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                        No buying partners with an outbound feed
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
@@ -738,7 +1096,11 @@ export default function AnalyticsTab() {
             {isBuyingView ? 'Traffic Buying Over Time' : 'Traffic Selling Over Time'}
           </h3>
         </div>
-        {analytics?.clicksOverTime && analytics.clicksOverTime.length > 0 ? (
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+          </div>
+        ) : analytics?.clicksOverTime && analytics.clicksOverTime.length > 0 ? (
           <Chart
             options={chartOptions}
             series={chartSeries}
@@ -1009,7 +1371,7 @@ export default function AnalyticsTab() {
 
       {/* Conversions Table */}
       <div className="border border-gray-200 dark:border-gray-800 rounded-lg">
-        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-800">
+        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-800 space-y-3">
           <div className="flex items-center gap-2">
             <CheckCircle className="w-5 h-5 text-emerald-500" />
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Conversions</h3>
@@ -1018,7 +1380,35 @@ export default function AnalyticsTab() {
                 ? 'Loading…'
                 : `${conversions.length.toLocaleString()} of ${conversionTotal.toLocaleString()}`}
             </span>
+            {isBuyingView && canCreate && (
+              <button
+                type="button"
+                onClick={handleRunAudit}
+                disabled={enqueueAudits.isPending}
+                className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
+              >
+                <ShieldCheck className={`w-4 h-4 ${enqueueAudits.isPending ? 'animate-pulse' : ''}`} />
+                Run Audit
+              </button>
+            )}
           </div>
+          {isBuyingView && (
+            <div className="flex flex-wrap gap-2">
+              {AUDIT_FILTERS.map((filter) => (
+                <button
+                  key={filter.id || 'all'}
+                  type="button"
+                  onClick={() => updateAnalyticsParams({ audit: filter.id })}
+                  className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${auditResult === filter.id
+                    ? 'bg-primary text-white'
+                    : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                    }`}
+                >
+                  {filter.label}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
         <div ref={conversionScrollRef} className="overflow-auto max-h-[32rem]">
           <table className="w-full">
@@ -1032,12 +1422,15 @@ export default function AnalyticsTab() {
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Payout</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Partner Conv. ID</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Converted At</th>
+                {isBuyingView && (
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Audit</th>
+                )}
               </tr>
             </thead>
             <tbody className="bg-white dark:bg-transparent divide-y divide-gray-200 dark:divide-gray-800">
               {conversionsLoading && conversions.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                  <td colSpan={isBuyingView ? 9 : 8} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
                     <div className="flex items-center justify-center">
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
                     </div>
@@ -1116,11 +1509,19 @@ export default function AnalyticsTab() {
                         {new Date(c.convertedAt).toLocaleString()}
                       </span>
                     </td>
+                    {isBuyingView && (
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <AuditBadge
+                          audit={c.audit}
+                          onClick={c.audit ? () => setAuditConversion(c) : undefined}
+                        />
+                      </td>
+                    )}
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan={8} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                  <td colSpan={isBuyingView ? 9 : 8} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
                     No conversions recorded yet
                   </td>
                 </tr>
@@ -1135,6 +1536,13 @@ export default function AnalyticsTab() {
           )}
         </div>
       </div>
+
+      {isBuyingView && (
+        <ConversionAuditDrawer
+          conversion={auditConversion}
+          onClose={() => setAuditConversion(null)}
+        />
+      )}
     </div>
   )
 }

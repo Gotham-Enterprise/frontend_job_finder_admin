@@ -8,6 +8,7 @@ import PermissionAwareSidebar from "@/layout/PermissionAwareSidebar";
 import Backdrop from "@/layout/Backdrop";
 import AuthInitializer from "@/components/auth/AuthInitializer";
 import PermissionGuard from "@/components/guards/PermissionGuard";
+import PermissionProvider from "@/context/PermissionProvider";
 import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { authUtils } from "@/services/utils/authUtils";
@@ -37,27 +38,29 @@ export default function AdminLayout({
   }, [router]);
   return (
     <AuthInitializer>
-      <AutoLogoutProvider>
-        <div className="min-h-screen xl:flex">
-          <PermissionAwareSidebar />
-          <Backdrop />       
-           <div
-            className={`flex-1 transition-all duration-300 ease-in-out overflow-x-hidden ${mainContentMargin}`}
-          >
-            <AppHeader />
-            <InactivityStatus 
-              className="mx-4 mb-4 md:mx-6 md:mb-6" 
-              showWarning={true}
-              warningThreshold={0.25}
-            />
-            <div className="p-4 mx-auto md:p-6 w-full max-w-full overflow-x-hidden box-border">
-              <PermissionGuard showFallback={true}>
-                {children}
-              </PermissionGuard>
+      <PermissionProvider>
+        <AutoLogoutProvider>
+          <div className="min-h-screen xl:flex">
+            <PermissionAwareSidebar />
+            <Backdrop />       
+             <div
+              className={`flex-1 transition-all duration-300 ease-in-out overflow-x-hidden ${mainContentMargin}`}
+            >
+              <AppHeader />
+              <InactivityStatus 
+                className="mx-4 mb-4 md:mx-6 md:mb-6" 
+                showWarning={true}
+                warningThreshold={0.25}
+              />
+              <div className="p-4 mx-auto md:p-6 w-full max-w-full overflow-x-hidden box-border">
+                <PermissionGuard showFallback={true}>
+                  {children}
+                </PermissionGuard>
+              </div>
             </div>
           </div>
-        </div>
-      </AutoLogoutProvider>
+        </AutoLogoutProvider>
+      </PermissionProvider>
     </AuthInitializer>
   );
 }

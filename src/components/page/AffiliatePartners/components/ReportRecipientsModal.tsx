@@ -7,6 +7,7 @@ import {
   useAddReportRecipient,
   useRemoveReportRecipient,
 } from '@/services/hooks/useAffiliates'
+import { useAffiliatePermissions } from '@/hooks/useAffiliatePermissions'
 
 interface Props {
   isOpen: boolean
@@ -16,6 +17,7 @@ interface Props {
 }
 
 export default function ReportRecipientsModal({ isOpen, onClose, partnerId, partnerName }: Props) {
+  const { canUpdate } = useAffiliatePermissions()
   const [email, setEmail] = useState('')
   const [emailError, setEmailError] = useState('')
 
@@ -79,42 +81,44 @@ export default function ReportRecipientsModal({ isOpen, onClose, partnerId, part
           </p>
 
           {/* Add recipient form */}
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-              Add Recipient
-            </label>
-            <div className="flex gap-2">
-              <div className="flex-1">
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => { setEmail(e.target.value); setEmailError('') }}
-                  onKeyDown={handleKeyDown}
-                  placeholder="email@example.com"
-                  className={`w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-800 dark:text-white transition-colors ${
-                    emailError
-                      ? 'border-red-400 dark:border-red-500'
-                      : 'border-gray-300 dark:border-gray-700'
-                  }`}
-                />
-                {emailError && (
-                  <p className="mt-1 text-xs text-red-500">{emailError}</p>
-                )}
+          {canUpdate && (
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Add Recipient
+              </label>
+              <div className="flex gap-2">
+                <div className="flex-1">
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => { setEmail(e.target.value); setEmailError('') }}
+                    onKeyDown={handleKeyDown}
+                    placeholder="email@example.com"
+                    className={`w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-800 dark:text-white transition-colors ${
+                      emailError
+                        ? 'border-red-400 dark:border-red-500'
+                        : 'border-gray-300 dark:border-gray-700'
+                    }`}
+                  />
+                  {emailError && (
+                    <p className="mt-1 text-xs text-red-500">{emailError}</p>
+                  )}
+                </div>
+                <button
+                  onClick={handleAdd}
+                  disabled={addMutation.isPending}
+                  className="flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 disabled:opacity-60 transition-colors"
+                >
+                  {addMutation.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Plus className="h-4 w-4" />
+                  )}
+                  Add
+                </button>
               </div>
-              <button
-                onClick={handleAdd}
-                disabled={addMutation.isPending}
-                className="flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 disabled:opacity-60 transition-colors"
-              >
-                {addMutation.isPending ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Plus className="h-4 w-4" />
-                )}
-                Add
-              </button>
             </div>
-          </div>
+          )}
 
           {/* Recipients list */}
           <div>
@@ -148,18 +152,20 @@ export default function ReportRecipientsModal({ isOpen, onClose, partnerId, part
                       <Mail className="h-4 w-4 shrink-0 text-gray-400 dark:text-gray-500" />
                       <span className="truncate text-sm text-gray-700 dark:text-gray-300">{r.email}</span>
                     </div>
-                    <button
-                      onClick={() => removeMutation.mutate({ partnerId, recipientId: r.id })}
-                      disabled={removeMutation.isPending && removeMutation.variables?.recipientId === r.id}
-                      className="ml-3 shrink-0 rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20 dark:hover:text-red-400 disabled:opacity-50 transition-colors"
-                      title="Remove recipient"
-                    >
-                      {removeMutation.isPending && removeMutation.variables?.recipientId === r.id ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <Trash2 className="h-4 w-4" />
-                      )}
-                    </button>
+                    {canUpdate && (
+                      <button
+                        onClick={() => removeMutation.mutate({ partnerId, recipientId: r.id })}
+                        disabled={removeMutation.isPending && removeMutation.variables?.recipientId === r.id}
+                        className="ml-3 shrink-0 rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20 dark:hover:text-red-400 disabled:opacity-50 transition-colors"
+                        title="Remove recipient"
+                      >
+                        {removeMutation.isPending && removeMutation.variables?.recipientId === r.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Trash2 className="h-4 w-4" />
+                        )}
+                      </button>
+                    )}
                   </li>
                 ))}
               </ul>

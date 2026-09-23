@@ -6,8 +6,16 @@ interface Option {
   label: string;
 }
 
-interface SelectProps {
+interface OptionGroup {
+  label: string;
   options: Option[];
+}
+
+interface SelectProps {
+  options?: Option[];
+  /** Renders options under labeled group headers, in the given group order.
+   *  Replaces `options` as the list source; search filters within groups. */
+  groups?: OptionGroup[];
   placeholder?: string;
   onChange: (value: string) => void;
   className?: string;
@@ -19,7 +27,8 @@ interface SelectProps {
 }
 
 const Select: React.FC<SelectProps> = ({
-  options,
+  options: optionsProp,
+  groups,
   placeholder = "",
   onChange,
   className = "",
@@ -29,6 +38,7 @@ const Select: React.FC<SelectProps> = ({
   searchable = false,
   searchPlaceholder = "Search...",
 }) => {
+  const options = groups ? groups.flatMap((group) => group.options) : (optionsProp ?? []);
   const [internalValue, setInternalValue] = useState<string>(defaultValue);
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [searchTerm, setSearchTerm] = useState<string>("");
@@ -37,9 +47,16 @@ const Select: React.FC<SelectProps> = ({
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   // Filter options based on search term
-  const filteredOptions = searchable
-    ? options.filter((option) => option.label.toLowerCase().includes(searchTerm.toLowerCase()))
-    : options;
+  const matchesSearch = (option: Option) =>
+    option.label.toLowerCase().includes(searchTerm.toLowerCase());
+  const filteredOptions = searchable ? options.filter(matchesSearch) : options;
+  // Grouped filtering keeps the group order; emptied groups are hidden
+  const filteredGroups = groups
+    ?.map((group) => ({
+      ...group,
+      options: searchable ? group.options.filter(matchesSearch) : group.options,
+    }))
+    .filter((group) => group.options.length > 0);
 
   // Get the selected option label for display
   const selectedOption = options.find((option) => option.value === currentValue);
@@ -98,6 +115,21 @@ const Select: React.FC<SelectProps> = ({
     }
   };
 
+  const renderOption = (option: Option) => (
+    <button
+      key={option.value}
+      type="button"
+      onClick={() => handleOptionSelect(option.value)}
+      className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-800 ${
+        currentValue === option.value
+          ? "bg-brand-50 text-brand-700 dark:bg-brand-900/20 dark:text-brand-300"
+          : "text-gray-700 dark:text-gray-300"
+      }`}
+    >
+      {option.label}
+    </button>
+  );
+
   if (!searchable) {
     // Fallback to native select when searchable is false
     return (
@@ -116,11 +148,21 @@ const Select: React.FC<SelectProps> = ({
         <option disabled value="" className="text-gray-700 dark:bg-gray-900 dark:text-gray-400">
           {placeholder}
         </option>
-        {options.map((option) => (
-          <option key={option.value} value={option.value} className="text-gray-700 dark:bg-gray-900 dark:text-gray-400">
-            {option.label}
-          </option>
-        ))}
+        {filteredGroups
+          ? filteredGroups.map((group) => (
+              <optgroup key={group.label} label={group.label}>
+                {group.options.map((option) => (
+                  <option key={option.value} value={option.value} className="text-gray-700 dark:bg-gray-900 dark:text-gray-400">
+                    {option.label}
+                  </option>
+                ))}
+              </optgroup>
+            ))
+          : options.map((option) => (
+              <option key={option.value} value={option.value} className="text-gray-700 dark:bg-gray-900 dark:text-gray-400">
+                {option.label}
+              </option>
+            ))}
       </select>
     );
   }
@@ -172,20 +214,18 @@ const Select: React.FC<SelectProps> = ({
           {/* Options List */}
           <div className="max-h-60 overflow-auto py-1">
             {filteredOptions.length > 0 ? (
-              filteredOptions.map((option) => (
-                <button
-                  key={option.value}
-                  type="button"
-                  onClick={() => handleOptionSelect(option.value)}
-                  className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-800 ${
-                    currentValue === option.value
-                      ? "bg-brand-50 text-brand-700 dark:bg-brand-900/20 dark:text-brand-300"
-                      : "text-gray-700 dark:text-gray-300"
-                  }`}
-                >
-                  {option.label}
-                </button>
-              ))
+              filteredGroups ? (
+                filteredGroups.map((group) => (
+                  <div key={group.label}>
+                    <div className="px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                      {group.label}
+                    </div>
+                    {group.options.map(renderOption)}
+                  </div>
+                ))
+              ) : (
+                filteredOptions.map(renderOption)
+              )
             ) : (
               <div className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">No options found</div>
             )}

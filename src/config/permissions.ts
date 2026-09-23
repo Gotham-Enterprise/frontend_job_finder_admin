@@ -84,6 +84,13 @@ export const GLOBAL_PERMISSION_CONFIG: GlobalPermissionConfig = {
       description: "Manage career opportunities and job listings",
       path: "/admin/careers",
     },
+    {
+      key: "affiliates",
+      name: "Affiliates",
+      icon: "HandShakeIcon",
+      description: "Manage affiliate partners, links, feeds, and analytics",
+      path: "/admin/affiliates",
+    },
   ],
 
   defaultPermissions: {
@@ -98,6 +105,7 @@ export const GLOBAL_PERMISSION_CONFIG: GlobalPermissionConfig = {
     medicalLibrary: { view: true, create: false, update: false, delete: false },
     // forum: { view: true, create: false, update: false, delete: false },
     unlockRequest: { view: true, create: false, update: false, delete: false },
+    affiliates: { view: false, create: false, update: false, delete: false },
   },
 
   roleBasedPermissions: {
@@ -113,6 +121,7 @@ export const GLOBAL_PERMISSION_CONFIG: GlobalPermissionConfig = {
       medicalLibrary: { view: true, create: true, update: true, delete: true },
       // forum: { view: true, create: false, update: true, delete: true },
       unlockRequest: { view: true, create: false, update: false, delete: true },
+      affiliates: { view: true, create: true, update: true, delete: true },
     },
     "super-admin": {
       tickets: { view: true, create: true, update: true, delete: true },
@@ -126,6 +135,7 @@ export const GLOBAL_PERMISSION_CONFIG: GlobalPermissionConfig = {
       medicalLibrary: { view: true, create: true, update: true, delete: true },
       // forum: { view: true, create: false, update: true, delete: true },
       unlockRequest: { view: true, create: false, update: false, delete: true },
+      affiliates: { view: true, create: true, update: true, delete: true },
     },
   },
 };

@@ -16,7 +16,9 @@ import TextArea from "@/components/form/input/TextArea";
 import { supervisorApi } from "@/services/api/supervisor";
 import { useCitiesByState } from "@/lib/useStatesCities";
 import {
+  emptySupervisorBoardCertification,
   emptySupervisorLicenseEntry,
+  emptySupervisorOffering,
   formDataToUpdatePayload,
   getSupervisorLicenseEntryDefaults,
   mapSupervisorDetailsToFormData,
@@ -25,6 +27,7 @@ import {
   type SupervisorFieldErrors,
   type SupervisorLicenseEntryFormData,
 } from "@/services/utils/supervisorProfileForm";
+import { EditSupervisorMedicalDirectorFields } from "./EditSupervisorMedicalDirectorFields";
 import {
   useUpdateSupervisor,
   useSupervisorEditFormOptions,
@@ -37,6 +40,7 @@ import {
   SUPERVISOR_PROFILE_TEXT_MAX_LENGTH,
   SUPERVISOR_CERTIFICATIONS_DISABLED_MESSAGE,
   getSupervisorCredentialSelectOptions,
+  isMedicalDirectorSupervisorType,
   isMonthlyOnlySupervisorType,
   isSupervisorTypeWithoutCertifications,
   supervisorYearsOfExperienceSelectOptions,
@@ -72,6 +76,14 @@ const emptyForm = (): SupervisorEditFormData => ({
   acceptingSupervisees: false,
   supervisionFeeType: "",
   supervisionFeeAmount: "",
+  offerSupervisingPhysician: false,
+  offerCollaboratingPhysician: false,
+  offerings: {
+    supervising: emptySupervisorOffering(),
+    collaborating: emptySupervisorOffering(),
+  },
+  boardCertified: false,
+  boardCertifications: [emptySupervisorBoardCertification()],
 });
 
 type SelectChoice = { label: string; value: string };
@@ -140,9 +152,18 @@ export const EditSupervisorModal: React.FC<EditSupervisorModalProps> = ({
     return "Select city";
   }, [formData.state, citiesLoading, cityChoices.length]);
 
+  // Medical Director profiles cannot switch type (dedicated signup path);
+  // conversely no other profile may switch INTO Medical Director from edit.
+  const isMedicalDirectorProfile = isMedicalDirectorSupervisorType(formData.supervisorType);
+
   const supervisorTypeChoices = useMemo(
-    () => choicesOnly(supervisorTypesData.map((t) => ({ label: t.name, value: t.name }))),
-    [supervisorTypesData],
+    () =>
+      choicesOnly(
+        supervisorTypesData
+          .filter((t) => isMedicalDirectorProfile || !isMedicalDirectorSupervisorType(t.name))
+          .map((t) => ({ label: t.name, value: t.name })),
+      ),
+    [supervisorTypesData, isMedicalDirectorProfile],
   );
 
   const selectedType = useMemo(
@@ -574,7 +595,13 @@ export const EditSupervisorModal: React.FC<EditSupervisorModalProps> = ({
                       onChange={(v) => updateField("supervisorType", v)}
                       options={supervisorTypeChoices}
                       placeholder={supervisorTypesLoading ? "Loading…" : "Select supervisor type"}
+                      disabled={isMedicalDirectorProfile}
                     />
+                    {isMedicalDirectorProfile ? (
+                      <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                        The supervisor type cannot be changed for Medical Directors.
+                      </p>
+                    ) : null}
                   </FormField>
                   <FormField label="Occupation" required error={fieldErrors.occupation}>
                     <Select
@@ -765,23 +792,26 @@ export const EditSupervisorModal: React.FC<EditSupervisorModalProps> = ({
                     JPEG, PNG, PDF, DOC, DOCX · max 5 MB
                   </p>
                 </FormField>
-                <FormField label="Certifications" error={fieldErrors.certification}>
-                  <div title={certificationsDisabled ? SUPERVISOR_CERTIFICATIONS_DISABLED_MESSAGE : undefined}>
-                    <MultiSelect
-                      label=""
-                      options={certMultiOptions}
-                      value={formData.certification}
-                      onChange={(selected) => updateField("certification", selected)}
-                      placeholder={certificationsPlaceholder}
-                      disabled={certificationsDisabled || isSaving}
-                    />
-                  </div>
-                  {certificationsDisabled ? (
-                    <p className="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
-                      {SUPERVISOR_CERTIFICATIONS_DISABLED_MESSAGE}
-                    </p>
-                  ) : null}
-                </FormField>
+                {/* Medical Directors use the dedicated Board Certification section instead. */}
+                {!isMedicalDirectorProfile ? (
+                  <FormField label="Certifications" error={fieldErrors.certification}>
+                    <div title={certificationsDisabled ? SUPERVISOR_CERTIFICATIONS_DISABLED_MESSAGE : undefined}>
+                      <MultiSelect
+                        label=""
+                        options={certMultiOptions}
+                        value={formData.certification}
+                        onChange={(selected) => updateField("certification", selected)}
+                        placeholder={certificationsPlaceholder}
+                        disabled={certificationsDisabled || isSaving}
+                      />
+                    </div>
+                    {certificationsDisabled ? (
+                      <p className="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                        {SUPERVISOR_CERTIFICATIONS_DISABLED_MESSAGE}
+                      </p>
+                    ) : null}
+                  </FormField>
+                ) : null}
                 <FormField label="About" required error={fieldErrors.describeYourself}>
                   <TextArea
                     value={formData.describeYourself}
@@ -814,6 +844,21 @@ export const EditSupervisorModal: React.FC<EditSupervisorModalProps> = ({
                   </p>
                 </FormField>
               </section>
+
+              {/* Medical Director extras: board certification + secondary offerings */}
+              {isMedicalDirectorProfile ? (
+                <EditSupervisorMedicalDirectorFields
+                  formData={formData}
+                  setFormData={setFormData}
+                  fieldErrors={fieldErrors}
+                  setFieldErrors={setFieldErrors}
+                  supervisorTypesData={supervisorTypesData}
+                  stateOptions={choicesOnly(stateOptions)}
+                  statesLoading={statesLoading}
+                  isSaving={isSaving}
+                  supervisorId={supervisorId}
+                />
+              ) : null}
 
               {/* Supervision preferences */}
               <section className="space-y-4">
@@ -849,15 +894,21 @@ export const EditSupervisorModal: React.FC<EditSupervisorModalProps> = ({
                     />
                   </FormField>
                 </div>
-                <FormField label="Patient Population" error={fieldErrors.patientPopulation}>
-                  <MultiSelect
-                    label=""
-                    options={patientPopMultiOptions}
-                    value={formData.patientPopulation}
-                    onChange={(selected) => updateField("patientPopulation", selected)}
-                    placeholder="Select patient populations..."
-                  />
-                </FormField>
+                {/* Clinical-supervision field — a plain Medical Director (no
+                    physician offerings) has no patient population. */}
+                {(!isMedicalDirectorProfile ||
+                  formData.offerSupervisingPhysician ||
+                  formData.offerCollaboratingPhysician) && (
+                  <FormField label="Patient Population" error={fieldErrors.patientPopulation}>
+                    <MultiSelect
+                      label=""
+                      options={patientPopMultiOptions}
+                      value={formData.patientPopulation}
+                      onChange={(selected) => updateField("patientPopulation", selected)}
+                      placeholder="Select patient populations..."
+                    />
+                  </FormField>
+                )}
               </section>
 
               {/* Fee */}

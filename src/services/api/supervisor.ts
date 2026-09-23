@@ -23,6 +23,7 @@ export const supervisorApi = {
       if (filters.keyword) queryParams.append("keyword", filters.keyword);
       // Only send verificationStatus when a specific one is selected; omitting it returns all statuses
       if (filters.verificationStatus) queryParams.append("verificationStatus", filters.verificationStatus);
+      if (filters.supervisorType) queryParams.append("supervisorType", filters.supervisorType);
       if (filters.sortBy) queryParams.append("sortBy", filters.sortBy);
       if (filters.sortOrder) queryParams.append("sortOrder", filters.sortOrder);
 

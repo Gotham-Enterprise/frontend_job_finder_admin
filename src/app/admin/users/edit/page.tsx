@@ -51,7 +51,9 @@ export default function EditUserPage() {
       
       const access: any = {};
 
-      // Map frontend permission keys to API permission names
+      // Map frontend permission keys to API permission names.
+      // Only include keys that have a matching row in AdminPermissions (DB).
+      // 'medicalLibrary' has NO DB row → omit it (backend would reject it).
       const keyToApiNameMap: { [key: string]: string } = {
         'tickets': 'Tickets',
         'jobSeekers': 'Job Seekers',
@@ -61,7 +63,8 @@ export default function EditUserPage() {
         'blog': 'Blog',
         'careers': 'Careers',
         'jobs': 'Jobs',
-        'medicalLibrary': 'Medical Library',
+        'unlockRequest': 'Unlock Requests',
+        'affiliates': 'Affiliates',
       };
 
       // Non-standard modules (e.g. "Unlock Requests") must be sent back with
@@ -79,6 +82,7 @@ export default function EditUserPage() {
         'Jobs': 'jobs',
         'Medical Library': 'medicalLibrary',
         'Unlock Requests': 'unlockRequest',
+        'Affiliates': 'affiliates',
       };
       const formKeyToExistingApiName: { [key: string]: string } = {};
       Object.keys(selectedUser.access || {}).forEach(apiName => {

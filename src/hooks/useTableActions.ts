@@ -1,4 +1,4 @@
-import { useAuthPermissions } from './useAuthPermissions';
+import { usePermissions } from '../context/PermissionProvider';
 import { hasPermission } from '../utils/permissionUtils';
 import { UserPermissions } from '../services/types/permissions';
 
@@ -56,7 +56,7 @@ export const useTableActions = ({
   module, 
   actions = {} 
 }: UseTableActionsProps) => {
-  const { permissions, loading, error } = useAuthPermissions();
+  const { permissions, loading, error } = usePermissions();
 
   const getRowActions = (item: any): TableAction[] => {
     if (!permissions || loading) return [];

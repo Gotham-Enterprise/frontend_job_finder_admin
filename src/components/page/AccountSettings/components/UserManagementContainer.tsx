@@ -16,6 +16,7 @@ const MOCK_CURRENT_USER_PERMISSIONS = {
   medicalLibrary: { view: true, create: true, update: true, delete: false },
   forum: { view: true, create: false, update: true, delete: false },
   unlockRequest: { view: true, create: false, update: false, delete: false },
+  affiliates: { view: true, create: true, update: true, delete: true },
 };
 
 const UserManagementContainer: React.FC = () => {

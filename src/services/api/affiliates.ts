@@ -31,6 +31,9 @@ export interface AffiliatePartner {
   outboundFeedLastBuildStatus?: "success" | "failed" | "in_progress";
   outboundFeedLastBuildError?: string;
   outboundFeedJobCount?: number;
+  landingEnabled?: boolean;
+  landingSlug?: string | null;
+  landingUrl?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -42,6 +45,7 @@ export interface AffiliatePartnerFeedRule {
   occupationName: string;
   specialtyName?: string | null;
   states: string[];
+  cities: string[];
   workSetting?: string | null;
   cpc?: number | null;
   cpa?: number | null;
@@ -197,6 +201,33 @@ export interface AffiliateAnalytics {
   totalPayout: number;
 }
 
+export interface AffiliateFeedJobTargetCount {
+  ruleId: string;
+  ruleGroupLabel: string | null;
+  occupationName: string;
+  specialtyName: string | null;
+  states: string[];
+  cities: string[];
+  workSetting: string | null;
+  jobCount: number;
+}
+
+export interface AffiliateFeedJobPartnerCount {
+  partnerId: string;
+  partnerName: string;
+  uniqueJobCount: number;
+  targets: AffiliateFeedJobTargetCount[];
+}
+
+export interface AffiliateFeedJobCounts {
+  partners: AffiliateFeedJobPartnerCount[];
+}
+
+export interface AffiliateConversionAuditSummary {
+  status: "pending" | "completed" | "failed";
+  overallResult: "pass" | "flagged" | "incomplete" | null;
+}
+
 export interface AffiliateConversionRow {
   id: string;
   jobPostId: string;
@@ -208,6 +239,54 @@ export interface AffiliateConversionRow {
   partnerConversionId: string | null;
   ipAddress: string | null;
   convertedAt: string;
+  audit?: AffiliateConversionAuditSummary | null;
+}
+
+export interface AffiliateConversionAuditDetail {
+  id: string;
+  conversionId: string;
+  status: "pending" | "completed" | "failed";
+  overallResult: "pass" | "flagged" | "incomplete" | null;
+  candidateOccupationName: string | null;
+  jobTitle: string | null;
+  jobOccupationName: string | null;
+  resumeId: string | null;
+  resumeInferredOccupationName: string | null;
+  resumeOccupationMatch: boolean | null;
+  resumeOccupationReason: string | null;
+  jobTitleOccupationMatch: boolean | null;
+  jobTitleOccupationReason: string | null;
+  jobTitleCandidateMatch: boolean | null;
+  jobTitleCandidateReason: string | null;
+  errorMessage: string | null;
+  auditedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  conversion: {
+    id: string;
+    jobPostId: string | null;
+    candidateId: string | null;
+    convertedAt: string;
+  };
+}
+
+export interface EnqueueConversionAuditsPayload {
+  conversionId?: string;
+  force?: boolean;
+  affiliateId?: string;
+  startDate?: string;
+  endDate?: string;
+  source?: "manual" | "auto-redirect" | "partner-feed";
+  partnerType?: "selling" | "buying";
+  deduplicate?: boolean;
+  requireApplication?: boolean;
+  excludeFlaggedConversions?: boolean;
+}
+
+export interface EnqueueConversionAuditsResult {
+  queued: number;
+  skipped: number;
+  totalMatching: number;
 }
 
 export interface AffiliateConversionsResponse {
@@ -234,6 +313,8 @@ export interface CreatePartnerData {
   outboundFeedCronExpression?: string;
   outboundFeedTimezone?: string;
   outboundFeedFilename?: string;
+  landingEnabled?: boolean;
+  landingSlug?: string;
 }
 
 export interface UpdatePartnerData {
@@ -251,6 +332,8 @@ export interface UpdatePartnerData {
   outboundFeedCronExpression?: string;
   outboundFeedTimezone?: string;
   outboundFeedFilename?: string;
+  landingEnabled?: boolean;
+  landingSlug?: string;
 }
 
 export interface CreateFeedRuleData {
@@ -258,6 +341,7 @@ export interface CreateFeedRuleData {
   occupationName: string;
   specialtyName?: string | null;
   states?: string[];
+  cities?: string[];
   workSetting?: string | null;
   cpc?: number | null;
   cpa?: number | null;
@@ -269,6 +353,7 @@ export interface UpdateFeedRuleData {
   occupationName?: string;
   specialtyName?: string | null;
   states?: string[];
+  cities?: string[];
   workSetting?: string | null;
   cpc?: number | null;
   cpa?: number | null;
@@ -324,11 +409,21 @@ export const getAffiliatePartners = async (params?: {
   page?: number;
   limit?: number;
   status?: string;
+  landingEnabled?: boolean;
+  outboundFeedEnabled?: boolean;
+  search?: string;
 }): Promise<{ data: AffiliatePartner[]; total: number; page: number; totalPages: number }> => {
   const queryParams = new URLSearchParams();
   if (params?.page) queryParams.append("page", params.page.toString());
   if (params?.limit) queryParams.append("limit", params.limit.toString());
   if (params?.status) queryParams.append("status", params.status);
+  if (params?.landingEnabled !== undefined) {
+    queryParams.append("landingEnabled", String(params.landingEnabled));
+  }
+  if (params?.outboundFeedEnabled !== undefined) {
+    queryParams.append("outboundFeedEnabled", String(params.outboundFeedEnabled));
+  }
+  if (params?.search) queryParams.append("search", params.search);
   const queryString = queryParams.toString();
   const res = await apiGet<{
     data: AffiliatePartner[];
@@ -389,11 +484,13 @@ export const getAffiliateLinks = async (params?: {
   page?: number;
   limit?: number;
   affiliateId?: string;
+  q?: string;
 }): Promise<{ data: AffiliateLink[]; total: number; page: number; totalPages: number }> => {
   const queryParams = new URLSearchParams();
   if (params?.page) queryParams.append("page", params.page.toString());
   if (params?.limit) queryParams.append("limit", params.limit.toString());
   if (params?.affiliateId) queryParams.append("affiliateId", params.affiliateId);
+  if (params?.q) queryParams.append("q", params.q);
   const queryString = queryParams.toString();
   const res = await apiGet<{ data: AffiliateLink[]; pagination: { page: number; limit: number; total: number; totalPages: number } }>(`/api/admin/affiliates/links${queryString ? `?${queryString}` : ""}`);
   return {
@@ -542,6 +639,7 @@ export const getAffiliateAnalytics = async (params?: {
   partnerType?: "selling" | "buying";
   deduplicate?: boolean;
   requireApplication?: boolean;
+  excludeFlaggedConversions?: boolean;
 }): Promise<AffiliateAnalytics> => {
   const queryParams = new URLSearchParams();
   if (params?.affiliateId) queryParams.append("affiliateId", params.affiliateId);
@@ -551,9 +649,106 @@ export const getAffiliateAnalytics = async (params?: {
   if (params?.partnerType) queryParams.append("partnerType", params.partnerType);
   if (params?.deduplicate !== undefined) queryParams.append("deduplicate", String(params.deduplicate));
   if (params?.requireApplication !== undefined) queryParams.append("requireApplication", String(params.requireApplication));
+  if (params?.excludeFlaggedConversions !== undefined) {
+    queryParams.append("excludeFlaggedConversions", String(params.excludeFlaggedConversions));
+  }
   const queryString = queryParams.toString();
   const response = await apiGet<{ success: boolean; data: AffiliateAnalytics }>(
     `/api/admin/affiliates/analytics${queryString ? `?${queryString}` : ""}`
+  );
+  return response.data;
+};
+
+export interface LandingAnalytics {
+  totalClicks: number;
+  uniqueIpAddresses: number;
+  clicksOverTime: Array<{
+    date: string;
+    clicks: number;
+    uniqueIpAddresses: number;
+  }>;
+}
+
+export interface LandingClickRow {
+  id: string;
+  clickedAt: string;
+  ipAddress: string | null;
+  userAgent: string | null;
+  referrer: string | null;
+  affiliate: {
+    id: string;
+    name: string;
+  };
+}
+
+export interface LandingClicksResponse {
+  data: LandingClickRow[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
+export type LandingAnalyticsParams = {
+  affiliateId?: string;
+  startDate?: string;
+  endDate?: string;
+  deduplicate?: boolean;
+};
+
+export type LandingClicksParams = LandingAnalyticsParams & {
+  page?: number;
+  limit?: number;
+};
+
+export const getLandingAnalytics = async (
+  params?: LandingAnalyticsParams
+): Promise<LandingAnalytics> => {
+  const queryParams = new URLSearchParams();
+  if (params?.affiliateId) queryParams.append("affiliateId", params.affiliateId);
+  if (params?.startDate) queryParams.append("startDate", params.startDate);
+  if (params?.endDate) queryParams.append("endDate", params.endDate);
+  if (params?.deduplicate !== undefined) {
+    queryParams.append("deduplicate", String(params.deduplicate));
+  }
+  const queryString = queryParams.toString();
+  const response = await apiGet<{ success: boolean; data: LandingAnalytics }>(
+    `/api/admin/affiliates/analytics/landing${queryString ? `?${queryString}` : ""}`
+  );
+  return response.data;
+};
+
+export const getLandingClicks = async (
+  params?: LandingClicksParams
+): Promise<LandingClicksResponse> => {
+  const queryParams = new URLSearchParams();
+  if (params?.affiliateId) queryParams.append("affiliateId", params.affiliateId);
+  if (params?.startDate) queryParams.append("startDate", params.startDate);
+  if (params?.endDate) queryParams.append("endDate", params.endDate);
+  if (params?.page) queryParams.append("page", String(params.page));
+  if (params?.limit) queryParams.append("limit", String(params.limit));
+  const queryString = queryParams.toString();
+  const response = await apiGet<{
+    success: boolean;
+    data: LandingClickRow[];
+    pagination: LandingClicksResponse["pagination"];
+  }>(`/api/admin/affiliates/landing-clicks${queryString ? `?${queryString}` : ""}`);
+  return {
+    data: response.data,
+    pagination: response.pagination,
+  };
+};
+
+export const getAffiliateFeedJobCounts = async (params?: {
+  affiliateId?: string;
+}): Promise<AffiliateFeedJobCounts> => {
+  const queryParams = new URLSearchParams();
+  if (params?.affiliateId) queryParams.append("affiliateId", params.affiliateId);
+  const queryString = queryParams.toString();
+  const response = await apiGet<{ success: boolean; data: AffiliateFeedJobCounts }>(
+    `/api/admin/affiliates/analytics/feed-job-counts${queryString ? `?${queryString}` : ""}`
   );
   return response.data;
 };
@@ -566,6 +761,8 @@ export type AffiliateConversionsParams = {
   partnerType?: "selling" | "buying";
   deduplicate?: boolean;
   requireApplication?: boolean;
+  excludeFlaggedConversions?: boolean;
+  auditResult?: "pass" | "flagged" | "incomplete" | "pending" | "failed" | "unaudited";
   page?: number;
   limit?: number;
 };
@@ -583,6 +780,10 @@ export const getAffiliateConversions = async (
   if (params?.requireApplication !== undefined) {
     queryParams.append("requireApplication", String(params.requireApplication));
   }
+  if (params?.excludeFlaggedConversions !== undefined) {
+    queryParams.append("excludeFlaggedConversions", String(params.excludeFlaggedConversions));
+  }
+  if (params?.auditResult) queryParams.append("auditResult", params.auditResult);
   if (params?.page) queryParams.append("page", String(params.page));
   if (params?.limit) queryParams.append("limit", String(params.limit));
   const queryString = queryParams.toString();
@@ -595,6 +796,25 @@ export const getAffiliateConversions = async (
     data: response.data || [],
     pagination: response.pagination ?? { page: 1, limit: 50, total: 0, totalPages: 0 },
   };
+};
+
+export const getConversionAudit = async (
+  conversionId: string
+): Promise<AffiliateConversionAuditDetail> => {
+  const response = await apiGet<{ success: boolean; data: AffiliateConversionAuditDetail }>(
+    `/api/admin/affiliates/analytics/conversions/${conversionId}/audit`
+  );
+  return response.data;
+};
+
+export const enqueueConversionAudits = async (
+  payload: EnqueueConversionAuditsPayload
+): Promise<EnqueueConversionAuditsResult> => {
+  const response = await apiPost<{ success: boolean; data: EnqueueConversionAuditsResult }>(
+    "/api/admin/affiliates/analytics/conversions/audit",
+    payload
+  );
+  return response.data;
 };
 
 // Outbound Feed APIs
@@ -656,6 +876,8 @@ export interface CoRegRecord {
   attempts: number;
   errorMessage: string | null;
   sentAt: string;
+  resentAt: string | null;
+  registrationDate: string | null;
   updatedAt: string;
 }
 
@@ -692,6 +914,34 @@ export const getCoRegs = async (params?: {
   if (params?.partner) queryParams.append("partner", params.partner);
   const queryString = queryParams.toString();
   return apiGet<CoRegListResponse>(`/api/admin/affiliates/coreg${queryString ? `?${queryString}` : ""}`);
+};
+
+export interface CoRegResendResult {
+  id: string;
+  outcome: "resent" | "skipped" | "failed";
+  reason?: string;
+  status?: string;
+  responseCode?: number | null;
+}
+
+export interface CoRegResendResponse {
+  success: boolean;
+  dailyLimit: number;
+  todayCount: number;
+  stoppedReason: string | null;
+  results: CoRegResendResult[];
+  summary: {
+    resent: number;
+    failed: number;
+    skipped: number;
+  };
+}
+
+export const resendCoRegs = async (payload: {
+  partner: string;
+  ids: string[];
+}): Promise<CoRegResendResponse> => {
+  return apiPost<CoRegResendResponse>("/api/admin/affiliates/coreg/resend", payload);
 };
 
 // ===== Report Recipients APIs =====
