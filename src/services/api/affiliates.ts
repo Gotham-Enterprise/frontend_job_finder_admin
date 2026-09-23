@@ -410,6 +410,8 @@ export const getAffiliatePartners = async (params?: {
   limit?: number;
   status?: string;
   landingEnabled?: boolean;
+  outboundFeedEnabled?: boolean;
+  search?: string;
 }): Promise<{ data: AffiliatePartner[]; total: number; page: number; totalPages: number }> => {
   const queryParams = new URLSearchParams();
   if (params?.page) queryParams.append("page", params.page.toString());
@@ -418,6 +420,10 @@ export const getAffiliatePartners = async (params?: {
   if (params?.landingEnabled !== undefined) {
     queryParams.append("landingEnabled", String(params.landingEnabled));
   }
+  if (params?.outboundFeedEnabled !== undefined) {
+    queryParams.append("outboundFeedEnabled", String(params.outboundFeedEnabled));
+  }
+  if (params?.search) queryParams.append("search", params.search);
   const queryString = queryParams.toString();
   const res = await apiGet<{
     data: AffiliatePartner[];
