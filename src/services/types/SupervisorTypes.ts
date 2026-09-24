@@ -23,6 +23,7 @@ export interface SupervisorFiltersProps {
   onFilterChange: (key: keyof SupervisorFilters, value: any) => void;
   statusOptions: Array<{ value: string; label: string }>;
   typeOptions: Array<{ value: string; label: string }>;
+  subscriptionOptions: Array<{ value: string; label: string }>;
   hasActiveFilters: boolean;
   clearIndividualFilter: (filterType: string) => void;
 }
