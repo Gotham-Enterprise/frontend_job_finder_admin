@@ -1,5 +1,31 @@
 export type VerificationStatus = "PENDING" | "APPROVED" | "REJECTED";
 
+/** PAID = active paid subscription; FREE = free plan or no active subscription. */
+export type SupervisorSubscriptionType = "PAID" | "FREE";
+
+/**
+ * Current subscription summary on list items: the latest ACTIVE/TRIALING
+ * subscription, preferring a paid plan. Null when none is active.
+ */
+export const SUBSCRIPTION_DATE_FILTER_KEYS = [
+  "subscriptionStartFrom",
+  "subscriptionStartTo",
+  "subscriptionEndFrom",
+  "subscriptionEndTo",
+] as const;
+
+export type SubscriptionDateFilterKey = (typeof SUBSCRIPTION_DATE_FILTER_KEYS)[number];
+
+export interface SupervisorSubscriptionSummary {
+  status: "ACTIVE" | "TRIALING";
+  planName: string | null;
+  /** Plan priceInCents > 0 — same rule the backend uses for paid-feature gating. */
+  isPaid: boolean;
+  currentPeriodStart: string | null;
+  currentPeriodEnd: string | null;
+  cancelAtPeriodEnd: boolean;
+}
+
 export interface SupervisorOccupation {
   id: number;
   name: string;
@@ -36,6 +62,7 @@ export interface Supervisor {
   emailVerifiedAt: string | null;
   /** Whether the supervisor's profile is hidden from public listings; drives the Hide/Show action. */
   hideProfile: boolean;
+  subscription: SupervisorSubscriptionSummary | null;
 }
 
 /** Response shape from PATCH /api/supervision/admin/:id/hide-profile */
@@ -67,6 +94,12 @@ export interface SupervisorFilters {
   verificationStatus?: VerificationStatus | "";
   /** Filter by the supervisor's primary type (e.g. "Medical Director"). */
   supervisorType?: string;
+  subscriptionType?: SupervisorSubscriptionType | "";
+  /** Inclusive YYYY-MM-DD bounds on the active subscription's currentPeriodStart / currentPeriodEnd. */
+  subscriptionStartFrom?: string;
+  subscriptionStartTo?: string;
+  subscriptionEndFrom?: string;
+  subscriptionEndTo?: string;
   sortBy?: SupervisorSortBy;
   sortOrder?: "asc" | "desc";
 }
