@@ -11,10 +11,11 @@ import {
   useRebuildOutboundFeed,
 } from '@/services/hooks/useAffiliates'
 import type { AffiliatePartner, CreatePartnerData } from '@/services/api/affiliates'
-import { Edit2, Trash2, Plus, Mail, Phone, Globe, CheckCircle, XCircle, AlertCircle, Building2, RefreshCw, Clock, AlertTriangle, Rss, MousePointerClick, Search } from 'lucide-react'
+import { Edit2, Trash2, Plus, Mail, Phone, Globe, CheckCircle, XCircle, AlertCircle, Building2, RefreshCw, Clock, AlertTriangle, Rss, MousePointerClick, Search, Users } from 'lucide-react'
 import Pagination from '@/components/tables/Pagination'
 import PartnerModal from './PartnerModal'
 import ReportRecipientsModal from './ReportRecipientsModal'
+import PortalUsersModal from './PortalUsersModal'
 import { useAffiliatePermissions } from '@/hooks/useAffiliatePermissions'
 
 export default function PartnersTab() {
@@ -26,6 +27,7 @@ export default function PartnersTab() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingPartner, setEditingPartner] = useState<AffiliatePartner | null>(null)
   const [reportRecipientsPartner, setReportRecipientsPartner] = useState<AffiliatePartner | null>(null)
+  const [portalUsersPartner, setPortalUsersPartner] = useState<AffiliatePartner | null>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const handleSearchChange = (value: string) => {
@@ -387,6 +389,15 @@ export default function PartnersTab() {
                         <Rss className={`w-4 h-4 ${rebuildMutation.isPending ? 'animate-pulse' : ''}`} />
                       </button>
                     )}
+                    {(canCreate || canUpdate || canDelete) && (
+                      <button
+                        onClick={() => setPortalUsersPartner(partner)}
+                        className="p-2 text-primary hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-colors"
+                        title="Manage dashboard users"
+                      >
+                        <Users className="w-4 h-4" />
+                      </button>
+                    )}
                     {partner.outboundFeedEnabled && canUpdate && (
                       <button
                         onClick={() => setReportRecipientsPartner(partner)}
@@ -472,6 +483,15 @@ export default function PartnersTab() {
         onSubmit={handleSubmit}
         isSubmitting={createMutation.isPending || updateMutation.isPending}
       />
+
+      {portalUsersPartner && (
+        <PortalUsersModal
+          isOpen={!!portalUsersPartner}
+          onClose={() => setPortalUsersPartner(null)}
+          partnerId={portalUsersPartner.id}
+          partnerName={portalUsersPartner.name}
+        />
+      )}
 
       {/* Report Recipients Modal */}
       {reportRecipientsPartner && (
