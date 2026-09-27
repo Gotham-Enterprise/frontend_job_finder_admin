@@ -9,6 +9,7 @@ import {
   useHideSupervisorProfile,
 } from "@/services/hooks/useSupervisors";
 import { SupervisorFilters, SupervisorSortBy, VerificationStatus } from "@/services/types/supervisor";
+import { useSupervisorTypesData } from "./useSupervisees";
 
 export const useSupervisorLogic = () => {
   const router = useRouter();
@@ -20,6 +21,7 @@ export const useSupervisorLogic = () => {
     if (hasUrlParams) {
       const keyword = searchParams.get("keyword") || "";
       const statusParam = searchParams.get("verificationStatus");
+      const typeParam = searchParams.get("supervisorType");
       const validStatus =
         statusParam && ["PENDING", "APPROVED", "REJECTED"].includes(statusParam)
           ? (statusParam as VerificationStatus)
@@ -31,10 +33,11 @@ export const useSupervisorLogic = () => {
         limit: parseInt(searchParams.get("limit") || "10", 10),
         keyword,
         verificationStatus: validStatus || undefined,
+        supervisorType: typeParam || undefined,
       };
 
       const isSimpleNavigation =
-        (!urlPage || urlPage === "1") && !keyword && !statusParam;
+        (!urlPage || urlPage === "1") && !keyword && !statusParam && !typeParam;
 
       if (isSimpleNavigation && typeof window !== "undefined") {
         localStorage.removeItem("supervisor-search-state");
@@ -59,6 +62,7 @@ export const useSupervisorLogic = () => {
               limit: parsed.limit || 10,
               keyword: parsed.keyword || "",
               verificationStatus: parsed.verificationStatus || undefined,
+              supervisorType: parsed.supervisorType || undefined,
               sortBy: parsed.sortBy || undefined,
               sortOrder: parsed.sortOrder || undefined,
             };
@@ -72,7 +76,7 @@ export const useSupervisorLogic = () => {
       }
     }
 
-    return { page: 1, limit: 10, keyword: "", verificationStatus: undefined };
+    return { page: 1, limit: 10, keyword: "", verificationStatus: undefined, supervisorType: undefined };
   };
 
   const initialFilters = getInitialFilters();
@@ -146,6 +150,7 @@ export const useSupervisorLogic = () => {
     if (filters.limit && filters.limit !== 10) params.set("limit", filters.limit.toString());
     if (filters.keyword) params.set("keyword", encodeURIComponent(filters.keyword));
     if (filters.verificationStatus) params.set("verificationStatus", filters.verificationStatus);
+    if (filters.supervisorType) params.set("supervisorType", filters.supervisorType);
 
     const newURL = params.toString() ? `?${params.toString()}` : "";
     const currentURL = window.location.search;
@@ -182,6 +187,7 @@ export const useSupervisorLogic = () => {
           limit: filters.limit,
           keyword: filters.keyword,
           verificationStatus: filters.verificationStatus,
+          supervisorType: filters.supervisorType,
           sortBy: filters.sortBy,
           sortOrder: filters.sortOrder,
         })
@@ -227,6 +233,14 @@ export const useSupervisorLogic = () => {
       { value: "REJECTED", label: "Rejected" },
     ],
     []
+  );
+
+  // Primary-type filter options from the seeded hierarchy (Medical Director,
+  // Supervising Physician, ...).
+  const { data: supervisorTypesData = [] } = useSupervisorTypesData();
+  const typeOptions = useMemo(
+    () => supervisorTypesData.map((t) => ({ value: t.name, label: t.name })),
+    [supervisorTypesData]
   );
 
   const itemsPerPageOptions = useMemo(
@@ -364,7 +378,13 @@ export const useSupervisorLogic = () => {
   }, [rejectModal.supervisorId, rejectNotes, rejectMutate, closeRejectModal]);
 
   const clearAllFilters = useCallback(() => {
-    setFilters({ page: 1, limit: 10, keyword: "", verificationStatus: undefined });
+    setFilters({
+      page: 1,
+      limit: 10,
+      keyword: "",
+      verificationStatus: undefined,
+      supervisorType: undefined,
+    });
     setSearchInput("");
     if (typeof window !== "undefined") {
       localStorage.removeItem("supervisor-scroll-position");
@@ -377,13 +397,16 @@ export const useSupervisorLogic = () => {
       if (filterType === "verificationStatus") {
         filterChange("verificationStatus", undefined);
       }
+      if (filterType === "supervisorType") {
+        filterChange("supervisorType", undefined);
+      }
     },
     [filterChange]
   );
 
   const hasActiveFilters = useMemo(() => {
-    return !!(searchInput || filters.verificationStatus);
-  }, [searchInput, filters.verificationStatus]);
+    return !!(searchInput || filters.verificationStatus || filters.supervisorType);
+  }, [searchInput, filters.verificationStatus, filters.supervisorType]);
 
   // Debounced keyword search
   useEffect(() => {
@@ -421,6 +444,7 @@ export const useSupervisorLogic = () => {
 
     tableColumns,
     statusOptions,
+    typeOptions,
     itemsPerPageOptions,
 
     sortBy: filters.sortBy,

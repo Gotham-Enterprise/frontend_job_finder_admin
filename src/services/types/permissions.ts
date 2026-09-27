@@ -17,6 +17,7 @@ export interface UserPermissions {
   careers: Permission;
   // forum: Permission;
   unlockRequest: Permission;
+  affiliates: Permission;
 }
 
 export interface CreateUserFormData {
@@ -45,6 +46,7 @@ export const PERMISSION_MODULES: PermissionModule[] = [
   { key: "medicalLibrary", label: "Medical Library" },
   { key: "careers", label: "Careers" },
   { key: "unlockRequest", label: "Unlock Requests" },
+  { key: "affiliates", label: "Affiliates" },
 ];
 
 export const DEFAULT_PERMISSIONS: UserPermissions = {
@@ -59,6 +61,7 @@ export const DEFAULT_PERMISSIONS: UserPermissions = {
   careers: { view: true, create: false, update: false, delete: false },
   // forum: { view: true, create: false, update: false, delete: false },
   unlockRequest: { view: true, create: false, update: false, delete: false },
+  affiliates: { view: false, create: false, update: false, delete: false },
 };
 
 export const ROLE_OPTIONS = [

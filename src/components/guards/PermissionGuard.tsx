@@ -2,8 +2,8 @@
 import React from "react";
 import { usePathname } from "next/navigation";
 import { authUtils } from "@/services/utils/authUtils";
-import { useAuthPermissions } from "@/hooks/useAuthPermissions";
-import { hasPermission, hasAnyModulePermission } from "@/utils/permissionUtils";
+import { usePermissions } from "@/context/PermissionProvider";
+import { hasPermission, hasAnyModulePermission, hasGeneralAdminAccess } from "@/utils/permissionUtils";
 import { UserPermissions } from "@/services/types/permissions";
 import NotFoundState from "@/components/common/NotFoundState";
 
@@ -39,6 +39,7 @@ const hasLegacyPermission = (permissionName: string, action: "view" | "add" | "e
       careers: ["Careers", "careers"],
       tickets: ["Tickets", "tickets"],
       coupons: ["Coupons", "coupons"],
+      affiliates: ["Affiliates", "affiliates", "Affiliates Management"],
     };
 
     const possibleNames = permissionNameMappings[permissionName.toLowerCase()] || [permissionName];
@@ -239,6 +240,24 @@ const getPermissionForPath = (
     };
   }
 
+  if (pathname.startsWith("/admin/affiliates")) {
+    return {
+      permission: "affiliates",
+      action: "view",
+      module: "affiliates",
+      moduleAction: "view",
+    };
+  }
+
+  if (pathname.startsWith("/admin/unlock-requests")) {
+    return {
+      permission: "unlockRequest",
+      action: "view",
+      module: "unlockRequest",
+      moduleAction: "view",
+    };
+  }
+
   return null;
 };
 
@@ -252,7 +271,7 @@ const PermissionGuard: React.FC<PermissionGuardProps> = ({
   showFallback = false,
 }) => {
   const pathname = usePathname();
-  const { permissions, loading, error } = useAuthPermissions();
+  const { permissions, loading, error } = usePermissions();
 
   // Show loading state
   if (loading) {
@@ -310,8 +329,28 @@ const PermissionGuard: React.FC<PermissionGuardProps> = ({
   // Otherwise, check based on the current route
   const pathPermission = getPermissionForPath(pathname);
 
-  // If no specific permission is required for this path, allow access
+  // If no specific permission is required for this path, apply a general-access check.
+  // The dashboard, profile, and account-settings are always accessible.
+  // All other "unrestricted" paths (supervisors, newsletters, analytics, legal, etc.)
+  // require that the user has at least one core admin module permission — this blocks
+  // users whose only permission is a single restricted module (e.g. affiliates-only).
   if (!pathPermission) {
+    const isAlwaysAccessible =
+      pathname === "/admin" ||
+      pathname === "/admin/" ||
+      pathname === "/" ||
+      pathname.startsWith("/admin/profile") ||
+      pathname.startsWith("/admin/account-settings");
+
+    if (!isAlwaysAccessible && permissions && !hasGeneralAdminAccess(permissions)) {
+      const fallbackContent = fallback || (
+        <div className="min-h-screen flex items-center justify-center">
+          <NotFoundState title="Access Denied" message="You don't have permission to access this page." />
+        </div>
+      );
+      return showFallback ? <>{fallbackContent}</> : null;
+    }
+
     return <>{children}</>;
   }
 
@@ -387,7 +426,7 @@ export function withPermission<P extends object>(
  * Hook to check permissions conditionally
  */
 export const usePermissionCheck = () => {
-  const { permissions, loading, error } = useAuthPermissions();
+  const { permissions, loading, error } = usePermissions();
 
   const checkPermission = (
     module: keyof UserPermissions,

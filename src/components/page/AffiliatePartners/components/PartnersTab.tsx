@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useRef } from 'react'
 import {
   useAffiliatePartners,
   useCreateAffiliatePartner,
@@ -11,18 +11,43 @@ import {
   useRebuildOutboundFeed,
 } from '@/services/hooks/useAffiliates'
 import type { AffiliatePartner, CreatePartnerData } from '@/services/api/affiliates'
-import { Edit2, Trash2, Plus, Mail, Phone, Globe, CheckCircle, XCircle, AlertCircle, Building2, RefreshCw, Clock, AlertTriangle, Rss } from 'lucide-react'
+import { Edit2, Trash2, Plus, Mail, Phone, Globe, CheckCircle, XCircle, AlertCircle, Building2, RefreshCw, Clock, AlertTriangle, Rss, MousePointerClick, Search } from 'lucide-react'
 import Pagination from '@/components/tables/Pagination'
 import PartnerModal from './PartnerModal'
 import ReportRecipientsModal from './ReportRecipientsModal'
+import { useAffiliatePermissions } from '@/hooks/useAffiliatePermissions'
 
 export default function PartnersTab() {
+  const { canCreate, canUpdate, canDelete } = useAffiliatePermissions()
   const [page, setPage] = useState(1)
+  const [searchInput, setSearchInput] = useState('')
+  const [search, setSearch] = useState('')
+  const [outboundEnabledOnly, setOutboundEnabledOnly] = useState(false)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingPartner, setEditingPartner] = useState<AffiliatePartner | null>(null)
   const [reportRecipientsPartner, setReportRecipientsPartner] = useState<AffiliatePartner | null>(null)
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const { data: partnersData, isLoading } = useAffiliatePartners({ page, limit: 10 })
+  const handleSearchChange = (value: string) => {
+    setSearchInput(value)
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => {
+      setSearch(value.trim())
+      setPage(1)
+    }, 300)
+  }
+
+  const handleOutboundFilterChange = (checked: boolean) => {
+    setOutboundEnabledOnly(checked)
+    setPage(1)
+  }
+
+  const { data: partnersData, isLoading } = useAffiliatePartners({
+    page,
+    limit: 10,
+    search: search || undefined,
+    outboundFeedEnabled: outboundEnabledOnly ? true : undefined,
+  })
   const { data: syncStatusData } = useAffiliateSyncStatus()
   const createMutation = useCreateAffiliatePartner()
   const updateMutation = useUpdateAffiliatePartner()
@@ -126,6 +151,19 @@ export default function PartnersTab() {
     )
   }
 
+  const getLandingBadge = (partner: AffiliatePartner) => {
+    if (!partner.landingEnabled) {
+      return <span className="text-sm text-gray-500">Disabled</span>
+    }
+
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
+        <MousePointerClick className="w-3 h-3" />
+        Enabled
+      </span>
+    )
+  }
+
   const getStatusBadge = (status: string) => {
     const styles = {
       active: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
@@ -148,28 +186,50 @@ export default function PartnersTab() {
     )
   }
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
-    )
-  }
-
   return (
     <div className="space-y-4">
       {/* Header with Create Button */}
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Affiliate Partners</h2>
-        <button
-          onClick={handleCreate}
-          className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          Add Partner
-        </button>
+        {canCreate && (
+          <button
+            onClick={handleCreate}
+            className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            Add Partner
+          </button>
+        )}
       </div>
 
+      <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+          <input
+            type="text"
+            value={searchInput}
+            onChange={(e) => handleSearchChange(e.target.value)}
+            placeholder="Search by partner name"
+            className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+          />
+        </div>
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={outboundEnabledOnly}
+            onChange={(e) => handleOutboundFilterChange(e.target.checked)}
+            className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
+          />
+          <span className="text-sm text-gray-700 dark:text-gray-300">Outbound enabled</span>
+        </label>
+      </div>
+
+      {isLoading ? (
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        </div>
+      ) : (
+      <>
       {/* Partners Table */}
       <div className="overflow-x-auto border border-gray-200 dark:border-gray-800 rounded-lg">
         <table className="w-full">
@@ -186,6 +246,9 @@ export default function PartnersTab() {
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 Outbound Feed
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                Landing
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 Status
@@ -304,13 +367,14 @@ export default function PartnersTab() {
                   </div>
                 </td>
                 <td className="px-6 py-4">{getOutboundFeedBadge(partner)}</td>
+                <td className="px-6 py-4">{getLandingBadge(partner)}</td>
                 <td className="px-6 py-4 whitespace-nowrap">{getStatusBadge(partner.status)}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                   {new Date(partner.createdAt).toLocaleDateString()}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <div className="flex items-center justify-end gap-2">
-                    {partner.outboundFeedEnabled && (
+                    {partner.outboundFeedEnabled && canUpdate && (
                       <button
                         onClick={() => handleRebuildFeed(partner.id, partner.name)}
                         disabled={
@@ -323,7 +387,7 @@ export default function PartnersTab() {
                         <Rss className={`w-4 h-4 ${rebuildMutation.isPending ? 'animate-pulse' : ''}`} />
                       </button>
                     )}
-                    {partner.outboundFeedEnabled && (
+                    {partner.outboundFeedEnabled && canUpdate && (
                       <button
                         onClick={() => setReportRecipientsPartner(partner)}
                         className="p-2 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
@@ -332,7 +396,7 @@ export default function PartnersTab() {
                         <Mail className="w-4 h-4" />
                       </button>
                     )}
-                    {partner.syncEnabled && (
+                    {partner.syncEnabled && canUpdate && (
                       <button
                         onClick={() => handleSync(partner.id, partner.name)}
                         disabled={syncMutation.isPending || partner.isRunning}
@@ -342,21 +406,25 @@ export default function PartnersTab() {
                         <RefreshCw className={`w-4 h-4 ${(syncMutation.isPending || partner.isRunning) ? 'animate-spin' : ''}`} />
                       </button>
                     )}
-                    <button
-                      onClick={() => handleEdit(partner)}
-                      className="text-primary hover:text-primary/80 transition-colors"
-                      title="Edit"
-                    >
-                      <Edit2 className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(partner.id)}
-                      className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-colors"
-                      title="Delete"
-                      disabled={deleteMutation.isPending}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    {canUpdate && (
+                      <button
+                        onClick={() => handleEdit(partner)}
+                        className="text-primary hover:text-primary/80 transition-colors"
+                        title="Edit"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                    )}
+                    {canDelete && (
+                      <button
+                        onClick={() => handleDelete(partner.id)}
+                        className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-colors"
+                        title="Delete"
+                        disabled={deleteMutation.isPending}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
                   </div>
                 </td>
               </tr>
@@ -364,16 +432,18 @@ export default function PartnersTab() {
           </tbody>
         </table>
 
-        {partnersWithStatus.length === 0 && !isLoading && (
+        {partnersWithStatus.length === 0 && (
           <div className="text-center py-12">
             <Building2 className="w-12 h-12 text-gray-400 mx-auto mb-3" />
             <p className="text-gray-500 dark:text-gray-400">No partners found</p>
-            <button
-              onClick={handleCreate}
-              className="mt-4 text-primary hover:text-primary/80 text-sm font-medium"
-            >
-              Create your first partner
-            </button>
+            {canCreate && !search && !outboundEnabledOnly && (
+              <button
+                onClick={handleCreate}
+                className="mt-4 text-primary hover:text-primary/80 text-sm font-medium"
+              >
+                Create your first partner
+              </button>
+            )}
           </div>
         )}
       </div>
@@ -390,6 +460,8 @@ export default function PartnersTab() {
             onPageChange={setPage}
           />
         </div>
+      )}
+      </>
       )}
 
       {/* Partner Modal */}

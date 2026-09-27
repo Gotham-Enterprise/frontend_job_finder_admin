@@ -12,6 +12,7 @@ import CreateSurveyJobModal from './CreateSurveyJobModal'
 import SurveyJobTrends from './SurveyJobTrends'
 import ConfirmationDialog from '@/components/ui/ConfirmationDialog'
 import { formatDate } from '@/services/utils/dateUtils'
+import { useAffiliatePermissions } from '@/hooks/useAffiliatePermissions'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -89,6 +90,7 @@ function ClickCountHeaderLabel() {
 }
 
 export default function SurveyJobsTab() {
+  const { canCreate, canUpdate, canDelete } = useAffiliatePermissions()
   const [page, setPage] = useState(1)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingJob, setEditingJob] = useState<SurveyJob | null>(null)
@@ -209,13 +211,15 @@ export default function SurveyJobsTab() {
             Manually posted opportunities via affiliate partners (Survey Junkie, Sermo)
           </p>
         </div>
-        <button
-          onClick={handleAdd}
-          className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary hover:bg-primary/90 rounded-lg transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          Add Survey Job
-        </button>
+        {canCreate && (
+          <button
+            onClick={handleAdd}
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary hover:bg-primary/90 rounded-lg transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            Add Survey Job
+          </button>
+        )}
       </div>
 
       {/* Filters */}
@@ -427,7 +431,7 @@ export default function SurveyJobsTab() {
                     <td className="px-4 py-3 text-center">
                       <button
                         onClick={() => handleToggle(job)}
-                        disabled={toggleMutation.isPending}
+                        disabled={toggleMutation.isPending || !canUpdate}
                         className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus:outline-none ${job.isPublished ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'
                           } disabled:opacity-50`}
                         title={job.isPublished ? 'Unpublish' : 'Publish'}
@@ -440,21 +444,25 @@ export default function SurveyJobsTab() {
                     </td>
                     <td className="px-4 py-3 text-right">
                       <div className="inline-flex items-center gap-1">
-                        <button
-                          onClick={() => handleEdit(job)}
-                          title="Edit"
-                          className="p-1.5 text-gray-400 hover:text-primary rounded transition-colors"
-                        >
-                          <Pencil className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(job)}
-                          title="Delete"
-                          disabled={deleteMutation.isPending}
-                          className="p-1.5 text-gray-400 hover:text-red-500 rounded transition-colors disabled:opacity-50"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        {canUpdate && (
+                          <button
+                            onClick={() => handleEdit(job)}
+                            title="Edit"
+                            className="p-1.5 text-gray-400 hover:text-primary rounded transition-colors"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                        )}
+                        {canDelete && (
+                          <button
+                            onClick={() => handleDelete(job)}
+                            title="Delete"
+                            disabled={deleteMutation.isPending}
+                            className="p-1.5 text-gray-400 hover:text-red-500 rounded transition-colors disabled:opacity-50"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
