@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { X, Users, Trash2, Plus, Loader2, Copy } from 'lucide-react'
+import { X, Users, Trash2, Plus, Loader2, Copy, RefreshCw } from 'lucide-react'
 import {
   usePortalUsers,
   useCreatePortalUser,
@@ -26,12 +26,23 @@ const emptyForm = {
   password: '',
 }
 
+const PASSWORD_CHARSET = 'abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+const PASSWORD_LENGTH = 16
+
+function generatePassword() {
+  const values = new Uint32Array(PASSWORD_LENGTH)
+  crypto.getRandomValues(values)
+  return Array.from(values, (value) => PASSWORD_CHARSET[value % PASSWORD_CHARSET.length]).join('')
+}
+
 export default function PortalUsersModal({ isOpen, onClose, partnerId, partnerName }: Props) {
   const { canCreate, canUpdate, canDelete } = useAffiliatePermissions()
   const [form, setForm] = useState(emptyForm)
   const [formError, setFormError] = useState('')
+  const [showCreatePassword, setShowCreatePassword] = useState(false)
   const [editing, setEditing] = useState<AffiliatePortalUser | null>(null)
   const [editPassword, setEditPassword] = useState('')
+  const [showEditPassword, setShowEditPassword] = useState(false)
 
   const { data: users = [], isLoading } = usePortalUsers(isOpen ? partnerId : '')
   const createMutation = useCreatePortalUser()
@@ -43,6 +54,31 @@ export default function PortalUsersModal({ isOpen, onClose, partnerId, partnerNa
   const resetCreate = () => {
     setForm(emptyForm)
     setFormError('')
+    setShowCreatePassword(false)
+  }
+
+  const copyPassword = async (password: string) => {
+    try {
+      await navigator.clipboard.writeText(password)
+      showToast.success('Copied', 'Password copied to clipboard')
+    } catch {
+      showToast.error('Copy failed', 'Could not copy password')
+    }
+  }
+
+  const handleGenerateCreatePassword = async () => {
+    const password = generatePassword()
+    setForm((current) => ({ ...current, password }))
+    setShowCreatePassword(true)
+    setFormError('')
+    await copyPassword(password)
+  }
+
+  const handleGenerateEditPassword = async () => {
+    const password = generatePassword()
+    setEditPassword(password)
+    setShowEditPassword(true)
+    await copyPassword(password)
   }
 
   const handleCreate = async () => {
@@ -89,6 +125,7 @@ export default function PortalUsersModal({ isOpen, onClose, partnerId, partnerNa
     })
     setEditing(null)
     setEditPassword('')
+    setShowEditPassword(false)
   }
 
   const handleCopyUsername = async (username: string) => {
@@ -106,6 +143,7 @@ export default function PortalUsersModal({ isOpen, onClose, partnerId, partnerNa
     if (editing?.id === user.id) {
       setEditing(null)
       setEditPassword('')
+      setShowEditPassword(false)
     }
   }
 
@@ -158,13 +196,23 @@ export default function PortalUsersModal({ isOpen, onClose, partnerId, partnerNa
                   placeholder="Email"
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg dark:bg-gray-800 dark:text-white"
                 />
-                <input
-                  type="password"
-                  value={form.password}
-                  onChange={(e) => setForm({ ...form, password: e.target.value })}
-                  placeholder="Password (min 8 characters)"
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg dark:bg-gray-800 dark:text-white"
-                />
+                <div className="flex gap-2">
+                  <input
+                    type={showCreatePassword ? 'text' : 'password'}
+                    value={form.password}
+                    onChange={(e) => setForm({ ...form, password: e.target.value })}
+                    placeholder="Password (min 8 characters)"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg dark:bg-gray-800 dark:text-white"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleGenerateCreatePassword}
+                    className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
+                  >
+                    <RefreshCw className="h-4 w-4" />
+                    Generate
+                  </button>
+                </div>
               </div>
               {formError && <p className="text-sm text-red-600">{formError}</p>}
               <button
@@ -224,13 +272,23 @@ export default function PortalUsersModal({ isOpen, onClose, partnerId, partnerNa
                           <option value="active">Active</option>
                           <option value="disabled">Disabled</option>
                         </select>
-                        <input
-                          type="password"
-                          value={editPassword}
-                          onChange={(e) => setEditPassword(e.target.value)}
-                          placeholder="New password (optional)"
-                          className="sm:col-span-2 w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg dark:bg-gray-800 dark:text-white"
-                        />
+                        <div className="sm:col-span-2 flex gap-2">
+                          <input
+                            type={showEditPassword ? 'text' : 'password'}
+                            value={editPassword}
+                            onChange={(e) => setEditPassword(e.target.value)}
+                            placeholder="New password (optional)"
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg dark:bg-gray-800 dark:text-white"
+                          />
+                          <button
+                            type="button"
+                            onClick={handleGenerateEditPassword}
+                            className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
+                          >
+                            <RefreshCw className="h-4 w-4" />
+                            Generate
+                          </button>
+                        </div>
                       </div>
                       {editPassword && editPassword.length < 8 && (
                         <p className="text-sm text-red-600">Password must be at least 8 characters.</p>
@@ -249,6 +307,7 @@ export default function PortalUsersModal({ isOpen, onClose, partnerId, partnerNa
                           onClick={() => {
                             setEditing(null)
                             setEditPassword('')
+                            setShowEditPassword(false)
                           }}
                           className="px-3 py-1.5 text-sm text-gray-600 dark:text-gray-300"
                         >
@@ -288,6 +347,7 @@ export default function PortalUsersModal({ isOpen, onClose, partnerId, partnerNa
                             onClick={() => {
                               setEditing(user)
                               setEditPassword('')
+                              setShowEditPassword(false)
                             }}
                             className="text-sm text-primary"
                           >
