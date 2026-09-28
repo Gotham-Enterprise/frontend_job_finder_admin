@@ -977,6 +977,7 @@ export interface AffiliatePortalUser {
   id: string;
   affiliatePartnerId: string;
   email: string;
+  username: string;
   firstName: string;
   lastName: string;
   status: "active" | "disabled";

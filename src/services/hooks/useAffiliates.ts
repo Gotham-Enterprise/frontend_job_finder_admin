@@ -747,9 +747,9 @@ export const useCreatePortalUser = () => {
   return useMutation({
     mutationFn: ({ partnerId, data }: { partnerId: string; data: PortalUserInput }) =>
       createPortalUser(partnerId, data),
-    onSuccess: (_data, variables) => {
+    onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: affiliateQueryKeys.portalUsers(variables.partnerId) });
-      showToast.success("User created", "The partner can now sign in to the dashboard.");
+      showToast.success("User created", `${data.username} can now sign in to the dashboard.`);
     },
     onError: (error: any) => {
       const errorMessage = error.response?.data?.message || error.message || "Failed to create user";

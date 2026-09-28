@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { X, Users, Trash2, Plus, Loader2 } from 'lucide-react'
+import { X, Users, Trash2, Plus, Loader2, Copy } from 'lucide-react'
 import {
   usePortalUsers,
   useCreatePortalUser,
@@ -10,6 +10,7 @@ import {
 } from '@/services/hooks/useAffiliates'
 import type { AffiliatePortalUser } from '@/services/api/affiliates'
 import { useAffiliatePermissions } from '@/hooks/useAffiliatePermissions'
+import { showToast } from '@/services/utils/toast'
 
 interface Props {
   isOpen: boolean
@@ -90,8 +91,17 @@ export default function PortalUsersModal({ isOpen, onClose, partnerId, partnerNa
     setEditPassword('')
   }
 
+  const handleCopyUsername = async (username: string) => {
+    try {
+      await navigator.clipboard.writeText(username)
+      showToast.success('Copied', 'Username copied to clipboard')
+    } catch {
+      showToast.error('Copy failed', 'Could not copy username')
+    }
+  }
+
   const handleDelete = async (user: AffiliatePortalUser) => {
-    if (!confirm(`Delete ${user.email}? They will no longer be able to sign in.`)) return
+    if (!confirm(`Delete ${user.username}? They will no longer be able to sign in.`)) return
     await deleteMutation.mutateAsync({ partnerId, userId: user.id })
     if (editing?.id === user.id) {
       setEditing(null)
@@ -184,6 +194,9 @@ export default function PortalUsersModal({ isOpen, onClose, partnerId, partnerNa
                 >
                   {editing?.id === user.id ? (
                     <div className="space-y-3">
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        Username <span className="font-medium text-gray-900 dark:text-white">{editing.username}</span>
+                      </p>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <input
                           value={editing.firstName}
@@ -249,6 +262,17 @@ export default function PortalUsersModal({ isOpen, onClose, partnerId, partnerNa
                         <p className="text-sm font-medium text-gray-900 dark:text-white">
                           {user.firstName} {user.lastName}
                         </p>
+                        <div className="mt-1 flex items-center gap-1.5">
+                          <p className="text-sm font-medium text-gray-900 dark:text-white">{user.username}</p>
+                          <button
+                            type="button"
+                            onClick={() => handleCopyUsername(user.username)}
+                            className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800 dark:hover:text-gray-300"
+                            title="Copy username"
+                          >
+                            <Copy className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
                         <p className="text-sm text-gray-500 dark:text-gray-400">{user.email}</p>
                         <p className="text-xs text-gray-400 mt-1">
                           {user.status === 'active' ? 'Active' : 'Disabled'}
