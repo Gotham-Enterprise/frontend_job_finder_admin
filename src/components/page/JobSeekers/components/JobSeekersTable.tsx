@@ -988,13 +988,9 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
                   </TableCell>
                   <TableCell className="py-4 px-6">
                     <SpecialtyDisplay
-                      specialties={
-                        Array.isArray(jobSeeker.specialty)
-                          ? jobSeeker.specialty
-                          : jobSeeker.specialty
-                            ? [jobSeeker.specialty]
-                            : []
-                      }
+                      specialties={(jobSeeker.specialties ?? []).map(
+                        (s: { id: number; name: string }) => s.name
+                      )}
                       jobSeekerId={jobSeeker.id}
                       expandedRows={expandedRows}
                       onToggleExpanded={toggleExpanded}

@@ -51,7 +51,7 @@ const TableHeading: React.FC<TableHeadingProps> = ({
                       ? `Sorted ${sortOrder === "asc" ? "ascending" : "descending"} — click to toggle`
                       : "Sort"
                   }
-                  className="flex items-center gap-1 font-semibold hover:text-brand-500 transition-colors"
+                  className="inline-flex items-center gap-1 font-semibold hover:text-brand-500 transition-colors"
                 >
                   {column.label}
                   {isActive ? (

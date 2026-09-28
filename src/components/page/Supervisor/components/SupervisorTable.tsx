@@ -1,7 +1,10 @@
 import React from "react";
 import { formatDate, formatDateTimeLocal } from "@/services/utils/dateUtils";
 import { TimeIcon } from "@/icons";
-import { formatUsStateCodeForDisplay } from "@/services/utils/formatUsStateLicensure";
+import {
+  formatUsStateCodeForDisplay,
+  resolveUsStateAbbreviation,
+} from "@/services/utils/formatUsStateLicensure";
 import { formatUSPhoneNationalDisplay } from "@/services/utils/phoneNumberUtils";
 import { Table, TableBody, TableCell, TableRow } from "../../../ui/table";
 import Avatar from "../../../ui/avatar/Avatar";
@@ -10,6 +13,7 @@ import EmailVerifiedBadge from "../../../ui/badge/EmailVerifiedBadge";
 import VisibilityBadge from "../../../ui/badge/VisibilityBadge";
 import SupervisorStatusBadge from "./SupervisorStatusBadge";
 import SupervisorRowActions from "./SupervisorRowActions";
+import SubscriptionCell from "./SubscriptionCell";
 import { SupervisorTableProps } from "@/services/types/SupervisorTypes";
 
 /** "Jane Smith, Ph.D., NCC" — no comma when either part is missing. */
@@ -135,16 +139,20 @@ const SupervisorTable: React.FC<SupervisorTableProps> = ({
                   </div>
                 </TableCell>
 
-                {/* State: full name (abbr) */}
-                <TableCell className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">
-                  {formatUsStateCodeForDisplay(supervisor.state) || (
+                {/* State: abbreviation only to keep the column narrow; full name on hover */}
+                <TableCell className="px-4 py-3 text-center text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                  {supervisor.state?.trim() ? (
+                    <span title={formatUsStateCodeForDisplay(supervisor.state) ?? undefined}>
+                      {resolveUsStateAbbreviation(supervisor.state) ?? supervisor.state.trim()}
+                    </span>
+                  ) : (
                     <span className="text-gray-400 italic">—</span>
                   )}
                 </TableCell>
 
-                {/* Role: supervisor type + occupation · specialty */}
-                <TableCell className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">
-                  <div>
+                {/* Role: supervisor type + occupation · specialty (wraps so long occupations don't widen the column) */}
+                <TableCell className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
+                  <div className="w-[220px]">
                     <p className="font-medium text-gray-900 dark:text-white">
                       {supervisor.supervisorType || (
                         <span className="font-normal text-gray-400 italic">
@@ -160,12 +168,12 @@ const SupervisorTable: React.FC<SupervisorTableProps> = ({
                 </TableCell>
 
                 {/* License Type */}
-                <TableCell className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                <TableCell className="px-4 py-3 text-center text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">
                   {renderOptionalCredential(supervisor.licenseType)}
                 </TableCell>
 
                 {/* Degree Type */}
-                <TableCell className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                <TableCell className="px-4 py-3 text-center text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">
                   {renderOptionalCredential(supervisor.degreeType)}
                 </TableCell>
 
@@ -191,6 +199,11 @@ const SupervisorTable: React.FC<SupervisorTableProps> = ({
                 {/* Visibility in Find a Supervisor app */}
                 <TableCell className="px-4 py-3 whitespace-nowrap">
                   <VisibilityBadge hidden={supervisor.hideProfile} />
+                </TableCell>
+
+                {/* Subscription: paid/free, plan, current billing period */}
+                <TableCell className="px-4 py-3 whitespace-nowrap">
+                  <SubscriptionCell subscription={supervisor.subscription} />
                 </TableCell>
 
                 {/* Submitted date */}

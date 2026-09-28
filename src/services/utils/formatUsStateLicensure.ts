@@ -1,6 +1,7 @@
 import { US_STATE_CODE_TO_NAME } from "@/lib/useStatesCities";
 
-function resolveUsStateAbbreviation(raw: string | null | undefined): string | null {
+/** e.g. `Alabama` or `al` → `AL`; unknown/empty → null. */
+export function resolveUsStateAbbreviation(raw: string | null | undefined): string | null {
   if (raw == null) return null;
   const trimmed = String(raw).trim();
   if (!trimmed) return null;
