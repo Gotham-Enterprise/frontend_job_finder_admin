@@ -214,6 +214,20 @@ const navItems: NavItem[] = [
     //subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
   },
   {
+    icon: <ShootingStarIcon />,
+    name: "Advertising",
+    // Routes and API use "spotlight": ad blockers block URLs containing "ads".
+    path: "/admin/spotlight",
+    // No permissionKey — the backend gate is auth(["admin"]), like Document Verifications.
+    subItems: [
+      { name: "Review Queue", path: "/admin/spotlight" },
+      { name: "Advertisers", path: "/admin/spotlight/advertisers" },
+      { name: "Campaigns", path: "/admin/spotlight/campaigns" },
+      { name: "Placements", path: "/admin/spotlight/placements" },
+      { name: "Reports", path: "/admin/spotlight/reports" },
+    ],
+  },
+  {
     icon: <DocsIcon />,
     name: "Document Verifications",
     path: "/admin/document-verifications",
