@@ -170,7 +170,10 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
     },
     {
       label: "Specialty",
-      value: jobSeeker.specialty || "Not specified",
+      value:
+        (jobSeeker.specialties ?? [])
+          .map((s) => s.name)
+          .join(", ") || "Not specified",
       className: "text-gray-900 dark:text-white",
     },
     {
