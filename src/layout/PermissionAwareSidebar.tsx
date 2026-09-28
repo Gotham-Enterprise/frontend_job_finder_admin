@@ -141,6 +141,7 @@ const navItems: NavItem[] = [
     subItems: [
       { name: "All Topics", path: "/admin/medical-library", requiredAction: "view" },
       { name: "Add New", path: "/admin/medical-library/add-new", requiredAction: "add" },
+      { name: "Scraper Runs", path: "/admin/medical-library/scraper-runs", requiredAction: "view" },
     ],
   },
 
@@ -290,6 +291,7 @@ const AppSidebar: React.FC = () => {
     if (item.permissionKey) {
       const hasModulePermission = hasAnyModulePermission(permissions, item.permissionKey);
 
+
       // Special handling for Unlock Requests - show if user is Super Admin
       if (item.permissionKey === "unlockRequest" && !hasModulePermission) {
         const user = typeof window !== "undefined" ? authUtils.getUser() : null;
@@ -421,7 +423,16 @@ const AppSidebar: React.FC = () => {
                         };
                         const mappedAction = actionMap[subItem.requiredAction];
                         const hasRequiredPermission = hasPermission(permissions, nav.permissionKey, mappedAction);
-                        return hasRequiredPermission;
+                        if (hasRequiredPermission) return true;
+
+                        // Same Super Admin bypass as the parent item (see isItemAccessible) —
+                        // unlockRequest/medicalLibrary aren't yet in the DB role for other roles.
+                        if (nav.permissionKey === "unlockRequest" || nav.permissionKey === "medicalLibrary") {
+                          const user = typeof window !== "undefined" ? authUtils.getUser() : null;
+                          return user?.adminRoleAccess?.roleName?.toLowerCase() === "super admin";
+                        }
+
+                        return false;
                       }
 
                       // If we have permissions loaded but no specific permission requirement, show the item

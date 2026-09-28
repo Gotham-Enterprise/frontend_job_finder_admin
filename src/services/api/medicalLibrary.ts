@@ -24,6 +24,14 @@ export interface MedicalLibraryContent {
   tabs: MedicalLibraryTab[];
 }
 
+/** Snapshot of a topic's fields as they were immediately before a re-import overwrote them with a genuine change — lets the edit form show old vs new. Null/absent when there's nothing pending review. */
+export interface MedicalLibraryPreviousVersion {
+  title: string;
+  category: string;
+  description: string | null;
+  content: MedicalLibraryContent;
+}
+
 export interface MedicalLibraryTopic {
   id: string;
   slug: string;
@@ -32,6 +40,9 @@ export interface MedicalLibraryTopic {
   description?: string;
   status?: string;
   content?: MedicalLibraryContent;
+  previousVersion?: MedicalLibraryPreviousVersion | null;
+  /** List view only (adminGetTopics) — true when a re-import found changes and this topic has a pending diff to review. The full previousVersion snapshot only comes from the single-topic endpoint (adminGetTopicById). */
+  hasPendingChanges?: boolean;
   createdAt: string;
   updatedAt: string;
 }
