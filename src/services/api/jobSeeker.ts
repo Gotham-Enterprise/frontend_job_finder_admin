@@ -58,8 +58,8 @@ export const jobSeekerApi = {
       formData.append("zipCode", data.zipCode);
       formData.append("phoneNumber", data.phoneNumber);
       formData.append("occupationId", data.occupationId.toString());
-      if (data.specialtyId) {
-        formData.append("specialtyId", data.specialtyId.toString());
+      if (data.specialtyIds && data.specialtyIds.length > 0) {
+        formData.append("specialtyIds", data.specialtyIds.join(","));
       }
       if (data.licenses !== undefined) {
         formData.append("licenses", JSON.stringify(data.licenses));
@@ -71,8 +71,12 @@ export const jobSeekerApi = {
       return apiPut<any>(`/api/admin/jobseekers/${id}`, formData);
     }
 
-    const { uploadProfilePicture: _file, ...jsonBody } = data;
-    return apiPut<any>(`/api/admin/jobseekers/${id}`, jsonBody);
+    const { uploadProfilePicture: _file, specialtyIds, ...jsonBody } = data;
+    return apiPut<any>(`/api/admin/jobseekers/${id}`, {
+      ...jsonBody,
+      // Comma-joined string, matching the multipart contract (validator handles the same shape)
+      ...(specialtyIds && specialtyIds.length > 0 ? { specialtyIds: specialtyIds.join(",") } : {}),
+    });
   },
 
   async shareResume(resumeId: string, request: ShareResumeRequest): Promise<ShareResumeResponse> {
