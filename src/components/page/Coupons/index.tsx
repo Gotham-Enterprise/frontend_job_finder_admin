@@ -20,9 +20,9 @@ const CouponsData: React.FC<CouponsProps> = ({ className = "" }) => {
     scrollPath: 'coupons-scroll-position',
     listPagePath: '/admin/coupons'
   });
-  
+
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  
+
   const {
     filters,
     searchInput,
@@ -30,16 +30,16 @@ const CouponsData: React.FC<CouponsProps> = ({ className = "" }) => {
     isFilterOpen,
     setIsFilterOpen,
     isPending,
-    
+
     data,
     isLoading,
     error,
     refetch,
-    
+
     tableColumns,
     statusOptions,
     itemsPerPageOptions,
-    
+
     filterChange,
     initPageChange,
     viewCoupon,
@@ -70,7 +70,7 @@ const CouponsData: React.FC<CouponsProps> = ({ className = "" }) => {
 
   if (error && !isPending) {
     return (
-      <ErrorState 
+      <ErrorState
         className={className}
         message={`Error loading coupons: ${error.message}`}
         onRetry={() => refetch()}
