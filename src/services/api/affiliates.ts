@@ -1008,15 +1008,20 @@ export const getPortalUsers = async (partnerId: string): Promise<AffiliatePortal
   return res.data;
 };
 
+export interface CreatePortalUserResult extends AffiliatePortalUser {
+  emailSent: boolean;
+}
+
 export const createPortalUser = async (
   partnerId: string,
   data: PortalUserInput
-): Promise<AffiliatePortalUser> => {
-  const res = await apiPost<{ success: boolean; data: AffiliatePortalUser }>(
-    `/api/admin/affiliates/partners/${partnerId}/users`,
-    data
-  );
-  return res.data;
+): Promise<CreatePortalUserResult> => {
+  const res = await apiPost<{
+    success: boolean;
+    data: AffiliatePortalUser;
+    emailSent: boolean;
+  }>(`/api/admin/affiliates/partners/${partnerId}/users`, data);
+  return { ...res.data, emailSent: Boolean(res.emailSent) };
 };
 
 export const updatePortalUser = async (

@@ -749,7 +749,17 @@ export const useCreatePortalUser = () => {
       createPortalUser(partnerId, data),
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: affiliateQueryKeys.portalUsers(variables.partnerId) });
-      showToast.success("User created", `${data.username} can now sign in to the dashboard.`);
+      if (data.emailSent) {
+        showToast.success(
+          "User created",
+          `Sign-in details were emailed to ${data.email}.`
+        );
+      } else {
+        showToast.warning(
+          "User created",
+          `${data.username} can sign in, but the welcome email did not send. Copy the password from the form before you clear it.`
+        );
+      }
     },
     onError: (error: any) => {
       const errorMessage = error.response?.data?.message || error.message || "Failed to create user";

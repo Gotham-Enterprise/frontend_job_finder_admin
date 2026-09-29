@@ -92,7 +92,7 @@ export default function PortalUsersModal({ isOpen, onClose, partnerId, partnerNa
       return
     }
     try {
-      await createMutation.mutateAsync({
+      const created = await createMutation.mutateAsync({
         partnerId,
         data: {
           email: form.email.trim(),
@@ -101,7 +101,12 @@ export default function PortalUsersModal({ isOpen, onClose, partnerId, partnerNa
           password: form.password,
         },
       })
-      resetCreate()
+      if (created.emailSent) {
+        resetCreate()
+      } else {
+        setShowCreatePassword(true)
+        setFormError('Account was created, but the welcome email did not send. Copy the password before clearing this form.')
+      }
     } catch {
       // toast handled in the hook
     }
