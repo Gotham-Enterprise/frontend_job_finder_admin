@@ -20,6 +20,8 @@ export interface Employer {
   zipCode?: string;
   country?: string;
   jobPostCount: number;
+  /** Company users whose email is not verified yet */
+  unverifiedUserCount?: number;
   totalApplications: number;
   totalJobViews: number;
   dateJoined: string;
