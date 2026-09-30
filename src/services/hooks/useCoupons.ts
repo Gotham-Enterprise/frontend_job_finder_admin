@@ -72,3 +72,26 @@ export const useCreateCoupon = () => {
     },
   });
 };
+
+export const useDeleteCoupon = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => couponApi.deleteCoupon(id),
+    onSuccess: (response) => {
+      queryClient.invalidateQueries({ queryKey: couponQueryKeys.all });
+
+      const title = response?.data?.title;
+      showToast.success(
+        'Coupon Deleted',
+        title
+          ? `"${title}" was removed from Stripe and marked as deleted.`
+          : 'The coupon was removed from Stripe and marked as deleted.'
+      );
+    },
+    onError: (error: any) => {
+      const errorMessage = error?.message || 'Failed to delete coupon. Please try again.';
+      showToast.error('Delete Failed', errorMessage);
+    },
+  });
+};
