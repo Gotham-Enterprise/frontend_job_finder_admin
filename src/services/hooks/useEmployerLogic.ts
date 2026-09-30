@@ -186,21 +186,22 @@ export const useEmployerLogic = () => {
 
     // Only include select column if user has permission to add jobs
     if (hasPermission("employers", "add")) {
-      columns.push({ key: "select", label: "", className: "w-16" });
+      columns.push({ key: "select", label: "", className: "w-12 !px-3" });
     }
 
     columns.push(
-      { key: "companyName", label: "Company" },
-      { key: "email", label: "Email" },
-      { key: "state", label: "Location" },
-      { key: "jobPostCount", label: "Active Job Post" },
-      { key: "totalJobViews", label: "Total Job Views" },
-      { key: "totalApplications", label: "Total Applications" },
-      { key: "dateJoined", label: "Registration date" },
-      { key: "lastActivity", label: "Last Activity" },
-      { key: "status", label: "Status" },
-      { key: "subscription", label: "Subscription" },
-      { key: "actions", label: "", className: "text-right" }
+      { key: "companyName", label: "Company", className: "!px-3" },
+      { key: "email", label: "Email", className: "!px-3" },
+      { key: "state", label: "Location", className: "!px-3" },
+      { key: "jobPostCount", label: "Active Job Post", className: "!px-3" },
+      { key: "totalJobViews", label: "Total Job Views", className: "!px-3" },
+      { key: "totalApplications", label: "Total Applications", className: "!px-3" },
+      { key: "dateJoined", label: "Registration date", className: "!px-3" },
+      { key: "lastActivity", label: "Last Activity", className: "!px-3" },
+      { key: "status", label: "Status", className: "!px-3" },
+      { key: "subscription", label: "Subscription", className: "!px-3" },
+      // Sticky to match the body's actions cell so the column stays visible on narrow screens
+      { key: "actions", label: "", className: "!px-3 text-right sticky right-0 bg-white dark:bg-gray-900" }
     );
 
     return columns;

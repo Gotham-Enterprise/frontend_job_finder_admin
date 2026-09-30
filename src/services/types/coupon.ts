@@ -9,16 +9,22 @@ export interface Coupon {
   amountOffInCents: number | null;
   percentOff: number | null;
   duration: string;
+  durationInMonths: number | null;
+  maxRedemptions: number | null;
   deactivatedAt: string | null;
+  deletedAt: string | null;
   createdAt: string;
   updatedAt: string;
 }
+
+export type CouponListStatus = 'active' | 'inactive' | 'deleted';
 
 export interface CouponFilters {
   page?: number;
   limit?: number;
   keyword?: string;
   isActive?: boolean;
+  status?: CouponListStatus[];
   sortBy?: 'createdAt' | 'updatedAt';
   sortOrder?: 'asc' | 'desc';
 }

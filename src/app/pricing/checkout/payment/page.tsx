@@ -15,6 +15,7 @@ import { useSubscriptionContext } from '@/context/SubscriptionContext';
 import { subscriptionApi } from '@/services/api/subscription';
 import { useToast } from '@/context/ToastContext';
 import FullScreenSpinner from '@/components/ui/FullScreenSpinner';
+import { formatCouponDurationCheckout } from '@/services/utils/couponDuration';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY!);
 
@@ -187,6 +188,11 @@ function PaymentForm() {
     );
   }
 
+  const appliedCouponDurationLabel = formatCouponDurationCheckout(
+    subscriptionData.appliedCoupon?.duration,
+    subscriptionData.appliedCoupon?.durationInMonths
+  );
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
@@ -335,6 +341,11 @@ function PaymentForm() {
                         <span className="text-sm text-green-500 dark:text-green-400">
                           Code: {subscriptionData.appliedCoupon.redemptionCode}
                         </span>
+                        {appliedCouponDurationLabel && (
+                          <span className="text-sm text-green-500 dark:text-green-400">
+                            {appliedCouponDurationLabel}
+                          </span>
+                        )}
                       </div>
                       <span className="font-semibold">
                         -{formatPrice(calculateDiscount(subscriptionData.planDetails.price, subscriptionData.appliedCoupon))}

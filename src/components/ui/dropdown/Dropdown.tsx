@@ -54,7 +54,13 @@ export const Dropdown: React.FC<DropdownProps> = ({
     const onDocMouseDown = (event: MouseEvent) => {
       const target = event.target as Node;
       if (dropdownRef.current?.contains(target)) return;
-      if ((event.target as HTMLElement).closest?.(".dropdown-toggle")) return;
+      // Only this menu's own trigger is exempt (it toggles itself); clicking
+      // another row's trigger must close this menu so only one stays open.
+      if (resolvedReference) {
+        if (resolvedReference.contains(target)) return;
+      } else if ((event.target as HTMLElement).closest?.(".dropdown-toggle")) {
+        return;
+      }
       onClose();
     };
 
@@ -68,7 +74,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
       document.removeEventListener("mousedown", onDocMouseDown);
       document.removeEventListener("keydown", onEsc);
     };
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, resolvedReference]);
 
   if (!isOpen) return null;
 
