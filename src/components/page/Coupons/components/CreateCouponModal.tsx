@@ -10,7 +10,6 @@ import { sanitizeNumericInput, sanitizeCurrencyInput, isValidNumericKeyPress } f
 import { COUPON_DURATION_MONTH_PRESETS } from '@/services/utils/couponDuration';
 
 const DURATION_OPTIONS: Array<{ value: CouponDuration; label: string; hint: string }> = [
-  { value: 'forever', label: 'Forever', hint: 'Discount on every invoice' },
   { value: 'once', label: 'Once', hint: 'First invoice only' },
   { value: 'repeating', label: 'Repeating', hint: 'For a set number of months' },
 ];
@@ -337,7 +336,7 @@ const CreateCouponModal: React.FC<CreateCouponModalProps> = ({
             <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 block">
               Duration
             </Label>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {DURATION_OPTIONS.map((option) => (
                 <Radio
                   key={option.value}
