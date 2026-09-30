@@ -24,6 +24,8 @@ export default function SubscriptionsPage() {
   const [isCancelSubscriptionModalOpen, setIsCancelSubscriptionModalOpen] = useState(false);
   const [isConfirmCancelModalOpen, setIsConfirmCancelModalOpen] = useState(false);
   const [isCancellingSubscription, setIsCancellingSubscription] = useState(false);
+  const [isEncourageEmailModalOpen, setIsEncourageEmailModalOpen] = useState(false);
+  const [isSendingEncourageEmail, setIsSendingEncourageEmail] = useState(false);
   const { addToast } = useToast();
   const { copyToClipboard } = useSubscriptionContext();
 
@@ -136,6 +138,39 @@ export default function SubscriptionsPage() {
     router.push(`/pricing?employerId=${employerId}`);
   };
 
+  const sendPaidPlanEncouragement = async () => {
+    if (!subscriptionData?.company.id || !canSendPaidPlanEmail) {
+      addToast({
+        variant: 'error',
+        title: 'Unavailable',
+        message: 'Upgrade emails can only be sent to employers on the Free Plan',
+        duration: 4000,
+      });
+      return;
+    }
+
+    try {
+      setIsSendingEncourageEmail(true);
+      const response = await subscriptionApi.sendPaidPlanEncouragement(subscriptionData.company.id);
+      addToast({
+        variant: 'success',
+        title: 'Email sent',
+        message: response.message || 'Upgrade email sent.',
+        duration: 5000,
+      });
+      setIsEncourageEmailModalOpen(false);
+    } catch (error) {
+      addToast({
+        variant: 'error',
+        title: 'Email not sent',
+        message: error instanceof Error ? error.message : 'Failed to send the upgrade email',
+        duration: 5000,
+      });
+    } finally {
+      setIsSendingEncourageEmail(false);
+    }
+  };
+
   const formatLocalDate = (dateString: string | null) => {
     if (!dateString) return 'Not set';
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -194,6 +229,10 @@ export default function SubscriptionsPage() {
 
 
   const canCancelSubscription = subscriptionData && subscriptionData.currentPlan.priceInCents > 0;
+  const canSendPaidPlanEmail = Boolean(
+    subscriptionData?.currentPlan &&
+    (subscriptionData.currentPlan.name === 'Free Plan' || subscriptionData.currentPlan.isTrialPlan)
+  );
 
   if (loading) {
     return <FullScreenSpinner isVisible={true} message="Loading subscription details..." />;
@@ -252,15 +291,30 @@ export default function SubscriptionsPage() {
                   )}
                 </div>
               </div>
-              <Button
-                onClick={navigateToUpgradePlan}
-                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 flex items-center gap-2"
-              >
-                {/* <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
-                </svg> */}
-                Manage Plan
-              </Button>
+              <div className="flex flex-col items-end gap-2">
+                <div className="flex flex-wrap justify-end gap-3">
+                  <Button
+                    type="button"
+                    variant="outlinePrimary"
+                    onClick={() => setIsEncourageEmailModalOpen(true)}
+                    disabled={!canSendPaidPlanEmail}
+                  >
+                    Send plan upgrade reminder email
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={navigateToUpgradePlan}
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 flex items-center gap-2"
+                  >
+                    Manage Plan
+                  </Button>
+                </div>
+                {!canSendPaidPlanEmail && (
+                  <p className="text-sm text-gray-500 dark:text-gray-400 text-right">
+                    Available only for employers on the Free Plan
+                  </p>
+                )}
+              </div>
             </div>
           </div>
 
@@ -969,6 +1023,50 @@ export default function SubscriptionsPage() {
               ) : (
                 'Yes, Cancel Subscription'
               )}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={isEncourageEmailModalOpen}
+        onClose={() => {
+          if (!isSendingEncourageEmail) {
+            setIsEncourageEmailModalOpen(false);
+          }
+        }}
+        isFullscreen={false}
+        className="max-w-md mx-4"
+      >
+        <div className="p-6">
+          <div className="mb-6">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+              Send plan upgrade reminder email?
+            </h2>
+            <p className="text-gray-600 dark:text-gray-400 text-sm">
+              This sends a plan upgrade reminder email to every active company user at {subscriptionData.company.name}. They will see monthly plan pricing and a link to subscribe.
+            </p>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Button
+              type="button"
+              variant="ghost"
+              size="default"
+              className="flex-1"
+              onClick={() => setIsEncourageEmailModalOpen(false)}
+              disabled={isSendingEncourageEmail}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="default"
+              size="default"
+              className="flex-1 bg-primary text-white hover:bg-primary/90 whitespace-nowrap"
+              onClick={sendPaidPlanEncouragement}
+              disabled={isSendingEncourageEmail || !canSendPaidPlanEmail}
+            >
+              {isSendingEncourageEmail ? 'Sending...' : 'Send email'}
             </Button>
           </div>
         </div>
