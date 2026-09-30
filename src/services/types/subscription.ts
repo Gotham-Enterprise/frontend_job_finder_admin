@@ -123,6 +123,7 @@ export interface CouponData {
   amountOffInCents: number | null;
   percentOff: number | null;
   duration: string;
+  durationInMonths?: number | null;
   redemptionCode: string;
   stripeCouponId: string;
   currency: string;
