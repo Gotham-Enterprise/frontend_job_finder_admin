@@ -33,6 +33,8 @@ export interface CouponsTableProps {
   isLoading: boolean;
   tableColumns: Array<{ key: string; label: string; className?: string }>;
   onViewCoupon: (couponId: string) => void;
+  onDeleteCoupon: (couponId: string) => void;
+  isDeleting?: boolean;
 }
 
 export interface CouponsTablePaginationProps {

@@ -3,8 +3,10 @@ import React, { useState } from 'react';
 import { BoltIcon } from '@/icons';
 import ErrorState from '../../common/ErrorState';
 import { useCouponsLogic } from '@/services/hooks/useCouponsLogic';
-import { useCreateCoupon } from '@/services/hooks/useCoupons';
+import { useCreateCoupon, useDeleteCoupon } from '@/services/hooks/useCoupons';
 import { usePreservedNavigation } from '@/hooks/usePreservedNavigation';
+import { useConfirmation } from '@/hooks/useConfirmation';
+import ConfirmationDialog from '@/components/ui/ConfirmationDialog';
 import { CouponsProps, CreateCouponFormData } from '@/services/types/CouponsTypes';
 import {
   CouponsHeader,
@@ -22,6 +24,7 @@ const CouponsData: React.FC<CouponsProps> = ({ className = "" }) => {
   });
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const confirmation = useConfirmation();
 
   const {
     filters,
@@ -50,6 +53,7 @@ const CouponsData: React.FC<CouponsProps> = ({ className = "" }) => {
   } = useCouponsLogic();
 
   const createCouponMutation = useCreateCoupon();
+  const deleteCouponMutation = useDeleteCoupon();
 
   const openCreateModal = () => {
     setIsCreateModalOpen(true);
@@ -57,6 +61,24 @@ const CouponsData: React.FC<CouponsProps> = ({ className = "" }) => {
 
   const closeCreateModal = () => {
     setIsCreateModalOpen(false);
+  };
+
+  const deleteCoupon = async (couponId: string) => {
+    const coupon = data?.data?.find((item: { id: string; title?: string }) => item.id === couponId);
+    const confirmed = await confirmation.confirm({
+      title: 'Delete coupon',
+      message: `Remove "${coupon?.title || 'this coupon'}" from Stripe? The coupon will stay in this list as Deleted and can no longer be redeemed.`,
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+    });
+
+    if (!confirmed) return;
+
+    try {
+      await deleteCouponMutation.mutateAsync(couponId);
+    } catch (error) {
+      console.error('Failed to delete coupon:', error);
+    }
   };
 
   const submitCreateCoupon = async (formData: CreateCouponFormData) => {
@@ -110,6 +132,8 @@ const CouponsData: React.FC<CouponsProps> = ({ className = "" }) => {
         isLoading={isLoading}
         tableColumns={tableColumns}
         onViewCoupon={viewCoupon}
+        onDeleteCoupon={deleteCoupon}
+        isDeleting={deleteCouponMutation.isPending}
       />
 
       <CouponsTablePagination
@@ -125,6 +149,18 @@ const CouponsData: React.FC<CouponsProps> = ({ className = "" }) => {
         onClose={closeCreateModal}
         onSubmit={submitCreateCoupon}
         isLoading={createCouponMutation.isPending}
+      />
+
+      <ConfirmationDialog
+        isOpen={confirmation.isOpen}
+        onClose={confirmation.onClose}
+        onConfirm={confirmation.onConfirm}
+        onCancel={confirmation.onCancel}
+        title={confirmation.config?.title || ''}
+        message={confirmation.config?.message || ''}
+        confirmText={confirmation.config?.confirmText}
+        cancelText={confirmation.config?.cancelText}
+        isLoading={deleteCouponMutation.isPending}
       />
     </div>
   );
