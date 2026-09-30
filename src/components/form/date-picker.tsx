@@ -10,7 +10,7 @@ type PropsType = {
   id: string;
   mode?: "single" | "multiple" | "range" | "time";
   onChange?: Hook | Hook[];
-  defaultDate?: DateOption;
+  defaultDate?: DateOption | DateOption[];
   label?: string;
   placeholder?: string;
 };
@@ -100,9 +100,29 @@ export default function DatePicker({
           background-color: #374151 !important;
           border-color: #374151 !important;
         }
-        .flatpickr-calendar .flatpickr-day.selected {
+        .flatpickr-calendar .flatpickr-day.prevMonthDay:not(.selected):not(.startRange):not(.endRange),
+        .flatpickr-calendar .flatpickr-day.nextMonthDay:not(.selected):not(.startRange):not(.endRange) {
+          color: #6b7280 !important;
+        }
+        /* Range mode: globals.css styles in-range days for a light calendar
+           (near-white fill), which hides the white day text here. */
+        .flatpickr-calendar .flatpickr-day.inRange,
+        .flatpickr-calendar .flatpickr-day.today.inRange,
+        .flatpickr-calendar .flatpickr-day.prevMonthDay.inRange,
+        .flatpickr-calendar .flatpickr-day.nextMonthDay.inRange {
+          background-color: #374151 !important;
+          border-color: #374151 !important;
+          box-shadow: -5px 0 0 #374151, 5px 0 0 #374151 !important;
+        }
+        .flatpickr-calendar .flatpickr-day.selected,
+        .flatpickr-calendar .flatpickr-day.startRange,
+        .flatpickr-calendar .flatpickr-day.endRange {
           background-color: #3b82f6 !important;
           border-color: #3b82f6 !important;
+          color: #ffffff !important;
+        }
+        .flatpickr-calendar .flatpickr-day.startRange + .endRange:not(:nth-child(7n + 1)) {
+          box-shadow: -10px 0 0 #3b82f6 !important;
         }
         .flatpickr-calendar .flatpickr-day.today {
           border-color: #3b82f6 !important;

@@ -1,6 +1,6 @@
-import React from "react";
+import React, { useCallback, useMemo } from "react";
 import Label from "../../../form/Label";
-import Input from "../../../ui/input/Input";
+import DatePicker from "@/components/form/date-picker";
 import { SupervisorFiltersProps } from "@/services/types/SupervisorTypes";
 import { SubscriptionDateFilterKey } from "@/services/types/supervisor";
 
@@ -12,6 +12,53 @@ const SUBSCRIPTION_DATE_RANGES: Array<{
   { label: "Subscription Start", from: "subscriptionStartFrom", to: "subscriptionStartTo" },
   { label: "Subscription End", from: "subscriptionEndFrom", to: "subscriptionEndTo" },
 ];
+
+interface SubscriptionDateRangeFieldProps {
+  from: SubscriptionDateFilterKey;
+  to: SubscriptionDateFilterKey;
+  fromValue?: string;
+  toValue?: string;
+  onFilterChange: SupervisorFiltersProps["onFilterChange"];
+}
+
+/**
+ * One flatpickr range input driving two filter keys. Filters update only once
+ * both ends are picked (or the range is cleared); callbacks and defaultDate are
+ * memoized because the shared DatePicker re-initializes when they change,
+ * which would drop a half-picked range.
+ */
+const SubscriptionDateRangeField: React.FC<SubscriptionDateRangeFieldProps> = ({
+  from,
+  to,
+  fromValue,
+  toValue,
+  onFilterChange,
+}) => {
+  const defaultDate = useMemo(
+    () => [fromValue, toValue].filter((d): d is string => !!d),
+    [fromValue, toValue]
+  );
+
+  const handleChange = useCallback(
+    (selectedDates: Date[], _dateStr: string, instance: { formatDate: (d: Date, f: string) => string }) => {
+      if (selectedDates.length === 1) return;
+      const [start, end] = selectedDates.map((d) => instance.formatDate(d, "Y-m-d"));
+      onFilterChange(from, start);
+      onFilterChange(to, end);
+    },
+    [from, to, onFilterChange]
+  );
+
+  return (
+    <DatePicker
+      id={`supervisor-filter-${from}`}
+      mode="range"
+      placeholder="Select date range"
+      defaultDate={defaultDate}
+      onChange={handleChange}
+    />
+  );
+};
 
 const SupervisorFilters: React.FC<SupervisorFiltersProps> = ({
   filters,
@@ -110,22 +157,15 @@ const SupervisorFilters: React.FC<SupervisorFiltersProps> = ({
       {SUBSCRIPTION_DATE_RANGES.map(({ label, from, to }) => (
         <div key={label}>
           <Label>{label}</Label>
-          <div className="mt-1 grid grid-cols-2 gap-2">
-            <Input
-              type="date"
-              aria-label={`${label} from`}
-              title="From"
-              value={filters[from] || ""}
-              max={filters[to] || undefined}
-              onChange={(e) => onFilterChange(from, e.target.value || undefined)}
-            />
-            <Input
-              type="date"
-              aria-label={`${label} to`}
-              title="To"
-              value={filters[to] || ""}
-              min={filters[from] || undefined}
-              onChange={(e) => onFilterChange(to, e.target.value || undefined)}
+          <div className="mt-1">
+            {/* Keyed by value so the uncontrolled flatpickr input resets on Clear */}
+            <SubscriptionDateRangeField
+              key={`${from}-${filters[from] || ""}-${filters[to] || ""}`}
+              from={from}
+              to={to}
+              fromValue={filters[from]}
+              toValue={filters[to]}
+              onFilterChange={onFilterChange}
             />
           </div>
         </div>
