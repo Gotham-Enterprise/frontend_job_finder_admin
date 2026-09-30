@@ -178,16 +178,21 @@ const CreateCouponModal: React.FC<CreateCouponModalProps> = ({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={closeModal} isFullscreen={false} className="max-w-2xl mx-auto my-8">
-      <div className="p-6">
-        <div className="mb-6">
+    <Modal
+      isOpen={isOpen}
+      onClose={closeModal}
+      isFullscreen={false}
+      className="max-w-2xl w-full rounded-lg shadow-xl overflow-hidden"
+    >
+      <div className="flex max-h-[85vh] flex-col bg-white dark:bg-gray-900">
+        <div className="shrink-0 border-b border-gray-200 p-6 dark:border-gray-700">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Create New Coupon</h2>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+          <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
             Fill in the details to create a new discount coupon
           </p>
         </div>
 
-        <div className="space-y-6">
+        <div className="min-h-0 flex-1 space-y-6 overflow-y-auto p-6">
           {/* Title Section */}
           <div>
             <Label htmlFor="title" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
@@ -423,8 +428,7 @@ const CreateCouponModal: React.FC<CreateCouponModalProps> = ({
           </div>
         </div>
 
-        {/* Modal Actions */}
-        <div className="flex items-center justify-end space-x-3 mt-8 pt-6 border-t border-gray-200 dark:text-white dark:border-gray-700">
+        <div className="flex shrink-0 items-center justify-end space-x-3 border-t border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900">
           <Button
             variant="outline"
             onClick={closeModal}
