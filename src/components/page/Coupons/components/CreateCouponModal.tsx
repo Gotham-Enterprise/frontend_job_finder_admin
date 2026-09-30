@@ -5,8 +5,14 @@ import Input from '../../../ui/input/Input';
 import Label from '../../../form/Label';
 import Checkbox from '../../../form/input/Checkbox';
 import { Radio } from '../../../ui/radio';
-import { CreateCouponModalProps, CreateCouponFormData } from '@/services/types/CouponsTypes';
+import { CreateCouponModalProps, CreateCouponFormData, CouponDuration } from '@/services/types/CouponsTypes';
 import { sanitizeNumericInput, sanitizeCurrencyInput, isValidNumericKeyPress } from '@/services/utils/inputValidation';
+import { COUPON_DURATION_MONTH_PRESETS } from '@/services/utils/couponDuration';
+
+const DURATION_OPTIONS: Array<{ value: CouponDuration; label: string; hint: string }> = [
+  { value: 'once', label: 'Once', hint: 'First invoice only' },
+  { value: 'repeating', label: 'Repeating', hint: 'For a set number of months' },
+];
 
 const CreateCouponModal: React.FC<CreateCouponModalProps> = ({
   isOpen,
@@ -21,6 +27,9 @@ const CreateCouponModal: React.FC<CreateCouponModalProps> = ({
     discountType: 'percentage',
     amountOffInCents: undefined,
     percentOff: undefined,
+    duration: 'once',
+    durationInMonths: undefined,
+    maxRedemptions: undefined,
   });
 
   const [errors, setErrors] = useState<Partial<Record<keyof CreateCouponFormData, string>>>({});
@@ -47,6 +56,20 @@ const CreateCouponModal: React.FC<CreateCouponModalProps> = ({
       }
     }
 
+    if (formData.duration === 'repeating') {
+      const months = formData.durationInMonths;
+      if (!months || !Number.isInteger(months) || months < 1 || months > 120) {
+        newErrors.durationInMonths = 'Enter a whole number of months between 1 and 120';
+      }
+    }
+
+    if (formData.maxRedemptions !== undefined) {
+      const redemptions = formData.maxRedemptions;
+      if (!Number.isInteger(redemptions) || redemptions < 1) {
+        newErrors.maxRedemptions = 'Enter a whole number of at least 1, or leave blank for unlimited';
+      }
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -59,6 +82,9 @@ const CreateCouponModal: React.FC<CreateCouponModalProps> = ({
       discountType: 'percentage',
       amountOffInCents: undefined,
       percentOff: undefined,
+      duration: 'once',
+      durationInMonths: undefined,
+      maxRedemptions: undefined,
     });
     setErrors({});
   };
@@ -70,6 +96,8 @@ const CreateCouponModal: React.FC<CreateCouponModalProps> = ({
       ...formData,
       amountOffInCents: formData.discountType === 'amount' ? formData.amountOffInCents : undefined,
       percentOff: formData.discountType === 'percentage' ? formData.percentOff : undefined,
+      durationInMonths: formData.duration === 'repeating' ? formData.durationInMonths : undefined,
+      maxRedemptions: formData.maxRedemptions,
     };
 
     await onSubmit(submitData);
@@ -89,6 +117,10 @@ const CreateCouponModal: React.FC<CreateCouponModalProps> = ({
           updated.percentOff = undefined;
         }
       }
+
+      if (field === 'duration' && value !== 'repeating') {
+        updated.durationInMonths = undefined;
+      }
       
       return updated;
     });
@@ -104,6 +136,10 @@ const CreateCouponModal: React.FC<CreateCouponModalProps> = ({
         percentOff: undefined,
       }));
     }
+
+    if (field === 'duration' && value !== 'repeating') {
+      setErrors(prev => ({ ...prev, durationInMonths: undefined }));
+    }
   };
 
   const closeModal = () => {
@@ -116,25 +152,47 @@ const CreateCouponModal: React.FC<CreateCouponModalProps> = ({
       return false;
     }
     if (formData.discountType === 'amount') {
-      return !!(formData.amountOffInCents && formData.amountOffInCents > 0);
+      if (!(formData.amountOffInCents && formData.amountOffInCents > 0)) {
+        return false;
+      }
     } else if (formData.discountType === 'percentage') {
-      return !!(formData.percentOff && formData.percentOff > 0 && formData.percentOff <= 100);
+      if (!(formData.percentOff && formData.percentOff > 0 && formData.percentOff <= 100)) {
+        return false;
+      }
+    } else {
+      return false;
     }
 
-    return false;
+    if (formData.duration === 'repeating') {
+      const months = formData.durationInMonths;
+      if (!(!!months && Number.isInteger(months) && months >= 1 && months <= 120)) {
+        return false;
+      }
+    }
+
+    if (formData.maxRedemptions !== undefined) {
+      return Number.isInteger(formData.maxRedemptions) && formData.maxRedemptions >= 1;
+    }
+
+    return true;
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={closeModal} isFullscreen={false} className="max-w-2xl mx-auto my-8">
-      <div className="p-6">
-        <div className="mb-6">
+    <Modal
+      isOpen={isOpen}
+      onClose={closeModal}
+      isFullscreen={false}
+      className="max-w-2xl w-full rounded-lg shadow-xl overflow-hidden"
+    >
+      <div className="flex max-h-[85vh] flex-col bg-white dark:bg-gray-900">
+        <div className="shrink-0 border-b border-gray-200 p-6 dark:border-gray-700">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Create New Coupon</h2>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+          <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
             Fill in the details to create a new discount coupon
           </p>
         </div>
 
-        <div className="space-y-6">
+        <div className="min-h-0 flex-1 space-y-6 overflow-y-auto p-6">
           {/* Title Section */}
           <div>
             <Label htmlFor="title" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
@@ -278,10 +336,99 @@ const CreateCouponModal: React.FC<CreateCouponModalProps> = ({
               )}
             </div>
           )}
+
+          <div>
+            <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 block">
+              Duration
+            </Label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {DURATION_OPTIONS.map((option) => (
+                <Radio
+                  key={option.value}
+                  name="duration"
+                  value={option.value}
+                  checked={formData.duration === option.value}
+                  onChange={(value) => updateFormField('duration', value as CouponDuration)}
+                  className="p-4 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 items-start"
+                >
+                  <span className="block font-medium text-gray-900 dark:text-white">{option.label}</span>
+                  <span className="block text-xs text-gray-500 dark:text-gray-400 mt-1">{option.hint}</span>
+                </Radio>
+              ))}
+            </div>
+          </div>
+
+          {formData.duration === 'repeating' && (
+            <div>
+              <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                Repeating duration (months)
+              </Label>
+              <div className="flex flex-wrap gap-2 mb-3">
+                {COUPON_DURATION_MONTH_PRESETS.map((months) => {
+                  const isSelected = formData.durationInMonths === months;
+                  return (
+                    <button
+                      key={months}
+                      type="button"
+                      onClick={() => updateFormField('durationInMonths', months)}
+                      className={`px-3 py-1.5 text-sm rounded-lg border transition-colors ${
+                        isSelected
+                          ? 'bg-brand-500 border-brand-500 text-white'
+                          : 'border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
+                      }`}
+                    >
+                      {months} {months === 1 ? 'month' : 'months'}
+                    </button>
+                  );
+                })}
+              </div>
+              <Label htmlFor="durationInMonths" className="text-sm text-gray-600 dark:text-gray-400">
+                Or enter a custom number of months (1–120)
+              </Label>
+              <Input
+                id="durationInMonths"
+                type="text"
+                inputMode="numeric"
+                value={formData.durationInMonths ?? ''}
+                onChange={(e) => {
+                  const digits = e.target.value.replace(/\D/g, '').slice(0, 3);
+                  updateFormField('durationInMonths', digits ? parseInt(digits, 10) : undefined);
+                }}
+                placeholder="e.g., 6"
+                className={`mt-1 ${errors.durationInMonths ? 'border-red-500' : ''}`}
+              />
+              {errors.durationInMonths && (
+                <p className="text-sm text-red-600 dark:text-red-400 mt-1">{errors.durationInMonths}</p>
+              )}
+            </div>
+          )}
+
+          <div>
+            <Label htmlFor="maxRedemptions" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              Max redemptions
+            </Label>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 mb-2">
+              Leave blank for unlimited redemptions
+            </p>
+            <Input
+              id="maxRedemptions"
+              type="text"
+              inputMode="numeric"
+              value={formData.maxRedemptions ?? ''}
+              onChange={(e) => {
+                const digits = e.target.value.replace(/\D/g, '').slice(0, 9);
+                updateFormField('maxRedemptions', digits ? parseInt(digits, 10) : undefined);
+              }}
+              placeholder="Unlimited"
+              className={errors.maxRedemptions ? 'border-red-500' : ''}
+            />
+            {errors.maxRedemptions && (
+              <p className="text-sm text-red-600 dark:text-red-400 mt-1">{errors.maxRedemptions}</p>
+            )}
+          </div>
         </div>
 
-        {/* Modal Actions */}
-        <div className="flex items-center justify-end space-x-3 mt-8 pt-6 border-t border-gray-200 dark:text-white dark:border-gray-700">
+        <div className="flex shrink-0 items-center justify-end space-x-3 border-t border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900">
           <Button
             variant="outline"
             onClick={closeModal}

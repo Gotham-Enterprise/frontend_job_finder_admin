@@ -1,7 +1,20 @@
 import { useState, useMemo, useTransition, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCoupons } from '@/services/hooks/useCoupons';
-import { CouponFilters } from '@/services/types/coupon';
+import { CouponFilters, CouponListStatus } from '@/services/types/coupon';
+
+const COUPON_STATUSES: CouponListStatus[] = ['active', 'inactive', 'deleted'];
+
+const parseStatusParam = (value?: string | null): CouponListStatus[] | undefined => {
+  if (!value) return undefined;
+  const statuses = value
+    .split(',')
+    .map((status) => status.trim())
+    .filter((status): status is CouponListStatus =>
+      COUPON_STATUSES.includes(status as CouponListStatus)
+    );
+  return statuses.length ? statuses : undefined;
+};
 
 export const useCouponsLogic = () => {
   const router = useRouter();
@@ -15,6 +28,7 @@ export const useCouponsLogic = () => {
       const urlLimit = searchParams.get('limit');
       const urlKeyword = searchParams.get('keyword');
       const urlIsActive = searchParams.get('isActive');
+      const urlStatus = parseStatusParam(searchParams.get('status'));
       const urlSortBy = searchParams.get('sortBy');
       const urlSortOrder = searchParams.get('sortOrder');
       
@@ -22,7 +36,8 @@ export const useCouponsLogic = () => {
         page: Math.max(1, parseInt(urlPage || '1', 10)),
         limit: parseInt(urlLimit || '100', 10),
         keyword: urlKeyword || '',
-        isActive: urlIsActive === 'true' ? true : urlIsActive === 'false' ? false : undefined,
+        isActive: urlStatus ? undefined : urlIsActive === 'true' ? true : urlIsActive === 'false' ? false : undefined,
+        status: urlStatus,
         sortBy: (urlSortBy as 'createdAt' | 'updatedAt') || 'createdAt',
         sortOrder: (urlSortOrder as 'asc' | 'desc') || 'desc',
       };
@@ -37,7 +52,8 @@ export const useCouponsLogic = () => {
             page: Math.max(1, parsed.page || 1),
             limit: parsed.limit || 100,
             keyword: parsed.keyword || '',
-            isActive: parsed.isActive,
+            isActive: parsed.status?.length ? undefined : parsed.isActive,
+            status: parseStatusParam(Array.isArray(parsed.status) ? parsed.status.join(',') : parsed.status),
             sortBy: parsed.sortBy || 'createdAt',
             sortOrder: parsed.sortOrder || 'desc',
           };
@@ -68,8 +84,9 @@ export const useCouponsLogic = () => {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>(() => {
-    if (initialFilters.isActive === true) return ['true'];
-    if (initialFilters.isActive === false) return ['false'];
+    if (initialFilters.status?.length) return initialFilters.status;
+    if (initialFilters.isActive === true) return ['active'];
+    if (initialFilters.isActive === false) return ['inactive'];
     return [];
   });
   const [isInitialized, setIsInitialized] = useState(false);
@@ -121,7 +138,8 @@ export const useCouponsLogic = () => {
     if (filters.page && filters.page > 1) params.set('page', filters.page.toString());
     if (filters.limit && filters.limit !== 100) params.set('limit', filters.limit.toString());
     if (filters.keyword) params.set('keyword', filters.keyword);
-    if (filters.isActive !== undefined) params.set('isActive', filters.isActive.toString());
+    if (filters.status?.length) params.set('status', filters.status.join(','));
+    else if (filters.isActive !== undefined) params.set('isActive', filters.isActive.toString());
     if (filters.sortBy && filters.sortBy !== 'createdAt') params.set('sortBy', filters.sortBy);
     if (filters.sortOrder && filters.sortOrder !== 'desc') params.set('sortOrder', filters.sortOrder);
     
@@ -158,6 +176,7 @@ export const useCouponsLogic = () => {
         limit: filters.limit,
         keyword: filters.keyword,
         isActive: filters.isActive,
+        status: filters.status,
         sortBy: filters.sortBy,
         sortOrder: filters.sortOrder,
       };
@@ -174,7 +193,8 @@ export const useCouponsLogic = () => {
     };
 
     if (filters.keyword) normalized.keyword = filters.keyword;
-    if (filters.isActive !== undefined) normalized.isActive = filters.isActive;
+    if (filters.status?.length) normalized.status = filters.status;
+    else if (filters.isActive !== undefined) normalized.isActive = filters.isActive;
     
     return normalized;
   }, [filters]);
@@ -187,15 +207,18 @@ export const useCouponsLogic = () => {
     { key: 'discount', label: 'Discount' },
     { key: 'currency', label: 'Currency' },
     { key: 'duration', label: 'Duration' },
+    { key: 'maxRedemptions', label: 'Max Redemptions' },
     { key: 'adminOnly', label: 'Admin Only' },
     { key: 'status', label: 'Status' },
     { key: 'createdAt', label: 'Created Date' },
     { key: 'updatedAt', label: 'Updated Date' },
+    { key: 'actions', label: 'Actions', className: 'text-right' },
   ], []);
 
   const statusOptions = useMemo(() => [
-    { value: 'true', label: 'Active' },
-    { value: 'false', label: 'Inactive' },
+    { value: 'active', label: 'Active' },
+    { value: 'inactive', label: 'Inactive' },
+    { value: 'deleted', label: 'Deleted' },
   ], []);
 
   const sortByOptions = useMemo(() => [
@@ -243,14 +266,17 @@ export const useCouponsLogic = () => {
     setSelectedStatuses(statuses);
     
     startTransition(() => {
-      if (statuses.length === 0) {
-        setFilters(prev => ({ ...prev, isActive: undefined, page: 1 }));
-      } else if (statuses.length === 1) {
-        const isActive = statuses[0] === 'true';
-        setFilters(prev => ({ ...prev, isActive, page: 1 }));
-      } else {
-        setFilters(prev => ({ ...prev, isActive: undefined, page: 1 }));
-      }
+      const nextStatus = statuses.filter((status): status is CouponListStatus =>
+        COUPON_STATUSES.includes(status as CouponListStatus)
+      );
+      setFilters(prev => ({
+        ...prev,
+        status: nextStatus.length === 0 || nextStatus.length === COUPON_STATUSES.length
+          ? undefined
+          : nextStatus,
+        isActive: undefined,
+        page: 1,
+      }));
     });
   }, []);
 
@@ -289,6 +315,7 @@ export const useCouponsLogic = () => {
       limit: 100,
       keyword: '',
       isActive: undefined,
+      status: undefined,
       sortBy: 'createdAt' as const,
       sortOrder: 'desc' as const,
     };
@@ -330,7 +357,7 @@ export const useCouponsLogic = () => {
     return () => clearTimeout(timeoutId);
   }, [searchInput, isInitialized, filters.keyword, hasRestoredFromState, initialFilters.keyword]);
   useEffect(() => {
-    if (filters.keyword || filters.isActive !== undefined || (filters.page && filters.page > 1)) {
+    if (filters.keyword || filters.isActive !== undefined || filters.status?.length || (filters.page && filters.page > 1)) {
       saveSearchState();
     }
   }, [filters, saveSearchState]);

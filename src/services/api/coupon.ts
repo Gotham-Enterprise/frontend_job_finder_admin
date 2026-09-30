@@ -1,6 +1,6 @@
-import { CouponFilters, CouponsResponse } from '../types/coupon';
+import { Coupon, CouponFilters, CouponsResponse } from '../types/coupon';
 import { CreateCouponFormData } from '../types/CouponsTypes';
-import { apiGet, apiPost } from './apiUtils';
+import { apiDelete, apiGet, apiPost } from './apiUtils';
 
 export const couponApi = {
   async getCoupons(filters: CouponFilters = {}): Promise<CouponsResponse> {
@@ -10,6 +10,7 @@ export const couponApi = {
     if (filters.limit) queryParams.append('limit', filters.limit.toString());
     if (filters.keyword) queryParams.append('keyword', filters.keyword);
     if (filters.isActive !== undefined) queryParams.append('isActive', filters.isActive.toString());
+    if (filters.status?.length) queryParams.append('status', filters.status.join(','));
     if (filters.sortBy) queryParams.append('sortBy', filters.sortBy);
     if (filters.sortOrder) queryParams.append('sortOrder', filters.sortOrder);
 
@@ -38,6 +39,15 @@ export const couponApi = {
       requestBody.percentOff = data.percentOff;
     }
 
+    requestBody.duration = data.duration;
+    if (data.duration === 'repeating' && data.durationInMonths) {
+      requestBody.durationInMonths = data.durationInMonths;
+    }
+
+    if (data.maxRedemptions) {
+      requestBody.maxRedemptions = data.maxRedemptions;
+    }
+
     const endpoint = `/api/admin/coupons`;
 
     try {
@@ -52,5 +62,9 @@ export const couponApi = {
     } catch (error: any) {
       throw error;
     }
+  },
+
+  async deleteCoupon(id: string): Promise<{ success: boolean; message: string; data: Coupon }> {
+    return apiDelete(`/api/admin/coupons/${id}`);
   },
 };
