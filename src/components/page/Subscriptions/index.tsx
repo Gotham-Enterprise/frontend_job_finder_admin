@@ -26,7 +26,7 @@ export default function SubscriptionsPage() {
   const [isCancellingSubscription, setIsCancellingSubscription] = useState(false);
   const { addToast } = useToast();
   const { copyToClipboard } = useSubscriptionContext();
-  
+
   const { subscriptionData, loading, error } = useSubscriptionByCompany(employerId);
 
   const handleCopyRedemptionCode = async (redemptionCode: string) => {
@@ -81,7 +81,7 @@ export default function SubscriptionsPage() {
     try {
       setIsCancellingSubscription(true);
       const response = await subscriptionApi.cancelSubscription(subscriptionData.company.id);
-      
+
       if (response.success) {
         addToast({
           variant: 'success',
@@ -125,7 +125,7 @@ export default function SubscriptionsPage() {
         message: 'Your subscription has been activated and is now ready to use.',
         duration: 8000,
       });
-      
+
       const newSearchParams = new URLSearchParams(searchParams.toString());
       newSearchParams.delete('success');
       router.replace(`/admin/subscriptions?${newSearchParams.toString()}`);
@@ -282,8 +282,8 @@ export default function SubscriptionsPage() {
                   </div>
                 </div>
                 <div className="text-right space-y-2">
-                  <Button 
-                    variant="ghost" 
+                  <Button
+                    variant="ghost"
                     size="lg"
                     onClick={() => setIsViewPlanModalOpen(true)}
                     className="text-blue-600 hover:text-blue-800 dark:text-blue-400"
@@ -319,7 +319,7 @@ export default function SubscriptionsPage() {
               </div>
               {subscriptionData.currentPlan.jobPostCredit !== 9999999 && (
                 <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                  <div 
+                  <div
                     className="bg-blue-600 h-2 rounded-full transition-all duration-300"
                     style={{ width: `${getUsagePercentage(subscriptionData.jobPostsUsed, subscriptionData.currentPlan.jobPostCredit)}%` }}
                   ></div>
@@ -349,7 +349,7 @@ export default function SubscriptionsPage() {
               </div>
               {subscriptionData.currentPlan.resumeSearchCredit && subscriptionData.currentPlan.resumeSearchCredit !== 9999999 && (
                 <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                  <div 
+                  <div
                     className="bg-green-600 h-2 rounded-full transition-all duration-300"
                     style={{ width: `${getUsagePercentage(subscriptionData.resumeSearchUsed, subscriptionData.currentPlan.resumeSearchCredit)}%` }}
                   ></div>
@@ -380,7 +380,7 @@ export default function SubscriptionsPage() {
               </div>
               {subscriptionData.currentPlan.profileViewsCredit !== 9999999 && (
                 <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                  <div 
+                  <div
                     className="bg-purple-600 h-2 rounded-full transition-all duration-300"
                     style={{ width: `${getUsagePercentage(subscriptionData.profileViewsUsed, subscriptionData.currentPlan.profileViewsCredit)}%` }}
                   ></div>
@@ -410,7 +410,7 @@ export default function SubscriptionsPage() {
               </div>
               {subscriptionData.currentPlan.emailSendingCredit !== 9999999 && (
                 <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                  <div 
+                  <div
                     className="bg-orange-600 h-2 rounded-full transition-all duration-300"
                     style={{ width: `${getUsagePercentage(subscriptionData.emailSendingUsed, subscriptionData.currentPlan.emailSendingCredit)}%` }}
                   ></div>
@@ -440,7 +440,7 @@ export default function SubscriptionsPage() {
               </div>
               {subscriptionData.currentPlan.resumeDownloadCredit !== 9999999 && (
                 <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                  <div 
+                  <div
                     className="bg-red-600 h-2 rounded-full transition-all duration-300"
                     style={{ width: `${getUsagePercentage(subscriptionData.resumeDownloadUsed, subscriptionData.currentPlan.resumeDownloadCredit)}%` }}
                   ></div>
@@ -470,7 +470,7 @@ export default function SubscriptionsPage() {
               </div>
               {subscriptionData.currentPlan.employeesSeatsCredit !== 9999999 && (
                 <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                  <div 
+                  <div
                     className="bg-teal-600 h-2 rounded-full transition-all duration-300"
                     style={{ width: `${getUsagePercentage(subscriptionData.employeesSeatsUsed, subscriptionData.currentPlan.employeesSeatsCredit)}%` }}
                   ></div>
@@ -707,9 +707,9 @@ export default function SubscriptionsPage() {
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
           <div className="flex justify-center">
             {canCancelSubscription ? (
-              <Button 
-                variant="ghost" 
-                className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300" 
+              <Button
+                variant="ghost"
+                className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
                 size="lg"
                 onClick={() => setIsCancelSubscriptionModalOpen(true)}
                 disabled={isCancellingSubscription}
@@ -719,8 +719,8 @@ export default function SubscriptionsPage() {
             ) : (
               <div className="text-center">
                 <p className="text-gray-500 dark:text-gray-400 text-sm">
-                  {subscriptionData?.currentPlan.priceInCents === 0 
-                    ? 'No subscription' 
+                  {subscriptionData?.currentPlan.priceInCents === 0
+                    ? 'No subscription'
                     : 'No active paid subscription'}
                 </p>
               </div>
@@ -730,8 +730,8 @@ export default function SubscriptionsPage() {
       </div>
 
       {/* View Plan Modal */}
-      <Modal 
-        isOpen={isViewPlanModalOpen} 
+      <Modal
+        isOpen={isViewPlanModalOpen}
         onClose={() => setIsViewPlanModalOpen(false)}
         isFullscreen={false}
         className="max-w-2xl mx-4"
@@ -838,8 +838,8 @@ export default function SubscriptionsPage() {
       </Modal>
 
       {/* Cancel Subscription Modal */}
-      <Modal 
-        isOpen={isCancelSubscriptionModalOpen} 
+      <Modal
+        isOpen={isCancelSubscriptionModalOpen}
         onClose={() => setIsCancelSubscriptionModalOpen(false)}
         isFullscreen={false}
         className="max-w-lg mx-4"
@@ -879,8 +879,8 @@ export default function SubscriptionsPage() {
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3 pt-4">
-            <Button 
-              variant="text-primary" 
+            <Button
+              variant="text-primary"
               size="default"
               className="flex-1"
               onClick={() => setIsCancelSubscriptionModalOpen(false)}
@@ -888,8 +888,8 @@ export default function SubscriptionsPage() {
             >
               Keep Subscription
             </Button>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               size="default"
               className="flex-1 border-red-600 text-red-600 hover:bg-red-50 dark:border-red-400 dark:text-red-400 dark:hover:bg-red-900/20"
               onClick={handleShowCancelConfirmation}
@@ -902,8 +902,8 @@ export default function SubscriptionsPage() {
       </Modal>
 
       {/* Final Confirmation Modal */}
-      <Modal 
-        isOpen={isConfirmCancelModalOpen} 
+      <Modal
+        isOpen={isConfirmCancelModalOpen}
         onClose={() => setIsConfirmCancelModalOpen(false)}
         isFullscreen={false}
         className="max-w-md mx-4"
@@ -939,8 +939,8 @@ export default function SubscriptionsPage() {
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3">
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               size="default"
               className="flex-1"
               onClick={() => {
@@ -951,8 +951,8 @@ export default function SubscriptionsPage() {
             >
               Go Back
             </Button>
-            <Button 
-              variant="default" 
+            <Button
+              variant="default"
               size="default"
               className="flex-1 bg-primary text-white hover:bg-primary/90 whitespace-nowrap"
               onClick={cancelSubscription}
