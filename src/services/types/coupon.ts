@@ -10,6 +10,7 @@ export interface Coupon {
   percentOff: number | null;
   duration: string;
   durationInMonths: number | null;
+  maxRedemptions: number | null;
   deactivatedAt: string | null;
   createdAt: string;
   updatedAt: string;

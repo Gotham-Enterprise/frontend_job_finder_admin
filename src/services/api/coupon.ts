@@ -43,6 +43,10 @@ export const couponApi = {
       requestBody.durationInMonths = data.durationInMonths;
     }
 
+    if (data.maxRedemptions) {
+      requestBody.maxRedemptions = data.maxRedemptions;
+    }
+
     const endpoint = `/api/admin/coupons`;
 
     try {

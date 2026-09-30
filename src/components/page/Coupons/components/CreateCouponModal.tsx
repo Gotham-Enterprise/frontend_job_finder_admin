@@ -30,6 +30,7 @@ const CreateCouponModal: React.FC<CreateCouponModalProps> = ({
     percentOff: undefined,
     duration: 'once',
     durationInMonths: undefined,
+    maxRedemptions: undefined,
   });
 
   const [errors, setErrors] = useState<Partial<Record<keyof CreateCouponFormData, string>>>({});
@@ -63,6 +64,13 @@ const CreateCouponModal: React.FC<CreateCouponModalProps> = ({
       }
     }
 
+    if (formData.maxRedemptions !== undefined) {
+      const redemptions = formData.maxRedemptions;
+      if (!Number.isInteger(redemptions) || redemptions < 1) {
+        newErrors.maxRedemptions = 'Enter a whole number of at least 1, or leave blank for unlimited';
+      }
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -77,6 +85,7 @@ const CreateCouponModal: React.FC<CreateCouponModalProps> = ({
       percentOff: undefined,
       duration: 'once',
       durationInMonths: undefined,
+      maxRedemptions: undefined,
     });
     setErrors({});
   };
@@ -89,6 +98,7 @@ const CreateCouponModal: React.FC<CreateCouponModalProps> = ({
       amountOffInCents: formData.discountType === 'amount' ? formData.amountOffInCents : undefined,
       percentOff: formData.discountType === 'percentage' ? formData.percentOff : undefined,
       durationInMonths: formData.duration === 'repeating' ? formData.durationInMonths : undefined,
+      maxRedemptions: formData.maxRedemptions,
     };
 
     await onSubmit(submitData);
@@ -156,7 +166,13 @@ const CreateCouponModal: React.FC<CreateCouponModalProps> = ({
 
     if (formData.duration === 'repeating') {
       const months = formData.durationInMonths;
-      return !!months && Number.isInteger(months) && months >= 1 && months <= 120;
+      if (!(!!months && Number.isInteger(months) && months >= 1 && months <= 120)) {
+        return false;
+      }
+    }
+
+    if (formData.maxRedemptions !== undefined) {
+      return Number.isInteger(formData.maxRedemptions) && formData.maxRedemptions >= 1;
     }
 
     return true;
@@ -382,6 +398,30 @@ const CreateCouponModal: React.FC<CreateCouponModalProps> = ({
               )}
             </div>
           )}
+
+          <div>
+            <Label htmlFor="maxRedemptions" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              Max redemptions
+            </Label>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 mb-2">
+              Leave blank for unlimited redemptions
+            </p>
+            <Input
+              id="maxRedemptions"
+              type="text"
+              inputMode="numeric"
+              value={formData.maxRedemptions ?? ''}
+              onChange={(e) => {
+                const digits = e.target.value.replace(/\D/g, '').slice(0, 9);
+                updateFormField('maxRedemptions', digits ? parseInt(digits, 10) : undefined);
+              }}
+              placeholder="Unlimited"
+              className={errors.maxRedemptions ? 'border-red-500' : ''}
+            />
+            {errors.maxRedemptions && (
+              <p className="text-sm text-red-600 dark:text-red-400 mt-1">{errors.maxRedemptions}</p>
+            )}
+          </div>
         </div>
 
         {/* Modal Actions */}

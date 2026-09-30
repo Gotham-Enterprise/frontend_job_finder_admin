@@ -47,7 +47,7 @@ const CouponsTable: React.FC<CouponsTableProps> = ({
         <TableBody>
           {isLoading ? (
             <TableRow>
-              <TableCell className="text-center py-8 px-6" colSpan={10}>
+              <TableCell className="text-center py-8 px-6" colSpan={11}>
                 <div className="flex items-center justify-center gap-3">
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-brand-500"></div>
                   <p className="text-gray-500 dark:text-gray-400">Loading...</p>
@@ -56,7 +56,7 @@ const CouponsTable: React.FC<CouponsTableProps> = ({
             </TableRow>
           ) : !data?.data?.length ? (
             <TableRow>
-              <TableCell className="text-center py-8 px-6" colSpan={10}>
+              <TableCell className="text-center py-8 px-6" colSpan={11}>
                 <p className="text-gray-500 dark:text-gray-400">No coupons found</p>
               </TableCell>
             </TableRow>
@@ -102,6 +102,11 @@ const CouponsTable: React.FC<CouponsTableProps> = ({
                 <TableCell className="py-4 px-6">
                   <p className="text-sm text-gray-900 dark:text-white">
                     {formatCouponDurationTable(coupon.duration, coupon.durationInMonths)}
+                  </p>
+                </TableCell>
+                <TableCell className="py-4 px-6">
+                  <p className="text-sm text-gray-900 dark:text-white">
+                    {coupon.maxRedemptions ?? 'Unlimited'}
                   </p>
                 </TableCell>
                 <TableCell className="py-4 px-6">

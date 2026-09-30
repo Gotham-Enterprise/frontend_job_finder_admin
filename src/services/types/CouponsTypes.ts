@@ -54,6 +54,7 @@ export interface CreateCouponFormData {
   percentOff?: number;
   duration: CouponDuration;
   durationInMonths?: number;
+  maxRedemptions?: number;
 }
 
 export interface CreateCouponModalProps {
