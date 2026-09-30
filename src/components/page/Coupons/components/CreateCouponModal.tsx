@@ -5,8 +5,15 @@ import Input from '../../../ui/input/Input';
 import Label from '../../../form/Label';
 import Checkbox from '../../../form/input/Checkbox';
 import { Radio } from '../../../ui/radio';
-import { CreateCouponModalProps, CreateCouponFormData } from '@/services/types/CouponsTypes';
+import { CreateCouponModalProps, CreateCouponFormData, CouponDuration } from '@/services/types/CouponsTypes';
 import { sanitizeNumericInput, sanitizeCurrencyInput, isValidNumericKeyPress } from '@/services/utils/inputValidation';
+import { COUPON_DURATION_MONTH_PRESETS } from '@/services/utils/couponDuration';
+
+const DURATION_OPTIONS: Array<{ value: CouponDuration; label: string; hint: string }> = [
+  { value: 'forever', label: 'Forever', hint: 'Discount on every invoice' },
+  { value: 'once', label: 'Once', hint: 'First invoice only' },
+  { value: 'repeating', label: 'Repeating', hint: 'For a set number of months' },
+];
 
 const CreateCouponModal: React.FC<CreateCouponModalProps> = ({
   isOpen,
@@ -21,6 +28,8 @@ const CreateCouponModal: React.FC<CreateCouponModalProps> = ({
     discountType: 'percentage',
     amountOffInCents: undefined,
     percentOff: undefined,
+    duration: 'once',
+    durationInMonths: undefined,
   });
 
   const [errors, setErrors] = useState<Partial<Record<keyof CreateCouponFormData, string>>>({});
@@ -47,6 +56,13 @@ const CreateCouponModal: React.FC<CreateCouponModalProps> = ({
       }
     }
 
+    if (formData.duration === 'repeating') {
+      const months = formData.durationInMonths;
+      if (!months || !Number.isInteger(months) || months < 1 || months > 120) {
+        newErrors.durationInMonths = 'Enter a whole number of months between 1 and 120';
+      }
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -59,6 +75,8 @@ const CreateCouponModal: React.FC<CreateCouponModalProps> = ({
       discountType: 'percentage',
       amountOffInCents: undefined,
       percentOff: undefined,
+      duration: 'once',
+      durationInMonths: undefined,
     });
     setErrors({});
   };
@@ -70,6 +88,7 @@ const CreateCouponModal: React.FC<CreateCouponModalProps> = ({
       ...formData,
       amountOffInCents: formData.discountType === 'amount' ? formData.amountOffInCents : undefined,
       percentOff: formData.discountType === 'percentage' ? formData.percentOff : undefined,
+      durationInMonths: formData.duration === 'repeating' ? formData.durationInMonths : undefined,
     };
 
     await onSubmit(submitData);
@@ -89,6 +108,10 @@ const CreateCouponModal: React.FC<CreateCouponModalProps> = ({
           updated.percentOff = undefined;
         }
       }
+
+      if (field === 'duration' && value !== 'repeating') {
+        updated.durationInMonths = undefined;
+      }
       
       return updated;
     });
@@ -104,6 +127,10 @@ const CreateCouponModal: React.FC<CreateCouponModalProps> = ({
         percentOff: undefined,
       }));
     }
+
+    if (field === 'duration' && value !== 'repeating') {
+      setErrors(prev => ({ ...prev, durationInMonths: undefined }));
+    }
   };
 
   const closeModal = () => {
@@ -116,12 +143,23 @@ const CreateCouponModal: React.FC<CreateCouponModalProps> = ({
       return false;
     }
     if (formData.discountType === 'amount') {
-      return !!(formData.amountOffInCents && formData.amountOffInCents > 0);
+      if (!(formData.amountOffInCents && formData.amountOffInCents > 0)) {
+        return false;
+      }
     } else if (formData.discountType === 'percentage') {
-      return !!(formData.percentOff && formData.percentOff > 0 && formData.percentOff <= 100);
+      if (!(formData.percentOff && formData.percentOff > 0 && formData.percentOff <= 100)) {
+        return false;
+      }
+    } else {
+      return false;
     }
 
-    return false;
+    if (formData.duration === 'repeating') {
+      const months = formData.durationInMonths;
+      return !!months && Number.isInteger(months) && months >= 1 && months <= 120;
+    }
+
+    return true;
   };
 
   return (
@@ -275,6 +313,72 @@ const CreateCouponModal: React.FC<CreateCouponModalProps> = ({
               </div>
               {errors.amountOffInCents && (
                 <p className="text-sm text-red-600 dark:text-red-400 mt-1">{errors.amountOffInCents}</p>
+              )}
+            </div>
+          )}
+
+          <div>
+            <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 block">
+              Duration
+            </Label>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {DURATION_OPTIONS.map((option) => (
+                <Radio
+                  key={option.value}
+                  name="duration"
+                  value={option.value}
+                  checked={formData.duration === option.value}
+                  onChange={(value) => updateFormField('duration', value as CouponDuration)}
+                  className="p-4 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 items-start"
+                >
+                  <span className="block font-medium text-gray-900 dark:text-white">{option.label}</span>
+                  <span className="block text-xs text-gray-500 dark:text-gray-400 mt-1">{option.hint}</span>
+                </Radio>
+              ))}
+            </div>
+          </div>
+
+          {formData.duration === 'repeating' && (
+            <div>
+              <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                Repeating duration (months)
+              </Label>
+              <div className="flex flex-wrap gap-2 mb-3">
+                {COUPON_DURATION_MONTH_PRESETS.map((months) => {
+                  const isSelected = formData.durationInMonths === months;
+                  return (
+                    <button
+                      key={months}
+                      type="button"
+                      onClick={() => updateFormField('durationInMonths', months)}
+                      className={`px-3 py-1.5 text-sm rounded-lg border transition-colors ${
+                        isSelected
+                          ? 'bg-brand-500 border-brand-500 text-white'
+                          : 'border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
+                      }`}
+                    >
+                      {months} {months === 1 ? 'month' : 'months'}
+                    </button>
+                  );
+                })}
+              </div>
+              <Label htmlFor="durationInMonths" className="text-sm text-gray-600 dark:text-gray-400">
+                Or enter a custom number of months (1–120)
+              </Label>
+              <Input
+                id="durationInMonths"
+                type="text"
+                inputMode="numeric"
+                value={formData.durationInMonths ?? ''}
+                onChange={(e) => {
+                  const digits = e.target.value.replace(/\D/g, '').slice(0, 3);
+                  updateFormField('durationInMonths', digits ? parseInt(digits, 10) : undefined);
+                }}
+                placeholder="e.g., 6"
+                className={`mt-1 ${errors.durationInMonths ? 'border-red-500' : ''}`}
+              />
+              {errors.durationInMonths && (
+                <p className="text-sm text-red-600 dark:text-red-400 mt-1">{errors.durationInMonths}</p>
               )}
             </div>
           )}

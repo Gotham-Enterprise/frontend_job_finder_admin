@@ -43,6 +43,8 @@ export interface CouponsTablePaginationProps {
   onFilterChange: (key: keyof CouponFilters, value: any) => void;
 }
 
+export type CouponDuration = 'forever' | 'once' | 'repeating';
+
 export interface CreateCouponFormData {
   title: string;
   description: string;
@@ -50,6 +52,8 @@ export interface CreateCouponFormData {
   discountType: 'amount' | 'percentage';
   amountOffInCents?: number;
   percentOff?: number;
+  duration: CouponDuration;
+  durationInMonths?: number;
 }
 
 export interface CreateCouponModalProps {

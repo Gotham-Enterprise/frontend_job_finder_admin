@@ -9,6 +9,7 @@ export interface Coupon {
   amountOffInCents: number | null;
   percentOff: number | null;
   duration: string;
+  durationInMonths: number | null;
   deactivatedAt: string | null;
   createdAt: string;
   updatedAt: string;

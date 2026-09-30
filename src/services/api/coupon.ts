@@ -38,6 +38,11 @@ export const couponApi = {
       requestBody.percentOff = data.percentOff;
     }
 
+    requestBody.duration = data.duration;
+    if (data.duration === 'repeating' && data.durationInMonths) {
+      requestBody.durationInMonths = data.durationInMonths;
+    }
+
     const endpoint = `/api/admin/coupons`;
 
     try {

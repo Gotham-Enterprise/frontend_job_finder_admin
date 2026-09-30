@@ -12,6 +12,7 @@ import Button from '../../../ui/button/Button';
 import TableHeading from '../../../tables/tableHeader';
 import { EyeIcon, TimeIcon, CopyIcon } from '@/icons';
 import { CouponsTableProps } from '@/services/types/CouponsTypes';
+import { formatCouponDurationTable } from '@/services/utils/couponDuration';
 
 const CouponsTable: React.FC<CouponsTableProps> = ({
   data,
@@ -99,8 +100,8 @@ const CouponsTable: React.FC<CouponsTableProps> = ({
                   </p>
                 </TableCell>
                 <TableCell className="py-4 px-6">
-                  <p className="text-sm text-gray-900 dark:text-white capitalize">
-                    {coupon.duration}
+                  <p className="text-sm text-gray-900 dark:text-white">
+                    {formatCouponDurationTable(coupon.duration, coupon.durationInMonths)}
                   </p>
                 </TableCell>
                 <TableCell className="py-4 px-6">
