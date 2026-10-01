@@ -10,7 +10,7 @@ import {
 import Badge from '../../../ui/badge/Badge';
 import Button from '../../../ui/button/Button';
 import TableHeading from '../../../tables/tableHeader';
-import { TimeIcon, CopyIcon, TrashBinIcon } from '@/icons';
+import { TimeIcon, CopyIcon, TrashBinIcon, PencilIcon } from '@/icons';
 import { CouponsTableProps } from '@/services/types/CouponsTypes';
 import { formatCouponDurationTable } from '@/services/utils/couponDuration';
 import PermissionWrapper from '../../../common/PermissionWrapper';
@@ -19,8 +19,10 @@ const CouponsTable: React.FC<CouponsTableProps> = ({
   data,
   isLoading,
   tableColumns,
+  onEditCoupon,
   onDeleteCoupon,
   isDeleting = false,
+  isUpdating = false,
 }) => {
   const formatDiscount = (coupon: any) => {
     if (coupon.amountOffInCents) {
@@ -173,18 +175,32 @@ const CouponsTable: React.FC<CouponsTableProps> = ({
                 </TableCell>
                 <TableCell className="py-4 px-6 text-right">
                   {!coupon.deletedAt && (
-                    <PermissionWrapper module="coupons" action="delete">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-red-400 hover:text-red-700"
-                        onClick={() => onDeleteCoupon(coupon.id)}
-                        disabled={isDeleting}
-                        startIcon={<TrashBinIcon />}
-                      >
-                        Delete
-                      </Button>
-                    </PermissionWrapper>
+                    <div className="flex items-center justify-end gap-2">
+                      <PermissionWrapper module="coupons" action="edit">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
+                          onClick={() => onEditCoupon(coupon.id)}
+                          disabled={isUpdating}
+                          startIcon={<PencilIcon />}
+                        >
+                          Edit
+                        </Button>
+                      </PermissionWrapper>
+                      <PermissionWrapper module="coupons" action="delete">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-red-400 hover:text-red-700"
+                          onClick={() => onDeleteCoupon(coupon.id)}
+                          disabled={isDeleting}
+                          startIcon={<TrashBinIcon />}
+                        >
+                          Delete
+                        </Button>
+                      </PermissionWrapper>
+                    </div>
                   )}
                 </TableCell>
               </TableRow>

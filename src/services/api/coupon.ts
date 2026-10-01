@@ -1,6 +1,6 @@
 import { Coupon, CouponFilters, CouponsResponse } from '../types/coupon';
-import { CreateCouponFormData } from '../types/CouponsTypes';
-import { apiDelete, apiGet, apiPost } from './apiUtils';
+import { CreateCouponFormData, UpdateCouponFormData } from '../types/CouponsTypes';
+import { apiDelete, apiGet, apiPatch, apiPost } from './apiUtils';
 
 export const couponApi = {
   async getCoupons(filters: CouponFilters = {}): Promise<CouponsResponse> {
@@ -62,6 +62,16 @@ export const couponApi = {
     } catch (error: any) {
       throw error;
     }
+  },
+
+  async updateCoupon(
+    id: string,
+    data: UpdateCouponFormData
+  ): Promise<{ success: boolean; message: string; data: Coupon }> {
+    return apiPatch(`/api/admin/coupons/${id}`, {
+      title: data.title.trim(),
+      description: data.description.trim(),
+    });
   },
 
   async deleteCoupon(id: string): Promise<{ success: boolean; message: string; data: Coupon }> {

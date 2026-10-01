@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { couponApi } from '../api/coupon';
 import { CouponFilters } from '../types/coupon';
-import { CreateCouponFormData } from '../types/CouponsTypes';
+import { CreateCouponFormData, UpdateCouponFormData } from '../types/CouponsTypes';
 import { showToast } from '../utils/toast';
 
 export const couponQueryKeys = {
@@ -69,6 +69,28 @@ export const useCreateCoupon = () => {
       }
       
       showToast.error('Creation Failed', errorMessage);
+    },
+  });
+};
+
+export const useUpdateCoupon = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: UpdateCouponFormData }) =>
+      couponApi.updateCoupon(id, data),
+    onSuccess: (response) => {
+      queryClient.invalidateQueries({ queryKey: couponQueryKeys.all });
+
+      const title = response?.data?.title;
+      showToast.success(
+        'Coupon Updated',
+        title ? `"${title}" was updated.` : 'The coupon was updated.'
+      );
+    },
+    onError: (error: any) => {
+      const errorMessage = error?.message || 'Failed to update coupon. Please try again.';
+      showToast.error('Update Failed', errorMessage);
     },
   });
 };
