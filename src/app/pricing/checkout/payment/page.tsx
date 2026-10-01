@@ -37,7 +37,7 @@ const CARD_ELEMENT_OPTIONS = {
 function PaymentForm() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   const stripe = useStripe();
   const elements = useElements();
   const router = useRouter();
@@ -45,11 +45,11 @@ function PaymentForm() {
   const employerId = searchParams.get('employerId');
   const planId = searchParams.get('planId');
   const { addToast } = useToast();
-  
+
   const { subscriptionData, clearSubscriptionData, isSubscriptionDataReady } = useSubscriptionContext();
 
   useEffect(() => {
-    
+
     if (!isSubscriptionDataReady) {
       router.push(`/pricing?employerId=${employerId}`);
     }
@@ -66,26 +66,26 @@ function PaymentForm() {
 
   const calculateDiscount = (originalPriceInCents: number, coupon: any) => {
     if (!coupon) return 0;
-    
+
     if (coupon.amountOffInCents) {
       return coupon.amountOffInCents;
     }
-    
+
     if (coupon.percentOff) {
       return Math.round((originalPriceInCents * coupon.percentOff) / 100);
     }
-    
+
     return 0;
   };
 
   const calculateTotal = () => {
     if (!subscriptionData) return 0;
-    
+
     const originalPrice = subscriptionData.planDetails.price;
-    const discount = subscriptionData.appliedCoupon 
+    const discount = subscriptionData.appliedCoupon
       ? calculateDiscount(originalPrice, subscriptionData.appliedCoupon)
       : 0;
-    
+
     return Math.max(0, originalPrice - discount);
   };
 
@@ -95,7 +95,7 @@ function PaymentForm() {
 
   const handlePayment = async (event: React.FormEvent) => {
     event.preventDefault();
-    
+
     if (!stripe || !elements || !subscriptionData) {
       return;
     }
@@ -104,7 +104,7 @@ function PaymentForm() {
     setError(null);
 
     const cardElement = elements.getElement(CardNumberElement);
-    
+
     if (!cardElement) {
       setError('Card element not found');
       setIsProcessing(false);
@@ -112,7 +112,7 @@ function PaymentForm() {
     }
 
     try {
-  
+
       const { token, error: stripeError } = await stripe.createToken(cardElement);
 
       if (stripeError) {
@@ -133,14 +133,14 @@ function PaymentForm() {
         companyId: subscriptionData.companyId,
         ...(subscriptionData.couponRedemptionCode && { couponRedemptionCode: subscriptionData.couponRedemptionCode }),
         paymentMethodType: subscriptionData.paymentMethodType,
-        paymentMethodToken: token.id, 
+        paymentMethodToken: token.id,
         isSetCardDefault: subscriptionData.isSetCardDefault
       };
 
       console.log('Final payment payload:', finalPayload);
 
       const response = await subscriptionApi.purchaseSubscription(finalPayload);
-      
+
       if (!response.success) {
         throw new Error(response.message || 'Purchase failed');
       }
@@ -152,7 +152,7 @@ function PaymentForm() {
         duration: 6000,
       });
 
-    
+
       clearSubscriptionData();
 
       router.push(`/admin/subscriptions?employerId=${employerId}&success=true`);
@@ -161,7 +161,7 @@ function PaymentForm() {
       console.error('Payment failed:', error);
       const errorMessage = error instanceof Error ? error.message : 'Payment failed. Please try again.';
       setError(errorMessage);
-      
+
       addToast({
         variant: 'error',
         title: 'Payment Failed',
@@ -207,7 +207,7 @@ function PaymentForm() {
             </svg>
             Back to Order Summary
           </button>
-          
+
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
             Complete Your Purchase
           </h1>
@@ -278,14 +278,14 @@ function PaymentForm() {
                   </div>
                 </div>
 
-              
+
                 {error && (
                   <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
                     <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
                   </div>
                 )}
 
-      
+
                 <button
                   type="submit"
                   disabled={!stripe || isProcessing}
@@ -304,7 +304,7 @@ function PaymentForm() {
             </div>
           </div>
 
-      
+
           <div className="lg:col-span-1">
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
               <div className="flex items-center justify-between mb-4">
