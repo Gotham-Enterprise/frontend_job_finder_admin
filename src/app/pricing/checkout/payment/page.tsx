@@ -15,6 +15,8 @@ import { useSubscriptionContext } from '@/context/SubscriptionContext';
 import { subscriptionApi } from '@/services/api/subscription';
 import { useToast } from '@/context/ToastContext';
 import FullScreenSpinner from '@/components/ui/FullScreenSpinner';
+import ConfirmationDialog from '@/components/ui/ConfirmationDialog';
+import { useConfirmation } from '@/hooks/useConfirmation';
 import { formatCouponDurationCheckout } from '@/services/utils/couponDuration';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY!);
@@ -36,7 +38,9 @@ const CARD_ELEMENT_OPTIONS = {
 
 function PaymentForm() {
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isSendingQuote, setIsSendingQuote] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const confirmation = useConfirmation();
 
   const stripe = useStripe();
   const elements = useElements();
@@ -177,6 +181,64 @@ function PaymentForm() {
     router.back();
   };
 
+  const handleSendQuote = async () => {
+    if (!subscriptionData) return;
+
+    const companyId = employerId || subscriptionData.companyId;
+    if (!companyId) {
+      addToast({
+        variant: 'error',
+        title: 'Quote not sent',
+        message: 'Company is missing from this checkout.',
+        duration: 5000,
+      });
+      return;
+    }
+
+    const couponNote = subscriptionData.appliedCoupon
+      ? ` Coupon ${subscriptionData.appliedCoupon.redemptionCode} will be applied automatically.`
+      : '';
+
+    const confirmed = await confirmation.confirm({
+      title: 'Send quote',
+      message: `Email active users at this company a link to complete the ${subscriptionData.planDetails.name} upgrade.${couponNote}`,
+      confirmText: 'Send quote',
+      cancelText: 'Cancel',
+    });
+
+    if (!confirmed) return;
+
+    setIsSendingQuote(true);
+    try {
+      const response = await subscriptionApi.sendSubscriptionQuote({
+        companyId,
+        subscriptionPlanId: subscriptionData.subscriptionPlanId,
+        duration: subscriptionData.planDetails.interval,
+        ...(subscriptionData.couponRedemptionCode
+          ? { couponRedemptionCode: subscriptionData.couponRedemptionCode }
+          : {}),
+      });
+
+      addToast({
+        variant: 'success',
+        title: 'Quote sent',
+        message: response.message || 'The employer can now complete this upgrade.',
+        duration: 6000,
+      });
+    } catch (sendError) {
+      const errorMessage =
+        sendError instanceof Error ? sendError.message : 'Failed to send the quote.';
+      addToast({
+        variant: 'error',
+        title: 'Quote not sent',
+        message: errorMessage,
+        duration: 6000,
+      });
+    } finally {
+      setIsSendingQuote(false);
+    }
+  };
+
   if (!subscriptionData) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
@@ -300,6 +362,18 @@ function PaymentForm() {
                     `Pay ${formatPrice(calculateTotal())}`
                   )}
                 </button>
+
+                <button
+                  type="button"
+                  onClick={handleSendQuote}
+                  disabled={isSendingQuote || isProcessing}
+                  className="w-full mt-3 py-3 px-4 border border-blue-600 text-blue-700 hover:bg-blue-50 disabled:border-gray-300 disabled:text-gray-400 dark:text-blue-300 dark:hover:bg-blue-900/20 dark:disabled:text-gray-500 font-semibold rounded-lg transition-colors duration-200"
+                >
+                  {isSendingQuote ? 'Sending quote...' : 'Send quote'}
+                </button>
+                <p className="mt-2 text-sm text-gray-500 dark:text-gray-400 text-center">
+                  Email the employer a link to complete this upgrade.
+                </p>
               </form>
             </div>
           </div>
@@ -401,6 +475,18 @@ function PaymentForm() {
           </div>
         </div>
       </div>
+
+      <ConfirmationDialog
+        isOpen={confirmation.isOpen}
+        onClose={confirmation.onClose}
+        onConfirm={confirmation.onConfirm}
+        onCancel={confirmation.onCancel}
+        title={confirmation.config?.title || ''}
+        message={confirmation.config?.message || ''}
+        confirmText={confirmation.config?.confirmText}
+        cancelText={confirmation.config?.cancelText}
+        isLoading={isSendingQuote}
+      />
     </div>
   );
 }
