@@ -972,3 +972,70 @@ export const addReportRecipient = async (partnerId: string, email: string): Prom
 export const removeReportRecipient = async (partnerId: string, recipientId: string): Promise<void> => {
   return apiDelete(`/api/admin/affiliates/partners/${partnerId}/report-recipients/${recipientId}`);
 };
+
+export interface AffiliatePortalUser {
+  id: string;
+  affiliatePartnerId: string;
+  email: string;
+  username: string;
+  firstName: string;
+  lastName: string;
+  status: "active" | "disabled";
+  lastLoginAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PortalUserInput {
+  email: string;
+  firstName: string;
+  lastName: string;
+  password: string;
+}
+
+export interface PortalUserUpdateInput {
+  email?: string;
+  firstName?: string;
+  lastName?: string;
+  password?: string;
+  status?: "active" | "disabled";
+}
+
+export const getPortalUsers = async (partnerId: string): Promise<AffiliatePortalUser[]> => {
+  const res = await apiGet<{ success: boolean; data: AffiliatePortalUser[] }>(
+    `/api/admin/affiliates/partners/${partnerId}/users`
+  );
+  return res.data;
+};
+
+export interface CreatePortalUserResult extends AffiliatePortalUser {
+  emailSent: boolean;
+}
+
+export const createPortalUser = async (
+  partnerId: string,
+  data: PortalUserInput
+): Promise<CreatePortalUserResult> => {
+  const res = await apiPost<{
+    success: boolean;
+    data: AffiliatePortalUser;
+    emailSent: boolean;
+  }>(`/api/admin/affiliates/partners/${partnerId}/users`, data);
+  return { ...res.data, emailSent: Boolean(res.emailSent) };
+};
+
+export const updatePortalUser = async (
+  partnerId: string,
+  userId: string,
+  data: PortalUserUpdateInput
+): Promise<AffiliatePortalUser> => {
+  const res = await apiPut<{ success: boolean; data: AffiliatePortalUser }>(
+    `/api/admin/affiliates/partners/${partnerId}/users/${userId}`,
+    data
+  );
+  return res.data;
+};
+
+export const deletePortalUser = async (partnerId: string, userId: string): Promise<void> => {
+  return apiDelete(`/api/admin/affiliates/partners/${partnerId}/users/${userId}`);
+};
