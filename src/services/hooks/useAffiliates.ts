@@ -31,6 +31,12 @@ import {
   getReportRecipients,
   addReportRecipient,
   removeReportRecipient,
+  getPortalUsers,
+  createPortalUser,
+  updatePortalUser,
+  deletePortalUser,
+  PortalUserInput,
+  PortalUserUpdateInput,
   CreatePartnerData,
   UpdatePartnerData,
   CreateFeedRuleData,
@@ -72,6 +78,7 @@ export const affiliateQueryKeys = {
   feedRules: (partnerId: string) => [...affiliateQueryKeys.all, "feed-rules", partnerId] as const,
   coReg: (partner: string, filters: any) => [...affiliateQueryKeys.all, "coreg", partner, filters] as const,
   reportRecipients: (partnerId: string) => [...affiliateQueryKeys.all, "report-recipients", partnerId] as const,
+  portalUsers: (partnerId: string) => [...affiliateQueryKeys.all, "portal-users", partnerId] as const,
 };
 
 // Partner Management Hooks
@@ -723,6 +730,79 @@ export const useAddReportRecipient = () => {
     onError: (error: any) => {
       const errorMessage = error.response?.data?.message || error.message || "Failed to add recipient";
       showToast.error("Add Failed", errorMessage);
+    },
+  });
+};
+
+export const usePortalUsers = (partnerId: string) => {
+  return useQuery({
+    queryKey: affiliateQueryKeys.portalUsers(partnerId),
+    queryFn: () => getPortalUsers(partnerId),
+    enabled: !!partnerId,
+  });
+};
+
+export const useCreatePortalUser = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ partnerId, data }: { partnerId: string; data: PortalUserInput }) =>
+      createPortalUser(partnerId, data),
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ queryKey: affiliateQueryKeys.portalUsers(variables.partnerId) });
+      if (data.emailSent) {
+        showToast.success(
+          "User created",
+          `Sign-in details were emailed to ${data.email}.`
+        );
+      } else {
+        showToast.warning(
+          "User created",
+          `${data.username} can sign in, but the welcome email did not send. Copy the password from the form before you clear it.`
+        );
+      }
+    },
+    onError: (error: any) => {
+      const errorMessage = error.response?.data?.message || error.message || "Failed to create user";
+      showToast.error("Create failed", errorMessage);
+    },
+  });
+};
+
+export const useUpdatePortalUser = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      partnerId,
+      userId,
+      data,
+    }: {
+      partnerId: string;
+      userId: string;
+      data: PortalUserUpdateInput;
+    }) => updatePortalUser(partnerId, userId, data),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: affiliateQueryKeys.portalUsers(variables.partnerId) });
+      showToast.success("User updated", "Portal user changes were saved.");
+    },
+    onError: (error: any) => {
+      const errorMessage = error.response?.data?.message || error.message || "Failed to update user";
+      showToast.error("Update failed", errorMessage);
+    },
+  });
+};
+
+export const useDeletePortalUser = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ partnerId, userId }: { partnerId: string; userId: string }) =>
+      deletePortalUser(partnerId, userId),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: affiliateQueryKeys.portalUsers(variables.partnerId) });
+      showToast.success("User deleted", "Portal user was removed.");
+    },
+    onError: (error: any) => {
+      const errorMessage = error.response?.data?.message || error.message || "Failed to delete user";
+      showToast.error("Delete failed", errorMessage);
     },
   });
 };
