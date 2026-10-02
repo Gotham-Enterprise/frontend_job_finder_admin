@@ -33,6 +33,7 @@ export interface CouponsTableProps {
   isLoading: boolean;
   tableColumns: Array<{ key: string; label: string; className?: string }>;
   onViewCoupon: (couponId: string) => void;
+  onViewRedemptions: (couponId: string) => void;
   onEditCoupon: (couponId: string) => void;
   onDeleteCoupon: (couponId: string) => void;
   isDeleting?: boolean;
@@ -77,6 +78,13 @@ export interface EditableCoupon {
   id: string;
   title: string;
   description?: string | null;
+}
+
+export interface CouponRedemptionsModalProps {
+  isOpen: boolean;
+  couponId: string | null;
+  couponTitle: string;
+  onClose: () => void;
 }
 
 export interface EditCouponModalProps {

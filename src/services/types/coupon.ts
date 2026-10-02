@@ -11,6 +11,7 @@ export interface Coupon {
   duration: string;
   durationInMonths: number | null;
   maxRedemptions: number | null;
+  redemptionCount: number;
   deactivatedAt: string | null;
   deletedAt: string | null;
   createdAt: string;
@@ -27,6 +28,25 @@ export interface CouponFilters {
   status?: CouponListStatus[];
   sortBy?: 'createdAt' | 'updatedAt';
   sortOrder?: 'asc' | 'desc';
+}
+
+export interface CouponRedeemer {
+  companyId: string;
+  companyName: string;
+  contactName: string | null;
+  contactEmail: string | null;
+  redeemedAt: string;
+  stillApplied: boolean;
+}
+
+export interface CouponRedemptionsResponse {
+  success: boolean;
+  data: {
+    couponId: string;
+    title: string;
+    redemptionCount: number;
+    redeemers: CouponRedeemer[];
+  };
 }
 
 export interface CouponsResponse {

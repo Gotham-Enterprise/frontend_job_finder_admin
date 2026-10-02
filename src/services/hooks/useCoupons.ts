@@ -13,6 +13,21 @@ export const couponQueryKeys = {
   },
 };
 
+export const useCouponRedemptions = (couponId: string | null) => {
+  return useQuery({
+    queryKey: [...couponQueryKeys.all, 'redemptions', couponId],
+    queryFn: () => couponApi.getCouponRedemptions(couponId as string),
+    enabled: Boolean(couponId),
+    staleTime: 0,
+    retry: (failureCount, error: Error) => {
+      if (error.message.includes('HTTP 401') || error.message.includes('HTTP 404')) {
+        return false;
+      }
+      return failureCount < 2;
+    },
+  });
+};
+
 export const useCoupons = (filters: CouponFilters = {}) => {
   return useQuery({
     queryKey: couponQueryKeys.list(filters),

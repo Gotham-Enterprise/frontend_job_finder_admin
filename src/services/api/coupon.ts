@@ -1,4 +1,4 @@
-import { Coupon, CouponFilters, CouponsResponse } from '../types/coupon';
+import { Coupon, CouponFilters, CouponRedemptionsResponse, CouponsResponse } from '../types/coupon';
 import { CreateCouponFormData, UpdateCouponFormData } from '../types/CouponsTypes';
 import { apiDelete, apiGet, apiPatch, apiPost } from './apiUtils';
 
@@ -76,5 +76,9 @@ export const couponApi = {
 
   async deleteCoupon(id: string): Promise<{ success: boolean; message: string; data: Coupon }> {
     return apiDelete(`/api/admin/coupons/${id}`);
+  },
+
+  async getCouponRedemptions(id: string): Promise<CouponRedemptionsResponse> {
+    return apiGet<CouponRedemptionsResponse>(`/api/admin/coupons/${id}/redemptions`);
   },
 };

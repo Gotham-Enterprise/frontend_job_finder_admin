@@ -15,6 +15,7 @@ import {
   CouponsTablePagination,
   CreateCouponModal,
   EditCouponModal,
+  CouponRedemptionsModal,
 } from './components';
 
 const CouponsData: React.FC<CouponsProps> = ({ className = "" }) => {
@@ -26,6 +27,7 @@ const CouponsData: React.FC<CouponsProps> = ({ className = "" }) => {
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingCoupon, setEditingCoupon] = useState<EditableCoupon | null>(null);
+  const [redemptionsCoupon, setRedemptionsCoupon] = useState<{ id: string; title: string } | null>(null);
   const confirmation = useConfirmation();
 
   const {
@@ -79,6 +81,20 @@ const CouponsData: React.FC<CouponsProps> = ({ className = "" }) => {
 
   const closeEditModal = () => {
     setEditingCoupon(null);
+  };
+
+  const openRedemptionsModal = (couponId: string) => {
+    const coupon = data?.data?.find((item: { id: string; title?: string }) => item.id === couponId);
+    if (!coupon) return;
+
+    setRedemptionsCoupon({
+      id: coupon.id,
+      title: coupon.title || '',
+    });
+  };
+
+  const closeRedemptionsModal = () => {
+    setRedemptionsCoupon(null);
   };
 
   const deleteCoupon = async (couponId: string) => {
@@ -161,6 +177,7 @@ const CouponsData: React.FC<CouponsProps> = ({ className = "" }) => {
         isLoading={isLoading}
         tableColumns={tableColumns}
         onViewCoupon={viewCoupon}
+        onViewRedemptions={openRedemptionsModal}
         onEditCoupon={openEditModal}
         onDeleteCoupon={deleteCoupon}
         isDeleting={deleteCouponMutation.isPending}
@@ -188,6 +205,13 @@ const CouponsData: React.FC<CouponsProps> = ({ className = "" }) => {
         onClose={closeEditModal}
         onSubmit={submitUpdateCoupon}
         isLoading={updateCouponMutation.isPending}
+      />
+
+      <CouponRedemptionsModal
+        isOpen={Boolean(redemptionsCoupon)}
+        couponId={redemptionsCoupon?.id ?? null}
+        couponTitle={redemptionsCoupon?.title ?? ''}
+        onClose={closeRedemptionsModal}
       />
 
       <ConfirmationDialog

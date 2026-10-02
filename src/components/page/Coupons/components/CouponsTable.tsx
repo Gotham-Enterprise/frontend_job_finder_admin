@@ -19,6 +19,7 @@ const CouponsTable: React.FC<CouponsTableProps> = ({
   data,
   isLoading,
   tableColumns,
+  onViewRedemptions,
   onEditCoupon,
   onDeleteCoupon,
   isDeleting = false,
@@ -112,6 +113,19 @@ const CouponsTable: React.FC<CouponsTableProps> = ({
                   <p className="text-sm text-gray-900 dark:text-white">
                     {coupon.maxRedemptions ?? 'Unlimited'}
                   </p>
+                </TableCell>
+                <TableCell className="py-4 px-6">
+                  {coupon.redemptionCount > 0 ? (
+                    <button
+                      type="button"
+                      onClick={() => onViewRedemptions(coupon.id)}
+                      className="text-sm font-medium text-brand-500 hover:text-brand-600 hover:underline"
+                    >
+                      {coupon.redemptionCount}
+                    </button>
+                  ) : (
+                    <p className="text-sm text-gray-900 dark:text-white">0</p>
+                  )}
                 </TableCell>
                 <TableCell className="py-4 px-6">
                   <Badge variant={coupon.isOnlyAdminCanApply ? 'solid' : 'light'}>
