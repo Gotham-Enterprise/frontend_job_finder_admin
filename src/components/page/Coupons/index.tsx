@@ -3,17 +3,19 @@ import React, { useState } from 'react';
 import { BoltIcon } from '@/icons';
 import ErrorState from '../../common/ErrorState';
 import { useCouponsLogic } from '@/services/hooks/useCouponsLogic';
-import { useCreateCoupon, useDeleteCoupon } from '@/services/hooks/useCoupons';
+import { useCreateCoupon, useDeleteCoupon, useUpdateCoupon } from '@/services/hooks/useCoupons';
 import { usePreservedNavigation } from '@/hooks/usePreservedNavigation';
 import { useConfirmation } from '@/hooks/useConfirmation';
 import ConfirmationDialog from '@/components/ui/ConfirmationDialog';
-import { CouponsProps, CreateCouponFormData } from '@/services/types/CouponsTypes';
+import { CouponsProps, CreateCouponFormData, EditableCoupon, UpdateCouponFormData } from '@/services/types/CouponsTypes';
 import {
   CouponsHeader,
   CouponsFilters,
   CouponsTable,
   CouponsTablePagination,
   CreateCouponModal,
+  EditCouponModal,
+  CouponRedemptionsModal,
 } from './components';
 
 const CouponsData: React.FC<CouponsProps> = ({ className = "" }) => {
@@ -24,6 +26,8 @@ const CouponsData: React.FC<CouponsProps> = ({ className = "" }) => {
   });
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [editingCoupon, setEditingCoupon] = useState<EditableCoupon | null>(null);
+  const [redemptionsCoupon, setRedemptionsCoupon] = useState<{ id: string; title: string } | null>(null);
   const confirmation = useConfirmation();
 
   const {
@@ -53,6 +57,7 @@ const CouponsData: React.FC<CouponsProps> = ({ className = "" }) => {
   } = useCouponsLogic();
 
   const createCouponMutation = useCreateCoupon();
+  const updateCouponMutation = useUpdateCoupon();
   const deleteCouponMutation = useDeleteCoupon();
 
   const openCreateModal = () => {
@@ -61,6 +66,35 @@ const CouponsData: React.FC<CouponsProps> = ({ className = "" }) => {
 
   const closeCreateModal = () => {
     setIsCreateModalOpen(false);
+  };
+
+  const openEditModal = (couponId: string) => {
+    const coupon = data?.data?.find((item: EditableCoupon) => item.id === couponId);
+    if (!coupon) return;
+
+    setEditingCoupon({
+      id: coupon.id,
+      title: coupon.title || '',
+      description: coupon.description || '',
+    });
+  };
+
+  const closeEditModal = () => {
+    setEditingCoupon(null);
+  };
+
+  const openRedemptionsModal = (couponId: string) => {
+    const coupon = data?.data?.find((item: { id: string; title?: string }) => item.id === couponId);
+    if (!coupon) return;
+
+    setRedemptionsCoupon({
+      id: coupon.id,
+      title: coupon.title || '',
+    });
+  };
+
+  const closeRedemptionsModal = () => {
+    setRedemptionsCoupon(null);
   };
 
   const deleteCoupon = async (couponId: string) => {
@@ -78,6 +112,17 @@ const CouponsData: React.FC<CouponsProps> = ({ className = "" }) => {
       await deleteCouponMutation.mutateAsync(couponId);
     } catch (error) {
       console.error('Failed to delete coupon:', error);
+    }
+  };
+
+  const submitUpdateCoupon = async (formData: UpdateCouponFormData) => {
+    if (!editingCoupon) return;
+
+    try {
+      await updateCouponMutation.mutateAsync({ id: editingCoupon.id, data: formData });
+      closeEditModal();
+    } catch (error) {
+      console.error('Failed to update coupon:', error);
     }
   };
 
@@ -132,8 +177,11 @@ const CouponsData: React.FC<CouponsProps> = ({ className = "" }) => {
         isLoading={isLoading}
         tableColumns={tableColumns}
         onViewCoupon={viewCoupon}
+        onViewRedemptions={openRedemptionsModal}
+        onEditCoupon={openEditModal}
         onDeleteCoupon={deleteCoupon}
         isDeleting={deleteCouponMutation.isPending}
+        isUpdating={updateCouponMutation.isPending}
       />
 
       <CouponsTablePagination
@@ -149,6 +197,21 @@ const CouponsData: React.FC<CouponsProps> = ({ className = "" }) => {
         onClose={closeCreateModal}
         onSubmit={submitCreateCoupon}
         isLoading={createCouponMutation.isPending}
+      />
+
+      <EditCouponModal
+        isOpen={Boolean(editingCoupon)}
+        coupon={editingCoupon}
+        onClose={closeEditModal}
+        onSubmit={submitUpdateCoupon}
+        isLoading={updateCouponMutation.isPending}
+      />
+
+      <CouponRedemptionsModal
+        isOpen={Boolean(redemptionsCoupon)}
+        couponId={redemptionsCoupon?.id ?? null}
+        couponTitle={redemptionsCoupon?.title ?? ''}
+        onClose={closeRedemptionsModal}
       />
 
       <ConfirmationDialog
