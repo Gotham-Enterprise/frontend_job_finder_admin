@@ -15,6 +15,8 @@ import { useSubscriptionContext } from '@/context/SubscriptionContext';
 import { subscriptionApi } from '@/services/api/subscription';
 import { useToast } from '@/context/ToastContext';
 import FullScreenSpinner from '@/components/ui/FullScreenSpinner';
+import ConfirmationDialog from '@/components/ui/ConfirmationDialog';
+import { useConfirmation } from '@/hooks/useConfirmation';
 import { formatCouponDurationCheckout } from '@/services/utils/couponDuration';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY!);
@@ -36,8 +38,10 @@ const CARD_ELEMENT_OPTIONS = {
 
 function PaymentForm() {
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isSendingQuote, setIsSendingQuote] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+  const confirmation = useConfirmation();
+
   const stripe = useStripe();
   const elements = useElements();
   const router = useRouter();
@@ -45,11 +49,11 @@ function PaymentForm() {
   const employerId = searchParams.get('employerId');
   const planId = searchParams.get('planId');
   const { addToast } = useToast();
-  
+
   const { subscriptionData, clearSubscriptionData, isSubscriptionDataReady } = useSubscriptionContext();
 
   useEffect(() => {
-    
+
     if (!isSubscriptionDataReady) {
       router.push(`/pricing?employerId=${employerId}`);
     }
@@ -66,26 +70,26 @@ function PaymentForm() {
 
   const calculateDiscount = (originalPriceInCents: number, coupon: any) => {
     if (!coupon) return 0;
-    
+
     if (coupon.amountOffInCents) {
       return coupon.amountOffInCents;
     }
-    
+
     if (coupon.percentOff) {
       return Math.round((originalPriceInCents * coupon.percentOff) / 100);
     }
-    
+
     return 0;
   };
 
   const calculateTotal = () => {
     if (!subscriptionData) return 0;
-    
+
     const originalPrice = subscriptionData.planDetails.price;
-    const discount = subscriptionData.appliedCoupon 
+    const discount = subscriptionData.appliedCoupon
       ? calculateDiscount(originalPrice, subscriptionData.appliedCoupon)
       : 0;
-    
+
     return Math.max(0, originalPrice - discount);
   };
 
@@ -95,7 +99,7 @@ function PaymentForm() {
 
   const handlePayment = async (event: React.FormEvent) => {
     event.preventDefault();
-    
+
     if (!stripe || !elements || !subscriptionData) {
       return;
     }
@@ -104,7 +108,7 @@ function PaymentForm() {
     setError(null);
 
     const cardElement = elements.getElement(CardNumberElement);
-    
+
     if (!cardElement) {
       setError('Card element not found');
       setIsProcessing(false);
@@ -112,7 +116,7 @@ function PaymentForm() {
     }
 
     try {
-  
+
       const { token, error: stripeError } = await stripe.createToken(cardElement);
 
       if (stripeError) {
@@ -133,14 +137,14 @@ function PaymentForm() {
         companyId: subscriptionData.companyId,
         ...(subscriptionData.couponRedemptionCode && { couponRedemptionCode: subscriptionData.couponRedemptionCode }),
         paymentMethodType: subscriptionData.paymentMethodType,
-        paymentMethodToken: token.id, 
+        paymentMethodToken: token.id,
         isSetCardDefault: subscriptionData.isSetCardDefault
       };
 
       console.log('Final payment payload:', finalPayload);
 
       const response = await subscriptionApi.purchaseSubscription(finalPayload);
-      
+
       if (!response.success) {
         throw new Error(response.message || 'Purchase failed');
       }
@@ -152,7 +156,7 @@ function PaymentForm() {
         duration: 6000,
       });
 
-    
+
       clearSubscriptionData();
 
       router.push(`/admin/subscriptions?employerId=${employerId}&success=true`);
@@ -161,7 +165,7 @@ function PaymentForm() {
       console.error('Payment failed:', error);
       const errorMessage = error instanceof Error ? error.message : 'Payment failed. Please try again.';
       setError(errorMessage);
-      
+
       addToast({
         variant: 'error',
         title: 'Payment Failed',
@@ -175,6 +179,64 @@ function PaymentForm() {
 
   const navigateBack = () => {
     router.back();
+  };
+
+  const handleSendQuote = async () => {
+    if (!subscriptionData) return;
+
+    const companyId = employerId || subscriptionData.companyId;
+    if (!companyId) {
+      addToast({
+        variant: 'error',
+        title: 'Quote not sent',
+        message: 'Company is missing from this checkout.',
+        duration: 5000,
+      });
+      return;
+    }
+
+    const couponNote = subscriptionData.appliedCoupon
+      ? ` Coupon ${subscriptionData.appliedCoupon.redemptionCode} will be applied automatically.`
+      : '';
+
+    const confirmed = await confirmation.confirm({
+      title: 'Send quote',
+      message: `Email active users at this company a link to complete the ${subscriptionData.planDetails.name} upgrade.${couponNote}`,
+      confirmText: 'Send quote',
+      cancelText: 'Cancel',
+    });
+
+    if (!confirmed) return;
+
+    setIsSendingQuote(true);
+    try {
+      const response = await subscriptionApi.sendSubscriptionQuote({
+        companyId,
+        subscriptionPlanId: subscriptionData.subscriptionPlanId,
+        duration: subscriptionData.planDetails.interval,
+        ...(subscriptionData.couponRedemptionCode
+          ? { couponRedemptionCode: subscriptionData.couponRedemptionCode }
+          : {}),
+      });
+
+      addToast({
+        variant: 'success',
+        title: 'Quote sent',
+        message: response.message || 'The employer can now complete this upgrade.',
+        duration: 6000,
+      });
+    } catch (sendError) {
+      const errorMessage =
+        sendError instanceof Error ? sendError.message : 'Failed to send the quote.';
+      addToast({
+        variant: 'error',
+        title: 'Quote not sent',
+        message: errorMessage,
+        duration: 6000,
+      });
+    } finally {
+      setIsSendingQuote(false);
+    }
   };
 
   if (!subscriptionData) {
@@ -207,7 +269,7 @@ function PaymentForm() {
             </svg>
             Back to Order Summary
           </button>
-          
+
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
             Complete Your Purchase
           </h1>
@@ -278,14 +340,14 @@ function PaymentForm() {
                   </div>
                 </div>
 
-              
+
                 {error && (
                   <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
                     <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
                   </div>
                 )}
 
-      
+
                 <button
                   type="submit"
                   disabled={!stripe || isProcessing}
@@ -300,11 +362,23 @@ function PaymentForm() {
                     `Pay ${formatPrice(calculateTotal())}`
                   )}
                 </button>
+
+                <button
+                  type="button"
+                  onClick={handleSendQuote}
+                  disabled={isSendingQuote || isProcessing}
+                  className="w-full mt-3 py-3 px-4 border border-blue-600 text-blue-700 hover:bg-blue-50 disabled:border-gray-300 disabled:text-gray-400 dark:text-blue-300 dark:hover:bg-blue-900/20 dark:disabled:text-gray-500 font-semibold rounded-lg transition-colors duration-200"
+                >
+                  {isSendingQuote ? 'Sending quote...' : 'Send quote'}
+                </button>
+                <p className="mt-2 text-sm text-gray-500 dark:text-gray-400 text-center">
+                  Email the employer a link to complete this upgrade.
+                </p>
               </form>
             </div>
           </div>
 
-      
+
           <div className="lg:col-span-1">
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
               <div className="flex items-center justify-between mb-4">
@@ -401,6 +475,18 @@ function PaymentForm() {
           </div>
         </div>
       </div>
+
+      <ConfirmationDialog
+        isOpen={confirmation.isOpen}
+        onClose={confirmation.onClose}
+        onConfirm={confirmation.onConfirm}
+        onCancel={confirmation.onCancel}
+        title={confirmation.config?.title || ''}
+        message={confirmation.config?.message || ''}
+        confirmText={confirmation.config?.confirmText}
+        cancelText={confirmation.config?.cancelText}
+        isLoading={isSendingQuote}
+      />
     </div>
   );
 }

@@ -208,6 +208,7 @@ export const useCouponsLogic = () => {
     { key: 'currency', label: 'Currency' },
     { key: 'duration', label: 'Duration' },
     { key: 'maxRedemptions', label: 'Max Redemptions' },
+    { key: 'redeemed', label: 'Redeemed' },
     { key: 'adminOnly', label: 'Admin Only' },
     { key: 'status', label: 'Status' },
     { key: 'createdAt', label: 'Created Date' },
