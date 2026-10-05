@@ -8,6 +8,20 @@ import Input from '../../../ui/input/Input';
 import { CalenderIcon } from '@/icons';
 import { JobSeekersFiltersProps } from '@/services/types/JobSeekersTypes';
 
+const RADIUS_PRESETS = [1, 3, 5, 10, 25, 50, 100];
+const MIN_RADIUS_MILES = 1;
+const MAX_RADIUS_MILES = 500;
+
+/** Whole miles from 1–500, `undefined` to clear, or `null` when the text should be ignored. */
+function parseRadiusInput(value: string): number | null | undefined {
+  const trimmed = value.trim();
+  if (trimmed === '') return undefined;
+  if (!/^\d+$/.test(trimmed)) return null;
+  const miles = parseInt(trimmed, 10);
+  if (miles < MIN_RADIUS_MILES || miles > MAX_RADIUS_MILES) return null;
+  return miles;
+}
+
 const JobSeekersFilters: React.FC<JobSeekersFiltersProps> = ({
   filters,
   onFilterChange,
@@ -20,27 +34,19 @@ const JobSeekersFilters: React.FC<JobSeekersFiltersProps> = ({
   clearIndividualFilter,
 }) => {
   const [cityInput, setCityInput] = useState(filters.city || '');
+  const [radiusInput, setRadiusInput] = useState(
+    filters.radius != null ? String(filters.radius) : ''
+  );
   const containerRef = useRef<HTMLDivElement>(null);
   const startDateRef = useRef<HTMLInputElement>(null);
   const endDateRef = useRef<HTMLInputElement>(null);
   const startDatePickerRef = useRef<flatpickr.Instance | null>(null);
   const endDatePickerRef = useRef<flatpickr.Instance | null>(null);
 
-  const radiusOptions = [
-    { value: '', label: 'Any Distance' },
-    { value: '1', label: '1 mile' },
-    { value: '3', label: '3 miles' },
-    { value: '5', label: '5 miles' },
-    { value: '10', label: '10 miles' },
-    { value: '25', label: '25 miles' },
-    { value: '50', label: '50 miles' },
-    { value: '100', label: '100 miles' },
-  ];
-
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       onFilterChange('city', cityInput);
-    }, 500); 
+    }, 500);
 
     return () => clearTimeout(timeoutId);
   }, [cityInput, onFilterChange]);
@@ -49,15 +55,40 @@ const JobSeekersFilters: React.FC<JobSeekersFiltersProps> = ({
     setCityInput(filters.city || '');
   }, [filters.city]);
 
-  
+
   const isRadiusDisabled = !filters.city || !(filters.location && filters.location.length > 0);
 
+  useEffect(() => {
+    setRadiusInput(filters.radius != null ? String(filters.radius) : '');
+  }, [filters.radius]);
+
+  useEffect(() => {
+    if (isRadiusDisabled) return;
+
+    const timeoutId = setTimeout(() => {
+      const parsed = parseRadiusInput(radiusInput);
+      if (parsed === null) return;
+      if (parsed === filters.radius) return;
+      if (parsed === undefined && filters.radius == null) return;
+      onFilterChange('radius', parsed);
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [radiusInput, isRadiusDisabled, filters.radius, onFilterChange]);
 
   useEffect(() => {
     if (isRadiusDisabled && filters.radius) {
       onFilterChange('radius', undefined);
     }
   }, [isRadiusDisabled, filters.radius, onFilterChange]);
+
+  const selectRadiusPreset = (miles: number) => {
+    if (isRadiusDisabled) return;
+    setRadiusInput(String(miles));
+    if (filters.radius !== miles) {
+      onFilterChange('radius', miles);
+    }
+  };
 
   // Initialize start date picker
   useEffect(() => {
@@ -200,7 +231,7 @@ const JobSeekersFilters: React.FC<JobSeekersFiltersProps> = ({
             className="w-full"
           />
         </div>
-     
+
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -223,7 +254,7 @@ const JobSeekersFilters: React.FC<JobSeekersFiltersProps> = ({
             placeholder="Select states..."
           />
         </div>
-           <div className="space-y-2">
+        <div className="space-y-2">
           <div className="flex items-center justify-between">
             <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
               Radius
@@ -237,18 +268,41 @@ const JobSeekersFilters: React.FC<JobSeekersFiltersProps> = ({
               </button>
             )}
           </div>
-          <SearchableSelect
-            value={filters.radius?.toString() || ''}
-            onChange={(value: string) => {
-              const numericValue = value === '' ? undefined : parseInt(value, 10);
-              onFilterChange('radius', numericValue);
-            }}
-            options={radiusOptions}
-            placeholder={isRadiusDisabled ? "Select city and state first..." : "Select radius..."}
-            searchPlaceholder="Search radius..."
+          <Input
+            type="number"
+            inputMode="numeric"
+            min={MIN_RADIUS_MILES}
+            max={MAX_RADIUS_MILES}
+            step={1}
+            value={radiusInput}
+            onChange={(e) => setRadiusInput(e.target.value)}
+            placeholder={isRadiusDisabled ? "Select city and state first..." : "Enter miles..."}
             className="w-full"
             disabled={isRadiusDisabled}
+            hint="Whole miles from 1 to 500"
           />
+          <div className="flex flex-wrap gap-1.5">
+            {RADIUS_PRESETS.map((miles) => {
+              const isSelected = filters.radius === miles;
+              return (
+                <button
+                  key={miles}
+                  type="button"
+                  disabled={isRadiusDisabled}
+                  onClick={() => selectRadiusPreset(miles)}
+                  className={`rounded-md border px-2 py-1 text-xs font-medium transition-colors ${
+                    isRadiusDisabled
+                      ? 'cursor-not-allowed border-gray-200 text-gray-400 dark:border-gray-700 dark:text-gray-500'
+                      : isSelected
+                        ? 'border-brand-500 bg-brand-50 text-brand-700 dark:border-brand-400 dark:bg-brand-500/10 dark:text-brand-300'
+                        : 'border-gray-300 text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800'
+                  }`}
+                >
+                  {miles} mi
+                </button>
+              );
+            })}
+          </div>
         </div>
         <div className="space-y-2">
           <div className="flex items-center justify-between">
