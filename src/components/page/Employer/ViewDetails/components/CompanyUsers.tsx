@@ -12,6 +12,7 @@ import ConfirmationDialog from "@/components/ui/ConfirmationDialog";
 import InputModal from "@/components/ui/InputModal";
 import { useToast } from "@/context/ToastContext";
 import { CompanyUser } from "@/services/types/employer";
+import CompanyUserRowActions from "./CompanyUserRowActions";
 
 interface CompanyUsersProps {
   users: CompanyUser[];
@@ -331,75 +332,15 @@ export default function CompanyUsers({ users }: CompanyUsersProps) {
                       <EmailVerifiedBadge verified={!!user.emailVerified} />
                     </TableCell>
                     <TableCell className="py-4 px-6 text-right">
-                      <div className="flex items-center justify-end gap-4">
-                        {!user.emailVerified && (
-                          <>
-                            <button
-                              className="text-brand-400 text-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
-                              onClick={() => handleResendVerification(user)}
-                              disabled={isRowBusy(user.id)}
-                            >
-                              {resendVerificationLoadingId === user.id ? (
-                                <span className="flex items-center gap-2">
-                                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-brand-400"></div>
-                                  Sending...
-                                </span>
-                              ) : (
-                                <>Resend verification</>
-                              )}
-                            </button>
-                            |
-                            <button
-                              className="text-brand-400 text-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
-                              onClick={() => handleApproveVerification(user)}
-                              disabled={isRowBusy(user.id)}
-                            >
-                              {approveVerificationLoadingId === user.id ? (
-                                <span className="flex items-center gap-2">
-                                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-brand-400"></div>
-                                  Approving...
-                                </span>
-                              ) : (
-                                <>Approve verification</>
-                              )}
-                            </button>
-                            |
-                          </>
-                        )}
-                        <button
-                          className="text-brand-400 text-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
-                          onClick={() => handleResetPassword(user)}
-                          disabled={isRowBusy(user.id)}
-                        >
-                          {resetPasswordLoadingId === user.id ? (
-                            <span className="flex items-center gap-2">
-                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-brand-400"></div>
-                              Sending...
-                            </span>
-                          ) : (
-                            <>Reset password</>
-                          )}
-                        </button>
-                        |
-                        <button
-                          className={`text-nowrap disabled:opacity-50 disabled:cursor-not-allowed ${
-                            user.status.toLowerCase() === "active"
-                              ? "text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
-                              : "text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300"
-                          }`}
-                          onClick={() => handleToggleUserStatus(user)}
-                          disabled={isRowBusy(user.id)}
-                        >
-                          {toggleLoadingId === user.id ? (
-                            <span className="flex items-center gap-2">
-                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
-                              Processing...
-                            </span>
-                          ) : (
-                            <>{user.status.toLowerCase() === "active" ? "Deactivate" : "Reactivate"}</>
-                          )}
-                        </button>
-                      </div>
+                      <CompanyUserRowActions
+                        isActive={user.status.toLowerCase() === "active"}
+                        isBusy={isRowBusy(user.id)}
+                        showVerificationActions={!user.emailVerified}
+                        onResendVerification={() => handleResendVerification(user)}
+                        onApproveVerification={() => handleApproveVerification(user)}
+                        onResetPassword={() => handleResetPassword(user)}
+                        onToggleStatus={() => handleToggleUserStatus(user)}
+                      />
                     </TableCell>
                   </TableRow>
                 ))}

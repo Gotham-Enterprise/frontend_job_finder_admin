@@ -33,6 +33,11 @@ export interface CouponsTableProps {
   isLoading: boolean;
   tableColumns: Array<{ key: string; label: string; className?: string }>;
   onViewCoupon: (couponId: string) => void;
+  onViewRedemptions: (couponId: string) => void;
+  onEditCoupon: (couponId: string) => void;
+  onDeleteCoupon: (couponId: string) => void;
+  isDeleting?: boolean;
+  isUpdating?: boolean;
 }
 
 export interface CouponsTablePaginationProps {
@@ -43,6 +48,8 @@ export interface CouponsTablePaginationProps {
   onFilterChange: (key: keyof CouponFilters, value: any) => void;
 }
 
+export type CouponDuration = 'once' | 'repeating';
+
 export interface CreateCouponFormData {
   title: string;
   description: string;
@@ -50,11 +57,40 @@ export interface CreateCouponFormData {
   discountType: 'amount' | 'percentage';
   amountOffInCents?: number;
   percentOff?: number;
+  duration: CouponDuration;
+  durationInMonths?: number;
+  maxRedemptions?: number;
 }
 
 export interface CreateCouponModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (data: CreateCouponFormData) => Promise<void>;
+  isLoading?: boolean;
+}
+
+export interface UpdateCouponFormData {
+  title: string;
+  description: string;
+}
+
+export interface EditableCoupon {
+  id: string;
+  title: string;
+  description?: string | null;
+}
+
+export interface CouponRedemptionsModalProps {
+  isOpen: boolean;
+  couponId: string | null;
+  couponTitle: string;
+  onClose: () => void;
+}
+
+export interface EditCouponModalProps {
+  isOpen: boolean;
+  coupon: EditableCoupon | null;
+  onClose: () => void;
+  onSubmit: (data: UpdateCouponFormData) => Promise<void>;
   isLoading?: boolean;
 }

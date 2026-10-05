@@ -10,14 +10,20 @@ import {
 import Badge from '../../../ui/badge/Badge';
 import Button from '../../../ui/button/Button';
 import TableHeading from '../../../tables/tableHeader';
-import { EyeIcon, TimeIcon, CopyIcon } from '@/icons';
+import { TimeIcon, CopyIcon, TrashBinIcon, PencilIcon } from '@/icons';
 import { CouponsTableProps } from '@/services/types/CouponsTypes';
+import { formatCouponDurationTable } from '@/services/utils/couponDuration';
+import PermissionWrapper from '../../../common/PermissionWrapper';
 
 const CouponsTable: React.FC<CouponsTableProps> = ({
   data,
   isLoading,
   tableColumns,
-  onViewCoupon,
+  onViewRedemptions,
+  onEditCoupon,
+  onDeleteCoupon,
+  isDeleting = false,
+  isUpdating = false,
 }) => {
   const formatDiscount = (coupon: any) => {
     if (coupon.amountOffInCents) {
@@ -46,7 +52,7 @@ const CouponsTable: React.FC<CouponsTableProps> = ({
         <TableBody>
           {isLoading ? (
             <TableRow>
-              <TableCell className="text-center py-8 px-6" colSpan={10}>
+              <TableCell className="text-center py-8 px-6" colSpan={tableColumns.length}>
                 <div className="flex items-center justify-center gap-3">
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-brand-500"></div>
                   <p className="text-gray-500 dark:text-gray-400">Loading...</p>
@@ -55,7 +61,7 @@ const CouponsTable: React.FC<CouponsTableProps> = ({
             </TableRow>
           ) : !data?.data?.length ? (
             <TableRow>
-              <TableCell className="text-center py-8 px-6" colSpan={10}>
+              <TableCell className="text-center py-8 px-6" colSpan={tableColumns.length}>
                 <p className="text-gray-500 dark:text-gray-400">No coupons found</p>
               </TableCell>
             </TableRow>
@@ -99,9 +105,27 @@ const CouponsTable: React.FC<CouponsTableProps> = ({
                   </p>
                 </TableCell>
                 <TableCell className="py-4 px-6">
-                  <p className="text-sm text-gray-900 dark:text-white capitalize">
-                    {coupon.duration}
+                  <p className="text-sm text-gray-900 dark:text-white">
+                    {formatCouponDurationTable(coupon.duration, coupon.durationInMonths)}
                   </p>
+                </TableCell>
+                <TableCell className="py-4 px-6">
+                  <p className="text-sm text-gray-900 dark:text-white">
+                    {coupon.maxRedemptions ?? 'Unlimited'}
+                  </p>
+                </TableCell>
+                <TableCell className="py-4 px-6">
+                  {coupon.redemptionCount > 0 ? (
+                    <button
+                      type="button"
+                      onClick={() => onViewRedemptions(coupon.id)}
+                      className="text-sm font-medium text-brand-500 hover:text-brand-600 hover:underline"
+                    >
+                      {coupon.redemptionCount}
+                    </button>
+                  ) : (
+                    <p className="text-sm text-gray-900 dark:text-white">0</p>
+                  )}
                 </TableCell>
                 <TableCell className="py-4 px-6">
                   <Badge variant={coupon.isOnlyAdminCanApply ? 'solid' : 'light'}>
@@ -109,9 +133,13 @@ const CouponsTable: React.FC<CouponsTableProps> = ({
                   </Badge>
                 </TableCell>
                 <TableCell className="py-4 px-6">
-                  <Badge variant={coupon.deactivatedAt ? 'light' : 'solid'}>
-                    {coupon.deactivatedAt ? 'Inactive' : 'Active'}
-                  </Badge>
+                  {coupon.deletedAt ? (
+                    <Badge color="error" variant="light">Deleted</Badge>
+                  ) : (
+                    <Badge variant={coupon.deactivatedAt ? 'light' : 'solid'}>
+                      {coupon.deactivatedAt ? 'Inactive' : 'Active'}
+                    </Badge>
+                  )}
                 </TableCell>
                 <TableCell className="py-4 px-6 whitespace-nowrap">
                   {coupon.createdAt ? (() => {
@@ -159,7 +187,36 @@ const CouponsTable: React.FC<CouponsTableProps> = ({
                     <span className="text-gray-400 dark:text-gray-500 italic">Not specified</span>
                   )}
                 </TableCell>
-               
+                <TableCell className="py-4 px-6 text-right">
+                  {!coupon.deletedAt && (
+                    <div className="flex items-center justify-end gap-2">
+                      <PermissionWrapper module="coupons" action="edit">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
+                          onClick={() => onEditCoupon(coupon.id)}
+                          disabled={isUpdating}
+                          startIcon={<PencilIcon />}
+                        >
+                          Edit
+                        </Button>
+                      </PermissionWrapper>
+                      <PermissionWrapper module="coupons" action="delete">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-red-400 hover:text-red-700"
+                          onClick={() => onDeleteCoupon(coupon.id)}
+                          disabled={isDeleting}
+                          startIcon={<TrashBinIcon />}
+                        >
+                          Delete
+                        </Button>
+                      </PermissionWrapper>
+                    </div>
+                  )}
+                </TableCell>
               </TableRow>
             ))
           )}

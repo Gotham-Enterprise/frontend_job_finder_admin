@@ -8,7 +8,14 @@ import {
   useApproveSupervisorEmailVerification,
   useHideSupervisorProfile,
 } from "@/services/hooks/useSupervisors";
-import { SupervisorFilters, SupervisorSortBy, VerificationStatus } from "@/services/types/supervisor";
+import {
+  SUBSCRIPTION_DATE_FILTER_KEYS,
+  SupervisorFilters,
+  SupervisorSortBy,
+  SupervisorSubscriptionType,
+  VerificationStatus,
+} from "@/services/types/supervisor";
+import { useSupervisorTypesData } from "./useSupervisees";
 
 export const useSupervisorLogic = () => {
   const router = useRouter();
@@ -20,21 +27,35 @@ export const useSupervisorLogic = () => {
     if (hasUrlParams) {
       const keyword = searchParams.get("keyword") || "";
       const statusParam = searchParams.get("verificationStatus");
+      const typeParam = searchParams.get("supervisorType");
+      const subscriptionParam = searchParams.get("subscriptionType");
+      const validSubscription =
+        subscriptionParam && ["PAID", "FREE"].includes(subscriptionParam)
+          ? (subscriptionParam as SupervisorSubscriptionType)
+          : undefined;
       const validStatus =
         statusParam && ["PENDING", "APPROVED", "REJECTED"].includes(statusParam)
           ? (statusParam as VerificationStatus)
           : undefined;
       const urlPage = searchParams.get("page");
+      const dateParams = Object.fromEntries(
+        SUBSCRIPTION_DATE_FILTER_KEYS.map((key) => [key, searchParams.get(key) || undefined])
+      );
 
       const urlFilters: SupervisorFilters = {
         page: Math.max(1, parseInt(urlPage || "1", 10)),
         limit: parseInt(searchParams.get("limit") || "10", 10),
         keyword,
         verificationStatus: validStatus || undefined,
+        supervisorType: typeParam || undefined,
+        subscriptionType: validSubscription,
+        ...dateParams,
       };
 
       const isSimpleNavigation =
-        (!urlPage || urlPage === "1") && !keyword && !statusParam;
+        (!urlPage || urlPage === "1") && !keyword && !statusParam && !typeParam &&
+        !subscriptionParam &&
+        !Object.values(dateParams).some(Boolean);
 
       if (isSimpleNavigation && typeof window !== "undefined") {
         localStorage.removeItem("supervisor-search-state");
@@ -59,6 +80,11 @@ export const useSupervisorLogic = () => {
               limit: parsed.limit || 10,
               keyword: parsed.keyword || "",
               verificationStatus: parsed.verificationStatus || undefined,
+              supervisorType: parsed.supervisorType || undefined,
+              subscriptionType: parsed.subscriptionType || undefined,
+              ...Object.fromEntries(
+                SUBSCRIPTION_DATE_FILTER_KEYS.map((key) => [key, parsed[key] || undefined])
+              ),
               sortBy: parsed.sortBy || undefined,
               sortOrder: parsed.sortOrder || undefined,
             };
@@ -72,7 +98,7 @@ export const useSupervisorLogic = () => {
       }
     }
 
-    return { page: 1, limit: 10, keyword: "", verificationStatus: undefined };
+    return { page: 1, limit: 10, keyword: "", verificationStatus: undefined, supervisorType: undefined };
   };
 
   const initialFilters = getInitialFilters();
@@ -146,6 +172,12 @@ export const useSupervisorLogic = () => {
     if (filters.limit && filters.limit !== 10) params.set("limit", filters.limit.toString());
     if (filters.keyword) params.set("keyword", encodeURIComponent(filters.keyword));
     if (filters.verificationStatus) params.set("verificationStatus", filters.verificationStatus);
+    if (filters.supervisorType) params.set("supervisorType", filters.supervisorType);
+    if (filters.subscriptionType) params.set("subscriptionType", filters.subscriptionType);
+    SUBSCRIPTION_DATE_FILTER_KEYS.forEach((key) => {
+      const value = filters[key];
+      if (value) params.set(key, value);
+    });
 
     const newURL = params.toString() ? `?${params.toString()}` : "";
     const currentURL = window.location.search;
@@ -182,6 +214,9 @@ export const useSupervisorLogic = () => {
           limit: filters.limit,
           keyword: filters.keyword,
           verificationStatus: filters.verificationStatus,
+          supervisorType: filters.supervisorType,
+          subscriptionType: filters.subscriptionType,
+          ...Object.fromEntries(SUBSCRIPTION_DATE_FILTER_KEYS.map((key) => [key, filters[key]])),
           sortBy: filters.sortBy,
           sortOrder: filters.sortOrder,
         })
@@ -194,14 +229,15 @@ export const useSupervisorLogic = () => {
   const tableColumns = useMemo(
     () => [
       { key: "name", label: "Name", sortKey: "fullName" },
-      { key: "state", label: "State", sortKey: "state" },
+      { key: "state", label: "State", sortKey: "state", className: "text-center" },
       { key: "role", label: "Role" },
-      { key: "licenseType", label: "License Type" },
-      { key: "degreeType", label: "Degree Type" },
+      { key: "licenseType", label: "License Type", className: "text-center" },
+      { key: "degreeType", label: "Degree Type", className: "text-center" },
       { key: "yearsOfExperience", label: "Experience", sortKey: "yearsOfExperience" },
       { key: "verificationStatus", label: "Status", sortKey: "verificationStatus" },
       { key: "emailVerified", label: "Email Verified" },
       { key: "visibility", label: "Visibility", sortKey: "hideProfile" },
+      { key: "subscription", label: "Subscription" },
       { key: "createdAt", label: "Submitted", sortKey: "createdAt" },
       { key: "actions", label: "", className: "text-right" },
     ],
@@ -227,6 +263,22 @@ export const useSupervisorLogic = () => {
       { value: "REJECTED", label: "Rejected" },
     ],
     []
+  );
+
+  const subscriptionOptions = useMemo(
+    () => [
+      { value: "PAID", label: "Paid" },
+      { value: "FREE", label: "Free / None" },
+    ],
+    []
+  );
+
+  // Primary-type filter options from the seeded hierarchy (Medical Director,
+  // Supervising Physician, ...).
+  const { data: supervisorTypesData = [] } = useSupervisorTypesData();
+  const typeOptions = useMemo(
+    () => supervisorTypesData.map((t) => ({ value: t.name, label: t.name })),
+    [supervisorTypesData]
   );
 
   const itemsPerPageOptions = useMemo(
@@ -364,7 +416,14 @@ export const useSupervisorLogic = () => {
   }, [rejectModal.supervisorId, rejectNotes, rejectMutate, closeRejectModal]);
 
   const clearAllFilters = useCallback(() => {
-    setFilters({ page: 1, limit: 10, keyword: "", verificationStatus: undefined });
+    setFilters({
+      page: 1,
+      limit: 10,
+      keyword: "",
+      verificationStatus: undefined,
+      supervisorType: undefined,
+      subscriptionType: undefined,
+    });
     setSearchInput("");
     if (typeof window !== "undefined") {
       localStorage.removeItem("supervisor-scroll-position");
@@ -377,13 +436,34 @@ export const useSupervisorLogic = () => {
       if (filterType === "verificationStatus") {
         filterChange("verificationStatus", undefined);
       }
+      if (filterType === "supervisorType") {
+        filterChange("supervisorType", undefined);
+      }
+      if (filterType === "subscriptionType") {
+        filterChange("subscriptionType", undefined);
+      }
+      if (filterType === "subscriptionDates") {
+        startTransition(() => {
+          setFilters((prev) => ({
+            ...prev,
+            ...Object.fromEntries(SUBSCRIPTION_DATE_FILTER_KEYS.map((key) => [key, undefined])),
+            page: 1,
+          }));
+        });
+      }
     },
     [filterChange]
   );
 
   const hasActiveFilters = useMemo(() => {
-    return !!(searchInput || filters.verificationStatus);
-  }, [searchInput, filters.verificationStatus]);
+    return !!(
+      searchInput ||
+      filters.verificationStatus ||
+      filters.supervisorType ||
+      filters.subscriptionType ||
+      SUBSCRIPTION_DATE_FILTER_KEYS.some((key) => filters[key])
+    );
+  }, [searchInput, filters]);
 
   // Debounced keyword search
   useEffect(() => {
@@ -421,6 +501,8 @@ export const useSupervisorLogic = () => {
 
     tableColumns,
     statusOptions,
+    typeOptions,
+    subscriptionOptions,
     itemsPerPageOptions,
 
     sortBy: filters.sortBy,

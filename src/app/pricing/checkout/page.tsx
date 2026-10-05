@@ -7,6 +7,7 @@ import { useSubscriptionContext, SubscriptionData } from '@/context/Subscription
 import { subscriptionApi } from '@/services/api/subscription';
 import { useToast } from '@/context/ToastContext';
 import FullScreenSpinner from '@/components/ui/FullScreenSpinner';
+import { formatCouponDurationCheckout } from '@/services/utils/couponDuration';
 
 function CheckoutContent() {
   const [couponCode, setCouponCode] = useState('');
@@ -180,6 +181,11 @@ function CheckoutContent() {
     );
   }
 
+  const appliedCouponDurationLabel = formatCouponDurationCheckout(
+    subscriptionData.appliedCoupon?.duration,
+    subscriptionData.appliedCoupon?.durationInMonths
+  );
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-2xl mx-auto">
@@ -278,6 +284,11 @@ function CheckoutContent() {
                         <div className="text-green-600 dark:text-green-400 text-xs">
                           Code: {subscriptionData.appliedCoupon.redemptionCode}
                         </div>
+                        {appliedCouponDurationLabel && (
+                          <div className="text-green-600 dark:text-green-400 text-xs">
+                            {appliedCouponDurationLabel}
+                          </div>
+                        )}
                       </div>
                     </div>
                     <button

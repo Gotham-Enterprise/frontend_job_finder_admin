@@ -11,6 +11,7 @@ import {
   FORMAT_LABELS,
   HOW_SOON_LABELS,
 } from "@/services/utils/superviseeProfileForm";
+import { supervisionTypeDisplayLabel } from "@/services/utils/superviseeEligibility";
 import ErrorState from "../../../common/ErrorState";
 import FullScreenSpinner from "../../../ui/FullScreenSpinner";
 import BackToListButton from "@/components/ui/BackToListButton";
@@ -111,11 +112,6 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
       ? s.stateOfLicensure.map(formatStateOfLicensureForDisplay).join(", ")
       : null;
 
-  const statesLookingDisplay =
-    profile?.stateTheyAreLookingIn && profile.stateTheyAreLookingIn.length > 0
-      ? profile.stateTheyAreLookingIn.map(formatStateOfLicensureForDisplay).join(", ")
-      : null;
-
   return (
     <>
       <div className="px-4 pt-4 pb-2">
@@ -197,14 +193,23 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
           <SectionCard title="Occupation & Licensure">
             <FieldRow label="Occupation" value={s.occupation?.name} />
             <FieldRow label="Specialty" value={s.specialty?.name} />
-            <FieldRow label="Credential / License Type" value={profile?.title} />
+            <FieldRow
+              label="Credential / License Type"
+              value={
+                profile?.title
+                  ? profile.licensureState
+                    ? `${profile.title} (${profile.licensureState})`
+                    : profile.title
+                  : null
+              }
+            />
             <FieldRow label="States of Licensure" value={statesOfLicensureDisplay} />
           </SectionCard>
 
           <SectionCard title="Supervision Needs">
             <FieldRow
               label="Type of Supervision Needed"
-              value={profile?.typeOfSupervisorNeeded?.join(", ")}
+              value={profile?.typeOfSupervisorNeeded?.map(supervisionTypeDisplayLabel).join(", ")}
             />
             <FieldRow label="Occupation" value={profile?.superviseeOccupation} />
             <FieldRow label="Specialty" value={profile?.superviseeSpecialty} />
@@ -228,17 +233,53 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
               }
             />
             <FieldRow label="Availability" value={profile?.availability} />
-            <FieldRow label="States Looking In" value={statesLookingDisplay} />
             <FieldRow
               label="Budget"
               value={
                 profile?.budgetRangeType
-                  ? `${BUDGET_TYPE_LABELS[profile.budgetRangeType] ?? profile.budgetRangeType}${
-                      profile.budgetRangeStart != null || profile.budgetRangeEnd != null
-                        ? ` — $${profile.budgetRangeStart ?? 0}–$${profile.budgetRangeEnd ?? 0}`
-                        : ""
-                    }`
+                  ? profile.budgetRangeType === "MONTHLY"
+                    ? // Monthly budgets are a single amount (stored in budgetRangeEnd)
+                      `Monthly — $${profile.budgetRangeEnd ?? 0}/month`
+                    : `${BUDGET_TYPE_LABELS[profile.budgetRangeType] ?? profile.budgetRangeType}${
+                        profile.budgetRangeStart != null || profile.budgetRangeEnd != null
+                          ? ` — $${profile.budgetRangeStart ?? 0}–$${profile.budgetRangeEnd ?? 0}`
+                          : ""
+                      }`
                   : null
+              }
+            />
+            {/* Medical Director need preferences (md* columns) */}
+            <FieldRow label="MD Preferred Occupation" value={profile?.mdPreferredOccupation} />
+            <FieldRow label="MD Preferred Specialty" value={profile?.mdPreferredSpecialty} />
+            <FieldRow
+              label="How Soon (Medical Director)"
+              value={
+                profile?.mdHowSoonLooking
+                  ? HOW_SOON_LABELS[profile.mdHowSoonLooking] ?? profile.mdHowSoonLooking
+                  : null
+              }
+            />
+            {profile?.mdHowSoonLooking === "CUSTOM_DATE" && (
+              <FieldRow label="MD Looking Date" value={formatDate(profile.mdLookingDate)} />
+            )}
+            <FieldRow
+              label="MD Monthly Budget"
+              value={profile?.mdMonthlyBudget ? `$${profile.mdMonthlyBudget}/month` : null}
+            />
+            <FieldRow
+              label="Ideal Medical Director"
+              value={
+                profile?.mdIdealDescription ? (
+                  <span className="whitespace-pre-line">{profile.mdIdealDescription}</span>
+                ) : null
+              }
+            />
+            <FieldRow
+              label="Introduction"
+              value={
+                profile?.introduction ? (
+                  <span className="whitespace-pre-line">{profile.introduction}</span>
+                ) : null
               }
             />
             <FieldRow

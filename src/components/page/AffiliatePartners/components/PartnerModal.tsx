@@ -19,6 +19,7 @@ type PartnerFormData = CreatePartnerData & {
   outboundFeedEnabled?: boolean
   outboundFeedCronExpression?: string
   outboundFeedTimezone?: string
+  landingEnabled?: boolean
 }
 
 export default function PartnerModal({
@@ -40,7 +41,9 @@ export default function PartnerModal({
   } = useForm<PartnerFormData>()
 
   const outboundEnabled = watch('outboundFeedEnabled')
+  const landingEnabled = watch('landingEnabled')
   const feedUrl = partner?.outboundFeedUrl
+  const landingUrl = partner?.landingUrl
 
   useEffect(() => {
     if (partner) {
@@ -53,6 +56,7 @@ export default function PartnerModal({
         outboundFeedEnabled: partner.outboundFeedEnabled || false,
         outboundFeedCronExpression: partner.outboundFeedCronExpression || '0 5 * * *',
         outboundFeedTimezone: partner.outboundFeedTimezone || 'UTC',
+        landingEnabled: partner.landingEnabled || false,
       })
     } else {
       reset({
@@ -61,6 +65,7 @@ export default function PartnerModal({
         contactPerson: '',
         phone: '',
         website: '',
+        landingEnabled: false,
       })
     }
     setShowFullError(false)
@@ -85,6 +90,16 @@ export default function PartnerModal({
       showToast.success('Copied', 'Feed URL copied to clipboard')
     } catch {
       showToast.error('Copy Failed', 'Could not copy feed URL')
+    }
+  }
+
+  const handleCopyLandingUrl = async () => {
+    if (!landingUrl) return
+    try {
+      await navigator.clipboard.writeText(landingUrl)
+      showToast.success('Copied', 'Landing URL copied to clipboard')
+    } catch {
+      showToast.error('Copy Failed', 'Could not copy landing URL')
     }
   }
 
@@ -358,6 +373,59 @@ export default function PartnerModal({
                           </button>
                         </div>
                       </>
+                    )}
+                  </div>
+                )}
+              </div>
+
+            {/* Landing page — track then redirect home */}
+              <div className="pt-4 border-t border-gray-200 dark:border-gray-800">
+                <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">Landing Page</h4>
+
+                {!partner ? (
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    Save the partner first to configure a tracking landing URL.
+                  </p>
+                ) : (
+                  <div className="space-y-4">
+                    <label className="flex items-center gap-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        {...register('landingEnabled')}
+                        className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
+                      />
+                      <span className="text-sm text-gray-700 dark:text-gray-300">
+                        Landing page (track then redirect to homepage)
+                      </span>
+                    </label>
+
+                    {landingEnabled && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                          Landing URL
+                        </label>
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            readOnly
+                            value={landingUrl || 'Will be generated after save'}
+                            className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800/50 text-gray-600 dark:text-gray-400 text-sm"
+                          />
+                          {landingUrl && (
+                            <button
+                              type="button"
+                              onClick={handleCopyLandingUrl}
+                              className="px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                              title="Copy URL"
+                            >
+                              <Copy className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
+                        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                          Give this single URL to the partner. Visitors are tracked, then sent to the homepage.
+                        </p>
+                      </div>
                     )}
                   </div>
                 )}

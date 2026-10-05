@@ -1,5 +1,31 @@
 export type VerificationStatus = "PENDING" | "APPROVED" | "REJECTED";
 
+/** PAID = active paid subscription; FREE = free plan or no active subscription. */
+export type SupervisorSubscriptionType = "PAID" | "FREE";
+
+/**
+ * Current subscription summary on list items: the latest ACTIVE/TRIALING
+ * subscription, preferring a paid plan. Null when none is active.
+ */
+export const SUBSCRIPTION_DATE_FILTER_KEYS = [
+  "subscriptionStartFrom",
+  "subscriptionStartTo",
+  "subscriptionEndFrom",
+  "subscriptionEndTo",
+] as const;
+
+export type SubscriptionDateFilterKey = (typeof SUBSCRIPTION_DATE_FILTER_KEYS)[number];
+
+export interface SupervisorSubscriptionSummary {
+  status: "ACTIVE" | "TRIALING";
+  planName: string | null;
+  /** Plan priceInCents > 0 — same rule the backend uses for paid-feature gating. */
+  isPaid: boolean;
+  currentPeriodStart: string | null;
+  currentPeriodEnd: string | null;
+  cancelAtPeriodEnd: boolean;
+}
+
 export interface SupervisorOccupation {
   id: number;
   name: string;
@@ -36,6 +62,7 @@ export interface Supervisor {
   emailVerifiedAt: string | null;
   /** Whether the supervisor's profile is hidden from public listings; drives the Hide/Show action. */
   hideProfile: boolean;
+  subscription: SupervisorSubscriptionSummary | null;
 }
 
 /** Response shape from PATCH /api/supervision/admin/:id/hide-profile */
@@ -65,6 +92,14 @@ export interface SupervisorFilters {
   limit?: number;
   keyword?: string;
   verificationStatus?: VerificationStatus | "";
+  /** Filter by the supervisor's primary type (e.g. "Medical Director"). */
+  supervisorType?: string;
+  subscriptionType?: SupervisorSubscriptionType | "";
+  /** Inclusive YYYY-MM-DD bounds on the active subscription's currentPeriodStart / currentPeriodEnd. */
+  subscriptionStartFrom?: string;
+  subscriptionStartTo?: string;
+  subscriptionEndFrom?: string;
+  subscriptionEndTo?: string;
   sortBy?: SupervisorSortBy;
   sortOrder?: "asc" | "desc";
 }
@@ -101,6 +136,34 @@ export interface SupervisorLicenseEntry {
   sortOrder?: number;
 }
 
+/** Medical Director secondary offering (Supervising/Collaborating Physician) with its own credentials. */
+export interface SupervisorOfferingEntry {
+  id?: string;
+  supervisorType: string;
+  occupation?: string | null;
+  specialty?: string | null;
+  degreeType?: string | null;
+  sortOrder?: number;
+  licenses?: {
+    id?: string;
+    licenseNumber?: string | null;
+    state?: string | null;
+    licenseExpiration?: string | null;
+    sortOrder?: number;
+  }[];
+}
+
+/** Medical Director board certification (admin endpoints return full entries). */
+export interface SupervisorBoardCertificationEntry {
+  id?: string;
+  certifyingBoard: string;
+  specialty?: string | null;
+  subspecialty?: string | null;
+  certificationNumber?: string | null;
+  expirationDate?: string | null;
+  sortOrder?: number;
+}
+
 /** Supervisor profile from the detail endpoint */
 export interface SupervisorProfile {
   id: string;
@@ -118,6 +181,10 @@ export interface SupervisorProfile {
   licenseExpiration: string | null;
   /** All licenses, ordered by sortOrder (first = primary). Empty for unmigrated legacy records. */
   licenses?: SupervisorLicenseEntry[];
+  /** Medical Director only: secondary service offerings. */
+  offerings?: SupervisorOfferingEntry[];
+  /** Medical Director only: board certifications. */
+  boardCertifications?: SupervisorBoardCertificationEntry[];
   yearsOfExperience: string | null;
   npiNumber: string | null;
   certification: string[];
@@ -234,6 +301,23 @@ export interface SupervisorLicenseEntryPayload {
   licenseExpiration: string;
 }
 
+/** Medical Director secondary offering — same shape the register endpoint accepts. */
+export interface SupervisorOfferingPayload {
+  supervisorType: string;
+  occupation: string;
+  specialty?: string;
+  degreeType: string;
+  licenses: { licenseNumber: string; state: string; licenseExpiration: string }[];
+}
+
+export interface SupervisorBoardCertificationPayload {
+  certifyingBoard: string;
+  specialty: string;
+  subspecialty?: string;
+  certificationNumber?: string;
+  expirationDate?: string;
+}
+
 export interface SupervisorUpdatePayload {
   fullName?: string;
   /** Post-nominal letters after the name; empty string clears the stored value. */
@@ -252,6 +336,10 @@ export interface SupervisorUpdatePayload {
    * rows untouched.
    */
   licenses?: SupervisorLicenseEntryPayload[];
+  /** Medical Director only — full replace; empty array clears all offerings. */
+  offerings?: SupervisorOfferingPayload[];
+  /** Medical Director only — full replace; empty array clears all certifications. */
+  boardCertifications?: SupervisorBoardCertificationPayload[];
   yearsOfExperience?: string;
   patientPopulation?: string[];
   certification?: string[];

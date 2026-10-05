@@ -6,7 +6,11 @@ export const jobCreationApi = {
     return apiPost<JobCreationResponse>('/api/admin/jobs/create', jobData);
   },
 
-  async getOccupationsWithSpecialties(): Promise<OccupationsListResponse> {
-    return apiGet<OccupationsListResponse>('/api/categories/occupations?page=1&limit=0');
+  async getOccupationsWithSpecialties(options?: {
+    /** Include isDropdown=false rows (supervision-only supervisee occupations). */
+    includeAll?: boolean;
+  }): Promise<OccupationsListResponse> {
+    const includeAll = options?.includeAll ? '&includeAll=true' : '';
+    return apiGet<OccupationsListResponse>(`/api/categories/occupations?page=1&limit=0${includeAll}`);
   },
 };

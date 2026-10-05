@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { couponApi } from '../api/coupon';
 import { CouponFilters } from '../types/coupon';
-import { CreateCouponFormData } from '../types/CouponsTypes';
+import { CreateCouponFormData, UpdateCouponFormData } from '../types/CouponsTypes';
 import { showToast } from '../utils/toast';
 
 export const couponQueryKeys = {
@@ -11,6 +11,21 @@ export const couponQueryKeys = {
     const serializedFilters = JSON.stringify(filters, Object.keys(filters).sort());
     return [...couponQueryKeys.lists(), serializedFilters] as const;
   },
+};
+
+export const useCouponRedemptions = (couponId: string | null) => {
+  return useQuery({
+    queryKey: [...couponQueryKeys.all, 'redemptions', couponId],
+    queryFn: () => couponApi.getCouponRedemptions(couponId as string),
+    enabled: Boolean(couponId),
+    staleTime: 0,
+    retry: (failureCount, error: Error) => {
+      if (error.message.includes('HTTP 401') || error.message.includes('HTTP 404')) {
+        return false;
+      }
+      return failureCount < 2;
+    },
+  });
 };
 
 export const useCoupons = (filters: CouponFilters = {}) => {
@@ -69,6 +84,51 @@ export const useCreateCoupon = () => {
       }
       
       showToast.error('Creation Failed', errorMessage);
+    },
+  });
+};
+
+export const useUpdateCoupon = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: UpdateCouponFormData }) =>
+      couponApi.updateCoupon(id, data),
+    onSuccess: (response) => {
+      queryClient.invalidateQueries({ queryKey: couponQueryKeys.all });
+
+      const title = response?.data?.title;
+      showToast.success(
+        'Coupon Updated',
+        title ? `"${title}" was updated.` : 'The coupon was updated.'
+      );
+    },
+    onError: (error: any) => {
+      const errorMessage = error?.message || 'Failed to update coupon. Please try again.';
+      showToast.error('Update Failed', errorMessage);
+    },
+  });
+};
+
+export const useDeleteCoupon = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => couponApi.deleteCoupon(id),
+    onSuccess: (response) => {
+      queryClient.invalidateQueries({ queryKey: couponQueryKeys.all });
+
+      const title = response?.data?.title;
+      showToast.success(
+        'Coupon Deleted',
+        title
+          ? `"${title}" was removed from Stripe and marked as deleted.`
+          : 'The coupon was removed from Stripe and marked as deleted.'
+      );
+    },
+    onError: (error: any) => {
+      const errorMessage = error?.message || 'Failed to delete coupon. Please try again.';
+      showToast.error('Delete Failed', errorMessage);
     },
   });
 };

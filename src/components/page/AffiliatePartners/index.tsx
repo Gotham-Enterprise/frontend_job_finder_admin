@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { FolderOpen, BarChart3, Handshake, UserCheck, ClipboardList, Shield, ListChecks } from 'lucide-react'
+import { FolderOpen, BarChart3, Handshake, UserCheck, ClipboardList, Shield, ListChecks, MousePointerClick } from 'lucide-react'
 import PartnersTab from './components/PartnersTab'
 import BatchesTab from './components/BatchesTab'
 import AnalyticsTab from './components/AnalyticsTab'
@@ -10,8 +10,9 @@ import CoRegistrationTab from './components/CoRegistrationTab'
 import SurveyJobsTab from './components/SurveyJobsTab'
 import InsuranceTab from './components/InsuranceTab'
 import FeedRulesTab from './components/FeedRulesTab'
+import LandingTab from './components/LandingTab'
 
-type TabType = 'partners' | 'batches' | 'analytics' | 'coreg' | 'survey' | 'insurance' | 'feed-rules'
+type TabType = 'partners' | 'batches' | 'analytics' | 'landing' | 'coreg' | 'survey' | 'insurance' | 'feed-rules'
 
 export default function AffiliatePartners() {
   const router = useRouter()
@@ -41,6 +42,11 @@ export default function AffiliatePartners() {
       id: 'analytics' as TabType,
       label: 'Analytics',
       icon: BarChart3,
+    },
+    {
+      id: 'landing' as TabType,
+      label: 'Landing',
+      icon: MousePointerClick,
     },
     {
       id: 'partners' as TabType,
@@ -84,6 +90,8 @@ export default function AffiliatePartners() {
         return <BatchesTab />
       case 'analytics':
         return <AnalyticsTab />
+      case 'landing':
+        return <LandingTab />
       case 'coreg':
         return <CoRegistrationTab />
       case 'survey':

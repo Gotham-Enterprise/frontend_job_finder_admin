@@ -25,4 +25,27 @@ export const subscriptionApi = {
   async cancelSubscription(companyId: string): Promise<{ success: boolean; message: string }> {
     return apiPut<{ success: boolean; message: string }>(`/api/admin/subscriptions/cancel/${companyId}`);
   },
+
+  async sendPaidPlanEncouragement(companyId: string): Promise<{
+    success: boolean;
+    message: string;
+    recipientCount?: number;
+    failedCount?: number;
+  }> {
+    return apiPost(`/api/admin/subscriptions/encourage-paid-plan/${companyId}`);
+  },
+
+  async sendSubscriptionQuote(payload: {
+    companyId: string;
+    subscriptionPlanId: number;
+    duration: PlanInterval;
+    couponRedemptionCode?: string;
+  }): Promise<{
+    success: boolean;
+    message: string;
+    recipientCount?: number;
+    failedCount?: number;
+  }> {
+    return apiPost('/api/admin/subscriptions/send-quote', payload);
+  },
 };

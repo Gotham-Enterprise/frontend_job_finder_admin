@@ -1,4 +1,5 @@
 import {
+  SUBSCRIPTION_DATE_FILTER_KEYS,
   SupervisorFilters,
   SupervisorsResponse,
   SupervisorDetailsResponse,
@@ -23,6 +24,12 @@ export const supervisorApi = {
       if (filters.keyword) queryParams.append("keyword", filters.keyword);
       // Only send verificationStatus when a specific one is selected; omitting it returns all statuses
       if (filters.verificationStatus) queryParams.append("verificationStatus", filters.verificationStatus);
+      if (filters.supervisorType) queryParams.append("supervisorType", filters.supervisorType);
+      if (filters.subscriptionType) queryParams.append("subscriptionType", filters.subscriptionType);
+      SUBSCRIPTION_DATE_FILTER_KEYS.forEach((key) => {
+        const value = filters[key];
+        if (value) queryParams.append(key, value);
+      });
       if (filters.sortBy) queryParams.append("sortBy", filters.sortBy);
       if (filters.sortOrder) queryParams.append("sortOrder", filters.sortOrder);
 
