@@ -7,6 +7,7 @@ import {
   useHideSuperviseeProfile,
 } from "@/services/hooks/useSupervisees";
 import { SuperviseeFilters, SuperviseeSortBy } from "@/services/types/supervisee";
+import { parseEmailVerifiedFilter } from "@/services/types/emailVerifiedFilter";
 
 export const useSuperviseeLogic = () => {
   const router = useRouter();
@@ -17,15 +18,17 @@ export const useSuperviseeLogic = () => {
 
     if (hasUrlParams) {
       const keyword = searchParams.get("keyword") || "";
+      const emailVerifiedParam = parseEmailVerifiedFilter(searchParams.get("emailVerified"));
       const urlPage = searchParams.get("page");
 
       const urlFilters: SuperviseeFilters = {
         page: Math.max(1, parseInt(urlPage || "1", 10)),
         limit: parseInt(searchParams.get("limit") || "10", 10),
         keyword,
+        emailVerified: emailVerifiedParam,
       };
 
-      const isSimpleNavigation = (!urlPage || urlPage === "1") && !keyword;
+      const isSimpleNavigation = (!urlPage || urlPage === "1") && !keyword && !emailVerifiedParam;
 
       if (isSimpleNavigation && typeof window !== "undefined") {
         localStorage.removeItem("supervisee-search-state");
@@ -49,6 +52,7 @@ export const useSuperviseeLogic = () => {
               page: Math.max(1, parsed.page || 1),
               limit: parsed.limit || 10,
               keyword: parsed.keyword || "",
+              emailVerified: parseEmailVerifiedFilter(parsed.emailVerified),
               sortBy: parsed.sortBy || undefined,
               sortOrder: parsed.sortOrder || undefined,
             };
@@ -68,6 +72,7 @@ export const useSuperviseeLogic = () => {
   const initialFilters = getInitialFilters();
   const [filters, setFilters] = useState<SuperviseeFilters>(() => initialFilters);
   const [searchInput, setSearchInput] = useState(() => initialFilters.keyword || "");
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [isInitialized, setIsInitialized] = useState(false);
   const [hasRestoredFromState, setHasRestoredFromState] = useState(false);
@@ -115,6 +120,7 @@ export const useSuperviseeLogic = () => {
     if (filters.page && filters.page > 1) params.set("page", filters.page.toString());
     if (filters.limit && filters.limit !== 10) params.set("limit", filters.limit.toString());
     if (filters.keyword) params.set("keyword", encodeURIComponent(filters.keyword));
+    if (filters.emailVerified) params.set("emailVerified", filters.emailVerified);
 
     const newURL = params.toString() ? `?${params.toString()}` : "";
     const currentURL = window.location.search;
@@ -149,6 +155,7 @@ export const useSuperviseeLogic = () => {
           page: filters.page,
           limit: filters.limit,
           keyword: filters.keyword,
+          emailVerified: filters.emailVerified,
           sortBy: filters.sortBy,
           sortOrder: filters.sortOrder,
         }),
@@ -291,7 +298,19 @@ export const useSuperviseeLogic = () => {
     }
   }, []);
 
-  const hasActiveFilters = useMemo(() => !!searchInput, [searchInput]);
+  const clearIndividualFilter = useCallback(
+    (filterType: string) => {
+      if (filterType === "emailVerified") {
+        filterChange("emailVerified", undefined);
+      }
+    },
+    [filterChange],
+  );
+
+  const hasActiveFilters = useMemo(
+    () => !!(searchInput || filters.emailVerified),
+    [searchInput, filters.emailVerified],
+  );
 
   useEffect(() => {
     if (!isInitialized) return;
@@ -317,6 +336,8 @@ export const useSuperviseeLogic = () => {
     filters,
     searchInput,
     setSearchInput,
+    isFilterOpen,
+    setIsFilterOpen,
     isPending,
     data,
     isLoading,
@@ -331,6 +352,7 @@ export const useSuperviseeLogic = () => {
     initPageChange,
     viewSupervisee,
     clearAllFilters,
+    clearIndividualFilter,
     hasActiveFilters,
     editModal,
     openEditModal,

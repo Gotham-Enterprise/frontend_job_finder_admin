@@ -7,6 +7,7 @@ import { useLicenses, useLicenseIssuingStates } from "@/services/hooks/useLicens
 import { jobApplicationApi } from "@/services/api/jobApplication";
 import { jobSeekerApi } from "@/services/api/jobSeeker";
 import { JobSeekerFilters } from "@/services/types/jobSeeker";
+import { EMAIL_VERIFIED_FILTER_OPTIONS, parseEmailVerifiedFilter } from "@/services/types/emailVerifiedFilter";
 import { showToast } from "@/services/utils/toast";
 
 export const useJobSeekersLogic = () => {
@@ -33,6 +34,7 @@ export const useJobSeekersLogic = () => {
       const urlLicenseIssuingState = searchParams.get("licenseIssuingState");
       const urlRegistrationStartDate = searchParams.get("registrationStartDate");
       const urlRegistrationEndDate = searchParams.get("registrationEndDate");
+      const urlEmailVerified = parseEmailVerifiedFilter(searchParams.get("emailVerified"));
 
       const urlFilters = {
         page: Math.max(1, parseInt(urlPage || "1", 10)),
@@ -47,6 +49,7 @@ export const useJobSeekersLogic = () => {
         licenseIssuingState: urlLicenseIssuingState || "",
         registrationStartDate: urlRegistrationStartDate || "",
         registrationEndDate: urlRegistrationEndDate || "",
+        emailVerified: urlEmailVerified,
       };
       const isSimpleNavigation =
         (!urlPage || urlPage === "1") &&
@@ -59,7 +62,8 @@ export const useJobSeekersLogic = () => {
         !urlLicenseName &&
         !urlLicenseIssuingState &&
         !urlRegistrationStartDate &&
-        !urlRegistrationEndDate;
+        !urlRegistrationEndDate &&
+        !urlEmailVerified;
 
       if (isSimpleNavigation && typeof window !== "undefined") {
         localStorage.removeItem("jobseeker-search-state");
@@ -92,6 +96,7 @@ export const useJobSeekersLogic = () => {
               licenseIssuingState: parsed.licenseIssuingState || "",
               registrationStartDate: parsed.registrationStartDate || "",
               registrationEndDate: parsed.registrationEndDate || "",
+              emailVerified: parseEmailVerifiedFilter(parsed.emailVerified),
             };
             return restoredFilters;
           } catch (error) {
@@ -117,6 +122,7 @@ export const useJobSeekersLogic = () => {
       licenseIssuingState: "",
       registrationStartDate: "",
       registrationEndDate: "",
+      emailVerified: undefined,
     };
     return defaultFilters;
   };
@@ -159,6 +165,7 @@ export const useJobSeekersLogic = () => {
     if (filters.licenseIssuingState) params.set("licenseIssuingState", filters.licenseIssuingState);
     if (filters.registrationStartDate) params.set("registrationStartDate", filters.registrationStartDate);
     if (filters.registrationEndDate) params.set("registrationEndDate", filters.registrationEndDate);
+    if (filters.emailVerified) params.set("emailVerified", filters.emailVerified);
 
     const newURL = params.toString() ? `?${params.toString()}` : "";
     const currentURL = window.location.search;
@@ -236,6 +243,7 @@ export const useJobSeekersLogic = () => {
         location: filters.location ?? [],
         occupationId: filters.occupationId,
         status: filters.status,
+        emailVerified: filters.emailVerified,
       };
       localStorage.setItem("jobseeker-search-state", JSON.stringify(stateToSave));
     }
@@ -271,6 +279,11 @@ export const useJobSeekersLogic = () => {
       { value: "active", label: "Active" },
       { value: "pending", label: "Pending" },
     ],
+    []
+  );
+
+  const emailVerifiedOptions = useMemo(
+    () => [{ value: "", label: "All" }, ...EMAIL_VERIFIED_FILTER_OPTIONS],
     []
   );
 
@@ -426,6 +439,7 @@ export const useJobSeekersLogic = () => {
       licenseIssuingState: "",
       registrationStartDate: "",
       registrationEndDate: "",
+      emailVerified: undefined,
     };
     setFilters(newFilters);
     setSearchInput("");
@@ -465,6 +479,9 @@ export const useJobSeekersLogic = () => {
         case "registrationEndDate":
           filterChange("registrationEndDate", "");
           break;
+        case "emailVerified":
+          filterChange("emailVerified", undefined);
+          break;
         default:
           break;
       }
@@ -481,9 +498,10 @@ export const useJobSeekersLogic = () => {
       filters.occupationId ||
       filters.status ||
       filters.licenseName ||
-      filters.licenseIssuingState
+      filters.licenseIssuingState ||
+      filters.emailVerified
     );
-  }, [searchInput, filters.city, filters.radius, filters.location, filters.occupationId, filters.status, filters.licenseName, filters.licenseIssuingState]);
+  }, [searchInput, filters.city, filters.radius, filters.location, filters.occupationId, filters.status, filters.licenseName, filters.licenseIssuingState, filters.emailVerified]);
 
   const handleExport = useCallback(async () => {
     if (isExporting) return;
@@ -502,6 +520,7 @@ export const useJobSeekersLogic = () => {
         licenseIssuingState: filters.licenseIssuingState,
         registrationStartDate: filters.registrationStartDate,
         registrationEndDate: filters.registrationEndDate,
+        emailVerified: filters.emailVerified,
       };
 
       await jobSeekerApi.exportJobSeekers(exportFilters);
@@ -559,7 +578,8 @@ export const useJobSeekersLogic = () => {
       !filters.radius &&
       !(filters.location && filters.location.length > 0) &&
       !filters.occupationId &&
-      !filters.status;
+      !filters.status &&
+      !filters.emailVerified;
 
     if (isOnPageOneWithNoFilters) {
       if (typeof window !== "undefined") {
@@ -573,6 +593,7 @@ export const useJobSeekersLogic = () => {
       (filters.location && filters.location.length > 0) ||
       filters.occupationId ||
       filters.status ||
+      filters.emailVerified ||
       (filters.page && filters.page > 1)
     ) {
       saveSearchState();
@@ -600,6 +621,7 @@ export const useJobSeekersLogic = () => {
 
     tableColumns,
     statusOptions,
+    emailVerifiedOptions,
     occupationOptions,
     stateOptions,
     licenseOptions,
