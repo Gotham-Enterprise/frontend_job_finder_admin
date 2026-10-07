@@ -240,6 +240,8 @@ const navItems: NavItem[] = [
     subItems: [
       { name: "All Listings", path: "/admin/office-spaces" },
       { name: "Inquiries", path: "/admin/office-spaces/inquiries" },
+      { name: "Landlords", path: "/admin/office-spaces/landlords" },
+      { name: "Ingest Data", path: "/admin/office-space-ingest" },
     ],
   },
 ];

@@ -187,6 +187,49 @@ export interface OfficeSpaceAdminStatusResponse {
   message?: string;
 }
 
+export interface OfficeSpaceLandlord {
+  id: string;
+  userId: string;
+  businessName: string | null;
+  businessEmail: string | null;
+  businessPhone: string | null;
+  businessCity: string | null;
+  businessState: string | null;
+  isInternal: boolean;
+  createdAt: string;
+  user: {
+    id: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+  };
+  _count: { listings: number };
+}
+
+export interface OfficeSpaceLandlordFilters {
+  page?: number;
+  limit?: number;
+  search?: string;
+}
+
+export interface OfficeSpaceLandlordListResponse {
+  success: boolean;
+  data: OfficeSpaceLandlord[];
+  metaData: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+  message?: string;
+}
+
+export interface OfficeSpaceLandlordToggleResponse {
+  success: boolean;
+  data: OfficeSpaceLandlord;
+  message?: string;
+}
+
 // ─── Component Props Types ───────────────────────────────────────────────────
 
 export interface OfficeSpaceAdminProps {

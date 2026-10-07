@@ -40,4 +40,4 @@ next-env.d.ts
 .env.local
 
 # graphify generated graph artifacts (rebuildable via graphify extract --code-only .)
-graphify-out/
+graphify-out/.worktrees/
