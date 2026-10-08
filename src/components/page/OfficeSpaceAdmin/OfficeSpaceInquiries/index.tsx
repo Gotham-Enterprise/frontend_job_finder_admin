@@ -75,12 +75,22 @@ const OfficeSpaceInquiriesList: React.FC<OfficeSpaceInquiriesListProps> = ({
                       {inquiry.senderPhone}
                     </p>
                   )}
+                  {inquiry.company && (
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      {inquiry.company}
+                    </p>
+                  )}
+                  {inquiry.city && inquiry.state && (
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      {inquiry.city}, {inquiry.state}
+                    </p>
+                  )}
                   <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                     Type: {INQUIRY_TYPE_LABELS[inquiry.inquiryType] || inquiry.inquiryType}{" "}
                     &middot; Listing: {inquiry.listingId.slice(0, 8)}...
                   </p>
                   <p className="text-sm text-gray-700 dark:text-gray-300 mt-2 whitespace-pre-wrap line-clamp-3">
-                    {inquiry.message}
+                    {inquiry.message || "No message provided"}
                   </p>
                   {inquiry.response && (
                     <div className="mt-2 p-2 bg-gray-50 rounded text-sm dark:bg-gray-800">

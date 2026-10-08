@@ -104,9 +104,12 @@ export interface ListingInquiry {
   senderName: string;
   senderEmail: string;
   senderPhone: string | null;
+  company: string | null;
+  city: string | null;
+  state: string | null;
   inquiryType: InquiryType;
   status: InquiryStatus;
-  message: string;
+  message: string | null;
   response: string | null;
   respondedAt: string | null;
   createdAt: string;
