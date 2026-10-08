@@ -1,3 +1,5 @@
+import { EmailVerifiedFilter } from "./emailVerifiedFilter";
+
 export interface SuperviseeOccupation {
   id: number;
   name: string;
@@ -40,6 +42,7 @@ export interface SuperviseeFilters {
   page?: number;
   limit?: number;
   keyword?: string;
+  emailVerified?: EmailVerifiedFilter;
   sortBy?: SuperviseeSortBy;
   sortOrder?: "asc" | "desc";
 }

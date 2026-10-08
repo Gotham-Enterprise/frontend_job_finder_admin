@@ -7,6 +7,7 @@ import {
   ShareResumeResponse,
 } from "../types/jobSeeker";
 import { apiGet, apiPut, apiPost, apiPatch } from "./apiUtils";
+import { BulkActionResponse } from "../types/bulkAction";
 
 export const jobSeekerApi = {
   async getJobSeekers(filters: JobSeekerFilters = {}): Promise<JobSeekersResponse> {
@@ -25,6 +26,7 @@ export const jobSeekerApi = {
     if (filters.licenseIssuingState) queryParams.append("licenseIssuingState", filters.licenseIssuingState);
     if (filters.registrationStartDate) queryParams.append("registrationStartDate", filters.registrationStartDate);
     if (filters.registrationEndDate) queryParams.append("registrationEndDate", filters.registrationEndDate);
+    if (filters.emailVerified) queryParams.append("emailVerified", filters.emailVerified);
 
     // Add timezone offset in minutes (e.g., -480 for UTC+8 Philippine time)
     const timezoneOffset = new Date().getTimezoneOffset();
@@ -102,6 +104,27 @@ export const jobSeekerApi = {
     return apiPatch<any>(`/api/admin/users/${userId}/approve-email-verification`);
   },
 
+  /** Resend verification emails to several users; each id succeeds or fails on its own. */
+  async bulkSendEmailVerificationReminder(userIds: string[]): Promise<BulkActionResponse> {
+    return apiPost<BulkActionResponse>("/api/admin/users/bulk-send-email-verification-reminder", {
+      ids: userIds,
+    });
+  },
+
+  /** Email password reset links to several users; each id succeeds or fails on its own. */
+  async bulkSendPasswordReset(userIds: string[]): Promise<BulkActionResponse> {
+    return apiPost<BulkActionResponse>("/api/admin/users/bulk-send-password-reset", {
+      ids: userIds,
+    });
+  },
+
+  /** Approve several users' pending email verifications; each id succeeds or fails on its own. */
+  async bulkApproveEmailVerification(userIds: string[]): Promise<BulkActionResponse> {
+    return apiPatch<BulkActionResponse>("/api/admin/users/bulk-approve-email-verification", {
+      ids: userIds,
+    });
+  },
+
   async exportJobSeekers(filters: JobSeekerFilters = {}): Promise<void> {
     const queryParams = new URLSearchParams();
 
@@ -116,6 +139,7 @@ export const jobSeekerApi = {
     if (filters.licenseIssuingState) queryParams.append("licenseIssuingState", filters.licenseIssuingState);
     if (filters.registrationStartDate) queryParams.append("registrationStartDate", filters.registrationStartDate);
     if (filters.registrationEndDate) queryParams.append("registrationEndDate", filters.registrationEndDate);
+    if (filters.emailVerified) queryParams.append("emailVerified", filters.emailVerified);
 
     // Add timezone offset in minutes (e.g., -480 for UTC+8 Philippine time)
     const timezoneOffset = new Date().getTimezoneOffset();
