@@ -38,6 +38,7 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
 
     tableColumns,
     statusOptions,
+    emailVerifiedOptions,
     occupationOptions,
     stateOptions,
     licenseOptions,
@@ -88,6 +89,7 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
               occupationOptions={occupationOptions}
               stateOptions={stateOptions}
               statusOptions={statusOptions}
+              emailVerifiedOptions={emailVerifiedOptions}
               licenseOptions={licenseOptions}
               licenseStateOptions={licenseStateOptions}
               hasActiveFilters={hasActiveFilters}

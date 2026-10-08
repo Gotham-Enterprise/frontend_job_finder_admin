@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useRef } from "react";
 import Input from "../../../ui/input/Input";
-import { SearchIcon } from "../../../ui/icons";
+import FilterDropdown from "../../../ui/FilterDropdown";
+import { SearchIcon, FilterIcon } from "../../../ui/icons";
 import { SuperviseeHeaderProps } from "@/services/types/SuperviseeTypes";
 
 const SuperviseeHeader: React.FC<SuperviseeHeaderProps> = ({
@@ -8,16 +9,46 @@ const SuperviseeHeader: React.FC<SuperviseeHeaderProps> = ({
   isPending,
   searchInput,
   setSearchInput,
+  isFilterOpen,
+  setIsFilterOpen,
+  onClearFilters,
+  hasActiveFilters,
+  filterDropdownContent,
 }) => {
+  const filterButtonRef = useRef<HTMLButtonElement>(null);
+
   return (
     <div className="px-6 py-5 border-b border-gray-200 dark:border-gray-800">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h3 className="text-xl font-semibold text-gray-800 dark:text-white">Supervisees</h3>
-          <p className="text-sm text-gray-500 mt-1 dark:text-gray-400">
-            {totalCount || 0} total supervisees
-            {isPending && <span className="ml-2 text-xs text-primary">Updating...</span>}
-          </p>
+        <div className="flex items-center justify-between w-full">
+          <div>
+            <h3 className="text-xl font-semibold text-gray-800 dark:text-white">Supervisees</h3>
+            <p className="text-sm text-gray-500 mt-1 dark:text-gray-400">
+              {totalCount || 0} total supervisees
+              {isPending && <span className="ml-2 text-xs text-primary">Updating...</span>}
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              ref={filterButtonRef}
+              onClick={() => setIsFilterOpen(!isFilterOpen)}
+              className={`
+                flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border transition-colors
+                ${
+                  isFilterOpen
+                    ? "bg-primary/10 border-primary/20 text-primary"
+                    : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700"
+                }
+              `}
+            >
+              <FilterIcon />
+              <span>Filter</span>
+              {hasActiveFilters && (
+                <span className="ml-1 bg-primary text-white text-xs rounded-full px-1.5 py-0.5 min-w-[18px] h-4 flex items-center justify-center font-medium"></span>
+              )}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -48,6 +79,18 @@ const SuperviseeHeader: React.FC<SuperviseeHeaderProps> = ({
           )}
         </div>
       </div>
+
+      {filterDropdownContent && (
+        <FilterDropdown
+          isOpen={isFilterOpen}
+          onClose={() => setIsFilterOpen(false)}
+          triggerRef={filterButtonRef}
+          onClearAll={onClearFilters}
+          hasActiveFilters={hasActiveFilters}
+        >
+          {filterDropdownContent}
+        </FilterDropdown>
+      )}
     </div>
   );
 };

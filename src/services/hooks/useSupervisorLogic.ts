@@ -15,6 +15,7 @@ import {
   SupervisorSubscriptionType,
   VerificationStatus,
 } from "@/services/types/supervisor";
+import { parseEmailVerifiedFilter } from "@/services/types/emailVerifiedFilter";
 import { useSupervisorTypesData } from "./useSupervisees";
 
 export const useSupervisorLogic = () => {
@@ -37,6 +38,7 @@ export const useSupervisorLogic = () => {
         statusParam && ["PENDING", "APPROVED", "REJECTED"].includes(statusParam)
           ? (statusParam as VerificationStatus)
           : undefined;
+      const emailVerifiedParam = parseEmailVerifiedFilter(searchParams.get("emailVerified"));
       const urlPage = searchParams.get("page");
       const dateParams = Object.fromEntries(
         SUBSCRIPTION_DATE_FILTER_KEYS.map((key) => [key, searchParams.get(key) || undefined])
@@ -49,12 +51,13 @@ export const useSupervisorLogic = () => {
         verificationStatus: validStatus || undefined,
         supervisorType: typeParam || undefined,
         subscriptionType: validSubscription,
+        emailVerified: emailVerifiedParam,
         ...dateParams,
       };
 
       const isSimpleNavigation =
         (!urlPage || urlPage === "1") && !keyword && !statusParam && !typeParam &&
-        !subscriptionParam &&
+        !subscriptionParam && !emailVerifiedParam &&
         !Object.values(dateParams).some(Boolean);
 
       if (isSimpleNavigation && typeof window !== "undefined") {
@@ -82,6 +85,7 @@ export const useSupervisorLogic = () => {
               verificationStatus: parsed.verificationStatus || undefined,
               supervisorType: parsed.supervisorType || undefined,
               subscriptionType: parsed.subscriptionType || undefined,
+              emailVerified: parseEmailVerifiedFilter(parsed.emailVerified),
               ...Object.fromEntries(
                 SUBSCRIPTION_DATE_FILTER_KEYS.map((key) => [key, parsed[key] || undefined])
               ),
@@ -174,6 +178,7 @@ export const useSupervisorLogic = () => {
     if (filters.verificationStatus) params.set("verificationStatus", filters.verificationStatus);
     if (filters.supervisorType) params.set("supervisorType", filters.supervisorType);
     if (filters.subscriptionType) params.set("subscriptionType", filters.subscriptionType);
+    if (filters.emailVerified) params.set("emailVerified", filters.emailVerified);
     SUBSCRIPTION_DATE_FILTER_KEYS.forEach((key) => {
       const value = filters[key];
       if (value) params.set(key, value);
@@ -216,6 +221,7 @@ export const useSupervisorLogic = () => {
           verificationStatus: filters.verificationStatus,
           supervisorType: filters.supervisorType,
           subscriptionType: filters.subscriptionType,
+          emailVerified: filters.emailVerified,
           ...Object.fromEntries(SUBSCRIPTION_DATE_FILTER_KEYS.map((key) => [key, filters[key]])),
           sortBy: filters.sortBy,
           sortOrder: filters.sortOrder,
@@ -423,6 +429,7 @@ export const useSupervisorLogic = () => {
       verificationStatus: undefined,
       supervisorType: undefined,
       subscriptionType: undefined,
+      emailVerified: undefined,
     });
     setSearchInput("");
     if (typeof window !== "undefined") {
@@ -441,6 +448,9 @@ export const useSupervisorLogic = () => {
       }
       if (filterType === "subscriptionType") {
         filterChange("subscriptionType", undefined);
+      }
+      if (filterType === "emailVerified") {
+        filterChange("emailVerified", undefined);
       }
       if (filterType === "subscriptionDates") {
         startTransition(() => {
@@ -461,6 +471,7 @@ export const useSupervisorLogic = () => {
       filters.verificationStatus ||
       filters.supervisorType ||
       filters.subscriptionType ||
+      filters.emailVerified ||
       SUBSCRIPTION_DATE_FILTER_KEYS.some((key) => filters[key])
     );
   }, [searchInput, filters]);

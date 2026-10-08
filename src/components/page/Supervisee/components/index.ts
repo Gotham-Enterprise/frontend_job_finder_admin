@@ -1,4 +1,5 @@
 export { default as SuperviseeHeader } from "./SuperviseeHeader";
+export { default as SuperviseeFilters } from "./SuperviseeFilters";
 export { default as SuperviseeTable } from "./SuperviseeTable";
 export { default as SuperviseeRowActions } from "./SuperviseeRowActions";
 export { default as SuperviseeTablePagination } from "./SuperviseeTablePagination";
