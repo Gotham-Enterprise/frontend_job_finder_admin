@@ -101,9 +101,10 @@ export interface SubscriptionPurchaseRequest {
   stripePriceId: string;
   companyId: string;
   couponRedemptionCode?: string; // Optional
-  paymentMethodType: string;
-  paymentMethodToken: string;
-  isSetCardDefault: boolean;
+  // Payment fields are omitted for 100%-off free orders
+  paymentMethodType?: string;
+  paymentMethodToken?: string;
+  isSetCardDefault?: boolean;
 }
 
 export interface SubscriptionPurchaseResponse {
