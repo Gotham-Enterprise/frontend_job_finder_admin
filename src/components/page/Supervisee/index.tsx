@@ -8,6 +8,7 @@ import { usePreservedNavigation } from "@/hooks/usePreservedNavigation";
 import { SuperviseesProps } from "@/services/types/SuperviseeTypes";
 import {
   SuperviseeHeader,
+  SuperviseeFilters,
   SuperviseeTable,
   SuperviseeTablePagination,
   EditSuperviseeModal,
@@ -27,6 +28,8 @@ const Supervisees: React.FC<SuperviseesProps> = ({ className = "" }) => {
     filters,
     searchInput,
     setSearchInput,
+    isFilterOpen,
+    setIsFilterOpen,
     isPending,
     data,
     isLoading,
@@ -40,6 +43,9 @@ const Supervisees: React.FC<SuperviseesProps> = ({ className = "" }) => {
     filterChange,
     initPageChange,
     viewSupervisee,
+    clearAllFilters,
+    clearIndividualFilter,
+    hasActiveFilters,
     editModal,
     openEditModal,
     closeEditModal,
@@ -84,6 +90,17 @@ const Supervisees: React.FC<SuperviseesProps> = ({ className = "" }) => {
           isPending={isPending}
           searchInput={searchInput}
           setSearchInput={setSearchInput}
+          isFilterOpen={isFilterOpen}
+          setIsFilterOpen={setIsFilterOpen}
+          onClearFilters={clearAllFilters}
+          hasActiveFilters={hasActiveFilters}
+          filterDropdownContent={
+            <SuperviseeFilters
+              filters={filters}
+              onFilterChange={filterChange}
+              clearIndividualFilter={clearIndividualFilter}
+            />
+          }
         />
 
         <SuperviseeTable
@@ -98,6 +115,7 @@ const Supervisees: React.FC<SuperviseesProps> = ({ className = "" }) => {
           onResendVerification={openResendModal}
           onApproveEmailVerification={openApproveEmailModal}
           onToggleHideProfile={openHideProfileModal}
+          onRefresh={refetch}
         />
 
         <SuperviseeTablePagination

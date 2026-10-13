@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { formatDateTimeEST, formatDateTimeLocal } from "@/services/utils/dateUtils";
 import { Table, TableBody, TableCell, TableRow } from "../../../ui/table";
@@ -6,7 +6,12 @@ import StatusBadge from "../../../ui/badge/StatusBadge";
 import EmailVerifiedBadge from "../../../ui/badge/EmailVerifiedBadge";
 import Badge from "../../../ui/badge/Badge";
 import Button from "../../../ui/button/Button";
-import TableHeading from "../../../tables/tableHeader";
+import TableHeading, { TableHeaderColumn } from "../../../tables/tableHeader";
+import Checkbox from "../../../form/input/Checkbox";
+import { KeyRound, Mail, MailCheck } from "lucide-react";
+import BulkActionsBar, { BulkRowAction } from "@/components/common/BulkActionsBar";
+import { useRowSelection } from "@/hooks/useRowSelection";
+import { jobSeekerApi } from "@/services/api/jobSeeker";
 import { TimeIcon, FileIcon, DownloadIcon, PaperPlaneIcon, IdCardIcon, CheckCircleIcon } from "@/icons";
 import { JobSeekersTableProps } from "@/services/types/JobSeekersTypes";
 import Avatar from "../../../ui/avatar/Avatar";
@@ -518,6 +523,11 @@ const CertificationsPopover: React.FC<CertificationsPopoverProps> = ({
   );
 };
 
+// Bulk actions act on the user account, so rows are keyed by userId and rows without one can't be selected.
+const getJobSeekerUserId = (jobSeeker: any): string => jobSeeker.userId;
+const hasUserAccount = (jobSeeker: any) => !!jobSeeker.userId;
+const isUnverifiedJobSeeker = (jobSeeker: any) => jobSeeker.emailVerified === false;
+
 const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
   data,
   isLoading,
@@ -549,6 +559,61 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
   const [isResendingVerification, setIsResendingVerification] = useState(false);
   const [approveVerificationJobSeeker, setApproveVerificationJobSeeker] = useState<any>(null);
   const [isApprovingVerification, setIsApprovingVerification] = useState(false);
+
+  const selection = useRowSelection(data?.data, getJobSeekerUserId, hasUserAccount);
+  const { selectableIds, allSelected, toggleAll } = selection;
+
+  const unverifiedSelectedIds = selection.selectedIdsWhere(isUnverifiedJobSeeker);
+  const bulkActions: BulkRowAction[] = [
+    {
+      key: "resend-verification",
+      label: "Resend Verification",
+      icon: <Mail className="h-4 w-4" />,
+      ids: unverifiedSelectedIds,
+      skipReason: "already verified",
+      run: jobSeekerApi.bulkSendEmailVerificationReminder,
+      confirmTitle: "Resend Verification Emails",
+      confirmMessage: (target) => `Resend the email verification link to ${target}?`,
+      doneMessage: "Verification email resent to",
+    },
+    {
+      key: "approve-verification",
+      label: "Approve Verification",
+      icon: <MailCheck className="h-4 w-4" />,
+      ids: unverifiedSelectedIds,
+      skipReason: "already verified",
+      run: jobSeekerApi.bulkApproveEmailVerification,
+      confirmTitle: "Approve Email Verification",
+      confirmMessage: (target) =>
+        `Mark the emails of ${target} as verified? This bypasses the verification email and verifies their accounts immediately.`,
+      doneMessage: "Email verified for",
+      refreshAfter: true,
+      primary: true,
+    },
+    {
+      key: "reset-password",
+      label: "Reset Password",
+      icon: <KeyRound className="h-4 w-4" />,
+      ids: selection.selectedIds,
+      run: jobSeekerApi.bulkSendPasswordReset,
+      confirmTitle: "Reset Passwords",
+      confirmMessage: (target) => `Send a password reset email to ${target}?`,
+      doneMessage: "Password reset email sent to",
+    },
+  ];
+
+  // Leading checkbox column for selecting rows for bulk actions.
+  const columns = useMemo<TableHeaderColumn[]>(
+    () => [
+      {
+        key: "select",
+        className: "w-10",
+        label: selectableIds.length ? <Checkbox checked={allSelected} onChange={toggleAll} /> : null,
+      },
+      ...tableColumns,
+    ],
+    [tableColumns, selectableIds.length, allSelected, toggleAll]
+  );
   const licensesButtonRefs = useRef<{ [key: string]: React.RefObject<HTMLButtonElement | null> }>({});
   const certificationsButtonRefs = useRef<{ [key: string]: React.RefObject<HTMLButtonElement | null> }>({});
   const { addToast } = useToast();
@@ -918,313 +983,330 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
   };
 
   return (
-    <div className="overflow-x-auto">
-      <Table>
-        <TableHeading columns={tableColumns} />
-        <TableBody>
-          {isLoading ? (
-            <TableRow>
-              <TableCell className="text-center py-8 px-6" colSpan={tableColumns.length}>
-                <div className="flex items-center justify-center gap-3">
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-brand-500"></div>
-                  <p className="text-gray-500 dark:text-gray-400">Loading...</p>
-                </div>
-              </TableCell>
-            </TableRow>
-          ) : !data?.data?.length ? (
-            <TableRow>
-              <TableCell className="text-center py-12 px-6" colSpan={tableColumns.length}>
-                <div className="flex flex-col items-center justify-center space-y-3">
-                  <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
-                    <FileIcon className="w-8 h-8 text-gray-400 dark:text-gray-500" />
+    <>
+      <BulkActionsBar
+        selectedCount={selection.selectedIds.length}
+        itemNoun="job seeker"
+        actions={bulkActions}
+        onClearSelection={selection.clear}
+        onRefresh={() => onRefresh?.()}
+      />
+      <div className="overflow-x-auto">
+        <Table>
+          <TableHeading columns={columns} />
+          <TableBody>
+            {isLoading ? (
+              <TableRow>
+                <TableCell className="text-center py-8 px-6" colSpan={columns.length}>
+                  <div className="flex items-center justify-center gap-3">
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-brand-500"></div>
+                    <p className="text-gray-500 dark:text-gray-400">Loading...</p>
                   </div>
-                  <div className="text-center">
-                    <p className="text-lg font-medium text-gray-900 dark:text-white mb-1">No job seekers found</p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                      Try adjusting your search criteria or filters
-                    </p>
-                  </div>
-                </div>
-              </TableCell>
-            </TableRow>
-          ) : (
-            data.data.map((jobSeeker: any) => {
-              const stateOfLicensure = jobSeeker.licenses?.map((license: any) => license.issuingState).join(", ") || "";
-
-              return (
-                <TableRow
-                  key={jobSeeker.id}
-                  data-item-id={jobSeeker.id}
-                  data-jobseeker-id={jobSeeker.id}
-                  className="border-b text-sm border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50"
-                >
-                  <TableCell className="py-4 px-6">
-                    <div className="flex items-center gap-3">
-                      <Avatar
-                        src={jobSeeker.profilePicture?.url}
-                        alt={jobSeeker.name}
-                        name={jobSeeker.name}
-                        size="medium"
-                        className="flex-shrink-0"
-                        enablePreview
-                      />
-                      <div>
-                        <p className="font-medium text-gray-900 dark:text-white">{jobSeeker.name}</p>
-                        {jobSeeker.email && (
-                          <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{jobSeeker.email}</p>
-                        )}
-                        <Link
-                          href={`/admin/applications?name=${jobSeeker.id}`}
-                          className="text-sm text-blue-500 dark:text-blue-500 hover:text-brand-500 dark:hover:text-brand-400 cursor-pointer transition-colors duration-200"
-                        >
-                          {jobSeeker.jobApplications}{" "}
-                          {jobSeeker.jobApplications === 1 ? "application" : "applications"}
-                        </Link>
-                      </div>
+                </TableCell>
+              </TableRow>
+            ) : !data?.data?.length ? (
+              <TableRow>
+                <TableCell className="text-center py-12 px-6" colSpan={columns.length}>
+                  <div className="flex flex-col items-center justify-center space-y-3">
+                    <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
+                      <FileIcon className="w-8 h-8 text-gray-400 dark:text-gray-500" />
                     </div>
-                  </TableCell>
-                  <TableCell className="py-4 px-6">
-                    <p className="text-sm text-gray-900 dark:text-white">{jobSeeker.occupation || "Not specified"}</p>
-                  </TableCell>
-                  <TableCell className="py-4 px-6">
-                    <SpecialtyDisplay
-                      specialties={(jobSeeker.specialties ?? []).map(
-                        (s: { id: number; name: string }) => s.name
+                    <div className="text-center">
+                      <p className="text-lg font-medium text-gray-900 dark:text-white mb-1">No job seekers found</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        Try adjusting your search criteria or filters
+                      </p>
+                    </div>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : (
+              data.data.map((jobSeeker: any) => {
+                const stateOfLicensure = jobSeeker.licenses?.map((license: any) => license.issuingState).join(", ") || "";
+
+                return (
+                  <TableRow
+                    key={jobSeeker.id}
+                    data-item-id={jobSeeker.id}
+                    data-jobseeker-id={jobSeeker.id}
+                    className="border-b text-sm border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                  >
+                    <TableCell className="py-4 px-6">
+                      {hasUserAccount(jobSeeker) && (
+                        <Checkbox
+                          checked={selection.isSelected(jobSeeker.userId)}
+                          onChange={(checked) => selection.toggle(jobSeeker.userId, checked)}
+                        />
                       )}
-                      jobSeekerId={jobSeeker.id}
-                      expandedRows={expandedRows}
-                      onToggleExpanded={toggleExpanded}
-                    />
-                  </TableCell>
-                  <TableCell className="py-4 px-6">
-                    <p className="text-sm text-gray-900 dark:text-white">
-                      {jobSeeker.city && jobSeeker.state
-                        ? `${jobSeeker.city}, ${jobSeeker.state}`
-                        : jobSeeker.city || jobSeeker.state || "Not specified"}
-                    </p>
-                  </TableCell>
-                  <TableCell className="py-4 px-6 min-w-[170px] max-w-[170px]">
-                    {stateOfLicensure || (
-                      <div className="flex items-center gap-2 text-gray-400 dark:text-gray-500 text-sm italic">
-                        <IdCardIcon className="opacity-50" />
-                        <span>N/A</span>
-                      </div>
-                    )}
-                  </TableCell>
-                  <TableCell className="py-4 px-6">
-                    <div className="text-sm text-gray-900 dark:text-white">
-                      {jobSeeker.licenses && jobSeeker.licenses.length > 0 ? (
-                        <div className="space-y-2">
-                          <button
-                            ref={getLicensesButtonRef(jobSeeker.id)}
-                            onClick={() => openLicensesPopover(jobSeeker.id)}
-                            disabled={loadingLicensesId === jobSeeker.id}
-                            className="inline-flex items-center justify-center font-medium gap-2 transition bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 disabled:cursor-not-allowed text-white px-3 py-1.5 text-xs font-medium rounded-md shadow-sm hover:shadow-md transition-all duration-200 flex items-center gap-1.5 h-[45px] w-[100px] rounded-sm px-3 text-xs bg-primary text-primary-foreground text-white shadow hover:bg-primary/90 disabled:bg-primary/50 [&>svg]:text-primary-foreground"
+                    </TableCell>
+                    <TableCell className="py-4 px-6">
+                      <div className="flex items-center gap-3">
+                        <Avatar
+                          src={jobSeeker.profilePicture?.url}
+                          alt={jobSeeker.name}
+                          name={jobSeeker.name}
+                          size="medium"
+                          className="flex-shrink-0"
+                          enablePreview
+                        />
+                        <div>
+                          <p className="font-medium text-gray-900 dark:text-white">{jobSeeker.name}</p>
+                          {jobSeeker.email && (
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{jobSeeker.email}</p>
+                          )}
+                          <Link
+                            href={`/admin/applications?name=${jobSeeker.id}`}
+                            className="text-sm text-blue-500 dark:text-blue-500 hover:text-brand-500 dark:hover:text-brand-400 cursor-pointer transition-colors duration-200"
                           >
-                            {loadingLicensesId === jobSeeker.id ? (
-                              <>
-                                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
-                              </>
-                            ) : (
-                              <>Licenses</>
-                            )}
-                          </button>
+                            {jobSeeker.jobApplications}{" "}
+                            {jobSeeker.jobApplications === 1 ? "application" : "applications"}
+                          </Link>
                         </div>
-                      ) : (
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-4 px-6">
+                      <p className="text-sm text-gray-900 dark:text-white">{jobSeeker.occupation || "Not specified"}</p>
+                    </TableCell>
+                    <TableCell className="py-4 px-6">
+                      <SpecialtyDisplay
+                        specialties={(jobSeeker.specialties ?? []).map(
+                          (s: { id: number; name: string }) => s.name
+                        )}
+                        jobSeekerId={jobSeeker.id}
+                        expandedRows={expandedRows}
+                        onToggleExpanded={toggleExpanded}
+                      />
+                    </TableCell>
+                    <TableCell className="py-4 px-6">
+                      <p className="text-sm text-gray-900 dark:text-white">
+                        {jobSeeker.city && jobSeeker.state
+                          ? `${jobSeeker.city}, ${jobSeeker.state}`
+                          : jobSeeker.city || jobSeeker.state || "Not specified"}
+                      </p>
+                    </TableCell>
+                    <TableCell className="py-4 px-6 min-w-[170px] max-w-[170px]">
+                      {stateOfLicensure || (
                         <div className="flex items-center gap-2 text-gray-400 dark:text-gray-500 text-sm italic">
                           <IdCardIcon className="opacity-50" />
                           <span>N/A</span>
                         </div>
                       )}
-                    </div>
-                  </TableCell>
-                  <TableCell className="py-4 px-6">
-                    <div className="text-sm text-gray-900 dark:text-white">
-                      {jobSeeker.certifications && jobSeeker.certifications.length > 0 ? (
-                        <div className="space-y-2">
-                          <button
-                            ref={getCertificationsButtonRef(jobSeeker.id)}
-                            onClick={() => openCertificationsPopover(jobSeeker.id)}
-                            disabled={loadingCertificationsId === jobSeeker.id}
-                            className="inline-flex items-center justify-center font-medium gap-2 transition bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 disabled:cursor-not-allowed text-white px-3 py-1.5 text-xs font-medium rounded-md shadow-sm hover:shadow-md transition-all duration-200 flex items-center gap-1.5 h-[45px] w-[100px] rounded-sm px-3 text-xs bg-primary text-primary-foreground text-white shadow hover:bg-primary/90 disabled:bg-primary/50 [&>svg]:text-primary-foreground"
-                          >
-                            {loadingCertificationsId === jobSeeker.id ? (
-                              <>
-                                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
-                              </>
-                            ) : (
-                              <>Certifications</>
-                            )}
-                          </button>
-                        </div>
+                    </TableCell>
+                    <TableCell className="py-4 px-6">
+                      <div className="text-sm text-gray-900 dark:text-white">
+                        {jobSeeker.licenses && jobSeeker.licenses.length > 0 ? (
+                          <div className="space-y-2">
+                            <button
+                              ref={getLicensesButtonRef(jobSeeker.id)}
+                              onClick={() => openLicensesPopover(jobSeeker.id)}
+                              disabled={loadingLicensesId === jobSeeker.id}
+                              className="inline-flex items-center justify-center font-medium gap-2 transition bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 disabled:cursor-not-allowed text-white px-3 py-1.5 text-xs font-medium rounded-md shadow-sm hover:shadow-md transition-all duration-200 flex items-center gap-1.5 h-[45px] w-[100px] rounded-sm px-3 text-xs bg-primary text-primary-foreground text-white shadow hover:bg-primary/90 disabled:bg-primary/50 [&>svg]:text-primary-foreground"
+                            >
+                              {loadingLicensesId === jobSeeker.id ? (
+                                <>
+                                  <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
+                                </>
+                              ) : (
+                                <>Licenses</>
+                              )}
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2 text-gray-400 dark:text-gray-500 text-sm italic">
+                            <IdCardIcon className="opacity-50" />
+                            <span>N/A</span>
+                          </div>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-4 px-6">
+                      <div className="text-sm text-gray-900 dark:text-white">
+                        {jobSeeker.certifications && jobSeeker.certifications.length > 0 ? (
+                          <div className="space-y-2">
+                            <button
+                              ref={getCertificationsButtonRef(jobSeeker.id)}
+                              onClick={() => openCertificationsPopover(jobSeeker.id)}
+                              disabled={loadingCertificationsId === jobSeeker.id}
+                              className="inline-flex items-center justify-center font-medium gap-2 transition bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 disabled:cursor-not-allowed text-white px-3 py-1.5 text-xs font-medium rounded-md shadow-sm hover:shadow-md transition-all duration-200 flex items-center gap-1.5 h-[45px] w-[100px] rounded-sm px-3 text-xs bg-primary text-primary-foreground text-white shadow hover:bg-primary/90 disabled:bg-primary/50 [&>svg]:text-primary-foreground"
+                            >
+                              {loadingCertificationsId === jobSeeker.id ? (
+                                <>
+                                  <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
+                                </>
+                              ) : (
+                                <>Certifications</>
+                              )}
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2 text-gray-400 dark:text-gray-500 text-sm italic">
+                            <CheckCircleIcon className="opacity-50" />
+                            <span>N/A</span>
+                          </div>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-4 px-6 text-left">{renderResumeButton(jobSeeker)}</TableCell>
+                    <TableCell className="py-4 px-6 whitespace-nowrap">
+                      {jobSeeker.dateJoined ? (
+                        (() => {
+                          const dateJoined = formatDateTimeLocal(jobSeeker.dateJoined);
+                          if (typeof dateJoined === "string") {
+                            return <p className="text-sm text-gray-900 dark:text-white">{dateJoined}</p>;
+                          }
+                          return (
+                            <div className="text-sm text-gray-900 dark:text-white">
+                              <div>{dateJoined.date}</div>
+                              <div className="flex items-center mt-1">
+                                <TimeIcon className="mr-1" />
+                                <span>{dateJoined.time}</span>
+                              </div>
+                            </div>
+                          );
+                        })()
                       ) : (
-                        <div className="flex items-center gap-2 text-gray-400 dark:text-gray-500 text-sm italic">
-                          <CheckCircleIcon className="opacity-50" />
-                          <span>N/A</span>
-                        </div>
+                        <span className="text-gray-400 dark:text-gray-500 italic">Not specified</span>
                       )}
-                    </div>
-                  </TableCell>
-                  <TableCell className="py-4 px-6 text-left">{renderResumeButton(jobSeeker)}</TableCell>
-                  <TableCell className="py-4 px-6 whitespace-nowrap">
-                    {jobSeeker.dateJoined ? (
-                      (() => {
-                        const dateJoined = formatDateTimeLocal(jobSeeker.dateJoined);
-                        if (typeof dateJoined === "string") {
-                          return <p className="text-sm text-gray-900 dark:text-white">{dateJoined}</p>;
+                    </TableCell>
+                    <TableCell className="py-4 px-6 whitespace-nowrap">
+                      {(() => {
+                        const source = jobSeeker.source || "Direct";
+                        if (source === "Direct") {
+                          return (
+                            <span className="text-sm text-gray-400 dark:text-gray-500">
+                              Direct
+                            </span>
+                          );
                         }
                         return (
-                          <div className="text-sm text-gray-900 dark:text-white">
-                            <div>{dateJoined.date}</div>
-                            <div className="flex items-center mt-1">
-                              <TimeIcon className="mr-1" />
-                              <span>{dateJoined.time}</span>
+                          <Badge variant="light" color="info" size="sm">
+                            {source}
+                          </Badge>
+                        );
+                      })()}
+                    </TableCell>
+                    <TableCell className="py-4 px-6 whitespace-nowrap">
+                      {jobSeeker.lastActivity ? (
+                        (() => {
+                          const lastActivity = formatDateTimeLocal(jobSeeker.lastActivity);
+                          if (typeof lastActivity === "string") {
+                            return <p className="text-sm text-gray-900 dark:text-white">{lastActivity}</p>;
+                          }
+                          return (
+                            <div className="text-sm text-gray-900 dark:text-white">
+                              <div>{lastActivity.date}</div>
+                              <div className="flex items-center mt-1">
+                                <TimeIcon className="mr-1" />
+                                <span>{lastActivity.time}</span>
+                              </div>
                             </div>
-                          </div>
-                        );
-                      })()
-                    ) : (
-                      <span className="text-gray-400 dark:text-gray-500 italic">Not specified</span>
-                    )}
-                  </TableCell>
-                  <TableCell className="py-4 px-6 whitespace-nowrap">
-                    {(() => {
-                      const source = jobSeeker.source || "Direct";
-                      if (source === "Direct") {
-                        return (
-                          <span className="text-sm text-gray-400 dark:text-gray-500">
-                            Direct
-                          </span>
-                        );
-                      }
-                      return (
-                        <Badge variant="light" color="info" size="sm">
-                          {source}
-                        </Badge>
-                      );
-                    })()}
-                  </TableCell>
-                  <TableCell className="py-4 px-6 whitespace-nowrap">
-                    {jobSeeker.lastActivity ? (
-                      (() => {
-                        const lastActivity = formatDateTimeLocal(jobSeeker.lastActivity);
-                        if (typeof lastActivity === "string") {
-                          return <p className="text-sm text-gray-900 dark:text-white">{lastActivity}</p>;
-                        }
-                        return (
-                          <div className="text-sm text-gray-900 dark:text-white">
-                            <div>{lastActivity.date}</div>
-                            <div className="flex items-center mt-1">
-                              <TimeIcon className="mr-1" />
-                              <span>{lastActivity.time}</span>
-                            </div>
-                          </div>
-                        );
-                      })()
-                    ) : (
-                      <span className="text-gray-400 dark:text-gray-500 italic">No activity</span>
-                    )}
-                  </TableCell>
-                  <TableCell className="py-4 px-6">
-                    <StatusBadge tone={getStatusVariant(jobSeeker.status) === "solid" ? "dark" : "light"}>
-                      {jobSeeker.status}
-                    </StatusBadge>
-                  </TableCell>
-                  <TableCell className="py-4 px-6">
-                    <EmailVerifiedBadge verified={!!jobSeeker.emailVerified} />
-                  </TableCell>
-                  <TableCell className="py-4 px-6 text-right">
-                    <JobSeekerRowActions
-                      onView={() => onViewJobSeeker(jobSeeker.id)}
-                      onEdit={() => openEditModal(jobSeeker.id)}
-                      onResetPassword={() => handleResetPassword(jobSeeker)}
-                      onResendVerification={() => openResendVerificationModal(jobSeeker)}
-                      showResendVerification={jobSeeker.emailVerified === false}
-                      onApproveEmailVerification={() => openApproveVerificationModal(jobSeeker)}
-                      showApproveEmailVerification={jobSeeker.emailVerified === false}
-                    />
-                  </TableCell>
-                </TableRow>
-              );
-            })
-          )}
-        </TableBody>
-      </Table>
+                          );
+                        })()
+                      ) : (
+                        <span className="text-gray-400 dark:text-gray-500 italic">No activity</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="py-4 px-6">
+                      <StatusBadge tone={getStatusVariant(jobSeeker.status) === "solid" ? "dark" : "light"}>
+                        {jobSeeker.status}
+                      </StatusBadge>
+                    </TableCell>
+                    <TableCell className="py-4 px-6">
+                      <EmailVerifiedBadge verified={!!jobSeeker.emailVerified} />
+                    </TableCell>
+                    <TableCell className="py-4 px-6 text-right">
+                      <JobSeekerRowActions
+                        onView={() => onViewJobSeeker(jobSeeker.id)}
+                        onEdit={() => openEditModal(jobSeeker.id)}
+                        onResetPassword={() => handleResetPassword(jobSeeker)}
+                        onResendVerification={() => openResendVerificationModal(jobSeeker)}
+                        showResendVerification={jobSeeker.emailVerified === false}
+                        onApproveEmailVerification={() => openApproveVerificationModal(jobSeeker)}
+                        showApproveEmailVerification={jobSeeker.emailVerified === false}
+                      />
+                    </TableCell>
+                  </TableRow>
+                );
+              })
+            )}
+          </TableBody>
+        </Table>
 
-      {selectedJobSeekerId && (
-        <EditJobSeekerModal
-          isOpen={editModalOpen}
-          onClose={closeEditModal}
-          jobSeekerId={selectedJobSeekerId}
-          onUpdate={() => refreshData(true)}
+        {selectedJobSeekerId && (
+          <EditJobSeekerModal
+            isOpen={editModalOpen}
+            onClose={closeEditModal}
+            jobSeekerId={selectedJobSeekerId}
+            onUpdate={() => refreshData(true)}
+          />
+        )}
+
+        {selectedJobSeekerForShare && (
+          <ShareResumeModal
+            isOpen={shareModalOpen}
+            onClose={closeShareModal}
+            jobSeekerName={selectedJobSeekerForShare.name}
+            jobSeekerId={selectedJobSeekerForShare.id}
+            resumeId={getResumeData(selectedJobSeekerForShare)?.id}
+            resumeObjectKey={getResumeData(selectedJobSeekerForShare)?.objectKey}
+            resumeFileName={getResumeData(selectedJobSeekerForShare)?.fileName}
+          />
+        )}
+
+        {/* Licenses Popover */}
+        {licensesPopover.isOpen && licensesPopover.jobSeekerId && (
+          <LicensesPopover
+            licenses={data?.data?.find((js: any) => js.id === licensesPopover.jobSeekerId)?.licenses || []}
+            isOpen={licensesPopover.isOpen}
+            onClose={closeLicensesPopover}
+            triggerRef={getLicensesButtonRef(licensesPopover.jobSeekerId)}
+          />
+        )}
+
+        {/* Certifications Popover */}
+        {certificationsPopover.isOpen && certificationsPopover.jobSeekerId && (
+          <CertificationsPopover
+            certifications={
+              data?.data?.find((js: any) => js.id === certificationsPopover.jobSeekerId)?.certifications || []
+            }
+            isOpen={certificationsPopover.isOpen}
+            onClose={closeCertificationsPopover}
+            triggerRef={getCertificationsButtonRef(certificationsPopover.jobSeekerId)}
+          />
+        )}
+
+        {/* Confirmation Dialog */}
+        <ConfirmationDialog
+          isOpen={confirmation.isOpen}
+          onClose={confirmation.onClose}
+          onConfirm={confirmation.onConfirm}
+          onCancel={confirmation.onCancel}
+          title={confirmation.config?.title || ""}
+          message={confirmation.config?.message || ""}
+          confirmText={confirmation.config?.confirmText}
+          cancelText={confirmation.config?.cancelText}
+          isLoading={resetPasswordLoadingId !== null}
         />
-      )}
 
-      {selectedJobSeekerForShare && (
-        <ShareResumeModal
-          isOpen={shareModalOpen}
-          onClose={closeShareModal}
-          jobSeekerName={selectedJobSeekerForShare.name}
-          jobSeekerId={selectedJobSeekerForShare.id}
-          resumeId={getResumeData(selectedJobSeekerForShare)?.id}
-          resumeObjectKey={getResumeData(selectedJobSeekerForShare)?.objectKey}
-          resumeFileName={getResumeData(selectedJobSeekerForShare)?.fileName}
+        {/* Resend Verification Email Modal */}
+        <ResendVerificationModal
+          isOpen={resendVerificationJobSeeker !== null}
+          fullName={resendVerificationJobSeeker?.name || ""}
+          onConfirm={confirmResendVerification}
+          onCancel={closeResendVerificationModal}
+          isLoading={isResendingVerification}
         />
-      )}
 
-      {/* Licenses Popover */}
-      {licensesPopover.isOpen && licensesPopover.jobSeekerId && (
-        <LicensesPopover
-          licenses={data?.data?.find((js: any) => js.id === licensesPopover.jobSeekerId)?.licenses || []}
-          isOpen={licensesPopover.isOpen}
-          onClose={closeLicensesPopover}
-          triggerRef={getLicensesButtonRef(licensesPopover.jobSeekerId)}
+        {/* Approve Email Verification Modal */}
+        <ApproveEmailVerificationModal
+          isOpen={approveVerificationJobSeeker !== null}
+          fullName={approveVerificationJobSeeker?.name || ""}
+          onConfirm={confirmApproveVerification}
+          onCancel={closeApproveVerificationModal}
+          isLoading={isApprovingVerification}
         />
-      )}
-
-      {/* Certifications Popover */}
-      {certificationsPopover.isOpen && certificationsPopover.jobSeekerId && (
-        <CertificationsPopover
-          certifications={
-            data?.data?.find((js: any) => js.id === certificationsPopover.jobSeekerId)?.certifications || []
-          }
-          isOpen={certificationsPopover.isOpen}
-          onClose={closeCertificationsPopover}
-          triggerRef={getCertificationsButtonRef(certificationsPopover.jobSeekerId)}
-        />
-      )}
-
-      {/* Confirmation Dialog */}
-      <ConfirmationDialog
-        isOpen={confirmation.isOpen}
-        onClose={confirmation.onClose}
-        onConfirm={confirmation.onConfirm}
-        onCancel={confirmation.onCancel}
-        title={confirmation.config?.title || ""}
-        message={confirmation.config?.message || ""}
-        confirmText={confirmation.config?.confirmText}
-        cancelText={confirmation.config?.cancelText}
-        isLoading={resetPasswordLoadingId !== null}
-      />
-
-      {/* Resend Verification Email Modal */}
-      <ResendVerificationModal
-        isOpen={resendVerificationJobSeeker !== null}
-        fullName={resendVerificationJobSeeker?.name || ""}
-        onConfirm={confirmResendVerification}
-        onCancel={closeResendVerificationModal}
-        isLoading={isResendingVerification}
-      />
-
-      {/* Approve Email Verification Modal */}
-      <ApproveEmailVerificationModal
-        isOpen={approveVerificationJobSeeker !== null}
-        fullName={approveVerificationJobSeeker?.name || ""}
-        onConfirm={confirmApproveVerification}
-        onCancel={closeApproveVerificationModal}
-        isLoading={isApprovingVerification}
-      />
-    </div>
+      </div>
+    </>
   );
 };
 

@@ -26,6 +26,7 @@ export const supervisorApi = {
       if (filters.verificationStatus) queryParams.append("verificationStatus", filters.verificationStatus);
       if (filters.supervisorType) queryParams.append("supervisorType", filters.supervisorType);
       if (filters.subscriptionType) queryParams.append("subscriptionType", filters.subscriptionType);
+      if (filters.emailVerified) queryParams.append("emailVerified", filters.emailVerified);
       SUBSCRIPTION_DATE_FILTER_KEYS.forEach((key) => {
         const value = filters[key];
         if (value) queryParams.append(key, value);

@@ -1,3 +1,5 @@
+import { EmailVerifiedFilter } from "./emailVerifiedFilter";
+
 export type VerificationStatus = "PENDING" | "APPROVED" | "REJECTED";
 
 /** PAID = active paid subscription; FREE = free plan or no active subscription. */
@@ -100,6 +102,7 @@ export interface SupervisorFilters {
   subscriptionStartTo?: string;
   subscriptionEndFrom?: string;
   subscriptionEndTo?: string;
+  emailVerified?: EmailVerifiedFilter;
   sortBy?: SupervisorSortBy;
   sortOrder?: "asc" | "desc";
 }

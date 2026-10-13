@@ -19,6 +19,14 @@ import ConfirmationDialog from '@/components/ui/ConfirmationDialog';
 import { useConfirmation } from '@/hooks/useConfirmation';
 import { formatCouponDurationCheckout } from '@/services/utils/couponDuration';
 
+// Helper: returns true when the applied coupon brings the order total to $0
+function isCouponFullyCovered(originalPriceInCents: number, coupon: any): boolean {
+  if (!coupon) return false;
+  if (coupon.percentOff === 100) return true;
+  if (coupon.amountOffInCents && coupon.amountOffInCents >= originalPriceInCents) return true;
+  return false;
+}
+
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY!);
 
 const CARD_ELEMENT_OPTIONS = {
@@ -51,6 +59,16 @@ function PaymentForm() {
   const { addToast } = useToast();
 
   const { subscriptionData, clearSubscriptionData, isSubscriptionDataReady } = useSubscriptionContext();
+
+  // Derived: is this a 100%-off free order?
+  const isFreeOrder =
+    !!subscriptionData?.appliedCoupon &&
+    isCouponFullyCovered(subscriptionData.planDetails.price, subscriptionData.appliedCoupon);
+
+  // Should we warn the employer that they'll need a payment method at renewal?
+  const showRenewalWarning =
+    isFreeOrder &&
+    subscriptionData?.appliedCoupon?.duration !== 'forever';
 
   useEffect(() => {
 
@@ -95,6 +113,52 @@ function PaymentForm() {
 
   const handleEditOrder = () => {
     router.push(`/pricing?employerId=${employerId}`);
+  };
+
+  // Called when the order is 100% off — no card token needed
+  const handleFreeActivation = async () => {
+    if (!subscriptionData) return;
+
+    setIsProcessing(true);
+    setError(null);
+
+    try {
+      const freePayload = {
+        subscriptionPlanId: subscriptionData.subscriptionPlanId,
+        stripePriceId: subscriptionData.stripePriceId,
+        companyId: subscriptionData.companyId,
+        ...(subscriptionData.couponRedemptionCode && {
+          couponRedemptionCode: subscriptionData.couponRedemptionCode,
+        }),
+      };
+
+      const response = await subscriptionApi.purchaseSubscription(freePayload);
+
+      if (!response.success) {
+        throw new Error(response.message || 'Activation failed');
+      }
+
+      addToast({
+        variant: 'success',
+        title: 'Subscription Activated!',
+        message: 'The subscription has been activated for free.',
+        duration: 6000,
+      });
+
+      clearSubscriptionData();
+      router.push(`/admin/subscriptions?employerId=${employerId}&success=true`);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Activation failed. Please try again.';
+      setError(errorMessage);
+      addToast({
+        variant: 'error',
+        title: 'Activation Failed',
+        message: errorMessage,
+        duration: 6000,
+      });
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const handlePayment = async (event: React.FormEvent) => {
@@ -283,98 +347,172 @@ function PaymentForm() {
           <div className="lg:col-span-2">
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">
-                Payment Method
+                {isFreeOrder ? 'Subscription Activation' : 'Payment Method'}
               </h2>
 
-              {/* Payment Method Selection */}
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                  Payment method
-                </label>
-                <div className="relative">
-                  <div className="bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg p-4 flex items-center">
-                    <svg className="w-6 h-6 text-gray-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                    </svg>
-                    <span className="text-gray-600 dark:text-gray-300">Credit or Debit Card</span>
-                    <span className="ml-auto text-xs text-gray-400 bg-gray-200 dark:bg-gray-600 px-2 py-1 rounded">
-                      Selected
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Card Details Form */}
-              <form onSubmit={handlePayment}>
+              {isFreeOrder ? (
+                /* ── FREE ORDER PATH ────────────────────────────────────────── */
                 <div className="space-y-4">
-                  {/* Card Number */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Card number
-                    </label>
-                    <div className="border border-gray-300 dark:border-gray-600 rounded-lg p-3 bg-white dark:bg-gray-700">
-                      <CardNumberElement options={CARD_ELEMENT_OPTIONS} />
+                  {/* "No payment required" banner */}
+                  <div className="flex items-start gap-3 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg">
+                    <svg className="w-6 h-6 text-green-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                    <div>
+                      <p className="font-semibold text-green-800 dark:text-green-300">
+                        No payment required
+                      </p>
+                      <p className="text-sm text-green-700 dark:text-green-400 mt-0.5">
+                        The applied coupon covers 100% of the subscription cost. No credit card is needed to activate.
+                      </p>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    {/* Expiry Date */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        MM/YY
-                      </label>
-                      <div className="border border-gray-300 dark:border-gray-600 rounded-lg p-3 bg-white dark:bg-gray-700">
-                        <CardExpiryElement options={CARD_ELEMENT_OPTIONS} />
+                  {/* Renewal warning for once / repeating coupons */}
+                  {showRenewalWarning && (
+                    <div className="flex items-start gap-3 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg">
+                      <svg className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
+                      <div>
+                        <p className="font-semibold text-amber-800 dark:text-amber-300">
+                          Payment method required at renewal
+                        </p>
+                        <p className="text-sm text-amber-700 dark:text-amber-400 mt-0.5">
+                          This coupon applies for a limited period. The employer will need to add a payment method before the next billing cycle to keep the subscription active.
+                        </p>
                       </div>
                     </div>
-
-                    {/* CVC */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        CVC
-                      </label>
-                      <div className="border border-gray-300 dark:border-gray-600 rounded-lg p-3 bg-white dark:bg-gray-700">
-                        <CardCvcElement options={CARD_ELEMENT_OPTIONS} />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-
-                {error && (
-                  <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-                    <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
-                  </div>
-                )}
-
-
-                <button
-                  type="submit"
-                  disabled={!stripe || isProcessing}
-                  className="w-full mt-6 py-3 px-4 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-semibold rounded-lg transition-colors duration-200 flex items-center justify-center"
-                >
-                  {isProcessing ? (
-                    <>
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                      Processing...
-                    </>
-                  ) : (
-                    `Pay ${formatPrice(calculateTotal())}`
                   )}
-                </button>
 
-                <button
-                  type="button"
-                  onClick={handleSendQuote}
-                  disabled={isSendingQuote || isProcessing}
-                  className="w-full mt-3 py-3 px-4 border border-blue-600 text-blue-700 hover:bg-blue-50 disabled:border-gray-300 disabled:text-gray-400 dark:text-blue-300 dark:hover:bg-blue-900/20 dark:disabled:text-gray-500 font-semibold rounded-lg transition-colors duration-200"
-                >
-                  {isSendingQuote ? 'Sending quote...' : 'Send quote'}
-                </button>
-                <p className="mt-2 text-sm text-gray-500 dark:text-gray-400 text-center">
-                  Email the employer a link to complete this upgrade.
-                </p>
-              </form>
+                  {error && (
+                    <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                      <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+                    </div>
+                  )}
+
+                  {/* Activate for Free button */}
+                  <button
+                    type="button"
+                    onClick={handleFreeActivation}
+                    disabled={isProcessing}
+                    className="w-full mt-2 py-3 px-4 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-semibold rounded-lg transition-colors duration-200 flex items-center justify-center"
+                  >
+                    {isProcessing ? (
+                      <>
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                        Activating...
+                      </>
+                    ) : (
+                      'Activate for Free'
+                    )}
+                  </button>
+
+                  {/* Send quote still available */}
+                  <button
+                    type="button"
+                    onClick={handleSendQuote}
+                    disabled={isSendingQuote || isProcessing}
+                    className="w-full py-3 px-4 border border-blue-600 text-blue-700 hover:bg-blue-50 disabled:border-gray-300 disabled:text-gray-400 dark:text-blue-300 dark:hover:bg-blue-900/20 dark:disabled:text-gray-500 font-semibold rounded-lg transition-colors duration-200"
+                  >
+                    {isSendingQuote ? 'Sending quote...' : 'Send quote'}
+                  </button>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
+                    Email the employer a link to complete this upgrade.
+                  </p>
+                </div>
+              ) : (
+                /* ── PAID ORDER PATH (existing card form) ───────────────────── */
+                <>
+                  {/* Payment Method Selection */}
+                  <div className="mb-6">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                      Payment method
+                    </label>
+                    <div className="relative">
+                      <div className="bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg p-4 flex items-center">
+                        <svg className="w-6 h-6 text-gray-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                        </svg>
+                        <span className="text-gray-600 dark:text-gray-300">Credit or Debit Card</span>
+                        <span className="ml-auto text-xs text-gray-400 bg-gray-200 dark:bg-gray-600 px-2 py-1 rounded">
+                          Selected
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Card Details Form */}
+                  <form onSubmit={handlePayment}>
+                    <div className="space-y-4">
+                      {/* Card Number */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                          Card number
+                        </label>
+                        <div className="border border-gray-300 dark:border-gray-600 rounded-lg p-3 bg-white dark:bg-gray-700">
+                          <CardNumberElement options={CARD_ELEMENT_OPTIONS} />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        {/* Expiry Date */}
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            MM/YY
+                          </label>
+                          <div className="border border-gray-300 dark:border-gray-600 rounded-lg p-3 bg-white dark:bg-gray-700">
+                            <CardExpiryElement options={CARD_ELEMENT_OPTIONS} />
+                          </div>
+                        </div>
+
+                        {/* CVC */}
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            CVC
+                          </label>
+                          <div className="border border-gray-300 dark:border-gray-600 rounded-lg p-3 bg-white dark:bg-gray-700">
+                            <CardCvcElement options={CARD_ELEMENT_OPTIONS} />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {error && (
+                      <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                        <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+                      </div>
+                    )}
+
+                    <button
+                      type="submit"
+                      disabled={!stripe || isProcessing}
+                      className="w-full mt-6 py-3 px-4 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-semibold rounded-lg transition-colors duration-200 flex items-center justify-center"
+                    >
+                      {isProcessing ? (
+                        <>
+                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                          Processing...
+                        </>
+                      ) : (
+                        `Pay ${formatPrice(calculateTotal())}`
+                      )}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleSendQuote}
+                      disabled={isSendingQuote || isProcessing}
+                      className="w-full mt-3 py-3 px-4 border border-blue-600 text-blue-700 hover:bg-blue-50 disabled:border-gray-300 disabled:text-gray-400 dark:text-blue-300 dark:hover:bg-blue-900/20 dark:disabled:text-gray-500 font-semibold rounded-lg transition-colors duration-200"
+                    >
+                      {isSendingQuote ? 'Sending quote...' : 'Send quote'}
+                    </button>
+                    <p className="mt-2 text-sm text-gray-500 dark:text-gray-400 text-center">
+                      Email the employer a link to complete this upgrade.
+                    </p>
+                  </form>
+                </>
+              )}
             </div>
           </div>
 

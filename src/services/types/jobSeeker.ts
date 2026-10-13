@@ -1,3 +1,5 @@
+import { EmailVerifiedFilter } from "./emailVerifiedFilter";
+
 /** Payload for PUT /api/admin/jobseekers/:id (matches admin validator) */
 export interface JobSeekerLicensePayload {
   name: string;
@@ -64,6 +66,7 @@ export interface JobSeekerFilters {
   licenseIssuingState?: string;
   registrationStartDate?: string;
   registrationEndDate?: string;
+  emailVerified?: EmailVerifiedFilter;
 }
 
 export interface JobSeekersResponse {

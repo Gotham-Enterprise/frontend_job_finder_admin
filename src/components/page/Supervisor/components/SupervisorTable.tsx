@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { formatDate, formatDateTimeLocal } from "@/services/utils/dateUtils";
 import { TimeIcon } from "@/icons";
 import {
@@ -8,7 +8,12 @@ import {
 import { formatUSPhoneNationalDisplay } from "@/services/utils/phoneNumberUtils";
 import { Table, TableBody, TableCell, TableRow } from "../../../ui/table";
 import Avatar from "../../../ui/avatar/Avatar";
-import TableHeading from "../../../tables/tableHeader";
+import TableHeading, { TableHeaderColumn } from "../../../tables/tableHeader";
+import Checkbox from "../../../form/input/Checkbox";
+import BulkActionsBar from "@/components/common/BulkActionsBar";
+import { supervisionUserBulkActions } from "@/components/common/supervisionUserBulkActions";
+import { useRowSelection } from "@/hooks/useRowSelection";
+import { Supervisor } from "@/services/types/supervisor";
 import EmailVerifiedBadge from "../../../ui/badge/EmailVerifiedBadge";
 import VisibilityBadge from "../../../ui/badge/VisibilityBadge";
 import SupervisorStatusBadge from "./SupervisorStatusBadge";
@@ -44,6 +49,8 @@ function renderRoleSubtext(values: Array<string | null | undefined>) {
   );
 }
 
+const getSupervisorId = (supervisor: Supervisor) => supervisor.id;
+
 const SupervisorTable: React.FC<SupervisorTableProps> = ({
   data,
   isLoading,
@@ -58,198 +65,230 @@ const SupervisorTable: React.FC<SupervisorTableProps> = ({
   onResendVerification,
   onApproveEmailVerification,
   onToggleHideProfile,
+  onRefresh,
 }) => {
+  const selection = useRowSelection(data?.data, getSupervisorId);
+  const { selectableIds, allSelected, toggleAll } = selection;
+
+  // Leading checkbox column for selecting rows for bulk actions.
+  const columns = useMemo<TableHeaderColumn[]>(
+    () => [
+      {
+        key: "select",
+        className: "w-10",
+        label: selectableIds.length ? <Checkbox checked={allSelected} onChange={toggleAll} /> : null,
+      },
+      ...tableColumns,
+    ],
+    [tableColumns, selectableIds.length, allSelected, toggleAll]
+  );
+
   return (
-    <div className="overflow-x-auto">
-      <Table className="min-w-full">
-        <TableHeading
-          columns={tableColumns}
-          sortBy={sortBy}
-          sortOrder={sortOrder}
-          onSort={onSort}
-        />
-        <TableBody>
-          {isLoading ? (
-            <TableRow>
-              <TableCell
-                colSpan={tableColumns.length}
-                className="py-12 text-center text-sm text-gray-500 dark:text-gray-400"
-              >
-                <div className="flex items-center justify-center gap-2">
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-brand-500" />
-                  Loading supervisors...
-                </div>
-              </TableCell>
-            </TableRow>
-          ) : !data?.data?.length ? (
-            <TableRow>
-              <TableCell
-                colSpan={tableColumns.length}
-                className="py-12 text-center text-sm text-gray-500 dark:text-gray-400"
-              >
-                <div className="flex flex-col items-center gap-2">
-                  <svg
-                    className="h-10 w-10 text-gray-300 dark:text-gray-600"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={1.5}
-                      d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"
-                    />
-                  </svg>
-                  <span>No supervisors found</span>
-                </div>
-              </TableCell>
-            </TableRow>
-          ) : (
-            data.data.map((supervisor) => (
-              <TableRow
-                key={supervisor.id}
-                className="border-t border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors"
-              >
-                {/* Name + Avatar (with email and phone stacked beneath) */}
-                <TableCell className="px-4 py-3 whitespace-nowrap">
-                  <div className="flex items-center gap-3">
-                    <Avatar
-                      src={supervisor.profilePhotoUrl || undefined}
-                      name={supervisor.fullName || "?"}
-                      size="small"
-                      enablePreview
-                    />
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-gray-900 dark:text-white truncate max-w-[220px]">
-                        {formatNameWithCredentials(
-                          supervisor.fullName,
-                          supervisor.professionalCredentials,
-                        ) || "—"}
-                      </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 truncate max-w-[220px]">
-                        {supervisor.email}
-                      </p>
-                      {supervisor.contactNumber && (
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
-                          {formatUSPhoneNationalDisplay(supervisor.contactNumber)}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </TableCell>
-
-                {/* State: abbreviation only to keep the column narrow; full name on hover */}
-                <TableCell className="px-4 py-3 text-center text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">
-                  {supervisor.state?.trim() ? (
-                    <span title={formatUsStateCodeForDisplay(supervisor.state) ?? undefined}>
-                      {resolveUsStateAbbreviation(supervisor.state) ?? supervisor.state.trim()}
-                    </span>
-                  ) : (
-                    <span className="text-gray-400 italic">—</span>
-                  )}
-                </TableCell>
-
-                {/* Role: supervisor type + occupation · specialty (wraps so long occupations don't widen the column) */}
-                <TableCell className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
-                  <div className="w-[220px]">
-                    <p className="font-medium text-gray-900 dark:text-white">
-                      {supervisor.supervisorType || (
-                        <span className="font-normal text-gray-400 italic">
-                          Not specified
-                        </span>
-                      )}
-                    </p>
-                    {renderRoleSubtext([
-                      supervisor.supervisorOccupation,
-                      supervisor.supervisorSpecialty,
-                    ])}
-                  </div>
-                </TableCell>
-
-                {/* License Type */}
-                <TableCell className="px-4 py-3 text-center text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">
-                  {renderOptionalCredential(supervisor.licenseType)}
-                </TableCell>
-
-                {/* Degree Type */}
-                <TableCell className="px-4 py-3 text-center text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">
-                  {renderOptionalCredential(supervisor.degreeType)}
-                </TableCell>
-
-                {/* Years of Experience */}
-                <TableCell className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">
-                  {supervisor.yearsOfExperience ? (
-                    `${supervisor.yearsOfExperience} yrs`
-                  ) : (
-                    <span className="text-gray-400 italic">—</span>
-                  )}
-                </TableCell>
-
-                {/* Verification Status */}
-                <TableCell className="px-4 py-3 whitespace-nowrap">
-                  <SupervisorStatusBadge status={supervisor.verificationStatus} />
-                </TableCell>
-
-                {/* Email Verified */}
-                <TableCell className="px-4 py-3 whitespace-nowrap">
-                  <EmailVerifiedBadge verified={supervisor.emailVerified} />
-                </TableCell>
-
-                {/* Visibility in Find a Supervisor app */}
-                <TableCell className="px-4 py-3 whitespace-nowrap">
-                  <VisibilityBadge hidden={supervisor.hideProfile} />
-                </TableCell>
-
-                {/* Subscription: paid/free, plan, current billing period */}
-                <TableCell className="px-4 py-3 whitespace-nowrap">
-                  <SubscriptionCell subscription={supervisor.subscription} />
-                </TableCell>
-
-                {/* Submitted date */}
-                <TableCell className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                  {supervisor.createdAt ? (
-                    (() => {
-                      const registered = formatDateTimeLocal(supervisor.createdAt);
-                      if (typeof registered === "string") {
-                        return <p>{registered}</p>;
-                      }
-                      return (
-                        <div>
-                          <div>{registered.date}</div>
-                          <div className="flex items-center mt-1">
-                            <TimeIcon className="mr-1" />
-                            <span>{registered.time}</span>
-                          </div>
-                        </div>
-                      );
-                    })()
-                  ) : (
-                    formatDate(supervisor.createdAt)
-                  )}
-                </TableCell>
-
-                {/* Actions */}
-                <TableCell className="px-4 py-3 whitespace-nowrap text-right">
-                  <div className="flex items-center justify-end">
-                    <SupervisorRowActions
-                      supervisor={supervisor}
-                      onView={onViewSupervisor}
-                      onEdit={onEditSupervisor}
-                      onApprove={onApproveSupervisor}
-                      onReject={onRejectSupervisor}
-                      onResendVerification={onResendVerification}
-                      onApproveEmailVerification={onApproveEmailVerification}
-                      onToggleHideProfile={onToggleHideProfile}
-                    />
+    <>
+      <BulkActionsBar
+        selectedCount={selection.selectedIds.length}
+        itemNoun="supervisor"
+        actions={supervisionUserBulkActions(selection.selectedIdsWhere)}
+        onClearSelection={selection.clear}
+        onRefresh={() => onRefresh?.()}
+      />
+      <div className="overflow-x-auto">
+        <Table className="min-w-full">
+          <TableHeading
+            columns={columns}
+            sortBy={sortBy}
+            sortOrder={sortOrder}
+            onSort={onSort}
+          />
+          <TableBody>
+            {isLoading ? (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="py-12 text-center text-sm text-gray-500 dark:text-gray-400"
+                >
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-brand-500" />
+                    Loading supervisors...
                   </div>
                 </TableCell>
               </TableRow>
-            ))
-          )}
-        </TableBody>
-      </Table>
-    </div>
+            ) : !data?.data?.length ? (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="py-12 text-center text-sm text-gray-500 dark:text-gray-400"
+                >
+                  <div className="flex flex-col items-center gap-2">
+                    <svg
+                      className="h-10 w-10 text-gray-300 dark:text-gray-600"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={1.5}
+                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
+                    </svg>
+                    <span>No supervisors found</span>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : (
+              data.data.map((supervisor) => (
+                <TableRow
+                  key={supervisor.id}
+                  className="border-t border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors"
+                >
+                  <TableCell className="px-6 py-3">
+                    <Checkbox
+                      checked={selection.isSelected(supervisor.id)}
+                      onChange={(checked) => selection.toggle(supervisor.id, checked)}
+                    />
+                  </TableCell>
+                  {/* Name + Avatar (with email and phone stacked beneath) */}
+                  <TableCell className="px-4 py-3 whitespace-nowrap">
+                    <div className="flex items-center gap-3">
+                      <Avatar
+                        src={supervisor.profilePhotoUrl || undefined}
+                        name={supervisor.fullName || "?"}
+                        size="small"
+                        enablePreview
+                      />
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-gray-900 dark:text-white truncate max-w-[220px]">
+                          {formatNameWithCredentials(
+                            supervisor.fullName,
+                            supervisor.professionalCredentials,
+                          ) || "—"}
+                        </p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 truncate max-w-[220px]">
+                          {supervisor.email}
+                        </p>
+                        {supervisor.contactNumber && (
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            {formatUSPhoneNationalDisplay(supervisor.contactNumber)}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </TableCell>
+
+                  {/* State: abbreviation only to keep the column narrow; full name on hover */}
+                  <TableCell className="px-4 py-3 text-center text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                    {supervisor.state?.trim() ? (
+                      <span title={formatUsStateCodeForDisplay(supervisor.state) ?? undefined}>
+                        {resolveUsStateAbbreviation(supervisor.state) ?? supervisor.state.trim()}
+                      </span>
+                    ) : (
+                      <span className="text-gray-400 italic">—</span>
+                    )}
+                  </TableCell>
+
+                  {/* Role: supervisor type + occupation · specialty (wraps so long occupations don't widen the column) */}
+                  <TableCell className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
+                    <div className="w-[220px]">
+                      <p className="font-medium text-gray-900 dark:text-white">
+                        {supervisor.supervisorType || (
+                          <span className="font-normal text-gray-400 italic">
+                            Not specified
+                          </span>
+                        )}
+                      </p>
+                      {renderRoleSubtext([
+                        supervisor.supervisorOccupation,
+                        supervisor.supervisorSpecialty,
+                      ])}
+                    </div>
+                  </TableCell>
+
+                  {/* License Type */}
+                  <TableCell className="px-4 py-3 text-center text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                    {renderOptionalCredential(supervisor.licenseType)}
+                  </TableCell>
+
+                  {/* Degree Type */}
+                  <TableCell className="px-4 py-3 text-center text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                    {renderOptionalCredential(supervisor.degreeType)}
+                  </TableCell>
+
+                  {/* Years of Experience */}
+                  <TableCell className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                    {supervisor.yearsOfExperience ? (
+                      `${supervisor.yearsOfExperience} yrs`
+                    ) : (
+                      <span className="text-gray-400 italic">—</span>
+                    )}
+                  </TableCell>
+
+                  {/* Verification Status */}
+                  <TableCell className="px-4 py-3 whitespace-nowrap">
+                    <SupervisorStatusBadge status={supervisor.verificationStatus} />
+                  </TableCell>
+
+                  {/* Email Verified */}
+                  <TableCell className="px-4 py-3 whitespace-nowrap">
+                    <EmailVerifiedBadge verified={supervisor.emailVerified} />
+                  </TableCell>
+
+                  {/* Visibility in Find a Supervisor app */}
+                  <TableCell className="px-4 py-3 whitespace-nowrap">
+                    <VisibilityBadge hidden={supervisor.hideProfile} />
+                  </TableCell>
+
+                  {/* Subscription: paid/free, plan, current billing period */}
+                  <TableCell className="px-4 py-3 whitespace-nowrap">
+                    <SubscriptionCell subscription={supervisor.subscription} />
+                  </TableCell>
+
+                  {/* Submitted date */}
+                  <TableCell className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                    {supervisor.createdAt ? (
+                      (() => {
+                        const registered = formatDateTimeLocal(supervisor.createdAt);
+                        if (typeof registered === "string") {
+                          return <p>{registered}</p>;
+                        }
+                        return (
+                          <div>
+                            <div>{registered.date}</div>
+                            <div className="flex items-center mt-1">
+                              <TimeIcon className="mr-1" />
+                              <span>{registered.time}</span>
+                            </div>
+                          </div>
+                        );
+                      })()
+                    ) : (
+                      formatDate(supervisor.createdAt)
+                    )}
+                  </TableCell>
+
+                  {/* Actions */}
+                  <TableCell className="px-4 py-3 whitespace-nowrap text-right">
+                    <div className="flex items-center justify-end">
+                      <SupervisorRowActions
+                        supervisor={supervisor}
+                        onView={onViewSupervisor}
+                        onEdit={onEditSupervisor}
+                        onApprove={onApproveSupervisor}
+                        onReject={onRejectSupervisor}
+                        onResendVerification={onResendVerification}
+                        onApproveEmailVerification={onApproveEmailVerification}
+                        onToggleHideProfile={onToggleHideProfile}
+                      />
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
+    </>
   );
 };
 

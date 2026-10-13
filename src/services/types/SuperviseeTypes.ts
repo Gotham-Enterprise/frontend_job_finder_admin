@@ -9,6 +9,17 @@ export interface SuperviseeHeaderProps {
   isPending: boolean;
   searchInput: string;
   setSearchInput: (value: string) => void;
+  isFilterOpen: boolean;
+  setIsFilterOpen: (value: boolean) => void;
+  onClearFilters: () => void;
+  hasActiveFilters: boolean;
+  filterDropdownContent?: React.ReactNode;
+}
+
+export interface SuperviseeFiltersProps {
+  filters: SuperviseeFilters;
+  onFilterChange: (key: keyof SuperviseeFilters, value: any) => void;
+  clearIndividualFilter: (filterType: string) => void;
 }
 
 export interface SuperviseeTableProps {
@@ -23,6 +34,7 @@ export interface SuperviseeTableProps {
   onResendVerification: (superviseeId: string, fullName: string) => void;
   onApproveEmailVerification: (superviseeId: string, fullName: string) => void;
   onToggleHideProfile: (superviseeId: string, fullName: string, currentlyHidden: boolean) => void;
+  onRefresh?: () => void;
 }
 
 export interface SuperviseeTablePaginationProps {
