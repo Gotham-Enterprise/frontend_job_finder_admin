@@ -19,6 +19,8 @@ export const officeSpaceAdminApi = {
     if (filters.search) queryParams.append("search", filters.search);
     if (filters.sortBy) queryParams.append("sortBy", filters.sortBy);
     if (filters.sort) queryParams.append("sort", filters.sort);
+    if (filters.isScraped !== undefined)
+      queryParams.append("isScraped", filters.isScraped.toString());
     const endpoint = `/api/admin/office-spaces?${queryParams.toString()}`;
     return apiGet<OfficeSpaceAdminListingsResponse>(endpoint);
   },

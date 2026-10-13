@@ -42,6 +42,15 @@ export const useOfficeSpaceListingsLogic = () => {
     []
   );
 
+  const sourceOptions = useMemo(
+    () => [
+      { value: "all", label: "All Sources" },
+      { value: "true", label: "Scraped" },
+      { value: "false", label: "Manual / Direct" },
+    ],
+    []
+  );
+
   const tableColumns = useMemo(
     () => [
       { key: "title", label: "Listing" },
@@ -151,8 +160,12 @@ export const useOfficeSpaceListingsLogic = () => {
   );
 
   const hasActiveFilters = useMemo(() => {
-    return !!(filters.search || filters.status);
-  }, [filters.search, filters.status]);
+    return !!(
+      filters.search ||
+      filters.status ||
+      filters.isScraped !== undefined
+    );
+  }, [filters.search, filters.status, filters.isScraped]);
 
   return {
     filters,
@@ -167,6 +180,7 @@ export const useOfficeSpaceListingsLogic = () => {
     refetch,
     tableColumns,
     statusOptions,
+    sourceOptions,
     itemsPerPageOptions,
     filterChange,
     handleSearch,

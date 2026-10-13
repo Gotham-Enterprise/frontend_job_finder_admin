@@ -80,6 +80,11 @@ export default function OfficeSpaceViewDetails({ id }: ViewDetailsProps) {
       <div className="flex items-center justify-between">
         <BackToListButton href="/admin/office-spaces" preserveState />
         <div className="flex items-center gap-3">
+          {(listing.isScraped || listing.scrape) && (
+            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300">
+              Scraped
+            </span>
+          )}
           <OfficeSpaceStatusBadge status={listing.status} />
           <select
             value={listing.status}
@@ -99,10 +104,23 @@ export default function OfficeSpaceViewDetails({ id }: ViewDetailsProps) {
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
           {listing.title}
         </h1>
-        <p className="text-gray-500 dark:text-gray-400 flex items-center gap-1 mt-1">
-          <MapPin className="w-4 h-4" />
-          {listing.address}, {listing.city}, {listing.state} {listing.zipCode}
-        </p>
+        {(() => {
+          const cityStateZip = [
+            listing.city,
+            [listing.state, listing.zipCode].filter(Boolean).join(" ")
+          ].filter(Boolean).join(", ");
+          const loc = [
+            listing.address,
+            cityStateZip || (listing as any).address2 || ""
+          ].filter(Boolean).join(", ") || (listing as any).address2 || listing.address || "";
+          if (!loc) return null;
+          return (
+            <p className="text-gray-500 dark:text-gray-400 flex items-center gap-1 mt-1">
+              <MapPin className="w-4 h-4" />
+              {loc}
+            </p>
+          );
+        })()}
       </div>
 
       {listing.photos && listing.photos.length > 0 && (
@@ -127,27 +145,28 @@ export default function OfficeSpaceViewDetails({ id }: ViewDetailsProps) {
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
               <DetailItem
                 icon={<Building2 className="w-4 h-4" />}
+                label="Source"
+                value={listing.isScraped || listing.scrape ? "Scraped" : "Manual / Direct"}
+              />
+              <DetailItem
+                icon={<Building2 className="w-4 h-4" />}
                 label="Type"
                 value={listing.propertyType}
               />
-              <DetailItem
-                icon={<Ruler className="w-4 h-4" />}
-                label="Size"
-                value={
-                  listing.squareFootage != null
-                    ? `${listing.squareFootage.toLocaleString()} sq ft`
-                    : "N/A"
-                }
-              />
-              <DetailItem
-                icon={<DollarSign className="w-4 h-4" />}
-                label="Monthly Rent"
-                value={
-                  listing.monthlyRent != null
-                    ? `$${listing.monthlyRent.toLocaleString()}`
-                    : "N/A"
-                }
-              />
+              {listing.squareFootage != null && listing.squareFootage > 0 && (
+                <DetailItem
+                  icon={<Ruler className="w-4 h-4" />}
+                  label="Size"
+                  value={`${listing.squareFootage.toLocaleString()} sq ft`}
+                />
+              )}
+              {listing.monthlyRent != null && listing.monthlyRent > 0 && (
+                <DetailItem
+                  icon={<DollarSign className="w-4 h-4" />}
+                  label="Monthly Rent"
+                  value={`$${listing.monthlyRent.toLocaleString()}`}
+                />
+              )}
               {listing.leaseTermMin && (
                 <DetailItem
                   icon={<Calendar className="w-4 h-4" />}
@@ -255,7 +274,9 @@ export default function OfficeSpaceViewDetails({ id }: ViewDetailsProps) {
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
               Landlord
             </h3>
-            <p className="text-sm text-gray-500">ID: {listing.landlordId}</p>
+            <p className="text-sm text-gray-500">
+              ID: {listing.landlordId || "Unassigned"}
+            </p>
           </div>
         </div>
       </div>

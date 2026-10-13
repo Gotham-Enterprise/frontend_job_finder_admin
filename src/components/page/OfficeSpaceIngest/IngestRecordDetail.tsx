@@ -72,9 +72,14 @@ const IngestRecordDetail: React.FC<{ id: string }> = ({ id }) => {
       </div>
 
       <div className="rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-white/[0.03]">
-        <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-          {record.address1 || "Untitled listing"}
-        </h1>
+        <div className="flex items-center gap-2">
+          <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+            {record.address1 || "Untitled listing"}
+          </h1>
+          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300">
+            Scraped
+          </span>
+        </div>
         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
           {record.address2 || "No location on record"}
         </p>

@@ -61,6 +61,8 @@ export interface IngestRecord extends IngestRawFields, IngestDerivedFields {
   landlordId: string | null;
   landlord?: IngestLandlordRef | null;
   importBatchId: string;
+  isScraped?: boolean;
+  scrape?: boolean;
   createdAt: string;
   updatedAt: string;
   lastSeenAt: string;

@@ -92,9 +92,16 @@ const OfficeSpaceListingsTable: React.FC<OfficeSpaceListingsTableProps> = ({
                     />
                   )}
                   <div>
-                    <p className="font-medium text-gray-900 dark:text-white text-sm">
-                      {listing.title}
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <p className="font-medium text-gray-900 dark:text-white text-sm">
+                        {listing.title}
+                      </p>
+                      {(listing.isScraped || listing.scrape) && (
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300">
+                          Scraped
+                        </span>
+                      )}
+                    </div>
                     <p className="text-xs text-gray-500 dark:text-gray-400">
                       {listing.propertyType}
                     </p>
@@ -103,21 +110,21 @@ const OfficeSpaceListingsTable: React.FC<OfficeSpaceListingsTableProps> = ({
               </td>
               <td className="px-6 py-4">
                 <p className="text-sm text-gray-900 dark:text-white">
-                  {listing.city}, {listing.state}
+                  {[listing.city, listing.state].filter(Boolean).join(", ") || (listing as any).address2 || listing.address || "—"}
                 </p>
               </td>
               <td className="px-6 py-4">
                 <p className="text-sm text-gray-900 dark:text-white">
-                  {listing.squareFootage != null
+                  {listing.squareFootage != null && listing.squareFootage > 0
                     ? `${listing.squareFootage.toLocaleString()} sq ft`
-                    : "N/A"}
+                    : "—"}
                 </p>
               </td>
               <td className="px-6 py-4">
                 <p className="text-sm text-gray-900 dark:text-white">
-                  {listing.monthlyRent != null
+                  {listing.monthlyRent != null && listing.monthlyRent > 0
                     ? `$${listing.monthlyRent.toLocaleString()}/mo`
-                    : "N/A"}
+                    : "—"}
                 </p>
               </td>
               <td className="px-6 py-4">

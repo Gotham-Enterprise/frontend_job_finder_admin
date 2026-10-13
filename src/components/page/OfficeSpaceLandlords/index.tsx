@@ -153,12 +153,12 @@ const LandlordListings: React.FC = () => {
                   </td>
                   <td className="px-6 py-4 text-gray-600 dark:text-gray-400">
                     <div>
-                      {[landlord.user.firstName, landlord.user.lastName]
+                      {[landlord.user?.firstName, landlord.user?.lastName]
                         .filter(Boolean)
                         .join(" ") || "—"}
                     </div>
                     <div className="text-xs text-gray-400 dark:text-gray-500">
-                      {landlord.user.email || "—"}
+                      {landlord.user?.email || "—"}
                     </div>
                   </td>
                   <td className="px-6 py-4 text-gray-600 dark:text-gray-400">
@@ -261,7 +261,7 @@ const LandlordListings: React.FC = () => {
           {pendingValue ? (
             <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
               <span className="font-medium">
-                {toggling?.businessName || toggling?.user.email}
+                {toggling?.businessName || toggling?.user?.email || "This landlord"}
               </span>{" "}
               will be treated as a Gotham-managed landlord. Their listings
               publish without going through the Stripe property post gateway.
@@ -269,7 +269,7 @@ const LandlordListings: React.FC = () => {
           ) : (
             <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
               <span className="font-medium">
-                {toggling?.businessName || toggling?.user.email}
+                {toggling?.businessName || toggling?.user?.email || "This landlord"}
               </span>{" "}
               will no longer be treated as Gotham-managed. Their listings will
               again require the paid property post credit to publish.

@@ -88,6 +88,8 @@ export interface OfficeSpaceListing {
   virtualTourUrl: string | null;
   isPublished: boolean;
   isFeatured: boolean;
+  isScraped?: boolean;
+  scrape?: boolean;
   viewsCount: number;
   inquiriesCount: number;
   photos: OfficeSpacePhoto[] | null;
@@ -125,6 +127,7 @@ export interface OfficeSpaceAdminFilters {
   search?: string;
   sortBy?: string;
   sort?: "asc" | "desc";
+  isScraped?: boolean | string;
 }
 
 export interface OfficeSpaceAdminStats {
@@ -200,12 +203,12 @@ export interface OfficeSpaceLandlord {
   businessState: string | null;
   isInternal: boolean;
   createdAt: string;
-  user: {
+  user?: {
     id: string;
     email: string;
     firstName: string;
     lastName: string;
-  };
+  } | null;
   _count: { listings: number };
 }
 

@@ -122,9 +122,14 @@ const IngestRecordsTable: React.FC<IngestRecordsTableProps> = ({
                   </button>
                 </td>
                 <td className="max-w-xs px-4 py-3">
-                  <p className="truncate text-sm font-medium text-gray-800 dark:text-gray-200">
-                    {record.address1 || "—"}
-                  </p>
+                  <div className="flex items-center gap-1.5">
+                    <p className="truncate text-sm font-medium text-gray-800 dark:text-gray-200">
+                      {record.address1 || "—"}
+                    </p>
+                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300">
+                      Scraped
+                    </span>
+                  </div>
                   <p className="truncate text-xs text-gray-500 dark:text-gray-400">
                     {record.address2 || "No location"}
                   </p>
