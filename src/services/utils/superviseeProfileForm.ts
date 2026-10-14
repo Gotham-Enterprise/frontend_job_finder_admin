@@ -6,17 +6,34 @@ import {
   normalizeLegacySupervisionTypeName,
 } from "@/services/utils/superviseeEligibility";
 
+import {
+  appendIdentityPreferencesToFormData,
+  identityPreferencesFormToPayload,
+  type IdentityPreferencesFieldErrors,
+  type IdentityPreferencesFormData,
+  mapIdentityPreferencesToFormData,
+  validateIdentityPreferencesForm,
+} from "./identityPreferencesForm";
+
 export const SUPERVISEE_IDEAL_SUPERVISOR_MAX_LENGTH = 500;
 
 export type SuperviseeFieldErrors = Partial<
-  Record<keyof SuperviseeEditFormData | "uploadProfilePhoto", string>
->;
+  Record<Exclude<keyof SuperviseeEditFormData, "identity"> | "uploadProfilePhoto", string>
+> & {
+  /** Errors for the pronouns / gender identity / languages block. */
+  identity?: IdentityPreferencesFieldErrors;
+};
 
 export function validateSuperviseeEditForm(form: SuperviseeEditFormData): SuperviseeFieldErrors {
   const errors: SuperviseeFieldErrors = {};
 
   if (!form.fullName.trim()) {
     errors.fullName = "Full name is required";
+  }
+
+  const identityErrors = validateIdentityPreferencesForm(form.identity);
+  if (Object.keys(identityErrors).length > 0) {
+    errors.identity = identityErrors;
   }
 
   const phoneDigits = form.contactNumber.replace(/\D/g, "");
@@ -119,6 +136,8 @@ export function validateSuperviseeEditForm(form: SuperviseeEditFormData): Superv
 
 export interface SuperviseeEditFormData {
   fullName: string;
+  /** Optional pronouns / gender identity / languages + visibility flags (account-level). */
+  identity: IdentityPreferencesFormData;
   contactNumber: string;
   city: string;
   state: string;
@@ -178,6 +197,7 @@ export function mapSuperviseeDetailsToFormData(
 
   return {
     fullName: details.fullName ?? "",
+    identity: mapIdentityPreferencesToFormData(details),
     contactNumber: details.contactNumber
       ? formatUSPhoneForDisplay(details.contactNumber)
       : "",
@@ -235,6 +255,7 @@ export function buildSuperviseeUpdateFormData(
     mdPreferredOccupation,
     mdPreferredSpecialty,
     introduction,
+    identity,
     ...rest
   } = payload;
 
@@ -242,6 +263,10 @@ export function buildSuperviseeUpdateFormData(
     if (value !== undefined && value !== null && value !== "") {
       fd.append(key, String(value));
     }
+  }
+
+  if (identity) {
+    appendIdentityPreferencesToFormData(fd, identity);
   }
 
   if (budgetRangeStart !== undefined) {
@@ -280,6 +305,7 @@ export function formDataToUpdatePayload(
 
   return {
     fullName: form.fullName.trim() || undefined,
+    identity: identityPreferencesFormToPayload(form.identity),
     contactNumber: contactDigits || form.contactNumber.trim() || undefined,
     city: form.city.trim() || undefined,
     state: form.state.trim() || undefined,

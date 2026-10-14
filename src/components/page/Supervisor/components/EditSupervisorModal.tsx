@@ -28,6 +28,8 @@ import {
   type SupervisorLicenseEntryFormData,
 } from "@/services/utils/supervisorProfileForm";
 import { EditSupervisorMedicalDirectorFields } from "./EditSupervisorMedicalDirectorFields";
+import { IdentityPreferencesFields } from "@/components/common/IdentityPreferencesFields";
+import { emptyIdentityPreferencesForm } from "@/services/utils/identityPreferencesForm";
 import {
   useUpdateSupervisor,
   useSupervisorEditFormOptions,
@@ -56,6 +58,7 @@ interface EditSupervisorModalProps {
 
 const emptyForm = (): SupervisorEditFormData => ({
   fullName: "",
+  identity: emptyIdentityPreferencesForm(),
   professionalCredentials: "",
   contactNumber: "",
   city: "",
@@ -577,6 +580,14 @@ export const EditSupervisorModal: React.FC<EditSupervisorModalProps> = ({
                   </FormField>
                 </div>
               </section>
+
+              {/* Pronouns / gender identity / languages + public-visibility flags */}
+              <IdentityPreferencesFields
+                value={formData.identity}
+                onChange={(identity) => updateField("identity", identity)}
+                errors={fieldErrors.identity}
+                disabled={isSaving}
+              />
 
               {/* Professional Info & Licensure */}
               <section className="space-y-4">
