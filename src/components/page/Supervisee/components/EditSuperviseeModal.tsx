@@ -36,6 +36,8 @@ import {
   supervisionTypeDisplayLabel,
 } from "@/services/utils/superviseeEligibility";
 import { useStates } from "@/services/hooks/useStates";
+import { IdentityPreferencesFields } from "@/components/common/IdentityPreferencesFields";
+import { emptyIdentityPreferencesForm } from "@/services/utils/identityPreferencesForm";
 import { useOccupationsWithSpecialties } from "@/services/hooks/useJobCreation";
 
 interface EditSuperviseeModalProps {
@@ -51,6 +53,7 @@ const CREDENTIAL_TITLE_PLACEHOLDER = "e.g. AMFT, LPC-Associate, ACSW, PA";
 
 const emptyForm = (): SuperviseeEditFormData => ({
   fullName: "",
+  identity: emptyIdentityPreferencesForm(),
   contactNumber: "",
   city: "",
   state: "",
@@ -491,6 +494,14 @@ export const EditSuperviseeModal: React.FC<EditSuperviseeModalProps> = ({
                   </FormField>
                 </div>
               </section>
+
+              {/* Pronouns / gender identity / languages + public-visibility flags */}
+              <IdentityPreferencesFields
+                value={formData.identity}
+                onChange={(identity) => updateField("identity", identity)}
+                errors={fieldErrors.identity}
+                disabled={isSaving}
+              />
 
               <section className="space-y-4">
                 <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">

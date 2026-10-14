@@ -1,4 +1,8 @@
 import { EmailVerifiedFilter } from "./emailVerifiedFilter";
+import type {
+  IdentityPreferencesPayload,
+  IdentityPreferencesResponse,
+} from "./identityPreferences";
 
 export type VerificationStatus = "PENDING" | "APPROVED" | "REJECTED";
 
@@ -243,7 +247,7 @@ export interface SupervisorVerifiedByAdmin {
 }
 
 /** Full detail shape from GET /api/supervision/admin/supervisors/:id */
-export interface SupervisorDetails {
+export interface SupervisorDetails extends IdentityPreferencesResponse {
   id: string;
   email: string;
   userName: string;
@@ -323,6 +327,8 @@ export interface SupervisorBoardCertificationPayload {
 
 export interface SupervisorUpdatePayload {
   fullName?: string;
+  /** Pronouns / gender identity / languages + visibility flags — full replace when present. */
+  identity?: IdentityPreferencesPayload;
   /** Post-nominal letters after the name; empty string clears the stored value. */
   professionalCredentials?: string;
   contactNumber?: string;
