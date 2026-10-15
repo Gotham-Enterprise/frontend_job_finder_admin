@@ -9,6 +9,7 @@ import {
   Calendar,
   CheckCircle,
   XCircle,
+  Tag,
 } from "lucide-react";
 import {
   useOfficeSpaceDetail,
@@ -153,6 +154,11 @@ export default function OfficeSpaceViewDetails({ id }: ViewDetailsProps) {
                 label="Type"
                 value={listing.propertyType}
               />
+              <DetailItem
+                icon={<Tag className="w-4 h-4" />}
+                label="Listing Type"
+                value={listing.listingType === "for_sale" ? "For sale" : "For rent"}
+              />
               {listing.squareFootage != null && listing.squareFootage > 0 && (
                 <DetailItem
                   icon={<Ruler className="w-4 h-4" />}
@@ -163,7 +169,7 @@ export default function OfficeSpaceViewDetails({ id }: ViewDetailsProps) {
               {listing.monthlyRent != null && listing.monthlyRent > 0 && (
                 <DetailItem
                   icon={<DollarSign className="w-4 h-4" />}
-                  label="Monthly Rent"
+                  label={listing.listingType === "for_sale" ? "Sale Price" : "Monthly Rent"}
                   value={`$${listing.monthlyRent.toLocaleString()}`}
                 />
               )}

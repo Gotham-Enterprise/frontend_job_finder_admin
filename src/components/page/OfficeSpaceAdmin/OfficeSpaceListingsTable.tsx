@@ -66,7 +66,7 @@ const OfficeSpaceListingsTable: React.FC<OfficeSpaceListingsTableProps> = ({
               Size
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Rent
+              Price
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               Status
@@ -101,6 +101,15 @@ const OfficeSpaceListingsTable: React.FC<OfficeSpaceListingsTableProps> = ({
                           Scraped
                         </span>
                       )}
+                      <span
+                        className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold ${
+                          listing.listingType === "for_sale"
+                            ? "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"
+                            : "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300"
+                        }`}
+                      >
+                        {listing.listingType === "for_sale" ? "For sale" : "For rent"}
+                      </span>
                     </div>
                     <p className="text-xs text-gray-500 dark:text-gray-400">
                       {listing.propertyType}
@@ -123,7 +132,9 @@ const OfficeSpaceListingsTable: React.FC<OfficeSpaceListingsTableProps> = ({
               <td className="px-6 py-4">
                 <p className="text-sm text-gray-900 dark:text-white">
                   {listing.monthlyRent != null && listing.monthlyRent > 0
-                    ? `$${listing.monthlyRent.toLocaleString()}/mo`
+                    ? `$${listing.monthlyRent.toLocaleString()}${
+                        listing.listingType === "for_sale" ? "" : "/mo"
+                      }`
                     : "—"}
                 </p>
               </td>

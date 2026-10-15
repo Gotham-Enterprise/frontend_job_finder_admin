@@ -68,6 +68,7 @@ export interface OfficeSpaceListing {
   monthlyRent: number;
   rentCurrency: string;
   rentType: string;
+  listingType: string;
   leaseTermMin: number | null;
   leaseTermMax: number | null;
   availableFrom: string | null;

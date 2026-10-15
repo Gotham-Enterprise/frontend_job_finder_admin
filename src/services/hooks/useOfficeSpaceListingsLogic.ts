@@ -56,7 +56,7 @@ export const useOfficeSpaceListingsLogic = () => {
       { key: "title", label: "Listing" },
       { key: "location", label: "Location" },
       { key: "size", label: "Size" },
-      { key: "rent", label: "Rent" },
+      { key: "price", label: "Price" },
       { key: "status", label: "Status" },
       { key: "actions", label: "Actions" },
     ],
