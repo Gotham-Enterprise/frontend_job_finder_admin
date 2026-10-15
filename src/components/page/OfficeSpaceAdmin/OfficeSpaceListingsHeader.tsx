@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { RotateCw, Search, SlidersHorizontal } from "lucide-react";
+import { RotateCw, Search, SlidersHorizontal, Settings2 } from "lucide-react";
 import Button from "@/components/ui/button/Button";
 import { OfficeSpaceAdminHeaderProps } from "@/services/types/officeSpace";
 
@@ -16,6 +16,7 @@ const OfficeSpaceListingsHeader: React.FC<OfficeSpaceAdminHeaderProps> = ({
   clearAllFilters,
   hasActiveFilters,
   filterDropdownContent,
+  onOpenConfig,
 }) => {
   return (
     <div className="border-b border-gray-200 dark:border-gray-800 px-6 py-4">
@@ -71,6 +72,17 @@ const OfficeSpaceListingsHeader: React.FC<OfficeSpaceAdminHeaderProps> = ({
               </div>
             )}
           </div>
+
+          {onOpenConfig && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onOpenConfig}
+              startIcon={<Settings2 className="w-4 h-4" />}
+            >
+              Configure Options
+            </Button>
+          )}
 
           <Button
             variant="ghost"

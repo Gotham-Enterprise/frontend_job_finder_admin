@@ -238,6 +238,23 @@ export interface OfficeSpaceLandlordToggleResponse {
 
 // ─── Component Props Types ───────────────────────────────────────────────────
 
+export interface OfficeSpaceOption {
+  id: string;
+  name: string;
+  value: string;
+  isActive: boolean;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface OfficeSpaceOptionPayload {
+  name: string;
+  value?: string;
+  isActive?: boolean;
+  sortOrder?: number;
+}
+
 export interface OfficeSpaceAdminProps {
   className?: string;
 }
@@ -253,6 +270,7 @@ export interface OfficeSpaceAdminHeaderProps {
   clearAllFilters: () => void;
   hasActiveFilters: boolean;
   filterDropdownContent: React.ReactNode;
+  onOpenConfig?: () => void;
 }
 
 export interface OfficeSpaceAdminFiltersProps {

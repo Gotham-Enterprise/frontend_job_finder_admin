@@ -5,8 +5,10 @@ import {
   OfficeSpaceAdminStatsResponse,
   OfficeSpaceAdminInquiriesResponse,
   OfficeSpaceAdminStatusResponse,
+  OfficeSpaceOption,
+  OfficeSpaceOptionPayload,
 } from "../types/officeSpace";
-import { apiGet, apiPut } from "./apiUtils";
+import { apiDelete, apiGet, apiPost, apiPut } from "./apiUtils";
 
 export const officeSpaceAdminApi = {
   async getListings(
@@ -56,6 +58,94 @@ export const officeSpaceAdminApi = {
     queryParams.append("limit", limit.toString());
     return apiGet<OfficeSpaceAdminInquiriesResponse>(
       `/api/admin/office-spaces/inquiries?${queryParams.toString()}`
+    );
+  },
+
+  // ─── Specialties ────────────────────────────────────────────────────────────
+
+  async getSpecialties(): Promise<{ success: boolean; data: OfficeSpaceOption[] }> {
+    return apiGet<{ success: boolean; data: OfficeSpaceOption[] }>(
+      "/api/admin/office-spaces/specialties"
+    );
+  },
+
+  async createSpecialty(
+    payload: OfficeSpaceOptionPayload
+  ): Promise<{ success: boolean; message: string; data: OfficeSpaceOption }> {
+    return apiPost<{ success: boolean; message: string; data: OfficeSpaceOption }>(
+      "/api/admin/office-spaces/specialties",
+      payload
+    );
+  },
+
+  async updateSpecialty(
+    id: string,
+    payload: Partial<OfficeSpaceOptionPayload>
+  ): Promise<{ success: boolean; message: string; data: OfficeSpaceOption }> {
+    return apiPut<{ success: boolean; message: string; data: OfficeSpaceOption }>(
+      `/api/admin/office-spaces/specialties/${id}`,
+      payload
+    );
+  },
+
+  async deleteSpecialty(
+    id: string
+  ): Promise<{ success: boolean; message: string }> {
+    return apiDelete<{ success: boolean; message: string }>(
+      `/api/admin/office-spaces/specialties/${id}`
+    );
+  },
+
+  async reorderSpecialties(
+    ids: string[]
+  ): Promise<{ success: boolean; message: string; data: OfficeSpaceOption[] }> {
+    return apiPut<{ success: boolean; message: string; data: OfficeSpaceOption[] }>(
+      "/api/admin/office-spaces/specialties/reorder",
+      { ids }
+    );
+  },
+
+  // ─── Property Types ─────────────────────────────────────────────────────────
+
+  async getPropertyTypes(): Promise<{ success: boolean; data: OfficeSpaceOption[] }> {
+    return apiGet<{ success: boolean; data: OfficeSpaceOption[] }>(
+      "/api/admin/office-spaces/property-types"
+    );
+  },
+
+  async createPropertyType(
+    payload: OfficeSpaceOptionPayload
+  ): Promise<{ success: boolean; message: string; data: OfficeSpaceOption }> {
+    return apiPost<{ success: boolean; message: string; data: OfficeSpaceOption }>(
+      "/api/admin/office-spaces/property-types",
+      payload
+    );
+  },
+
+  async updatePropertyType(
+    id: string,
+    payload: Partial<OfficeSpaceOptionPayload>
+  ): Promise<{ success: boolean; message: string; data: OfficeSpaceOption }> {
+    return apiPut<{ success: boolean; message: string; data: OfficeSpaceOption }>(
+      `/api/admin/office-spaces/property-types/${id}`,
+      payload
+    );
+  },
+
+  async deletePropertyType(
+    id: string
+  ): Promise<{ success: boolean; message: string }> {
+    return apiDelete<{ success: boolean; message: string }>(
+      `/api/admin/office-spaces/property-types/${id}`
+    );
+  },
+
+  async reorderPropertyTypes(
+    ids: string[]
+  ): Promise<{ success: boolean; message: string; data: OfficeSpaceOption[] }> {
+    return apiPut<{ success: boolean; message: string; data: OfficeSpaceOption[] }>(
+      "/api/admin/office-spaces/property-types/reorder",
+      { ids }
     );
   },
 };

@@ -1,15 +1,17 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useOfficeSpaceListingsLogic } from "@/services/hooks/useOfficeSpaceListingsLogic";
 import OfficeSpaceListingsHeader from "./OfficeSpaceListingsHeader";
 import OfficeSpaceListingsTable from "./OfficeSpaceListingsTable";
 import OfficeSpaceListingsPagination from "./OfficeSpaceListingsPagination";
+import OfficeSpaceOptionsConfigModal from "./components/OfficeSpaceOptionsConfigModal";
 import ErrorState from "@/components/common/ErrorState";
 import { Building2 } from "lucide-react";
 
 const OfficeSpaceListings: React.FC = () => {
+  const [isConfigOpen, setIsConfigOpen] = useState(false);
   const {
     filters,
     searchInput,
@@ -58,6 +60,7 @@ const OfficeSpaceListings: React.FC = () => {
         onRefetch={refetch}
         clearAllFilters={clearAllFilters}
         hasActiveFilters={hasActiveFilters}
+        onOpenConfig={() => setIsConfigOpen(true)}
         filterDropdownContent={
           <div className="p-4 space-y-4">
             <div>
@@ -125,6 +128,11 @@ const OfficeSpaceListings: React.FC = () => {
         onPageChange={initPageChange}
         itemsPerPageOptions={itemsPerPageOptions}
         onFilterChange={filterChange}
+      />
+
+      <OfficeSpaceOptionsConfigModal
+        isOpen={isConfigOpen}
+        onClose={() => setIsConfigOpen(false)}
       />
     </div>
   );
