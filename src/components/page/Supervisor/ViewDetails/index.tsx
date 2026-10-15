@@ -25,6 +25,7 @@ import { ApproveSupervisorModal, RejectSupervisorModal, SupervisorStatusBadge, E
 import { VerificationStatus } from "@/services/types/supervisor";
 import { getSupervisorCredentialTypeLabel, isSupervisorTypeWithoutCertifications } from "@/constants/supervisorSignupOptions";
 import { CloseLineIcon } from "@/icons";
+import InAppPaymentsCard from "../components/InAppPaymentsCard";
 
 interface ViewDetailsProps {
   id: string;
@@ -553,6 +554,8 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
               <FieldRow label="Verification Notes At" value={formatDate(profile?.verificationNotesAt)} />
             ) : null}
           </SectionCard>
+
+          <InAppPaymentsCard supervisorId={id} />
 
           {/* Subscription — latest ACTIVE row only */}
           {latestActiveSubscription && (

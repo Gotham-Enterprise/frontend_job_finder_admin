@@ -101,6 +101,7 @@ const navItems: NavItem[] = [
       { name: "Supervisor", path: "/admin/supervisors", badgeType: "supervisors" },
       { name: "Supervisee", path: "/admin/supervisees" },
       { name: "Reviews", path: "/admin/supervision-reviews" },
+      { name: "Payments", path: "/admin/supervision-payments" },
     ],
   },
   {
