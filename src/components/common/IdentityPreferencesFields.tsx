@@ -52,10 +52,17 @@ export function IdentityPreferencesFields({
     if (key === "genderIdentity" && next !== GENDER_IDENTITY_SELF_DESCRIBE) {
       updated.customGenderIdentity = "";
     }
+    // A cleared field has nothing to display, so its visibility switches off with it.
+    if (key === "pronouns" && (next as string[]).length === 0) updated.showPronouns = false;
+    if (key === "genderIdentity" && !next) updated.showGenderIdentity = false;
+    if (key === "languages" && (next as string[]).length === 0) updated.showLanguages = false;
     onChange(updated);
   };
 
   const isSelfDescribe = value.genderIdentity === GENDER_IDENTITY_SELF_DESCRIBE;
+  const hasPronouns = value.pronouns.length > 0;
+  const hasGender = value.genderIdentity !== "";
+  const hasLanguages = value.languages.length > 0;
 
   return (
     <section className="space-y-4">
@@ -80,9 +87,9 @@ export function IdentityPreferencesFields({
         </FormField>
         <Checkbox
           label="Display pronouns on public profile"
-          checked={value.showPronouns}
+          checked={hasPronouns && value.showPronouns}
           onChange={(checked) => set("showPronouns", checked)}
-          disabled={disabled}
+          disabled={disabled || !hasPronouns}
         />
       </div>
 
@@ -110,9 +117,9 @@ export function IdentityPreferencesFields({
         )}
         <Checkbox
           label="Display gender identity on public profile"
-          checked={value.showGenderIdentity}
+          checked={hasGender && value.showGenderIdentity}
           onChange={(checked) => set("showGenderIdentity", checked)}
-          disabled={disabled}
+          disabled={disabled || !hasGender}
         />
       </div>
 
@@ -129,9 +136,9 @@ export function IdentityPreferencesFields({
         </FormField>
         <Checkbox
           label="Display languages on public profile"
-          checked={value.showLanguages}
+          checked={hasLanguages && value.showLanguages}
           onChange={(checked) => set("showLanguages", checked)}
-          disabled={disabled}
+          disabled={disabled || !hasLanguages}
         />
       </div>
     </section>
