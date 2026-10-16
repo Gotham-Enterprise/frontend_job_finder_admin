@@ -169,6 +169,11 @@ export default function PricingTable() {
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
                     {plan.name.replace(" Plan", "")}
                   </h3>
+                  {plan.isCustom && (
+                    <span className="mb-2 inline-flex rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
+                      Custom
+                    </span>
+                  )}
 
                   {/* Price */}
                   <div className="mb-4">
