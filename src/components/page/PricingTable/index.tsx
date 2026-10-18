@@ -6,6 +6,7 @@ import { usePricingPlans } from "@/services/hooks/usePricingPlans";
 import { PricingPlan, PlanInterval } from "@/services/types/subscription";
 import { useSubscriptionContext } from "@/context/SubscriptionContext";
 import FullScreenSpinner from "@/components/ui/FullScreenSpinner";
+import ToggleSwitch from "@/components/ui/ToggleSwitch";
 
 const PLAN_INTERVALS: { value: PlanInterval; label: string; discount?: string }[] = [
   { value: "MONTHLY", label: "Monthly" },
@@ -16,6 +17,7 @@ const PLAN_INTERVALS: { value: PlanInterval; label: string; discount?: string }[
 
 export default function PricingTable() {
   const [selectedInterval, setSelectedInterval] = useState<PlanInterval>("MONTHLY");
+  const [showCustomPlans, setShowCustomPlans] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<PricingPlan | null>(null);
   const { plans, isLoading, error, refetchPlans } = usePricingPlans(selectedInterval);
   const { setSubscriptionData } = useSubscriptionContext();
@@ -84,6 +86,10 @@ export default function PricingTable() {
 
     router.push(`/pricing/checkout?employerId=${employerId}&planId=${plan.id}`);
   };
+
+  const standardPlans = getOrderedPlans(plans.filter((plan) => !plan.isCustom));
+  const customPlans = plans.filter((plan) => plan.isCustom);
+  const visiblePlans = showCustomPlans ? [...standardPlans, ...customPlans] : standardPlans;
 
   if (isLoading) {
     return <FullScreenSpinner isVisible={true} message="Loading pricing plans..." />;
@@ -156,9 +162,26 @@ export default function PricingTable() {
           </div>
         </div>
 
+        <div className="mb-8 flex justify-center">
+          <ToggleSwitch
+            id="show-custom-plans"
+            checked={showCustomPlans}
+            onChange={setShowCustomPlans}
+            label="Show custom plans"
+            className="gap-3"
+          />
+        </div>
+
+        {standardPlans.length === 0 && (
+          <p className="mb-8 text-center text-gray-600 dark:text-gray-300">
+            No standard plans for this billing period.
+          </p>
+        )}
+
         {/* Pricing Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {getOrderedPlans(plans).map((plan, index) => (
+        {visiblePlans.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {visiblePlans.map((plan) => (
             <div
               key={plan.id}
               className="relative bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 transition-all duration-300 hover:shadow-lg"
@@ -233,7 +256,8 @@ export default function PricingTable() {
               </div>
             </div>
           ))}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );
