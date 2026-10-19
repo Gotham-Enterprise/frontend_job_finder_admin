@@ -186,6 +186,7 @@ const PlansPage: React.FC = () => {
               <th className="px-4 py-3 font-medium">Downloads</th>
               <th className="px-4 py-3 font-medium">Search</th>
               <th className="px-4 py-3 font-medium">Seats</th>
+              <th className="px-4 py-3 font-medium">Employers</th>
               <th className="px-4 py-3 font-medium">Status</th>
               {kind === 'custom' && <th className="px-4 py-3 font-medium">Actions</th>}
             </tr>
@@ -193,14 +194,14 @@ const PlansPage: React.FC = () => {
           <tbody>
             {isLoading && (
               <tr>
-                <td colSpan={kind === 'custom' ? 11 : 10} className="px-6 py-10 text-center text-gray-500">
+                <td colSpan={kind === 'custom' ? 12 : 11} className="px-6 py-10 text-center text-gray-500">
                   Loading plans...
                 </td>
               </tr>
             )}
             {!isLoading && plans.length === 0 && (
               <tr>
-                <td colSpan={kind === 'custom' ? 11 : 10} className="px-6 py-10 text-center text-gray-500">
+                <td colSpan={kind === 'custom' ? 12 : 11} className="px-6 py-10 text-center text-gray-500">
                   {kind === 'custom' ? 'No custom plans yet.' : 'No plans found.'}
                 </td>
               </tr>
@@ -212,9 +213,6 @@ const PlansPage: React.FC = () => {
                   {plan.description && (
                     <div className="mt-1 max-w-xs truncate text-xs text-gray-500">{plan.description}</div>
                   )}
-                  {kind === 'custom' && (
-                    <div className="mt-1 text-xs text-gray-400">{plan.subscriberCount} subscribers</div>
-                  )}
                 </td>
                 <td className="px-4 py-4 text-gray-700 dark:text-gray-300">{INTERVAL_LABELS[plan.interval]}</td>
                 <td className="px-4 py-4 text-gray-700 dark:text-gray-300">{formatPrice(plan.priceInCents)}</td>
@@ -224,6 +222,9 @@ const PlansPage: React.FC = () => {
                 <td className="px-4 py-4">{formatCredit(plan.resumeDownloadCredit)}</td>
                 <td className="px-4 py-4">{formatCredit(plan.resumeSearchCredit)}</td>
                 <td className="px-4 py-4">{formatCredit(plan.employeesSeatsCredit)}</td>
+                <td className="px-4 py-4 text-gray-700 dark:text-gray-300">
+                  {plan.subscriberCount.toLocaleString()}
+                </td>
                 <td className="px-4 py-4">
                   <span
                     className={`rounded-full px-2 py-1 text-xs font-medium ${
