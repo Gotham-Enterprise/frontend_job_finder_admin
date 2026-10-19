@@ -319,7 +319,7 @@ export const EditSupervisorMedicalDirectorFields: React.FC<
                         />
                       </FormField>
                     ) : null}
-                    <FormField label="Subspecialty (optional)">
+                    <FormField label="Subspecialty (Optional)">
                       <Input
                         value={entry.subspecialty}
                         onChange={(e) =>

@@ -25,6 +25,12 @@ import { ApproveSupervisorModal, RejectSupervisorModal, SupervisorStatusBadge, E
 import { VerificationStatus } from "@/services/types/supervisor";
 import { getSupervisorCredentialTypeLabel, isSupervisorTypeWithoutCertifications } from "@/constants/supervisorSignupOptions";
 import { CloseLineIcon } from "@/icons";
+import {
+  formatGenderIdentityForDisplay,
+  formatLanguagesForDisplay,
+  formatPronounsForDisplay,
+  isGenderIdentityPubliclyVisible,
+} from "@/services/utils/identityPreferencesForm";
 
 interface ViewDetailsProps {
   id: string;
@@ -56,6 +62,19 @@ function FieldRow({ label, value }: { label: string; value: React.ReactNode }) {
       <span className="text-sm font-medium text-gray-500 dark:text-gray-400 sm:w-44 flex-shrink-0">{label}</span>
       <span className="text-sm text-gray-900 dark:text-white flex-1">{value || <span className="text-gray-400 italic">Not specified</span>}</span>
     </div>
+  );
+}
+
+/** A stored value plus whether the public profile currently shows it. */
+function withVisibility(value: string, isPublic: boolean): React.ReactNode {
+  if (!value) return null;
+  return (
+    <span className="inline-flex flex-wrap items-center gap-2">
+      <span>{value}</span>
+      <Badge size="sm" color={isPublic ? "success" : "light"}>
+        {isPublic ? "Shown publicly" : "Hidden"}
+      </Badge>
+    </span>
   );
 }
 
@@ -341,6 +360,25 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
             />
             <FieldRow label="Account Status" value={s.status} />
             <FieldRow label="Registered" value={formatDateTime(s.createdAt, "Not specified")} />
+          </SectionCard>
+
+          {/* Optional self-identification + what the public profile shows */}
+          <SectionCard title="Identity & Public Visibility">
+            <FieldRow
+              label="Pronouns"
+              value={withVisibility(formatPronounsForDisplay(s), s.showPronouns === true)}
+            />
+            <FieldRow
+              label="Gender Identity"
+              value={withVisibility(
+                formatGenderIdentityForDisplay(s),
+                isGenderIdentityPubliclyVisible(s),
+              )}
+            />
+            <FieldRow
+              label="Languages"
+              value={withVisibility(formatLanguagesForDisplay(s), s.showLanguages === true)}
+            />
           </SectionCard>
 
           {/* Professional Info */}
