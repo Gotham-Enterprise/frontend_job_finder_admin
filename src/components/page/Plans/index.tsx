@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import Input from '@/components/ui/input/Input';
 import Pagination from '@/components/tables/Pagination';
 import ConfirmationDialog from '@/components/ui/ConfirmationDialog';
@@ -32,15 +33,73 @@ const formatPrice = (priceInCents: number) =>
 
 const formatCredit = (value: number | null) => (value === null ? 'Unlimited' : value.toLocaleString());
 
+const PLAN_INTERVALS = Object.keys(INTERVAL_LABELS) as PlanInterval[];
+
+const parseKind = (value: string | null): PlanKind => (value === 'custom' ? 'custom' : 'standard');
+
+const parseInterval = (value: string | null): PlanInterval | '' => {
+  if (value === 'all') return '';
+  if (value && PLAN_INTERVALS.includes(value as PlanInterval)) return value as PlanInterval;
+  return 'MONTHLY';
+};
+
+const parsePage = (value: string | null): number => {
+  const page = Number.parseInt(value || '1', 10);
+  return Number.isFinite(page) && page > 0 ? page : 1;
+};
+
+type PlansQueryUpdate = {
+  tab?: PlanKind;
+  interval?: PlanInterval | '';
+  page?: number;
+  keyword?: string;
+};
+
 const PlansPage: React.FC = () => {
-  const [kind, setKind] = useState<PlanKind>('standard');
-  const [page, setPage] = useState(1);
-  const [keyword, setKeyword] = useState('');
-  const [searchInput, setSearchInput] = useState('');
-  const [interval, setInterval] = useState<PlanInterval | ''>('');
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const kind = parseKind(searchParams.get('tab'));
+  const interval = parseInterval(searchParams.get('interval'));
+  const page = parsePage(searchParams.get('page'));
+  const keyword = searchParams.get('keyword')?.trim() || '';
+  const [searchInput, setSearchInput] = useState(keyword);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPlan, setEditingPlan] = useState<AdminSubscriptionPlan | null>(null);
   const confirmation = useConfirmation();
+
+  useEffect(() => {
+    setSearchInput(keyword);
+  }, [keyword]);
+
+  const updateQuery = (next: PlansQueryUpdate) => {
+    const params = new URLSearchParams(searchParams.toString());
+
+    if (next.tab !== undefined) {
+      if (next.tab === 'standard') params.delete('tab');
+      else params.set('tab', next.tab);
+    }
+
+    if (next.interval !== undefined) {
+      if (next.interval === 'MONTHLY') params.delete('interval');
+      else if (next.interval === '') params.set('interval', 'all');
+      else params.set('interval', next.interval);
+    }
+
+    if (next.page !== undefined) {
+      if (next.page <= 1) params.delete('page');
+      else params.set('page', String(next.page));
+    }
+
+    if (next.keyword !== undefined) {
+      const trimmed = next.keyword.trim();
+      if (!trimmed) params.delete('keyword');
+      else params.set('keyword', trimmed);
+    }
+
+    const query = params.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+  };
 
   const { data, isLoading, isFetching, error, refetch } = useAdminSubscriptionPlans({
     kind,
@@ -60,14 +119,12 @@ const PlansPage: React.FC = () => {
   const meta = data?.metaData;
 
   const switchKind = (nextKind: PlanKind) => {
-    setKind(nextKind);
-    setPage(1);
+    updateQuery({ tab: nextKind, page: 1 });
   };
 
   const submitSearch = (event: React.FormEvent) => {
     event.preventDefault();
-    setKeyword(searchInput.trim());
-    setPage(1);
+    updateQuery({ keyword: searchInput.trim(), page: 1 });
   };
 
   const openCreate = () => {
@@ -152,8 +209,7 @@ const PlansPage: React.FC = () => {
           <select
             value={interval}
             onChange={(event) => {
-              setInterval(event.target.value as PlanInterval | '');
-              setPage(1);
+              updateQuery({ interval: event.target.value as PlanInterval | '', page: 1 });
             }}
             className="h-11 rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-800 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90"
           >
@@ -264,7 +320,7 @@ const PlansPage: React.FC = () => {
 
       {meta && meta.totalPages > 1 && (
         <div className="border-t border-gray-200 px-6 py-4 dark:border-gray-800">
-          <Pagination currentPage={meta.page} totalPages={meta.totalPages} onPageChange={setPage} />
+          <Pagination currentPage={meta.page} totalPages={meta.totalPages} onPageChange={(nextPage) => updateQuery({ page: nextPage })} />
         </div>
       )}
 
