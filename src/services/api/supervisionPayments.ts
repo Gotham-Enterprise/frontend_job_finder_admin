@@ -5,8 +5,9 @@ import {
   LateEntryInput,
   ResolveDisputeInput,
   SupervisorInAppPayments,
+  PaymentsSummaryResponse,
 } from "../types/supervisionPayments";
-import { apiGet, apiPatch, apiPost } from "./apiUtils";
+import { apiGet, apiPost } from "./apiUtils";
 
 export const supervisionPaymentsApi = {
   async getBillingWeeks(filters: BillingWeekFilters = {}): Promise<BillingWeeksResponse> {
@@ -20,6 +21,10 @@ export const supervisionPaymentsApi = {
     return apiGet<BillingWeeksResponse>(
       `/api/supervision/admin/billing-weeks?${queryParams.toString()}`,
     );
+  },
+
+  async getPaymentsSummary(): Promise<PaymentsSummaryResponse> {
+    return apiGet<PaymentsSummaryResponse>(`/api/supervision/admin/billing-weeks/summary`);
   },
 
   async getBillingWeek(id: string): Promise<BillingWeekResponse> {
@@ -47,14 +52,5 @@ export const supervisionPaymentsApi = {
     supervisorId: string,
   ): Promise<{ success: boolean; data: SupervisorInAppPayments }> {
     return apiGet(`/api/supervision/admin/supervisors/${supervisorId}/in-app-payments`);
-  },
-
-  async setSupervisorInAppPayments(
-    supervisorId: string,
-    inAppPaymentsPilot: boolean,
-  ): Promise<{ success: boolean; data: SupervisorInAppPayments }> {
-    return apiPatch(`/api/supervision/admin/supervisors/${supervisorId}/in-app-payments`, {
-      inAppPaymentsPilot,
-    });
   },
 };

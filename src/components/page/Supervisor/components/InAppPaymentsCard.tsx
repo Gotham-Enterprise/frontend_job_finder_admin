@@ -1,19 +1,14 @@
 "use client";
 import React from "react";
-import ToggleSwitch from "@/components/ui/ToggleSwitch";
-import {
-  useSetSupervisorInAppPayments,
-  useSupervisorInAppPayments,
-} from "@/services/hooks/useSupervisionPayments";
+import { useSupervisorInAppPayments } from "@/services/hooks/useSupervisionPayments";
 
 /**
- * In-app payments pilot allowlist for one supervisor: when on (and the
- * platform flag is on), their non-monthly hires use hourly, in-app billed
- * agreements. Turning it off only affects new agreements.
+ * In-app payments payout status for one supervisor. While the platform flag is
+ * on, every supervisor's non-monthly hires use hourly, in-app billed agreements;
+ * the only prerequisite is a finished payout account.
  */
 const InAppPaymentsCard: React.FC<{ supervisorId: string }> = ({ supervisorId }) => {
   const { data, isLoading, error } = useSupervisorInAppPayments(supervisorId);
-  const setPilot = useSetSupervisorInAppPayments(supervisorId);
   const status = data?.data;
 
   const payout = !status
@@ -38,17 +33,10 @@ const InAppPaymentsCard: React.FC<{ supervisorId: string }> = ({ supervisorId })
           <p className="text-sm text-red-600 dark:text-red-400">Couldn&apos;t load the in-app payments status.</p>
         ) : (
           <>
-            <ToggleSwitch
-              id="in-app-payments-pilot"
-              label="In the pilot (hourly, in-app billed agreements)"
-              checked={status.inAppPaymentsPilot}
-              disabled={setPilot.isPending}
-              onChange={(checked) => setPilot.mutate(checked)}
-            />
             {payout && <p className={`text-sm ${payout.className}`}>{payout.text}</p>}
             <p className="text-xs text-gray-500 dark:text-gray-400">
-              Supervisors must finish payout setup (Billing &amp; Invoices → Payouts) before they can send
-              an in-app billed agreement. Turning this off only affects new agreements.
+              Hourly, in-app billed agreements are on for all supervisors. This supervisor must finish
+              payout setup (Billing &amp; Invoices → Payouts) before they can send one.
             </p>
           </>
         )}

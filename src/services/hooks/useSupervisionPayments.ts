@@ -13,6 +13,7 @@ export const supervisionPaymentsQueryKeys = {
   lists: () => [...supervisionPaymentsQueryKeys.all, "list"] as const,
   list: (filters: BillingWeekFilters) => [...supervisionPaymentsQueryKeys.lists(), filters] as const,
   detail: (id: string) => [...supervisionPaymentsQueryKeys.all, "detail", id] as const,
+  summary: () => [...supervisionPaymentsQueryKeys.all, "summary"] as const,
   supervisor: (supervisorId: string) =>
     [...supervisionPaymentsQueryKeys.all, "supervisor", supervisorId] as const,
 };
@@ -25,6 +26,14 @@ export const useBillingWeeks = (filters: BillingWeekFilters = {}) =>
     queryKey: supervisionPaymentsQueryKeys.list(filters),
     queryFn: () => supervisionPaymentsApi.getBillingWeeks(filters),
     staleTime: 1000 * 30,
+    retry,
+  });
+
+export const usePaymentsSummary = () =>
+  useQuery({
+    queryKey: supervisionPaymentsQueryKeys.summary(),
+    queryFn: () => supervisionPaymentsApi.getPaymentsSummary(),
+    staleTime: 1000 * 60,
     retry,
   });
 
@@ -84,21 +93,3 @@ export const useSupervisorInAppPayments = (supervisorId: string) =>
     enabled: !!supervisorId,
     retry,
   });
-
-export const useSetSupervisorInAppPayments = (supervisorId: string) => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (enabled: boolean) =>
-      supervisionPaymentsApi.setSupervisorInAppPayments(supervisorId, enabled),
-    onSuccess: (data) => {
-      queryClient.setQueryData(supervisionPaymentsQueryKeys.supervisor(supervisorId), data);
-      showToast.success(
-        "In-app payments updated",
-        data.data.inAppPaymentsPilot
-          ? "This supervisor now sends hourly, in-app billed agreements."
-          : "New agreements from this supervisor use monthly terms paid outside the app.",
-      );
-    },
-    onError: (error: Error) => showToast.error("Update failed", error.message || "Please try again."),
-  });
-};

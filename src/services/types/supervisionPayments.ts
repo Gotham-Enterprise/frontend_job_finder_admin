@@ -124,8 +124,26 @@ export interface LateEntryInput {
 }
 
 export interface SupervisorInAppPayments {
-  inAppPaymentsPilot: boolean;
   payoutAccountCreated: boolean;
   payoutsEnabled: boolean;
   detailsSubmitted: boolean;
+}
+
+/** GET /api/supervision/admin/billing-weeks/summary — platform revenue at a glance. */
+export interface PaymentsSummary {
+  monthStart: string;
+  platformFees: {
+    thisMonthCents: number;
+    allTimeCents: number;
+    /** Fee the logged hours of prepaid, unsettled weeks would earn. */
+    inProgressEstimateCents: number;
+  };
+  settledWeeks: { thisMonth: number; allTime: number };
+  chargedVolume: { thisMonthCents: number; allTimeCents: number };
+  inProgressWeeks: number;
+}
+
+export interface PaymentsSummaryResponse {
+  success: boolean;
+  data: PaymentsSummary;
 }

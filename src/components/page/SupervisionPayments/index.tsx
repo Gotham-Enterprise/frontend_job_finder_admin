@@ -11,7 +11,8 @@ import ToggleSwitch from "../../ui/ToggleSwitch";
 import { SearchIcon } from "../../ui/icons";
 import { Table, TableBody, TableCell, TableRow } from "../../ui/table";
 import TableHeading from "../../tables/tableHeader";
-import { useBillingWeeks } from "@/services/hooks/useSupervisionPayments";
+import { useBillingWeeks, usePaymentsSummary } from "@/services/hooks/useSupervisionPayments";
+import type { PaymentsSummary } from "@/services/types/supervisionPayments";
 import {
   BillingWeek,
   BillingWeekFilters,
@@ -57,6 +58,64 @@ function attentionLabel(week: BillingWeek): string | null {
   return null;
 }
 
+function StatCard({ label, value, hint }: { label: string; value: string; hint?: string }) {
+  return (
+    <div className="rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-800">
+      <p className="text-sm text-gray-500 dark:text-gray-400">{label}</p>
+      <p className="mt-1.5 text-2xl font-bold text-gray-800 dark:text-white">{value}</p>
+      {hint && <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{hint}</p>}
+    </div>
+  );
+}
+
+/**
+ * Platform revenue cards: the 10% fee is not a Stripe line item (separate
+ * charges and transfers keep it as leftover balance), so this is where Gotham
+ * sees it directly.
+ */
+function PaymentsSummaryCards({ summary, loading }: { summary: PaymentsSummary | undefined; loading: boolean }) {
+  if (loading) {
+    return (
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {[...Array(4)].map((_, i) => (
+          <div key={i} className="h-24 animate-pulse rounded-xl bg-gray-100 dark:bg-gray-800" />
+        ))}
+      </div>
+    );
+  }
+  if (!summary) return null;
+  const month = new Date(summary.monthStart).toLocaleDateString("en-US", {
+    month: "long",
+    year: "numeric",
+    timeZone: "America/New_York",
+  });
+  const settled = summary.settledWeeks;
+  return (
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <StatCard
+        label={`Platform fees · ${month}`}
+        value={formatCents(summary.platformFees.thisMonthCents)}
+        hint={`${settled.thisMonth} settled week${settled.thisMonth === 1 ? "" : "s"} this month`}
+      />
+      <StatCard
+        label="Platform fees · all time"
+        value={formatCents(summary.platformFees.allTimeCents)}
+        hint={`${settled.allTime} settled week${settled.allTime === 1 ? "" : "s"}`}
+      />
+      <StatCard
+        label="In progress (estimated)"
+        value={formatCents(summary.platformFees.inProgressEstimateCents)}
+        hint={`${summary.inProgressWeeks} prepaid week${summary.inProgressWeeks === 1 ? "" : "s"} not yet settled`}
+      />
+      <StatCard
+        label={`Charged to supervisees · ${month}`}
+        value={formatCents(summary.chargedVolume.thisMonthCents)}
+        hint={`${formatCents(summary.chargedVolume.allTimeCents)} all time, before refunds`}
+      />
+    </div>
+  );
+}
+
 /** Billing weeks of in-app (hourly) supervision hires, for Gotham support. */
 const SupervisionPayments: React.FC = () => {
   const router = useRouter();
@@ -68,6 +127,7 @@ const SupervisionPayments: React.FC = () => {
     needsAttention: true,
   });
   const { data, isLoading, error, refetch } = useBillingWeeks(filters);
+  const { data: summaryData, isLoading: summaryLoading } = usePaymentsSummary();
 
   const updateFilters = (next: Partial<BillingWeekFilters>) =>
     startTransition(() => setFilters((prev) => ({ ...prev, page: 1, ...next })));
@@ -86,6 +146,9 @@ const SupervisionPayments: React.FC = () => {
   const limit = filters.limit || 10;
 
   return (
+    <div className="space-y-6">
+      <PaymentsSummaryCards summary={summaryData?.data} loading={summaryLoading} />
+
     <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
       <div className="px-6 py-5 border-b border-gray-200 dark:border-gray-800">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -250,6 +313,7 @@ const SupervisionPayments: React.FC = () => {
           </div>
         </div>
       ) : null}
+    </div>
     </div>
   );
 };
