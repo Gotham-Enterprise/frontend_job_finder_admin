@@ -42,6 +42,20 @@ export const supervisionPaymentsApi = {
     );
   },
 
+  async approveLateEntryRequest(id: string, requestId: string, reason?: string): Promise<BillingWeekResponse> {
+    return apiPost<BillingWeekResponse>(
+      `/api/supervision/admin/billing-weeks/${id}/late-entry-requests/${requestId}/approve`,
+      reason ? { reason } : {},
+    );
+  },
+
+  async dismissLateEntryRequest(id: string, requestId: string, note?: string): Promise<BillingWeekResponse> {
+    return apiPost<BillingWeekResponse>(
+      `/api/supervision/admin/billing-weeks/${id}/late-entry-requests/${requestId}/dismiss`,
+      note ? { note } : {},
+    );
+  },
+
   async retryLateEntryCharge(id: string, sessionId: string): Promise<BillingWeekResponse> {
     return apiPost<BillingWeekResponse>(
       `/api/supervision/admin/billing-weeks/${id}/late-entries/${sessionId}/retry-charge`,

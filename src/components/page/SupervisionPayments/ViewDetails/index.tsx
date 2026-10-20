@@ -3,11 +3,18 @@ import React, { useMemo, useState } from "react";
 import { AlertTriangle, RotateCw } from "lucide-react";
 import {
   useAddLateEntry,
+  useApproveLateEntryRequest,
   useBillingWeek,
+  useDismissLateEntryRequest,
   useResolveDispute,
   useRetryLateEntryCharge,
 } from "@/services/hooks/useSupervisionPayments";
-import { BillingWeek, BillingWeekSession } from "@/services/types/supervisionPayments";
+import {
+  BillingWeek,
+  BillingWeekSession,
+  DisputeAttachment,
+  LateEntryRequest,
+} from "@/services/types/supervisionPayments";
 import {
   PREPAY_STATUS_CLASS,
   PREPAY_STATUS_LABEL,
@@ -95,6 +102,33 @@ function settlementPreview(week: BillingWeek, minutes: number) {
   return { payout: earned - fee, fee, refund: week.prepayAmountCents - earned };
 }
 
+/** The supervisee's evidence images; each opens full size in a new tab. */
+function DisputeEvidence({ attachments }: { attachments: DisputeAttachment[] }) {
+  if (attachments.length === 0) return null;
+  return (
+    <div className="mt-3">
+      <p className="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+        Evidence ({attachments.length})
+      </p>
+      <div className="mt-1.5 flex flex-wrap gap-2">
+        {attachments.map((a) => (
+          <a
+            key={a.id}
+            href={a.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            title={`${a.fileName} · ${(a.sizeBytes / 1024 / 1024).toFixed(1)} MB`}
+            className="block rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden"
+          >
+            { }
+            <img src={a.url} alt={a.fileName} className="h-24 w-24 object-cover" />
+          </a>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function ResolveDisputeCard({ week }: { week: BillingWeek }) {
   const resolve = useResolveDispute(week.id);
   const maxMinutes = Math.min(week.loggedMinutes, week.terms.weeklyCapMinutes);
@@ -112,6 +146,7 @@ function ResolveDisputeCard({ week }: { week: BillingWeek }) {
           {formatEasternDateTime(week.disputedAt)}
         </p>
         <p className="mt-1 whitespace-pre-wrap">{week.disputeReason}</p>
+        <DisputeEvidence attachments={week.disputeAttachments} />
       </div>
       <div className="mt-4 space-y-3">
         <div>
@@ -239,6 +274,114 @@ function SessionsCard({ week }: { week: BillingWeek }) {
   );
 }
 
+/** The supervisor's open requests for this week: add each as a late session, or decline it. */
+function LateEntryRequestsList({ week, canAdd }: { week: BillingWeek; canAdd: boolean }) {
+  const approve = useApproveLateEntryRequest(week.id);
+  const decline = useDismissLateEntryRequest(week.id);
+  const [declining, setDeclining] = useState<LateEntryRequest | null>(null);
+  const [note, setNote] = useState("");
+  const requests = week.lateEntryRequests.filter((r) => r.status === "REQUESTED");
+  if (requests.length === 0) return null;
+  const busy = approve.isPending || decline.isPending;
+  const left = week.terms.weeklyCapMinutes - week.loggedMinutes;
+
+  const confirmDecline = async () => {
+    if (!declining) return;
+    await decline.mutateAsync({ requestId: declining.id, note: note.trim() || undefined });
+    setDeclining(null);
+    setNote("");
+  };
+
+  return (
+    <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-900/50 dark:bg-amber-900/20 p-4">
+      <p className="text-sm font-medium text-amber-800 dark:text-amber-300">
+        Requested by the supervisor ({requests.length})
+      </p>
+      <p className="mt-1 text-xs text-amber-800/80 dark:text-amber-300/80">
+        Approving adds the session as requested; the supervisee is then asked to approve it.
+      </p>
+      <ul className="mt-1 divide-y divide-amber-200 dark:divide-amber-900/50">
+        {requests.map((request) => {
+          const overCap = request.durationMinutes > left;
+          return (
+            <li key={request.id} className="py-3">
+              <div className="flex flex-wrap gap-4 items-start">
+                <div className="w-28 shrink-0">
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">
+                    {formatCalendarDate(request.sessionDate)}
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">{formatMinutes(request.durationMinutes)}</p>
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap break-words">
+                    {request.notes}
+                  </p>
+                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    Requested {formatEasternDateTime(request.createdAt)}
+                    {canAdd && overCap && ` · over the weekly max (${formatMinutes(left)} left)`}
+                  </p>
+                </div>
+                <div className="flex shrink-0 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => void approve.mutateAsync({ requestId: request.id })}
+                    disabled={busy || !canAdd || overCap}
+                    className={`${buttonClass} px-3 py-1.5 text-xs bg-brand-500 text-white hover:bg-brand-600`}
+                  >
+                    {approve.isPending && approve.variables?.requestId === request.id ? "Adding..." : "Approve"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDeclining(declining?.id === request.id ? null : request);
+                      setNote("");
+                    }}
+                    disabled={busy}
+                    className={`${buttonClass} px-3 py-1.5 text-xs border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-800`}
+                  >
+                    Decline
+                  </button>
+                </div>
+              </div>
+              {declining?.id === request.id && (
+                <div className="mt-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-3">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Reason (shown to the supervisor, optional)
+                  </label>
+                  <Input
+                    type="text"
+                    value={note}
+                    onChange={(e) => setNote(e.target.value)}
+                    placeholder="e.g. No matching session in the supervisee's records"
+                  />
+                  <div className="mt-3 flex justify-end gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setDeclining(null)}
+                      disabled={busy}
+                      className={`${buttonClass} border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300`}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void confirmDecline()}
+                      disabled={busy}
+                      className={`${buttonClass} bg-red-600 text-white hover:bg-red-700`}
+                    >
+                      {decline.isPending ? "Declining..." : "Decline request"}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
 function AddLateEntryCard({ week }: { week: BillingWeek }) {
   const add = useAddLateEntry(week.id);
   const today = todayEastern();
@@ -251,9 +394,13 @@ function AddLateEntryCard({ week }: { week: BillingWeek }) {
   const [notes, setNotes] = useState("");
   const [reason, setReason] = useState("");
 
+  const canAdd = today <= week.lateEntryDeadline && left >= UNIT;
+  const requestsList = <LateEntryRequestsList week={week} canAdd={canAdd} />;
+
   if (today > week.lateEntryDeadline) {
     return (
       <SectionCard title="Add a late session">
+        {requestsList}
         <p className="text-sm text-gray-500 dark:text-gray-400">
           Late sessions for this week could be added until {formatCalendarDate(week.lateEntryDeadline)}.
         </p>
@@ -263,6 +410,7 @@ function AddLateEntryCard({ week }: { week: BillingWeek }) {
   if (left < UNIT) {
     return (
       <SectionCard title="Add a late session">
+        {requestsList}
         <p className="text-sm text-gray-500 dark:text-gray-400">This week has reached its weekly max.</p>
       </SectionCard>
     );
@@ -282,10 +430,11 @@ function AddLateEntryCard({ week }: { week: BillingWeek }) {
 
   return (
     <SectionCard title="Add a late session">
+      {requestsList}
       <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
-        For a session the supervisor missed logging (until {formatCalendarDate(week.lateEntryDeadline)}).
-        The supervisee must approve it; if this week is already settled, it&apos;s charged separately and
-        the supervisor is paid right away.
+        For a session the supervisor missed logging and didn&apos;t request in the app (until{" "}
+        {formatCalendarDate(week.lateEntryDeadline)}). The supervisee must approve it; if this week is already
+        settled, it&apos;s charged separately and the supervisor is paid right away.
       </p>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
@@ -400,6 +549,8 @@ export default function ViewDetails({ id }: { id: string }) {
     if (!week) return null;
     if (week.status === "DISPUTED") return "This week is disputed. Resolve it below.";
     if (week.failedLateCharges > 0) return "A late-session charge failed. Retry it once the supervisee updates their card.";
+    if (week.pendingLateEntryRequests > 0)
+      return "The supervisor asked for a late session to be added. Approve or decline it below.";
     if (week.prepayStatus === "FAILED" && week.status !== "SETTLED")
       return "The prepay failed. The supervisee was asked to tap Pay now.";
     return null;
@@ -457,6 +608,9 @@ export default function ViewDetails({ id }: { id: string }) {
             <SectionCard title="Dispute resolution">
               <FieldRow label="Disputed" value={formatEasternDateTime(week.disputedAt)} />
               <FieldRow label="Reason" value={week.disputeReason} />
+              {week.disputeAttachments.length > 0 && (
+                <FieldRow label="Evidence" value={<DisputeEvidence attachments={week.disputeAttachments} />} />
+              )}
               <FieldRow label="Resolved" value={formatEasternDateTime(week.resolvedAt)} />
               <FieldRow label="Note" value={week.resolutionNote} />
             </SectionCard>

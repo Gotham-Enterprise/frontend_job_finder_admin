@@ -53,6 +53,7 @@ const ITEMS_PER_PAGE_OPTIONS = ["10", "25", "50"].map((value) => ({ value, label
 function attentionLabel(week: BillingWeek): string | null {
   if (week.status === "DISPUTED") return "Dispute to resolve";
   if (week.failedLateCharges > 0) return "Late charge failed";
+  if (week.pendingLateEntryRequests > 0) return "Late entry requested";
   if (week.prepayStatus === "FAILED" && week.status !== "SETTLED") return "Prepay failed";
   if (week.pendingLateEntries > 0) return "Late entry awaiting supervisee";
   return null;

@@ -79,6 +79,22 @@ export const useAddLateEntry = (id: string) =>
     message: "The supervisee was asked to approve it.",
   });
 
+export const useApproveLateEntryRequest = (id: string) =>
+  useWeekMutation(
+    id,
+    ({ requestId, reason }: { requestId: string; reason?: string }) =>
+      supervisionPaymentsApi.approveLateEntryRequest(id, requestId, reason),
+    { title: "Late session added", message: "The supervisee was asked to approve it." },
+  );
+
+export const useDismissLateEntryRequest = (id: string) =>
+  useWeekMutation(
+    id,
+    ({ requestId, note }: { requestId: string; note?: string }) =>
+      supervisionPaymentsApi.dismissLateEntryRequest(id, requestId, note),
+    { title: "Request declined", message: "The supervisor was told it wasn't added." },
+  );
+
 export const useRetryLateEntryCharge = (id: string) =>
   useWeekMutation(
     id,
