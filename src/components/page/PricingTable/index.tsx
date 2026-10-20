@@ -203,7 +203,7 @@ export default function PricingTable() {
                     <span className="text-3xl font-bold text-gray-900 dark:text-white">
                       {formatPrice(plan.monthlyCostInCents)}
                     </span>
-                    <span className="text-gray-500 dark:text-gray-400 text-sm">/{selectedInterval.toLowerCase()}</span>
+                    <span className="text-gray-500 dark:text-gray-400 text-sm"> Monthly</span>
                   </div>
 
                   {/* CTA Button */}
