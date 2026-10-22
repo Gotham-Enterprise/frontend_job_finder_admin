@@ -49,7 +49,7 @@ const ApproveSupervisorModal: React.FC<ApproveSupervisorModalProps> = ({
 
           <div className="mt-4">
             <label htmlFor="approve-supervisor-note" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Note <span className="font-normal text-gray-500 dark:text-gray-400">(optional)</span>
+              Note <span className="font-normal text-gray-500 dark:text-gray-400">(Optional)</span>
             </label>
             <textarea
               id="approve-supervisor-note"

@@ -1,5 +1,7 @@
 import { EmailVerifiedFilter } from "./emailVerifiedFilter";
 
+import type { IdentityPreferencesPayload, IdentityPreferencesResponse } from "./identityPreferences";
+
 export interface SuperviseeOccupation {
   id: number;
   name: string;
@@ -126,7 +128,7 @@ export interface SuperviseeSubscription {
 }
 
 /** Full detail shape from GET /api/supervision/admin/supervisees/:id */
-export interface SuperviseeDetails {
+export interface SuperviseeDetails extends IdentityPreferencesResponse {
   id: string;
   email: string;
   userName: string;
@@ -161,6 +163,8 @@ export interface SuperviseeDetailsResponse {
 
 export interface SuperviseeUpdatePayload {
   fullName?: string;
+  /** Pronouns / gender identity / languages + visibility flags — full replace when present. */
+  identity?: IdentityPreferencesPayload;
   contactNumber?: string;
   city?: string;
   state?: string;
