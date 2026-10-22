@@ -11,7 +11,7 @@ export const subscriptionApi = {
   },
 
   async getSubscriptionPlans(interval: PlanInterval = 'MONTHLY'): Promise<PricingPlansResponse> {
-    return apiGet<PricingPlansResponse>(`/api/categories/subscriptionPlans?interval=${interval}`);
+    return apiGet<PricingPlansResponse>(`/api/admin/subscription-plans/checkout?interval=${interval}`);
   },
 
   async verifyCoupon(couponRedemptionCode: string): Promise<CouponVerificationResponse> {

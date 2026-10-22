@@ -18,6 +18,7 @@ import {
   PieChartIcon,
   UserCircleIcon,
   TaskIcon,
+  ListIcon,
   IdCardIcon,
   HandShake,
   MailIcon,
@@ -205,6 +206,11 @@ const navItems: NavItem[] = [
     path: "/admin/coupons",
     permissionKey: "coupons",
     //subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
+  },
+  {
+    icon: <ListIcon />,
+    name: "Plans",
+    path: "/admin/plans",
   },
   {
     icon: <IdCardIcon />,

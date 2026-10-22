@@ -77,3 +77,21 @@ export const formatInterval = (interval: string): string => {
       return interval.toLowerCase();
   }
 };
+
+export const getBilledAmountInCents = (planDetails: {
+  price: number;
+  upfrontCost?: number | null;
+}): number => planDetails.upfrontCost ?? planDetails.price;
+
+export const formatBilledIntervalLabel = (interval?: string | null): string => {
+  switch (interval) {
+    case 'QUARTERLY':
+      return 'billed quarterly';
+    case 'SEMI_ANNUALLY':
+      return 'billed semi-annually';
+    case 'ANNUALLY':
+      return 'billed annually';
+    default:
+      return 'billed monthly';
+  }
+};
