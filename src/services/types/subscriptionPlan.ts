@@ -15,6 +15,7 @@ export interface AdminSubscriptionPlan {
   resumeSearchCredit: number | null;
   profileViewsCredit: number;
   emailSendingCredit: number;
+  smsSendingCredit: number;
   resumeDownloadCredit: number;
   employeesSeatsCredit: number;
   subscriberCount: number;
@@ -65,6 +66,7 @@ export interface CustomPlanPayload {
   resumeSearchCredit: number | null;
   profileViewsCredit: number;
   emailSendingCredit: number;
+  smsSendingCredit: number;
   resumeDownloadCredit: number;
   employeesSeatsCredit: number;
   isActive?: boolean;

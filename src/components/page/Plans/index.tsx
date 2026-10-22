@@ -189,11 +189,10 @@ const PlansPage: React.FC = () => {
               key={tab}
               type="button"
               onClick={() => switchKind(tab)}
-              className={`rounded-lg px-4 py-2 text-sm font-medium ${
-                kind === tab
-                  ? 'bg-primary text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300'
-              }`}
+              className={`rounded-lg px-4 py-2 text-sm font-medium ${kind === tab
+                ? 'bg-primary text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300'
+                }`}
             >
               {tab === 'standard' ? 'Plans' : 'Custom plans'}
             </button>
@@ -236,13 +235,14 @@ const PlansPage: React.FC = () => {
               <th className="px-6 py-3 font-medium">Name</th>
               <th className="px-4 py-3 font-medium">Interval</th>
               <th className="px-4 py-3 font-medium">Price</th>
-              <th className="px-4 py-3 font-medium">Job posts</th>
-              <th className="px-4 py-3 font-medium">Profiles</th>
-              <th className="px-4 py-3 font-medium">Emails</th>
-              <th className="px-4 py-3 font-medium">Downloads</th>
-              <th className="px-4 py-3 font-medium">Search</th>
-              <th className="px-4 py-3 font-medium">Seats</th>
-              <th className="px-4 py-3 font-medium">Employers</th>
+              <th className="px-4 py-3 font-medium">Job slots</th>
+              <th className="px-4 py-3 font-medium">Profile Views</th>
+              <th className="px-4 py-3 font-medium">Email Job invites</th>
+              <th className="px-4 py-3 font-medium">SMS Job invites</th>
+              <th className="px-4 py-3 font-medium">Resume Downloads</th>
+              <th className="px-4 py-3 font-medium">Resume Search</th>
+              <th className="px-4 py-3 font-medium">Employee seats</th>
+              <th className="px-4 py-3 font-medium">Subscriber count</th>
               <th className="px-4 py-3 font-medium">Status</th>
               {kind === 'custom' && <th className="px-4 py-3 font-medium">Actions</th>}
             </tr>
@@ -250,14 +250,14 @@ const PlansPage: React.FC = () => {
           <tbody>
             {isLoading && (
               <tr>
-                <td colSpan={kind === 'custom' ? 12 : 11} className="px-6 py-10 text-center text-gray-500">
+                <td colSpan={kind === 'custom' ? 13 : 12} className="px-6 py-10 text-center text-gray-500">
                   Loading plans...
                 </td>
               </tr>
             )}
             {!isLoading && plans.length === 0 && (
               <tr>
-                <td colSpan={kind === 'custom' ? 12 : 11} className="px-6 py-10 text-center text-gray-500">
+                <td colSpan={kind === 'custom' ? 13 : 12} className="px-6 py-10 text-center text-gray-500">
                   {kind === 'custom' ? 'No custom plans yet.' : 'No plans found.'}
                 </td>
               </tr>
@@ -275,6 +275,7 @@ const PlansPage: React.FC = () => {
                 <td className="px-4 py-4">{formatCredit(plan.jobPostCredit)}</td>
                 <td className="px-4 py-4">{formatCredit(plan.profileViewsCredit)}</td>
                 <td className="px-4 py-4">{formatCredit(plan.emailSendingCredit)}</td>
+                <td className="px-4 py-4">{formatCredit(plan.smsSendingCredit)}</td>
                 <td className="px-4 py-4">{formatCredit(plan.resumeDownloadCredit)}</td>
                 <td className="px-4 py-4">{formatCredit(plan.resumeSearchCredit)}</td>
                 <td className="px-4 py-4">{formatCredit(plan.employeesSeatsCredit)}</td>
@@ -283,11 +284,10 @@ const PlansPage: React.FC = () => {
                 </td>
                 <td className="px-4 py-4">
                   <span
-                    className={`rounded-full px-2 py-1 text-xs font-medium ${
-                      plan.isActive
-                        ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
-                        : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300'
-                    }`}
+                    className={`rounded-full px-2 py-1 text-xs font-medium ${plan.isActive
+                      ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
+                      : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300'
+                      }`}
                   >
                     {plan.isActive ? 'Active' : 'Inactive'}
                   </span>

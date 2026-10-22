@@ -25,6 +25,7 @@ interface CustomPlanFormState {
   resumeSearchCredit: string;
   profileViewsCredit: string;
   emailSendingCredit: string;
+  smsSendingCredit: string;
   resumeDownloadCredit: string;
   employeesSeatsCredit: string;
   isActive: boolean;
@@ -40,6 +41,7 @@ const emptyForm = (): CustomPlanFormState => ({
   resumeSearchCredit: '',
   profileViewsCredit: '0',
   emailSendingCredit: '0',
+  smsSendingCredit: '0',
   resumeDownloadCredit: '0',
   employeesSeatsCredit: '0',
   isActive: true,
@@ -55,6 +57,7 @@ const formFromPlan = (plan: AdminSubscriptionPlan): CustomPlanFormState => ({
   resumeSearchCredit: plan.resumeSearchCredit === null ? '' : String(plan.resumeSearchCredit),
   profileViewsCredit: String(plan.profileViewsCredit),
   emailSendingCredit: String(plan.emailSendingCredit),
+  smsSendingCredit: String(plan.smsSendingCredit ?? 0),
   resumeDownloadCredit: String(plan.resumeDownloadCredit),
   employeesSeatsCredit: String(plan.employeesSeatsCredit),
   isActive: plan.isActive,
@@ -103,6 +106,7 @@ const CustomPlanModal: React.FC<CustomPlanModalProps> = ({
       'jobPostCredit',
       'profileViewsCredit',
       'emailSendingCredit',
+      'smsSendingCredit',
       'resumeDownloadCredit',
       'employeesSeatsCredit',
     ];
@@ -131,6 +135,7 @@ const CustomPlanModal: React.FC<CustomPlanModalProps> = ({
       resumeSearchCredit: form.resumeSearchUnlimited ? null : Number(form.resumeSearchCredit),
       profileViewsCredit: Number(form.profileViewsCredit),
       emailSendingCredit: Number(form.emailSendingCredit),
+      smsSendingCredit: Number(form.smsSendingCredit),
       resumeDownloadCredit: Number(form.resumeDownloadCredit),
       employeesSeatsCredit: Number(form.employeesSeatsCredit),
       isActive: form.isActive,
@@ -220,7 +225,7 @@ const CustomPlanModal: React.FC<CustomPlanModalProps> = ({
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {field(
             'jobPostCredit',
-            'Job posts',
+            'Job slots',
             <Input
               id="jobPostCredit"
               inputMode="numeric"
@@ -242,13 +247,24 @@ const CustomPlanModal: React.FC<CustomPlanModalProps> = ({
           )}
           {field(
             'emailSendingCredit',
-            'Emails',
+            'Email Job invites',
             <Input
               id="emailSendingCredit"
               inputMode="numeric"
               value={form.emailSendingCredit}
               error={Boolean(errors.emailSendingCredit)}
               onChange={(event) => updateField('emailSendingCredit', event.target.value)}
+            />
+          )}
+          {field(
+            'smsSendingCredit',
+            'SMS Job invites',
+            <Input
+              id="smsSendingCredit"
+              inputMode="numeric"
+              value={form.smsSendingCredit}
+              error={Boolean(errors.smsSendingCredit)}
+              onChange={(event) => updateField('smsSendingCredit', event.target.value)}
             />
           )}
           {field(
