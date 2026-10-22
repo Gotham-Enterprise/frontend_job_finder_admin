@@ -8,18 +8,19 @@ import { subscriptionApi } from '@/services/api/subscription';
 import { useToast } from '@/context/ToastContext';
 import FullScreenSpinner from '@/components/ui/FullScreenSpinner';
 import { formatCouponDurationCheckout } from '@/services/utils/couponDuration';
+import { formatBilledIntervalLabel, getBilledAmountInCents } from '@/services/utils/planUtils';
 
 function CheckoutContent() {
   const [couponCode, setCouponCode] = useState('');
   const [isVerifyingCoupon, setIsVerifyingCoupon] = useState(false);
   const [couponError, setCouponError] = useState<string | null>(null);
-  
+
   const searchParams = useSearchParams();
   const router = useRouter();
   const employerId = searchParams.get('employerId');
   const planId = searchParams.get('planId');
   const { addToast } = useToast();
-  
+
   const { subscriptionData, setSubscriptionData, clearSubscriptionData, isSubscriptionDataReady } = useSubscriptionContext();
 
   useEffect(() => {
@@ -39,27 +40,30 @@ function CheckoutContent() {
 
   const calculateDiscount = (originalPriceInCents: number, coupon: any) => {
     if (!coupon) return 0;
-    
+
     if (coupon.amountOffInCents) {
       return coupon.amountOffInCents;
     }
-    
+
     if (coupon.percentOff) {
       return Math.round((originalPriceInCents * coupon.percentOff) / 100);
     }
-    
+
     return 0;
   };
 
+  const billedAmountInCents = subscriptionData
+    ? getBilledAmountInCents(subscriptionData.planDetails)
+    : 0;
+
   const calculateTotal = () => {
     if (!subscriptionData) return 0;
-    
-    const originalPrice = subscriptionData.planDetails.price;
-    const discount = subscriptionData.appliedCoupon 
-      ? calculateDiscount(originalPrice, subscriptionData.appliedCoupon)
+
+    const discount = subscriptionData.appliedCoupon
+      ? calculateDiscount(billedAmountInCents, subscriptionData.appliedCoupon)
       : 0;
-    
-    return Math.max(0, originalPrice - discount);
+
+    return Math.max(0, billedAmountInCents - discount);
   };
 
   const applyCoupon = async () => {
@@ -83,19 +87,19 @@ function CheckoutContent() {
 
     setIsVerifyingCoupon(true);
     setCouponError(null);
-    
+
     try {
       const response = await subscriptionApi.verifyCoupon(couponCode);
-      
+
       if (response.success && response.data) {
-        const discount = calculateDiscount(subscriptionData?.planDetails.price || 0, response.data);
-        
+        const discount = calculateDiscount(billedAmountInCents, response.data);
+
         addToast({
           variant: 'success',
           title: 'Coupon Applied',
           message: `Coupon "${response.data.title}" has been applied successfully! You saved ${formatPrice(discount)}.`,
         });
-        
+
         if (subscriptionData) {
           setSubscriptionData({
             ...subscriptionData,
@@ -103,7 +107,7 @@ function CheckoutContent() {
             appliedCoupon: response.data,
           });
         }
-        
+
         setCouponCode('');
       } else {
         const errorMessage = response.error || 'The coupon code is invalid or expired';
@@ -131,7 +135,7 @@ function CheckoutContent() {
   const removeCoupon = () => {
     setCouponCode('');
     setCouponError(null);
-    
+
     if (subscriptionData) {
       setSubscriptionData({
         ...subscriptionData,
@@ -149,7 +153,7 @@ function CheckoutContent() {
 
   const confirmAndPay = () => {
     if (!subscriptionData) return;
-    
+
     if (couponError) {
       addToast({
         variant: 'error',
@@ -158,7 +162,7 @@ function CheckoutContent() {
       });
       return;
     }
-    
+
     router.push(`/pricing/checkout/payment?employerId=${employerId}&planId=${planId}`);
   };
 
@@ -200,7 +204,7 @@ function CheckoutContent() {
             </svg>
             Back to Plans
           </button>
-          
+
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
             Subscriptions
           </h1>
@@ -231,8 +235,13 @@ function CheckoutContent() {
               <span className="text-gray-900 dark:text-white font-medium">
                 {subscriptionData.planDetails.name}
               </span>
-              <span className="text-gray-900 dark:text-white font-semibold">
-                {formatPrice(subscriptionData.planDetails.price)}
+              <span className="text-right">
+                <span className="block text-gray-900 dark:text-white font-semibold">
+                  {formatPrice(billedAmountInCents)}
+                </span>
+                <span className="block text-xs text-gray-500 dark:text-gray-400">
+                  {formatBilledIntervalLabel(subscriptionData.planDetails.interval)}
+                </span>
               </span>
             </div>
 
@@ -249,7 +258,7 @@ function CheckoutContent() {
                     </span>
                   </div>
                   <span className="font-semibold">
-                    -{formatPrice(calculateDiscount(subscriptionData.planDetails.price, subscriptionData.appliedCoupon))}
+                    -{formatPrice(calculateDiscount(billedAmountInCents, subscriptionData.appliedCoupon))}
                   </span>
                 </div>
               </div>
@@ -260,8 +269,13 @@ function CheckoutContent() {
               <span className="text-lg font-semibold text-gray-900 dark:text-white">
                 Total
               </span>
-              <span className="text-lg font-bold text-gray-900 dark:text-white">
-                {formatPrice(calculateTotal())}
+              <span className="text-right">
+                <span className="block text-lg font-bold text-gray-900 dark:text-white">
+                  {formatPrice(calculateTotal())}
+                </span>
+                <span className="block text-xs text-gray-500 dark:text-gray-400">
+                  {formatBilledIntervalLabel(subscriptionData.planDetails.interval)}
+                </span>
               </span>
             </div>
 
@@ -311,7 +325,7 @@ function CheckoutContent() {
                       value={couponCode}
                       onChange={(e) => {
                         setCouponCode(e.target.value);
-                        setCouponError(null); 
+                        setCouponError(null);
                       }}
                       disabled={isVerifyingCoupon}
                       className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50"
@@ -402,7 +416,15 @@ function CheckoutContent() {
                 <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
               </svg>
               <span className="text-gray-700 dark:text-gray-300">
-                {subscriptionData.planDetails.planInclusions.emailSending.toLocaleString()} Email Sends
+                {subscriptionData.planDetails.planInclusions.emailSending.toLocaleString()} Email Invites
+              </span>
+            </div>
+            <div className="flex items-center">
+              <svg className="w-5 h-5 text-green-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+              </svg>
+              <span className="text-gray-700 dark:text-gray-300">
+                {(subscriptionData.planDetails.planInclusions.smsSending ?? 0).toLocaleString()} SMS Invites
               </span>
             </div>
             <div className="flex items-center">

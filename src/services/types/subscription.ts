@@ -83,6 +83,7 @@ export interface PricingPlan {
   monthlyCostInCents: number;
   upfrontCostInCents: number;
   stripePriceId: string;
+  isCustom?: boolean;
   planInclusions: PlanInclusions;
 }
 
