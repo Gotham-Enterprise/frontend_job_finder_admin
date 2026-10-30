@@ -43,6 +43,7 @@ export interface AffiliatePartnerFeedRule {
   affiliatePartnerId: string;
   ruleGroupLabel?: string | null;
   occupationName: string;
+  titleKeywords: string[];
   specialtyName?: string | null;
   states: string[];
   cities: string[];
@@ -205,6 +206,7 @@ export interface AffiliateFeedJobTargetCount {
   ruleId: string;
   ruleGroupLabel: string | null;
   occupationName: string;
+  titleKeywords: string[];
   specialtyName: string | null;
   states: string[];
   cities: string[];
@@ -339,6 +341,7 @@ export interface UpdatePartnerData {
 export interface CreateFeedRuleData {
   ruleGroupLabel?: string;
   occupationName: string;
+  titleKeywords?: string[];
   specialtyName?: string | null;
   states?: string[];
   cities?: string[];
@@ -351,6 +354,7 @@ export interface CreateFeedRuleData {
 export interface UpdateFeedRuleData {
   ruleGroupLabel?: string | null;
   occupationName?: string;
+  titleKeywords?: string[];
   specialtyName?: string | null;
   states?: string[];
   cities?: string[];

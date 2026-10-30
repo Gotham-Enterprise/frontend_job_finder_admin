@@ -14,9 +14,13 @@ const US_STATE_NAME_TO_CODE: Record<string, string> = Object.fromEntries(
   Object.entries(US_STATE_CODE_TO_NAME).map(([code, name]) => [name, code])
 )
 
+const TITLE_KEYWORD_MAX_LENGTH = 80
+const TITLE_KEYWORD_MAX_COUNT = 20
+
 const EMPTY_FORM: CreateFeedRuleData = {
   ruleGroupLabel: '',
   occupationName: '',
+  titleKeywords: [],
   specialtyName: '',
   states: [],
   cities: [],
@@ -45,6 +49,7 @@ export default function FeedRuleModal({
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [cityStateName, setCityStateName] = useState('')
   const [cityName, setCityName] = useState('')
+  const [titleKeywordDraft, setTitleKeywordDraft] = useState('')
 
   const { data: occupationsData, isLoading: loadingOccupations } = useQuery({
     queryKey: ['dropdowns', 'occupations'],
@@ -86,6 +91,7 @@ export default function FeedRuleModal({
       setForm({
         ruleGroupLabel: rule.ruleGroupLabel || '',
         occupationName: rule.occupationName,
+        titleKeywords: rule.titleKeywords || [],
         specialtyName: rule.specialtyName || '',
         states: rule.states || [],
         cities: rule.cities || [],
@@ -99,6 +105,7 @@ export default function FeedRuleModal({
     }
     setCityStateName('')
     setCityName('')
+    setTitleKeywordDraft('')
     setErrors({})
   }, [rule, isOpen])
 
@@ -129,6 +136,40 @@ export default function FeedRuleModal({
     )
   }
 
+  const addTitleKeyword = (keywordValue = titleKeywordDraft) => {
+    const keyword = keywordValue.trim()
+    if (!keyword) return false
+    if (keyword.length > TITLE_KEYWORD_MAX_LENGTH) {
+      setErrors((prev) => ({
+        ...prev,
+        titleKeywords: `Each keyword must be at most ${TITLE_KEYWORD_MAX_LENGTH} characters`,
+      }))
+      return false
+    }
+    const existing = form.titleKeywords || []
+    if (existing.some((entry) => entry.toLowerCase() === keyword.toLowerCase())) {
+      setTitleKeywordDraft('')
+      return true
+    }
+    if (existing.length >= TITLE_KEYWORD_MAX_COUNT) {
+      setErrors((prev) => ({
+        ...prev,
+        titleKeywords: `Add at most ${TITLE_KEYWORD_MAX_COUNT} keywords`,
+      }))
+      return false
+    }
+    set('titleKeywords', [...existing, keyword])
+    setTitleKeywordDraft('')
+    return true
+  }
+
+  const removeTitleKeyword = (keyword: string) => {
+    set(
+      'titleKeywords',
+      (form.titleKeywords || []).filter((entry) => entry !== keyword)
+    )
+  }
+
   const addCity = () => {
     const city = cityName.trim()
     if (!city || !cityStateName) return
@@ -153,6 +194,20 @@ export default function FeedRuleModal({
     e.preventDefault()
     const errs: Record<string, string> = {}
     if (!form.occupationName) errs.occupationName = 'Occupation is required'
+    const titleKeywords = [...(form.titleKeywords || [])]
+    const pendingKeyword = titleKeywordDraft.trim()
+    if (pendingKeyword) {
+      if (pendingKeyword.length > TITLE_KEYWORD_MAX_LENGTH) {
+        errs.titleKeywords = `Each keyword must be at most ${TITLE_KEYWORD_MAX_LENGTH} characters`
+      } else if (
+        titleKeywords.length >= TITLE_KEYWORD_MAX_COUNT &&
+        !titleKeywords.some((entry) => entry.toLowerCase() === pendingKeyword.toLowerCase())
+      ) {
+        errs.titleKeywords = `Add at most ${TITLE_KEYWORD_MAX_COUNT} keywords`
+      } else if (!titleKeywords.some((entry) => entry.toLowerCase() === pendingKeyword.toLowerCase())) {
+        titleKeywords.push(pendingKeyword)
+      }
+    }
     if (Object.keys(errs).length > 0) {
       setErrors(errs)
       return
@@ -168,6 +223,7 @@ export default function FeedRuleModal({
     onSubmit({
       ...form,
       ruleGroupLabel: form.ruleGroupLabel || undefined,
+      titleKeywords,
       specialtyName: form.specialtyName || null,
       cities,
       workSetting: form.workSetting || null,
@@ -269,6 +325,62 @@ export default function FeedRuleModal({
               />
               {errors.occupationName && (
                 <p className="text-red-500 text-xs mt-1">{errors.occupationName}</p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Title keywords
+              </label>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                Optional. Leave empty to match all titles. A job matches if its title contains any keyword.
+              </p>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={titleKeywordDraft}
+                  onChange={(e) => setTitleKeywordDraft(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault()
+                      addTitleKeyword()
+                    }
+                  }}
+                  className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-800 dark:text-white"
+                  placeholder="e.g. ICU"
+                />
+                <button
+                  type="button"
+                  onClick={() => addTitleKeyword()}
+                  disabled={!titleKeywordDraft.trim()}
+                  className="inline-flex items-center justify-center gap-1 px-3 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add
+                </button>
+              </div>
+              {errors.titleKeywords && (
+                <p className="text-red-500 text-xs mt-1">{errors.titleKeywords}</p>
+              )}
+              {(form.titleKeywords || []).length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-3">
+                  {(form.titleKeywords || []).map((keyword) => (
+                    <span
+                      key={keyword}
+                      className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200"
+                    >
+                      {keyword}
+                      <button
+                        type="button"
+                        onClick={() => removeTitleKeyword(keyword)}
+                        className="text-gray-500 hover:text-gray-800 dark:hover:text-white"
+                        aria-label={`Remove ${keyword}`}
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
               )}
             </div>
 

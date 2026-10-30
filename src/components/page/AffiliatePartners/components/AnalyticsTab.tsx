@@ -62,6 +62,10 @@ function formatFeedRuleCities(cities: string[]): string {
   return !cities?.length ? 'All' : cities.join(', ')
 }
 
+function formatFeedRuleTitleKeywords(keywords: string[] | null | undefined): string {
+  return !keywords?.length ? 'All' : keywords.join(', ')
+}
+
 function downloadBuyingAnalyticsCsv({
   partnerName,
   startDate,
@@ -102,6 +106,7 @@ function downloadBuyingAnalyticsCsv({
         'Partner name',
         'Job Target',
         'Occupation',
+        'Title keywords',
         'Specialty',
         'Work Setting',
         'States',
@@ -123,6 +128,7 @@ function downloadBuyingAnalyticsCsv({
             '',
             '',
             '',
+            '',
             0,
             partner.uniqueJobCount,
           ]
@@ -137,6 +143,7 @@ function downloadBuyingAnalyticsCsv({
             partner.partnerName,
             target.ruleGroupLabel || '',
             target.occupationName,
+            formatFeedRuleTitleKeywords(target.titleKeywords),
             target.specialtyName || '',
             target.workSetting || '',
             formatFeedRuleStates(target.states),
@@ -152,6 +159,7 @@ function downloadBuyingAnalyticsCsv({
         [
           partner.partnerName,
           'Unique jobs (deduplicated)',
+          '',
           '',
           '',
           '',
@@ -828,6 +836,9 @@ export default function AnalyticsTab() {
                       Occupation
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      Title keywords
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                       Specialty
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
@@ -847,7 +858,7 @@ export default function AnalyticsTab() {
                 <tbody className="bg-white dark:bg-transparent divide-y divide-gray-200 dark:divide-gray-800">
                   {feedJobCountsLoading ? (
                     <tr>
-                      <td colSpan={8} className="px-6 py-12 text-center">
+                      <td colSpan={9} className="px-6 py-12 text-center">
                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
                       </td>
                     </tr>
@@ -873,6 +884,11 @@ export default function AnalyticsTab() {
                               <td className="px-6 py-4">
                                 <div className="text-sm text-gray-700 dark:text-gray-300">
                                   {target.occupationName}
+                                </div>
+                              </td>
+                              <td className="px-6 py-4">
+                                <div className="text-sm text-gray-700 dark:text-gray-300">
+                                  {formatFeedRuleTitleKeywords(target.titleKeywords)}
                                 </div>
                               </td>
                               <td className="px-6 py-4">
@@ -910,7 +926,7 @@ export default function AnalyticsTab() {
                                   {partner.partnerName}
                                 </div>
                               </td>
-                              <td colSpan={6} className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
+                              <td colSpan={7} className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
                                 No active job targets
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-right">
@@ -927,7 +943,7 @@ export default function AnalyticsTab() {
                           key={`${partner.partnerId}-unique`}
                           className="bg-gray-50 dark:bg-gray-900/40"
                         >
-                          <td className="px-6 py-3" colSpan={7}>
+                          <td className="px-6 py-3" colSpan={8}>
                             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                               Unique jobs for {partner.partnerName}
                             </span>
@@ -942,7 +958,7 @@ export default function AnalyticsTab() {
                     })
                   ) : (
                     <tr>
-                      <td colSpan={8} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                      <td colSpan={9} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
                         No buying partners with an outbound feed
                       </td>
                     </tr>
