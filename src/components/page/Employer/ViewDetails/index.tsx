@@ -2,12 +2,19 @@
 
 import React from "react";
 import { useRouter } from "next/navigation";
-import { useEmployerDetails } from "@/services/hooks/useEmployers";
+import {
+  useDeactivateEmployer,
+  useEmployerDetails,
+  useReactivateEmployer,
+} from "@/services/hooks/useEmployers";
 import { formatDate, formatDateTimeEST } from "@/services/utils/dateUtils";
 import ErrorState from "../../../common/ErrorState";
 import FullScreenSpinner from "../../../ui/FullScreenSpinner";
 import { CompanyProfile, JobPosts, CompanyUsers } from "./components";
 import BackToListButton from "@/components/ui/BackToListButton";
+import PermissionWrapper from "@/components/common/PermissionWrapper";
+import ConfirmationDialog from "@/components/ui/ConfirmationDialog";
+import { useConfirmation } from "@/hooks/useConfirmation";
 
 interface ViewDetailsProps {
   id: string;
@@ -15,10 +22,40 @@ interface ViewDetailsProps {
 
 export default function ViewDetails({ id }: ViewDetailsProps) {
   const router = useRouter();
+  const confirmation = useConfirmation();
   const { data, isLoading, error } = useEmployerDetails(id);
+  const deactivateEmployer = useDeactivateEmployer(id);
+  const reactivateEmployer = useReactivateEmployer(id);
+  const isUpdatingStatus = deactivateEmployer.isPending || reactivateEmployer.isPending;
 
   const seeReviews = () => {
     router.push(`/admin/company-reviews?id=${id}`);
+  };
+
+  const handleDeactivate = async () => {
+    const confirmed = await confirmation.confirm({
+      title: "Deactivate Company",
+      message:
+        "The public employer page will show as not found. Published job posts will be unpublished and will not come back automatically if you reactivate this company.",
+      confirmText: "Deactivate",
+      cancelText: "Cancel",
+    });
+
+    if (!confirmed) return;
+    deactivateEmployer.mutate();
+  };
+
+  const handleReactivate = async () => {
+    const confirmed = await confirmation.confirm({
+      title: "Reactivate Company",
+      message:
+        "The public employer profile will be visible again. Job posts stay unpublished until someone republishes them.",
+      confirmText: "Reactivate",
+      cancelText: "Cancel",
+    });
+
+    if (!confirmed) return;
+    reactivateEmployer.mutate();
   };
 
   if (isLoading) {
@@ -50,6 +87,13 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
     );
   }
   const employer = data.data;
+  const isDeactivated = Boolean(employer.deactivatedAt);
+  const deactivatedLabel = (() => {
+    if (!employer.deactivatedAt) return null;
+    const formatted = formatDateTimeEST(employer.deactivatedAt);
+    if (typeof formatted === "string") return formatted;
+    return `${formatted.date} ${formatted.time} ET`;
+  })();
 
   const contactInfo = [
     {
@@ -103,10 +147,40 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
   return (
     <>
       <div className="px-4 pt-4 pb-2">
-        <BackToListButton href="/admin/employers" className="mb-6" preserveState={true}>
-          Back to Employers
-        </BackToListButton>
-      </div>{" "}
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
+          <BackToListButton href="/admin/employers" preserveState={true}>
+            Back to Employers
+          </BackToListButton>
+
+          <div className="flex flex-wrap items-center gap-3">
+            {isDeactivated && (
+              <span className="inline-flex items-center rounded-full bg-yellow-50 px-3 py-1 text-sm font-medium text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400">
+                Deactivated {deactivatedLabel}
+              </span>
+            )}
+            <PermissionWrapper module="employers" action="edit">
+              <button
+                type="button"
+                onClick={isDeactivated ? handleReactivate : handleDeactivate}
+                disabled={isUpdatingStatus}
+                className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors disabled:opacity-60 ${
+                  isDeactivated
+                    ? "text-green-700 bg-green-50 hover:bg-green-100 dark:bg-green-900/20 dark:text-green-400 dark:hover:bg-green-900/30"
+                    : "text-yellow-700 bg-yellow-50 hover:bg-yellow-100 dark:bg-yellow-900/20 dark:text-yellow-400 dark:hover:bg-yellow-900/30"
+                }`}
+              >
+                {isUpdatingStatus
+                  ? isDeactivated
+                    ? "Reactivating..."
+                    : "Deactivating..."
+                  : isDeactivated
+                    ? "Reactivate Company"
+                    : "Deactivate Company"}
+              </button>
+            </PermissionWrapper>
+          </div>
+        </div>
+      </div>
       <div className="p-4 grid grid-cols-1 xl:grid-cols-3 gap-6">
         <div className="col-span-full xl:col-auto">
           <CompanyProfile
@@ -123,6 +197,17 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
           <CompanyUsers users={employer.companyUsers || []} />
         </div>
       </div>
+
+      <ConfirmationDialog
+        isOpen={confirmation.isOpen}
+        onClose={confirmation.onClose}
+        onConfirm={confirmation.onConfirm}
+        onCancel={confirmation.onCancel}
+        title={confirmation.config?.title || ""}
+        message={confirmation.config?.message || ""}
+        confirmText={confirmation.config?.confirmText}
+        cancelText={confirmation.config?.cancelText}
+      />
     </>
   );
 }
