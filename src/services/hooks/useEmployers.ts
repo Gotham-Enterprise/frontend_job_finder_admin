@@ -1,7 +1,8 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { employerApi } from "../api/employer";
 import { EmployerFilters } from "../types/employer";
 import { apiDelete } from "@/services/api/apiUtils";
+import { showToast } from "../utils/toast";
 
 export const employerQueryKeys = {
   all: ["employers"] as const,
@@ -36,6 +37,43 @@ export const useEmployerDetails = (id: string) => {
     staleTime: 1000 * 60 * 5,
     retry: 1,
     retryDelay: 1000,
+  });
+};
+
+export const useDeactivateEmployer = (id: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => employerApi.deactivateEmployer(id),
+    onSuccess: (response) => {
+      queryClient.invalidateQueries({ queryKey: employerQueryKeys.detail(id) });
+      const count = response.data.unpublishedJobCount;
+      showToast.success(
+        "Company deactivated",
+        `${count} published job ${count === 1 ? "post was" : "posts were"} unpublished.`
+      );
+    },
+    onError: (error: Error) => {
+      showToast.error("Deactivation failed", error.message || "Failed to deactivate company");
+    },
+  });
+};
+
+export const useReactivateEmployer = (id: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => employerApi.reactivateEmployer(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: employerQueryKeys.detail(id) });
+      showToast.success(
+        "Company reactivated",
+        "The public profile is visible again. Job posts stay unpublished until they are republished."
+      );
+    },
+    onError: (error: Error) => {
+      showToast.error("Reactivation failed", error.message || "Failed to reactivate company");
+    },
   });
 };
 
