@@ -104,6 +104,7 @@ export interface EmployerDetails {
   dateJoined: string;
   lastActivity: string;
   status: string;
+  deactivatedAt?: string | null;
   jobPost: JobPost[];
   companyUsers?: CompanyUser[];
   avatarUrl?: string;
