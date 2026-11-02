@@ -51,7 +51,52 @@ function renderRoleSubtext(values: Array<string | null | undefined>) {
 
 const getSupervisorId = (supervisor: Supervisor) => supervisor.id;
 
+const PAYOUT_BADGE: Record<NonNullable<Supervisor["payoutStatus"]>, { label: string; className: string }> = {
+  ready: { label: "Ready", className: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" },
+  pending: { label: "Onboarding", className: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400" },
+  none: { label: "Not set up", className: "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400" },
+};
+
+/** "$1,000/mo" from the listed fee (dollars); other cadences say so. */
+function formatListedFee(supervisor: Supervisor) {
+  if (supervisor.supervisionFeeAmount == null) return <span className="text-gray-400 italic">—</span>;
+  const amount = `$${supervisor.supervisionFeeAmount.toLocaleString("en-US")}`;
+  const type = supervisor.supervisionFeeType?.toUpperCase();
+  return type === "MONTHLY" ? `${amount}/mo` : type === "HOURLY" ? `${amount}/hr` : amount;
+}
+
+/** Medical Directors page: board certs, listed fee, payout account, active clients. */
+function MedicalDirectorCells({ supervisor }: { supervisor: Supervisor }) {
+  const payout = PAYOUT_BADGE[supervisor.payoutStatus ?? "none"];
+  return (
+    <>
+      {/* Board certifications */}
+      <TableCell className="px-4 py-3 text-center text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">
+        {supervisor.boardCertificationCount || <span className="text-gray-400 italic">None</span>}
+      </TableCell>
+
+      {/* Listed monthly fee */}
+      <TableCell className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">
+        {formatListedFee(supervisor)}
+      </TableCell>
+
+      {/* In-app payout account (needed to send a monthly agreement) */}
+      <TableCell className="px-4 py-3 whitespace-nowrap">
+        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${payout.className}`}>
+          {payout.label}
+        </span>
+      </TableCell>
+
+      {/* Clients with an accepted or active hire */}
+      <TableCell className="px-4 py-3 text-center text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">
+        {supervisor.activeClientCount ?? 0}
+      </TableCell>
+    </>
+  );
+}
+
 const SupervisorTable: React.FC<SupervisorTableProps> = ({
+  mode = "supervisors",
   data,
   isLoading,
   tableColumns,
@@ -202,9 +247,18 @@ const SupervisorTable: React.FC<SupervisorTableProps> = ({
                         supervisor.supervisorOccupation,
                         supervisor.supervisorSpecialty,
                       ])}
+                      {mode === "medicalDirectors" && !!supervisor.offerings?.length && (
+                        <p className="mt-1 text-xs text-brand-600 dark:text-brand-400">
+                          Also offers {supervisor.offerings.join(", ")}
+                        </p>
+                      )}
                     </div>
                   </TableCell>
 
+                  {mode === "medicalDirectors" && <MedicalDirectorCells supervisor={supervisor} />}
+
+                  {mode !== "medicalDirectors" && (
+                  <>
                   {/* License Type */}
                   <TableCell className="px-4 py-3 text-center text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">
                     {renderOptionalCredential(supervisor.licenseType)}
@@ -223,6 +277,8 @@ const SupervisorTable: React.FC<SupervisorTableProps> = ({
                       <span className="text-gray-400 italic">—</span>
                     )}
                   </TableCell>
+                  </>
+                  )}
 
                   {/* Verification Status */}
                   <TableCell className="px-4 py-3 whitespace-nowrap">

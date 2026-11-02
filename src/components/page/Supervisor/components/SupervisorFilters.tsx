@@ -56,21 +56,24 @@ const SupervisorFilters: React.FC<SupervisorFiltersProps> = ({
         </button>
       )}
 
-      <div>
-        <Label>Supervisor Type</Label>
-        <select
-          value={filters.supervisorType || ""}
-          onChange={(e) => onFilterChange("supervisorType", e.target.value || undefined)}
-          className="mt-1 h-11 w-full appearance-none rounded-lg border border-gray-300 px-4 py-2.5 pr-11 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-800"
-        >
-          <option value="">All Types</option>
-          {typeOptions.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
-      </div>
+      {/* No type choice on the Medical Directors page (every row is one). */}
+      {typeOptions.length > 0 && (
+        <div>
+          <Label>Supervisor Type</Label>
+          <select
+            value={filters.supervisorType || ""}
+            onChange={(e) => onFilterChange("supervisorType", e.target.value || undefined)}
+            className="mt-1 h-11 w-full appearance-none rounded-lg border border-gray-300 px-4 py-2.5 pr-11 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-800"
+          >
+            <option value="">All Types</option>
+            {typeOptions.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       {filters.supervisorType && (
         <button

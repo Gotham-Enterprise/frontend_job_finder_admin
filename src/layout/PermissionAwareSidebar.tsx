@@ -37,7 +37,7 @@ type NavItem = {
     new?: boolean;
     requiredAction?: "view" | "add" | "edit" | "delete";
     /** Drives a pending-count badge on this submenu item */
-    badgeType?: "supervisors";
+    badgeType?: "supervisors" | "medicalDirectors";
   }[];
   permissionKey?:
     | "jobSeekers"
@@ -98,9 +98,11 @@ const navItems: NavItem[] = [
     path: "/admin/supervisors",
     isAccessible: true,
     subItems: [
-      { name: "Supervisor", path: "/admin/supervisors", badgeType: "supervisors" },
-      { name: "Supervisee", path: "/admin/supervisees" },
+      { name: "Supervisors", path: "/admin/supervisors", badgeType: "supervisors" },
+      { name: "Medical Directors", path: "/admin/medical-directors", badgeType: "medicalDirectors" },
+      { name: "Supervisees", path: "/admin/supervisees" },
       { name: "Reviews", path: "/admin/supervision-reviews" },
+      // Hourly (weekly) and monthly (Medical Director) payments, as tabs
       { name: "Payments", path: "/admin/supervision-payments" },
     ],
   },
@@ -261,9 +263,11 @@ const AppSidebar: React.FC = () => {
   }
 
   let pendingSupervisorCount = 0;
+  let pendingMedicalDirectorCount = 0;
   try {
     const supervisorContext = usePendingSupervisorContext();
-    pendingSupervisorCount = supervisorContext.pendingCount;
+    pendingSupervisorCount = supervisorContext.pendingSupervisorCount;
+    pendingMedicalDirectorCount = supervisorContext.pendingMedicalDirectorCount;
   } catch (error) {
     console.debug("[Sidebar] PendingSupervisorContext not available");
   }
@@ -449,27 +453,36 @@ const AppSidebar: React.FC = () => {
                       // If we don't have permissions or are loading, don't show submenu items
                       return false;
                     })
-                    .map((subItem) => (
+                    .map((subItem) => {
+                      // Pending verifications for this list, if it shows a badge.
+                      const badgeCount =
+                        subItem.badgeType === "supervisors"
+                          ? pendingSupervisorCount
+                          : subItem.badgeType === "medicalDirectors"
+                            ? pendingMedicalDirectorCount
+                            : 0;
+                      const badgeNoun = subItem.badgeType === "medicalDirectors" ? "medical director" : "supervisor";
+                      return (
                       <li key={subItem.name}>
                         <Link
                           href={subItem.path}
                           className={`menu-dropdown-item ${
                             isActive(subItem.path) ? "menu-dropdown-item-active" : "menu-dropdown-item-inactive"
                           } ${
-                            subItem.badgeType === "supervisors" && pendingSupervisorCount > 0
+                            badgeCount > 0
                               ? "!text-[#006D36] !font-semibold"
                               : ""
                           }`}
                         >
                           {subItem.name}
                           <span className="flex items-center gap-1 ml-auto">
-                            {subItem.badgeType === "supervisors" && pendingSupervisorCount > 0 && (
+                            {badgeCount > 0 && (
                               <span className="relative group/badge">
                                 <span className="bg-[#006D36] text-white text-xs font-bold rounded-full px-2 py-0.5 min-w-[24px] text-center cursor-default">
-                                  {pendingSupervisorCount > 9 ? "9+" : pendingSupervisorCount}
+                                  {badgeCount > 9 ? "9+" : badgeCount}
                                 </span>
                                 <span className="pointer-events-none absolute right-full top-1/2 -translate-y-1/2 mr-2 hidden group-hover/badge:block bg-gray-800 text-white text-xs rounded px-2 py-1 whitespace-nowrap z-50 shadow-lg">
-                                  {pendingSupervisorCount} pending supervisor{pendingSupervisorCount !== 1 ? "s" : ""}
+                                  {badgeCount} pending {badgeNoun}{badgeCount !== 1 ? "s" : ""}
                                 </span>
                               </span>
                             )}
@@ -494,7 +507,8 @@ const AppSidebar: React.FC = () => {
                           </span>
                         </Link>
                       </li>
-                    ))}
+                      );
+                    })}
                 </ul>
               </div>
             )}

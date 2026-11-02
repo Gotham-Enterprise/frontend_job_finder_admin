@@ -58,6 +58,16 @@ export interface Supervisor {
   /** Post-nominal letters displayed after the full name, e.g. "Ph.D., NCC, LPC-S (AL)" */
   professionalCredentials: string | null;
   yearsOfExperience: string | null;
+  /** Listed fee: type (e.g. "MONTHLY") and amount in dollars. */
+  supervisionFeeType?: string | null;
+  supervisionFeeAmount?: number | null;
+  /** Physician offerings beyond the primary type, e.g. ["Supervising Physician"]. */
+  offerings?: string[];
+  boardCertificationCount?: number;
+  /** In-app payout account: none, onboarding not finished, or ready to receive payments. */
+  payoutStatus?: "none" | "pending" | "ready";
+  /** Medical Directors list only: clients with an accepted or active hire. */
+  activeClientCount?: number;
   createdAt: string;
   /** Email confirmation status; used to gate the "Resend verification email" action. */
   emailVerified: boolean;
@@ -96,6 +106,8 @@ export interface SupervisorFilters {
   verificationStatus?: VerificationStatus | "";
   /** Filter by the supervisor's primary type (e.g. "Medical Director"). */
   supervisorType?: string;
+  /** Which admin list: Supervisors (everyone but Medical Directors) or Medical Directors. */
+  group?: "supervisors" | "medicalDirectors";
   subscriptionType?: SupervisorSubscriptionType | "";
   /** Inclusive YYYY-MM-DD bounds on the active subscription's currentPeriodStart / currentPeriodEnd. */
   subscriptionStartFrom?: string;

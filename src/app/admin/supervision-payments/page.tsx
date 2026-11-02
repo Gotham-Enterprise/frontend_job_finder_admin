@@ -1,11 +1,11 @@
 import React, { Suspense } from "react";
-import SupervisionPayments from "@/components/page/SupervisionPayments";
+import SupervisionPaymentsTabs from "@/components/page/SupervisionPaymentsTabs";
 import FullScreenSpinner from "@/components/ui/FullScreenSpinner";
 
 const SupervisionPaymentsPage: React.FC = () => {
   return (
     <Suspense fallback={<FullScreenSpinner isVisible={true} message="Loading payments..." />}>
-      <SupervisionPayments />
+      <SupervisionPaymentsTabs />
     </Suspense>
   );
 };

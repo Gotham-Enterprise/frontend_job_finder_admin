@@ -25,6 +25,7 @@ export const supervisorApi = {
       // Only send verificationStatus when a specific one is selected; omitting it returns all statuses
       if (filters.verificationStatus) queryParams.append("verificationStatus", filters.verificationStatus);
       if (filters.supervisorType) queryParams.append("supervisorType", filters.supervisorType);
+      if (filters.group) queryParams.append("group", filters.group);
       if (filters.subscriptionType) queryParams.append("subscriptionType", filters.subscriptionType);
       if (filters.emailVerified) queryParams.append("emailVerified", filters.emailVerified);
       SUBSCRIPTION_DATE_FILTER_KEYS.forEach((key) => {
