@@ -23,7 +23,8 @@ export const SUBSCRIPTION_DATE_FILTER_KEYS = [
 export type SubscriptionDateFilterKey = (typeof SUBSCRIPTION_DATE_FILTER_KEYS)[number];
 
 export interface SupervisorSubscriptionSummary {
-  status: "ACTIVE" | "TRIALING";
+  /** PAST_DUE = renewal failed, Stripe still retrying; backend still treats it as entitled. */
+  status: "ACTIVE" | "TRIALING" | "PAST_DUE";
   planName: string | null;
   /** Plan priceInCents > 0 — same rule the backend uses for paid-feature gating. */
   isPaid: boolean;

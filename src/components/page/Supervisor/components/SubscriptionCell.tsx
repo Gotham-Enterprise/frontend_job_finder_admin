@@ -24,6 +24,7 @@ const SubscriptionCell: React.FC<SubscriptionCellProps> = ({ subscription }) => 
       <div className="flex items-center gap-1.5">
         <StatusBadge tone={isPaid ? "dark" : "light"}>{isPaid ? "Paid" : "Free"}</StatusBadge>
         {status === "TRIALING" && <StatusBadge tone="light">Trial</StatusBadge>}
+        {status === "PAST_DUE" && <StatusBadge tone="warning">Past due</StatusBadge>}
       </div>
       {planName && (
         <p className="text-xs text-gray-700 dark:text-gray-300 truncate max-w-[200px]">

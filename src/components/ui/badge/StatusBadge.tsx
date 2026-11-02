@@ -3,13 +3,16 @@ import React from "react";
 const baseClass =
   "inline-flex items-center justify-center gap-1 rounded-sm px-2.5 py-0.5 font-medium whitespace-nowrap text-theme-xs uppercase";
 
-// Uniform admin-table badge palette: two greens only for now.
-// dark  -> brand green (#006D36), used for positive/primary states
-// light -> soft emerald with ring, used for every other state
+// Uniform admin-table badge palette.
+// dark    -> brand green (#006D36), used for positive/primary states
+// light   -> soft emerald with ring, used for every other neutral state
+// warning -> amber with ring, used for states that need admin attention (e.g. past-due payment)
 const toneClass = {
   dark: "bg-brand-500 text-white shadow-sm dark:bg-brand-500 dark:text-white",
   light:
     "bg-emerald-50 text-emerald-800 ring-1 ring-inset ring-emerald-200/90 dark:bg-emerald-950/40 dark:text-emerald-300 dark:ring-emerald-700/50",
+  warning:
+    "bg-amber-50 text-amber-800 ring-1 ring-inset ring-amber-200/90 dark:bg-amber-950/40 dark:text-amber-300 dark:ring-amber-700/50",
 } as const;
 
 export type StatusBadgeTone = keyof typeof toneClass;
