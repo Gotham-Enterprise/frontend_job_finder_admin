@@ -9,6 +9,7 @@ interface SubscriptionCellProps {
 
 /**
  * Paid/Free badge with the plan name and billing period stacked beneath.
+ * A past-due paid plan shows a single amber "Past due" badge instead of "Paid".
  * Free-plan rows skip the period, matching the supervisor detail page.
  */
 const SubscriptionCell: React.FC<SubscriptionCellProps> = ({ subscription }) => {
@@ -22,9 +23,15 @@ const SubscriptionCell: React.FC<SubscriptionCellProps> = ({ subscription }) => 
   return (
     <div className="space-y-1">
       <div className="flex items-center gap-1.5">
-        <StatusBadge tone={isPaid ? "dark" : "light"}>{isPaid ? "Paid" : "Free"}</StatusBadge>
+        {status === "PAST_DUE" ? (
+          // Payment failed and Stripe is retrying. Replace the plan-type badge
+          // so "Paid" and "Past due" never sit side by side; the plan name
+          // below still identifies which paid plan it is.
+          <StatusBadge tone="warning">Past due</StatusBadge>
+        ) : (
+          <StatusBadge tone={isPaid ? "dark" : "light"}>{isPaid ? "Paid" : "Free"}</StatusBadge>
+        )}
         {status === "TRIALING" && <StatusBadge tone="light">Trial</StatusBadge>}
-        {status === "PAST_DUE" && <StatusBadge tone="warning">Past due</StatusBadge>}
       </div>
       {planName && (
         <p className="text-xs text-gray-700 dark:text-gray-300 truncate max-w-[200px]">
