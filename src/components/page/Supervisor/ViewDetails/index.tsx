@@ -230,9 +230,16 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
     .join(", ");
   const location = [s.city, s.state, s.zipcode].filter(Boolean).join(", ");
 
-  /** Among ACTIVE subscriptions, show only the most recently created (e.g. upgraded plan vs stale free tier). */
+  /**
+   * Among entitled subscriptions (ACTIVE, TRIALING, or PAST_DUE while Stripe retries a failed
+   * renewal), show only the most recently created (e.g. upgraded plan vs stale free tier).
+   * Mirrors the backend admin-list filter.
+   */
+  const ENTITLED_SUBSCRIPTION_STATUSES = ["ACTIVE", "TRIALING", "PAST_DUE"];
   const latestActiveSubscription = (() => {
-    const active = (s.subscriptions ?? []).filter((sub) => sub.status === "ACTIVE");
+    const active = (s.subscriptions ?? []).filter((sub) =>
+      ENTITLED_SUBSCRIPTION_STATUSES.includes(sub.status),
+    );
     if (active.length === 0) return null;
     return active.reduce((latest, sub) => {
       const t = new Date(sub.createdAt).getTime();
@@ -592,7 +599,7 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
             ) : null}
           </SectionCard>
 
-          {/* Subscription — latest ACTIVE row only */}
+          {/* Subscription — latest entitled row only (ACTIVE / TRIALING / PAST_DUE) */}
           {latestActiveSubscription && (
             <SectionCard title="Subscription">
               <div>
@@ -602,8 +609,14 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
                     <FieldRow
                       label="Status"
                       value={
-                        <Badge variant="solid" color="success" size="sm">
-                          {latestActiveSubscription.status}
+                        <Badge
+                          variant="solid"
+                          color={latestActiveSubscription.status === "PAST_DUE" ? "warning" : "success"}
+                          size="sm"
+                        >
+                          {latestActiveSubscription.status === "PAST_DUE"
+                            ? "PAST DUE (payment failed, retrying)"
+                            : latestActiveSubscription.status}
                         </Badge>
                       }
                     />
