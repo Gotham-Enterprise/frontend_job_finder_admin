@@ -1,5 +1,6 @@
 import {
   MonthlyPeriodFilters,
+  MonthlyPeriodMessagesResponse,
   MonthlyPeriodResponse,
   MonthlyPeriodsResponse,
   ResolveMonthlyDisputeInput,
@@ -20,6 +21,11 @@ export const supervisionMonthlyPaymentsApi = {
 
   async getPeriod(id: string): Promise<MonthlyPeriodResponse> {
     return apiGet<MonthlyPeriodResponse>(`/api/supervision/admin/monthly-periods/${id}`);
+  },
+
+  /** A disputed month's hire chat. Each call is recorded with the admin's name. */
+  async getPeriodMessages(id: string): Promise<MonthlyPeriodMessagesResponse> {
+    return apiGet<MonthlyPeriodMessagesResponse>(`/api/supervision/admin/monthly-periods/${id}/messages`);
   },
 
   async resolveDispute(id: string, input: ResolveMonthlyDisputeInput): Promise<MonthlyPeriodResponse> {

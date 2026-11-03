@@ -1,9 +1,18 @@
 "use client";
 import React, { useState } from "react";
-import { AlertTriangle } from "lucide-react";
-import { useMonthlyPeriod, useResolveMonthlyDispute } from "@/services/hooks/useSupervisionMonthlyPayments";
-import { MonthlyPeriod } from "@/services/types/supervisionMonthlyPayments";
-import { formatCents, formatEasternDateTime } from "@/services/utils/supervisionPaymentsFormat";
+import { AlertTriangle, FileText, MessageSquare } from "lucide-react";
+import {
+  useMonthlyPeriod,
+  useMonthlyPeriodMessages,
+  useResolveMonthlyDispute,
+} from "@/services/hooks/useSupervisionMonthlyPayments";
+import { MonthlyActivityEntry, MonthlyDisputeCategory, MonthlyPeriod } from "@/services/types/supervisionMonthlyPayments";
+import {
+  formatCalendarDate,
+  formatCents,
+  formatEasternDateTime,
+  formatMinutes,
+} from "@/services/utils/supervisionPaymentsFormat";
 import ErrorState from "../../common/ErrorState";
 import FullScreenSpinner from "../../ui/FullScreenSpinner";
 import BackToListButton from "@/components/ui/BackToListButton";
@@ -47,6 +56,248 @@ function FieldRow({ label, value }: { label: string; value: React.ReactNode }) {
   );
 }
 
+const CATEGORY_LABEL: Record<MonthlyDisputeCategory, string> = {
+  UNREACHABLE: "Couldn't reach the Medical Director",
+  MISSED_MEETINGS: "Missed meetings or calls",
+  NO_CHART_REVIEW: "Charts weren't reviewed",
+  PROTOCOLS_NOT_SIGNED: "Protocols or standing orders weren't signed",
+  UNPROFESSIONAL: "Unprofessional conduct",
+  OTHER: "Other",
+};
+
+const ACTIVITY_LABEL: Record<MonthlyActivityEntry["type"], string> = {
+  MEETING: "Meeting or call",
+  CHART_REVIEW: "Chart review",
+  PROTOCOL_REVIEW: "Protocols & standing orders",
+  CONSULTATION: "Consultation",
+  OTHER: "Other",
+};
+
+/** Both sides' submissions on the dispute, oldest first, with their files. */
+function EvidenceCard({ period }: { period: MonthlyPeriod }) {
+  const evidence = period.evidence ?? [];
+  const client = period.hire?.supervisee.fullName || "Client";
+  const md = period.hire?.supervisor.fullName || "Medical Director";
+  return (
+    <SectionCard title="Evidence">
+      {evidence.length === 0 ? (
+        <p className="text-sm text-gray-500 dark:text-gray-400">
+          Nothing was attached (this month was reported before evidence could be added).
+        </p>
+      ) : (
+        <ol className="space-y-4">
+          {evidence.map((item, i) => (
+            <li
+              key={item.id}
+              className={`rounded-lg border-l-4 px-4 py-3 ${
+                item.authorRole === "SUPERVISOR"
+                  ? "border-blue-400 bg-blue-50 dark:bg-blue-900/20"
+                  : "border-amber-400 bg-amber-50 dark:bg-amber-900/20"
+              }`}
+            >
+              <p className="text-xs font-medium text-gray-700 dark:text-gray-300">
+                {item.authorRole === "SUPERVISOR"
+                  ? `Medical Director · ${md}`
+                  : `${i === 0 ? "Report" : "Client"} · ${client}`}{" "}
+                <span className="font-normal text-gray-500 dark:text-gray-400">· {formatEasternDateTime(item.createdAt)}</span>
+              </p>
+              {item.note && <p className="mt-1 text-sm text-gray-900 dark:text-white whitespace-pre-wrap">{item.note}</p>}
+              {item.files.length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {item.files.map((f) => (
+                    <a
+                      key={f.id}
+                      href={f.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title={f.fileName}
+                      className="block rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900"
+                    >
+                      {f.contentType.startsWith("image/") ? (
+                        <img src={f.url} alt={f.fileName} className="h-20 w-20 rounded-md object-cover" />
+                      ) : (
+                        <span className="flex h-20 w-32 flex-col items-center justify-center gap-1 px-2">
+                          <FileText className="h-5 w-5 text-gray-500" />
+                          <span className="w-full truncate text-center text-xs text-gray-700 dark:text-gray-300">{f.fileName}</span>
+                        </span>
+                      )}
+                    </a>
+                  ))}
+                </div>
+              )}
+            </li>
+          ))}
+        </ol>
+      )}
+    </SectionCard>
+  );
+}
+
+function Stat({ label, value, warn = false }: { label: string; value: React.ReactNode; warn?: boolean }) {
+  return (
+    <div className="rounded-lg border border-gray-100 dark:border-gray-700 px-3 py-2">
+      <p className="text-xs text-gray-500 dark:text-gray-400">{label}</p>
+      <p className={`mt-0.5 text-sm font-semibold ${warn ? "text-red-700 dark:text-red-400" : "text-gray-900 dark:text-white"}`}>
+        {value}
+      </p>
+    </div>
+  );
+}
+
+/**
+ * A disputed month's hire chat: the numbers (always), and the messages behind
+ * an explicit button — opening them is recorded with the admin's name.
+ */
+function ChatCard({ period }: { period: MonthlyPeriod }) {
+  const open = useMonthlyPeriodMessages(period.id);
+  const summary = period.chatSummary;
+  const access = open.data?.data.accessLog ?? period.chatAccessLog ?? [];
+  const messages = open.data?.data.messages;
+  const client = period.hire?.supervisee.fullName || "Client";
+  const md = period.hire?.supervisor.fullName || "Medical Director";
+
+  return (
+    <SectionCard title="Messages this month">
+      {!summary ? (
+        <p className="text-sm text-gray-500 dark:text-gray-400">This hire has no chat room, so there are no messages.</p>
+      ) : (
+        <>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            <Stat label="From the client" value={summary.clientMessages} />
+            <Stat label="From the Medical Director" value={summary.mdMessages} />
+            <Stat
+              label={`Client waited over ${summary.replyWindowHours} h`}
+              value={`${summary.unansweredRequests} of ${summary.clientRequests}`}
+              warn={summary.unansweredRequests > 0}
+            />
+            <Stat
+              label="Typical reply time"
+              value={summary.medianReplyHours == null ? "No replies" : `${summary.medianReplyHours} h`}
+            />
+            <Stat
+              label="Last Medical Director message"
+              value={summary.lastMdMessageAt ? formatEasternDateTime(summary.lastMdMessageAt) : "None this month"}
+              warn={!summary.lastMdMessageAt}
+            />
+            <Stat
+              label="Client messages never opened"
+              value={summary.clientMessagesNeverOpened}
+              warn={summary.clientMessagesNeverOpened > 0}
+            />
+          </div>
+          <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+            A client &quot;request&quot; is one or more client messages in a row; it&apos;s answered by the Medical
+            Director&apos;s next message. Replies up to {summary.replyWindowHours} h after the month ends count.
+          </p>
+
+          {messages ? (
+            messages.length === 0 ? (
+              <p className="mt-4 text-sm text-gray-500 dark:text-gray-400">No messages this month.</p>
+            ) : (
+              <ol className="mt-4 space-y-2 max-h-[32rem] overflow-y-auto pr-1">
+                {messages.map((m) => {
+                  const fromMd = m.from === "SUPERVISOR";
+                  return (
+                    <li key={m.id} className={`flex ${fromMd ? "justify-end" : "justify-start"}`}>
+                      <div
+                        className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${
+                          fromMd
+                            ? "bg-blue-50 text-gray-900 dark:bg-blue-900/30 dark:text-white"
+                            : "bg-gray-100 text-gray-900 dark:bg-gray-700 dark:text-white"
+                        }`}
+                      >
+                        <p className="text-xs font-medium text-gray-600 dark:text-gray-300">
+                          {fromMd ? md : client} · {formatEasternDateTime(m.createdAt)}
+                        </p>
+                        <p className="mt-0.5 whitespace-pre-wrap break-words">
+                          {m.body ?? <span className="italic text-gray-500">({m.type.toLowerCase()} message)</span>}
+                        </p>
+                        <p className="mt-0.5 text-[11px] text-gray-500 dark:text-gray-400">
+                          {m.readAt ? `Read ${formatEasternDateTime(m.readAt)}` : "Not opened"}
+                        </p>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ol>
+            )
+          ) : (
+            <div className="mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 rounded-lg bg-gray-50 dark:bg-gray-900/40 px-4 py-3">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Read the messages only to review this dispute. Opening them is recorded with your name.
+              </p>
+              <button
+                onClick={() => open.mutate()}
+                disabled={open.isPending}
+                className={`${buttonClass} shrink-0 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700`}
+              >
+                <MessageSquare className="h-4 w-4" />
+                {open.isPending ? "Opening..." : "Show messages"}
+              </button>
+            </div>
+          )}
+        </>
+      )}
+
+      {access.length > 0 && (
+        <div className="mt-4 border-t border-gray-100 dark:border-gray-700 pt-3">
+          <p className="text-xs font-medium text-gray-600 dark:text-gray-300">Messages opened by</p>
+          <ul className="mt-1 space-y-0.5 text-xs text-gray-500 dark:text-gray-400">
+            {access.map((a, i) => (
+              <li key={`${a.createdAt}-${i}`}>
+                {a.adminName} · {formatEasternDateTime(a.createdAt)}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </SectionCard>
+  );
+}
+
+/** What the Medical Director logged during the month — context for a dispute. */
+function ActivityCard({ period }: { period: MonthlyPeriod }) {
+  const activity = period.activity ?? [];
+  const minutes = activity.reduce((sum, e) => sum + (e.durationMinutes ?? 0), 0);
+  const charts = activity.reduce((sum, e) => sum + (e.chartCount ?? 0), 0);
+  return (
+    <SectionCard title="Medical Director's activity log">
+      {activity.length === 0 ? (
+        <p className="text-sm text-gray-500 dark:text-gray-400">Nothing was logged for this month.</p>
+      ) : (
+        <>
+          <p className="mb-3 text-sm text-gray-600 dark:text-gray-400">
+            {activity.length} {activity.length === 1 ? "entry" : "entries"}
+            {minutes > 0 && ` · ${formatMinutes(minutes)}`}
+            {charts > 0 && ` · ${charts} chart${charts === 1 ? "" : "s"} reviewed`}
+          </p>
+          <ul className="divide-y divide-gray-100 dark:divide-gray-700">
+            {activity.map((e) => (
+              <li key={e.id} className="py-2.5">
+                <p className="text-sm text-gray-900 dark:text-white">
+                  <span className="font-medium">{formatCalendarDate(e.activityDate)}</span> · {ACTIVITY_LABEL[e.type]}
+                  {e.durationMinutes ? ` · ${formatMinutes(e.durationMinutes)}` : ""}
+                  {e.chartCount ? ` · ${e.chartCount} chart${e.chartCount === 1 ? "" : "s"}` : ""}
+                </p>
+                {e.notes && <p className="mt-0.5 text-sm text-gray-600 dark:text-gray-400 whitespace-pre-wrap">{e.notes}</p>}
+                <div className="mt-1 flex flex-wrap gap-2 text-xs text-gray-500 dark:text-gray-400">
+                  {e.loggedOn !== e.activityDate && <span>Logged {formatCalendarDate(e.loggedOn)}</span>}
+                  {e.edited && <span>Edited</span>}
+                  {e.addedAfterDispute && (
+                    <span className="rounded bg-red-100 px-1.5 py-0.5 font-medium text-red-700 dark:bg-red-900/30 dark:text-red-300">
+                      Added after the dispute
+                    </span>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+    </SectionCard>
+  );
+}
+
 /** What the Medical Director gets and what's refunded when `releaseCents` of the month is released. */
 function preview(period: MonthlyPeriod, releaseCents: number) {
   const earned = Math.min(Math.max(releaseCents, 0), period.amountCents);
@@ -69,6 +320,7 @@ function ResolveDisputeCard({ period }: { period: MonthlyPeriod }) {
         <p className="font-medium">
           Reported by {period.hire?.supervisee.fullName || "the client"} on {formatEasternDateTime(period.disputedAt)}
         </p>
+        {period.disputeCategory && <p className="mt-1">Problem: {CATEGORY_LABEL[period.disputeCategory]}</p>}
         <p className="mt-1 whitespace-pre-wrap">{period.disputeReason}</p>
       </div>
       <div className="mt-4 space-y-3">
@@ -190,12 +442,16 @@ export default function MonthlyPeriodDetails({ id }: { id: string }) {
           {period.resolvedAt && (
             <SectionCard title="Dispute resolution">
               <FieldRow label="Disputed" value={formatEasternDateTime(period.disputedAt)} />
+              <FieldRow label="Problem" value={period.disputeCategory && CATEGORY_LABEL[period.disputeCategory]} />
               <FieldRow label="Reason" value={period.disputeReason} />
               <FieldRow label="Resolved" value={formatEasternDateTime(period.resolvedAt)} />
               <FieldRow label="Released" value={formatCents(period.approvedAmountCents)} />
               <FieldRow label="Note" value={period.resolutionNote} />
             </SectionCard>
           )}
+          {period.disputedAt && <EvidenceCard period={period} />}
+          {period.disputedAt && <ChatCard period={period} />}
+          {period.activity && <ActivityCard period={period} />}
           {period.paymentStatus === "FAILED" && period.status === "OPEN" && (
             <SectionCard title="Unpaid">
               <p className="text-sm text-gray-700 dark:text-gray-300">

@@ -44,3 +44,17 @@ export const useResolveMonthlyDispute = (id: string) => {
     },
   });
 };
+
+/** Opens a disputed month's messages (recorded server-side), then refreshes who-looked on the detail. */
+export const useMonthlyPeriodMessages = (id: string) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => supervisionMonthlyPaymentsApi.getPeriodMessages(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: supervisionMonthlyPaymentsQueryKeys.detail(id) });
+    },
+    onError: (error: Error) => {
+      showToast.error("Couldn't open the messages", error.message || "Please try again.");
+    },
+  });
+};
