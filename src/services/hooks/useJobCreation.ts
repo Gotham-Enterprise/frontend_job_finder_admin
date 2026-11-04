@@ -5,6 +5,7 @@ export const jobCreationQueryKeys = {
   all: ['job-creation'] as const,
   occupations: (includeAll = false) =>
     [...jobCreationQueryKeys.all, 'occupations', { includeAll }] as const,
+  degrees: () => [...jobCreationQueryKeys.all, 'degrees'] as const,
 };
 
 export const useOccupationsWithSpecialties = (options?: { includeAll?: boolean }) => {
@@ -17,6 +18,16 @@ export const useOccupationsWithSpecialties = (options?: { includeAll?: boolean }
       console.error('Error fetching occupations with specialties:', error);
       return failureCount < 3;
     },
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+  });
+};
+
+export const useDegrees = () => {
+  return useQuery({
+    queryKey: jobCreationQueryKeys.degrees(),
+    queryFn: () => jobCreationApi.getDegrees(),
+    staleTime: 1000 * 60 * 60 * 2,
+    retry: (failureCount) => failureCount < 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 };

@@ -3,6 +3,7 @@ import {
   JobSeekersResponse,
   JobSeekerDetailsResponse,
   JobSeekerUpdateData,
+  CreatedJobSeeker,
   ShareResumeRequest,
   ShareResumeResponse,
 } from "../types/jobSeeker";
@@ -19,8 +20,10 @@ export const jobSeekerApi = {
     if (filters.city) queryParams.append("city", filters.city);
     if (filters.radius) queryParams.append("radius", filters.radius.toString());
     if (filters.location && filters.location.length > 0) queryParams.append("location", filters.location.join(","));
-    if (filters.specialty) queryParams.append("specialty", filters.specialty);
     if (filters.occupationId) queryParams.append("occupationId", filters.occupationId.toString());
+    if (filters.occupationId && filters.specialtyId) {
+      queryParams.append("specialtyId", filters.specialtyId.toString());
+    }
     if (filters.status) queryParams.append("status", filters.status);
     if (filters.licenseName) queryParams.append("licenseName", filters.licenseName);
     if (filters.licenseIssuingState) queryParams.append("licenseIssuingState", filters.licenseIssuingState);
@@ -43,6 +46,10 @@ export const jobSeekerApi = {
 
   async getJobSeekerById(id: string): Promise<JobSeekerDetailsResponse> {
     return apiGet<JobSeekerDetailsResponse>(`/api/admin/jobseekers/${id}`);
+  },
+
+  async createJobSeeker(formData: FormData): Promise<{ success: boolean; data: CreatedJobSeeker }> {
+    return apiPost<{ success: boolean; data: CreatedJobSeeker }>("/api/admin/jobseekers", formData);
   },
 
   async updateJobSeeker(id: string, data: JobSeekerUpdateData): Promise<any> {
@@ -132,8 +139,10 @@ export const jobSeekerApi = {
     if (filters.city) queryParams.append("city", filters.city);
     if (filters.radius) queryParams.append("radius", filters.radius.toString());
     if (filters.location && filters.location.length > 0) queryParams.append("location", filters.location.join(","));
-    if (filters.specialty) queryParams.append("specialty", filters.specialty);
     if (filters.occupationId) queryParams.append("occupationId", filters.occupationId.toString());
+    if (filters.occupationId && filters.specialtyId) {
+      queryParams.append("specialtyId", filters.specialtyId.toString());
+    }
     if (filters.status) queryParams.append("status", filters.status);
     if (filters.licenseName) queryParams.append("licenseName", filters.licenseName);
     if (filters.licenseIssuingState) queryParams.append("licenseIssuingState", filters.licenseIssuingState);
