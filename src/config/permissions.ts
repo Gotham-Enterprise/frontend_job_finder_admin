@@ -48,6 +48,12 @@ export const GLOBAL_PERMISSION_CONFIG: GlobalPermissionConfig = {
       icon: "BriefcaseIcon",
       description: "Manage job listings and postings",
       path: "/admin/jobs",
+      subItems: [
+        { name: "All Jobs", path: "/admin/jobs", requiredPermission: "view" },
+        { name: "Add New", path: "/admin/jobs/create-job", requiredPermission: "create" },
+        { name: "Batch API Jobs", path: "/admin/batch-api-jobs", requiredPermission: "view" },
+        { name: "Occupations", path: "/admin/occupations", requiredPermission: "view" },
+      ],
     },
     {
       key: "applications",
