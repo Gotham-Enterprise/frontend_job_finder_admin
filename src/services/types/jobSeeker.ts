@@ -9,6 +9,15 @@ export interface JobSeekerLicensePayload {
   licenseIdNumber?: string;
 }
 
+export interface CreatedJobSeeker {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  status: string;
+  emailVerifiedAt: string | null;
+}
+
 export interface JobSeekerUpdateData {
   firstName: string;
   lastName: string;
@@ -59,8 +68,8 @@ export interface JobSeekerFilters {
   city?: string;
   radius?: number;
   location?: string[];
-  specialty?: string;
   occupationId?: number;
+  specialtyId?: number;
   status?: "active" | "inactive" | "suspended" | "pending";
   licenseName?: string;
   licenseIssuingState?: string;
