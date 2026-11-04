@@ -68,8 +68,8 @@ export interface JobSeekerFilters {
   city?: string;
   radius?: number;
   location?: string[];
-  specialty?: string;
   occupationId?: number;
+  specialtyId?: number;
   status?: "active" | "inactive" | "suspended" | "pending";
   licenseName?: string;
   licenseIssuingState?: string;

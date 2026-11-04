@@ -22,6 +22,7 @@ export interface JobSeekersFiltersProps {
   filters: JobSeekerFilters;
   onFilterChange: (key: keyof JobSeekerFilters, value: any) => void;
   occupationOptions: Array<{ value: string; label: string }>;
+  specialtyOptions: Array<{ value: string; label: string }>;
   stateOptions: Array<{ value: string; label: string }>;
   statusOptions: Array<{ value: string; label: string }>;
   emailVerifiedOptions: Array<{ value: string; label: string }>;
