@@ -9,6 +9,15 @@ export interface JobSeekerLicensePayload {
   licenseIdNumber?: string;
 }
 
+export interface CreatedJobSeeker {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  status: string;
+  emailVerifiedAt: string | null;
+}
+
 export interface JobSeekerUpdateData {
   firstName: string;
   lastName: string;

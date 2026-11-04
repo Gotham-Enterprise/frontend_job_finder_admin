@@ -3,6 +3,7 @@ import {
   JobSeekersResponse,
   JobSeekerDetailsResponse,
   JobSeekerUpdateData,
+  CreatedJobSeeker,
   ShareResumeRequest,
   ShareResumeResponse,
 } from "../types/jobSeeker";
@@ -43,6 +44,10 @@ export const jobSeekerApi = {
 
   async getJobSeekerById(id: string): Promise<JobSeekerDetailsResponse> {
     return apiGet<JobSeekerDetailsResponse>(`/api/admin/jobseekers/${id}`);
+  },
+
+  async createJobSeeker(formData: FormData): Promise<{ success: boolean; data: CreatedJobSeeker }> {
+    return apiPost<{ success: boolean; data: CreatedJobSeeker }>("/api/admin/jobseekers", formData);
   },
 
   async updateJobSeeker(id: string, data: JobSeekerUpdateData): Promise<any> {

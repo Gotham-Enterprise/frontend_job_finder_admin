@@ -15,6 +15,7 @@ export interface JobSeekersHeaderProps {
   onRefetch: () => void;
   onClearFilters: () => void;
   hasActiveFilters: boolean;
+  onCreate?: () => void;
 }
 
 export interface JobSeekersFiltersProps {

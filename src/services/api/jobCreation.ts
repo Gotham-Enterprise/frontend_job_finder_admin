@@ -6,6 +6,12 @@ export const jobCreationApi = {
     return apiPost<JobCreationResponse>('/api/admin/jobs/create', jobData);
   },
 
+  async getDegrees(): Promise<{ success: boolean; data: { id: number; name: string }[] }> {
+    return apiGet<{ success: boolean; data: { id: number; name: string }[] }>(
+      "/api/categories/degrees?limit=0",
+    );
+  },
+
   async getOccupationsWithSpecialties(options?: {
     /** Include isDropdown=false rows (supervision-only supervisee occupations). */
     includeAll?: boolean;
