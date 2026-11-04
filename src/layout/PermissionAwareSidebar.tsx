@@ -119,6 +119,7 @@ const navItems: NavItem[] = [
       { name: "All Jobs", path: "/admin/jobs", requiredAction: "view" },
       { name: "Add New", path: "/admin/jobs/create-job/", requiredAction: "add" },
       { name: "Batch API Jobs", path: "/admin/batch-api-jobs", requiredAction: "view" },
+      { name: "Occupations", path: "/admin/occupations", requiredAction: "view" },
     ],
   },
   {
