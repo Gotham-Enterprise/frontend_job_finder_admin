@@ -17,6 +17,10 @@ import {
 } from "@/services/types/supervisor";
 import { parseEmailVerifiedFilter } from "@/services/types/emailVerifiedFilter";
 import { useSupervisorTypesData } from "./useSupervisees";
+import {
+  DESC_FIRST_SORT_KEYS,
+  ENGAGEMENT_TABLE_COLUMNS,
+} from "@/components/page/SupervisionEngagement/EngagementListCells";
 
 export const useSupervisorLogic = () => {
   const router = useRouter();
@@ -244,6 +248,7 @@ export const useSupervisorLogic = () => {
       { key: "emailVerified", label: "Email Verified" },
       { key: "visibility", label: "Visibility", sortKey: "hideProfile" },
       { key: "subscription", label: "Subscription" },
+      ...ENGAGEMENT_TABLE_COLUMNS,
       { key: "createdAt", label: "Submitted", sortKey: "createdAt" },
       { key: "actions", label: "", className: "text-right" },
     ],
@@ -255,8 +260,12 @@ export const useSupervisorLogic = () => {
       setFilters((prev) => ({
         ...prev,
         sortBy: sortKey as SupervisorSortBy,
-        // Toggle direction when re-clicking the active column; default to asc.
-        sortOrder: prev.sortBy === sortKey && prev.sortOrder === "asc" ? "desc" : "asc",
+        // Toggle direction when re-clicking the active column. A first click
+        // sorts asc, except count columns, which start busiest-first.
+        sortOrder:
+          prev.sortBy === sortKey
+            ? prev.sortOrder === "asc" ? "desc" : "asc"
+            : DESC_FIRST_SORT_KEYS.has(sortKey) ? "desc" : "asc",
         page: 1,
       }));
     });

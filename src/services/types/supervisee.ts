@@ -1,3 +1,4 @@
+import type { EngagementListMetrics, EngagementSortBy } from "./supervisionEngagement";
 import { EmailVerifiedFilter } from "./emailVerifiedFilter";
 
 import type { IdentityPreferencesPayload, IdentityPreferencesResponse } from "./identityPreferences";
@@ -35,10 +36,17 @@ export interface Supervisee {
   superviseeSpecialty: string | null;
   /** Whether the supervisee's profile is hidden from public listings; drives the Hide/Show action. */
   hideProfile: boolean;
+  /** Message and hire counts (Admin Engagement Analytics). */
+  engagement?: EngagementListMetrics;
   createdAt: string;
 }
 
-export type SuperviseeSortBy = "fullName" | "state" | "hideProfile" | "createdAt";
+export type SuperviseeSortBy =
+  | "fullName"
+  | "state"
+  | "hideProfile"
+  | "createdAt"
+  | EngagementSortBy;
 
 export interface SuperviseeFilters {
   page?: number;

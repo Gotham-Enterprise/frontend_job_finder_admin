@@ -21,6 +21,7 @@ import BackToListButton from "@/components/ui/BackToListButton";
 import Badge from "@/components/ui/badge/Badge";
 import EmailVerifiedBadge from "@/components/ui/badge/EmailVerifiedBadge";
 import Avatar from "@/components/ui/avatar/Avatar";
+import EngagementCard from "../../SupervisionEngagement/EngagementCard";
 import { ApproveSupervisorModal, RejectSupervisorModal, SupervisorStatusBadge, EditVerificationNotesModal, EditSupervisorModal, ResendVerificationModal } from "../components";
 import { VerificationStatus } from "@/services/types/supervisor";
 import { getSupervisorCredentialTypeLabel, isSupervisorTypeWithoutCertifications } from "@/constants/supervisorSignupOptions";
@@ -627,6 +628,8 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
               </div>
             </SectionCard>
           )}
+
+          <EngagementCard role="SUPERVISOR" userId={id} />
         </div>
       </div>
 

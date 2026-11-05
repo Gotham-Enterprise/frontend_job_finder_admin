@@ -19,6 +19,7 @@ import VisibilityBadge from "../../../ui/badge/VisibilityBadge";
 import SupervisorStatusBadge from "./SupervisorStatusBadge";
 import SupervisorRowActions from "./SupervisorRowActions";
 import SubscriptionCell from "./SubscriptionCell";
+import { EngagementListCells } from "../../SupervisionEngagement/EngagementListCells";
 import { SupervisorTableProps } from "@/services/types/SupervisorTypes";
 
 /** "Jane Smith, Ph.D., NCC" — no comma when either part is missing. */
@@ -243,6 +244,9 @@ const SupervisorTable: React.FC<SupervisorTableProps> = ({
                   <TableCell className="px-4 py-3 whitespace-nowrap">
                     <SubscriptionCell subscription={supervisor.subscription} />
                   </TableCell>
+
+                  {/* Messages + Active Hires (Admin Engagement Analytics) */}
+                  <EngagementListCells engagement={supervisor.engagement} />
 
                   {/* Submitted date */}
                   <TableCell className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">

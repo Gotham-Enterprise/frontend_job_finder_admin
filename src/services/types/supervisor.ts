@@ -1,3 +1,4 @@
+import type { EngagementListMetrics, EngagementSortBy } from "./supervisionEngagement";
 import { EmailVerifiedFilter } from "./emailVerifiedFilter";
 import type {
   IdentityPreferencesPayload,
@@ -70,6 +71,8 @@ export interface Supervisor {
   /** Whether the supervisor's profile is hidden from public listings; drives the Hide/Show action. */
   hideProfile: boolean;
   subscription: SupervisorSubscriptionSummary | null;
+  /** Message and hire counts (Admin Engagement Analytics). */
+  engagement?: EngagementListMetrics;
 }
 
 /** Response shape from PATCH /api/supervision/admin/:id/hide-profile */
@@ -92,7 +95,8 @@ export type SupervisorSortBy =
   | "yearsOfExperience"
   | "verificationStatus"
   | "hideProfile"
-  | "createdAt";
+  | "createdAt"
+  | EngagementSortBy;
 
 export interface SupervisorFilters {
   page?: number;

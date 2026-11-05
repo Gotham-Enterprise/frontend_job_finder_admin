@@ -18,6 +18,7 @@ import { Supervisee } from "@/services/types/supervisee";
 import EmailVerifiedBadge from "../../../ui/badge/EmailVerifiedBadge";
 import VisibilityBadge from "../../../ui/badge/VisibilityBadge";
 import SuperviseeRowActions from "./SuperviseeRowActions";
+import { EngagementListCells } from "../../SupervisionEngagement/EngagementListCells";
 import { SuperviseeTableProps } from "@/services/types/SuperviseeTypes";
 
 const getSuperviseeId = (supervisee: Supervisee) => supervisee.id;
@@ -156,6 +157,9 @@ const SuperviseeTable: React.FC<SuperviseeTableProps> = ({
                   <TableCell className="px-4 py-3 whitespace-nowrap">
                     <VisibilityBadge hidden={supervisee.hideProfile} />
                   </TableCell>
+
+                  {/* Messages + Active Hires (Admin Engagement Analytics) */}
+                  <EngagementListCells engagement={supervisee.engagement} />
 
                   <TableCell className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
                     {supervisee.createdAt ? (

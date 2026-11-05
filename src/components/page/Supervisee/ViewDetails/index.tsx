@@ -17,6 +17,7 @@ import FullScreenSpinner from "../../../ui/FullScreenSpinner";
 import BackToListButton from "@/components/ui/BackToListButton";
 import EmailVerifiedBadge from "@/components/ui/badge/EmailVerifiedBadge";
 import Avatar from "@/components/ui/avatar/Avatar";
+import EngagementCard from "../../SupervisionEngagement/EngagementCard";
 import { EditSuperviseeModal } from "../components/EditSuperviseeModal";
 import ResendVerificationModal from "@/components/common/ResendVerificationModal";
 import Badge from "@/components/ui/badge/Badge";
@@ -331,6 +332,7 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
             />
           </SectionCard>
 
+          <EngagementCard role="SUPERVISEE" userId={id} />
         </div>
       </div>
 
