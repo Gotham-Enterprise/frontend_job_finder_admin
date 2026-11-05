@@ -2,10 +2,24 @@
 import React, { useMemo, useState } from "react";
 import { useEngagementOverview } from "@/services/hooks/useSupervisionEngagement";
 import { formatDate, formatDateTime } from "@/services/utils/dateUtils";
-import type { EngagementOverviewPeriod } from "@/services/types/supervisionEngagement";
+import type {
+  EngagementOverviewFilters,
+  EngagementOverviewPeriod,
+} from "@/services/types/supervisionEngagement";
+import Select from "@/components/form/Select";
+import { formatUsStateCodeForDisplay } from "@/services/utils/formatUsStateLicensure";
 import ConversationTimelineModal from "../ConversationTimelineModal";
 import { CounterpartCell, EmptyRow, HIRE_KIND_LABELS, HireStatusBadge, TD, TH } from "../shared";
 import TrendChart from "./TrendChart";
+import {
+  PREVIOUS_PERIOD_LABELS,
+  compareCount,
+  compareDuration,
+  compareRate,
+  formatDuration,
+  formatPercent,
+  type Delta,
+} from "./compare";
 
 const PERIODS: { value: EngagementOverviewPeriod; label: string }[] = [
   { value: "7d", label: "Last 7 Days" },
@@ -15,11 +29,38 @@ const PERIODS: { value: EngagementOverviewPeriod; label: string }[] = [
   { value: "1y", label: "Last Year" },
 ];
 
-function StatTile({ label, value, detail }: { label: string; value: string; detail?: string }) {
+// Each pair clears 4.5:1 text contrast on its card surface (white / gray-800).
+const DELTA_TONE_CLASSES: Record<Delta["tone"], string> = {
+  good: "text-success-700 dark:text-success-500",
+  bad: "text-error-600 dark:text-error-400",
+  neutral: "text-gray-500 dark:text-gray-400",
+};
+
+function StatTile({
+  label,
+  value,
+  detail,
+  delta,
+  comparedTo,
+}: {
+  label: string;
+  value: string;
+  detail?: string;
+  /** Change vs the previous period; arrow + words carry it, color only helps. */
+  delta?: Delta | null;
+  /** e.g. "previous 28 days". */
+  comparedTo?: string;
+}) {
   return (
     <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-5 py-4">
       <div className="text-sm text-gray-500 dark:text-gray-400">{label}</div>
       <div className="mt-1 text-2xl font-semibold text-gray-900 dark:text-white">{value}</div>
+      {delta && (
+        <div className="mt-1 text-xs">
+          <span className={`font-medium ${DELTA_TONE_CLASSES[delta.tone]}`}>{delta.text}</span>
+          {comparedTo && <span className="text-gray-500 dark:text-gray-400"> vs {comparedTo}</span>}
+        </div>
+      )}
       {detail && <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">{detail}</div>}
     </div>
   );
@@ -47,6 +88,25 @@ function SectionCard({
 
 const formatCount = (value: number) => value.toLocaleString();
 
+// The Select component can't pick an empty value, so "all" is a sentinel.
+const ALL = "ALL";
+const NO_FILTERS: EngagementOverviewFilters = { supervisorType: "", superviseeState: "" };
+// Below this many active conversations, percentages swing on one or two chats.
+const SMALL_SAMPLE = 5;
+
+/** "2 · oldest Oct 30, 2026", or a dash when there is nothing waiting. */
+function FollowUpCount({ count, since }: { count: number; since: string | null }) {
+  if (!count) return <span className="text-gray-400">—</span>;
+  return (
+    <div>
+      <span className="font-medium tabular-nums text-gray-900 dark:text-white">{formatCount(count)}</span>
+      {since && (
+        <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">oldest {formatDate(since)}</span>
+      )}
+    </div>
+  );
+}
+
 /** "2026-11-03" -> "Nov 3" for x-axis ticks; read as a calendar date, not UTC. */
 function shortDate(isoDate: string): string {
   const [year, month, day] = isoDate.split("-").map(Number);
@@ -59,8 +119,12 @@ function shortDate(isoDate: string): string {
  */
 export default function SupervisionEngagementOverview() {
   const [period, setPeriod] = useState<EngagementOverviewPeriod>("28d");
+  const [filters, setFilters] = useState<EngagementOverviewFilters>(NO_FILTERS);
   const [timelineFor, setTimelineFor] = useState<{ id: string; title: string } | null>(null);
-  const { data, isLoading, isFetching, isPlaceholderData, error, refetch } = useEngagementOverview(period);
+  const { data, isLoading, isFetching, isPlaceholderData, error, refetch } = useEngagementOverview(
+    period,
+    filters
+  );
   const overview = data?.success ? data.data : null;
   const isRefreshing = isFetching && isPlaceholderData;
   const unitLabel = overview?.granularity === "week" ? "Week" : "Day";
@@ -75,10 +139,30 @@ export default function SupervisionEngagementOverview() {
   );
 
   const summary = overview?.summary;
-  const conversion =
-    summary?.conversionRate === null || summary?.conversionRate === undefined
-      ? "—"
-      : `${Math.round(summary.conversionRate * 100)}%`;
+  const previous = summary?.previous;
+  const comparedTo = PREVIOUS_PERIOD_LABELS[period];
+  const responsiveness = overview?.responsiveness;
+  const hasFilters = Boolean(filters.supervisorType || filters.superviseeState);
+
+  const supervisorTypeOptions = useMemo(
+    () => [
+      { value: ALL, label: "All Supervisor Types" },
+      ...(overview?.filterOptions.supervisorTypes ?? []).map((type) => ({ value: type, label: type })),
+    ],
+    [overview?.filterOptions.supervisorTypes]
+  );
+  const stateOptions = useMemo(
+    () => [
+      { value: ALL, label: "All Supervisee States" },
+      ...(overview?.filterOptions.superviseeStates ?? []).map((code) => ({
+        value: code,
+        label: formatUsStateCodeForDisplay(code) ?? code,
+      })),
+    ],
+    [overview?.filterOptions.superviseeStates]
+  );
+  const setFilter = (key: keyof EngagementOverviewFilters) => (value: string) =>
+    setFilters((prev) => ({ ...prev, [key]: value === ALL ? "" : value }));
 
   return (
     <div className="space-y-5">
@@ -116,6 +200,49 @@ export default function SupervisionEngagementOverview() {
           </span>
         )}
       </div>
+      <div className="flex flex-wrap items-center gap-3">
+        <Select
+          className="w-full sm:w-60"
+          options={supervisorTypeOptions}
+          value={filters.supervisorType || ALL}
+          onChange={setFilter("supervisorType")}
+          searchable
+          searchPlaceholder="Search types..."
+        />
+        <Select
+          className="w-full sm:w-64"
+          options={stateOptions}
+          value={filters.superviseeState || ALL}
+          onChange={setFilter("superviseeState")}
+          searchable
+          searchPlaceholder="Search states..."
+        />
+        {hasFilters && (
+          <button
+            type="button"
+            onClick={() => setFilters(NO_FILTERS)}
+            className="text-sm font-medium text-brand-600 hover:underline dark:text-brand-400"
+          >
+            Clear filters
+          </button>
+        )}
+      </div>
+      {hasFilters && (
+        <div className="space-y-1 text-xs text-gray-500 dark:text-gray-400">
+          <p>
+            Every number below is filtered. Supervisor type matches the supervisor&apos;s profile; supervisee state
+            matches the supervisee&apos;s profile state.
+            {filters.superviseeState && " Public visitors without an account have no state, so they are not counted."}
+          </p>
+          {summary && summary.activeConversations < SMALL_SAMPLE && (
+            <p className="text-warning-700 dark:text-warning-400">
+              Only {summary.activeConversations} active{" "}
+              {summary.activeConversations === 1 ? "conversation matches" : "conversations match"}. Percentages can
+              swing a lot on numbers this small.
+            </p>
+          )}
+        </div>
+      )}
 
       {isLoading ? (
         <p className="text-sm text-gray-500 dark:text-gray-400">Loading engagement…</p>
@@ -136,21 +263,29 @@ export default function SupervisionEngagementOverview() {
             <StatTile
               label="Messages"
               value={formatCount(summary.messages)}
+              delta={previous && compareCount(summary.messages, previous.messages)}
+              comparedTo={comparedTo}
               detail={`In ${formatCount(summary.activeConversations)} active conversation${summary.activeConversations === 1 ? "" : "s"}`}
             />
             <StatTile
               label="Conversations With A Hire"
-              value={conversion}
+              value={formatPercent(summary.conversionRate)}
+              delta={previous && compareRate(summary.conversionRate, previous.conversionRate)}
+              comparedTo={comparedTo}
               detail={`${formatCount(summary.convertedConversations)} of ${formatCount(summary.activeConversations)} active conversations`}
             />
             <StatTile
               label="Connection Requests"
               value={formatCount(summary.connectionRequestsSent)}
+              delta={previous && compareCount(summary.connectionRequestsSent, previous.connectionRequestsSent)}
+              comparedTo={comparedTo}
               detail={`${formatCount(summary.connectionRequestsApproved)} approved in this period`}
             />
             <StatTile
               label="Hire Requests"
               value={formatCount(summary.hireRequests)}
+              delta={previous && compareCount(summary.hireRequests, previous.hireRequests)}
+              comparedTo={comparedTo}
               detail={`${formatCount(summary.hiresAccepted)} hires accepted in this period`}
             />
             <StatTile label="Current Hires" value={formatCount(summary.currentHires)} detail="Accepted or active right now" />
@@ -204,6 +339,46 @@ export default function SupervisionEngagementOverview() {
             </div>
           </details>
 
+          {responsiveness && (
+            <SectionCard
+              title="Responsiveness"
+              description="How fast supervisors and Medical Directors answer. A reply is their first message after a supervisee writes; an answer is approving or declining a connection request."
+            >
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <StatTile
+                  label="Median Reply Time"
+                  value={formatDuration(responsiveness.current.medianReplyMinutes)}
+                  delta={compareDuration(
+                    responsiveness.current.medianReplyMinutes,
+                    responsiveness.previous.medianReplyMinutes
+                  )}
+                  comparedTo={comparedTo}
+                  detail={`${formatCount(responsiveness.current.replies)} replies measured`}
+                />
+                <StatTile
+                  label="Replies Within 24 Hours"
+                  value={formatPercent(responsiveness.current.replyWithin24hRate)}
+                  delta={compareRate(
+                    responsiveness.current.replyWithin24hRate,
+                    responsiveness.previous.replyWithin24hRate
+                  )}
+                  comparedTo={comparedTo}
+                  detail={`${formatCount(responsiveness.current.unansweredOver24h)} still unanswered after 24 hours`}
+                />
+                <StatTile
+                  label="Connection Requests Answered Within 24 Hours"
+                  value={formatPercent(responsiveness.current.connections.answeredWithin24hRate)}
+                  delta={compareRate(
+                    responsiveness.current.connections.answeredWithin24hRate,
+                    responsiveness.previous.connections.answeredWithin24hRate
+                  )}
+                  comparedTo={comparedTo}
+                  detail={`Median answer time ${formatDuration(responsiveness.current.connections.medianAnswerMinutes)}`}
+                />
+              </div>
+            </SectionCard>
+          )}
+
           <SectionCard
             title="Supervision vs Medical Director"
             description="Hire requests and accepted hires in this period, and hires running right now."
@@ -230,6 +405,49 @@ export default function SupervisionEngagementOverview() {
                 </tbody>
               </table>
             </div>
+          </SectionCard>
+
+          <SectionCard
+            title={`Needs Follow-Up (${formatCount(overview.needsFollowUp.total)})`}
+            description={`Supervisors and Medical Directors with a connection request or a supervisee's message unanswered for ${overview.needsFollowUp.afterDays}+ days. This is a live list, not tied to the period above.`}
+          >
+            {overview.needsFollowUp.items.length === 0 ? (
+              <EmptyRow>Everyone is caught up.</EmptyRow>
+            ) : (
+              <>
+                <div className="relative overflow-x-auto rounded-lg border border-gray-100 dark:border-gray-700">
+                  <table className="min-w-full divide-y divide-gray-100 dark:divide-gray-700">
+                    <thead className="bg-gray-50 dark:bg-gray-900/40">
+                      <tr>
+                        <th className={TH}>Supervisor</th>
+                        <th className={TH}>Pending Requests</th>
+                        <th className={TH}>Unanswered Conversations</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                      {overview.needsFollowUp.items.map((row) => (
+                        <tr key={row.supervisor.id}>
+                          <td className={TD}>
+                            <CounterpartCell counterpart={row.supervisor} />
+                          </td>
+                          <td className={TD}>
+                            <FollowUpCount count={row.pendingRequests} since={row.oldestPendingAt} />
+                          </td>
+                          <td className={TD}>
+                            <FollowUpCount count={row.waitingConversations} since={row.oldestWaitingAt} />
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                {overview.needsFollowUp.total > overview.needsFollowUp.items.length && (
+                  <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                    Showing {overview.needsFollowUp.items.length} of {formatCount(overview.needsFollowUp.total)}.
+                  </p>
+                )}
+              </>
+            )}
           </SectionCard>
 
           <SectionCard

@@ -220,8 +220,10 @@ export default function EngagementCard({ role, userId }: EngagementCardProps) {
 
             <section>
               <SubHeading>
-                Connection Requests {engagement.connectionRequests.direction === "SENT" ? "Sent" : "Received"} (
-                {engagement.connectionRequests.total})
+                Connection Requests ({engagement.connectionRequests.total}) ·{" "}
+                <span className="font-normal text-gray-500 dark:text-gray-400">
+                  {engagement.connectionRequests.sent} sent, {engagement.connectionRequests.received} received
+                </span>
               </SubHeading>
               {engagement.connectionRequests.items.length === 0 ? (
                 <EmptyRow>No connection requests.</EmptyRow>
@@ -230,7 +232,8 @@ export default function EngagementCard({ role, userId }: EngagementCardProps) {
                   <table className="min-w-full divide-y divide-gray-100 dark:divide-gray-700">
                     <thead className="bg-gray-50 dark:bg-gray-900/40">
                       <tr>
-                        <th className={TH}>{engagement.connectionRequests.direction === "SENT" ? "To" : "From"}</th>
+                        <th className={TH}>Direction</th>
+                        <th className={TH}>With</th>
                         <th className={TH}>Status</th>
                         <th className={TH}>Sent</th>
                         <th className={TH}>Answered</th>
@@ -239,6 +242,7 @@ export default function EngagementCard({ role, userId }: EngagementCardProps) {
                     <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
                       {engagement.connectionRequests.items.map((request) => (
                         <tr key={request.id}>
+                          <td className={TD}>{request.direction === "SENT" ? "Sent" : "Received"}</td>
                           <td className={TD}>
                             <ConnectionRequesterCell request={request} />
                           </td>

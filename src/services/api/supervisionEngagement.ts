@@ -1,5 +1,6 @@
 import type {
   ConversationTimelineResponse,
+  EngagementOverviewFilters,
   EngagementOverviewPeriod,
   EngagementOverviewResponse,
   EngagementRole,
@@ -35,9 +36,12 @@ export const supervisionEngagementApi = {
   /** Platform-wide messaging + hiring overview, bucketed in `timezone`. */
   async getOverview(
     period: EngagementOverviewPeriod,
-    timezone: string
+    timezone: string,
+    filters: EngagementOverviewFilters
   ): Promise<EngagementOverviewResponse> {
     const params = new URLSearchParams({ period, timezone });
+    if (filters.supervisorType) params.set("supervisorType", filters.supervisorType);
+    if (filters.superviseeState) params.set("superviseeState", filters.superviseeState);
     return apiGet<EngagementOverviewResponse>(`/api/supervision/admin/engagement/overview?${params}`);
   },
 };

@@ -1,6 +1,10 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { supervisionEngagementApi } from "../api/supervisionEngagement";
-import type { EngagementOverviewPeriod, EngagementRole } from "../types/supervisionEngagement";
+import type {
+  EngagementOverviewFilters,
+  EngagementOverviewPeriod,
+  EngagementRole,
+} from "../types/supervisionEngagement";
 import { errorUtils } from "../utils/errorUtils";
 
 export const supervisionEngagementQueryKeys = {
@@ -9,8 +13,15 @@ export const supervisionEngagementQueryKeys = {
     [...supervisionEngagementQueryKeys.all, role, id] as const,
   timeline: (conversationId: string, page: number) =>
     [...supervisionEngagementQueryKeys.all, "timeline", conversationId, page] as const,
-  overview: (period: EngagementOverviewPeriod, timezone: string) =>
-    [...supervisionEngagementQueryKeys.all, "overview", period, timezone] as const,
+  overview: (period: EngagementOverviewPeriod, timezone: string, filters: EngagementOverviewFilters) =>
+    [
+      ...supervisionEngagementQueryKeys.all,
+      "overview",
+      period,
+      timezone,
+      filters.supervisorType,
+      filters.superviseeState,
+    ] as const,
 };
 
 /** The admin's IANA timezone, so trend buckets match their calendar days. */
@@ -50,11 +61,14 @@ export const useConversationTimeline = (conversationId: string | null, page: num
 };
 
 /** Platform-wide dashboard data; keeps the previous period's data while a new one loads. */
-export const useEngagementOverview = (period: EngagementOverviewPeriod) => {
+export const useEngagementOverview = (
+  period: EngagementOverviewPeriod,
+  filters: EngagementOverviewFilters
+) => {
   const timezone = browserTimezone();
   return useQuery({
-    queryKey: supervisionEngagementQueryKeys.overview(period, timezone),
-    queryFn: () => supervisionEngagementApi.getOverview(period, timezone),
+    queryKey: supervisionEngagementQueryKeys.overview(period, timezone, filters),
+    queryFn: () => supervisionEngagementApi.getOverview(period, timezone, filters),
     staleTime: 1000 * 60,
     placeholderData: keepPreviousData,
     retry: retryUnlessAuthOrMissing,

@@ -55,6 +55,8 @@ export interface EngagementHire {
 
 export interface EngagementConnectionRequest {
   id: string;
+  /** Whether this user sent the request or received it. */
+  direction: "SENT" | "RECEIVED";
   status: "PENDING" | "APPROVED" | "DECLINED" | "CANCELED" | string;
   source: "REGISTERED_USER" | "PUBLIC" | string;
   createdAt: string;
@@ -78,10 +80,11 @@ export interface SupervisionEngagement {
     byStatus: Record<string, number>;
     items: EngagementHire[];
   };
+  /** Both directions; the automatic hire-accept connection is left out. */
   connectionRequests: {
-    /** Supervisees send requests; supervisors receive them. */
-    direction: "SENT" | "RECEIVED";
     total: number;
+    sent: number;
+    received: number;
     byStatus: Record<string, number>;
     items: EngagementConnectionRequest[];
   };
@@ -136,6 +139,14 @@ export interface ConversationTimelineResponse {
 /** Dashboard periods accepted by GET /api/supervision/admin/engagement/overview. */
 export type EngagementOverviewPeriod = "7d" | "28d" | "3m" | "6m" | "1y";
 
+/** Dashboard filters; an empty value means "all". */
+export interface EngagementOverviewFilters {
+  /** A supervisor type name, matched against the supervisor's profile. */
+  supervisorType: string;
+  /** Two-letter code, matched against the supervisee's profile state. */
+  superviseeState: string;
+}
+
 export interface EngagementOverviewTrendBucket {
   /** Bucket start in the admin's timezone, YYYY-MM-DD. */
   date: string;
@@ -163,10 +174,51 @@ export interface EngagementNoHireConversation {
   latestHireRequest: { status: string; createdAt: string } | null;
 }
 
+/** The summary measures that also have a previous-period value. */
+export interface EngagementOverviewComparable {
+  messages: number;
+  activeConversations: number;
+  convertedConversations: number;
+  conversionRate: number | null;
+  hireRequests: number;
+  hiresAccepted: number;
+  connectionRequestsSent: number;
+  connectionRequestsApproved: number;
+}
+
+export interface EngagementResponsiveness {
+  /** Supervisor reply time after a supervisee writes, in minutes. */
+  medianReplyMinutes: number | null;
+  replies: number;
+  /** Supervisee messages from this period still unanswered after 24h. */
+  unansweredOver24h: number;
+  replyWithin24hRate: number | null;
+  /** Connection requests supervisors received in this period. */
+  connections: {
+    medianAnswerMinutes: number | null;
+    answered: number;
+    unansweredOver24h: number;
+    answeredWithin24hRate: number | null;
+  };
+}
+
+export interface EngagementFollowUpRow {
+  supervisor: EngagementCounterpart;
+  pendingRequests: number;
+  oldestPendingAt: string | null;
+  /** Conversations whose last message is the supervisee's, unanswered. */
+  waitingConversations: number;
+  oldestWaitingAt: string | null;
+}
+
 export interface EngagementOverview {
   period: EngagementOverviewPeriod;
   timezone: string;
+  filters: { supervisorType: string | null; superviseeState: string | null };
+  filterOptions: { supervisorTypes: string[]; superviseeStates: string[] };
   range: { start: string; end: string };
+  /** The equally long stretch right before `range`. */
+  previousRange: { start: string; end: string };
   granularity: "day" | "week";
   summary: {
     messages: number;
@@ -180,10 +232,14 @@ export interface EngagementOverview {
     currentHires: number;
     connectionRequestsSent: number;
     connectionRequestsApproved: number;
+    previous: EngagementOverviewComparable;
   };
+  responsiveness: { current: EngagementResponsiveness; previous: EngagementResponsiveness };
   byKind: EngagementOverviewKindRow[];
   trend: EngagementOverviewTrendBucket[];
   noHireConversations: { total: number; items: EngagementNoHireConversation[] };
+  /** Right now, not tied to the period. */
+  needsFollowUp: { afterDays: number; total: number; items: EngagementFollowUpRow[] };
 }
 
 export interface EngagementOverviewResponse {
