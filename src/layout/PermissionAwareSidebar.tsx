@@ -330,16 +330,14 @@ const AppSidebar: React.FC = () => {
               <button
                 onClick={() => submenuToggle(index, menuType)}
                 className={`menu-item group relative ${
-                  openSubmenu?.type === menuType && openSubmenu?.index === index
-                    ? "menu-item-active"
-                    : "menu-item-inactive"
+                  // Highlight follows the current route, not the open state: the
+                  // submenu can be auto-expanded (pending supervisors) on any page.
+                  hasActiveSubItem(nav) ? "menu-item-active" : "menu-item-inactive"
                 } cursor-pointer ${!isExpanded && !isHovered ? "lg:justify-center" : "lg:justify-start"}`}
               >
                 <span
                   className={`${
-                    openSubmenu?.type === menuType && openSubmenu?.index === index
-                      ? "menu-item-icon-active"
-                      : "menu-item-icon-inactive"
+                    hasActiveSubItem(nav) ? "menu-item-icon-active" : "menu-item-icon-inactive"
                   }`}
                 >
                   {nav.icon}
@@ -348,8 +346,8 @@ const AppSidebar: React.FC = () => {
                 {(isExpanded || isHovered || isMobileOpen) && (
                   <ChevronDownIcon
                     className={`ml-auto w-5 h-5 transition-transform duration-200 ${
-                      openSubmenu?.type === menuType && openSubmenu?.index === index ? "rotate-180 text-brand-500" : ""
-                    }`}
+                      openSubmenu?.type === menuType && openSubmenu?.index === index ? "rotate-180" : ""
+                    } ${hasActiveSubItem(nav) ? "text-brand-500" : ""}`}
                   />
                 )}
               </button>
@@ -516,6 +514,10 @@ const AppSidebar: React.FC = () => {
   const [subMenuHeight, setSubMenuHeight] = useState<Record<string, number>>({});
   const subMenuRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const isActive = useCallback((path: string) => path === pathname, [pathname]);
+  const hasActiveSubItem = useCallback(
+    (nav: NavItem) => nav.subItems?.some((subItem) => isActive(subItem.path)) ?? false,
+    [isActive],
+  );
   // Hide menu items until converted permissions exist so restricted roles
   // never flash Super Admin / isAccessible items on first paint.
   const showSidebarSkeleton = !permissions;
