@@ -75,7 +75,7 @@ const EmployerTable: React.FC<EmployerTableProps> = ({
         <TableBody>
           {isLoading ? (
             <TableRow>
-              <TableCell className="text-center py-8 px-3" colSpan={canCreateJobs ? 12 : 11}>
+              <TableCell className="text-center py-8 px-3" colSpan={canCreateJobs ? 13 : 12}>
                 <div className="flex items-center justify-center gap-3">
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-brand-500"></div>
                   <p className="text-gray-500 dark:text-gray-400">Loading...</p>
@@ -84,7 +84,7 @@ const EmployerTable: React.FC<EmployerTableProps> = ({
             </TableRow>
           ) : !data?.success || !data?.data?.length ? (
             <TableRow>
-              <TableCell className="text-center py-8 px-3" colSpan={canCreateJobs ? 12 : 11}>
+              <TableCell className="text-center py-8 px-3" colSpan={canCreateJobs ? 13 : 12}>
                 <p className="text-gray-500 dark:text-gray-400">No employers found</p>
               </TableCell>
             </TableRow>
@@ -175,6 +175,21 @@ const EmployerTable: React.FC<EmployerTableProps> = ({
                   ) : (
                     <span className="text-gray-400 dark:text-gray-500 italic">Not specified</span>
                   )}
+                </TableCell>
+                <TableCell className="py-4 px-3 whitespace-nowrap">
+                  {(() => {
+                    const source = employer.source || "Direct";
+                    if (source === "Direct") {
+                      return (
+                        <span className="text-sm text-gray-400 dark:text-gray-500">Direct</span>
+                      );
+                    }
+                    return (
+                      <Badge variant="light" color="info" size="sm">
+                        {source}
+                      </Badge>
+                    );
+                  })()}
                 </TableCell>
                 <TableCell className="py-4 px-3 whitespace-nowrap">
                   {employer.lastActivity ? (

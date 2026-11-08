@@ -25,6 +25,7 @@ export interface Employer {
   totalApplications: number;
   totalJobViews: number;
   dateJoined: string;
+  source?: string;
   lastActivity: string;
   status: string;
   currentPlan?: string;
