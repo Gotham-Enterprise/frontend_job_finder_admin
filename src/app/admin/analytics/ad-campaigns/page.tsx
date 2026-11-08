@@ -71,7 +71,7 @@ export default function AdCampaignsPage() {
     return isoDate(start);
   });
   const [to, setTo] = useState(() => isoDate(today));
-  const [platform, setPlatform] = useState("all");
+  const [platform, setPlatform] = useState("google");
   const [page, setPage] = useState(1);
 
   const filters = { from, to, platform };
