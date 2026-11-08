@@ -197,6 +197,7 @@ export const useEmployerLogic = () => {
       { key: "totalJobViews", label: "Total Job Views", className: "!px-3" },
       { key: "totalApplications", label: "Total Applications", className: "!px-3" },
       { key: "dateJoined", label: "Registration date", className: "!px-3" },
+      { key: "source", label: "Source", className: "!px-3" },
       { key: "lastActivity", label: "Last Activity", className: "!px-3" },
       { key: "status", label: "Status", className: "!px-3" },
       { key: "subscription", label: "Subscription", className: "!px-3" },
