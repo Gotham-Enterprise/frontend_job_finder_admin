@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useRef, useState } from "react";
-import { Eye, Mail, MailCheck, MoreVertical, Pencil } from "lucide-react";
+import { Eye, KeyRound, Mail, MailCheck, MoreVertical, Pencil } from "lucide-react";
 import { Dropdown } from "../../../ui/dropdown/Dropdown";
 import { DropdownItem } from "../../../ui/dropdown/DropdownItem";
 import PermissionWrapper from "@/components/common/PermissionWrapper";
@@ -14,6 +14,7 @@ interface EmployerRowActionsProps {
   onEdit: () => void;
   onVerifyUsers: () => void;
   onResendVerification: () => void;
+  onResetPasswords: () => void;
   showVerificationActions: boolean;
 }
 
@@ -22,6 +23,7 @@ const EmployerRowActions: React.FC<EmployerRowActionsProps> = ({
   onEdit,
   onVerifyUsers,
   onResendVerification,
+  onResetPasswords,
   showVerificationActions,
 }) => {
   const [open, setOpen] = useState(false);
@@ -75,6 +77,12 @@ const EmployerRowActions: React.FC<EmployerRowActionsProps> = ({
             </PermissionWrapper>
           </>
         )}
+
+        <PermissionWrapper module="employers" action="edit">
+          <DropdownItem tag="button" className={itemClass} onClick={run(onResetPasswords)}>
+            <KeyRound {...iconProps} /> Reset User Passwords
+          </DropdownItem>
+        </PermissionWrapper>
       </Dropdown>
     </div>
   );
