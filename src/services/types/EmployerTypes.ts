@@ -27,6 +27,7 @@ export interface EmployerFiltersProps {
   onFilterChange: (key: keyof EmployerFilters, value: any) => void;
   stateOptions: Array<{ value: string; label: string }>;
   statusOptions: Array<{ value: string; label: string }>;
+  emailVerifiedOptions: Array<{ value: string; label: string }>;
   hasActiveFilters: boolean;
   clearIndividualFilter: (filterType: string) => void;
 }

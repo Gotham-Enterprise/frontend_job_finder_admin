@@ -1,3 +1,5 @@
+import { EmailVerifiedFilter } from "./emailVerifiedFilter";
+
 export interface EmployerUpdateData {
   name: string;
   overview: string;
@@ -39,6 +41,7 @@ export interface EmployerFilters {
   name?: string;
   location?: string;
   status?: string;
+  emailVerified?: EmailVerifiedFilter;
 }
 
 export interface EmployersResponse {

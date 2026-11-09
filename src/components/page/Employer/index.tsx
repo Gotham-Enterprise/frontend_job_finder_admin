@@ -36,6 +36,7 @@ const Employers: React.FC<EmployersProps> = ({ className = "" }) => {
     
     tableColumns,
     statusOptions,
+    emailVerifiedOptions,
     stateOptions,
     itemsPerPageOptions,
     filterChange,
@@ -70,6 +71,7 @@ const Employers: React.FC<EmployersProps> = ({ className = "" }) => {
       onFilterChange={filterChange}
       stateOptions={stateOptions}
       statusOptions={statusOptions}
+      emailVerifiedOptions={emailVerifiedOptions}
       hasActiveFilters={hasActiveFilters}
       clearIndividualFilter={clearIndividualFilter}
     />

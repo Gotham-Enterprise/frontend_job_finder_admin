@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { authApi } from '../api/auth';
 import { authUtils } from '../utils/authUtils';
+import { getSafeAdminRedirect } from '../utils/redirectUtils';
 import { LoginCredentials, AuthResponse, ForgotPasswordRequest, ResetPasswordRequest, ChangePasswordRequest } from '../types/auth';
 
 export const useLogin = () => {
@@ -29,7 +30,7 @@ export const useLogin = () => {
       }
       
       queryClient.invalidateQueries({ queryKey: ['currentUser'] });
-      router.push('/admin');
+      router.push(getSafeAdminRedirect(new URLSearchParams(window.location.search).get('redirect')));
     }
   });
 };
