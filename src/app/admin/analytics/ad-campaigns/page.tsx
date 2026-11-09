@@ -6,14 +6,14 @@ import { getAdCampaignConversions, getAdCampaignSummary } from "@/services/api/a
 
 const PLATFORMS = [
   { value: "all", label: "All platforms" },
-  { value: "google", label: "Google Ads" },
+  { value: "google", label: "Google" },
   { value: "meta", label: "Meta Ads" },
   { value: "tiktok", label: "TikTok Ads" },
   { value: "other", label: "Other" },
 ];
 
 const PLATFORM_LABELS: Record<string, string> = {
-  google: "Google Ads",
+  google: "Google",
   meta: "Meta Ads",
   tiktok: "TikTok Ads",
   other: "Other",
@@ -183,7 +183,7 @@ export default function AdCampaignsPage() {
               <th className="px-4 py-3 font-medium">Uniques</th>
               <th className="px-4 py-3 font-medium">Job seekers</th>
               <th className="px-4 py-3 font-medium">Employers</th>
-              <th className="px-4 py-3 font-medium">CVR</th>
+              <th className="px-4 py-3 font-medium">Conversion rate</th>
               <th className="px-4 py-3 font-medium">Landing path</th>
             </tr>
           </thead>
