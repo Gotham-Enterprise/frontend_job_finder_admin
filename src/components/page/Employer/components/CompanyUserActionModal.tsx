@@ -9,25 +9,41 @@ import { jobSeekerApi } from "@/services/api/jobSeeker";
 import { CompanyUser } from "@/services/types/employer";
 import { useToast } from "@/context/ToastContext";
 
-export type CompanyUserVerificationAction = "approve" | "resend";
+export type CompanyUserAction = "approve" | "resend" | "reset";
 
-interface CompanyUserVerificationModalProps {
+interface CompanyUserActionModalProps {
   isOpen: boolean;
   onClose: () => void;
   employerId: string;
   companyName: string;
-  action: CompanyUserVerificationAction;
+  action: CompanyUserAction;
   /** Called after at least one user was marked verified, so the list can refresh */
   onVerified?: () => void;
 }
 
 const getUserName = (user: CompanyUser) => `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim() || user.email;
 
-const isActionable = (user: CompanyUser) => !user.emailVerified && !!user.userId;
+const isUnverified = (user: CompanyUser) => !user.emailVerified && !!user.userId;
+
+const verificationSummary = (users: CompanyUser[]) => {
+  const unverifiedCount = users.filter((u) => !u.emailVerified).length;
+  return `${unverifiedCount} of ${users.length} ${users.length === 1 ? "user has" : "users have"} an unverified email`;
+};
+
+// The bulk endpoint answers 200 and lists per-id failures in the body, so surface them as errors
+const sendPasswordReset = async (user: CompanyUser) => {
+  const response = await jobSeekerApi.bulkSendPasswordReset([user.userId]);
+  const failure = response.data?.failed?.[0];
+  if (failure) throw new Error(failure.message);
+};
 
 const ACTIONS = {
   approve: {
     title: "Verify Company Users",
+    isActionable: isUnverified,
+    summary: verificationSummary,
+    selectAllLabel: "Select all unverified",
+    showVerifiedBanner: true,
     rowLabel: "Approve",
     busyLabel: "Approving...",
     bulkLabel: "Approve selected",
@@ -44,6 +60,10 @@ const ACTIONS = {
   },
   resend: {
     title: "Resend Verification Email",
+    isActionable: isUnverified,
+    summary: verificationSummary,
+    selectAllLabel: "Select all unverified",
+    showVerifiedBanner: true,
     rowLabel: "Resend",
     busyLabel: "Sending...",
     bulkLabel: "Resend to selected",
@@ -57,13 +77,32 @@ const ACTIONS = {
     failure: "Failed to send email verification reminder to",
     marksVerified: false,
   },
+  reset: {
+    title: "Reset User Passwords",
+    isActionable: (user: CompanyUser) => !!user.userId,
+    summary: (users: CompanyUser[]) => `${users.length} ${users.length === 1 ? "user" : "users"}`,
+    selectAllLabel: "Select all",
+    showVerifiedBanner: false,
+    rowLabel: "Reset",
+    busyLabel: "Sending...",
+    bulkLabel: "Reset selected",
+    confirmLabel: "Yes, Reset Password",
+    confirmOne: (user: CompanyUser) => `Send a password reset email to ${getUserName(user)} (${user.email})?`,
+    confirmMany: (count: number) => `Send a password reset email to ${count} users?`,
+    confirmNote: "They'll receive an email with a link to set a new password.",
+    run: sendPasswordReset,
+    successOne: (email: string) => `Password reset email has been sent to ${email}`,
+    successMany: (count: number) => `Password reset email has been sent to ${count} users`,
+    failure: "Failed to send password reset email to",
+    marksVerified: false,
+  },
 } as const;
 
 const Spinner = ({ className = "border-white" }: { className?: string }) => (
   <div className={`animate-spin rounded-full h-4 w-4 border-b-2 ${className}`}></div>
 );
 
-export const CompanyUserVerificationModal: React.FC<CompanyUserVerificationModalProps> = ({
+export const CompanyUserActionModal: React.FC<CompanyUserActionModalProps> = ({
   isOpen,
   onClose,
   employerId,
@@ -109,13 +148,14 @@ export const CompanyUserVerificationModal: React.FC<CompanyUserVerificationModal
     }
   }, [isOpen, employerId, loadUsers]);
 
-  // Unverified users first so they're the first thing the admin sees
+  const { isActionable } = config;
+
+  // Actionable users first so they're the first thing the admin sees
   const sortedUsers = useMemo(
-    () => [...users].sort((a, b) => Number(!!a.emailVerified) - Number(!!b.emailVerified)),
-    [users]
+    () => [...users].sort((a, b) => Number(!isActionable(a)) - Number(!isActionable(b))),
+    [users, isActionable]
   );
-  const actionableUsers = useMemo(() => users.filter(isActionable), [users]);
-  const unverifiedCount = users.filter((u) => !u.emailVerified).length;
+  const actionableUsers = useMemo(() => users.filter(isActionable), [users, isActionable]);
   const allSelected = actionableUsers.length > 0 && actionableUsers.every((u) => selectedIds.has(u.id));
 
   const toggleSelected = (userId: string, checked: boolean) => {
@@ -206,13 +246,7 @@ export const CompanyUserVerificationModal: React.FC<CompanyUserVerificationModal
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white">{config.title}</h2>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
             {companyName}
-            {!isLoading && users.length > 0 && (
-              <>
-                {" "}
-                &middot; {unverifiedCount} of {users.length} {users.length === 1 ? "user has" : "users have"} an
-                unverified email
-              </>
-            )}
+            {!isLoading && users.length > 0 && <> &middot; {config.summary(users)}</>}
           </p>
         </div>
 
@@ -236,7 +270,7 @@ export const CompanyUserVerificationModal: React.FC<CompanyUserVerificationModal
             )
           ) : (
             <>
-              {unverifiedCount === 0 && (
+              {config.showVerifiedBanner && users.every((u) => u.emailVerified) && (
                 <div className="mb-4 flex items-center gap-2 p-3 rounded-md bg-success-50 text-success-700 dark:bg-success-500/10 dark:text-success-400">
                   <MailCheck size={16} className="shrink-0" />
                   <p className="text-sm">All users of this employer have verified emails.</p>
@@ -248,7 +282,7 @@ export const CompanyUserVerificationModal: React.FC<CompanyUserVerificationModal
                   <div className="flex items-center gap-3 px-4 py-3 bg-gray-50 dark:bg-gray-800/50">
                     <Checkbox checked={allSelected} onChange={toggleAll} disabled={isProcessing} />
                     <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Select all unverified ({actionableUsers.length})
+                      {config.selectAllLabel} ({actionableUsers.length})
                     </span>
                   </div>
                 )}
@@ -259,7 +293,7 @@ export const CompanyUserVerificationModal: React.FC<CompanyUserVerificationModal
                   return (
                     <div
                       key={user.id}
-                      className={`flex items-center gap-3 px-4 py-3 ${user.emailVerified ? "opacity-60" : ""}`}
+                      className={`flex items-center gap-3 px-4 py-3 ${actionable ? "" : "opacity-60"}`}
                     >
                       <div className="w-5 flex-shrink-0">
                         {actionable && (
