@@ -174,6 +174,21 @@ const EmployerTable: React.FC<EmployerTableProps> = ({
                   )}
                 </TableCell>
                 <TableCell className="py-4 px-3 whitespace-nowrap">
+                  {(() => {
+                    const source = employer.source || "Direct";
+                    if (source === "Direct") {
+                      return (
+                        <span className="text-sm text-gray-400 dark:text-gray-500">Direct</span>
+                      );
+                    }
+                    return (
+                      <Badge variant="light" color="info" size="sm">
+                        {source}
+                      </Badge>
+                    );
+                  })()}
+                </TableCell>
+                <TableCell className="py-4 px-3 whitespace-nowrap">
                   {employer.lastActivity ? (
                     (() => {
                       const lastActivity = formatDateTimeEST(employer.lastActivity);
