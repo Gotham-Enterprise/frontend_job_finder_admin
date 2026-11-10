@@ -1,6 +1,6 @@
 import { useState, useMemo, useTransition, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useJobSeekers } from "@/services/hooks/useJobSeekers";
+import { useJobSeekers, useJobSeekerSources } from "@/services/hooks/useJobSeekers";
 import { useOccupations } from "@/services/hooks/useOccupations";
 import { useStates } from "@/services/hooks/useStates";
 import { useLicenses, useLicenseIssuingStates } from "@/services/hooks/useLicenses";
@@ -37,6 +37,7 @@ export const useJobSeekersLogic = () => {
       const urlRegistrationStartDate = searchParams.get("registrationStartDate");
       const urlRegistrationEndDate = searchParams.get("registrationEndDate");
       const urlEmailVerified = parseEmailVerifiedFilter(searchParams.get("emailVerified"));
+      const urlSource = searchParams.get("source")?.trim() || "";
 
       const urlFilters = {
         page: Math.max(1, parseInt(urlPage || "1", 10)),
@@ -57,6 +58,7 @@ export const useJobSeekersLogic = () => {
         registrationStartDate: urlRegistrationStartDate || "",
         registrationEndDate: urlRegistrationEndDate || "",
         emailVerified: urlEmailVerified,
+        source: urlSource && urlSource.length <= 200 ? urlSource : undefined,
       };
       const isSimpleNavigation =
         (!urlPage || urlPage === "1") &&
@@ -71,7 +73,8 @@ export const useJobSeekersLogic = () => {
         !urlLicenseIssuingState &&
         !urlRegistrationStartDate &&
         !urlRegistrationEndDate &&
-        !urlEmailVerified;
+        !urlEmailVerified &&
+        !urlSource;
 
       if (isSimpleNavigation && typeof window !== "undefined") {
         localStorage.removeItem("jobseeker-search-state");
@@ -111,6 +114,12 @@ export const useJobSeekersLogic = () => {
               registrationStartDate: parsed.registrationStartDate || "",
               registrationEndDate: parsed.registrationEndDate || "",
               emailVerified: parseEmailVerifiedFilter(parsed.emailVerified),
+              source:
+                typeof parsed.source === "string" &&
+                parsed.source.trim() &&
+                parsed.source.trim().length <= 200
+                  ? parsed.source.trim()
+                  : undefined,
             };
             return restoredFilters;
           } catch (error) {
@@ -138,6 +147,7 @@ export const useJobSeekersLogic = () => {
       registrationStartDate: "",
       registrationEndDate: "",
       emailVerified: undefined,
+      source: undefined,
     };
     return defaultFilters;
   };
@@ -184,6 +194,7 @@ export const useJobSeekersLogic = () => {
     if (filters.registrationStartDate) params.set("registrationStartDate", filters.registrationStartDate);
     if (filters.registrationEndDate) params.set("registrationEndDate", filters.registrationEndDate);
     if (filters.emailVerified) params.set("emailVerified", filters.emailVerified);
+    if (filters.source) params.set("source", filters.source);
 
     const newURL = params.toString() ? `?${params.toString()}` : "";
     const currentURL = window.location.search;
@@ -263,6 +274,7 @@ export const useJobSeekersLogic = () => {
         specialtyId: filters.specialtyId,
         status: filters.status,
         emailVerified: filters.emailVerified,
+        source: filters.source,
       };
       localStorage.setItem("jobseeker-search-state", JSON.stringify(stateToSave));
     }
@@ -308,6 +320,18 @@ export const useJobSeekersLogic = () => {
     () => [{ value: "", label: "All" }, ...EMAIL_VERIFIED_FILTER_OPTIONS],
     []
   );
+
+  const { data: sourceLabels = [] } = useJobSeekerSources();
+  const sourceOptions = useMemo(() => {
+    const labels = [...sourceLabels];
+    if (filters.source && !labels.includes(filters.source)) {
+      labels.push(filters.source);
+    }
+    return [
+      { value: "", label: "All" },
+      ...labels.map((label) => ({ value: label, label })),
+    ];
+  }, [sourceLabels, filters.source]);
 
   const occupationOptions = useMemo(() => {
     const baseOptions = [{ value: "", label: "All Occupations" }];
@@ -476,6 +500,7 @@ export const useJobSeekersLogic = () => {
       registrationStartDate: "",
       registrationEndDate: "",
       emailVerified: undefined,
+      source: undefined,
     };
     setFilters(newFilters);
     setSearchInput("");
@@ -521,6 +546,9 @@ export const useJobSeekersLogic = () => {
         case "emailVerified":
           filterChange("emailVerified", undefined);
           break;
+        case "source":
+          filterChange("source", undefined);
+          break;
         default:
           break;
       }
@@ -539,9 +567,10 @@ export const useJobSeekersLogic = () => {
       filters.status ||
       filters.licenseName ||
       filters.licenseIssuingState ||
-      filters.emailVerified
+      filters.emailVerified ||
+      filters.source
     );
-  }, [searchInput, filters.city, filters.radius, filters.location, filters.occupationId, filters.specialtyId, filters.status, filters.licenseName, filters.licenseIssuingState, filters.emailVerified]);
+  }, [searchInput, filters.city, filters.radius, filters.location, filters.occupationId, filters.specialtyId, filters.status, filters.licenseName, filters.licenseIssuingState, filters.emailVerified, filters.source]);
 
   const handleExport = useCallback(async () => {
     if (isExporting) return;
@@ -562,6 +591,7 @@ export const useJobSeekersLogic = () => {
         registrationStartDate: filters.registrationStartDate,
         registrationEndDate: filters.registrationEndDate,
         emailVerified: filters.emailVerified,
+        source: filters.source,
       };
 
       await jobSeekerApi.exportJobSeekers(exportFilters);
@@ -621,7 +651,8 @@ export const useJobSeekersLogic = () => {
       !filters.occupationId &&
       !filters.specialtyId &&
       !filters.status &&
-      !filters.emailVerified;
+      !filters.emailVerified &&
+      !filters.source;
 
     if (isOnPageOneWithNoFilters) {
       if (typeof window !== "undefined") {
@@ -637,6 +668,7 @@ export const useJobSeekersLogic = () => {
       filters.specialtyId ||
       filters.status ||
       filters.emailVerified ||
+      filters.source ||
       (filters.page && filters.page > 1)
     ) {
       saveSearchState();
@@ -665,6 +697,7 @@ export const useJobSeekersLogic = () => {
     tableColumns,
     statusOptions,
     emailVerifiedOptions,
+    sourceOptions,
     occupationOptions,
     specialtyOptions,
     stateOptions,

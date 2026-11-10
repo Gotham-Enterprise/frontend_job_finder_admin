@@ -76,6 +76,7 @@ export interface JobSeekerFilters {
   registrationStartDate?: string;
   registrationEndDate?: string;
   emailVerified?: EmailVerifiedFilter;
+  source?: string;
 }
 
 export interface JobSeekersResponse {

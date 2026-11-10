@@ -9,6 +9,7 @@ export const jobSeekerQueryKeys = {
   details: () => [...jobSeekerQueryKeys.all, 'detail'] as const,
   detail: (id: string) => [...jobSeekerQueryKeys.details(), id] as const,
   stats: () => [...jobSeekerQueryKeys.all, 'stats'] as const,
+  sources: () => [...jobSeekerQueryKeys.all, 'sources'] as const,
 };
 
 export const useJobSeekers = (filters: JobSeekerFilters = {}) => {
@@ -25,6 +26,17 @@ export const useJobSeekers = (filters: JobSeekerFilters = {}) => {
       return failureCount < 3;
     },
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+  });
+};
+
+export const useJobSeekerSources = () => {
+  return useQuery({
+    queryKey: jobSeekerQueryKeys.sources(),
+    queryFn: async () => {
+      const response = await jobSeekerApi.getJobSeekerSources();
+      return response.data ?? [];
+    },
+    staleTime: 1000 * 60 * 5,
   });
 };
 
