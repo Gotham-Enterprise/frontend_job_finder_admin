@@ -10,6 +10,7 @@ import Image from "next/image";
 import { useLogin } from "@/services/hooks/useAuth";
 import { useRouter, useSearchParams } from "next/navigation";
 import { authUtils } from "@/services/utils/authUtils";
+import { getSafeAdminRedirect } from "@/services/utils/redirectUtils";
 
 export default function SignInForm() {  const [showPassword, setShowPassword] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
@@ -45,7 +46,7 @@ export default function SignInForm() {  const [showPassword, setShowPassword] = 
   useEffect(() => {
    
     if (authUtils.isAuthenticated()) {
-      router.push('/');
+      router.push(getSafeAdminRedirect(searchParams.get('redirect')));
       return;
     }
     
