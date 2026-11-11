@@ -63,7 +63,13 @@ export interface AffiliateLink {
   id: string;
   name: string;
   url: string;
+  /** @deprecated leaf type name kept for older clients; read `linkType` / `parentType`. */
   type?: string;
+  linkTypeId?: string | null;
+  /** Most specific type (a sub-type when `parentId` is set). */
+  linkType?: { id: string; name: string; parentId: string | null } | null;
+  /** Top-level category when `linkType` is a sub-type. */
+  parentType?: { id: string; name: string } | null;
   format?: string;
   targetAudience?: string;
   contentLevel?: string;
@@ -76,6 +82,8 @@ export interface AffiliateLink {
   ceCredits?: number;
   occupations?: string[];
   courseThumbnail?: string | null;
+  /** DIPLOMA | ASSOCIATE | BACHELOR | MASTER | DOCTORATE; null = not specified. */
+  degreeLevel?: string | null;
   city?: string;
   state?: string;
   zipCode?: string;
@@ -363,9 +371,12 @@ export interface UpdateFeedRuleData {
 export interface CreateLinkData {
   name: string;
   url: string;
-  type?: string;
+  /** Most specific link type id (sub-type id when one is chosen); null = Uncategorized. */
+  linkTypeId?: string | null;
   format?: string;
   courseThumbnail?: string | null;
+  /** DIPLOMA | ASSOCIATE | BACHELOR | MASTER | DOCTORATE; null = not specified. */
+  degreeLevel?: string | null;
   city?: string;
   state?: string;
   zipCode?: string;
@@ -385,9 +396,12 @@ export interface CreateLinkData {
 export interface UpdateLinkData {
   name?: string;
   url?: string;
-  type?: string;
+  /** Most specific link type id (sub-type id when one is chosen); null = Uncategorized. */
+  linkTypeId?: string | null;
   format?: string;
   courseThumbnail?: string | null;
+  /** DIPLOMA | ASSOCIATE | BACHELOR | MASTER | DOCTORATE; null = not specified. */
+  degreeLevel?: string | null;
   city?: string;
   state?: string;
   zipCode?: string;
@@ -518,8 +532,18 @@ export interface AffiliateLinkType {
   name: string;
   isActive: boolean;
   sortOrder: number;
+  /** Set on sub-types; null on top-level categories. One level only. */
+  parentId: string | null;
+  /** Present on top-level categories (admin tree response). */
+  children?: AffiliateLinkType[];
   createdAt: string;
   updatedAt: string;
+}
+
+export interface DeleteLinkTypeResult {
+  id: string;
+  childrenDeleted: number;
+  linksUncategorized: number;
 }
 
 // Link Type Configuration APIs
@@ -528,21 +552,22 @@ export const getAffiliateLinkTypes = async (): Promise<AffiliateLinkType[]> => {
   return res.data || [];
 };
 
-export const createAffiliateLinkType = async (data: { name: string }): Promise<AffiliateLinkType> => {
+export const createAffiliateLinkType = async (data: { name: string; parentId?: string | null }): Promise<AffiliateLinkType> => {
   const res = await apiPost<{ success: boolean; data: AffiliateLinkType }>("/api/admin/affiliates/link-types", data);
   return res.data;
 };
 
 export const updateAffiliateLinkType = async (
   id: string,
-  data: { name?: string; isActive?: boolean; sortOrder?: number },
+  data: { name?: string; isActive?: boolean; sortOrder?: number; parentId?: string | null },
 ): Promise<AffiliateLinkType> => {
   const res = await apiPut<{ success: boolean; data: AffiliateLinkType }>(`/api/admin/affiliates/link-types/${id}`, data);
   return res.data;
 };
 
-export const deleteAffiliateLinkType = async (id: string): Promise<void> => {
-  await apiDelete(`/api/admin/affiliates/link-types/${id}`);
+export const deleteAffiliateLinkType = async (id: string): Promise<DeleteLinkTypeResult | undefined> => {
+  const res = await apiDelete<{ success: boolean; data?: DeleteLinkTypeResult }>(`/api/admin/affiliates/link-types/${id}`);
+  return res?.data;
 };
 
 export const reorderAffiliateLinkTypes = async (ids: string[]): Promise<AffiliateLinkType[]> => {
