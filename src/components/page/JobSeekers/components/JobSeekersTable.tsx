@@ -23,6 +23,7 @@ import ResendVerificationModal from "@/components/common/ResendVerificationModal
 import ApproveEmailVerificationModal from "@/components/common/ApproveEmailVerificationModal";
 import { useConfirmation } from "@/hooks/useConfirmation";
 import ConfirmationDialog from "@/components/ui/ConfirmationDialog";
+import { openLoginAsUser } from "@/services/utils/loginAsUser";
 
 interface SpecialtyDisplayProps {
   specialties: string[];
@@ -618,6 +619,12 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
   const certificationsButtonRefs = useRef<{ [key: string]: React.RefObject<HTMLButtonElement | null> }>({});
   const { addToast } = useToast();
   const confirmation = useConfirmation();
+  const [loginAsTarget, setLoginAsTarget] = useState<{
+    userId: string;
+    name: string;
+    email?: string;
+  } | null>(null);
+  const [loginAsLoading, setLoginAsLoading] = useState(false);
 
   // Helper functions for popovers
   const openLicensesPopover = async (jobSeekerId: string) => {
@@ -678,6 +685,30 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
   const closeShareModal = () => {
     setShareModalOpen(false);
     setSelectedJobSeekerForShare(null);
+  };
+
+  const confirmLoginAs = async () => {
+    if (!loginAsTarget) return;
+    setLoginAsLoading(true);
+    try {
+      await openLoginAsUser(loginAsTarget.userId);
+      addToast({
+        variant: "success",
+        title: "Login as user",
+        message: `Opened the app as ${loginAsTarget.name}.`,
+        duration: 5000,
+      });
+      setLoginAsTarget(null);
+    } catch (error: any) {
+      addToast({
+        variant: "error",
+        title: "Could not login as user",
+        message: error.message || "Failed to open the user's account",
+        duration: 5000,
+      });
+    } finally {
+      setLoginAsLoading(false);
+    }
   };
 
   const handleResetPassword = async (jobSeeker: any) => {
@@ -1223,6 +1254,14 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
                         showResendVerification={jobSeeker.emailVerified === false}
                         onApproveEmailVerification={() => openApproveVerificationModal(jobSeeker)}
                         showApproveEmailVerification={jobSeeker.emailVerified === false}
+                        showLoginAs={Boolean(jobSeeker.userId)}
+                        onLoginAs={() =>
+                          setLoginAsTarget({
+                            userId: jobSeeker.userId,
+                            name: jobSeeker.name,
+                            email: jobSeeker.email,
+                          })
+                        }
                       />
                     </TableCell>
                   </TableRow>
@@ -1286,6 +1325,28 @@ const JobSeekersTable: React.FC<JobSeekersTableProps> = ({
           confirmText={confirmation.config?.confirmText}
           cancelText={confirmation.config?.cancelText}
           isLoading={resetPasswordLoadingId !== null}
+        />
+
+        <ConfirmationDialog
+          isOpen={loginAsTarget !== null}
+          onClose={() => {
+            if (!loginAsLoading) setLoginAsTarget(null);
+          }}
+          onCancel={() => {
+            if (!loginAsLoading) setLoginAsTarget(null);
+          }}
+          onConfirm={confirmLoginAs}
+          title="Login as User"
+          message={
+            loginAsTarget
+              ? `Open the application as ${loginAsTarget.name}${
+                  loginAsTarget.email ? ` (${loginAsTarget.email})` : ""
+                }? Your admin session stays signed in. Use Exit impersonation in the app to return.`
+              : ""
+          }
+          confirmText="Login as User"
+          cancelText="Cancel"
+          isLoading={loginAsLoading}
         />
 
         {/* Resend Verification Email Modal */}
