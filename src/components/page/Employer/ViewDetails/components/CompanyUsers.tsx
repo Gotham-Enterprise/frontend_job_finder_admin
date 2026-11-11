@@ -13,6 +13,7 @@ import InputModal from "@/components/ui/InputModal";
 import { useToast } from "@/context/ToastContext";
 import { CompanyUser } from "@/services/types/employer";
 import CompanyUserRowActions from "./CompanyUserRowActions";
+import { openLoginAsUser } from "@/services/utils/loginAsUser";
 
 interface CompanyUsersProps {
   users: CompanyUser[];
@@ -46,6 +47,8 @@ export default function CompanyUsers({ users }: CompanyUsersProps) {
   const [approveVerificationLoadingId, setApproveVerificationLoadingId] = useState<string | null>(null);
   const [reasonModalOpen, setReasonModalOpen] = useState(false);
   const [pendingUserAction, setPendingUserAction] = useState<{ user: CompanyUser; isActive: boolean } | null>(null);
+  const [loginAsUser, setLoginAsUser] = useState<CompanyUser | null>(null);
+  const [loginAsLoading, setLoginAsLoading] = useState(false);
   const { addToast } = useToast();
   const confirmation = useConfirmation();
 
@@ -57,6 +60,30 @@ export default function CompanyUsers({ users }: CompanyUsersProps) {
 
   const initPageChange = (page: number) => {
     setCurrentPage(page);
+  };
+
+  const confirmLoginAs = async () => {
+    if (!loginAsUser?.userId) return;
+    setLoginAsLoading(true);
+    try {
+      await openLoginAsUser(loginAsUser.userId);
+      addToast({
+        variant: "success",
+        title: "Login as user",
+        message: `Opened the app as ${loginAsUser.firstName} ${loginAsUser.lastName}.`.replace(/\s+/g, " ").trim(),
+        duration: 5000,
+      });
+      setLoginAsUser(null);
+    } catch (error: any) {
+      addToast({
+        variant: "error",
+        title: "Could not login as user",
+        message: error.message || "Failed to open the user's account",
+        duration: 5000,
+      });
+    } finally {
+      setLoginAsLoading(false);
+    }
   };
 
   const handleResetPassword = async (user: CompanyUser) => {
@@ -340,6 +367,7 @@ export default function CompanyUsers({ users }: CompanyUsersProps) {
                         onApproveVerification={() => handleApproveVerification(user)}
                         onResetPassword={() => handleResetPassword(user)}
                         onToggleStatus={() => handleToggleUserStatus(user)}
+                        onLoginAs={user.userId ? () => setLoginAsUser(user) : undefined}
                       />
                     </TableCell>
                   </TableRow>
@@ -377,6 +405,26 @@ export default function CompanyUsers({ users }: CompanyUsersProps) {
           resendVerificationLoadingId !== null ||
           approveVerificationLoadingId !== null
         }
+      />
+
+      <ConfirmationDialog
+        isOpen={loginAsUser !== null}
+        onClose={() => {
+          if (!loginAsLoading) setLoginAsUser(null);
+        }}
+        onCancel={() => {
+          if (!loginAsLoading) setLoginAsUser(null);
+        }}
+        onConfirm={confirmLoginAs}
+        title="Login as User"
+        message={
+          loginAsUser
+            ? `Open the application as ${`${loginAsUser.firstName ?? ""} ${loginAsUser.lastName ?? ""}`.trim() || loginAsUser.email} (${loginAsUser.email})? Your admin session stays signed in. Use Exit impersonation in the app to return.`
+            : ""
+        }
+        confirmText="Login as User"
+        cancelText="Cancel"
+        isLoading={loginAsLoading}
       />
 
       {/* Reason Input Modal */}

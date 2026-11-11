@@ -11,6 +11,7 @@ import { EmployerTableProps } from "@/services/types/EmployerTypes";
 import Avatar from "../../../ui/avatar/Avatar";
 import { EditEmployerModal } from "./EditEmployerModal";
 import { CompanyUserActionModal, CompanyUserAction } from "./CompanyUserActionModal";
+import LoginAsCompanyUserModal from "./LoginAsCompanyUserModal";
 import EmployerRowActions from "./EmployerRowActions";
 import { useToast } from "@/context/ToastContext";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -35,6 +36,7 @@ const EmployerTable: React.FC<EmployerTableProps> = ({
     companyName: string;
     action: CompanyUserAction;
   } | null>(null);
+  const [loginAsEmployer, setLoginAsEmployer] = useState<{ id: string; companyName: string } | null>(null);
   const { addToast } = useToast();
   const { hasPermission } = usePermissions();
   const router = useRouter();
@@ -247,6 +249,9 @@ const EmployerTable: React.FC<EmployerTableProps> = ({
                     onResetPasswords={() =>
                       setUserActionTarget({ id: employer.id, companyName: employer.companyName, action: "reset" })
                     }
+                    onLoginAs={() =>
+                      setLoginAsEmployer({ id: employer.id, companyName: employer.companyName })
+                    }
                     // Unknown count (older API) keeps the actions visible
                     showVerificationActions={(employer.unverifiedUserCount ?? 1) > 0}
                   />
@@ -265,6 +270,15 @@ const EmployerTable: React.FC<EmployerTableProps> = ({
           companyName={userActionTarget.companyName}
           action={userActionTarget.action}
           onVerified={() => onRefresh?.()}
+        />
+      )}
+
+      {loginAsEmployer && (
+        <LoginAsCompanyUserModal
+          isOpen={!!loginAsEmployer}
+          onClose={() => setLoginAsEmployer(null)}
+          employerId={loginAsEmployer.id}
+          companyName={loginAsEmployer.companyName}
         />
       )}
 
