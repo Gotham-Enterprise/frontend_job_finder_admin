@@ -15,6 +15,7 @@ import BackToListButton from "@/components/ui/BackToListButton";
 import PermissionWrapper from "@/components/common/PermissionWrapper";
 import ConfirmationDialog from "@/components/ui/ConfirmationDialog";
 import { useConfirmation } from "@/hooks/useConfirmation";
+import ActivityLogsPanel from "@/components/page/common/ActivityLogsPanel";
 
 interface ViewDetailsProps {
   id: string;
@@ -196,6 +197,9 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
 
           <CompanyUsers users={employer.companyUsers || []} />
         </div>
+
+        {/* Activity Logs — full width */}
+        <ActivityLogsPanel type="employer" id={employer.id} />
       </div>
 
       <ConfirmationDialog

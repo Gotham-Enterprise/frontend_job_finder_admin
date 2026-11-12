@@ -20,6 +20,7 @@ import { DocsIcon } from "@/icons";
 import { MdOutlineLock } from "react-icons/md";
 import PermissionWrapper from "@/components/common/PermissionWrapper";
 import AdminCreateApplicationModal from "@/components/admin/AdminCreateApplicationModal";
+import ActivityLogsPanel from "@/components/page/common/ActivityLogsPanel";
 interface ViewDetailsProps {
   id: string;
 }
@@ -265,6 +266,9 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
             />
           </PermissionWrapper>
         </div>
+
+        {/* Activity Logs — full width */}
+        <ActivityLogsPanel type="jobseeker" id={id} />
       </div>
 
       {/* Deactivate Modal */}
