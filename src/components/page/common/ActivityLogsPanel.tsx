@@ -51,6 +51,7 @@ const RESOURCE_BADGE: Record<string, string> = {
   TEAM: "bg-orange-100 text-orange-700 dark:bg-orange-900/20 dark:text-orange-400",
   RESUMES: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/20 dark:text-indigo-400",
   PROFILE: "bg-pink-100 text-pink-700 dark:bg-pink-900/20 dark:text-pink-400",
+  CANDIDATE: "bg-teal-100 text-teal-700 dark:bg-teal-900/20 dark:text-teal-400",
   USER: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400",
 };
 
