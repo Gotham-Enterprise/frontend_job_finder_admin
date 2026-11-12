@@ -93,7 +93,7 @@ export default function LinkModal({ isOpen, onClose, link, onSubmit, isSubmittin
     if (isOpen) {
       setOccupationSearch('')
       setOccupationsLoading(true)
-      occupationApi.getOccupationList()
+      occupationApi.getDropdownOccupations()
         .then((res) => {
           const sorted = [...(res.data || [])].sort((a, b) =>
             a.name.toLowerCase().localeCompare(b.name.toLowerCase()),
@@ -190,16 +190,29 @@ export default function LinkModal({ isOpen, onClose, link, onSubmit, isSubmittin
     })
   }
 
+  // Saved names that are no longer in the dropdown catalog stay visible (and
+  // checked) so an editor can clear them. They are not offered as new choices.
+  const occupationOptions = useMemo(() => {
+    const catalogNames = new Set(occupations.map((occ) => occ.name))
+    const savedOnly = (formData.occupations || [])
+      .filter((name) => Boolean(name) && !catalogNames.has(name))
+      .map((name, index) => ({ id: -(index + 1), name }))
+    if (savedOnly.length === 0) return occupations
+    return [...occupations, ...savedOnly].sort((a, b) =>
+      a.name.toLowerCase().localeCompare(b.name.toLowerCase()),
+    )
+  }, [occupations, formData.occupations])
+
   const visibleOccupations = useMemo(() => {
     const term = occupationSearch.trim().toLowerCase()
-    if (!term) return occupations
+    if (!term) return occupationOptions
     const selected = formData.occupations || []
     const isSelected = (name: string) => selected.includes(name)
-    const matches = occupations.filter(
+    const matches = occupationOptions.filter(
       (occ) => !isSelected(occ.name) && occ.name.toLowerCase().includes(term),
     )
-    return [...occupations.filter((occ) => isSelected(occ.name)), ...matches]
-  }, [occupations, occupationSearch, formData.occupations])
+    return [...occupationOptions.filter((occ) => isSelected(occ.name)), ...matches]
+  }, [occupationOptions, occupationSearch, formData.occupations])
 
   const updateBullet = (index: number, value: string) => {
     setFormData((prev) => {
@@ -702,7 +715,7 @@ export default function LinkModal({ isOpen, onClose, link, onSubmit, isSubmittin
                   <div className="flex items-center justify-center py-8">
                     <div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
                   </div>
-                ) : occupations.length === 0 ? (
+                ) : occupationOptions.length === 0 ? (
                   <p className="text-gray-500 text-sm text-center py-4">No occupations available</p>
                 ) : visibleOccupations.length === 0 ? (
                   <p className="text-gray-500 text-sm text-center py-4">No occupations match your search</p>
