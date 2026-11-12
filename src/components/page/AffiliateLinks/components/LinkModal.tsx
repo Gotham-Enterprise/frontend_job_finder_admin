@@ -107,7 +107,7 @@ export default function LinkModal({ isOpen, onClose, link, onSubmit, isSubmittin
         name: link.name,
         url: link.url,
         type: link.type || '',
-        format: link.format || '',
+        format: link.format === 'ONLINE_COURSE' ? 'VIRTUAL' : link.format || '',
         city: link.city || '',
         state: link.state || '',
         zipCode: link.zipCode || '',
@@ -331,8 +331,6 @@ export default function LinkModal({ isOpen, onClose, link, onSubmit, isSubmittin
                 <option value="IN_PERSON">In-Person</option>
                 <option value="VIRTUAL">Virtual</option>
                 <option value="HYBRID">Hybrid</option>
-                <option value="ONLINE_COURSE">Online Course</option>
-                <option value="DIRECTORY">Directory</option>
               </select>
               <p className="text-xs text-gray-500 mt-1">
                 Delivery format shown on the Career Center filter
