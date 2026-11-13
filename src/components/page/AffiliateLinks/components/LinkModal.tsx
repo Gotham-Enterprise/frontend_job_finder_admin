@@ -401,8 +401,10 @@ export default function LinkModal({ isOpen, onClose, link, onSubmit, isSubmittin
                 <option value="IN_PERSON">In-Person</option>
                 <option value="VIRTUAL">Virtual</option>
                 <option value="HYBRID">Hybrid</option>
-                <option value="ONLINE_COURSE">Online Course</option>
-                <option value="DIRECTORY">Directory</option>
+                {/* Online Course and Directory are no longer offered for new links.
+                    Keep the saved value selectable so editing an old link does not silently change it. */}
+                {formData.format === 'ONLINE_COURSE' && <option value="ONLINE_COURSE">Online Course (legacy)</option>}
+                {formData.format === 'DIRECTORY' && <option value="DIRECTORY">Directory (legacy)</option>}
               </select>
               <p className="text-xs text-gray-500 mt-1">
                 Delivery format shown on the Career Center filter
