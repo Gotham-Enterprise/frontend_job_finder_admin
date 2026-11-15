@@ -30,6 +30,7 @@ export const jobSeekerApi = {
     if (filters.registrationStartDate) queryParams.append("registrationStartDate", filters.registrationStartDate);
     if (filters.registrationEndDate) queryParams.append("registrationEndDate", filters.registrationEndDate);
     if (filters.emailVerified) queryParams.append("emailVerified", filters.emailVerified);
+    if (filters.source) queryParams.append("source", filters.source);
 
     // Add timezone offset in minutes (e.g., -480 for UTC+8 Philippine time)
     const timezoneOffset = new Date().getTimezoneOffset();
@@ -38,6 +39,10 @@ export const jobSeekerApi = {
     const endpoint = `/api/admin/jobseekers?${queryParams.toString()}`;
 
     return apiGet<JobSeekersResponse>(endpoint);
+  },
+
+  async getJobSeekerSources(): Promise<{ success: boolean; data: string[] }> {
+    return apiGet<{ success: boolean; data: string[] }>("/api/admin/jobseekers/sources");
   },
 
   async viewResume(resumeId: string): Promise<any> {
@@ -149,6 +154,7 @@ export const jobSeekerApi = {
     if (filters.registrationStartDate) queryParams.append("registrationStartDate", filters.registrationStartDate);
     if (filters.registrationEndDate) queryParams.append("registrationEndDate", filters.registrationEndDate);
     if (filters.emailVerified) queryParams.append("emailVerified", filters.emailVerified);
+    if (filters.source) queryParams.append("source", filters.source);
 
     // Add timezone offset in minutes (e.g., -480 for UTC+8 Philippine time)
     const timezoneOffset = new Date().getTimezoneOffset();

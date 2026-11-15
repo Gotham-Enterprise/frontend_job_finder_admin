@@ -30,6 +30,7 @@ const JobSeekersFilters: React.FC<JobSeekersFiltersProps> = ({
   stateOptions,
   statusOptions,
   emailVerifiedOptions,
+  sourceOptions,
   licenseOptions,
   licenseStateOptions,
   hasActiveFilters,
@@ -350,6 +351,30 @@ const JobSeekersFilters: React.FC<JobSeekersFiltersProps> = ({
             options={statusOptions}
             placeholder="Select status..."
             searchPlaceholder="Search statuses..."
+            className="w-full"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              Source
+            </Label>
+            {filters.source && (
+              <button
+                onClick={() => clearIndividualFilter('source')}
+                className="text-xs text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100 font-medium cursor-pointer hover:underline"
+              >
+                Clear
+              </button>
+            )}
+          </div>
+          <SearchableSelect
+            value={filters.source || ''}
+            onChange={(value: string) => onFilterChange('source', value === '' ? undefined : value)}
+            options={sourceOptions}
+            placeholder="Select source..."
+            searchPlaceholder="Search sources..."
             className="w-full"
           />
         </div>

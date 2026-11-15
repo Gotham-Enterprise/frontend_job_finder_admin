@@ -26,6 +26,7 @@ export interface JobSeekersFiltersProps {
   stateOptions: Array<{ value: string; label: string }>;
   statusOptions: Array<{ value: string; label: string }>;
   emailVerifiedOptions: Array<{ value: string; label: string }>;
+  sourceOptions: Array<{ value: string; label: string }>;
   licenseOptions: Array<{ value: string; label: string }>;
   licenseStateOptions: Array<{ value: string; label: string }>;
   hasActiveFilters: boolean;
