@@ -2,7 +2,7 @@ import React, { useRef } from "react";
 import Link from "next/link";
 import Input from "../../../ui/input/Input";
 import FilterDropdown from "../../../ui/FilterDropdown";
-import { SearchIcon, FilterIcon } from "../../../ui/icons";
+import { SearchIcon, FilterIcon, PlusIcon } from "../../../ui/icons";
 import { TrashBinIcon, DownloadIcon } from "@/icons";
 import { JobSeekersHeaderProps } from "@/services/types/JobSeekersTypes";
 import { MdOutlineLock } from "react-icons/md";
@@ -28,6 +28,7 @@ const JobSeekersHeader: React.FC<JobSeekersHeaderWithDropdownProps> = ({
   filterDropdownContent,
   onExport,
   isExporting = false,
+  onCreate,
 }) => {
   const filterButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -43,7 +44,18 @@ const JobSeekersHeader: React.FC<JobSeekersHeaderWithDropdownProps> = ({
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <PermissionWrapper module="jobseekers" action="add">
+              <button
+                type="button"
+                onClick={onCreate}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg bg-primary text-white hover:bg-primary/90 transition-colors"
+              >
+                <PlusIcon className="w-4 h-4" width={16} height={16} />
+                <span>Create job seeker</span>
+              </button>
+            </PermissionWrapper>
+
             <PermissionWrapper module="jobseekers" action="view">
               <button
                 onClick={onExport}

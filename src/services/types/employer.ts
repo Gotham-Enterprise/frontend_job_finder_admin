@@ -25,6 +25,7 @@ export interface Employer {
   totalApplications: number;
   totalJobViews: number;
   dateJoined: string;
+  source?: string;
   lastActivity: string;
   status: string;
   currentPlan?: string;
@@ -104,6 +105,7 @@ export interface EmployerDetails {
   dateJoined: string;
   lastActivity: string;
   status: string;
+  deactivatedAt?: string | null;
   jobPost: JobPost[];
   companyUsers?: CompanyUser[];
   avatarUrl?: string;

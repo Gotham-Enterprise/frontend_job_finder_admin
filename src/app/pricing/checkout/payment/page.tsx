@@ -18,6 +18,7 @@ import FullScreenSpinner from '@/components/ui/FullScreenSpinner';
 import ConfirmationDialog from '@/components/ui/ConfirmationDialog';
 import { useConfirmation } from '@/hooks/useConfirmation';
 import { formatCouponDurationCheckout } from '@/services/utils/couponDuration';
+import { formatBilledIntervalLabel, getBilledAmountInCents } from '@/services/utils/planUtils';
 
 // Helper: returns true when the applied coupon brings the order total to $0
 function isCouponFullyCovered(originalPriceInCents: number, coupon: any): boolean {
@@ -60,10 +61,14 @@ function PaymentForm() {
 
   const { subscriptionData, clearSubscriptionData, isSubscriptionDataReady } = useSubscriptionContext();
 
+  const billedAmountInCents = subscriptionData
+    ? getBilledAmountInCents(subscriptionData.planDetails)
+    : 0;
+
   // Derived: is this a 100%-off free order?
   const isFreeOrder =
     !!subscriptionData?.appliedCoupon &&
-    isCouponFullyCovered(subscriptionData.planDetails.price, subscriptionData.appliedCoupon);
+    isCouponFullyCovered(billedAmountInCents, subscriptionData.appliedCoupon);
 
   // Should we warn the employer that they'll need a payment method at renewal?
   const showRenewalWarning =
@@ -103,12 +108,11 @@ function PaymentForm() {
   const calculateTotal = () => {
     if (!subscriptionData) return 0;
 
-    const originalPrice = subscriptionData.planDetails.price;
     const discount = subscriptionData.appliedCoupon
-      ? calculateDiscount(originalPrice, subscriptionData.appliedCoupon)
+      ? calculateDiscount(billedAmountInCents, subscriptionData.appliedCoupon)
       : 0;
 
-    return Math.max(0, originalPrice - discount);
+    return Math.max(0, billedAmountInCents - discount);
   };
 
   const handleEditOrder = () => {
@@ -537,8 +541,13 @@ function PaymentForm() {
                   <span className="text-gray-900 dark:text-white font-medium">
                     {subscriptionData.planDetails.name}
                   </span>
-                  <span className="text-gray-900 dark:text-white font-semibold">
-                    {formatPrice(subscriptionData.planDetails.price)}
+                  <span className="text-right">
+                    <span className="block text-gray-900 dark:text-white font-semibold">
+                      {formatPrice(billedAmountInCents)}
+                    </span>
+                    <span className="block text-xs text-gray-500 dark:text-gray-400">
+                      {formatBilledIntervalLabel(subscriptionData.planDetails.interval)}
+                    </span>
                   </span>
                 </div>
 
@@ -560,7 +569,7 @@ function PaymentForm() {
                         )}
                       </div>
                       <span className="font-semibold">
-                        -{formatPrice(calculateDiscount(subscriptionData.planDetails.price, subscriptionData.appliedCoupon))}
+                        -{formatPrice(calculateDiscount(billedAmountInCents, subscriptionData.appliedCoupon))}
                       </span>
                     </div>
                   </div>
@@ -571,8 +580,13 @@ function PaymentForm() {
                   <span className="text-lg font-semibold text-gray-900 dark:text-white">
                     Total
                   </span>
-                  <span className="text-lg font-bold text-gray-900 dark:text-white">
-                    {formatPrice(calculateTotal())}
+                  <span className="text-right">
+                    <span className="block text-lg font-bold text-gray-900 dark:text-white">
+                      {formatPrice(calculateTotal())}
+                    </span>
+                    <span className="block text-xs text-gray-500 dark:text-gray-400">
+                      {formatBilledIntervalLabel(subscriptionData.planDetails.interval)}
+                    </span>
                   </span>
                 </div>
 

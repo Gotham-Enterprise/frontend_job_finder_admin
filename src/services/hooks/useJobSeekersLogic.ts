@@ -1,9 +1,10 @@
 import { useState, useMemo, useTransition, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useJobSeekers } from "@/services/hooks/useJobSeekers";
+import { useJobSeekers, useJobSeekerSources } from "@/services/hooks/useJobSeekers";
 import { useOccupations } from "@/services/hooks/useOccupations";
 import { useStates } from "@/services/hooks/useStates";
 import { useLicenses, useLicenseIssuingStates } from "@/services/hooks/useLicenses";
+import { useSpecialtiesByOccupation } from "@/services/hooks/useSupervisees";
 import { jobApplicationApi } from "@/services/api/jobApplication";
 import { jobSeekerApi } from "@/services/api/jobSeeker";
 import { JobSeekerFilters } from "@/services/types/jobSeeker";
@@ -30,11 +31,13 @@ export const useJobSeekersLogic = () => {
       const urlCity = searchParams.get("city");
       const urlRadius = searchParams.get("radius");
       const urlOccupationId = searchParams.get("occupationId");
+      const urlSpecialtyId = searchParams.get("specialtyId");
       const urlLicenseName = searchParams.get("licenseName");
       const urlLicenseIssuingState = searchParams.get("licenseIssuingState");
       const urlRegistrationStartDate = searchParams.get("registrationStartDate");
       const urlRegistrationEndDate = searchParams.get("registrationEndDate");
       const urlEmailVerified = parseEmailVerifiedFilter(searchParams.get("emailVerified"));
+      const urlSource = searchParams.get("source")?.trim() || "";
 
       const urlFilters = {
         page: Math.max(1, parseInt(urlPage || "1", 10)),
@@ -44,12 +47,18 @@ export const useJobSeekersLogic = () => {
         radius: urlRadius ? parseInt(urlRadius, 10) : undefined,
         location: urlLocation,
         occupationId: urlOccupationId ? parseInt(urlOccupationId, 10) : undefined,
+        specialtyId: (() => {
+          if (!urlOccupationId || !urlSpecialtyId) return undefined;
+          const parsed = parseInt(urlSpecialtyId, 10);
+          return Number.isInteger(parsed) && parsed > 0 ? parsed : undefined;
+        })(),
         status: validStatus,
         licenseName: urlLicenseName || "",
         licenseIssuingState: urlLicenseIssuingState || "",
         registrationStartDate: urlRegistrationStartDate || "",
         registrationEndDate: urlRegistrationEndDate || "",
         emailVerified: urlEmailVerified,
+        source: urlSource && urlSource.length <= 200 ? urlSource : undefined,
       };
       const isSimpleNavigation =
         (!urlPage || urlPage === "1") &&
@@ -58,12 +67,14 @@ export const useJobSeekersLogic = () => {
         !urlRadius &&
         !urlLocation.length &&
         !urlOccupationId &&
+        !urlSpecialtyId &&
         !validStatus &&
         !urlLicenseName &&
         !urlLicenseIssuingState &&
         !urlRegistrationStartDate &&
         !urlRegistrationEndDate &&
-        !urlEmailVerified;
+        !urlEmailVerified &&
+        !urlSource;
 
       if (isSimpleNavigation && typeof window !== "undefined") {
         localStorage.removeItem("jobseeker-search-state");
@@ -91,12 +102,24 @@ export const useJobSeekersLogic = () => {
               radius: parsed.radius || undefined,
               location: Array.isArray(parsed.location) ? parsed.location : (parsed.location ? [parsed.location] : []),
               occupationId: parsed.occupationId || undefined,
+              specialtyId:
+                parsed.occupationId &&
+                Number.isInteger(parsed.specialtyId) &&
+                parsed.specialtyId > 0
+                  ? parsed.specialtyId
+                  : undefined,
               status: parsed.status || undefined,
               licenseName: parsed.licenseName || "",
               licenseIssuingState: parsed.licenseIssuingState || "",
               registrationStartDate: parsed.registrationStartDate || "",
               registrationEndDate: parsed.registrationEndDate || "",
               emailVerified: parseEmailVerifiedFilter(parsed.emailVerified),
+              source:
+                typeof parsed.source === "string" &&
+                parsed.source.trim() &&
+                parsed.source.trim().length <= 200
+                  ? parsed.source.trim()
+                  : undefined,
             };
             return restoredFilters;
           } catch (error) {
@@ -117,12 +140,14 @@ export const useJobSeekersLogic = () => {
       radius: undefined,
       location: [] as string[],
       occupationId: undefined,
+      specialtyId: undefined,
       status: undefined,
       licenseName: "",
       licenseIssuingState: "",
       registrationStartDate: "",
       registrationEndDate: "",
       emailVerified: undefined,
+      source: undefined,
     };
     return defaultFilters;
   };
@@ -160,12 +185,16 @@ export const useJobSeekersLogic = () => {
     if (filters.radius) params.set("radius", filters.radius.toString());
     if (filters.location && filters.location.length > 0) params.set("location", filters.location.join(","));
     if (filters.occupationId) params.set("occupationId", filters.occupationId.toString());
+    if (filters.occupationId && filters.specialtyId) {
+      params.set("specialtyId", filters.specialtyId.toString());
+    }
     if (filters.status) params.set("status", filters.status);
     if (filters.licenseName) params.set("licenseName", filters.licenseName);
     if (filters.licenseIssuingState) params.set("licenseIssuingState", filters.licenseIssuingState);
     if (filters.registrationStartDate) params.set("registrationStartDate", filters.registrationStartDate);
     if (filters.registrationEndDate) params.set("registrationEndDate", filters.registrationEndDate);
     if (filters.emailVerified) params.set("emailVerified", filters.emailVerified);
+    if (filters.source) params.set("source", filters.source);
 
     const newURL = params.toString() ? `?${params.toString()}` : "";
     const currentURL = window.location.search;
@@ -242,8 +271,10 @@ export const useJobSeekersLogic = () => {
         radius: filters.radius,
         location: filters.location ?? [],
         occupationId: filters.occupationId,
+        specialtyId: filters.specialtyId,
         status: filters.status,
         emailVerified: filters.emailVerified,
+        source: filters.source,
       };
       localStorage.setItem("jobseeker-search-state", JSON.stringify(stateToSave));
     }
@@ -251,6 +282,9 @@ export const useJobSeekersLogic = () => {
 
   const { data, isLoading, error, refetch } = useJobSeekers(filters);
   const { data: occupationsData, isLoading: isOccupationsLoading } = useOccupations();
+  const { data: specialtiesForOccupation = [] } = useSpecialtiesByOccupation(
+    filters.occupationId ? String(filters.occupationId) : ""
+  );
   const { data: statesData, isLoading: isStatesLoading } = useStates();
   const { data: licensesData, isLoading: isLicensesLoading } = useLicenses();
   const { data: licenseStatesData, isLoading: isLicenseStatesLoading } = useLicenseIssuingStates();
@@ -287,6 +321,18 @@ export const useJobSeekersLogic = () => {
     []
   );
 
+  const { data: sourceLabels = [] } = useJobSeekerSources();
+  const sourceOptions = useMemo(() => {
+    const labels = [...sourceLabels];
+    if (filters.source && !labels.includes(filters.source)) {
+      labels.push(filters.source);
+    }
+    return [
+      { value: "", label: "All" },
+      ...labels.map((label) => ({ value: label, label })),
+    ];
+  }, [sourceLabels, filters.source]);
+
   const occupationOptions = useMemo(() => {
     const baseOptions = [{ value: "", label: "All Occupations" }];
 
@@ -309,6 +355,18 @@ export const useJobSeekersLogic = () => {
 
     return baseOptions;
   }, [occupationsData]);
+
+  const specialtyOptions = useMemo(() => {
+    const baseOptions = [{ value: "", label: "All Specialties" }];
+    if (!filters.occupationId) return baseOptions;
+    return [
+      ...baseOptions,
+      ...specialtiesForOccupation.map((specialty) => ({
+        value: specialty.value,
+        label: specialty.label,
+      })),
+    ];
+  }, [filters.occupationId, specialtiesForOccupation]);
 
   const stateOptions = useMemo(() => {
     if (statesData?.success && statesData.data) {
@@ -364,6 +422,7 @@ export const useJobSeekersLogic = () => {
         ...prev,
         [key]: value === "" ? undefined : value,
         page: 1,
+        ...(key === "occupationId" ? { specialtyId: undefined } : {}),
       }));
     });
   }, []);
@@ -434,12 +493,14 @@ export const useJobSeekersLogic = () => {
       radius: undefined,
       location: [] as string[],
       occupationId: undefined,
+      specialtyId: undefined,
       status: undefined,
       licenseName: "",
       licenseIssuingState: "",
       registrationStartDate: "",
       registrationEndDate: "",
       emailVerified: undefined,
+      source: undefined,
     };
     setFilters(newFilters);
     setSearchInput("");
@@ -454,6 +515,9 @@ export const useJobSeekersLogic = () => {
       switch (filterType) {
         case "occupationId":
           filterChange("occupationId", undefined);
+          break;
+        case "specialtyId":
+          filterChange("specialtyId", undefined);
           break;
         case "city":
           filterChange("city", "");
@@ -482,6 +546,9 @@ export const useJobSeekersLogic = () => {
         case "emailVerified":
           filterChange("emailVerified", undefined);
           break;
+        case "source":
+          filterChange("source", undefined);
+          break;
         default:
           break;
       }
@@ -496,12 +563,14 @@ export const useJobSeekersLogic = () => {
       filters.radius ||
       (filters.location && filters.location.length > 0) ||
       filters.occupationId ||
+      filters.specialtyId ||
       filters.status ||
       filters.licenseName ||
       filters.licenseIssuingState ||
-      filters.emailVerified
+      filters.emailVerified ||
+      filters.source
     );
-  }, [searchInput, filters.city, filters.radius, filters.location, filters.occupationId, filters.status, filters.licenseName, filters.licenseIssuingState, filters.emailVerified]);
+  }, [searchInput, filters.city, filters.radius, filters.location, filters.occupationId, filters.specialtyId, filters.status, filters.licenseName, filters.licenseIssuingState, filters.emailVerified, filters.source]);
 
   const handleExport = useCallback(async () => {
     if (isExporting) return;
@@ -515,12 +584,14 @@ export const useJobSeekersLogic = () => {
         radius: filters.radius,
         location: filters.location,
         occupationId: filters.occupationId,
+        specialtyId: filters.specialtyId,
         status: filters.status,
         licenseName: filters.licenseName,
         licenseIssuingState: filters.licenseIssuingState,
         registrationStartDate: filters.registrationStartDate,
         registrationEndDate: filters.registrationEndDate,
         emailVerified: filters.emailVerified,
+        source: filters.source,
       };
 
       await jobSeekerApi.exportJobSeekers(exportFilters);
@@ -578,8 +649,10 @@ export const useJobSeekersLogic = () => {
       !filters.radius &&
       !(filters.location && filters.location.length > 0) &&
       !filters.occupationId &&
+      !filters.specialtyId &&
       !filters.status &&
-      !filters.emailVerified;
+      !filters.emailVerified &&
+      !filters.source;
 
     if (isOnPageOneWithNoFilters) {
       if (typeof window !== "undefined") {
@@ -592,8 +665,10 @@ export const useJobSeekersLogic = () => {
       filters.radius ||
       (filters.location && filters.location.length > 0) ||
       filters.occupationId ||
+      filters.specialtyId ||
       filters.status ||
       filters.emailVerified ||
+      filters.source ||
       (filters.page && filters.page > 1)
     ) {
       saveSearchState();
@@ -622,7 +697,9 @@ export const useJobSeekersLogic = () => {
     tableColumns,
     statusOptions,
     emailVerifiedOptions,
+    sourceOptions,
     occupationOptions,
+    specialtyOptions,
     stateOptions,
     licenseOptions,
     licenseStateOptions,

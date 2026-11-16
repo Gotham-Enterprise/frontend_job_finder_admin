@@ -1,5 +1,5 @@
 "use client";
-import React from 'react';
+import React, { useState } from 'react';
 import { BoltIcon } from '@/icons';
 import ErrorState from '../../common/ErrorState';
 import FullScreenSpinner from '../../ui/FullScreenSpinner';
@@ -11,9 +11,11 @@ import {
   JobSeekersFilters,
   JobSeekersTable,
   JobSeekersTablePagination,
+  CreateJobSeekerModal,
 } from './components';
 
 const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
   const { saveNavigationState, clearNavigationState } = usePreservedNavigation({
     enabled: true,
     statePath: 'jobseeker-search-state',
@@ -39,7 +41,9 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
     tableColumns,
     statusOptions,
     emailVerifiedOptions,
+    sourceOptions,
     occupationOptions,
+    specialtyOptions,
     stateOptions,
     licenseOptions,
     licenseStateOptions,
@@ -82,14 +86,17 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
           hasActiveFilters={hasActiveFilters}
           onExport={handleExport}
           isExporting={isExporting}
+          onCreate={() => setIsCreateOpen(true)}
           filterDropdownContent={
             <JobSeekersFilters
               filters={filters}
               onFilterChange={filterChange}
               occupationOptions={occupationOptions}
+              specialtyOptions={specialtyOptions}
               stateOptions={stateOptions}
               statusOptions={statusOptions}
               emailVerifiedOptions={emailVerifiedOptions}
+              sourceOptions={sourceOptions}
               licenseOptions={licenseOptions}
               licenseStateOptions={licenseStateOptions}
               hasActiveFilters={hasActiveFilters}
@@ -122,6 +129,11 @@ const JobSeekers: React.FC<JobSeekersProps> = ({ className = "" }) => {
       <FullScreenSpinner
         isVisible={isExporting}
         message="Exporting Job Seekers"
+      />
+
+      <CreateJobSeekerModal
+        isOpen={isCreateOpen}
+        onClose={() => setIsCreateOpen(false)}
       />
     </>
   );

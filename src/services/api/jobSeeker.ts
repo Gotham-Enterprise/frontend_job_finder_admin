@@ -3,6 +3,7 @@ import {
   JobSeekersResponse,
   JobSeekerDetailsResponse,
   JobSeekerUpdateData,
+  CreatedJobSeeker,
   ShareResumeRequest,
   ShareResumeResponse,
 } from "../types/jobSeeker";
@@ -19,14 +20,17 @@ export const jobSeekerApi = {
     if (filters.city) queryParams.append("city", filters.city);
     if (filters.radius) queryParams.append("radius", filters.radius.toString());
     if (filters.location && filters.location.length > 0) queryParams.append("location", filters.location.join(","));
-    if (filters.specialty) queryParams.append("specialty", filters.specialty);
     if (filters.occupationId) queryParams.append("occupationId", filters.occupationId.toString());
+    if (filters.occupationId && filters.specialtyId) {
+      queryParams.append("specialtyId", filters.specialtyId.toString());
+    }
     if (filters.status) queryParams.append("status", filters.status);
     if (filters.licenseName) queryParams.append("licenseName", filters.licenseName);
     if (filters.licenseIssuingState) queryParams.append("licenseIssuingState", filters.licenseIssuingState);
     if (filters.registrationStartDate) queryParams.append("registrationStartDate", filters.registrationStartDate);
     if (filters.registrationEndDate) queryParams.append("registrationEndDate", filters.registrationEndDate);
     if (filters.emailVerified) queryParams.append("emailVerified", filters.emailVerified);
+    if (filters.source) queryParams.append("source", filters.source);
 
     // Add timezone offset in minutes (e.g., -480 for UTC+8 Philippine time)
     const timezoneOffset = new Date().getTimezoneOffset();
@@ -37,12 +41,20 @@ export const jobSeekerApi = {
     return apiGet<JobSeekersResponse>(endpoint);
   },
 
+  async getJobSeekerSources(): Promise<{ success: boolean; data: string[] }> {
+    return apiGet<{ success: boolean; data: string[] }>("/api/admin/jobseekers/sources");
+  },
+
   async viewResume(resumeId: string): Promise<any> {
     return apiGet<any>(`/api/resumes/${resumeId}/view`);
   },
 
   async getJobSeekerById(id: string): Promise<JobSeekerDetailsResponse> {
     return apiGet<JobSeekerDetailsResponse>(`/api/admin/jobseekers/${id}`);
+  },
+
+  async createJobSeeker(formData: FormData): Promise<{ success: boolean; data: CreatedJobSeeker }> {
+    return apiPost<{ success: boolean; data: CreatedJobSeeker }>("/api/admin/jobseekers", formData);
   },
 
   async updateJobSeeker(id: string, data: JobSeekerUpdateData): Promise<any> {
@@ -132,14 +144,17 @@ export const jobSeekerApi = {
     if (filters.city) queryParams.append("city", filters.city);
     if (filters.radius) queryParams.append("radius", filters.radius.toString());
     if (filters.location && filters.location.length > 0) queryParams.append("location", filters.location.join(","));
-    if (filters.specialty) queryParams.append("specialty", filters.specialty);
     if (filters.occupationId) queryParams.append("occupationId", filters.occupationId.toString());
+    if (filters.occupationId && filters.specialtyId) {
+      queryParams.append("specialtyId", filters.specialtyId.toString());
+    }
     if (filters.status) queryParams.append("status", filters.status);
     if (filters.licenseName) queryParams.append("licenseName", filters.licenseName);
     if (filters.licenseIssuingState) queryParams.append("licenseIssuingState", filters.licenseIssuingState);
     if (filters.registrationStartDate) queryParams.append("registrationStartDate", filters.registrationStartDate);
     if (filters.registrationEndDate) queryParams.append("registrationEndDate", filters.registrationEndDate);
     if (filters.emailVerified) queryParams.append("emailVerified", filters.emailVerified);
+    if (filters.source) queryParams.append("source", filters.source);
 
     // Add timezone offset in minutes (e.g., -480 for UTC+8 Philippine time)
     const timezoneOffset = new Date().getTimezoneOffset();

@@ -7,8 +7,17 @@ import {
   EmployerUpdateData,
 } from "../types/employer";
 import { ApplicantDetailsResponse } from "../types/applicant";
-import { apiGet, apiPut } from "./apiUtils";
+import { apiGet, apiPost, apiPut } from "./apiUtils";
 import { showToast } from "../utils/toast";
+
+export interface EmployerActivationResponse {
+  success: boolean;
+  data: {
+    id: string;
+    deactivatedAt: string | null;
+    unpublishedJobCount: number;
+  };
+}
 
 export const employerApi = {
   async getEmployers(filters: EmployerFilters = {}): Promise<EmployersResponse> {
@@ -77,5 +86,13 @@ export const employerApi = {
     };
 
     return apiPut<any>(`/api/admin/employers/${id}`, mappedData);
+  },
+
+  async deactivateEmployer(id: string): Promise<EmployerActivationResponse> {
+    return apiPost<EmployerActivationResponse>(`/api/admin/employers/${id}/deactivate`);
+  },
+
+  async reactivateEmployer(id: string): Promise<EmployerActivationResponse> {
+    return apiPost<EmployerActivationResponse>(`/api/admin/employers/${id}/reactivate`);
   },
 };

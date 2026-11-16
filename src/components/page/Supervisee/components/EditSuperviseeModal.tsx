@@ -36,6 +36,8 @@ import {
   supervisionTypeDisplayLabel,
 } from "@/services/utils/superviseeEligibility";
 import { useStates } from "@/services/hooks/useStates";
+import { IdentityPreferencesFields } from "@/components/common/IdentityPreferencesFields";
+import { emptyIdentityPreferencesForm } from "@/services/utils/identityPreferencesForm";
 import { useOccupationsWithSpecialties } from "@/services/hooks/useJobCreation";
 
 interface EditSuperviseeModalProps {
@@ -51,6 +53,7 @@ const CREDENTIAL_TITLE_PLACEHOLDER = "e.g. AMFT, LPC-Associate, ACSW, PA";
 
 const emptyForm = (): SuperviseeEditFormData => ({
   fullName: "",
+  identity: emptyIdentityPreferencesForm(),
   contactNumber: "",
   city: "",
   state: "",
@@ -179,7 +182,7 @@ export const EditSuperviseeModal: React.FC<EditSuperviseeModalProps> = ({
     if (!formData.occupation) return "Select an occupation first";
     if (profileSpecialtiesLoading) return "Loading…";
     if (profileSpecialtyOptions.length === 0) return "No specialties available";
-    return "Select specialty (optional)";
+    return "Select specialty (Optional)";
   }, [formData.occupation, profileSpecialtiesLoading, profileSpecialtyOptions.length]);
 
   // Eligibility for the supervision type is driven solely by the supervisee's own
@@ -492,6 +495,14 @@ export const EditSuperviseeModal: React.FC<EditSuperviseeModalProps> = ({
                 </div>
               </section>
 
+              {/* Pronouns / gender identity / languages + public-visibility flags */}
+              <IdentityPreferencesFields
+                value={formData.identity}
+                onChange={(identity) => updateField("identity", identity)}
+                errors={fieldErrors.identity}
+                disabled={isSaving}
+              />
+
               <section className="space-y-4">
                 <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
                   Occupation & licensure
@@ -719,7 +730,7 @@ export const EditSuperviseeModal: React.FC<EditSuperviseeModalProps> = ({
                   </p>
                 </FormField>
                 <FormField
-                  label="Introduce Yourself (optional)"
+                  label="Introduce Yourself (Optional)"
                   error={fieldErrors.introduction}
                 >
                   <TextArea
@@ -778,7 +789,7 @@ export const EditSuperviseeModal: React.FC<EditSuperviseeModalProps> = ({
 
                 {formData.needsMedicalDirector && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <FormField label="Preferred Occupation (optional)">
+                    <FormField label="Preferred Occupation (Optional)">
                       <Select
                         value={formData.mdPreferredOccupation}
                         onChange={(v) => {
@@ -793,7 +804,7 @@ export const EditSuperviseeModal: React.FC<EditSuperviseeModalProps> = ({
                         }
                       />
                     </FormField>
-                    <FormField label="Preferred Specialty (optional)">
+                    <FormField label="Preferred Specialty (Optional)">
                       <Select
                         value={formData.mdPreferredSpecialty}
                         onChange={(v) => updateField("mdPreferredSpecialty", v)}
