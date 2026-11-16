@@ -7,6 +7,7 @@ import type { Occupation } from '@/services/types/occupation'
 import SingleSelect from '@/components/molecules/SingleSelect'
 import SelectCity from '@/components/molecules/SelectCity'
 import RichTextEditor from '@/components/form/input/RichTextEditor'
+import { DEGREE_LEVEL_GROUPS, DEGREE_LEVELS, getDegreeLevelGroup, type DegreeLevelGroup } from '../degreeLevels'
 
 const isHtmlEmpty = (html: string): boolean => {
     const text = html.replace(/<[^>]*>/g, ' ').replace(/&nbsp;/g, ' ').trim()
@@ -56,7 +57,6 @@ export default function LinkModal({ isOpen, onClose, link, onSubmit, isSubmittin
   const [formData, setFormData] = useState<CreateLinkData>({
     name: '',
     url: '',
-    type: '',
     format: '',
     city: '',
     state: '',
@@ -77,6 +77,14 @@ export default function LinkModal({ isOpen, onClose, link, onSubmit, isSubmittin
   const [occupations, setOccupations] = useState<Occupation[]>([])
   const [occupationsLoading, setOccupationsLoading] = useState(false)
   const [occupationSearch, setOccupationSearch] = useState('')
+  // Category = top-level link type id, Sub-type = one of its children. The
+  // saved value is the most specific one: linkTypeId = subTypeId || categoryId.
+  const [categoryId, setCategoryId] = useState('')
+  const [subTypeId, setSubTypeId] = useState('')
+  // Degree level is a single saved value (degreeType); the Program Level step
+  // (Undergraduate / Graduate) only narrows the Degree Type options.
+  const [programLevel, setProgramLevel] = useState<DegreeLevelGroup | ''>('')
+  const [degreeType, setDegreeType] = useState('')
 
   const { data: partnersData } = useAffiliatePartners({ limit: 1000, status: 'active' })
   const { data: linkTypes = [] } = useAffiliateLinkTypes()
@@ -85,7 +93,7 @@ export default function LinkModal({ isOpen, onClose, link, onSubmit, isSubmittin
     if (isOpen) {
       setOccupationSearch('')
       setOccupationsLoading(true)
-      occupationApi.getOccupationList()
+      occupationApi.getDropdownOccupations()
         .then((res) => {
           const sorted = [...(res.data || [])].sort((a, b) =>
             a.name.toLowerCase().localeCompare(b.name.toLowerCase()),
@@ -106,7 +114,6 @@ export default function LinkModal({ isOpen, onClose, link, onSubmit, isSubmittin
       setFormData({
         name: link.name,
         url: link.url,
-        type: link.type || '',
         format: link.format || '',
         city: link.city || '',
         state: link.state || '',
@@ -124,12 +131,20 @@ export default function LinkModal({ isOpen, onClose, link, onSubmit, isSubmittin
         occupations: link.occupations || [],
         affiliateId: link.affiliateId,
       })
+      if (link.linkType?.parentId) {
+        setCategoryId(link.linkType.parentId)
+        setSubTypeId(link.linkType.id)
+      } else {
+        setCategoryId(link.linkType?.id || link.linkTypeId || '')
+        setSubTypeId('')
+      }
+      setProgramLevel(getDegreeLevelGroup(link.degreeLevel) || '')
+      setDegreeType(link.degreeLevel || '')
     } else {
       setFormData({
         name: '',
         url: '',
-        type: '',
-        format: '',
+            format: '',
         city: '',
         state: '',
         zipCode: '',
@@ -146,8 +161,24 @@ export default function LinkModal({ isOpen, onClose, link, onSubmit, isSubmittin
         occupations: [],
         affiliateId: '',
       })
+      setCategoryId('')
+      setSubTypeId('')
+      setProgramLevel('')
+      setDegreeType('')
     }
   }, [link, isOpen])
+
+  // Admin tree: top-level types carry `children`. Inactive entries stay
+  // selectable only when they are the link's saved value, so editing an old
+  // link never silently changes its category.
+  const topLevelTypes = useMemo(
+    () => linkTypes.filter((t) => !t.parentId && (t.isActive || t.id === categoryId)),
+    [linkTypes, categoryId],
+  )
+  const subTypeOptions = useMemo(() => {
+    const parent = linkTypes.find((t) => t.id === categoryId)
+    return (parent?.children || []).filter((c) => c.isActive || c.id === subTypeId)
+  }, [linkTypes, categoryId, subTypeId])
 
   const toggleOccupation = (occupationName: string) => {
     setFormData((prev) => {
@@ -159,16 +190,29 @@ export default function LinkModal({ isOpen, onClose, link, onSubmit, isSubmittin
     })
   }
 
+  // Saved names that are no longer in the dropdown catalog stay visible (and
+  // checked) so an editor can clear them. They are not offered as new choices.
+  const occupationOptions = useMemo(() => {
+    const catalogNames = new Set(occupations.map((occ) => occ.name))
+    const savedOnly = (formData.occupations || [])
+      .filter((name) => Boolean(name) && !catalogNames.has(name))
+      .map((name, index) => ({ id: -(index + 1), name }))
+    if (savedOnly.length === 0) return occupations
+    return [...occupations, ...savedOnly].sort((a, b) =>
+      a.name.toLowerCase().localeCompare(b.name.toLowerCase()),
+    )
+  }, [occupations, formData.occupations])
+
   const visibleOccupations = useMemo(() => {
     const term = occupationSearch.trim().toLowerCase()
-    if (!term) return occupations
+    if (!term) return occupationOptions
     const selected = formData.occupations || []
     const isSelected = (name: string) => selected.includes(name)
-    const matches = occupations.filter(
+    const matches = occupationOptions.filter(
       (occ) => !isSelected(occ.name) && occ.name.toLowerCase().includes(term),
     )
-    return [...occupations.filter((occ) => isSelected(occ.name)), ...matches]
-  }, [occupations, occupationSearch, formData.occupations])
+    return [...occupationOptions.filter((occ) => isSelected(occ.name)), ...matches]
+  }, [occupationOptions, occupationSearch, formData.occupations])
 
   const updateBullet = (index: number, value: string) => {
     setFormData((prev) => {
@@ -215,6 +259,8 @@ export default function LinkModal({ isOpen, onClose, link, onSubmit, isSubmittin
     e.preventDefault()
     const payload: CreateLinkData = {
       ...formData,
+      linkTypeId: subTypeId || categoryId || null,
+      degreeLevel: degreeType || null,
       whatYoullLearn: (formData.whatYoullLearn || []).map((b) => b.trim()).filter(Boolean),
       faqs: (formData.faqs || []).filter((f) => f.question.trim() && !isHtmlEmpty(f.answer)),
     }
@@ -300,23 +346,47 @@ export default function LinkModal({ isOpen, onClose, link, onSubmit, isSubmittin
                 Category / Type
               </label>
               <select
-                value={formData.type || ''}
-                onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+                value={categoryId}
+                onChange={(e) => {
+                  setCategoryId(e.target.value)
+                  setSubTypeId('')
+                }}
                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
               >
                 <option value="">Uncategorized</option>
-                {linkTypes
-                  .filter((t) => t.isActive || t.name === formData.type)
-                  .map((t) => (
-                    <option key={t.id} value={t.name}>
-                      {t.name}
-                    </option>
-                  ))}
+                {topLevelTypes.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.name}{t.isActive ? '' : ' (inactive)'}
+                  </option>
+                ))}
               </select>
               <p className="text-xs text-gray-500 mt-1">
                 Used to categorize this link on the Career Center page
               </p>
             </div>
+
+            {subTypeOptions.length > 0 && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Sub-type
+                </label>
+                <select
+                  value={subTypeId}
+                  onChange={(e) => setSubTypeId(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                >
+                  <option value="">All of this category (no sub-type)</option>
+                  {subTypeOptions.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.name}{t.isActive ? '' : ' (inactive)'}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  Optional. Narrows the link to a sub-type shown under the category on the Career Center
+                </p>
+              </div>
+            )}
 
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -331,13 +401,64 @@ export default function LinkModal({ isOpen, onClose, link, onSubmit, isSubmittin
                 <option value="IN_PERSON">In-Person</option>
                 <option value="VIRTUAL">Virtual</option>
                 <option value="HYBRID">Hybrid</option>
-                <option value="ONLINE_COURSE">Online Course</option>
-                <option value="DIRECTORY">Directory</option>
+                {/* Online Course and Directory are no longer offered for new links.
+                    Keep the saved value selectable so editing an old link does not silently change it. */}
+                {formData.format === 'ONLINE_COURSE' && <option value="ONLINE_COURSE">Online Course (legacy)</option>}
+                {formData.format === 'DIRECTORY' && <option value="DIRECTORY">Directory (legacy)</option>}
               </select>
               <p className="text-xs text-gray-500 mt-1">
                 Delivery format shown on the Career Center filter
               </p>
             </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Program Level <span className="text-red-500">*</span>
+              </label>
+              <select
+                required
+                value={programLevel}
+                onChange={(e) => {
+                  setProgramLevel(e.target.value as DegreeLevelGroup | '')
+                  setDegreeType('')
+                }}
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+              >
+                <option value="" disabled>Select program level</option>
+                {DEGREE_LEVEL_GROUPS.map((g) => (
+                  <option key={g.value} value={g.value}>
+                    {g.label}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-gray-500 mt-1">
+                Required. Shown as the Degree Level filter on the Career Center
+              </p>
+            </div>
+
+            {programLevel && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Degree Type <span className="text-red-500">*</span>
+                </label>
+                <select
+                  required
+                  value={degreeType}
+                  onChange={(e) => setDegreeType(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                >
+                  <option value="" disabled>Select degree type</option>
+                  {DEGREE_LEVELS.filter((d) => d.group === programLevel).map((d) => (
+                    <option key={d.value} value={d.value}>
+                      {d.label}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  Required. The specific degree saved on this link
+                </p>
+              </div>
+            )}
 
             <div>
               <SelectCity
@@ -596,7 +717,7 @@ export default function LinkModal({ isOpen, onClose, link, onSubmit, isSubmittin
                   <div className="flex items-center justify-center py-8">
                     <div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
                   </div>
-                ) : occupations.length === 0 ? (
+                ) : occupationOptions.length === 0 ? (
                   <p className="text-gray-500 text-sm text-center py-4">No occupations available</p>
                 ) : visibleOccupations.length === 0 ? (
                   <p className="text-gray-500 text-sm text-center py-4">No occupations match your search</p>

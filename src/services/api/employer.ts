@@ -29,6 +29,7 @@ export const employerApi = {
       if (filters.name) queryParams.append("name", filters.name);
       if (filters.location) queryParams.append("location", filters.location);
       if (filters.status) queryParams.append("status", filters.status);
+      if (filters.emailVerified) queryParams.append("emailVerified", filters.emailVerified);
 
       const endpoint = `/api/admin/employers?${queryParams.toString()}`;
 

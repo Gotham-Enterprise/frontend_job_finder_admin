@@ -226,11 +226,14 @@ export const useAffiliateLinkTypes = () => {
 export const useCreateAffiliateLinkType = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: { name: string }) => createAffiliateLinkType(data),
+    mutationFn: (data: { name: string; parentId?: string | null }) => createAffiliateLinkType(data),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: affiliateQueryKeys.linkTypes() });
       queryClient.invalidateQueries({ queryKey: affiliateQueryKeys.links() });
-      showToast.success("Link Type Added!", `"${data.name}" has been added.`);
+      showToast.success(
+        data.parentId ? "Sub-type Added!" : "Link Type Added!",
+        `"${data.name}" has been added.`,
+      );
     },
     onError: (error: any) => {
       const errorMessage = error.response?.data?.message || error.message || "Failed to add link type";
@@ -242,8 +245,13 @@ export const useCreateAffiliateLinkType = () => {
 export const useUpdateAffiliateLinkType = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: { name?: string; isActive?: boolean; sortOrder?: number } }) =>
-      updateAffiliateLinkType(id, data),
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: { name?: string; isActive?: boolean; sortOrder?: number; parentId?: string | null };
+    }) => updateAffiliateLinkType(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: affiliateQueryKeys.linkTypes() });
       queryClient.invalidateQueries({ queryKey: affiliateQueryKeys.links() });
@@ -260,10 +268,20 @@ export const useDeleteAffiliateLinkType = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => deleteAffiliateLinkType(id),
-    onSuccess: () => {
+    onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: affiliateQueryKeys.linkTypes() });
       queryClient.invalidateQueries({ queryKey: affiliateQueryKeys.links() });
-      showToast.success("Link Type Deleted!", "The link type has been deleted.");
+      const parts: string[] = [];
+      if (result?.childrenDeleted) {
+        parts.push(`${result.childrenDeleted} sub-type${result.childrenDeleted === 1 ? "" : "s"} deleted`);
+      }
+      if (result?.linksUncategorized) {
+        parts.push(`${result.linksUncategorized} link${result.linksUncategorized === 1 ? "" : "s"} now Uncategorized`);
+      }
+      showToast.success(
+        "Link Type Deleted!",
+        parts.length ? `The link type has been deleted. ${parts.join(", ")}.` : "The link type has been deleted.",
+      );
     },
     onError: (error: any) => {
       const errorMessage = error.response?.data?.message || error.message || "Failed to delete link type";
