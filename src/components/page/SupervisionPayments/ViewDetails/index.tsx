@@ -187,8 +187,12 @@ function ResolveDisputeCard({ week }: { week: BillingWeek }) {
         onClose={() => setConfirmOpen(false)}
         onCancel={() => setConfirmOpen(false)}
         onConfirm={async () => {
-          await resolve.mutateAsync({ approvedMinutes: Number(minutes), note: note.trim() });
-          setConfirmOpen(false);
+          try {
+            await resolve.mutateAsync({ approvedMinutes: Number(minutes), note: note.trim() });
+            setConfirmOpen(false);
+          } catch {
+            /* toasted by useWeekMutation */
+          }
         }}
         title="Resolve dispute"
         message={
@@ -232,8 +236,31 @@ function LateEntryStatus({ session }: { session: BillingWeekSession }) {
 
 function SessionsCard({ week }: { week: BillingWeek }) {
   const retry = useRetryLateEntryCharge(week.id);
+  // Retrying charges the supervisee's card: confirm first.
+  const [retrying, setRetrying] = useState<BillingWeekSession | null>(null);
   return (
     <SectionCard title={`Sessions (${formatMinutes(week.loggedMinutes)} of ${formatMinutes(week.terms.weeklyCapMinutes)})`}>
+      <ConfirmationDialog
+        isOpen={retrying != null}
+        onClose={() => setRetrying(null)}
+        onCancel={() => setRetrying(null)}
+        onConfirm={async () => {
+          if (!retrying) return;
+          // The mutation's onError already toasts; a rejected await here would
+          // only be an unhandled rejection. The dialog stays open to retry.
+          try {
+            await retry.mutateAsync(retrying.id);
+            setRetrying(null);
+          } catch {
+            /* toasted by useWeekMutation */
+          }
+        }}
+        title="Retry this charge?"
+        message={`This charges the supervisee's card ${retrying?.totalCents != null ? formatCents(retrying.totalCents) : "again"} for the ${retrying ? formatMinutes(retrying.durationMinutes) : ""} late session and pays the supervisor right away.`}
+        confirmText="Charge now"
+        cancelText="Cancel"
+        isLoading={retry.isPending}
+      />
       {week.sessions.length === 0 ? (
         <p className="text-sm text-gray-500 dark:text-gray-400">No sessions logged.</p>
       ) : (
@@ -258,7 +285,7 @@ function SessionsCard({ week }: { week: BillingWeek }) {
               </div>
               {session.chargeStatus === "FAILED" && (
                 <button
-                  onClick={() => retry.mutate(session.id)}
+                  onClick={() => setRetrying(session)}
                   disabled={retry.isPending}
                   className={`${buttonClass} self-start border border-gray-200 text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300`}
                 >
@@ -534,6 +561,18 @@ function PaymentCard({ week }: { week: BillingWeek }) {
       <FieldRow compact label="Supervisor paid" value={week.supervisorAmountCents != null ? formatCents(week.supervisorAmountCents) : null} />
       <FieldRow compact label="Platform fee" value={week.platformFeeCents != null ? formatCents(week.platformFeeCents) : null} />
       <FieldRow compact label="Refunded" value={week.refundCents != null ? formatCents(week.refundCents) : null} />
+      {week.settlementFailedAt && week.status !== "SETTLED" && (
+        <FieldRow
+          compact
+          label="Settlement"
+          value={
+            <span className="text-red-600 dark:text-red-400">
+              Failing since {formatEasternDateTime(week.settlementFailedAt)} · retried every 15 minutes
+              {week.settlementError && ` · ${week.settlementError}`}
+            </span>
+          }
+        />
+      )}
       <FieldRow compact label="Settled" value={week.settledAt ? formatEasternDateTime(week.settledAt) : null} />
       <FieldRow compact label="Stripe payment" value={week.stripePaymentIntentId && <code className="text-xs break-all">{week.stripePaymentIntentId}</code>} />
       <FieldRow compact label="Stripe transfer" value={week.stripeTransferId && <code className="text-xs break-all">{week.stripeTransferId}</code>} />

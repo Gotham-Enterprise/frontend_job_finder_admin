@@ -105,6 +105,9 @@ export interface BillingWeek {
   stripeTransferId: string | null;
   stripeRefundId: string | null;
   settledAt: string | null;
+  /** Set while an approved week's settlement keeps failing (retried every 15 min) */
+  settlementFailedAt: string | null;
+  settlementError: string | null;
   /** YYYY-MM-DD: late entries can be added until this day (inclusive) */
   lateEntryDeadline: string;
   sessions: BillingWeekSession[];

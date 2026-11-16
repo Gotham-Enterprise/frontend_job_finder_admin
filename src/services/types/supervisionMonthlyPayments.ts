@@ -20,6 +20,15 @@ export interface MonthlyDisputeEvidence {
   files: { id: string; url: string; fileName: string; contentType: string; sizeBytes: number }[];
 }
 
+/** A file on an activity log entry (presigned URL, 24 h). */
+export interface MonthlyActivityAttachment {
+  id: string;
+  url: string;
+  fileName: string;
+  contentType: string;
+  sizeBytes: number;
+}
+
 /** What the Medical Director logged during the month (their activity log). */
 export interface MonthlyActivityEntry {
   id: string;
@@ -34,6 +43,8 @@ export interface MonthlyActivityEntry {
   createdAt: string;
   edited: boolean;
   addedAfterDispute: boolean;
+  /** Files the Medical Director attached (older entries: may be missing). */
+  attachments?: MonthlyActivityAttachment[];
 }
 
 export interface MonthlyPeriodParty {
@@ -111,6 +122,9 @@ export interface MonthlyPeriod {
   stripeTransferId: string | null;
   stripeRefundId: string | null;
   settledAt: string | null;
+  /** Set while a released month's settlement keeps failing (retried every 15 min) */
+  settlementFailedAt: string | null;
+  settlementError: string | null;
   /** Detail view only: the dispute's evidence from both sides, oldest first. */
   evidence?: MonthlyDisputeEvidence[];
   /** Detail view only: the Medical Director's activity log entries for this month. */

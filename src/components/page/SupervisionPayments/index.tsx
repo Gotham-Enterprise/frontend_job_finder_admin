@@ -52,6 +52,14 @@ const ITEMS_PER_PAGE_OPTIONS = ["10", "25", "50"].map((value) => ({ value, label
 /** What needs a support action on this week, if anything. */
 function attentionLabel(week: BillingWeek): string | null {
   if (week.status === "DISPUTED") return "Dispute to resolve";
+  if (week.settlementFailedAt && week.status !== "SETTLED") return "Settlement failing";
+  if (
+    week.prepayStatus !== "PAID" &&
+    week.status !== "SETTLED" &&
+    (week.hire.status === "COMPLETED" || week.hire.status === "CANCELED")
+  ) {
+    return week.loggedMinutes > 0 ? "Unpaid, hire ended" : "Unpaid, hire ended (nothing logged)";
+  }
   if (week.failedLateCharges > 0) return "Late charge failed";
   if (week.pendingLateEntryRequests > 0) return "Late entry requested";
   if (week.prepayStatus === "FAILED" && week.status !== "SETTLED") return "Prepay failed";

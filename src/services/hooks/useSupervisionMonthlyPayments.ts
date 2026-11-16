@@ -36,7 +36,14 @@ export const useResolveMonthlyDispute = (id: string) => {
     onSuccess: (data) => {
       queryClient.setQueryData(supervisionMonthlyPaymentsQueryKeys.detail(id), data);
       queryClient.invalidateQueries({ queryKey: supervisionMonthlyPaymentsQueryKeys.lists() });
-      showToast.success("Dispute resolved", "The month is settled: the Medical Director is paid and the rest refunded.");
+      if (data.data?.status === "SETTLED") {
+        showToast.success("Dispute resolved", "The month is settled: the Medical Director is paid and the rest refunded.");
+      } else {
+        showToast.success(
+          "Dispute resolved",
+          "Both sides were told. The payout couldn't be made yet (see Settlement below); it's retried every 15 minutes.",
+        );
+      }
     },
     onError: (error: Error) => {
       queryClient.invalidateQueries({ queryKey: supervisionMonthlyPaymentsQueryKeys.detail(id) });

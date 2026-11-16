@@ -280,6 +280,24 @@ function ActivityCard({ period }: { period: MonthlyPeriod }) {
                   {e.chartCount ? ` · ${e.chartCount} chart${e.chartCount === 1 ? "" : "s"}` : ""}
                 </p>
                 {e.notes && <p className="mt-0.5 text-sm text-gray-600 dark:text-gray-400 whitespace-pre-wrap">{e.notes}</p>}
+                {(e.attachments?.length ?? 0) > 0 && (
+                  <ul className="mt-1.5 flex flex-wrap gap-2">
+                    {e.attachments!.map((f) => (
+                      <li key={f.id}>
+                        <a
+                          href={f.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          title={f.fileName}
+                          className="inline-flex items-center gap-1.5 rounded-md border border-gray-200 bg-gray-50 px-2 py-1 text-xs text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+                        >
+                          <FileText className="h-3.5 w-3.5 text-gray-500 dark:text-gray-400" aria-hidden />
+                          <span className="max-w-[16rem] truncate">{f.fileName}</span>
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                )}
                 <div className="mt-1 flex flex-wrap gap-2 text-xs text-gray-500 dark:text-gray-400">
                   {e.loggedOn !== e.activityDate && <span>Logged {formatCalendarDate(e.loggedOn)}</span>}
                   {e.edited && <span>Edited</span>}
@@ -489,6 +507,17 @@ export default function MonthlyPeriodDetails({ id }: { id: string }) {
             <FieldRow label="Platform fee" value={period.status === "SETTLED" ? formatCents(period.platformFeeCents) : null} />
             <FieldRow label="Refunded" value={period.status === "SETTLED" ? formatCents(period.refundCents) : null} />
             <FieldRow label="Settled" value={period.settledAt ? formatEasternDateTime(period.settledAt) : null} />
+            {period.settlementFailedAt && period.status !== "SETTLED" && (
+              <FieldRow
+                label="Settlement"
+                value={
+                  <span className="text-red-600 dark:text-red-400">
+                    Failing since {formatEasternDateTime(period.settlementFailedAt)} · retried every 15 minutes
+                    {period.settlementError && ` · ${period.settlementError}`}
+                  </span>
+                }
+              />
+            )}
             <FieldRow label="Stripe payment" value={period.stripePaymentIntentId && <code className="text-xs break-all">{period.stripePaymentIntentId}</code>} />
             <FieldRow label="Stripe transfer" value={period.stripeTransferId && <code className="text-xs break-all">{period.stripeTransferId}</code>} />
             <FieldRow label="Stripe refund" value={period.stripeRefundId && <code className="text-xs break-all">{period.stripeRefundId}</code>} />
