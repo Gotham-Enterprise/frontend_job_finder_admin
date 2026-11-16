@@ -12,6 +12,7 @@ import type { AffiliateLink, CreateLinkData, UpdateLinkData } from '@/services/a
 import LinkModal from './components/LinkModal'
 import LinkTypesConfigModal from './components/LinkTypesConfigModal'
 import { useAffiliatePermissions } from '@/hooks/useAffiliatePermissions'
+import { getDegreeLevelLabel } from './degreeLevels'
 
 const stripHtml = (html: string): string =>
   html.replace(/<[^>]*>/g, ' ').replace(/&nbsp;/gi, ' ').replace(/\s+/g, ' ').trim()
@@ -154,6 +155,9 @@ export default function AffiliateLinks() {
                   Format
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Degree Level
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Location
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
@@ -206,7 +210,9 @@ export default function AffiliateLinks() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className="inline-block px-2.5 py-0.5 bg-primary/10 text-primary text-xs font-medium rounded-full">
-                      {link.type || 'Uncategorized'}
+                      {link.parentType && link.linkType
+                        ? `${link.parentType.name} › ${link.linkType.name}`
+                        : link.linkType?.name || link.type || 'Uncategorized'}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -217,6 +223,11 @@ export default function AffiliateLinks() {
                     ) : (
                       <span className="text-sm text-gray-400">—</span>
                     )}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-500 dark:text-gray-400">
+                      {getDegreeLevelLabel(link.degreeLevel) || '—'}
+                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-500 dark:text-gray-400">
