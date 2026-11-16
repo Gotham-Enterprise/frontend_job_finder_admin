@@ -9,6 +9,7 @@ const EmployerFilters: React.FC<EmployerFiltersProps> = ({
   onFilterChange,
   stateOptions,
   statusOptions,
+  emailVerifiedOptions,
   hasActiveFilters,
   clearIndividualFilter,
 }) => {
@@ -60,6 +61,29 @@ const EmployerFilters: React.FC<EmployerFiltersProps> = ({
             options={statusOptions}
             placeholder="Select status..."
             searchPlaceholder="Search status..."
+            className="w-full"
+          />
+        </div>
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              Email Verified
+            </Label>
+            {filters.emailVerified && (
+              <button
+                onClick={() => clearIndividualFilter('emailVerified')}
+                className="text-xs text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100 font-medium cursor-pointer hover:underline"
+              >
+                Clear
+              </button>
+            )}
+          </div>
+          <SearchableSelect
+            value={filters.emailVerified || ''}
+            onChange={(value: string) => onFilterChange('emailVerified', value)}
+            options={emailVerifiedOptions}
+            placeholder="Select email verification..."
+            searchPlaceholder="Search..."
             className="w-full"
           />
         </div>
