@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useRef, useState } from "react";
-import { KeyRound, Mail, MailCheck, MoreVertical, UserCheck, UserX } from "lucide-react";
+import { KeyRound, LogIn, Mail, MailCheck, MoreVertical, UserCheck, UserX } from "lucide-react";
+import PermissionWrapper from "@/components/common/PermissionWrapper";
 import { Dropdown } from "@/components/ui/dropdown/Dropdown";
 import { DropdownItem } from "@/components/ui/dropdown/DropdownItem";
 
@@ -16,6 +17,7 @@ interface CompanyUserRowActionsProps {
   onApproveVerification: () => void;
   onResetPassword: () => void;
   onToggleStatus: () => void;
+  onLoginAs?: () => void;
 }
 
 const CompanyUserRowActions: React.FC<CompanyUserRowActionsProps> = ({
@@ -26,6 +28,7 @@ const CompanyUserRowActions: React.FC<CompanyUserRowActionsProps> = ({
   onApproveVerification,
   onResetPassword,
   onToggleStatus,
+  onLoginAs,
 }) => {
   const [open, setOpen] = useState(false);
   const buttonRef = useRef<HTMLButtonElement | null>(null);
@@ -70,6 +73,14 @@ const CompanyUserRowActions: React.FC<CompanyUserRowActionsProps> = ({
         <DropdownItem tag="button" className={itemClass} onClick={run(onResetPassword)}>
           <KeyRound {...iconProps} /> Reset Password
         </DropdownItem>
+
+        {onLoginAs && (
+          <PermissionWrapper module="employers" action="edit">
+            <DropdownItem tag="button" className={itemClass} onClick={run(onLoginAs)}>
+              <LogIn {...iconProps} /> Login as User
+            </DropdownItem>
+          </PermissionWrapper>
+        )}
 
         <DropdownItem
           tag="button"
