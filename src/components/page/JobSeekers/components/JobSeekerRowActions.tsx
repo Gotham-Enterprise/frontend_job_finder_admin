@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useRef, useState } from "react";
-import { Eye, KeyRound, Mail, MailCheck, MoreVertical, Pencil } from "lucide-react";
+import { Eye, KeyRound, LogIn, Mail, MailCheck, MoreVertical, Pencil } from "lucide-react";
 import { Dropdown } from "../../../ui/dropdown/Dropdown";
 import { DropdownItem } from "../../../ui/dropdown/DropdownItem";
 import PermissionWrapper from "@/components/common/PermissionWrapper";
@@ -17,6 +17,8 @@ interface JobSeekerRowActionsProps {
   showResendVerification: boolean;
   onApproveEmailVerification: () => void;
   showApproveEmailVerification: boolean;
+  onLoginAs?: () => void;
+  showLoginAs?: boolean;
 }
 
 const JobSeekerRowActions: React.FC<JobSeekerRowActionsProps> = ({
@@ -27,6 +29,8 @@ const JobSeekerRowActions: React.FC<JobSeekerRowActionsProps> = ({
   showResendVerification,
   onApproveEmailVerification,
   showApproveEmailVerification,
+  onLoginAs,
+  showLoginAs = false,
 }) => {
   const [open, setOpen] = useState(false);
   const buttonRef = useRef<HTMLButtonElement | null>(null);
@@ -63,6 +67,14 @@ const JobSeekerRowActions: React.FC<JobSeekerRowActionsProps> = ({
             <Pencil {...iconProps} /> Edit
           </DropdownItem>
         </PermissionWrapper>
+
+        {showLoginAs && onLoginAs && (
+          <PermissionWrapper module="jobseekers" action="edit">
+            <DropdownItem tag="button" className={itemClass} onClick={run(onLoginAs)}>
+              <LogIn {...iconProps} /> Login as User
+            </DropdownItem>
+          </PermissionWrapper>
+        )}
 
         <DropdownItem tag="button" className={itemClass} onClick={run(onResetPassword)}>
           <KeyRound {...iconProps} /> Reset password
