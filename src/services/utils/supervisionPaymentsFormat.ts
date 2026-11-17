@@ -68,9 +68,9 @@ export const WEEK_STATUS_CLASS: Record<BillingWeekStatus, string> = {
 
 export const PREPAY_STATUS_LABEL: Record<PrepayStatus, string> = {
   PENDING: "Not charged yet",
-  PAID: "Paid",
-  FAILED: "Failed",
-  CANCELED: "Not charged",
+  PAID: "Charged",
+  FAILED: "Charge failed",
+  CANCELED: "Nothing charged",
 };
 
 export const PREPAY_STATUS_CLASS: Record<PrepayStatus, string> = {

@@ -33,9 +33,9 @@ const TABLE_COLUMNS = [
   { key: "parties", label: "Supervisee → Supervisor" },
   { key: "status", label: "Status" },
   { key: "hours", label: "Hours" },
-  { key: "charged", label: "Prepay" },
+  { key: "charged", label: "Charge" },
   { key: "payout", label: "Paid out" },
-  { key: "refund", label: "Refunded" },
+  { key: "refund", label: "Back to supervisee" },
   { key: "actions", label: "", className: "text-right" },
 ];
 
@@ -60,9 +60,13 @@ function attentionLabel(week: BillingWeek): string | null {
   ) {
     return week.loggedMinutes > 0 ? "Unpaid, hire ended" : "Unpaid, hire ended (nothing logged)";
   }
+  if (week.hire.superviseeOnHold) return "Account on hold";
   if (week.failedLateCharges > 0) return "Late charge failed";
   if (week.pendingLateEntryRequests > 0) return "Late entry requested";
-  if (week.prepayStatus === "FAILED" && week.status !== "SETTLED") return "Prepay failed";
+  if (week.prepayStatus === "FAILED" && week.status !== "SETTLED")
+    return week.chargeAttempts >= 3
+      ? "Charge failed after 3 rounds"
+      : `Charge failed (round ${Math.max(week.chargeAttempts, 1)} of 3)`;
   if (week.pendingLateEntries > 0) return "Late entry awaiting supervisee";
   return null;
 }
@@ -114,7 +118,7 @@ function PaymentsSummaryCards({ summary, loading }: { summary: PaymentsSummary |
       <StatCard
         label="In progress (estimated)"
         value={formatCents(summary.platformFees.inProgressEstimateCents)}
-        hint={`${summary.inProgressWeeks} prepaid week${summary.inProgressWeeks === 1 ? "" : "s"} not yet settled`}
+        hint={`${summary.inProgressWeeks} charged week${summary.inProgressWeeks === 1 ? "" : "s"} not yet settled`}
       />
       <StatCard
         label={`Charged to supervisees · ${month}`}
