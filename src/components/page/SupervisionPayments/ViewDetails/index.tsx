@@ -88,11 +88,15 @@ const durationOptions = (maxMinutes: number, includeZero: boolean) =>
     const minutes = (includeZero ? i : i + 1) * UNIT;
     return {
       value: String(minutes),
-      label: minutes === 0 ? "0 min (refund everything)" : formatMinutes(minutes),
+      label: minutes === 0 ? "0 min (everything back to the supervisee)" : formatMinutes(minutes),
     };
   });
 
-/** What the supervisor gets and what's refunded for a given number of paid minutes. */
+/**
+ * What the supervisor gets and what goes back to the supervisee for a given
+ * number of paid minutes. The week was charged for the logged hours
+ * (`prepayAmountCents`); paying fewer hours sends the difference back.
+ */
 function settlementPreview(week: BillingWeek, minutes: number) {
   const earned = Math.min(
     Math.round((week.terms.hourlyRateCents * minutes) / 60),
@@ -131,7 +135,8 @@ function DisputeEvidence({ attachments }: { attachments: DisputeAttachment[] }) 
 
 function ResolveDisputeCard({ week }: { week: BillingWeek }) {
   const resolve = useResolveDispute(week.id);
-  const maxMinutes = Math.min(week.loggedMinutes, week.terms.weeklyCapMinutes);
+  // Up to the minutes logged: the weekly max is soft and no longer caps what can be paid.
+  const maxMinutes = week.loggedMinutes;
   const [minutes, setMinutes] = useState(String(maxMinutes));
   const [note, setNote] = useState("");
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -151,14 +156,18 @@ function ResolveDisputeCard({ week }: { week: BillingWeek }) {
       <div className="mt-4 space-y-3">
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Hours to pay the supervisor ({formatMinutes(week.loggedMinutes)} logged)
+            Hours to pay the supervisor (up to the {formatMinutes(week.loggedMinutes)} logged
+            {week.loggedMinutes > week.terms.weeklyCapMinutes
+              ? `, ${formatMinutes(week.loggedMinutes - week.terms.weeklyCapMinutes)} over the ${formatMinutes(week.terms.weeklyCapMinutes)} weekly max`
+              : ""}
+            )
           </label>
           <Select value={minutes} onChange={setMinutes} options={durationOptions(maxMinutes, true)} />
         </div>
         <p className="text-sm text-gray-600 dark:text-gray-400">
           {paid
-            ? `Supervisor receives ${formatCents(preview.payout)} (after a ${formatCents(preview.fee)} platform fee); ${formatCents(preview.refund)} is refunded to the supervisee.`
-            : `The prepay isn't paid yet: ${Number(minutes) === 0 ? "the week closes at $0 and the charge is cancelled." : "the supervisor is paid once the supervisee pays the week."}`}
+            ? `Supervisor receives ${formatCents(preview.payout)} (after a ${formatCents(preview.fee)} platform fee); ${formatCents(preview.refund)} for the hours goes back to the supervisee's card. The service fee isn't returned.`
+            : `The week's charge hasn't gone through yet: ${Number(minutes) === 0 ? "the week closes at $0 and the charge is cancelled." : "the supervisor is paid once the supervisee's payment goes through."}`}
         </p>
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -197,8 +206,8 @@ function ResolveDisputeCard({ week }: { week: BillingWeek }) {
         title="Resolve dispute"
         message={
           Number(minutes) === 0
-            ? "Pay the supervisor nothing and refund the whole prepay? This can't be undone."
-            : `Pay the supervisor for ${formatMinutes(Number(minutes))} and refund the rest? This can't be undone.`
+            ? "Pay the supervisor nothing and send the whole charge back to the supervisee? This can't be undone."
+            : `Pay the supervisor for ${formatMinutes(Number(minutes))} and send the difference back to the supervisee? This can't be undone.`
         }
         confirmText="Resolve"
         cancelText="Cancel"
@@ -412,7 +421,10 @@ function LateEntryRequestsList({ week, canAdd }: { week: BillingWeek; canAdd: bo
 function AddLateEntryCard({ week }: { week: BillingWeek }) {
   const add = useAddLateEntry(week.id);
   const today = todayEastern();
-  const left = week.terms.weeklyCapMinutes - week.loggedMinutes;
+  // The weekly max is a flag, not a limit (post-pay): a late entry can take the
+  // week over it; the supervisee approves or rejects it either way.
+  const MAX_LATE_ENTRY_MINUTES = 8 * 60;
+  const overBy = Math.max(0, week.loggedMinutes - week.terms.weeklyCapMinutes);
   const maxDate = week.endDate < today ? week.endDate : today;
   const agreementStart = week.hire.agreement?.startDate ?? week.startDate;
   const minDate = agreementStart > week.startDate ? agreementStart : week.startDate;
@@ -421,7 +433,7 @@ function AddLateEntryCard({ week }: { week: BillingWeek }) {
   const [notes, setNotes] = useState("");
   const [reason, setReason] = useState("");
 
-  const canAdd = today <= week.lateEntryDeadline && left >= UNIT;
+  const canAdd = today <= week.lateEntryDeadline;
   const requestsList = <LateEntryRequestsList week={week} canAdd={canAdd} />;
 
   if (today > week.lateEntryDeadline) {
@@ -434,15 +446,6 @@ function AddLateEntryCard({ week }: { week: BillingWeek }) {
       </SectionCard>
     );
   }
-  if (left < UNIT) {
-    return (
-      <SectionCard title="Add a late session">
-        {requestsList}
-        <p className="text-sm text-gray-500 dark:text-gray-400">This week has reached its weekly max.</p>
-      </SectionCard>
-    );
-  }
-
   const submit = async () => {
     await add.mutateAsync({
       sessionDate,
@@ -476,12 +479,12 @@ function AddLateEntryCard({ week }: { week: BillingWeek }) {
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Duration ({formatMinutes(left)} left)
+            Duration{overBy > 0 ? ` (week already ${formatMinutes(overBy)} over its ${formatMinutes(week.terms.weeklyCapMinutes)} max)` : ""}
           </label>
           <Select
             value={minutes}
             onChange={setMinutes}
-            options={durationOptions(left, false)}
+            options={durationOptions(MAX_LATE_ENTRY_MINUTES, false)}
             placeholder="Select duration"
           />
         </div>
@@ -535,32 +538,37 @@ function PaymentCard({ week }: { week: BillingWeek }) {
     <SectionCard title="Payment">
       <FieldRow
         compact
-        label="Prepay"
+        label="Invoice"
         value={
           <>
             {formatCents(week.totalCents)}{" "}
             <span className="text-xs text-gray-500">
-              ({formatCents(week.prepayAmountCents)} + {formatCents(week.serviceFeeCents)} service fee)
+              ({formatCents(week.prepayAmountCents)} for {formatMinutes(week.loggedMinutes)} + {formatCents(week.serviceFeeCents)} service fee)
             </span>
           </>
         }
       />
+      <FieldRow compact label="Charge date" value={formatCalendarDate(week.chargeDate)} />
       <FieldRow
         compact
-        label="Prepay status"
+        label="Charge status"
         value={
           <span className={PREPAY_STATUS_CLASS[week.prepayStatus]}>
             {PREPAY_STATUS_LABEL[week.prepayStatus]}
             {week.paidAt && ` · ${formatEasternDateTime(week.paidAt)}`}
+            {week.prepayStatus === "FAILED" &&
+              (week.chargeAttempts >= 3 ? " · after 3 rounds" : ` · round ${Math.max(week.chargeAttempts, 1)} of 3`)}
+            {week.prepayStatus === "FAILED" && week.lastChargeAttemptAt && ` · last tried ${formatEasternDateTime(week.lastChargeAttemptAt)}`}
             {week.prepayStatus === "FAILED" && week.failureMessage && ` · ${week.failureMessage}`}
           </span>
         }
       />
+      <FieldRow compact label="Payout date" value={formatCalendarDate(week.payoutDate)} />
       <FieldRow compact label="Approved hours" value={week.approvedMinutes != null ? formatMinutes(week.approvedMinutes) : null} />
       <FieldRow compact label="Approved by" value={approvedBy} />
       <FieldRow compact label="Supervisor paid" value={week.supervisorAmountCents != null ? formatCents(week.supervisorAmountCents) : null} />
       <FieldRow compact label="Platform fee" value={week.platformFeeCents != null ? formatCents(week.platformFeeCents) : null} />
-      <FieldRow compact label="Refunded" value={week.refundCents != null ? formatCents(week.refundCents) : null} />
+      <FieldRow compact label="Back to supervisee" value={week.refundCents != null ? formatCents(week.refundCents) : null} />
       {week.settlementFailedAt && week.status !== "SETTLED" && (
         <FieldRow
           compact
@@ -590,8 +598,12 @@ export default function ViewDetails({ id }: { id: string }) {
     if (week.failedLateCharges > 0) return "A late-session charge failed. Retry it once the supervisee updates their card.";
     if (week.pendingLateEntryRequests > 0)
       return "The supervisor asked for a late session to be added. Approve or decline it below.";
+    if (week.hire.superviseeOnHold)
+      return `The supervisee's account is on hold${week.hire.superviseeHoldSince ? ` since ${formatEasternDateTime(week.hire.superviseeHoldSince)}` : ""}: a week is still unpaid after the 3 charge rounds. Their supervisors can't log sessions and they can't start new supervisions until it's paid; messaging stays open.`;
     if (week.prepayStatus === "FAILED" && week.status !== "SETTLED")
-      return "The prepay failed. The supervisee was asked to tap Pay now.";
+      return week.chargeAttempts >= 3
+        ? "The week's charge failed after 3 rounds. Only Pay now is left; the supervisee was asked to pay, and their account goes on hold if it's still unpaid Sunday night."
+        : `The week's charge failed (round ${Math.max(week.chargeAttempts, 1)} of 3). Each round tries their card and then the backup card, if any; the supervisee can also tap Pay now.`;
     return null;
   }, [week]);
 
@@ -632,6 +644,13 @@ export default function ViewDetails({ id }: { id: string }) {
           week · {week.terms.platformFeeBps / 100}% platform fee · logging deadline{" "}
           {formatEasternDateTime(week.logDeadlineAt)} · review until {formatEasternDateTime(week.reviewEndsAt)}
         </p>
+        {week.hire.superviseeOnHold && (
+          <p className="mt-1 text-sm font-medium text-red-700 dark:text-red-400">
+            Supervisee account on hold
+            {week.hire.superviseeHoldSince && ` since ${formatEasternDateTime(week.hire.superviseeHoldSince)}`}
+            {" "}· lifts when the unpaid week is paid
+          </p>
+        )}
         {attention && (
           <p className="mt-3 flex items-center gap-2 text-sm text-red-700 dark:text-red-400">
             <AlertTriangle className="h-4 w-4 shrink-0" />

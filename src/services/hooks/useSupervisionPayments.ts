@@ -70,7 +70,7 @@ const useWeekMutation = <TVariables>(
 export const useResolveDispute = (id: string) =>
   useWeekMutation(id, (input: ResolveDisputeInput) => supervisionPaymentsApi.resolveDispute(id, input), {
     title: "Dispute resolved",
-    message: "The week is settled: the supervisor is paid and unused prepay refunded.",
+    message: "The week is settled: the supervisor is paid and any difference for the hours goes back to the supervisee's card (the service fee isn't returned).",
   });
 
 export const useAddLateEntry = (id: string) =>
