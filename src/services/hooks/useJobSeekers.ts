@@ -1,4 +1,4 @@
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { jobSeekerApi } from '../api/jobSeeker';
 import { JobSeekerFilters } from '../types/jobSeeker';
 
@@ -9,6 +9,7 @@ export const jobSeekerQueryKeys = {
   details: () => [...jobSeekerQueryKeys.all, 'detail'] as const,
   detail: (id: string) => [...jobSeekerQueryKeys.details(), id] as const,
   stats: () => [...jobSeekerQueryKeys.all, 'stats'] as const,
+  sources: () => [...jobSeekerQueryKeys.all, 'sources'] as const,
 };
 
 export const useJobSeekers = (filters: JobSeekerFilters = {}) => {
@@ -28,6 +29,17 @@ export const useJobSeekers = (filters: JobSeekerFilters = {}) => {
   });
 };
 
+export const useJobSeekerSources = () => {
+  return useQuery({
+    queryKey: jobSeekerQueryKeys.sources(),
+    queryFn: async () => {
+      const response = await jobSeekerApi.getJobSeekerSources();
+      return response.data ?? [];
+    },
+    staleTime: 1000 * 60 * 5,
+  });
+};
+
 export const useJobSeekerDetails = (id: string) => {
   return useQuery({
     queryKey: jobSeekerQueryKeys.detail(id),
@@ -42,6 +54,16 @@ export const useJobSeekerDetails = (id: string) => {
       return failureCount < 3;
     },
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+  });
+};
+
+export const useCreateJobSeeker = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (formData: FormData) => jobSeekerApi.createJobSeeker(formData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: jobSeekerQueryKeys.lists() });
+    },
   });
 };
 

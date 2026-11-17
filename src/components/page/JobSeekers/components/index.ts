@@ -4,6 +4,7 @@ export { default as JobSeekersTable } from "./JobSeekersTable";
 export { default as JobSeekersTablePagination } from "./JobSeekersTablePagination";
 export { default as JobSeekerRowActions } from "./JobSeekerRowActions";
 export { EditJobSeekerModal } from "./EditJobSeekerModal";
+export { CreateJobSeekerModal } from "./CreateJobSeekerModal";
 export { DeactivateUserModal } from "./DeactivateUserModal";
 export { ReactivateUserModal } from "./ReactivateUserModal";
 export { DeactivationHistoryModal } from "./DeactivationHistoryModal";

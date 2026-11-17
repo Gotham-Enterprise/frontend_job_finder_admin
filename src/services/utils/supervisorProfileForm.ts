@@ -23,6 +23,15 @@ import type {
 import { formatUSPhoneForDisplay } from "@/services/utils/phoneNumberUtils";
 import { resolveStateToAbbreviation } from "./superviseeProfileForm";
 
+import {
+  appendIdentityPreferencesToFormData,
+  identityPreferencesFormToPayload,
+  type IdentityPreferencesFieldErrors,
+  type IdentityPreferencesFormData,
+  mapIdentityPreferencesToFormData,
+  validateIdentityPreferencesForm,
+} from "./identityPreferencesForm";
+
 export interface SupervisorLicenseEntryFormData {
   licenseType: string;
   licenseNumber: string;
@@ -63,8 +72,13 @@ export type SupervisorBoardCertificationEntryErrors = Partial<
 >;
 
 export type SupervisorFieldErrors = Partial<
-  Record<keyof SupervisorEditFormData | "uploadProfilePhoto" | "uploadLicense", string>
+  Record<
+    Exclude<keyof SupervisorEditFormData, "identity"> | "uploadProfilePhoto" | "uploadLicense",
+    string
+  >
 > & {
+  /** Errors for the pronouns / gender identity / languages block. */
+  identity?: IdentityPreferencesFieldErrors;
   /** Per-entry errors for the `licenses` repeater, aligned by index. */
   licenseEntries?: SupervisorLicenseEntryErrors[];
   /** Per-offering errors for the Medical Director offering blocks. */
@@ -75,6 +89,8 @@ export type SupervisorFieldErrors = Partial<
 
 export interface SupervisorEditFormData {
   fullName: string;
+  /** Optional pronouns / gender identity / languages + visibility flags (account-level). */
+  identity: IdentityPreferencesFormData;
   professionalCredentials: string;
   contactNumber: string;
   city: string;
@@ -140,6 +156,11 @@ export function validateSupervisorEditForm(form: SupervisorEditFormData): Superv
 
   if (!form.fullName.trim()) {
     errors.fullName = "Full name is required";
+  }
+
+  const identityErrors = validateIdentityPreferencesForm(form.identity);
+  if (Object.keys(identityErrors).length > 0) {
+    errors.identity = identityErrors;
   }
 
   const credentials = form.professionalCredentials.trim();
@@ -442,6 +463,7 @@ export function mapSupervisorDetailsToFormData(
 
   return {
     fullName: details.fullName ?? "",
+    identity: mapIdentityPreferencesToFormData(details),
     professionalCredentials: profile?.professionalCredentials ?? "",
     contactNumber: details.contactNumber
       ? formatUSPhoneForDisplay(details.contactNumber)
@@ -491,6 +513,7 @@ export function buildSupervisorUpdateFormData(payload: SupervisorUpdatePayload):
     certification,
     acceptingSupervisees,
     professionalCredentials,
+    identity,
     ...rest
   } = payload;
 
@@ -498,6 +521,10 @@ export function buildSupervisorUpdateFormData(payload: SupervisorUpdatePayload):
     if (value !== undefined && value !== null && value !== "") {
       fd.append(key, String(value));
     }
+  }
+
+  if (identity) {
+    appendIdentityPreferencesToFormData(fd, identity);
   }
 
   if (acceptingSupervisees !== undefined) {
@@ -546,6 +573,7 @@ export function formDataToUpdatePayload(
 
   return {
     fullName: form.fullName.trim() || undefined,
+    identity: identityPreferencesFormToPayload(form.identity),
     // Always sent (empty string clears the stored value on the backend).
     professionalCredentials: form.professionalCredentials.trim(),
     contactNumber: contactDigits || form.contactNumber.trim() || undefined,

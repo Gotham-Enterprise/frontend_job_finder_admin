@@ -7,8 +7,17 @@ import {
   EmployerUpdateData,
 } from "../types/employer";
 import { ApplicantDetailsResponse } from "../types/applicant";
-import { apiGet, apiPut } from "./apiUtils";
+import { apiGet, apiPost, apiPut } from "./apiUtils";
 import { showToast } from "../utils/toast";
+
+export interface EmployerActivationResponse {
+  success: boolean;
+  data: {
+    id: string;
+    deactivatedAt: string | null;
+    unpublishedJobCount: number;
+  };
+}
 
 export const employerApi = {
   async getEmployers(filters: EmployerFilters = {}): Promise<EmployersResponse> {
@@ -20,6 +29,7 @@ export const employerApi = {
       if (filters.name) queryParams.append("name", filters.name);
       if (filters.location) queryParams.append("location", filters.location);
       if (filters.status) queryParams.append("status", filters.status);
+      if (filters.emailVerified) queryParams.append("emailVerified", filters.emailVerified);
 
       const endpoint = `/api/admin/employers?${queryParams.toString()}`;
 
@@ -77,5 +87,13 @@ export const employerApi = {
     };
 
     return apiPut<any>(`/api/admin/employers/${id}`, mappedData);
+  },
+
+  async deactivateEmployer(id: string): Promise<EmployerActivationResponse> {
+    return apiPost<EmployerActivationResponse>(`/api/admin/employers/${id}/deactivate`);
+  },
+
+  async reactivateEmployer(id: string): Promise<EmployerActivationResponse> {
+    return apiPost<EmployerActivationResponse>(`/api/admin/employers/${id}/reactivate`);
   },
 };

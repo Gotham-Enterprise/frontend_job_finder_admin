@@ -33,7 +33,9 @@ export default function AdminLayout({
   
   useEffect(() => {
     if (typeof window !== "undefined" && !authUtils.isAuthenticated()) {
-      router.replace("/login");
+      // Keep the requested page (e.g. a link from an email) so login can return to it
+      const redirect = encodeURIComponent(window.location.pathname + window.location.search);
+      router.replace(`/login?redirect=${redirect}`);
     }
   }, [router]);
   return (

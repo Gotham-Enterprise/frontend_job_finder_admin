@@ -4,6 +4,7 @@ import { useEmployers } from "@/services/hooks/useEmployers";
 import { useEmployerStates } from "@/services/hooks/useEmployerStates";
 import { EmployerFilters } from "@/services/types/employer";
 import { usePermissions } from "@/hooks/usePermissions";
+import { EMAIL_VERIFIED_FILTER_OPTIONS, parseEmailVerifiedFilter } from "@/services/types/emailVerifiedFilter";
 
 export const useEmployerLogic = () => {
   const router = useRouter();
@@ -19,6 +20,7 @@ export const useEmployerLogic = () => {
       const urlName = searchParams.get("name");
       const urlLocation = searchParams.get("location");
       const urlStatus = searchParams.get("status");
+      const urlEmailVerified = parseEmailVerifiedFilter(searchParams.get("emailVerified"));
 
       const urlFilters = {
         page: Math.max(1, parseInt(urlPage || "1", 10)),
@@ -26,9 +28,11 @@ export const useEmployerLogic = () => {
         name: urlName || "",
         location: urlLocation || "",
         status: urlStatus || undefined,
+        emailVerified: urlEmailVerified,
       };
 
-      const isSimpleNavigation = (!urlPage || urlPage === "1") && !urlName && !urlLocation && !urlStatus;
+      const isSimpleNavigation =
+        (!urlPage || urlPage === "1") && !urlName && !urlLocation && !urlStatus && !urlEmailVerified;
 
       if (isSimpleNavigation && typeof window !== "undefined") {
         localStorage.removeItem("employer-search-state");
@@ -54,6 +58,7 @@ export const useEmployerLogic = () => {
               name: parsed.name || "",
               location: parsed.location || "",
               status: parsed.status || undefined,
+              emailVerified: parseEmailVerifiedFilter(parsed.emailVerified),
             };
           } catch (error) {
             console.warn("Failed to parse saved employer state:", error);
@@ -71,6 +76,7 @@ export const useEmployerLogic = () => {
       name: "",
       location: "",
       status: undefined,
+      emailVerified: undefined,
     };
   };
 
@@ -138,6 +144,7 @@ export const useEmployerLogic = () => {
     if (filters.name) params.set("name", filters.name);
     if (filters.location) params.set("location", filters.location);
     if (filters.status) params.set("status", filters.status);
+    if (filters.emailVerified) params.set("emailVerified", filters.emailVerified);
 
     const newURL = params.toString() ? `?${params.toString()}` : "";
     const currentURL = window.location.search;
@@ -174,6 +181,7 @@ export const useEmployerLogic = () => {
         name: filters.name,
         location: filters.location,
         status: filters.status,
+        emailVerified: filters.emailVerified,
       };
       localStorage.setItem("employer-search-state", JSON.stringify(stateToSave));
     }
@@ -192,11 +200,13 @@ export const useEmployerLogic = () => {
     columns.push(
       { key: "companyName", label: "Company", className: "!px-3" },
       { key: "email", label: "Email", className: "!px-3" },
+      { key: "unverifiedUserCount", label: "Unverified Users", className: "!px-3 text-center" },
       { key: "state", label: "Location", className: "!px-3" },
-      { key: "jobPostCount", label: "Active Job Post", className: "!px-3" },
-      { key: "totalJobViews", label: "Total Job Views", className: "!px-3" },
-      { key: "totalApplications", label: "Total Applications", className: "!px-3" },
+      { key: "jobPostCount", label: "Active Job Post", className: "!px-3 text-center" },
+      { key: "totalJobViews", label: "Total Job Views", className: "!px-3 text-center" },
+      { key: "totalApplications", label: "Total Applications", className: "!px-3 text-center" },
       { key: "dateJoined", label: "Registration date", className: "!px-3" },
+      { key: "source", label: "Source", className: "!px-3" },
       { key: "lastActivity", label: "Last Activity", className: "!px-3" },
       { key: "status", label: "Status", className: "!px-3" },
       { key: "subscription", label: "Subscription", className: "!px-3" },
@@ -213,6 +223,10 @@ export const useEmployerLogic = () => {
       { value: "active", label: "Active" },
       { value: "pending", label: "Pending" },
     ],
+    []
+  );
+  const emailVerifiedOptions = useMemo(
+    () => [{ value: "", label: "All" }, ...EMAIL_VERIFIED_FILTER_OPTIONS],
     []
   );
   const stateOptions = useMemo(() => {
@@ -312,6 +326,7 @@ export const useEmployerLogic = () => {
       name: "",
       location: "",
       status: undefined,
+      emailVerified: undefined,
     };
     setFilters(newFilters);
     setSearchInput("");
@@ -331,6 +346,9 @@ export const useEmployerLogic = () => {
         case "status":
           filterChange("status", undefined);
           break;
+        case "emailVerified":
+          filterChange("emailVerified", undefined);
+          break;
         default:
           break;
       }
@@ -339,8 +357,8 @@ export const useEmployerLogic = () => {
   );
 
   const hasActiveFilters = useMemo(() => {
-    return !!(searchInput || filters.location || filters.status || selectedEmployerId);
-  }, [searchInput, filters.location, filters.status, selectedEmployerId]);
+    return !!(searchInput || filters.location || filters.status || filters.emailVerified || selectedEmployerId);
+  }, [searchInput, filters.location, filters.status, filters.emailVerified, selectedEmployerId]);
 
   useEffect(() => {
     if (data && !isLoading) {
@@ -357,14 +375,21 @@ export const useEmployerLogic = () => {
   }, [data, isLoading, searchParams, restoreScrollPosition]);
 
   useEffect(() => {
-    const isOnPageOneWithNoFilters = filters.page === 1 && !filters.name && !filters.location && !filters.status;
+    const isOnPageOneWithNoFilters =
+      filters.page === 1 && !filters.name && !filters.location && !filters.status && !filters.emailVerified;
 
     if (isOnPageOneWithNoFilters) {
       if (typeof window !== "undefined") {
         localStorage.removeItem("employer-search-state");
         localStorage.removeItem("employer-scroll-position");
       }
-    } else if (filters.name || filters.location || filters.status || (filters.page && filters.page > 1)) {
+    } else if (
+      filters.name ||
+      filters.location ||
+      filters.status ||
+      filters.emailVerified ||
+      (filters.page && filters.page > 1)
+    ) {
       saveSearchState();
     }
   }, [filters, saveSearchState]);
@@ -408,6 +433,7 @@ export const useEmployerLogic = () => {
 
     tableColumns,
     statusOptions,
+    emailVerifiedOptions,
     stateOptions,
     itemsPerPageOptions,
     filterChange,

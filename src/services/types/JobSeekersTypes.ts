@@ -15,15 +15,18 @@ export interface JobSeekersHeaderProps {
   onRefetch: () => void;
   onClearFilters: () => void;
   hasActiveFilters: boolean;
+  onCreate?: () => void;
 }
 
 export interface JobSeekersFiltersProps {
   filters: JobSeekerFilters;
   onFilterChange: (key: keyof JobSeekerFilters, value: any) => void;
   occupationOptions: Array<{ value: string; label: string }>;
+  specialtyOptions: Array<{ value: string; label: string }>;
   stateOptions: Array<{ value: string; label: string }>;
   statusOptions: Array<{ value: string; label: string }>;
   emailVerifiedOptions: Array<{ value: string; label: string }>;
+  sourceOptions: Array<{ value: string; label: string }>;
   licenseOptions: Array<{ value: string; label: string }>;
   licenseStateOptions: Array<{ value: string; label: string }>;
   hasActiveFilters: boolean;

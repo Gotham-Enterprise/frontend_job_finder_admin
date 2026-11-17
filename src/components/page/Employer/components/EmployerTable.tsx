@@ -10,7 +10,8 @@ import { TimeIcon } from "@/icons";
 import { EmployerTableProps } from "@/services/types/EmployerTypes";
 import Avatar from "../../../ui/avatar/Avatar";
 import { EditEmployerModal } from "./EditEmployerModal";
-import { CompanyUserVerificationModal, CompanyUserVerificationAction } from "./CompanyUserVerificationModal";
+import { CompanyUserActionModal, CompanyUserAction } from "./CompanyUserActionModal";
+import LoginAsCompanyUserModal from "./LoginAsCompanyUserModal";
 import EmployerRowActions from "./EmployerRowActions";
 import { useToast } from "@/context/ToastContext";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -30,11 +31,12 @@ const EmployerTable: React.FC<EmployerTableProps> = ({
 }) => {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedEmployerIdForEdit, setSelectedEmployerIdForEdit] = useState<string | null>(null);
-  const [verificationTarget, setVerificationTarget] = useState<{
+  const [userActionTarget, setUserActionTarget] = useState<{
     id: string;
     companyName: string;
-    action: CompanyUserVerificationAction;
+    action: CompanyUserAction;
   } | null>(null);
+  const [loginAsEmployer, setLoginAsEmployer] = useState<{ id: string; companyName: string } | null>(null);
   const { addToast } = useToast();
   const { hasPermission } = usePermissions();
   const router = useRouter();
@@ -75,7 +77,7 @@ const EmployerTable: React.FC<EmployerTableProps> = ({
         <TableBody>
           {isLoading ? (
             <TableRow>
-              <TableCell className="text-center py-8 px-3" colSpan={canCreateJobs ? 12 : 11}>
+              <TableCell className="text-center py-8 px-3" colSpan={canCreateJobs ? 13 : 12}>
                 <div className="flex items-center justify-center gap-3">
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-brand-500"></div>
                   <p className="text-gray-500 dark:text-gray-400">Loading...</p>
@@ -84,7 +86,7 @@ const EmployerTable: React.FC<EmployerTableProps> = ({
             </TableRow>
           ) : !data?.success || !data?.data?.length ? (
             <TableRow>
-              <TableCell className="text-center py-8 px-3" colSpan={canCreateJobs ? 12 : 11}>
+              <TableCell className="text-center py-8 px-3" colSpan={canCreateJobs ? 13 : 12}>
                 <p className="text-gray-500 dark:text-gray-400">No employers found</p>
               </TableCell>
             </TableRow>
@@ -129,6 +131,13 @@ const EmployerTable: React.FC<EmployerTableProps> = ({
                     {employer.email}
                   </p>
                 </TableCell>
+                <TableCell className="py-4 px-3 text-center">
+                  {employer.unverifiedUserCount > 0 ? (
+                    <Badge color="warning">{employer.unverifiedUserCount}</Badge>
+                  ) : (
+                    <span className="text-sm text-gray-500 dark:text-gray-400">0</span>
+                  )}
+                </TableCell>
                 <TableCell className="py-4 px-3">
                   <p className="text-sm text-gray-900 dark:text-white">
                     {employer.city && employer.state
@@ -136,24 +145,14 @@ const EmployerTable: React.FC<EmployerTableProps> = ({
                       : employer.city || employer.state || "Not specified"}
                   </p>
                 </TableCell>
-                <TableCell className="py-4 px-3">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-gray-900 dark:text-white">{employer.jobPostCount}</span>
-                  </div>
+                <TableCell className="py-4 px-3 text-center text-sm font-medium text-gray-900 dark:text-white">
+                  {employer.jobPostCount}
                 </TableCell>
-                <TableCell className="py-4 px-3 text-sm max-w-xs">
-                  <div className="flex items-center gap-3">
-                    <div className="min-w-0 flex-1 max-w-48">
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">{employer.totalJobViews}</p>
-                    </div>
-                  </div>
+                <TableCell className="py-4 px-3 text-center text-sm font-medium text-gray-900 dark:text-white">
+                  {employer.totalJobViews}
                 </TableCell>
-                <TableCell className="py-4 px-3 text-sm max-w-xs">
-                  <div className="flex items-center gap-3">
-                    <div className="min-w-0 flex-1 max-w-48">
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">{employer.totalApplications}</p>
-                    </div>
-                  </div>
+                <TableCell className="py-4 px-3 text-center text-sm font-medium text-gray-900 dark:text-white">
+                  {employer.totalApplications}
                 </TableCell>
                 <TableCell className="py-4 px-3 whitespace-nowrap">
                   {employer.dateJoined ? (
@@ -175,6 +174,21 @@ const EmployerTable: React.FC<EmployerTableProps> = ({
                   ) : (
                     <span className="text-gray-400 dark:text-gray-500 italic">Not specified</span>
                   )}
+                </TableCell>
+                <TableCell className="py-4 px-3 whitespace-nowrap">
+                  {(() => {
+                    const source = employer.source || "Direct";
+                    if (source === "Direct") {
+                      return (
+                        <span className="text-sm text-gray-400 dark:text-gray-500">Direct</span>
+                      );
+                    }
+                    return (
+                      <Badge variant="light" color="info" size="sm">
+                        {source}
+                      </Badge>
+                    );
+                  })()}
                 </TableCell>
                 <TableCell className="py-4 px-3 whitespace-nowrap">
                   {employer.lastActivity ? (
@@ -227,10 +241,16 @@ const EmployerTable: React.FC<EmployerTableProps> = ({
                     onView={() => onViewEmployer(employer.id)}
                     onEdit={() => openEditModal(employer.id)}
                     onVerifyUsers={() =>
-                      setVerificationTarget({ id: employer.id, companyName: employer.companyName, action: "approve" })
+                      setUserActionTarget({ id: employer.id, companyName: employer.companyName, action: "approve" })
                     }
                     onResendVerification={() =>
-                      setVerificationTarget({ id: employer.id, companyName: employer.companyName, action: "resend" })
+                      setUserActionTarget({ id: employer.id, companyName: employer.companyName, action: "resend" })
+                    }
+                    onResetPasswords={() =>
+                      setUserActionTarget({ id: employer.id, companyName: employer.companyName, action: "reset" })
+                    }
+                    onLoginAs={() =>
+                      setLoginAsEmployer({ id: employer.id, companyName: employer.companyName })
                     }
                     // Unknown count (older API) keeps the actions visible
                     showVerificationActions={(employer.unverifiedUserCount ?? 1) > 0}
@@ -242,14 +262,23 @@ const EmployerTable: React.FC<EmployerTableProps> = ({
         </TableBody>
       </Table>
 
-      {verificationTarget && (
-        <CompanyUserVerificationModal
-          isOpen={!!verificationTarget}
-          onClose={() => setVerificationTarget(null)}
-          employerId={verificationTarget.id}
-          companyName={verificationTarget.companyName}
-          action={verificationTarget.action}
+      {userActionTarget && (
+        <CompanyUserActionModal
+          isOpen={!!userActionTarget}
+          onClose={() => setUserActionTarget(null)}
+          employerId={userActionTarget.id}
+          companyName={userActionTarget.companyName}
+          action={userActionTarget.action}
           onVerified={() => onRefresh?.()}
+        />
+      )}
+
+      {loginAsEmployer && (
+        <LoginAsCompanyUserModal
+          isOpen={!!loginAsEmployer}
+          onClose={() => setLoginAsEmployer(null)}
+          employerId={loginAsEmployer.id}
+          companyName={loginAsEmployer.companyName}
         />
       )}
 

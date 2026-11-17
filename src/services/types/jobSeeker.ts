@@ -9,6 +9,15 @@ export interface JobSeekerLicensePayload {
   licenseIdNumber?: string;
 }
 
+export interface CreatedJobSeeker {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  status: string;
+  emailVerifiedAt: string | null;
+}
+
 export interface JobSeekerUpdateData {
   firstName: string;
   lastName: string;
@@ -39,7 +48,7 @@ export interface JobSeeker {
   zipCode: string;
   jobApplications: number;
   dateJoined: string;
-  source?: string; // AffiliatePartner name or "Direct"
+  source?: string; // Google Ads, Meta Ads, TikTok Ads, affiliate name, or "Direct"
   documents?: Document[];
   lastActivity: string;
   status: "active" | "inactive" | "suspended" | "pending";
@@ -59,14 +68,15 @@ export interface JobSeekerFilters {
   city?: string;
   radius?: number;
   location?: string[];
-  specialty?: string;
   occupationId?: number;
+  specialtyId?: number;
   status?: "active" | "inactive" | "suspended" | "pending";
   licenseName?: string;
   licenseIssuingState?: string;
   registrationStartDate?: string;
   registrationEndDate?: string;
   emailVerified?: EmailVerifiedFilter;
+  source?: string;
 }
 
 export interface JobSeekersResponse {

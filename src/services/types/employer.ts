@@ -1,3 +1,5 @@
+import { EmailVerifiedFilter } from "./emailVerifiedFilter";
+
 export interface EmployerUpdateData {
   name: string;
   overview: string;
@@ -25,6 +27,7 @@ export interface Employer {
   totalApplications: number;
   totalJobViews: number;
   dateJoined: string;
+  source?: string;
   lastActivity: string;
   status: string;
   currentPlan?: string;
@@ -38,6 +41,7 @@ export interface EmployerFilters {
   name?: string;
   location?: string;
   status?: string;
+  emailVerified?: EmailVerifiedFilter;
 }
 
 export interface EmployersResponse {
@@ -104,6 +108,7 @@ export interface EmployerDetails {
   dateJoined: string;
   lastActivity: string;
   status: string;
+  deactivatedAt?: string | null;
   jobPost: JobPost[];
   companyUsers?: CompanyUser[];
   avatarUrl?: string;
