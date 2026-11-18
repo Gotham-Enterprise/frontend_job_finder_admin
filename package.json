@@ -44,6 +44,7 @@
     "apexcharts": "^4.3.0",
     "autoprefixer": "^10.4.20",
     "cities.json": "^1.1.50",
+    "date-fns": "^4.4.0",
     "flatpickr": "^4.6.13",
     "framer-motion": "^12.23.5",
     "lodash.debounce": "^4.0.8",
