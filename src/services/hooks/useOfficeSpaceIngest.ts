@@ -197,13 +197,9 @@ export const useAssignIngestLandlord = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({
-      ids,
-      landlordId,
-    }: {
-      ids: string[];
-      landlordId: string | null;
-    }) => officeSpaceIngestApi.assignLandlord(ids, landlordId),
+    mutationFn: (
+      params: Parameters<typeof officeSpaceIngestApi.assignLandlord>[0]
+    ) => officeSpaceIngestApi.assignLandlord(params),
     onSuccess: (result) => {
       queryClient.invalidateQueries({
         queryKey: officeSpaceIngestQueryKeys.all,

@@ -5,12 +5,21 @@ import { AlertTriangle, UserCheck, X } from "lucide-react";
 import { Modal } from "@/components/ui/modal";
 import Button from "@/components/ui/button/Button";
 import { useAssignIngestLandlord, useIngestLandlords } from "@/services/hooks/useOfficeSpaceIngest";
+import { IngestRecordFilters } from "@/services/types/officeSpaceIngest";
+
+type SelectAllFilters = Pick<
+  IngestRecordFilters,
+  "search" | "landlordId" | "unassigned" | "propertyTypeHint"
+>;
 
 interface AssignLandlordModalProps {
   isOpen: boolean;
   onClose: () => void;
-  /** Empty when opened from a single-record action. */
+  /** Empty when opened from a single-record action or selectAll mode. */
   recordIds: string[];
+  selectAll?: boolean;
+  selectAllFilters?: SelectAllFilters;
+  selectAllLabel?: string;
   onAssigned?: () => void;
 }
 
@@ -18,6 +27,9 @@ const AssignLandlordModal: React.FC<AssignLandlordModalProps> = ({
   isOpen,
   onClose,
   recordIds,
+  selectAll = false,
+  selectAllFilters,
+  selectAllLabel,
   onAssigned,
 }) => {
   const [landlordId, setLandlordId] = useState<string>("");
@@ -31,6 +43,7 @@ const AssignLandlordModal: React.FC<AssignLandlordModalProps> = ({
 
   const landlords = data?.data ?? [];
   const targetCount = recordIds.length;
+  const hasTargets = selectAll || targetCount > 0;
 
   const selected = useMemo(
     () => landlords.find((l) => l.id === landlordId) ?? null,
@@ -38,13 +51,27 @@ const AssignLandlordModal: React.FC<AssignLandlordModalProps> = ({
   );
 
   const handleAssign = async () => {
-    await assign.mutateAsync({ ids: recordIds, landlordId: landlordId || null });
+    if (selectAll) {
+      await assign.mutateAsync({
+        selectAll: true,
+        filters: selectAllFilters,
+        landlordId: landlordId || null,
+      });
+    } else {
+      await assign.mutateAsync({ ids: recordIds, landlordId: landlordId || null });
+    }
     onAssigned?.();
     onClose();
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} showCloseButton={false} isFullscreen={false}>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      showCloseButton={false}
+      isFullscreen={false}
+      className="max-w-md rounded-2xl border border-gray-200 shadow-2xl dark:border-gray-800"
+    >
       <div className="p-6">
         <div className="mb-5 flex items-start justify-between gap-4">
           <div className="flex items-start gap-3">
@@ -56,9 +83,11 @@ const AssignLandlordModal: React.FC<AssignLandlordModalProps> = ({
                 Assign landlord
               </h2>
               <p className="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
-                {targetCount === 1
-                  ? "Link this record to a landlord profile."
-                  : `Link ${targetCount} records to a landlord profile.`}
+                {selectAll
+                  ? `Link ${selectAllLabel || "all matching records"} to a landlord profile.`
+                  : targetCount === 1
+                    ? "Link this record to a landlord profile."
+                    : `Link ${targetCount} records to a landlord profile.`}
               </p>
             </div>
           </div>
@@ -110,14 +139,14 @@ const AssignLandlordModal: React.FC<AssignLandlordModalProps> = ({
           </div>
         )}
 
-        <div className="mt-6 flex justify-end gap-3">
+        <div className="mt-6 flex justify-end gap-3 border-t border-gray-100 pt-4 dark:border-gray-800">
           <Button variant="outline" onClick={onClose} disabled={assign.isPending}>
             Cancel
           </Button>
           <Button
             onClick={handleAssign}
             disabled={
-              assign.isPending || isLoading || landlords.length === 0 || targetCount === 0
+              assign.isPending || isLoading || landlords.length === 0 || !hasTargets
             }
           >
             {assign.isPending ? "Assigning…" : "Save assignment"}

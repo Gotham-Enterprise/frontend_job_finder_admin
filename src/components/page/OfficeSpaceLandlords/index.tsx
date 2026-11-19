@@ -2,6 +2,8 @@
 
 import React, { useState } from "react";
 import {
+  AlertTriangle,
+  Building2,
   ChevronLeft,
   ChevronRight,
   RefreshCw,
@@ -253,29 +255,54 @@ const LandlordListings: React.FC = () => {
         onClose={() => setToggling(null)}
         showCloseButton={false}
         isFullscreen={false}
+        className="max-w-md rounded-2xl border border-gray-200 shadow-2xl dark:border-gray-800"
       >
         <div className="p-6">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-            {pendingValue ? "Mark as own listing?" : "Unmark own listing?"}
-          </h2>
-          {pendingValue ? (
-            <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-              <span className="font-medium">
-                {toggling?.businessName || toggling?.user?.email || "This landlord"}
-              </span>{" "}
-              will be treated as a Gotham-managed landlord. Their listings
-              publish without going through the Stripe property post gateway.
-            </p>
-          ) : (
-            <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-              <span className="font-medium">
-                {toggling?.businessName || toggling?.user?.email || "This landlord"}
-              </span>{" "}
-              will no longer be treated as Gotham-managed. Their listings will
-              again require the paid property post credit to publish.
-            </p>
-          )}
-          <div className="mt-6 flex justify-end gap-3">
+          <div className="flex items-start gap-4">
+            <div
+              className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${
+                pendingValue
+                  ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400"
+                  : "bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400"
+              }`}
+            >
+              {pendingValue ? (
+                <Building2 className="h-5 w-5" />
+              ) : (
+                <AlertTriangle className="h-5 w-5" />
+              )}
+            </div>
+
+            <div className="min-w-0 flex-1">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                {pendingValue ? "Mark as own listing?" : "Unmark own listing?"}
+              </h2>
+              {pendingValue ? (
+                <p className="mt-1.5 text-sm leading-relaxed text-gray-600 dark:text-gray-400">
+                  <span className="font-semibold text-gray-900 dark:text-gray-200">
+                    {toggling?.businessName ||
+                      toggling?.user?.email ||
+                      "This landlord"}
+                  </span>{" "}
+                  will be treated as a Gotham-managed landlord. All of their
+                  listings will be set to published and future listings will
+                  publish without going through the Stripe property post gateway.
+                </p>
+              ) : (
+                <p className="mt-1.5 text-sm leading-relaxed text-gray-600 dark:text-gray-400">
+                  <span className="font-semibold text-gray-900 dark:text-gray-200">
+                    {toggling?.businessName ||
+                      toggling?.user?.email ||
+                      "This landlord"}
+                  </span>{" "}
+                  will no longer be treated as Gotham-managed. Their listings
+                  will again require the paid property post credit to publish.
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div className="mt-6 flex items-center justify-end gap-3 border-t border-gray-100 pt-4 dark:border-gray-800">
             <Button
               variant="outline"
               onClick={() => setToggling(null)}

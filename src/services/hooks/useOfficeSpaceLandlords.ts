@@ -30,7 +30,7 @@ export const useToggleLandlordInternal = () => {
           ? "Own listing enabled"
           : "Own listing disabled",
         vars.isInternal
-          ? "This landlord's listings now bypass the Stripe property post gateway."
+          ? "All of this landlord's listings are now published and bypass the Stripe property post gateway."
           : "This landlord's listings now require the paid property post credit.",
       );
       queryClient.invalidateQueries({
