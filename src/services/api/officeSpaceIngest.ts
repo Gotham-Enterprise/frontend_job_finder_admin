@@ -97,12 +97,20 @@ export const officeSpaceIngestApi = {
   },
 
   async assignLandlord(
-    ids: string[],
-    landlordId: string | null
+    params:
+      | { ids: string[]; landlordId: string | null; selectAll?: false }
+      | {
+          selectAll: true;
+          filters?: Pick<
+            IngestRecordFilters,
+            "search" | "landlordId" | "unassigned" | "propertyTypeHint"
+          >;
+          landlordId: string | null;
+        }
   ): Promise<IngestAssignResponse> {
     return apiPost<IngestAssignResponse>(
       "/api/admin/office-space-ingest/records/bulk-landlord",
-      { ids, landlordId }
+      params
     );
   },
 
