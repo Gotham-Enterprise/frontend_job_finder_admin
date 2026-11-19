@@ -26,7 +26,9 @@ const IngestRecordsList: React.FC = () => {
   const [filters, setFilters] = useState<IngestRecordFilters>(DEFAULT_FILTERS);
   const [searchInput, setSearchInput] = useState("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [selectAllMode, setSelectAllMode] = useState<"none" | "matching" | "unassigned">("none");
   const [assignIds, setAssignIds] = useState<string[] | null>(null);
+  const [assignAllMode, setAssignAllMode] = useState<"none" | "matching" | "unassigned">("none");
   const [editing, setEditing] = useState<IngestRecord | null>(null);
   const [deleting, setDeleting] = useState<IngestRecord | null>(null);
   const [confirmClear, setConfirmClear] = useState(false);
@@ -38,6 +40,7 @@ const IngestRecordsList: React.FC = () => {
   const applyFilter = (patch: Partial<IngestRecordFilters>) => {
     setFilters((prev) => ({ ...prev, page: 1, ...patch }));
     setSelectedIds([]);
+    setSelectAllMode("none");
   };
 
   const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -45,15 +48,22 @@ const IngestRecordsList: React.FC = () => {
   };
 
   const toggleSelect = (id: string) => {
+    setSelectAllMode("none");
     setSelectedIds((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
     );
   };
 
   const toggleSelectAll = () => {
+    setSelectAllMode("none");
     const records = data?.data ?? [];
     const allSelected = records.every((r) => selectedIds.includes(r.id));
     setSelectedIds(allSelected ? [] : records.map((r) => r.id));
+  };
+
+  const clearSelection = () => {
+    setSelectedIds([]);
+    setSelectAllMode("none");
   };
 
   const handleDelete = async () => {
@@ -112,11 +122,22 @@ const IngestRecordsList: React.FC = () => {
           </Button>
 
           <Button
+            variant={filters.unassigned ? "default" : "outline"}
+            size="sm"
+            onClick={() =>
+              applyFilter({ unassigned: filters.unassigned ? undefined : true })
+            }
+          >
+            Unassigned only
+          </Button>
+
+          <Button
             variant="ghost"
             size="sm"
             onClick={() => {
               setSearchInput("");
               setFilters(DEFAULT_FILTERS);
+              clearSelection();
             }}
           >
             Reset
@@ -138,16 +159,48 @@ const IngestRecordsList: React.FC = () => {
         </div>
       </div>
 
-      {selectedIds.length > 0 && (
-        <div className="flex items-center gap-3 border-b border-blue-200 bg-blue-50 px-6 py-3 dark:border-blue-500/30 dark:bg-blue-500/10">
-          <p className="text-sm text-blue-800 dark:text-blue-300">
-            {selectedIds.length} selected
-          </p>
+      {(selectedIds.length > 0 || selectAllMode !== "none") && (
+        <div className="flex flex-wrap items-center gap-3 border-b border-blue-200 bg-blue-50 px-6 py-3 dark:border-blue-500/30 dark:bg-blue-500/10">
+          <div className="flex flex-wrap items-center gap-2 text-sm text-blue-800 dark:text-blue-300">
+            <span>
+              {selectAllMode === "matching"
+                ? `All ${metaData?.totalCount?.toLocaleString() ?? 0} matching records selected`
+                : selectAllMode === "unassigned"
+                  ? "All unassigned records selected"
+                  : `${selectedIds.length} selected on this page`}
+            </span>
+
+            {selectAllMode === "none" && metaData && metaData.totalCount > selectedIds.length && (
+              <button
+                type="button"
+                onClick={() => setSelectAllMode("matching")}
+                className="font-semibold underline underline-offset-2 hover:text-blue-900 dark:hover:text-blue-200"
+              >
+                Select all {metaData.totalCount.toLocaleString()} matching
+              </button>
+            )}
+
+            {selectAllMode !== "unassigned" && !filters.unassigned && (
+              <button
+                type="button"
+                onClick={() => setSelectAllMode("unassigned")}
+                className="font-semibold underline underline-offset-2 hover:text-blue-900 dark:hover:text-blue-200"
+              >
+                Select all unassigned
+              </button>
+            )}
+          </div>
           <div className="ml-auto flex gap-2">
             <Button
               variant="secondary"
               size="sm"
-              onClick={() => setAssignIds(selectedIds)}
+              onClick={() => {
+                if (selectAllMode !== "none") {
+                  setAssignAllMode(selectAllMode);
+                } else {
+                  setAssignIds(selectedIds);
+                }
+              }}
             >
               <UserCheck className="h-4 w-4" />
               Assign landlord
@@ -155,7 +208,7 @@ const IngestRecordsList: React.FC = () => {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setSelectedIds([])}
+              onClick={clearSelection}
             >
               Clear
             </Button>
@@ -218,9 +271,25 @@ const IngestRecordsList: React.FC = () => {
       )}
 
       <AssignLandlordModal
-        isOpen={assignIds !== null}
+        isOpen={assignIds !== null || assignAllMode !== "none"}
         recordIds={assignIds ?? []}
-        onClose={() => setAssignIds(null)}
+        selectAll={assignAllMode !== "none"}
+        selectAllFilters={{
+          search: filters.search,
+          landlordId: filters.landlordId,
+          propertyTypeHint: filters.propertyTypeHint,
+          unassigned: assignAllMode === "unassigned" ? true : filters.unassigned,
+        }}
+        selectAllLabel={
+          assignAllMode === "unassigned"
+            ? "all unassigned records"
+            : `all ${metaData?.totalCount?.toLocaleString() ?? 0} matching records`
+        }
+        onAssigned={clearSelection}
+        onClose={() => {
+          setAssignIds(null);
+          setAssignAllMode("none");
+        }}
       />
 
       <EditIngestRecordModal
@@ -235,6 +304,7 @@ const IngestRecordsList: React.FC = () => {
           onClose={() => setDeleting(null)}
           showCloseButton={false}
           isFullscreen={false}
+          className="max-w-md rounded-2xl border border-gray-200 shadow-2xl dark:border-gray-800"
         >
           <div className="p-6">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
@@ -270,6 +340,7 @@ const IngestRecordsList: React.FC = () => {
         onClose={() => setConfirmClear(false)}
         showCloseButton={false}
         isFullscreen={false}
+        className="max-w-md rounded-2xl border border-gray-200 shadow-2xl dark:border-gray-800"
       >
         <div className="p-6">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">

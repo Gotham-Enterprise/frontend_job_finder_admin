@@ -80,7 +80,13 @@ const EditIngestRecordModal: React.FC<EditIngestRecordModalProps> = ({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} showCloseButton={false} isFullscreen={false}>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      showCloseButton={false}
+      isFullscreen={false}
+      className="max-w-lg rounded-2xl border border-gray-200 shadow-2xl dark:border-gray-800"
+    >
       <div className="max-h-[80vh] overflow-y-auto p-6">
         <div className="mb-5 flex items-start justify-between gap-4">
           <div>
