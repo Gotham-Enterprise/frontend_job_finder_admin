@@ -101,6 +101,18 @@ const IngestRecordDetail: React.FC<{ id: string }> = ({ id }) => {
           <Field label="Property type" value={orDash(record.propertyTypeHint)} />
           <Field label="Space available" value={orDash(record.spaceAvailable)} />
           <Field label="Contact" value={orDash(record.contact)} />
+          <Field label="Contact company" value={orDash(record.contactCompany)} />
+          <Field label="Contact phone" value={orDash(record.contactPhone)} />
+          <Field
+            label="Images"
+            value={
+              record.imageUrls?.length
+                ? `${record.imageUrls.length} image(s)`
+                : record.imageUrl
+                  ? "1 image"
+                  : "—"
+            }
+          />
           <Field
             label="Landlord"
             value={orDash(record.landlord?.businessName)}
