@@ -25,6 +25,7 @@ import { ApproveSupervisorModal, RejectSupervisorModal, SupervisorStatusBadge, E
 import { VerificationStatus } from "@/services/types/supervisor";
 import { getSupervisorCredentialTypeLabel, isSupervisorTypeWithoutCertifications } from "@/constants/supervisorSignupOptions";
 import { CloseLineIcon } from "@/icons";
+import InAppPaymentsCard from "../components/InAppPaymentsCard";
 import {
   formatGenderIdentityForDisplay,
   formatLanguagesForDisplay,
@@ -34,6 +35,9 @@ import {
 
 interface ViewDetailsProps {
   id: string;
+  /** The list this was opened from (Supervisors, or Medical Directors). */
+  listPath?: string;
+  listLabel?: string;
 }
 
 function SectionCard({
@@ -78,7 +82,11 @@ function withVisibility(value: string, isPublic: boolean): React.ReactNode {
   );
 }
 
-export default function ViewDetails({ id }: ViewDetailsProps) {
+export default function ViewDetails({
+  id,
+  listPath = "/admin/supervisors",
+  listLabel = "Supervisors",
+}: ViewDetailsProps) {
   const { data, isLoading, error, refetch } = useSupervisorDetails(id);
   const {
     certificateOptions,
@@ -198,8 +206,8 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
   if (error) {
     return (
       <div className="px-4 pt-4 pb-2">
-        <BackToListButton href="/admin/supervisors" className="mb-6" preserveState={true}>
-          Back to Supervisors
+        <BackToListButton href={listPath} className="mb-6" preserveState={true}>
+          Back to {listLabel}
         </BackToListButton>
         <ErrorState message={`Error loading supervisor details: ${error.message}`} />
       </div>
@@ -209,8 +217,8 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
   if (!data?.success || !data?.data) {
     return (
       <div className="px-4 pt-4 pb-2">
-        <BackToListButton href="/admin/supervisors" className="mb-6" preserveState={true}>
-          Back to Supervisors
+        <BackToListButton href={listPath} className="mb-6" preserveState={true}>
+          Back to {listLabel}
         </BackToListButton>
         <div className="text-center py-8">
           <p className="text-gray-500 dark:text-gray-400">Supervisor not found</p>
@@ -272,8 +280,8 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
     <>
       <div className="px-4 pt-4 pb-2">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-          <BackToListButton href="/admin/supervisors" preserveState={true}>
-            Back to Supervisors
+          <BackToListButton href={listPath} preserveState={true}>
+            Back to {listLabel}
           </BackToListButton>
 
           <div className="flex flex-wrap items-center gap-3">
@@ -598,6 +606,8 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
               <FieldRow label="Verification Notes At" value={formatDate(profile?.verificationNotesAt)} />
             ) : null}
           </SectionCard>
+
+          <InAppPaymentsCard supervisorId={id} />
 
           {/* Subscription — latest entitled row only (ACTIVE / TRIALING / PAST_DUE) */}
           {latestActiveSubscription && (

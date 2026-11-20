@@ -17,8 +17,34 @@ import {
 } from "@/services/types/supervisor";
 import { parseEmailVerifiedFilter } from "@/services/types/emailVerifiedFilter";
 import { useSupervisorTypesData } from "./useSupervisees";
+import type { SupervisorListMode } from "@/services/types/SupervisorTypes";
 
-export const useSupervisorLogic = () => {
+/**
+ * Which admin list this is: Supervisors, or Medical Directors (supervisors
+ * whose primary type is Medical Director), each with its own page, saved
+ * search state and details route.
+ */
+export type { SupervisorListMode } from "@/services/types/SupervisorTypes";
+
+export const MEDICAL_DIRECTOR_TYPE = "Medical Director";
+
+const storageKeys = (prefix: string) => ({
+  searchState: `${prefix}-search-state`,
+  scrollPosition: `${prefix}-scroll-position`,
+  preserveState: `${prefix}-preserve-state`,
+  selectedItem: `${prefix}-selected-item`,
+});
+
+export const SUPERVISOR_LIST_CONFIG: Record<
+  SupervisorListMode,
+  { basePath: string; keys: ReturnType<typeof storageKeys> }
+> = {
+  supervisors: { basePath: "/admin/supervisors", keys: storageKeys("supervisor") },
+  medicalDirectors: { basePath: "/admin/medical-directors", keys: storageKeys("medical-director") },
+};
+
+export const useSupervisorLogic = (mode: SupervisorListMode = "supervisors") => {
+  const { basePath, keys } = SUPERVISOR_LIST_CONFIG[mode];
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -61,20 +87,20 @@ export const useSupervisorLogic = () => {
         !Object.values(dateParams).some(Boolean);
 
       if (isSimpleNavigation && typeof window !== "undefined") {
-        localStorage.removeItem("supervisor-search-state");
-        localStorage.removeItem("supervisor-scroll-position");
+        localStorage.removeItem(keys.searchState);
+        localStorage.removeItem(keys.scrollPosition);
       }
 
       return urlFilters;
     }
 
     if (typeof window !== "undefined") {
-      const navigationFlag = sessionStorage.getItem("supervisor-preserve-state");
+      const navigationFlag = sessionStorage.getItem(keys.preserveState);
 
       if (navigationFlag === "true") {
-        sessionStorage.removeItem("supervisor-preserve-state");
+        sessionStorage.removeItem(keys.preserveState);
 
-        const savedState = localStorage.getItem("supervisor-search-state");
+        const savedState = localStorage.getItem(keys.searchState);
         if (savedState) {
           try {
             const parsed = JSON.parse(savedState);
@@ -97,8 +123,8 @@ export const useSupervisorLogic = () => {
           }
         }
       } else {
-        localStorage.removeItem("supervisor-search-state");
-        localStorage.removeItem("supervisor-scroll-position");
+        localStorage.removeItem(keys.searchState);
+        localStorage.removeItem(keys.scrollPosition);
       }
     }
 
@@ -188,7 +214,7 @@ export const useSupervisorLogic = () => {
     const currentURL = window.location.search;
 
     if (newURL !== currentURL) {
-      router.replace(`/admin/supervisors${newURL}`, { scroll: false });
+      router.replace(`${basePath}${newURL}`, { scroll: false });
     }
   }, [filters, router]);
 
@@ -196,7 +222,7 @@ export const useSupervisorLogic = () => {
   useEffect(() => {
     const hasUrlParams = Array.from(searchParams.keys()).length > 0;
     if (!hasUrlParams && typeof window !== "undefined") {
-      const savedPosition = localStorage.getItem("supervisor-scroll-position");
+      const savedPosition = localStorage.getItem(keys.scrollPosition);
       if (savedPosition) {
         const position = parseInt(savedPosition, 10);
         setTimeout(() => window.scrollTo({ top: position, behavior: "smooth" }), 100);
@@ -206,14 +232,14 @@ export const useSupervisorLogic = () => {
 
   const saveScrollPosition = useCallback(() => {
     if (typeof window !== "undefined") {
-      localStorage.setItem("supervisor-scroll-position", window.scrollY.toString());
+      localStorage.setItem(keys.scrollPosition, window.scrollY.toString());
     }
   }, []);
 
   const saveSearchState = useCallback(() => {
     if (typeof window !== "undefined") {
       localStorage.setItem(
-        "supervisor-search-state",
+        keys.searchState,
         JSON.stringify({
           page: filters.page,
           limit: filters.limit,
@@ -230,16 +256,25 @@ export const useSupervisorLogic = () => {
     }
   }, [filters]);
 
-  const { data, isLoading, error, refetch } = useSupervisors(filters);
+  const { data, isLoading, error, refetch } = useSupervisors({ ...filters, group: mode });
 
   const tableColumns = useMemo(
     () => [
       { key: "name", label: "Name", sortKey: "fullName" },
       { key: "state", label: "State", sortKey: "state", className: "text-center" },
       { key: "role", label: "Role" },
-      { key: "licenseType", label: "License Type", className: "text-center" },
-      { key: "degreeType", label: "Degree Type", className: "text-center" },
-      { key: "yearsOfExperience", label: "Experience", sortKey: "yearsOfExperience" },
+      ...(mode === "medicalDirectors"
+        ? [
+            { key: "boardCertifications", label: "Board Certs", className: "text-center" },
+            { key: "monthlyFee", label: "Monthly Fee" },
+            { key: "payouts", label: "Payouts" },
+            { key: "activeClients", label: "Active Clients", className: "text-center" },
+          ]
+        : [
+            { key: "licenseType", label: "License Type", className: "text-center" },
+            { key: "degreeType", label: "Degree Type", className: "text-center" },
+            { key: "yearsOfExperience", label: "Experience", sortKey: "yearsOfExperience" },
+          ]),
       { key: "verificationStatus", label: "Status", sortKey: "verificationStatus" },
       { key: "emailVerified", label: "Email Verified" },
       { key: "visibility", label: "Visibility", sortKey: "hideProfile" },
@@ -247,7 +282,7 @@ export const useSupervisorLogic = () => {
       { key: "createdAt", label: "Submitted", sortKey: "createdAt" },
       { key: "actions", label: "", className: "text-right" },
     ],
-    []
+    [mode]
   );
 
   const handleSort = useCallback((sortKey: string) => {
@@ -282,8 +317,12 @@ export const useSupervisorLogic = () => {
   // Primary-type filter options from the seeded hierarchy (Medical Director,
   // Supervising Physician, ...).
   const { data: supervisorTypesData = [] } = useSupervisorTypesData();
+  // Medical Directors have their own page, so the Supervisors type filter leaves them out.
   const typeOptions = useMemo(
-    () => supervisorTypesData.map((t) => ({ value: t.name, label: t.name })),
+    () =>
+      supervisorTypesData
+        .filter((t) => t.name !== MEDICAL_DIRECTOR_TYPE)
+        .map((t) => ({ value: t.name, label: t.name })),
     [supervisorTypesData]
   );
 
@@ -317,11 +356,11 @@ export const useSupervisorLogic = () => {
       saveSearchState();
 
       if (typeof window !== "undefined") {
-        sessionStorage.setItem("supervisor-preserve-state", "true");
-        sessionStorage.setItem("supervisor-selected-item", supervisorId);
+        sessionStorage.setItem(keys.preserveState, "true");
+        sessionStorage.setItem(keys.selectedItem, supervisorId);
       }
 
-      router.push(`/admin/supervisors/details/${supervisorId}`);
+      router.push(`${basePath}/details/${supervisorId}`);
     },
     [router, saveScrollPosition, saveSearchState]
   );
@@ -433,8 +472,8 @@ export const useSupervisorLogic = () => {
     });
     setSearchInput("");
     if (typeof window !== "undefined") {
-      localStorage.removeItem("supervisor-scroll-position");
-      localStorage.removeItem("supervisor-search-state");
+      localStorage.removeItem(keys.scrollPosition);
+      localStorage.removeItem(keys.searchState);
     }
   }, []);
 
