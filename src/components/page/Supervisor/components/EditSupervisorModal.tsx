@@ -46,6 +46,7 @@ import {
   isMonthlyOnlySupervisorType,
   isSupervisorTypeWithoutCertifications,
   supervisorYearsOfExperienceSelectOptions,
+  WEEKLY_HOURS_AVAILABLE_OPTIONS,
 } from "@/constants/supervisorSignupOptions";
 
 interface EditSupervisorModalProps {
@@ -74,6 +75,7 @@ const emptyForm = (): SupervisorEditFormData => ({
   certification: [],
   supervisionFormat: "",
   availability: "",
+  weeklyHoursAvailable: "",
   professionalSummary: "",
   describeYourself: "",
   acceptingSupervisees: false,
@@ -893,6 +895,17 @@ export const EditSupervisorModal: React.FC<EditSupervisorModalProps> = ({
                       placeholder={optionsStillLoading ? "Loading…" : "Select availability"}
                     />
                   </FormField>
+                  {/* Medical Directors don't track weekly hours. */}
+                  {!isMedicalDirectorProfile && (
+                    <FormField label="Hours Available Weekly" error={fieldErrors.weeklyHoursAvailable}>
+                      <Select
+                        value={formData.weeklyHoursAvailable}
+                        onChange={(v) => updateField("weeklyHoursAvailable", v)}
+                        options={WEEKLY_HOURS_AVAILABLE_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
+                        placeholder="Select hours"
+                      />
+                    </FormField>
+                  )}
                   <FormField label="Accepting Supervisees" error={fieldErrors.acceptingSupervisees}>
                     <Select
                       value={formData.acceptingSupervisees ? "true" : "false"}
