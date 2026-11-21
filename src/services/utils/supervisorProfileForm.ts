@@ -106,6 +106,7 @@ export interface SupervisorEditFormData {
   certification: string[];
   supervisionFormat: string;
   availability: string;
+  weeklyHoursAvailable: string;
   professionalSummary: string;
   describeYourself: string;
   acceptingSupervisees: boolean;
@@ -490,6 +491,7 @@ export function mapSupervisorDetailsToFormData(
       : profile?.certification ?? [],
     supervisionFormat: profile?.supervisionFormat ?? "",
     availability: profile?.availability ?? "",
+    weeklyHoursAvailable: profile?.weeklyHoursAvailable ?? "",
     professionalSummary: profile?.professionalSummary ?? "",
     describeYourself: profile?.describeYourself ?? "",
     acceptingSupervisees: profile?.acceptingSupervisees ?? false,
@@ -609,6 +611,10 @@ export function formDataToUpdatePayload(
         : undefined,
     supervisionFormat: form.supervisionFormat || undefined,
     availability: form.availability || undefined,
+    // Optional for admins (the backend exempts admin edits); nulled for Medical Directors server-side.
+    weeklyHoursAvailable: isMedicalDirectorSupervisorType(form.supervisorType)
+      ? undefined
+      : form.weeklyHoursAvailable || undefined,
     professionalSummary: form.professionalSummary.trim() || undefined,
     describeYourself: form.describeYourself.trim() || undefined,
     acceptingSupervisees: form.acceptingSupervisees,

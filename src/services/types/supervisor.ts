@@ -199,6 +199,8 @@ export interface SupervisorProfile {
   patientPopulation: string[];
   supervisionFormat: string | null;
   availability: string | null;
+  /** "Hours Available Weekly" range code (5_10 | 11_20 | 21_30 | 31_PLUS); null for Medical Directors / not yet set. */
+  weeklyHoursAvailable?: string | null;
   acceptingSupervisees: boolean;
   describeYourself: string | null;
   licenseUrl: string | null;
@@ -355,6 +357,7 @@ export interface SupervisorUpdatePayload {
   certification?: string[];
   supervisionFormat?: string;
   availability?: string;
+  weeklyHoursAvailable?: string;
   professionalSummary?: string;
   describeYourself?: string;
   acceptingSupervisees?: boolean;
