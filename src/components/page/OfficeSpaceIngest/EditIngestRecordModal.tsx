@@ -28,6 +28,8 @@ const FIELDS: Array<{
   { key: "spaceAvailable", label: "Space available", hint: "Raw scraped value" },
   { key: "details", label: "Details", hint: "Raw scraped value" },
   { key: "contact", label: "Contact", hint: "Raw scraped value" },
+  { key: "contactCompany", label: "Contact company", hint: "Raw scraped value" },
+  { key: "contactPhone", label: "Contact phone", hint: "Raw scraped value" },
   { key: "squareFeet", label: "Square feet", type: "number" },
   { key: "priceText", label: "Price text" },
   { key: "yearBuilt", label: "Year built", type: "number" },
@@ -52,6 +54,8 @@ const EditIngestRecordModal: React.FC<EditIngestRecordModalProps> = ({
         details: record.details,
         description: record.description,
         contact: record.contact,
+        contactCompany: record.contactCompany ?? null,
+        contactPhone: record.contactPhone ?? null,
         squareFeet: record.squareFeet,
         priceText: record.priceText,
         yearBuilt: record.yearBuilt,
@@ -80,7 +84,13 @@ const EditIngestRecordModal: React.FC<EditIngestRecordModalProps> = ({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} showCloseButton={false} isFullscreen={false}>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      showCloseButton={false}
+      isFullscreen={false}
+      className="max-w-lg rounded-2xl border border-gray-200 shadow-2xl dark:border-gray-800"
+    >
       <div className="max-h-[80vh] overflow-y-auto p-6">
         <div className="mb-5 flex items-start justify-between gap-4">
           <div>
