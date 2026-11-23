@@ -10,7 +10,8 @@ import { JobSeekerLicensePayload, JobSeekerUpdateData } from "@/services/types/j
 import { useStates } from "@/services/hooks/useStates";
 import { useLicenses } from "@/services/hooks/useLicenses";
 import { useOccupationsWithSpecialties } from "@/services/hooks/useJobCreation";
-import { Trash2 } from "lucide-react";
+import { showToast } from "@/services/utils/toast";
+import { Copy, Trash2 } from "lucide-react";
 
 interface EditJobSeekerModalProps {
   isOpen: boolean;
@@ -239,6 +240,7 @@ export const EditJobSeekerModal: React.FC<EditJobSeekerModalProps> = ({ isOpen, 
       occupationId: 0,
       specialtyIds: [],
     });
+    setEmail("");
     setLicenseRows([]);
 
     onClose();
@@ -256,6 +258,8 @@ export const EditJobSeekerModal: React.FC<EditJobSeekerModalProps> = ({ isOpen, 
     occupationId: 0,
     specialtyIds: [],
   });
+  // Read-only; kept out of formData so it is never sent in the update payload
+  const [email, setEmail] = useState("");
   const [licenseRows, setLicenseRows] = useState<LicenseFormRow[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -421,6 +425,7 @@ export const EditJobSeekerModal: React.FC<EditJobSeekerModalProps> = ({ isOpen, 
           occupationId: jobSeeker.occupationId || 0,
           specialtyIds: (jobSeeker.specialties ?? []).map((s) => s.id),
         });
+        setEmail(jobSeeker.email || "");
 
         if (jobSeeker.licenses && jobSeeker.licenses.length > 0) {
           setLicenseRows(
@@ -527,6 +532,16 @@ export const EditJobSeekerModal: React.FC<EditJobSeekerModalProps> = ({ isOpen, 
   const removeLicenseRow = useCallback((key: string) => {
     setLicenseRows((prev) => prev.filter((r) => r.key !== key));
   }, []);
+
+  const handleCopyEmail = async () => {
+    if (!email) return;
+    try {
+      await navigator.clipboard.writeText(email);
+      showToast.success("Copied", "Email copied to clipboard");
+    } catch {
+      showToast.error("Copy Failed", "Could not copy email");
+    }
+  };
 
   const updateField = (field: keyof JobSeekerUpdateData, value: string | number | number[] | undefined) => {
     setFormData((prev) => ({
@@ -813,6 +828,29 @@ export const EditJobSeekerModal: React.FC<EditJobSeekerModalProps> = ({ isOpen, 
                   onChange={(e) => updateField("phoneNumber", e.target.value)}
                   placeholder="Enter phone number"
                 />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
+                <div className="flex gap-2">
+                  <input
+                    type="email"
+                    readOnly
+                    value={email}
+                    onFocus={(e) => e.target.select()}
+                    className="h-11 flex-1 min-w-0 rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-4 py-2.5 text-sm text-gray-500 dark:text-gray-400 shadow-theme-xs focus:outline-hidden"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleCopyEmail}
+                    disabled={!email}
+                    className="h-11 px-3 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    title="Copy email"
+                    aria-label="Copy email"
+                  >
+                    <Copy className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
 
               <div>
