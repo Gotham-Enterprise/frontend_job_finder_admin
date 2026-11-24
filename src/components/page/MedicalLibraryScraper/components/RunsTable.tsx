@@ -92,9 +92,13 @@ const RunsTable: React.FC<{ runs: ScraperRun[] }> = ({ runs }) => {
               </td>
               <td className="px-6 py-4">
                 {getStatusBadge(run.status)}
-                {run.status === "failed" && run.errorMessage && (
+                {run.errorMessage && (run.status === "failed" || run.status === "completed") && (
+                  // On a failed run this is the error; on a completed run it is a
+                  // note (e.g. ICD-10 codes came from a cached list).
                   <p
-                    className="mt-1 max-w-xs truncate text-xs text-red-600 dark:text-red-400"
+                    className={`mt-1 max-w-xs truncate text-xs ${
+                      run.status === "failed" ? "text-red-600 dark:text-red-400" : "text-amber-700 dark:text-amber-400"
+                    }`}
                     title={run.errorMessage}
                   >
                     {run.errorMessage}

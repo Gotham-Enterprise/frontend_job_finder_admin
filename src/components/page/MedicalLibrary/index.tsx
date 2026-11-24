@@ -44,7 +44,6 @@ const MedicalLibraryPage: React.FC<{ className?: string }> = ({ className = "" }
     toggleSelect,
     toggleSelectAllOnPage,
     clearSelection,
-    describeActiveFilter,
     handleBulkStatus,
   } = useMedicalLibraryLogic();
 
@@ -100,8 +99,6 @@ const MedicalLibraryPage: React.FC<{ className?: string }> = ({ className = "" }
 
         <MedicalLibraryBulkBar
           selectedCount={selectedIds.length}
-          matchingCount={data?.metaData?.totalCount || 0}
-          activeFilterDescription={describeActiveFilter()}
           isBusy={isMutating}
           onClearSelection={clearSelection}
           onBulkStatus={handleBulkStatus}

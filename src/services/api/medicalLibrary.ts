@@ -40,8 +40,21 @@ export interface MedicalLibraryTab {
   sections: MedicalLibrarySection[];
 }
 
+/** ICD-10-CM reference code attached by the MedlinePlus import (NLM Clinical Tables). */
+export interface MedicalLibraryCode {
+  system: string;
+  code: string;
+  name: string;
+  /** true = the condition itself; false = another condition MedlinePlus files on the same page */
+  primary: boolean;
+}
+
 export interface MedicalLibraryContent {
   tabs: MedicalLibraryTab[];
+  /** Imported topics only: the source's related topics by URL (resolved separately as relatedTopics). */
+  related?: { title: string; sourceUrl: string }[];
+  /** Imported topics only. */
+  codes?: MedicalLibraryCode[];
 }
 
 /** Snapshot of a topic's fields as they were immediately before a re-import overwrote them with a genuine change — lets the edit form show old vs new. Null/absent when there's nothing pending review. */
@@ -52,6 +65,17 @@ export interface MedicalLibraryPreviousVersion {
   content: MedicalLibraryContent;
 }
 
+/** One of the source's curated cross-references, with how it stands on our side. Single-topic endpoint only. */
+export interface MedicalLibraryRelatedTopic {
+  title: string;
+  sourceUrl: string;
+  /** Our row, when the related topic was imported; null when it was not. */
+  id: string | null;
+  slug: string | null;
+  /** "published" | "draft" | null (not imported) */
+  status: string | null;
+}
+
 export interface MedicalLibraryTopic {
   id: string;
   slug: string;
@@ -60,6 +84,8 @@ export interface MedicalLibraryTopic {
   description?: string;
   status?: string;
   content?: MedicalLibraryContent;
+  /** Imported topics: the source's related topics resolved against our rows (adminGetTopicById only). */
+  relatedTopics?: MedicalLibraryRelatedTopic[];
   /** Import that owns this row ("nami", "medlineplus"); null for hand-authored topics. */
   source?: MedicalLibrarySource | string | null;
   /** Canonical page on the source site; the importer's dedupe key. Single-topic endpoint only. */

@@ -13,8 +13,6 @@ import {
 import { useConfirmation } from "@/hooks/useConfirmation";
 import { showToast } from "@/services/utils/toast";
 
-export type BulkStatusScope = "selected" | "filter";
-
 export const useMedicalLibraryLogic = () => {
   const [filters, setFilters] = useState<MedicalLibraryFilters>({
     page: 1,
@@ -41,6 +39,28 @@ export const useMedicalLibraryLogic = () => {
     }, 500);
     return () => clearTimeout(id);
   }, [searchInput]);
+
+  // Deep links such as /admin/medical-library?source=medlineplus&status=draft
+  // (from the Imports page's "Review drafts" button) preselect the filters.
+  // Applied after mount rather than in the initial state so the server and
+  // client first render identically.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const source = params.get("source");
+    const status = params.get("status");
+    const category = params.get("category");
+    if (!source && !status && !category) return;
+    startTransition(() => {
+      setFilters((prev) => ({
+        ...prev,
+        ...(source ? { source: source as MedicalLibraryFilters["source"] } : {}),
+        ...(status ? { status: status as MedicalLibraryFilters["status"] } : {}),
+        ...(category ? { category } : {}),
+        page: 1,
+      }));
+    });
+  }, []);
 
   // A selection only makes sense for the rows on screen; any filter or page
   // change swaps those rows out, so the selection is dropped with them.
@@ -143,31 +163,6 @@ export const useMedicalLibraryLogic = () => {
 
   const clearSelection = useCallback(() => setSelectedIds([]), []);
 
-  // The constraints the list is currently fetched with, minus paging and
-  // sorting — exactly what "everything matching this filter" means to the
-  // admin looking at the table. Empty when no filter is set, in which case
-  // the filter-scoped bulk action is not offered (the backend would refuse
-  // it anyway rather than flip every topic in the table).
-  const activeFilter = useMemo(() => {
-    const picked = {
-      source: filters.source || undefined,
-      status: filters.status || undefined,
-      category: filters.category || undefined,
-      search: filters.search || undefined,
-    };
-    return Object.values(picked).some(Boolean) ? picked : null;
-  }, [filters.source, filters.status, filters.category, filters.search]);
-
-  const describeActiveFilter = useCallback(() => {
-    if (!activeFilter) return "";
-    const parts: string[] = [];
-    if (activeFilter.source) parts.push(`source "${MEDICAL_LIBRARY_SOURCE_LABELS[activeFilter.source] || activeFilter.source}"`);
-    if (activeFilter.status) parts.push(`status "${activeFilter.status}"`);
-    if (activeFilter.category) parts.push(`category "${activeFilter.category}"`);
-    if (activeFilter.search) parts.push(`title containing "${activeFilter.search}"`);
-    return parts.join(", ");
-  }, [activeFilter]);
-
   // ── Actions ───────────────────────────────────────────────────────────────
 
   const handleDelete = async (topicId: string, topicTitle: string) => {
@@ -190,18 +185,14 @@ export const useMedicalLibraryLogic = () => {
     }
   };
 
-  const handleBulkStatus = async (status: MedicalLibraryStatus, scope: BulkStatusScope) => {
+  // Applies to the rows checked on this page. Publishing a whole import's
+  // drafts at once lives on the Imports page (filter-scoped bulk-status).
+  const handleBulkStatus = async (status: MedicalLibraryStatus) => {
     const verb = status === "published" ? "Publish" : "Set to draft";
-    const totalCount = data?.metaData?.totalCount || 0;
-    const count = scope === "selected" ? selectedIds.length : totalCount;
+    const count = selectedIds.length;
+    if (count === 0) return;
 
-    if (scope === "selected" && selectedIds.length === 0) return;
-    if (scope === "filter" && !activeFilter) return;
-
-    const target =
-      scope === "selected"
-        ? `the ${count} selected topic${count === 1 ? "" : "s"}`
-        : `all ${count} topic${count === 1 ? "" : "s"} matching ${describeActiveFilter()}`;
+    const target = `the ${count} selected topic${count === 1 ? "" : "s"}`;
 
     const confirmed = await confirmation.confirm({
       title: `${verb}: ${count} topic${count === 1 ? "" : "s"}`,
@@ -215,7 +206,7 @@ export const useMedicalLibraryLogic = () => {
     if (!confirmed) return;
 
     bulkUpdateStatus(
-      scope === "selected" ? { status, ids: selectedIds } : { status, filter: activeFilter! },
+      { status, ids: selectedIds },
       {
         onSuccess: (res) => {
           const n = res?.data?.count ?? count;
@@ -258,8 +249,6 @@ export const useMedicalLibraryLogic = () => {
     toggleSelect,
     toggleSelectAllOnPage,
     clearSelection,
-    activeFilter,
-    describeActiveFilter,
     handleBulkStatus,
   };
 };

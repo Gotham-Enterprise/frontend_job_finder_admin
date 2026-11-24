@@ -57,14 +57,81 @@ const ImportedSourcePanel: React.FC<{ topic: MedicalLibraryTopic }> = ({ topic }
             Imported from {label}
           </p>
           <p className="mt-1 text-sm text-gray-700 dark:text-gray-300">
-            Content on this page is maintained by the {label} import. If the source page changes, the next import
-            replaces the title, description and content here and sets the topic back to draft for review. Your
-            status and slug are kept.
+            Title, category, description and content are maintained by the {label} import and are read-only here.
+            If the source page changes, the next import replaces them and sets the topic back to draft for review.
+            Status and slug are yours to change and are kept across imports.
           </p>
           {topic.sourceUrl && (
             <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
               Source URL: <code className="break-all">{topic.sourceUrl}</code>
             </p>
+          )}
+          {topic.content?.codes && topic.content.codes.length > 0 && (
+            <div className="mt-4">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-teal-700 dark:text-teal-400">
+                ICD-10-CM codes ({topic.content.codes.length})
+              </p>
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                Matched by the import from the NLM Clinical Tables conditions list. Primary codes are shown on the
+                public page; related codes are other conditions MedlinePlus files on the same page.
+              </p>
+              <ul className="mt-2 flex flex-wrap gap-2">
+                {topic.content.codes.map((c) => (
+                  <li
+                    key={c.code}
+                    title={c.name}
+                    className={`inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-xs ${
+                      c.primary
+                        ? "border-teal-300 bg-white text-teal-900 dark:border-teal-500/30 dark:bg-transparent dark:text-teal-200"
+                        : "border-gray-200 bg-gray-50 text-gray-600 dark:border-gray-700 dark:bg-gray-800/40 dark:text-gray-400"
+                    }`}
+                  >
+                    <code className="font-semibold">{c.code}</code>
+                    <span className="max-w-[220px] truncate">{c.name}</span>
+                    {c.primary && <span className="opacity-70">· primary</span>}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {topic.relatedTopics && topic.relatedTopics.length > 0 && (
+            <div className="mt-4">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-teal-700 dark:text-teal-400">
+                Related topics from {label} ({topic.relatedTopics.length})
+              </p>
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                Shown as &quot;Related Conditions&quot; on the public page once published. Maintained by the import.
+              </p>
+              <ul className="mt-2 flex flex-wrap gap-2">
+                {topic.relatedTopics.map((rel) => {
+                  const tone =
+                    rel.status === "published"
+                      ? "border-green-200 bg-green-50 text-green-800 dark:border-green-500/30 dark:bg-green-500/10 dark:text-green-300"
+                      : rel.status === "draft"
+                        ? "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300"
+                        : "border-gray-200 bg-gray-50 text-gray-500 dark:border-gray-700 dark:bg-gray-800/40 dark:text-gray-400";
+                  const note =
+                    rel.status === "published" ? "published" : rel.status === "draft" ? "draft, hidden until published" : "not imported, not shown";
+                  const chip = (
+                    <span className={`inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-xs ${tone}`} title={note}>
+                      {rel.title}
+                      <span className="opacity-70">· {rel.status || "not imported"}</span>
+                    </span>
+                  );
+                  return (
+                    <li key={rel.sourceUrl}>
+                      {rel.id ? (
+                        <a href={`/admin/medical-library/edit/${rel.id}`} className="hover:opacity-80">
+                          {chip}
+                        </a>
+                      ) : (
+                        chip
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
           )}
         </div>
         {topic.sourceUrl && (
@@ -102,6 +169,16 @@ const MedicalLibraryForm: React.FC<MedicalLibraryFormProps> = ({ initialData, on
   const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
   const [status, setStatus] = useState("published");
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Imported topics (MedlinePlus, NAMI) are owned by their importer: title,
+  // category, description and content get overwritten on the next run
+  // whenever the source page differs, so editing them here would be lost
+  // and would flip the topic back to draft. Those fields are read-only for
+  // imported rows; only status and slug are the admin's to change.
+  const isImported = Boolean(initialData?.source);
+  const readOnlyFieldClass = isImported
+    ? "disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed dark:disabled:bg-gray-800/40 dark:disabled:text-gray-400"
+    : "";
 
   const clearError = (key: string) =>
     setErrors((prev) => {
@@ -223,6 +300,25 @@ const MedicalLibraryForm: React.FC<MedicalLibraryFormProps> = ({ initialData, on
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Imported row: only slug and status are sent. Re-sending the content
+    // (even unchanged) risks editor normalisation drifting it from what the
+    // importer wrote, which the next import would read as a change.
+    if (isImported) {
+      const nextErrors: Record<string, string> = {};
+      if (!slug.trim()) nextErrors.slug = "Slug is required";
+      setErrors(nextErrors);
+      if (Object.keys(nextErrors).length > 0) {
+        scrollToFirstError();
+        return;
+      }
+      setIsSubmitting(true);
+      onSave({ slug: slug.trim(), status }, (apiErrorMessage?: string) => {
+        setIsSubmitting(false);
+        if (apiErrorMessage) applyApiError(apiErrorMessage);
+      });
+      return;
+    }
+
     if (tabs.length > 3) {
       showToast.error("Limit Exceeded", "You cannot exceed the maximum limit of 3 content tabs.");
       return;
@@ -319,12 +415,13 @@ const MedicalLibraryForm: React.FC<MedicalLibraryFormProps> = ({ initialData, on
               <input
                 type="text"
                 value={title}
+                disabled={isImported}
                 onChange={(e) => {
                   setTitle(e.target.value);
                   clearError("title");
                 }}
                 placeholder="e.g. Anxiety Disorders"
-                className={`w-full px-4 py-3 text-sm border rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 ${
+                className={`w-full px-4 py-3 text-sm border rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 ${readOnlyFieldClass} ${
                   errors.title ? "border-red-500 focus:ring-red-500" : "border-gray-200 dark:border-gray-700 focus:ring-blue-500"
                 }`}
               />
@@ -359,8 +456,9 @@ const MedicalLibraryForm: React.FC<MedicalLibraryFormProps> = ({ initialData, on
               <div className="relative">
                 <select
                   value={category}
+                  disabled={isImported}
                   onChange={(e) => setCategory(e.target.value)}
-                  className="w-full px-4 py-3 text-sm border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
+                  className={`w-full px-4 py-3 text-sm border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none ${readOnlyFieldClass}`}
                 >
                   {CATEGORY_OPTIONS.map((opt) => (
                     <option key={opt.value} value={opt.value}>
@@ -403,13 +501,14 @@ const MedicalLibraryForm: React.FC<MedicalLibraryFormProps> = ({ initialData, on
               </label>
               <textarea
                 value={description}
+                disabled={isImported}
                 onChange={(e) => {
                   setDescription(e.target.value);
                   clearError("description");
                 }}
                 placeholder="Short summary shown in listings"
                 rows={2}
-                className={`w-full px-4 py-3 text-sm border rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 resize-y ${
+                className={`w-full px-4 py-3 text-sm border rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 resize-y ${readOnlyFieldClass} ${
                   errors.description ? "border-red-500 focus:ring-red-500" : "border-gray-200 dark:border-gray-700 focus:ring-blue-500"
                 }`}
               />
@@ -423,8 +522,15 @@ const MedicalLibraryForm: React.FC<MedicalLibraryFormProps> = ({ initialData, on
           <div>
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                Content Structure <span className="text-red-500">*</span>
+                Content Structure {isImported ? (
+                  <span className="ml-2 align-middle text-xs font-medium text-teal-700 dark:text-teal-400 bg-teal-50 dark:bg-teal-500/10 border border-teal-200 dark:border-teal-500/20 rounded-md px-2 py-0.5">
+                    Read-only, maintained by {getSourceLabel(initialData?.source)}
+                  </span>
+                ) : (
+                  <span className="text-red-500">*</span>
+                )}
               </h3>
+              {!isImported && (
               <button
                 type="button"
                 onClick={addTab}
@@ -441,6 +547,7 @@ const MedicalLibraryForm: React.FC<MedicalLibraryFormProps> = ({ initialData, on
                 </svg>
                 Add Content Tab
               </button>
+              )}
             </div>
 
             <div className="space-y-8">
@@ -461,9 +568,10 @@ const MedicalLibraryForm: React.FC<MedicalLibraryFormProps> = ({ initialData, on
                       <input
                         type="text"
                         value={tab.tabName}
+                        disabled={isImported}
                         onChange={(e) => updateTabName(tabIdx, e.target.value)}
                         placeholder={`e.g. Overview or Symptoms`}
-                        className={`w-full px-4 py-2.5 text-sm font-semibold bg-transparent text-gray-900 dark:text-white border rounded-lg focus:outline-none ${
+                        className={`w-full px-4 py-2.5 text-sm font-semibold bg-transparent text-gray-900 dark:text-white border rounded-lg focus:outline-none disabled:text-gray-500 disabled:cursor-not-allowed ${
                           errors[`tab-${tabIdx}-name`] ? "border-red-500 focus:border-red-500" : "border-gray-300 dark:border-gray-600 focus:border-blue-500"
                         }`}
                       />
@@ -471,7 +579,7 @@ const MedicalLibraryForm: React.FC<MedicalLibraryFormProps> = ({ initialData, on
                         <p className="text-xs text-red-500 mt-1.5 ml-1">{errors[`tab-${tabIdx}-name`]}</p>
                       )}
                     </div>
-                    {tabs.length > 1 && (
+                    {tabs.length > 1 && !isImported && (
                       <button
                         type="button"
                         onClick={() => removeTab(tabIdx)}
@@ -504,11 +612,12 @@ const MedicalLibraryForm: React.FC<MedicalLibraryFormProps> = ({ initialData, on
                           <input
                             type="text"
                             value={section.label}
+                            disabled={isImported}
                             onChange={(e) => updateSection(tabIdx, secIdx, "label", e.target.value)}
                             placeholder={`Section Heading (Optional)`}
-                            className="flex-1 text-sm font-medium text-gray-800 dark:text-gray-200 bg-transparent focus:outline-none placeholder-gray-400"
+                            className="flex-1 text-sm font-medium text-gray-800 dark:text-gray-200 bg-transparent focus:outline-none placeholder-gray-400 disabled:cursor-not-allowed"
                           />
-                          {tab.sections.length > 1 && (
+                          {tab.sections.length > 1 && !isImported && (
                             <button
                               type="button"
                               onClick={() => removeSection(tabIdx, secIdx)}
@@ -528,15 +637,25 @@ const MedicalLibraryForm: React.FC<MedicalLibraryFormProps> = ({ initialData, on
                         </div>
 
                         <div className="p-4 bg-white dark:bg-gray-800">
-                          <HtmlEditorPreview
-                            initialHtml={section.html}
-                            onChange={(newHtml) => updateSection(tabIdx, secIdx, "html", newHtml)}
-                            placeholder="Write raw HTML code here... e.g. <h3>Header</h3><p>Text...</p>"
-                          />
+                          {isImported ? (
+                            // Rendered preview instead of the editor: the HTML was sanitized
+                            // by the backend on import and only the importer may change it.
+                            <div
+                              className="text-sm leading-relaxed text-gray-800 dark:text-gray-200 space-y-3 [&_h3]:text-base [&_h3]:font-semibold [&_h4]:font-semibold [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:mt-1 [&_a]:text-blue-600 [&_a]:underline dark:[&_a]:text-blue-400 [&_table]:w-full [&_td]:border [&_td]:p-2 [&_th]:border [&_th]:p-2"
+                              dangerouslySetInnerHTML={{ __html: section.html }}
+                            />
+                          ) : (
+                            <HtmlEditorPreview
+                              initialHtml={section.html}
+                              onChange={(newHtml) => updateSection(tabIdx, secIdx, "html", newHtml)}
+                              placeholder="Write raw HTML code here... e.g. <h3>Header</h3><p>Text...</p>"
+                            />
+                          )}
                         </div>
                       </div>
                     ))}
 
+                    {!isImported && (
                     <button
                       type="button"
                       onClick={() => addSection(tabIdx)}
@@ -547,6 +666,7 @@ const MedicalLibraryForm: React.FC<MedicalLibraryFormProps> = ({ initialData, on
                       </svg>
                       Add Section to {tab.tabName || "this Tab"}
                     </button>
+                    )}
                   </div>
                 </div>
               ))}
