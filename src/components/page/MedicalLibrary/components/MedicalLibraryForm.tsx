@@ -4,7 +4,12 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Button from "@/components/ui/button/Button";
 import FullScreenSpinner from "@/components/ui/FullScreenSpinner";
-import { MedicalLibraryTopic, MedicalLibrarySection, MedicalLibraryTab } from "@/services/api/medicalLibrary";
+import {
+  MedicalLibraryTopic,
+  MedicalLibrarySection,
+  MedicalLibraryTab,
+  getSourceLabel,
+} from "@/services/api/medicalLibrary";
 import HtmlEditorPreview from "./HtmlEditorPreview";
 import PendingChangesPanel from "./PendingChangesPanel";
 import { showToast } from "@/services/utils/toast";
@@ -35,6 +40,55 @@ const defaultTab = (): MedicalLibraryTab => ({
   tabName: "",
   sections: [defaultSection()],
 });
+
+// Read-only provenance for imported rows. The importer owns the content: if
+// the source page changes, the next run overwrites title/description/content
+// and re-queues the topic as draft (the Pending Changes panel then shows old
+// vs new). Status and slug are the admin's — the importer never touches them
+// on an unchanged topic.
+const ImportedSourcePanel: React.FC<{ topic: MedicalLibraryTopic }> = ({ topic }) => {
+  const label = getSourceLabel(topic.source);
+  const sourceSite = topic.source === "medlineplus" ? "MedlinePlus.gov" : topic.source === "nami" ? "NAMI.org" : label;
+  return (
+    <div className="rounded-2xl border border-teal-200 bg-teal-50 p-5 dark:border-teal-500/20 dark:bg-teal-500/10">
+      <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-teal-700 dark:text-teal-400">
+            Imported from {label}
+          </p>
+          <p className="mt-1 text-sm text-gray-700 dark:text-gray-300">
+            Content on this page is maintained by the {label} import. If the source page changes, the next import
+            replaces the title, description and content here and sets the topic back to draft for review. Your
+            status and slug are kept.
+          </p>
+          {topic.sourceUrl && (
+            <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+              Source URL: <code className="break-all">{topic.sourceUrl}</code>
+            </p>
+          )}
+        </div>
+        {topic.sourceUrl && (
+          <a
+            href={topic.sourceUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-teal-300 bg-white px-3 py-2 text-sm font-medium text-teal-800 hover:bg-teal-100 dark:border-teal-500/30 dark:bg-transparent dark:text-teal-300 dark:hover:bg-teal-500/10"
+          >
+            View on {sourceSite}
+            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+              />
+            </svg>
+          </a>
+        )}
+      </div>
+    </div>
+  );
+};
 
 const MedicalLibraryForm: React.FC<MedicalLibraryFormProps> = ({ initialData, onSave, isSaving }) => {
   const router = useRouter();
@@ -247,6 +301,8 @@ const MedicalLibraryForm: React.FC<MedicalLibraryFormProps> = ({ initialData, on
           </Button>
         </div>
       </div>
+
+      {initialData?.source && <ImportedSourcePanel topic={initialData} />}
 
       {initialData?.previousVersion && (
         <PendingChangesPanel previousVersion={initialData.previousVersion} current={initialData} />

@@ -1,10 +1,30 @@
-import { apiGet, apiPost, apiPut, apiDelete } from "./apiUtils";
+import { apiGet, apiPost, apiPut, apiDelete, apiPatch } from "./apiUtils";
+
+/**
+ * Where a topic's content came from. `null` on the row means hand-authored in
+ * this admin; the list filter spells that as "manual" (the backend maps it to
+ * `source IS NULL`).
+ */
+export type MedicalLibrarySource = "nami" | "medlineplus";
+export type MedicalLibrarySourceFilter = MedicalLibrarySource | "manual";
+export type MedicalLibraryStatus = "published" | "draft";
+
+export const MEDICAL_LIBRARY_SOURCE_LABELS: Record<MedicalLibrarySourceFilter, string> = {
+  medlineplus: "MedlinePlus",
+  nami: "NAMI",
+  manual: "Manual",
+};
+
+export const getSourceLabel = (source: string | null | undefined): string =>
+  MEDICAL_LIBRARY_SOURCE_LABELS[(source || "manual") as MedicalLibrarySourceFilter] || source || "Manual";
 
 export interface MedicalLibraryFilters {
   page?: number;
   limit?: number;
   search?: string;
   category?: string;
+  status?: MedicalLibraryStatus | "";
+  source?: MedicalLibrarySourceFilter | "";
   sortBy?: string;
   sortOrder?: string;
 }
@@ -40,6 +60,10 @@ export interface MedicalLibraryTopic {
   description?: string;
   status?: string;
   content?: MedicalLibraryContent;
+  /** Import that owns this row ("nami", "medlineplus"); null for hand-authored topics. */
+  source?: MedicalLibrarySource | string | null;
+  /** Canonical page on the source site; the importer's dedupe key. Single-topic endpoint only. */
+  sourceUrl?: string | null;
   previousVersion?: MedicalLibraryPreviousVersion | null;
   /** List view only (adminGetTopics) — true when a re-import found changes and this topic has a pending diff to review. The full previousVersion snapshot only comes from the single-topic endpoint (adminGetTopicById). */
   hasPendingChanges?: boolean;
@@ -67,6 +91,23 @@ export interface MedicalLibraryCreateData {
   content?: MedicalLibraryContent;
 }
 
+/**
+ * Bulk status change. Either `ids` or a non-empty `filter` is required; the
+ * backend refuses an empty selection so a stray call can never flip the whole
+ * table. The filter keys mirror the list filters, so "publish everything the
+ * admin is currently looking at" is the same object the list was fetched with.
+ */
+export interface MedicalLibraryBulkStatusRequest {
+  status: MedicalLibraryStatus;
+  ids?: string[];
+  filter?: Pick<MedicalLibraryFilters, "source" | "status" | "category" | "search">;
+}
+
+export interface MedicalLibraryBulkStatusResponse {
+  success: boolean;
+  data: { count: number; status: MedicalLibraryStatus };
+}
+
 export const medicalLibraryApi = {
   async getTopics(filters: MedicalLibraryFilters = {}): Promise<MedicalLibraryTopicsResponse> {
     const queryParams = new URLSearchParams();
@@ -74,6 +115,8 @@ export const medicalLibraryApi = {
     if (filters.limit) queryParams.append("limit", filters.limit.toString());
     if (filters.search) queryParams.append("search", filters.search);
     if (filters.category) queryParams.append("category", filters.category);
+    if (filters.status) queryParams.append("status", filters.status);
+    if (filters.source) queryParams.append("source", filters.source);
     if (filters.sortBy) queryParams.append("sortBy", filters.sortBy);
     if (filters.sortOrder) queryParams.append("sortOrder", filters.sortOrder);
 
@@ -97,5 +140,17 @@ export const medicalLibraryApi = {
 
   async deleteTopic(id: string): Promise<{ success: boolean; message: string }> {
     return apiDelete(`/api/admin/medical-library/${id}`);
+  },
+
+  async bulkUpdateStatus(request: MedicalLibraryBulkStatusRequest): Promise<MedicalLibraryBulkStatusResponse> {
+    // Drop empty filter values so the backend sees only real constraints.
+    const filter = request.filter
+      ? Object.fromEntries(Object.entries(request.filter).filter(([, value]) => value !== undefined && value !== ""))
+      : undefined;
+    return apiPatch(`/api/admin/medical-library/bulk-status`, {
+      status: request.status,
+      ...(request.ids?.length ? { ids: request.ids } : {}),
+      ...(filter && Object.keys(filter).length ? { filter } : {}),
+    });
   },
 };

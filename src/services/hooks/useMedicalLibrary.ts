@@ -1,5 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { medicalLibraryApi, MedicalLibraryFilters, MedicalLibraryCreateData } from "../api/medicalLibrary";
+import {
+  medicalLibraryApi,
+  MedicalLibraryFilters,
+  MedicalLibraryCreateData,
+  MedicalLibraryBulkStatusRequest,
+} from "../api/medicalLibrary";
 
 export const medicalLibraryQueryKeys = {
   all: ["medical-library"] as const,
@@ -54,6 +59,21 @@ export const useDeleteMedicalLibraryTopic = () => {
     mutationFn: (id: string) => medicalLibraryApi.deleteTopic(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: medicalLibraryQueryKeys.lists() });
+    },
+  });
+};
+
+/**
+ * Publish / unpublish many topics at once. A bulk change can touch rows whose
+ * detail query is cached, so every medical-library query is invalidated, not
+ * just the lists.
+ */
+export const useBulkUpdateMedicalLibraryStatus = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (request: MedicalLibraryBulkStatusRequest) => medicalLibraryApi.bulkUpdateStatus(request),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: medicalLibraryQueryKeys.all });
     },
   });
 };
