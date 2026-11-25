@@ -23,7 +23,12 @@ import EmailVerifiedBadge from "@/components/ui/badge/EmailVerifiedBadge";
 import Avatar from "@/components/ui/avatar/Avatar";
 import { ApproveSupervisorModal, RejectSupervisorModal, SupervisorStatusBadge, EditVerificationNotesModal, EditSupervisorModal, ResendVerificationModal } from "../components";
 import { VerificationStatus } from "@/services/types/supervisor";
-import { getSupervisorCredentialTypeLabel, isSupervisorTypeWithoutCertifications } from "@/constants/supervisorSignupOptions";
+import {
+  formatWeeklyHoursAvailable,
+  getSupervisorCredentialTypeLabel,
+  isMedicalDirectorSupervisorType,
+  isSupervisorTypeWithoutCertifications,
+} from "@/constants/supervisorSignupOptions";
 import { CloseLineIcon } from "@/icons";
 import {
   formatGenderIdentityForDisplay,
@@ -543,6 +548,13 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
           <SectionCard title="Supervision Preferences">
             <FieldRow label="Supervision Format" value={supervisionFormatDisplay} />
             <FieldRow label="Availability" value={availabilityDisplay} />
+            {/* Medical Directors don't track weekly hours. */}
+            {!isMedicalDirectorSupervisorType(profile?.supervisorType ?? "") && (
+              <FieldRow
+                label="Hours Available Weekly"
+                value={formatWeeklyHoursAvailable(profile?.weeklyHoursAvailable)}
+              />
+            )}
             <FieldRow label="Accepting Supervisees" value={profile?.acceptingSupervisees ? "Yes" : "No"} />
             <FieldRow label="Patient Population" value={patientPopulationDisplay} />
             <FieldRow

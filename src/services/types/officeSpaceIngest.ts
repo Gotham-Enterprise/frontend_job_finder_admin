@@ -25,11 +25,14 @@ export interface IngestRawFields {
   address1: string | null;
   address2: string | null;
   imageUrl: string | null;
+  imageUrls?: string[] | null;
   spaceAvailable: string | null;
   details: string | null;
   description: string | null;
   contact: string | null;
   listingType?: string | null;
+  contactCompany?: string | null;
+  contactPhone?: string | null;
 }
 
 /** A loose input row as uploaded or pasted — keys may use snake_case aliases. */
@@ -38,11 +41,22 @@ export interface IngestInputRow {
   address1?: string;
   address2?: string;
   imageUrl?: string;
+  images?: string[];
   spaceAvailable?: string;
   details?: string;
   description?: string;
   contact?: string;
   listingType?: string;
+  contactCompany?: string;
+  contactPhone?: string;
+  offers?: {
+    offeredBy?: {
+      company?: string;
+      contactPerson?: string;
+      contactPhone?: string;
+    };
+    [key: string]: unknown;
+  };
   [snakeOrOtherKey: string]: unknown;
 }
 
