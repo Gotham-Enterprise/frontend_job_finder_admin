@@ -57,9 +57,9 @@ const ImportedSourcePanel: React.FC<{ topic: MedicalLibraryTopic }> = ({ topic }
             Imported from {label}
           </p>
           <p className="mt-1 text-sm text-gray-700 dark:text-gray-300">
-            Title, category, description and content are maintained by the {label} import and are read-only here.
-            If the source page changes, the next import replaces them and sets the topic back to draft for review.
-            Status and slug are yours to change and are kept across imports.
+            {topic.source === "medlineplus"
+              ? `Title, category, description and content are maintained by the ${label} import and are read-only here. If the source page changes, the next import replaces them and sets the topic back to draft for review. Status and slug are yours to change and are kept across imports.`
+              : `Content on this page is maintained by the ${label} import. If the source page changes, the next import replaces the title, description and content here and sets the topic back to draft for review. Your status and slug are kept.`}
           </p>
           {topic.sourceUrl && (
             <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
@@ -170,12 +170,14 @@ const MedicalLibraryForm: React.FC<MedicalLibraryFormProps> = ({ initialData, on
   const [status, setStatus] = useState("published");
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Imported topics (MedlinePlus, NAMI) are owned by their importer: title,
-  // category, description and content get overwritten on the next run
-  // whenever the source page differs, so editing them here would be lost
-  // and would flip the topic back to draft. Those fields are read-only for
-  // imported rows; only status and slug are the admin's to change.
-  const isImported = Boolean(initialData?.source);
+  // MedlinePlus topics are owned by the importer: title, category,
+  // description and content get overwritten on the next run whenever the
+  // source page differs, so editing them here would be lost and would flip
+  // the topic back to draft. Those fields are read-only for MedlinePlus rows;
+  // only status and slug are the admin's to change. NAMI topics keep the
+  // original fully editable form (product decision 2026-11-24), even though
+  // the same re-import rule applies to them.
+  const isImported = initialData?.source === "medlineplus";
   const readOnlyFieldClass = isImported
     ? "disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed dark:disabled:bg-gray-800/40 dark:disabled:text-gray-400"
     : "";
