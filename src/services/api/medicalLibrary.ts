@@ -49,12 +49,23 @@ export interface MedicalLibraryCode {
   primary: boolean;
 }
 
+export interface Icd10SearchHit {
+  code: string;
+  /** Official ICD-10-CM name */
+  name: string;
+  /** Lay condition names from the NLM conditions list filed under this code, if any */
+  layNames: string[];
+}
+
 export interface MedicalLibraryContent {
   tabs: MedicalLibraryTab[];
   /** Imported topics only: the source's related topics by URL (resolved separately as relatedTopics). */
   related?: { title: string; sourceUrl: string }[];
-  /** Imported topics only. */
   codes?: MedicalLibraryCode[];
+  /** true once an admin edited the codes of an imported topic; the importer then leaves codes alone. */
+  codesCurated?: boolean;
+  /** The importer's own suggestion, kept while codes are curated so they can be reset. */
+  codesFromImport?: MedicalLibraryCode[];
 }
 
 /** Snapshot of a topic's fields as they were immediately before a re-import overwrote them with a genuine change — lets the edit form show old vs new. Null/absent when there's nothing pending review. */
@@ -166,6 +177,16 @@ export const medicalLibraryApi = {
 
   async deleteTopic(id: string): Promise<{ success: boolean; message: string }> {
     return apiDelete(`/api/admin/medical-library/${id}`);
+  },
+
+  /** Search the full ICD-10-CM list by code prefix or name (NLM), with lay condition names where known. */
+  async searchIcd10Codes(q: string): Promise<{ success: boolean; data: Icd10SearchHit[] }> {
+    return apiGet(`/api/admin/medical-library/icd10-search?q=${encodeURIComponent(q)}`);
+  },
+
+  /** ICD-10-CM suggestions for a title (hand-maintained aliases, then NLM Clinical Tables). */
+  async suggestCodes(title: string): Promise<{ success: boolean; data: { codes: MedicalLibraryCode[]; source: string } }> {
+    return apiGet(`/api/admin/medical-library/suggest-codes?title=${encodeURIComponent(title)}`);
   },
 
   async bulkUpdateStatus(request: MedicalLibraryBulkStatusRequest): Promise<MedicalLibraryBulkStatusResponse> {

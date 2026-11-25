@@ -8,10 +8,13 @@ import {
   MedicalLibraryTopic,
   MedicalLibrarySection,
   MedicalLibraryTab,
+  MedicalLibraryCode,
   getSourceLabel,
+  medicalLibraryApi,
 } from "@/services/api/medicalLibrary";
 import HtmlEditorPreview from "./HtmlEditorPreview";
 import PendingChangesPanel from "./PendingChangesPanel";
+import Icd10CodePicker from "./Icd10CodePicker";
 import { showToast } from "@/services/utils/toast";
 
 interface MedicalLibraryFormProps {
@@ -41,6 +44,16 @@ const defaultTab = (): MedicalLibraryTab => ({
   sections: [defaultSection()],
 });
 
+const ICD10_CODE_PATTERN = /^[A-Z]\d{2}(\.[A-Z0-9]{1,4})?$/;
+
+/** Trims, uppercases codes, drops empty rows and duplicates; keeps entry order. */
+const cleanCodes = (list: MedicalLibraryCode[]): MedicalLibraryCode[] => {
+  const seen = new Set<string>();
+  return list
+    .map((c) => ({ system: "ICD-10-CM", code: c.code.trim().toUpperCase(), name: c.name.trim(), primary: Boolean(c.primary) }))
+    .filter((c) => c.code && !seen.has(c.code) && seen.add(c.code));
+};
+
 // Read-only provenance for imported rows. The importer owns the content: if
 // the source page changes, the next run overwrites title/description/content
 // and re-queues the topic as draft (the Pending Changes panel then shows old
@@ -65,34 +78,6 @@ const ImportedSourcePanel: React.FC<{ topic: MedicalLibraryTopic }> = ({ topic }
             <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
               Source URL: <code className="break-all">{topic.sourceUrl}</code>
             </p>
-          )}
-          {topic.content?.codes && topic.content.codes.length > 0 && (
-            <div className="mt-4">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-teal-700 dark:text-teal-400">
-                ICD-10-CM codes ({topic.content.codes.length})
-              </p>
-              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                Matched by the import from the NLM Clinical Tables conditions list. Primary codes are shown on the
-                public page; related codes are other conditions MedlinePlus files on the same page.
-              </p>
-              <ul className="mt-2 flex flex-wrap gap-2">
-                {topic.content.codes.map((c) => (
-                  <li
-                    key={c.code}
-                    title={c.name}
-                    className={`inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-xs ${
-                      c.primary
-                        ? "border-teal-300 bg-white text-teal-900 dark:border-teal-500/30 dark:bg-transparent dark:text-teal-200"
-                        : "border-gray-200 bg-gray-50 text-gray-600 dark:border-gray-700 dark:bg-gray-800/40 dark:text-gray-400"
-                    }`}
-                  >
-                    <code className="font-semibold">{c.code}</code>
-                    <span className="max-w-[220px] truncate">{c.name}</span>
-                    {c.primary && <span className="opacity-70">· primary</span>}
-                  </li>
-                ))}
-              </ul>
-            </div>
           )}
           {topic.relatedTopics && topic.relatedTopics.length > 0 && (
             <div className="mt-4">
@@ -169,6 +154,34 @@ const MedicalLibraryForm: React.FC<MedicalLibraryFormProps> = ({ initialData, on
   const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
   const [status, setStatus] = useState("published");
   const [errors, setErrors] = useState<Record<string, string>>({});
+  // ICD-10-CM codes for topics whose import does not supply them (NAMI,
+  // hand-written). MedlinePlus topics get theirs from the importer and show
+  // them read-only in the Imported Source panel instead.
+  const [codes, setCodes] = useState<MedicalLibraryCode[]>([]);
+  const [isSuggestingCodes, setIsSuggestingCodes] = useState(false);
+  // For imported topics: "import" = the importer manages the codes and may
+  // change them on the next run; "curated" = an admin edited them, so the
+  // importer leaves them alone. codesFromImport is the importer's own list,
+  // kept so a curated topic can be reset to it. codesTouched gates whether
+  // the save sends codes at all (an untouched import-managed list is not
+  // re-sent, so nothing can drift).
+  const [codesMode, setCodesMode] = useState<"import" | "curated">("import");
+  const [codesFromImport, setCodesFromImport] = useState<MedicalLibraryCode[]>([]);
+  const [codesTouched, setCodesTouched] = useState(false);
+
+  const changeCodes = (updater: (prev: MedicalLibraryCode[]) => MedicalLibraryCode[]) => {
+    clearError("codes");
+    setCodes(updater);
+    setCodesTouched(true);
+    if (isImported) setCodesMode("curated");
+  };
+
+  const resetCodesToImport = () => {
+    clearError("codes");
+    setCodes(codesFromImport);
+    setCodesMode("import");
+    setCodesTouched(true);
+  };
 
   // MedlinePlus topics are owned by the importer: title, category,
   // description and content get overwritten on the next run whenever the
@@ -242,6 +255,15 @@ const MedicalLibraryForm: React.FC<MedicalLibraryFormProps> = ({ initialData, on
       const existingTabs = initialData.content?.tabs;
       setTabs(existingTabs && existingTabs.length > 0 ? existingTabs : [defaultTab()]);
       setStatus(initialData.status || "published");
+      const storedCodes = Array.isArray(initialData.content?.codes) ? initialData.content.codes : [];
+      setCodes(storedCodes);
+      const curated = Boolean(initialData.content?.codesCurated);
+      setCodesMode(curated ? "curated" : "import");
+      // While import-managed, the stored codes ARE the import's list.
+      setCodesFromImport(
+        curated && Array.isArray(initialData.content?.codesFromImport) ? initialData.content.codesFromImport : storedCodes
+      );
+      setCodesTouched(false);
       setSlugManuallyEdited(true);
     }
   }, [initialData]);
@@ -297,14 +319,48 @@ const MedicalLibraryForm: React.FC<MedicalLibraryFormProps> = ({ initialData, on
     );
   };
 
+  // ── ICD-10 codes ──────────────────────────────────────────────────────────
+
+  const updateCode = (index: number, patch: Partial<MedicalLibraryCode>) => {
+    changeCodes((prev) => prev.map((c, i) => (i === index ? { ...c, ...patch } : c)));
+  };
+
+  const handleSuggestCodes = async () => {
+    if (!title.trim()) return;
+    setIsSuggestingCodes(true);
+    try {
+      const res = await medicalLibraryApi.suggestCodes(title.trim());
+      const suggested = res?.data?.codes || [];
+      if (suggested.length === 0) {
+        showToast.error("No suggestions", `No ICD-10-CM code is known for "${title.trim()}". Add one by hand if you have it.`);
+        return;
+      }
+      // Merge: keep what the admin already typed, add suggestions not present yet.
+      const existing = new Set(cleanCodes(codes).map((c) => c.code));
+      const added = suggested.filter((c) => !existing.has(c.code.toUpperCase()));
+      if (added.length) changeCodes((prev) => [...prev, ...added]);
+      showToast.success(
+        added.length ? "Codes suggested" : "Already listed",
+        added.length ? `${added.length} code${added.length === 1 ? "" : "s"} added — review before saving.` : "Every suggested code is already in the list."
+      );
+    } catch (err: any) {
+      showToast.error("Lookup failed", err?.message || "Could not fetch code suggestions");
+    } finally {
+      setIsSuggestingCodes(false);
+    }
+  };
+
   // ── Submit ────────────────────────────────────────────────────────────────
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Imported row: only slug and status are sent. Re-sending the content
-    // (even unchanged) risks editor normalisation drifting it from what the
-    // importer wrote, which the next import would read as a change.
+    // Imported row: only slug, status and (when the admin touched them) the
+    // ICD-10 codes are sent. Re-sending the rest of the content (even
+    // unchanged) risks editor normalisation drifting it from what the
+    // importer wrote, which the next import would read as a change. The
+    // backend merges content keys, so sending codes alone leaves tabs,
+    // synonyms and related untouched.
     if (isImported) {
       const nextErrors: Record<string, string> = {};
       if (!slug.trim()) nextErrors.slug = "Slug is required";
@@ -314,7 +370,14 @@ const MedicalLibraryForm: React.FC<MedicalLibraryFormProps> = ({ initialData, on
         return;
       }
       setIsSubmitting(true);
-      onSave({ slug: slug.trim(), status }, (apiErrorMessage?: string) => {
+      const payload: any = { slug: slug.trim(), status };
+      if (codesTouched) {
+        payload.content =
+          codesMode === "curated"
+            ? { codes: cleanCodes(codes), codesCurated: true, codesFromImport }
+            : { codes: cleanCodes(codesFromImport), codesCurated: false, codesFromImport: null };
+      }
+      onSave(payload, (apiErrorMessage?: string) => {
         setIsSubmitting(false);
         if (apiErrorMessage) applyApiError(apiErrorMessage);
       });
@@ -331,6 +394,8 @@ const MedicalLibraryForm: React.FC<MedicalLibraryFormProps> = ({ initialData, on
     if (!slug.trim()) nextErrors.slug = "Slug is required";
     if (!category.trim()) nextErrors.category = "Category is required";
     if (!description.trim()) nextErrors.description = "Description is required";
+    const badCode = codes.find((c) => c.code.trim() && !ICD10_CODE_PATTERN.test(c.code.trim().toUpperCase()));
+    if (badCode) nextErrors.codes = `"${badCode.code}" is not a valid ICD-10-CM code (expected a form like F41.1 or J45.909)`;
     tabs.forEach((tab, i) => {
       if (!tab.tabName.trim()) nextErrors[`tab-${i}-name`] = "Tab name is required";
       if (!tab.sections.some((s) => s.html.trim())) {
@@ -352,7 +417,7 @@ const MedicalLibraryForm: React.FC<MedicalLibraryFormProps> = ({ initialData, on
       category: category.trim(),
       description: description.trim(),
       status: status,
-      content: { tabs },
+      content: { tabs, codes: cleanCodes(codes) },
     };
 
     onSave(payload, (apiErrorMessage?: string) => {
@@ -515,6 +580,96 @@ const MedicalLibraryForm: React.FC<MedicalLibraryFormProps> = ({ initialData, on
                 }`}
               />
               {errors.description && <p className="text-xs text-red-500 mt-1.5 ml-1">{errors.description}</p>}
+            </div>
+
+            {/* ICD-10-CM codes — editable for every topic. On imported topics an
+                edit switches the list to "curated" and the importer stops touching it. */}
+            <div className="md:col-span-2" data-field-error={errors.codes ? true : undefined}>
+                <div className="flex flex-wrap items-center justify-between gap-2 mb-1.5">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    ICD-10-CM codes <span className="text-xs font-normal text-gray-400">(optional)</span>
+                    {isImported && (
+                      <span
+                        className={`ml-2 align-middle rounded-md border px-2 py-0.5 text-[11px] font-medium ${
+                          codesMode === "curated"
+                            ? "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300"
+                            : "border-teal-200 bg-teal-50 text-teal-700 dark:border-teal-500/20 dark:bg-teal-500/10 dark:text-teal-400"
+                        }`}
+                        title={
+                          codesMode === "curated"
+                            ? "An admin edited these codes; the import will not change them."
+                            : "These codes come from the import and may change when the source changes."
+                        }
+                      >
+                        {codesMode === "curated" ? "Curated by admin — import won't change these" : `From ${getSourceLabel(initialData?.source)} import`}
+                      </span>
+                    )}
+                  </label>
+                  <div className="flex items-center gap-2">
+                    {isImported && codesMode === "curated" && (
+                      <button
+                        type="button"
+                        onClick={resetCodesToImport}
+                        className="px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700"
+                        title="Discard the edits and let the import manage these codes again"
+                      >
+                        Reset to import suggestions
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={handleSuggestCodes}
+                      disabled={isSuggestingCodes || !title.trim()}
+                      title={!title.trim() ? "Enter a title first" : "Look up codes for this title"}
+                      className="px-3 py-1.5 text-xs font-medium rounded-lg border border-teal-300 text-teal-800 bg-teal-50 hover:bg-teal-100 disabled:opacity-50 disabled:cursor-not-allowed dark:border-teal-500/30 dark:bg-teal-500/10 dark:text-teal-300"
+                    >
+                      {isSuggestingCodes ? "Looking up…" : "Suggest codes for this title"}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Picked codes: code and official name come from the NLM list and are not typed. */}
+                {codes.length > 0 && (
+                  <ul className="mb-2 space-y-1.5">
+                    {codes.map((c, i) => (
+                      <li
+                        key={`${c.code}-${i}`}
+                        className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 dark:border-gray-700 dark:bg-gray-800/40"
+                      >
+                        <code className="font-mono text-sm font-semibold text-gray-900 dark:text-white">{c.code}</code>
+                        <span className="min-w-0 flex-1 truncate text-sm text-gray-700 dark:text-gray-300" title={c.name}>
+                          {c.name || <span className="italic text-gray-400">name unknown</span>}
+                        </span>
+                        <label className="flex items-center gap-1.5 text-xs text-gray-600 dark:text-gray-300 whitespace-nowrap">
+                          <input type="checkbox" checked={c.primary} onChange={(e) => updateCode(i, { primary: e.target.checked })} />
+                          Primary
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => changeCodes((prev) => prev.filter((_, j) => j !== i))}
+                          className="p-1 text-gray-400 hover:text-red-500 rounded-md hover:bg-red-50 dark:hover:bg-red-900/20"
+                          title="Remove code"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+
+                <Icd10CodePicker
+                  excludeCodes={codes.map((c) => c.code)}
+                  onPick={(hit) =>
+                    changeCodes((prev) => [...prev, { system: "ICD-10-CM", code: hit.code, name: hit.name, primary: prev.length === 0 }])
+                  }
+                />
+                <p className="mt-1.5 ml-1 text-xs text-gray-400">
+                  Search the official ICD-10-CM list by code or condition name and pick from the dropdown. Primary = the
+                  condition itself; unchecked = a related code. Shown on the public page as reference only, not billing guidance.
+                </p>
+                {errors.codes && <p className="text-xs text-red-500 mt-1.5 ml-1">{errors.codes}</p>}
             </div>
           </div>
 
