@@ -477,6 +477,10 @@ export default function InsuranceTab() {
                   <tr className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
                     <th className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 whitespace-nowrap">Partner</th>
                     <th className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 whitespace-nowrap">Insurance Type</th>
+                    <th className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 whitespace-nowrap">First Name</th>
+                    <th className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 whitespace-nowrap">Last Name</th>
+                    <th className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 whitespace-nowrap">Occupation</th>
+                    <th className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 whitespace-nowrap">Email</th>
                     <th className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 whitespace-nowrap">User</th>
                     <th className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 whitespace-nowrap">IP Address</th>
                     <th className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 whitespace-nowrap">Redirected At</th>
@@ -485,7 +489,7 @@ export default function InsuranceTab() {
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
                   {redirectsData?.records.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="px-4 py-10 text-center text-gray-500 dark:text-gray-400">
+                      <td colSpan={9} className="px-4 py-10 text-center text-gray-500 dark:text-gray-400">
                         No redirect records found for the selected filters.
                       </td>
                     </tr>
@@ -500,6 +504,18 @@ export default function InsuranceTab() {
                         </td>
                         <td className="px-4 py-3 text-gray-700 dark:text-gray-300 whitespace-nowrap">
                           {formatEnumLabel(record.insuranceType)}
+                        </td>
+                        <td className="px-4 py-3 text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                          {formatNullable(record.firstName)}
+                        </td>
+                        <td className="px-4 py-3 text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                          {formatNullable(record.lastName)}
+                        </td>
+                        <td className="px-4 py-3 text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                          {formatNullable(record.occupation)}
+                        </td>
+                        <td className="px-4 py-3 text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                          {formatNullable(record.email)}
                         </td>
                         <td className="px-4 py-3 text-gray-700 dark:text-gray-300 text-xs whitespace-nowrap">
                           {formatUserLabel(record.user)}
