@@ -29,6 +29,7 @@ export interface IngestRawFields {
   details: string | null;
   description: string | null;
   contact: string | null;
+  listingType?: string | null;
 }
 
 /** A loose input row as uploaded or pasted — keys may use snake_case aliases. */
@@ -41,6 +42,7 @@ export interface IngestInputRow {
   details?: string;
   description?: string;
   contact?: string;
+  listingType?: string;
   [snakeOrOtherKey: string]: unknown;
 }
 
