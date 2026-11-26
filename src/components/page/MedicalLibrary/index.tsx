@@ -7,7 +7,12 @@ import { BoltIcon } from "@/icons";
 import FullScreenSpinner from "../../ui/FullScreenSpinner";
 import ConfirmationDialog from "@/components/ui/ConfirmationDialog";
 import { useMedicalLibraryLogic } from "@/services/hooks/useMedicalLibraryLogic";
-import { MedicalLibraryHeader, MedicalLibraryTable, MedicalLibraryTablePagination } from "./components";
+import {
+  MedicalLibraryHeader,
+  MedicalLibraryTable,
+  MedicalLibraryTablePagination,
+  MedicalLibraryBulkBar,
+} from "./components";
 
 const MedicalLibraryPage: React.FC<{ className?: string }> = ({ className = "" }) => {
   const router = useRouter();
@@ -24,12 +29,22 @@ const MedicalLibraryPage: React.FC<{ className?: string }> = ({ className = "" }
     isCreating,
     isUpdating,
     isDeleting,
+    isBulkUpdating,
     tableColumns,
     itemsPerPageOptions,
+    categoryOptions,
+    statusOptions,
+    sourceOptions,
     filterChange,
     initPageChange,
     handleDelete,
     confirmation,
+    selectedIds,
+    allOnPageSelected,
+    toggleSelect,
+    toggleSelectAllOnPage,
+    clearSelection,
+    handleBulkStatus,
   } = useMedicalLibraryLogic();
 
   useEffect(() => {
@@ -60,7 +75,7 @@ const MedicalLibraryPage: React.FC<{ className?: string }> = ({ className = "" }
     );
   }
 
-  const isMutating = isCreating || isUpdating || isDeleting;
+  const isMutating = isCreating || isUpdating || isDeleting || isBulkUpdating;
 
   return (
     <>
@@ -75,6 +90,18 @@ const MedicalLibraryPage: React.FC<{ className?: string }> = ({ className = "" }
           setSearchInput={setSearchInput}
           onRefetch={refetch}
           onAddNew={() => router.push("/admin/medical-library/add-new")}
+          filters={filters}
+          onFilterChange={filterChange}
+          categoryOptions={categoryOptions}
+          statusOptions={statusOptions}
+          sourceOptions={sourceOptions}
+        />
+
+        <MedicalLibraryBulkBar
+          selectedCount={selectedIds.length}
+          isBusy={isMutating}
+          onClearSelection={clearSelection}
+          onBulkStatus={handleBulkStatus}
         />
 
         <MedicalLibraryTable
@@ -83,6 +110,10 @@ const MedicalLibraryPage: React.FC<{ className?: string }> = ({ className = "" }
           tableColumns={tableColumns}
           onEditTopic={(topic) => router.push(`/admin/medical-library/edit/${topic.id}`)}
           onDeleteTopic={handleDelete}
+          selectedIds={selectedIds}
+          allOnPageSelected={allOnPageSelected}
+          onToggleSelect={toggleSelect}
+          onToggleSelectAllOnPage={toggleSelectAllOnPage}
         />
 
         <MedicalLibraryTablePagination
@@ -96,7 +127,15 @@ const MedicalLibraryPage: React.FC<{ className?: string }> = ({ className = "" }
 
       <FullScreenSpinner
         isVisible={isMutating}
-        message={isDeleting ? "Deleting topic..." : isUpdating ? "Updating topic..." : "Creating topic..."}
+        message={
+          isBulkUpdating
+            ? "Updating topics..."
+            : isDeleting
+              ? "Deleting topic..."
+              : isUpdating
+                ? "Updating topic..."
+                : "Creating topic..."
+        }
       />
 
       <ConfirmationDialog
