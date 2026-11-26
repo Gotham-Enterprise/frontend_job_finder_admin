@@ -39,7 +39,7 @@ type NavItem = {
     new?: boolean;
     requiredAction?: "view" | "add" | "edit" | "delete";
     /** Drives a pending-count badge on this submenu item */
-    badgeType?: "supervisors";
+    badgeType?: "supervisors" | "preceptors";
   }[];
   permissionKey?:
     | "jobSeekers"
@@ -102,6 +102,8 @@ const navItems: NavItem[] = [
     subItems: [
       { name: "Supervisor", path: "/admin/supervisors", badgeType: "supervisors" },
       { name: "Supervisee", path: "/admin/supervisees" },
+      { name: "Preceptor", path: "/admin/preceptors", badgeType: "preceptors" },
+      { name: "Preceptee", path: "/admin/preceptees" },
       { name: "Reviews", path: "/admin/supervision-reviews" },
     ],
   },
@@ -279,9 +281,11 @@ const AppSidebar: React.FC = () => {
   }
 
   let pendingSupervisorCount = 0;
+  let pendingPreceptorCount = 0;
   try {
     const supervisorContext = usePendingSupervisorContext();
     pendingSupervisorCount = supervisorContext.pendingCount;
+    pendingPreceptorCount = supervisorContext.pendingPreceptorCount;
   } catch (error) {
     console.debug("[Sidebar] PendingSupervisorContext not available");
   }
@@ -465,27 +469,37 @@ const AppSidebar: React.FC = () => {
                       // If we don't have permissions or are loading, don't show submenu items
                       return false;
                     })
-                    .map((subItem) => (
+                    .map((subItem) => {
+                      // Pending-verification badges: Supervisor (non-preceptors) and Preceptor.
+                      const pendingBadgeCount =
+                        subItem.badgeType === "supervisors"
+                          ? pendingSupervisorCount
+                          : subItem.badgeType === "preceptors"
+                            ? pendingPreceptorCount
+                            : 0;
+                      const pendingBadgeNoun =
+                        subItem.badgeType === "preceptors" ? "preceptor" : "supervisor";
+                      return (
                       <li key={subItem.name}>
                         <Link
                           href={subItem.path}
                           className={`menu-dropdown-item ${
                             isActive(subItem.path) ? "menu-dropdown-item-active" : "menu-dropdown-item-inactive"
                           } ${
-                            subItem.badgeType === "supervisors" && pendingSupervisorCount > 0
+                            pendingBadgeCount > 0
                               ? "!text-[#006D36] !font-semibold"
                               : ""
                           }`}
                         >
                           {subItem.name}
                           <span className="flex items-center gap-1 ml-auto">
-                            {subItem.badgeType === "supervisors" && pendingSupervisorCount > 0 && (
+                            {pendingBadgeCount > 0 && (
                               <span className="relative group/badge">
                                 <span className="bg-[#006D36] text-white text-xs font-bold rounded-full px-2 py-0.5 min-w-[24px] text-center cursor-default">
-                                  {pendingSupervisorCount > 9 ? "9+" : pendingSupervisorCount}
+                                  {pendingBadgeCount > 9 ? "9+" : pendingBadgeCount}
                                 </span>
                                 <span className="pointer-events-none absolute right-full top-1/2 -translate-y-1/2 mr-2 hidden group-hover/badge:block bg-gray-800 text-white text-xs rounded px-2 py-1 whitespace-nowrap z-50 shadow-lg">
-                                  {pendingSupervisorCount} pending supervisor{pendingSupervisorCount !== 1 ? "s" : ""}
+                                  {pendingBadgeCount} pending {pendingBadgeNoun}{pendingBadgeCount !== 1 ? "s" : ""}
                                 </span>
                               </span>
                             )}
@@ -510,7 +524,8 @@ const AppSidebar: React.FC = () => {
                           </span>
                         </Link>
                       </li>
-                    ))}
+                      );
+                    })}
                 </ul>
               </div>
             )}
@@ -558,7 +573,7 @@ const AppSidebar: React.FC = () => {
     });
 
     if (!submenuMatched) {
-      if (pendingSupervisorCount > 0) {
+      if (pendingSupervisorCount > 0 || pendingPreceptorCount > 0) {
         const supervisorMenuIndex = navItems.findIndex((item) => item.name === "Find A Supervisor");
         if (supervisorMenuIndex >= 0 && isItemAccessible(navItems[supervisorMenuIndex])) {
           setOpenSubmenu({ type: "main", index: supervisorMenuIndex });
@@ -567,7 +582,7 @@ const AppSidebar: React.FC = () => {
       }
       setOpenSubmenu(null);
     }
-  }, [pathname, isActive, permissions, pendingSupervisorCount]);
+  }, [pathname, isActive, permissions, pendingSupervisorCount, pendingPreceptorCount]);
 
   useEffect(() => {
     if (openSubmenu === null || showSidebarSkeleton) return;

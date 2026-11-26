@@ -40,11 +40,15 @@ export interface Supervisee {
 
 export type SuperviseeSortBy = "fullName" | "state" | "hideProfile" | "createdAt";
 
+/** "preceptee" = students whose need is a Preceptor; "supervisee" = everyone else. */
+export type SuperviseeNeedType = "preceptee" | "supervisee";
+
 export interface SuperviseeFilters {
   page?: number;
   limit?: number;
   keyword?: string;
   emailVerified?: EmailVerifiedFilter;
+  needType?: SuperviseeNeedType;
   sortBy?: SuperviseeSortBy;
   sortOrder?: "asc" | "desc";
 }

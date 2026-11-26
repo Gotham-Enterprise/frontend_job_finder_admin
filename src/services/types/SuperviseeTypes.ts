@@ -1,10 +1,21 @@
 import { SuperviseeFilters, SuperviseesResponse } from "@/services/types/supervisee";
 
+/** Which list the page shows — Preceptees (students) have their own page. */
+export type SuperviseeListVariant = "supervisees" | "preceptees";
+
+export interface SuperviseeListLabels {
+  plural: string;
+  singular: string;
+  pluralLower: string;
+}
+
 export interface SuperviseesProps {
   className?: string;
+  variant?: SuperviseeListVariant;
 }
 
 export interface SuperviseeHeaderProps {
+  labels?: SuperviseeListLabels;
   totalCount: number;
   isPending: boolean;
   searchInput: string;
@@ -23,6 +34,7 @@ export interface SuperviseeFiltersProps {
 }
 
 export interface SuperviseeTableProps {
+  labels?: SuperviseeListLabels;
   data: SuperviseesResponse | undefined;
   isLoading: boolean;
   tableColumns: Array<{ key: string; label: string; className?: string; sortKey?: string }>;

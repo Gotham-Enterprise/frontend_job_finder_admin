@@ -17,10 +17,45 @@ import {
 } from "@/services/types/supervisor";
 import { parseEmailVerifiedFilter } from "@/services/types/emailVerifiedFilter";
 import { useSupervisorTypesData } from "./useSupervisees";
+import { SupervisorListVariant } from "@/services/types/SupervisorTypes";
 
-export const useSupervisorLogic = () => {
+const PRECEPTOR_TYPE_NAME = "Preceptor";
+
+/** Per-page config: route, storage keys and the fixed filter sent to the API. */
+export const SUPERVISOR_LIST_VARIANTS: Record<
+  SupervisorListVariant,
+  {
+    basePath: string;
+    storagePrefix: string;
+    labels: { plural: string; singular: string; pluralLower: string };
+    /** Sent with every request, never shown in the UI. */
+    fixedFilters: Pick<SupervisorFilters, "supervisorType" | "excludeSupervisorType">;
+  }
+> = {
+  supervisors: {
+    basePath: "/admin/supervisors",
+    storagePrefix: "supervisor",
+    labels: { plural: "Supervisors", singular: "supervisor", pluralLower: "supervisors" },
+    fixedFilters: { excludeSupervisorType: PRECEPTOR_TYPE_NAME },
+  },
+  preceptors: {
+    basePath: "/admin/preceptors",
+    storagePrefix: "preceptor",
+    labels: { plural: "Preceptors", singular: "preceptor", pluralLower: "preceptors" },
+    fixedFilters: { supervisorType: PRECEPTOR_TYPE_NAME },
+  },
+};
+
+export const useSupervisorLogic = (variant: SupervisorListVariant = "supervisors") => {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const config = SUPERVISOR_LIST_VARIANTS[variant];
+  const { basePath } = config;
+  const isPreceptors = variant === "preceptors";
+  const stateKey = `${config.storagePrefix}-search-state`;
+  const scrollKey = `${config.storagePrefix}-scroll-position`;
+  const preserveKey = `${config.storagePrefix}-preserve-state`;
+  const selectedKey = `${config.storagePrefix}-selected-item`;
 
   const getInitialFilters = (): SupervisorFilters => {
     const hasUrlParams = Array.from(searchParams.keys()).length > 0;
@@ -28,7 +63,7 @@ export const useSupervisorLogic = () => {
     if (hasUrlParams) {
       const keyword = searchParams.get("keyword") || "";
       const statusParam = searchParams.get("verificationStatus");
-      const typeParam = searchParams.get("supervisorType");
+      const typeParam = isPreceptors ? null : searchParams.get("supervisorType");
       const subscriptionParam = searchParams.get("subscriptionType");
       const validSubscription =
         subscriptionParam && ["PAID", "FREE"].includes(subscriptionParam)
@@ -61,20 +96,20 @@ export const useSupervisorLogic = () => {
         !Object.values(dateParams).some(Boolean);
 
       if (isSimpleNavigation && typeof window !== "undefined") {
-        localStorage.removeItem("supervisor-search-state");
-        localStorage.removeItem("supervisor-scroll-position");
+        localStorage.removeItem(stateKey);
+        localStorage.removeItem(scrollKey);
       }
 
       return urlFilters;
     }
 
     if (typeof window !== "undefined") {
-      const navigationFlag = sessionStorage.getItem("supervisor-preserve-state");
+      const navigationFlag = sessionStorage.getItem(preserveKey);
 
       if (navigationFlag === "true") {
-        sessionStorage.removeItem("supervisor-preserve-state");
+        sessionStorage.removeItem(preserveKey);
 
-        const savedState = localStorage.getItem("supervisor-search-state");
+        const savedState = localStorage.getItem(stateKey);
         if (savedState) {
           try {
             const parsed = JSON.parse(savedState);
@@ -97,8 +132,8 @@ export const useSupervisorLogic = () => {
           }
         }
       } else {
-        localStorage.removeItem("supervisor-search-state");
-        localStorage.removeItem("supervisor-scroll-position");
+        localStorage.removeItem(stateKey);
+        localStorage.removeItem(scrollKey);
       }
     }
 
@@ -188,15 +223,15 @@ export const useSupervisorLogic = () => {
     const currentURL = window.location.search;
 
     if (newURL !== currentURL) {
-      router.replace(`/admin/supervisors${newURL}`, { scroll: false });
+      router.replace(`${basePath}${newURL}`, { scroll: false });
     }
-  }, [filters, router]);
+  }, [filters, router, basePath]);
 
   // Restore scroll on back navigation
   useEffect(() => {
     const hasUrlParams = Array.from(searchParams.keys()).length > 0;
     if (!hasUrlParams && typeof window !== "undefined") {
-      const savedPosition = localStorage.getItem("supervisor-scroll-position");
+      const savedPosition = localStorage.getItem(scrollKey);
       if (savedPosition) {
         const position = parseInt(savedPosition, 10);
         setTimeout(() => window.scrollTo({ top: position, behavior: "smooth" }), 100);
@@ -206,14 +241,14 @@ export const useSupervisorLogic = () => {
 
   const saveScrollPosition = useCallback(() => {
     if (typeof window !== "undefined") {
-      localStorage.setItem("supervisor-scroll-position", window.scrollY.toString());
+      localStorage.setItem(scrollKey, window.scrollY.toString());
     }
-  }, []);
+  }, [scrollKey]);
 
   const saveSearchState = useCallback(() => {
     if (typeof window !== "undefined") {
       localStorage.setItem(
-        "supervisor-search-state",
+        stateKey,
         JSON.stringify({
           page: filters.page,
           limit: filters.limit,
@@ -228,9 +263,14 @@ export const useSupervisorLogic = () => {
         })
       );
     }
-  }, [filters]);
+  }, [filters, stateKey]);
 
-  const { data, isLoading, error, refetch } = useSupervisors(filters);
+  // The page's fixed scope is applied on top of whatever the user filtered.
+  const requestFilters = useMemo(
+    () => ({ ...filters, ...config.fixedFilters }),
+    [filters, config.fixedFilters]
+  );
+  const { data, isLoading, error, refetch } = useSupervisors(requestFilters);
 
   const tableColumns = useMemo(
     () => [
@@ -282,8 +322,12 @@ export const useSupervisorLogic = () => {
   // Primary-type filter options from the seeded hierarchy (Medical Director,
   // Supervising Physician, ...).
   const { data: supervisorTypesData = [] } = useSupervisorTypesData();
+  // Preceptors have their own page, so the Supervisors type filter leaves them out.
   const typeOptions = useMemo(
-    () => supervisorTypesData.map((t) => ({ value: t.name, label: t.name })),
+    () =>
+      supervisorTypesData
+        .filter((t) => t.name !== PRECEPTOR_TYPE_NAME)
+        .map((t) => ({ value: t.name, label: t.name })),
     [supervisorTypesData]
   );
 
@@ -317,13 +361,13 @@ export const useSupervisorLogic = () => {
       saveSearchState();
 
       if (typeof window !== "undefined") {
-        sessionStorage.setItem("supervisor-preserve-state", "true");
-        sessionStorage.setItem("supervisor-selected-item", supervisorId);
+        sessionStorage.setItem(preserveKey, "true");
+        sessionStorage.setItem(selectedKey, supervisorId);
       }
 
-      router.push(`/admin/supervisors/details/${supervisorId}`);
+      router.push(`${basePath}/details/${supervisorId}`);
     },
-    [router, saveScrollPosition, saveSearchState]
+    [router, saveScrollPosition, saveSearchState, basePath, preserveKey, selectedKey]
   );
 
   const openEditModal = useCallback((supervisorId: string, fullName: string) => {
@@ -433,10 +477,10 @@ export const useSupervisorLogic = () => {
     });
     setSearchInput("");
     if (typeof window !== "undefined") {
-      localStorage.removeItem("supervisor-scroll-position");
-      localStorage.removeItem("supervisor-search-state");
+      localStorage.removeItem(scrollKey);
+      localStorage.removeItem(stateKey);
     }
-  }, []);
+  }, [scrollKey, stateKey]);
 
   const clearIndividualFilter = useCallback(
     (filterType: string) => {
@@ -498,6 +542,11 @@ export const useSupervisorLogic = () => {
   }, [searchInput, isInitialized, filters.keyword, hasRestoredFromState, initialFilters.keyword]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return {
+    variant,
+    labels: config.labels,
+    basePath,
+    showTypeFilter: !isPreceptors,
+
     filters,
     searchInput,
     setSearchInput,

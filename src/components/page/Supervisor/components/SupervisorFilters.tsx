@@ -15,6 +15,7 @@ const SUBSCRIPTION_DATE_RANGES: Array<{
 ];
 
 const SupervisorFilters: React.FC<SupervisorFiltersProps> = ({
+  showTypeFilter = true,
   filters,
   onFilterChange,
   statusOptions,
@@ -56,6 +57,7 @@ const SupervisorFilters: React.FC<SupervisorFiltersProps> = ({
         </button>
       )}
 
+      {showTypeFilter && (
       <div>
         <Label>Supervisor Type</Label>
         <select
@@ -71,8 +73,9 @@ const SupervisorFilters: React.FC<SupervisorFiltersProps> = ({
           ))}
         </select>
       </div>
+      )}
 
-      {filters.supervisorType && (
+      {showTypeFilter && filters.supervisorType && (
         <button
           type="button"
           onClick={() => clearIndividualFilter("supervisorType")}

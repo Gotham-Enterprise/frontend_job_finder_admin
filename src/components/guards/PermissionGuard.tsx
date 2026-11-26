@@ -92,7 +92,12 @@ const getPermissionForPath = (
   }
 
   // Supervisors / supervisees are always accessible (no backend RBAC module yet for Find Supervisor)
-  if (pathname.startsWith("/admin/supervisors") || pathname.startsWith("/admin/supervisees")) {
+  if (
+    pathname.startsWith("/admin/supervisors") ||
+    pathname.startsWith("/admin/supervisees") ||
+    pathname.startsWith("/admin/preceptors") ||
+    pathname.startsWith("/admin/preceptees")
+  ) {
     return null;
   }
 

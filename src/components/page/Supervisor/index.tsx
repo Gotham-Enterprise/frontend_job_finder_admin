@@ -18,14 +18,11 @@ import {
   HideProfileModal,
 } from "./components";
 
-const Supervisors: React.FC<SupervisorsProps> = ({ className = "" }) => {
-  usePreservedNavigation({
-    statePath: "supervisor-search-state",
-    scrollPath: "supervisor-scroll-position",
-    listPagePath: "/admin/supervisors",
-  });
-
+const Supervisors: React.FC<SupervisorsProps> = ({ className = "", variant = "supervisors" }) => {
   const {
+    labels,
+    basePath,
+    showTypeFilter,
     filters,
     searchInput,
     setSearchInput,
@@ -89,13 +86,19 @@ const Supervisors: React.FC<SupervisorsProps> = ({ className = "" }) => {
     openHideProfileModal,
     closeHideProfileModal,
     confirmHideProfile,
-  } = useSupervisorLogic();
+  } = useSupervisorLogic(variant);
+
+  usePreservedNavigation({
+    statePath: `${variant === "preceptors" ? "preceptor" : "supervisor"}-search-state`,
+    scrollPath: `${variant === "preceptors" ? "preceptor" : "supervisor"}-scroll-position`,
+    listPagePath: basePath,
+  });
 
   if (error && !isPending) {
     return (
       <ErrorState
         className={className}
-        message={`Error loading supervisors: ${error.message}`}
+        message={`Error loading ${labels.pluralLower}: ${error.message}`}
         onRetry={() => refetch()}
         retryIcon={<BoltIcon />}
       />
@@ -108,6 +111,7 @@ const Supervisors: React.FC<SupervisorsProps> = ({ className = "" }) => {
         className={`rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] ${className}`}
       >
         <SupervisorHeader
+          labels={labels}
           totalCount={data?.metaData?.totalCount || 0}
           isPending={isPending}
           isLoading={isLoading}
@@ -120,6 +124,7 @@ const Supervisors: React.FC<SupervisorsProps> = ({ className = "" }) => {
           hasActiveFilters={hasActiveFilters}
           filterDropdownContent={
             <SupervisorFilters
+              showTypeFilter={showTypeFilter}
               filters={filters}
               onFilterChange={filterChange}
               statusOptions={statusOptions}
@@ -132,6 +137,7 @@ const Supervisors: React.FC<SupervisorsProps> = ({ className = "" }) => {
         />
 
         <SupervisorTable
+          labels={labels}
           data={data}
           isLoading={isLoading}
           tableColumns={tableColumns}

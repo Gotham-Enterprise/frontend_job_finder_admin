@@ -21,6 +21,7 @@ export const superviseeApi = {
       if (filters.limit) queryParams.append("limit", filters.limit.toString());
       if (filters.keyword) queryParams.append("keyword", filters.keyword);
       if (filters.emailVerified) queryParams.append("emailVerified", filters.emailVerified);
+      if (filters.needType) queryParams.append("needType", filters.needType);
       if (filters.sortBy) queryParams.append("sortBy", filters.sortBy);
       if (filters.sortOrder) queryParams.append("sortOrder", filters.sortOrder);
 

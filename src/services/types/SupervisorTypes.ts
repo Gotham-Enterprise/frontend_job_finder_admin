@@ -1,10 +1,24 @@
 import { SupervisorFilters, SupervisorsResponse } from "@/services/types/supervisor";
 
+/** Which list the page shows — Preceptors have their own page (and sidebar entry). */
+export type SupervisorListVariant = "supervisors" | "preceptors";
+
+export interface SupervisorListLabels {
+  /** Plural heading, e.g. "Preceptors". */
+  plural: string;
+  /** Lower-case singular noun for copy, e.g. "preceptor". */
+  singular: string;
+  /** Lower-case plural noun for copy, e.g. "preceptors". */
+  pluralLower: string;
+}
+
 export interface SupervisorsProps {
   className?: string;
+  variant?: SupervisorListVariant;
 }
 
 export interface SupervisorHeaderProps {
+  labels?: SupervisorListLabels;
   totalCount: number;
   isPending: boolean;
   isLoading: boolean;
@@ -19,6 +33,8 @@ export interface SupervisorHeaderProps {
 }
 
 export interface SupervisorFiltersProps {
+  /** Hidden on the Preceptors page, which is locked to one type. */
+  showTypeFilter?: boolean;
   filters: SupervisorFilters;
   onFilterChange: (key: keyof SupervisorFilters, value: any) => void;
   statusOptions: Array<{ value: string; label: string }>;
@@ -29,6 +45,7 @@ export interface SupervisorFiltersProps {
 }
 
 export interface SupervisorTableProps {
+  labels?: SupervisorListLabels;
   data: SupervisorsResponse | undefined;
   isLoading: boolean;
   tableColumns: Array<{ key: string; label: string; className?: string; sortKey?: string }>;

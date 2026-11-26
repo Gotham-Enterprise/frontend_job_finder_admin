@@ -23,6 +23,7 @@ import { SuperviseeTableProps } from "@/services/types/SuperviseeTypes";
 const getSuperviseeId = (supervisee: Supervisee) => supervisee.id;
 
 const SuperviseeTable: React.FC<SuperviseeTableProps> = ({
+  labels = { plural: "Supervisees", singular: "supervisee", pluralLower: "supervisees" },
   data,
   isLoading,
   tableColumns,
@@ -56,7 +57,7 @@ const SuperviseeTable: React.FC<SuperviseeTableProps> = ({
     <>
       <BulkActionsBar
         selectedCount={selection.selectedIds.length}
-        itemNoun="supervisee"
+        itemNoun={labels.singular}
         actions={supervisionUserBulkActions(selection.selectedIdsWhere)}
         onClearSelection={selection.clear}
         onRefresh={() => onRefresh?.()}
@@ -78,7 +79,7 @@ const SuperviseeTable: React.FC<SuperviseeTableProps> = ({
                 >
                   <div className="flex items-center justify-center gap-2">
                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-brand-500" />
-                    Loading supervisees...
+                    Loading {labels.pluralLower}...
                   </div>
                 </TableCell>
               </TableRow>
@@ -89,7 +90,7 @@ const SuperviseeTable: React.FC<SuperviseeTableProps> = ({
                   className="py-12 text-center text-sm text-gray-500 dark:text-gray-400"
                 >
                   <div className="flex flex-col items-center gap-2">
-                    <span>No supervisees found</span>
+                    <span>No {labels.pluralLower} found</span>
                   </div>
                 </TableCell>
               </TableRow>

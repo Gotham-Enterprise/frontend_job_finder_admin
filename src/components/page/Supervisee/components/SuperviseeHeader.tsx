@@ -5,6 +5,7 @@ import { SearchIcon, FilterIcon } from "../../../ui/icons";
 import { SuperviseeHeaderProps } from "@/services/types/SuperviseeTypes";
 
 const SuperviseeHeader: React.FC<SuperviseeHeaderProps> = ({
+  labels = { plural: "Supervisees", singular: "supervisee", pluralLower: "supervisees" },
   totalCount,
   isPending,
   searchInput,
@@ -22,9 +23,9 @@ const SuperviseeHeader: React.FC<SuperviseeHeaderProps> = ({
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center justify-between w-full">
           <div>
-            <h3 className="text-xl font-semibold text-gray-800 dark:text-white">Supervisees</h3>
+            <h3 className="text-xl font-semibold text-gray-800 dark:text-white">{labels.plural}</h3>
             <p className="text-sm text-gray-500 mt-1 dark:text-gray-400">
-              {totalCount || 0} total supervisees
+              {totalCount || 0} total {labels.pluralLower}
               {isPending && <span className="ml-2 text-xs text-primary">Updating...</span>}
             </p>
           </div>

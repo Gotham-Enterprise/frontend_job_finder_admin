@@ -101,6 +101,8 @@ export interface SupervisorFilters {
   verificationStatus?: VerificationStatus | "";
   /** Filter by the supervisor's primary type (e.g. "Medical Director"). */
   supervisorType?: string;
+  /** Comma-separated primary types to leave out (the Supervisors page hides Preceptors). */
+  excludeSupervisorType?: string;
   subscriptionType?: SupervisorSubscriptionType | "";
   /** Inclusive YYYY-MM-DD bounds on the active subscription's currentPeriodStart / currentPeriodEnd. */
   subscriptionStartFrom?: string;

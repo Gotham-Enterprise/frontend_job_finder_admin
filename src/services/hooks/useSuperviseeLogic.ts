@@ -8,10 +8,41 @@ import {
 } from "@/services/hooks/useSupervisees";
 import { SuperviseeFilters, SuperviseeSortBy } from "@/services/types/supervisee";
 import { parseEmailVerifiedFilter } from "@/services/types/emailVerifiedFilter";
+import { SuperviseeListVariant } from "@/services/types/SuperviseeTypes";
 
-export const useSuperviseeLogic = () => {
+/** Per-page config: route, storage keys and the fixed `needType` sent to the API. */
+export const SUPERVISEE_LIST_VARIANTS: Record<
+  SuperviseeListVariant,
+  {
+    basePath: string;
+    storagePrefix: string;
+    labels: { plural: string; singular: string; pluralLower: string };
+    needType: NonNullable<SuperviseeFilters["needType"]>;
+  }
+> = {
+  supervisees: {
+    basePath: "/admin/supervisees",
+    storagePrefix: "supervisee",
+    labels: { plural: "Supervisees", singular: "supervisee", pluralLower: "supervisees" },
+    needType: "supervisee",
+  },
+  preceptees: {
+    basePath: "/admin/preceptees",
+    storagePrefix: "preceptee",
+    labels: { plural: "Preceptees", singular: "preceptee", pluralLower: "preceptees" },
+    needType: "preceptee",
+  },
+};
+
+export const useSuperviseeLogic = (variant: SuperviseeListVariant = "supervisees") => {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const config = SUPERVISEE_LIST_VARIANTS[variant];
+  const { basePath } = config;
+  const stateKey = `${config.storagePrefix}-search-state`;
+  const scrollKey = `${config.storagePrefix}-scroll-position`;
+  const preserveKey = `${config.storagePrefix}-preserve-state`;
+  const selectedKey = `${config.storagePrefix}-selected-item`;
 
   const getInitialFilters = (): SuperviseeFilters => {
     const hasUrlParams = Array.from(searchParams.keys()).length > 0;
@@ -31,20 +62,20 @@ export const useSuperviseeLogic = () => {
       const isSimpleNavigation = (!urlPage || urlPage === "1") && !keyword && !emailVerifiedParam;
 
       if (isSimpleNavigation && typeof window !== "undefined") {
-        localStorage.removeItem("supervisee-search-state");
-        localStorage.removeItem("supervisee-scroll-position");
+        localStorage.removeItem(stateKey);
+        localStorage.removeItem(scrollKey);
       }
 
       return urlFilters;
     }
 
     if (typeof window !== "undefined") {
-      const navigationFlag = sessionStorage.getItem("supervisee-preserve-state");
+      const navigationFlag = sessionStorage.getItem(preserveKey);
 
       if (navigationFlag === "true") {
-        sessionStorage.removeItem("supervisee-preserve-state");
+        sessionStorage.removeItem(preserveKey);
 
-        const savedState = localStorage.getItem("supervisee-search-state");
+        const savedState = localStorage.getItem(stateKey);
         if (savedState) {
           try {
             const parsed = JSON.parse(savedState);
@@ -61,8 +92,8 @@ export const useSuperviseeLogic = () => {
           }
         }
       } else {
-        localStorage.removeItem("supervisee-search-state");
-        localStorage.removeItem("supervisee-scroll-position");
+        localStorage.removeItem(stateKey);
+        localStorage.removeItem(scrollKey);
       }
     }
 
@@ -126,14 +157,14 @@ export const useSuperviseeLogic = () => {
     const currentURL = window.location.search;
 
     if (newURL !== currentURL) {
-      router.replace(`/admin/supervisees${newURL}`, { scroll: false });
+      router.replace(`${basePath}${newURL}`, { scroll: false });
     }
-  }, [filters, router]);
+  }, [filters, router, basePath]);
 
   useEffect(() => {
     const hasUrlParams = Array.from(searchParams.keys()).length > 0;
     if (!hasUrlParams && typeof window !== "undefined") {
-      const savedPosition = localStorage.getItem("supervisee-scroll-position");
+      const savedPosition = localStorage.getItem(scrollKey);
       if (savedPosition) {
         const position = parseInt(savedPosition, 10);
         setTimeout(() => window.scrollTo({ top: position, behavior: "smooth" }), 100);
@@ -143,14 +174,14 @@ export const useSuperviseeLogic = () => {
 
   const saveScrollPosition = useCallback(() => {
     if (typeof window !== "undefined") {
-      localStorage.setItem("supervisee-scroll-position", window.scrollY.toString());
+      localStorage.setItem(scrollKey, window.scrollY.toString());
     }
-  }, []);
+  }, [scrollKey]);
 
   const saveSearchState = useCallback(() => {
     if (typeof window !== "undefined") {
       localStorage.setItem(
-        "supervisee-search-state",
+        stateKey,
         JSON.stringify({
           page: filters.page,
           limit: filters.limit,
@@ -161,9 +192,14 @@ export const useSuperviseeLogic = () => {
         }),
       );
     }
-  }, [filters]);
+  }, [filters, stateKey]);
 
-  const { data, isLoading, error, refetch } = useSupervisees(filters);
+  // The page's fixed scope (students vs. everyone else) rides on every request.
+  const requestFilters = useMemo(
+    () => ({ ...filters, needType: config.needType }),
+    [filters, config.needType],
+  );
+  const { data, isLoading, error, refetch } = useSupervisees(requestFilters);
 
   const tableColumns = useMemo(
     () => [
@@ -222,13 +258,13 @@ export const useSuperviseeLogic = () => {
       saveSearchState();
 
       if (typeof window !== "undefined") {
-        sessionStorage.setItem("supervisee-preserve-state", "true");
-        sessionStorage.setItem("supervisee-selected-item", superviseeId);
+        sessionStorage.setItem(preserveKey, "true");
+        sessionStorage.setItem(selectedKey, superviseeId);
       }
 
-      router.push(`/admin/supervisees/details/${superviseeId}`);
+      router.push(`${basePath}/details/${superviseeId}`);
     },
-    [router, saveScrollPosition, saveSearchState],
+    [router, saveScrollPosition, saveSearchState, basePath, preserveKey, selectedKey],
   );
 
   const openEditModal = useCallback((superviseeId: string, fullName: string) => {
@@ -293,10 +329,10 @@ export const useSuperviseeLogic = () => {
     setFilters({ page: 1, limit: 10, keyword: "" });
     setSearchInput("");
     if (typeof window !== "undefined") {
-      localStorage.removeItem("supervisee-scroll-position");
-      localStorage.removeItem("supervisee-search-state");
+      localStorage.removeItem(scrollKey);
+      localStorage.removeItem(stateKey);
     }
-  }, []);
+  }, [scrollKey, stateKey]);
 
   const clearIndividualFilter = useCallback(
     (filterType: string) => {
@@ -333,6 +369,9 @@ export const useSuperviseeLogic = () => {
   }, [searchInput, isInitialized, filters.keyword, hasRestoredFromState, initialFilters.keyword]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return {
+    variant,
+    labels: config.labels,
+    basePath,
     filters,
     searchInput,
     setSearchInput,

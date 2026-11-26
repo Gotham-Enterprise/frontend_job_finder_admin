@@ -52,6 +52,7 @@ function renderRoleSubtext(values: Array<string | null | undefined>) {
 const getSupervisorId = (supervisor: Supervisor) => supervisor.id;
 
 const SupervisorTable: React.FC<SupervisorTableProps> = ({
+  labels = { plural: "Supervisors", singular: "supervisor", pluralLower: "supervisors" },
   data,
   isLoading,
   tableColumns,
@@ -87,7 +88,7 @@ const SupervisorTable: React.FC<SupervisorTableProps> = ({
     <>
       <BulkActionsBar
         selectedCount={selection.selectedIds.length}
-        itemNoun="supervisor"
+        itemNoun={labels.singular}
         actions={supervisionUserBulkActions(selection.selectedIdsWhere)}
         onClearSelection={selection.clear}
         onRefresh={() => onRefresh?.()}
@@ -109,7 +110,7 @@ const SupervisorTable: React.FC<SupervisorTableProps> = ({
                 >
                   <div className="flex items-center justify-center gap-2">
                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-brand-500" />
-                    Loading supervisors...
+                    Loading {labels.pluralLower}...
                   </div>
                 </TableCell>
               </TableRow>
@@ -133,7 +134,7 @@ const SupervisorTable: React.FC<SupervisorTableProps> = ({
                         d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"
                       />
                     </svg>
-                    <span>No supervisors found</span>
+                    <span>No {labels.pluralLower} found</span>
                   </div>
                 </TableCell>
               </TableRow>

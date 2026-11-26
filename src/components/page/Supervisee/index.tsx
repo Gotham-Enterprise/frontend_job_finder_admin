@@ -17,14 +17,10 @@ import {
   HideProfileModal,
 } from "./components";
 
-const Supervisees: React.FC<SuperviseesProps> = ({ className = "" }) => {
-  usePreservedNavigation({
-    statePath: "supervisee-search-state",
-    scrollPath: "supervisee-scroll-position",
-    listPagePath: "/admin/supervisees",
-  });
-
+const Supervisees: React.FC<SuperviseesProps> = ({ className = "", variant = "supervisees" }) => {
   const {
+    labels,
+    basePath,
     filters,
     searchInput,
     setSearchInput,
@@ -67,13 +63,19 @@ const Supervisees: React.FC<SuperviseesProps> = ({ className = "" }) => {
     openHideProfileModal,
     closeHideProfileModal,
     confirmHideProfile,
-  } = useSuperviseeLogic();
+  } = useSuperviseeLogic(variant);
+
+  usePreservedNavigation({
+    statePath: `${variant === "preceptees" ? "preceptee" : "supervisee"}-search-state`,
+    scrollPath: `${variant === "preceptees" ? "preceptee" : "supervisee"}-scroll-position`,
+    listPagePath: basePath,
+  });
 
   if (error && !isPending) {
     return (
       <ErrorState
         className={className}
-        message={`Error loading supervisees: ${error.message}`}
+        message={`Error loading ${labels.pluralLower}: ${error.message}`}
         onRetry={() => refetch()}
         retryIcon={<BoltIcon />}
       />
@@ -86,6 +88,7 @@ const Supervisees: React.FC<SuperviseesProps> = ({ className = "" }) => {
         className={`rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] ${className}`}
       >
         <SuperviseeHeader
+          labels={labels}
           totalCount={data?.metaData?.totalCount || 0}
           isPending={isPending}
           searchInput={searchInput}
@@ -104,6 +107,7 @@ const Supervisees: React.FC<SuperviseesProps> = ({ className = "" }) => {
         />
 
         <SuperviseeTable
+          labels={labels}
           data={data}
           isLoading={isLoading}
           tableColumns={tableColumns}
