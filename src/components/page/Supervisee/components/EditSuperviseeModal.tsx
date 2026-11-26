@@ -15,7 +15,10 @@ import { superviseeApi } from "@/services/api/supervisee";
 import { useCitiesByState } from "@/lib/useStatesCities";
 import {
   formDataToUpdatePayload,
+  isPrecepteeForm,
   mapSuperviseeDetailsToFormData,
+  PRECEPTEE_CLINICAL_HOURS_MAX,
+  PRECEPTEE_TEXT_MAX_LENGTH,
   SUPERVISEE_IDEAL_SUPERVISOR_MAX_LENGTH,
   validateSuperviseeEditForm,
   type SuperviseeEditFormData,
@@ -29,9 +32,11 @@ import {
 } from "@/services/hooks/useSupervisees";
 import {
   filterSuperviseeOccupationChoices,
+  getEligiblePreceptorOccupations,
   getEligibleSupervisorTypes,
   groupSuperviseeOccupationChoices,
   isMedicalDirectorType,
+  isPrecepteeOccupation,
   isSupervisorTypeEligibleForSupervisee,
   supervisionTypeDisplayLabel,
 } from "@/services/utils/superviseeEligibility";
@@ -82,6 +87,12 @@ const emptyForm = (): SuperviseeEditFormData => ({
   mdMonthlyBudget: "",
   mdIdealDescription: "",
   introduction: "",
+  schoolName: "",
+  degreeProgram: "",
+  expectedGraduation: "",
+  clinicalHoursRequired: "",
+  rotationStartDate: "",
+  rotationEndDate: "",
 });
 
 type SelectChoice = { label: string; value: string };
@@ -210,15 +221,28 @@ export const EditSuperviseeModal: React.FC<EditSuperviseeModalProps> = ({
     [supervisorTypesData, eligibilityOccupationName],
   );
 
+  // Students (preceptees) may only request preceptor occupations their
+  // discipline can rotate with (occupation matrix); the backend enforces the
+  // same rule on save.
+  const isPreceptee = isPrecepteeForm(formData);
+  const isStudentOccupation = isPrecepteeOccupation(eligibilityOccupationName);
+
   const supervisionOccupationChoices = useMemo(() => {
     if (!formData.typeOfSupervisorNeeded) return [];
     const selectedType = supervisorTypesData.find(
       (t) => t.name === formData.typeOfSupervisorNeeded,
     );
-    return choicesOnly(
-      selectedType?.occupations.map((o) => ({ label: o.name, value: o.name })) ?? [],
-    );
-  }, [formData.typeOfSupervisorNeeded, supervisorTypesData]);
+    const all = selectedType?.occupations.map((o) => ({ label: o.name, value: o.name })) ?? [];
+    if (isPreceptee) {
+      const allowed = new Set(
+        getEligiblePreceptorOccupations(eligibilityOccupationName).map((n) => n.toLowerCase()),
+      );
+      if (allowed.size > 0) {
+        return choicesOnly(all.filter((o) => allowed.has(o.value.toLowerCase())));
+      }
+    }
+    return choicesOnly(all);
+  }, [formData.typeOfSupervisorNeeded, supervisorTypesData, isPreceptee, eligibilityOccupationName]);
 
   const supervisionOccupationPlaceholder = useMemo(() => {
     if (!formData.typeOfSupervisorNeeded) return "Select a type of supervision first";
@@ -319,6 +343,8 @@ export const EditSuperviseeModal: React.FC<EditSuperviseeModalProps> = ({
       if (field === "typeOfSupervisorNeeded") {
         next.superviseeOccupation = "";
         next.superviseeSpecialty = "";
+        // A student may not combine the Preceptor need with a Medical Director.
+        if (isPrecepteeForm(next)) next.needsMedicalDirector = false;
       }
       if (field === "superviseeOccupation") next.superviseeSpecialty = "";
       if (field === "state") next.city = "";
@@ -338,6 +364,13 @@ export const EditSuperviseeModal: React.FC<EditSuperviseeModalProps> = ({
           next.superviseeOccupation = "";
           next.superviseeSpecialty = "";
         }
+      }
+      // Switching to a student occupation drops the MD checkbox (students may
+      // only request a Preceptor).
+      if (field === "occupation") {
+        const occupationName =
+          profileOccupationChoices.find((o) => o.value === next.occupation)?.label ?? "";
+        if (isPrecepteeOccupation(occupationName)) next.needsMedicalDirector = false;
       }
       return next;
     });
@@ -528,26 +561,106 @@ export const EditSuperviseeModal: React.FC<EditSuperviseeModalProps> = ({
                       placeholder={profileSpecialtyPlaceholder}
                     />
                   </FormField>
-                  <FormField label={CREDENTIAL_TITLE_LABEL} required error={fieldErrors.title}>
-                    <Input
-                      value={formData.title}
-                      onChange={(e) => updateField("title", e.target.value)}
-                      placeholder={CREDENTIAL_TITLE_PLACEHOLDER}
-                      error={!!fieldErrors.title}
-                    />
-                  </FormField>
-                  {/* State tied to the credential (e.g. "AMFT (TX)") — matches signup */}
-                  <FormField label="State of Licensure" required error={fieldErrors.licensureState}>
-                    <Select
-                      value={formData.licensureState}
-                      onChange={(v) => updateField("licensureState", v)}
-                      options={choicesOnly(stateOptions)}
-                      placeholder={statesLoading ? "Loading…" : "Select state"}
-                      disabled={statesLoading}
-                    />
-                  </FormField>
+                  {/* Students (Preceptor need) hold no credential yet — the program
+                      fields below take the place of title + state of licensure. */}
+                  {isPreceptee ? null : (
+                    <>
+                      <FormField label={CREDENTIAL_TITLE_LABEL} required error={fieldErrors.title}>
+                        <Input
+                          value={formData.title}
+                          onChange={(e) => updateField("title", e.target.value)}
+                          placeholder={CREDENTIAL_TITLE_PLACEHOLDER}
+                          error={!!fieldErrors.title}
+                        />
+                      </FormField>
+                      {/* State tied to the credential (e.g. "AMFT (TX)") — matches signup */}
+                      <FormField label="State of Licensure" required error={fieldErrors.licensureState}>
+                        <Select
+                          value={formData.licensureState}
+                          onChange={(v) => updateField("licensureState", v)}
+                          options={choicesOnly(stateOptions)}
+                          placeholder={statesLoading ? "Loading…" : "Select state"}
+                          disabled={statesLoading}
+                        />
+                      </FormField>
+                    </>
+                  )}
                 </div>
               </section>
+
+              {isPreceptee ? (
+                <section className="space-y-4">
+                  <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                    Program &amp; rotation (preceptee)
+                  </h3>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 -mt-2">
+                    The student&apos;s degree program and the clinical hours it requires.
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <FormField label="School" required error={fieldErrors.schoolName}>
+                      <Input
+                        value={formData.schoolName}
+                        onChange={(e) => updateField("schoolName", e.target.value)}
+                        placeholder="e.g. University of Texas at Austin"
+                        maxLength={PRECEPTEE_TEXT_MAX_LENGTH}
+                        error={!!fieldErrors.schoolName}
+                      />
+                    </FormField>
+                    <FormField label="Degree Program" required error={fieldErrors.degreeProgram}>
+                      <Input
+                        value={formData.degreeProgram}
+                        onChange={(e) => updateField("degreeProgram", e.target.value)}
+                        placeholder="e.g. MSN – Family Nurse Practitioner"
+                        maxLength={PRECEPTEE_TEXT_MAX_LENGTH}
+                        error={!!fieldErrors.degreeProgram}
+                      />
+                    </FormField>
+                    <FormField
+                      label="Expected Graduation"
+                      required
+                      error={fieldErrors.expectedGraduation}
+                    >
+                      <Input
+                        type="date"
+                        value={formData.expectedGraduation}
+                        onChange={(e) => updateField("expectedGraduation", e.target.value)}
+                        error={!!fieldErrors.expectedGraduation}
+                      />
+                    </FormField>
+                    <FormField
+                      label="Clinical Hours Required"
+                      required
+                      error={fieldErrors.clinicalHoursRequired}
+                    >
+                      <Input
+                        type="number"
+                        min={1}
+                        max={PRECEPTEE_CLINICAL_HOURS_MAX}
+                        value={formData.clinicalHoursRequired}
+                        onChange={(e) => updateField("clinicalHoursRequired", e.target.value)}
+                        error={!!fieldErrors.clinicalHoursRequired}
+                      />
+                    </FormField>
+                    <FormField label="Rotation Start Date" error={fieldErrors.rotationStartDate}>
+                      <Input
+                        type="date"
+                        value={formData.rotationStartDate}
+                        onChange={(e) => updateField("rotationStartDate", e.target.value)}
+                        error={!!fieldErrors.rotationStartDate}
+                      />
+                    </FormField>
+                    <FormField label="Rotation End Date" error={fieldErrors.rotationEndDate}>
+                      <Input
+                        type="date"
+                        value={formData.rotationEndDate}
+                        min={formData.rotationStartDate || undefined}
+                        onChange={(e) => updateField("rotationEndDate", e.target.value)}
+                        error={!!fieldErrors.rotationEndDate}
+                      />
+                    </FormField>
+                  </div>
+                </section>
+              ) : null}
 
               <section className="space-y-4">
                 <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
@@ -580,7 +693,7 @@ export const EditSuperviseeModal: React.FC<EditSuperviseeModalProps> = ({
                   {isMdOnly ? null : (
                     <>
                       <FormField
-                        label="Occupation"
+                        label={isPreceptee ? "Preceptor Occupation" : "Occupation"}
                         required={Boolean(formData.typeOfSupervisorNeeded)}
                         error={fieldErrors.superviseeOccupation}
                       >
@@ -603,7 +716,7 @@ export const EditSuperviseeModal: React.FC<EditSuperviseeModalProps> = ({
                   )}
                   <FormField
                     className="sm:col-span-2"
-                    label="States of Licensure"
+                    label={isPreceptee ? "Rotation State(s)" : "States of Licensure"}
                     required
                     error={fieldErrors.stateOfLicensure}
                   >
@@ -744,7 +857,9 @@ export const EditSuperviseeModal: React.FC<EditSuperviseeModalProps> = ({
               </section>
 
               {/* Medical director — own section; checking the box reveals the
-                  MD-specific required fields (md* columns) */}
+                  MD-specific required fields (md* columns). Students (preceptees)
+                  may only request a Preceptor, so the section is hidden for them. */}
+              {isPreceptee || isStudentOccupation ? null : (
               <section className="space-y-4">
                 <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
                   Medical director
@@ -870,6 +985,7 @@ export const EditSuperviseeModal: React.FC<EditSuperviseeModalProps> = ({
                   </div>
                 )}
               </section>
+              )}
             </div>
           )}
         </div>

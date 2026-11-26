@@ -103,6 +103,14 @@ export interface SuperviseeProfile {
   mdIdealDescription?: string | null;
   /** Optional self introduction (separate from idealSupervisor) */
   introduction?: string | null;
+  /** Preceptee (student) details — set only when typeOfSupervisorNeeded includes
+   *  "Preceptor"; students hold no license, so title/licensureState stay null. */
+  schoolName?: string | null;
+  degreeProgram?: string | null;
+  expectedGraduation?: string | null;
+  clinicalHoursRequired?: number | null;
+  rotationStartDate?: string | null;
+  rotationEndDate?: string | null;
   completedCount: number;
   leftCount: number;
   createdAt: string;
@@ -192,6 +200,13 @@ export interface SuperviseeUpdatePayload {
   mdMonthlyBudget?: number;
   mdIdealDescription?: string;
   introduction?: string;
+  /** Preceptee (student) details — only accepted alongside a "Preceptor" need. */
+  schoolName?: string;
+  degreeProgram?: string;
+  expectedGraduation?: string;
+  clinicalHoursRequired?: number;
+  rotationStartDate?: string;
+  rotationEndDate?: string;
   uploadProfilePhoto?: File;
 }
 

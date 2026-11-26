@@ -22,7 +22,11 @@ export const PROFESSIONAL_CREDENTIALS_PATTERN = /^[A-Za-z0-9 .,()-]*$/;
 export const PROFESSIONAL_CREDENTIALS_HELPER_TEXT =
   "Enter degrees, licenses, and certifications that appear after your name. Example: Ph.D., NCC, LPC-S (AL), LPC (MI)";
 
-/** Supervisor types that do not use the certifications field. */
+/**
+ * Physician supervisor types: a single MD/DO degree type instead of per-license
+ * license types, and the certifications field does not apply (disabled).
+ * Same list as the backend's PHYSICIAN_SUPERVISOR_TYPE_NAMES.
+ */
 export const SUPERVISOR_TYPES_WITHOUT_CERTIFICATIONS = [
   "Collaborating Physician",
   "Supervising Physician",
@@ -32,6 +36,26 @@ export const SUPERVISOR_TYPES_WITHOUT_CERTIFICATIONS = [
 export function isSupervisorTypeWithoutCertifications(supervisorType: string): boolean {
   return (SUPERVISOR_TYPES_WITHOUT_CERTIFICATIONS as readonly string[]).includes(
     supervisorType,
+  );
+}
+
+/**
+ * Preceptors host students (preceptees) for program-required clinical hours.
+ * They stay on the license-type path (per-occupation license types from the
+ * hierarchy, never MD/DO degree types); certifications are optional, not
+ * disabled — so this type is intentionally NOT in the list above.
+ */
+export const PRECEPTOR_TYPE_NAME = "Preceptor";
+
+export function isPreceptorSupervisorType(supervisorType: string): boolean {
+  return supervisorType.trim() === PRECEPTOR_TYPE_NAME;
+}
+
+/** Types whose forms require at least one certification (none today enforce it; kept for parity with the main app). */
+export function requiresSupervisorCertifications(supervisorType: string): boolean {
+  return (
+    !isSupervisorTypeWithoutCertifications(supervisorType) &&
+    !isPreceptorSupervisorType(supervisorType)
   );
 }
 

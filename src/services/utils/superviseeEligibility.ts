@@ -14,6 +14,7 @@ export const SUPERVISOR_TYPE_CODES = {
   SUPERVISING_PHYSICIAN: "SUPERVISING_PHYSICIAN",
   MENTAL_HEALTH_COUNSELORS: "MENTAL_HEALTH_COUNSELORS",
   MEDICAL_DIRECTOR: "MEDICAL_DIRECTOR",
+  PRECEPTOR: "PRECEPTOR",
 } as const;
 
 /** Fallback when hierarchy entries carry only a display name. */
@@ -23,7 +24,51 @@ const SUPERVISOR_TYPE_NAME_TO_CODE: Record<string, string> = {
   "mental health counselors": SUPERVISOR_TYPE_CODES.MENTAL_HEALTH_COUNSELORS,
   "supervising mental health counselor": SUPERVISOR_TYPE_CODES.MENTAL_HEALTH_COUNSELORS,
   "medical director": SUPERVISOR_TYPE_CODES.MEDICAL_DIRECTOR,
+  preceptor: SUPERVISOR_TYPE_CODES.PRECEPTOR,
 };
+
+/** Display name of the Preceptor type as seeded in the backend. */
+export const PRECEPTOR_TYPE_NAME = "Preceptor";
+
+/**
+ * Preceptor occupations (SupervisorOccupation rows under the PRECEPTOR type).
+ * Physician Assistants are deliberately not preceptors (product decision, 2026-11-24).
+ */
+export const PRECEPTOR_OCCUPATIONS = {
+  NURSE_PRACTITIONER: "Nurse Practitioner",
+  PHYSICIAN: "Physician",
+  PHYSICAL_THERAPIST: "Physical Therapist",
+  PHARMACIST: "Pharmacist",
+  DENTIST: "Dentist",
+  OCCUPATIONAL_THERAPIST: "Occupational Therapist",
+  SPEECH_LANGUAGE_PATHOLOGIST: "Speech Language Pathologist",
+} as const;
+
+/**
+ * Preceptee (student) occupations → the preceptor occupations that may host their
+ * rotation. Students are college/program enrollees completing required field hours;
+ * names carry "Student" so they never collide with the licensed "Nurse Practitioner" /
+ * "Physician Assistant" supervisee occupations. Mirrors the backend matrix.
+ */
+export const PRECEPTEE_OCCUPATION_MATRIX: Record<string, readonly string[]> = {
+  "Nurse Practitioner Student": [
+    PRECEPTOR_OCCUPATIONS.NURSE_PRACTITIONER,
+    PRECEPTOR_OCCUPATIONS.PHYSICIAN,
+  ],
+  "Physician Assistant Student": [
+    PRECEPTOR_OCCUPATIONS.PHYSICIAN,
+    PRECEPTOR_OCCUPATIONS.NURSE_PRACTITIONER,
+  ],
+  "Physical Therapy Student": [PRECEPTOR_OCCUPATIONS.PHYSICAL_THERAPIST],
+  "Physical Therapist Assistant Student": [PRECEPTOR_OCCUPATIONS.PHYSICAL_THERAPIST],
+  "Dental Hygiene Student": [PRECEPTOR_OCCUPATIONS.DENTIST],
+  "Dental Assistant Student": [PRECEPTOR_OCCUPATIONS.DENTIST],
+  "Occupational Therapy Assistant Student": [PRECEPTOR_OCCUPATIONS.OCCUPATIONAL_THERAPIST],
+  "Speech Language Pathology Student": [PRECEPTOR_OCCUPATIONS.SPEECH_LANGUAGE_PATHOLOGIST],
+  "Pharmacy Student": [PRECEPTOR_OCCUPATIONS.PHARMACIST],
+};
+
+export const PRECEPTEE_OCCUPATIONS = Object.keys(PRECEPTEE_OCCUPATION_MATRIX);
 
 type SupervisorTypeLike = { code?: string; name?: string };
 
@@ -46,19 +91,22 @@ export const SUPERVISEE_ALLOWED_OCCUPATIONS = [
   // Mental health — supervised by a Licensed Mental Health Counselor Supervisor.
   // LPCA (KY) and LPC-A (TX) share the "Licensed Professional Counselor Associate" entry.
   // Counseling
-  "Associate Professional Counselor",
-  "Associate Professional Clinical Counselor",
+  "Associate Mental Health Counselor",
   "Licensed Mental Health Counselor Associate",
   "Licensed Clinical Mental Health Counselor Associate",
   "Licensed Professional Counselor Associate",
   "Provisional Licensed Professional Counselor",
   "Licensed Associate Counselor",
-  "Associate Licensed Counselor",
   "Licensed Associate Professional Counselor",
   "Licensed Graduate Professional Counselor",
   "Licensed Professional Counselor In Training",
   "Registered Mental Health Counselor Intern",
   "Mental Health Counselor, Limited Permit",
+  // Retired from the supervisee dropdown on 2026-11-04 (backend seed `supersededNames`)
+  // but kept so legacy profiles that still carry them resolve as mental health.
+  "Associate Professional Counselor",
+  "Associate Professional Clinical Counselor",
+  "Associate Licensed Counselor",
   // Marriage & Family Therapy
   "Associate Marriage and Family Therapist",
   "Licensed Marriage and Family Therapist Associate",
@@ -66,6 +114,8 @@ export const SUPERVISEE_ALLOWED_OCCUPATIONS = [
   "Marriage and Family Therapist Intern",
   "Registered Marriage and Family Therapist Intern",
   // Social Work
+  "Associate Social Worker",
+  // Legacy names kept for profiles saved before the 2026-11-04 rename/merge.
   "Associate Clinical Social Worker",
   "Clinical Social Work Associate",
   "Licensed Social Worker",
@@ -78,16 +128,48 @@ export const SUPERVISEE_ALLOWED_OCCUPATIONS = [
   // Healthcare — supervised by a Supervising/Collaborating Physician
   PHYSICIAN_ASSISTANT_OCCUPATION,
   NURSE_PRACTITIONER_OCCUPATION,
+  // Students (preceptees) — hosted by a Preceptor; see PRECEPTEE_OCCUPATION_MATRIX
+  ...PRECEPTEE_OCCUPATIONS,
 ] as const;
 
 const ALLOWED_OCCUPATIONS_NORMALIZED = new Set(
   SUPERVISEE_ALLOWED_OCCUPATIONS.map((name) => normalize(name)),
 );
 
-/** Allowlisted mental-health occupations (everything except NP and PA). */
+const PRECEPTEE_MATRIX_NORMALIZED = new Map(
+  Object.entries(PRECEPTEE_OCCUPATION_MATRIX).map(([student, preceptors]) => [
+    normalize(student),
+    preceptors,
+  ]),
+);
+
+export function isPrecepteeOccupation(occupationName: string): boolean {
+  return PRECEPTEE_MATRIX_NORMALIZED.has(normalize(occupationName));
+}
+
+/** Preceptor occupation names a student of `occupationName` may request ([] when not a preceptee). */
+export function getEligiblePreceptorOccupations(occupationName: string): string[] {
+  return [...(PRECEPTEE_MATRIX_NORMALIZED.get(normalize(occupationName)) ?? [])];
+}
+
+/** Whether a preceptor with `preceptorOccupation` may host a student of `studentOccupation`. */
+export function isPreceptorOccupationEligibleForPreceptee(
+  preceptorOccupation: string,
+  studentOccupation: string,
+): boolean {
+  const allowed = PRECEPTEE_MATRIX_NORMALIZED.get(normalize(studentOccupation));
+  if (!allowed) return false;
+  const wanted = normalize(preceptorOccupation);
+  return allowed.some((name) => normalize(name) === wanted);
+}
+
+/** Allowlisted mental-health occupations (everything except NP, PA and students). */
 const MENTAL_HEALTH_OCCUPATIONS_NORMALIZED = new Set(
   SUPERVISEE_ALLOWED_OCCUPATIONS.filter(
-    (name) => name !== PHYSICIAN_ASSISTANT_OCCUPATION && name !== NURSE_PRACTITIONER_OCCUPATION,
+    (name) =>
+      name !== PHYSICIAN_ASSISTANT_OCCUPATION &&
+      name !== NURSE_PRACTITIONER_OCCUPATION &&
+      !isPrecepteeOccupation(name),
   ).map((name) => normalize(name)),
 );
 
@@ -118,6 +200,7 @@ export function groupSuperviseeOccupationChoices<T extends { label: string }>(
 ): { label: string; options: T[] }[] {
   const medical: T[] = [];
   const mentalHealth: T[] = [];
+  const students: T[] = [];
   const other: T[] = [];
   for (const option of options) {
     if (
@@ -127,6 +210,8 @@ export function groupSuperviseeOccupationChoices<T extends { label: string }>(
       medical.push(option);
     } else if (isMentalHealthSuperviseeOccupation(option.label)) {
       mentalHealth.push(option);
+    } else if (isPrecepteeOccupation(option.label)) {
+      students.push(option);
     } else {
       other.push(option);
     }
@@ -134,6 +219,7 @@ export function groupSuperviseeOccupationChoices<T extends { label: string }>(
   return [
     { label: "Medical", options: medical },
     { label: "Mental Health", options: mentalHealth },
+    { label: "Students", options: students },
     { label: "Other", options: other },
   ].filter((group) => group.options.length > 0);
 }
@@ -155,6 +241,10 @@ export const MEDICAL_DIRECTOR_TYPE_NAME = "Medical Director";
 
 export function isMedicalDirectorType(type: SupervisorTypeLike): boolean {
   return resolveSupervisorTypeCode(type) === SUPERVISOR_TYPE_CODES.MEDICAL_DIRECTOR;
+}
+
+export function isPreceptorType(type: SupervisorTypeLike): boolean {
+  return resolveSupervisorTypeCode(type) === SUPERVISOR_TYPE_CODES.PRECEPTOR;
 }
 
 /**
@@ -218,8 +308,9 @@ export function supervisionTypeDisplayLabel(typeName: string): string {
  * For edit forms: maps a legacy enum code onto the current SupervisorType
  * display name when one exists, so the stored value matches the dropdown
  * options (and legacy MEDICAL_DIRECTOR still checks the MD checkbox). Retired
- * types (PRECEPTOR, LPC_SUPERVISOR, …) have no current equivalent and are
- * returned unchanged.
+ * types (LPC_SUPERVISOR, …) have no current equivalent and are returned
+ * unchanged. Legacy "PRECEPTOR" rows are intentionally left as-is (product
+ * decision 2026-11-24): the new Preceptor type is for student placements.
  */
 export function normalizeLegacySupervisionTypeName(typeName: string): string {
   switch (typeName.trim()) {
@@ -243,7 +334,9 @@ export function resolveSupervisorTypeCode(type: SupervisorTypeLike): string {
 
 /**
  * Whether the supervisee may select the given supervision type.
- * Medical Director is always available; unknown/future types default to available.
+ * Medical Director is available to every licensed supervisee; Preceptor only to
+ * students (preceptee occupations), who in turn may pick nothing else.
+ * Unknown/future types default to available for non-students.
  */
 export function isSupervisorTypeEligibleForSupervisee(
   type: SupervisorTypeLike,
@@ -256,10 +349,12 @@ export function isSupervisorTypeEligibleForSupervisee(
       return isPhysicianAssistantOccupation(occupationName);
     case SUPERVISOR_TYPE_CODES.MENTAL_HEALTH_COUNSELORS:
       return isMentalHealthSuperviseeOccupation(occupationName);
+    case SUPERVISOR_TYPE_CODES.PRECEPTOR:
+      return isPrecepteeOccupation(occupationName);
     case SUPERVISOR_TYPE_CODES.MEDICAL_DIRECTOR:
-      return true;
+      return !isPrecepteeOccupation(occupationName);
     default:
-      return true;
+      return !isPrecepteeOccupation(occupationName);
   }
 }
 

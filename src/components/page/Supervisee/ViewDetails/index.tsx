@@ -245,6 +245,25 @@ export default function ViewDetails({ id }: ViewDetailsProps) {
             <FieldRow label="States of Licensure" value={statesOfLicensureDisplay} />
           </SectionCard>
 
+          {/* Preceptee (student) details — populated only with a "Preceptor" need */}
+          {profile?.schoolName || profile?.degreeProgram || profile?.clinicalHoursRequired ? (
+            <SectionCard title="Program & Rotation (Preceptee)">
+              <FieldRow label="School" value={profile?.schoolName} />
+              <FieldRow label="Degree Program" value={profile?.degreeProgram} />
+              <FieldRow label="Expected Graduation" value={formatDate(profile?.expectedGraduation)} />
+              <FieldRow
+                label="Clinical Hours Required"
+                value={
+                  profile?.clinicalHoursRequired != null
+                    ? `${profile.clinicalHoursRequired.toLocaleString("en-US")} hours`
+                    : null
+                }
+              />
+              <FieldRow label="Rotation Start" value={formatDate(profile?.rotationStartDate)} />
+              <FieldRow label="Rotation End" value={formatDate(profile?.rotationEndDate)} />
+            </SectionCard>
+          ) : null}
+
           <SectionCard title="Supervision Needs">
             <FieldRow
               label="Type of Supervision Needed"

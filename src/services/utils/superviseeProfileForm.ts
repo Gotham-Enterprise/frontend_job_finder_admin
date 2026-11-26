@@ -2,6 +2,7 @@ import type { SuperviseeDetails, SuperviseeUpdatePayload } from "@/services/type
 import { formatUSPhoneForDisplay } from "@/services/utils/phoneNumberUtils";
 import {
   isMedicalDirectorType,
+  isPreceptorType,
   MEDICAL_DIRECTOR_TYPE_NAME,
   normalizeLegacySupervisionTypeName,
 } from "@/services/utils/superviseeEligibility";
@@ -16,6 +17,15 @@ import {
 } from "./identityPreferencesForm";
 
 export const SUPERVISEE_IDEAL_SUPERVISOR_MAX_LENGTH = 500;
+
+/** Mirrors the backend validator's MAX_CLINICAL_HOURS_REQUIRED. */
+export const PRECEPTEE_CLINICAL_HOURS_MAX = 10000;
+export const PRECEPTEE_TEXT_MAX_LENGTH = 200;
+
+/** A preceptee (student) profile: the selected supervision type is Preceptor. */
+export function isPrecepteeForm(form: Pick<SuperviseeEditFormData, "typeOfSupervisorNeeded">): boolean {
+  return isPreceptorType({ name: form.typeOfSupervisorNeeded });
+}
 
 export type SuperviseeFieldErrors = Partial<
   Record<Exclude<keyof SuperviseeEditFormData, "identity"> | "uploadProfilePhoto", string>
@@ -54,14 +64,46 @@ export function validateSuperviseeEditForm(form: SuperviseeEditFormData): Superv
   if (!form.occupation) {
     errors.occupation = "Occupation is required";
   }
-  if (!form.title.trim()) {
-    errors.title = "Credential or license type is required";
-  }
-  if (!form.licensureState.trim()) {
-    errors.licensureState = "State of licensure is required";
+  const preceptee = isPrecepteeForm(form);
+  // Students (Preceptor need) hold no credential yet — the program fields
+  // below take the place of title + licensureState (backend precepteeFieldRules).
+  if (!preceptee) {
+    if (!form.title.trim()) {
+      errors.title = "Credential or license type is required";
+    }
+    if (!form.licensureState.trim()) {
+      errors.licensureState = "State of licensure is required";
+    }
+  } else {
+    if (!form.schoolName.trim()) {
+      errors.schoolName = "School name is required";
+    } else if (form.schoolName.trim().length > PRECEPTEE_TEXT_MAX_LENGTH) {
+      errors.schoolName = `School name must be ${PRECEPTEE_TEXT_MAX_LENGTH} characters or less`;
+    }
+    if (!form.degreeProgram.trim()) {
+      errors.degreeProgram = "Degree program is required";
+    } else if (form.degreeProgram.trim().length > PRECEPTEE_TEXT_MAX_LENGTH) {
+      errors.degreeProgram = `Degree program must be ${PRECEPTEE_TEXT_MAX_LENGTH} characters or less`;
+    }
+    if (!form.expectedGraduation) {
+      errors.expectedGraduation = "Expected graduation is required";
+    }
+    const hours = form.clinicalHoursRequired === "" ? NaN : Number(form.clinicalHoursRequired);
+    if (!Number.isInteger(hours) || hours < 1 || hours > PRECEPTEE_CLINICAL_HOURS_MAX) {
+      errors.clinicalHoursRequired = `Clinical hours required must be a whole number between 1 and ${PRECEPTEE_CLINICAL_HOURS_MAX}`;
+    }
+    if (
+      form.rotationStartDate &&
+      form.rotationEndDate &&
+      Date.parse(form.rotationEndDate) < Date.parse(form.rotationStartDate)
+    ) {
+      errors.rotationEndDate = "Rotation end date must be on or after the start date";
+    }
   }
   if (!form.stateOfLicensure.length) {
-    errors.stateOfLicensure = "At least one state of licensure is required";
+    errors.stateOfLicensure = preceptee
+      ? "At least one rotation state is required"
+      : "At least one state of licensure is required";
   }
 
   if (!form.typeOfSupervisorNeeded && !form.needsMedicalDirector) {
@@ -167,6 +209,14 @@ export interface SuperviseeEditFormData {
   mdMonthlyBudget: string;
   mdIdealDescription: string;
   introduction: string;
+  /** Preceptee (student) details — shown/required only for a Preceptor need. */
+  schoolName: string;
+  degreeProgram: string;
+  /** yyyy-mm-dd */
+  expectedGraduation: string;
+  clinicalHoursRequired: string;
+  rotationStartDate: string;
+  rotationEndDate: string;
 }
 
 export function resolveStateToAbbreviation(
@@ -239,6 +289,13 @@ export function mapSuperviseeDetailsToFormData(
     mdMonthlyBudget: profile?.mdMonthlyBudget ? String(profile.mdMonthlyBudget) : "",
     mdIdealDescription: profile?.mdIdealDescription ?? "",
     introduction: profile?.introduction ?? "",
+    schoolName: profile?.schoolName ?? "",
+    degreeProgram: profile?.degreeProgram ?? "",
+    expectedGraduation: profile?.expectedGraduation ? profile.expectedGraduation.slice(0, 10) : "",
+    clinicalHoursRequired:
+      profile?.clinicalHoursRequired != null ? String(profile.clinicalHoursRequired) : "",
+    rotationStartDate: profile?.rotationStartDate ? profile.rotationStartDate.slice(0, 10) : "",
+    rotationEndDate: profile?.rotationEndDate ? profile.rotationEndDate.slice(0, 10) : "",
   };
 }
 
@@ -256,6 +313,8 @@ export function buildSuperviseeUpdateFormData(
     mdPreferredSpecialty,
     introduction,
     identity,
+    rotationStartDate,
+    rotationEndDate,
     ...rest
   } = payload;
 
@@ -285,6 +344,13 @@ export function buildSuperviseeUpdateFormData(
   // Present-but-empty clears the stored introduction (optional and erasable).
   if (introduction !== undefined) {
     fd.append("introduction", introduction);
+  }
+  // Optional rotation dates: present-but-empty clears the stored value.
+  if (rotationStartDate !== undefined) {
+    fd.append("rotationStartDate", rotationStartDate);
+  }
+  if (rotationEndDate !== undefined) {
+    fd.append("rotationEndDate", rotationEndDate);
   }
 
   stateOfLicensure?.forEach((s) => fd.append("stateOfLicensure[]", s));
@@ -363,6 +429,20 @@ export function formDataToUpdatePayload(
     mdIdealDescription: form.mdIdealDescription.trim() || undefined,
     // '' (not undefined) so an erased introduction clears the stored value
     introduction: form.introduction.trim(),
+    // Preceptee (student) details — sent only with a Preceptor need (the
+    // backend rejects them otherwise, and clears the columns itself when the
+    // need no longer includes Preceptor). '' clears an optional date.
+    ...(isPrecepteeForm(form)
+      ? {
+          schoolName: form.schoolName.trim() || undefined,
+          degreeProgram: form.degreeProgram.trim() || undefined,
+          expectedGraduation: form.expectedGraduation || undefined,
+          clinicalHoursRequired:
+            form.clinicalHoursRequired !== "" ? parseInt(form.clinicalHoursRequired, 10) : undefined,
+          rotationStartDate: form.rotationStartDate,
+          rotationEndDate: form.rotationEndDate,
+        }
+      : {}),
     uploadProfilePhoto,
   };
 }
