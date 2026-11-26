@@ -224,22 +224,20 @@ export default function InsuranceTab() {
         <div className="flex rounded-lg border border-gray-300 dark:border-gray-700 overflow-hidden h-10 w-fit">
           <button
             onClick={() => handleViewChange('submissions')}
-            className={`flex items-center gap-2 px-4 text-sm font-medium transition-colors ${
-              view === 'submissions'
+            className={`flex items-center gap-2 px-4 text-sm font-medium transition-colors ${view === 'submissions'
                 ? 'bg-primary text-white'
                 : 'bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
-            }`}
+              }`}
           >
             <FileText className="w-4 h-4" />
             Submissions
           </button>
           <button
             onClick={() => handleViewChange('redirects')}
-            className={`flex items-center gap-2 px-4 text-sm font-medium border-l border-gray-300 dark:border-gray-700 transition-colors ${
-              view === 'redirects'
+            className={`flex items-center gap-2 px-4 text-sm font-medium border-l border-gray-300 dark:border-gray-700 transition-colors ${view === 'redirects'
                 ? 'bg-primary text-white'
                 : 'bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
-            }`}
+              }`}
           >
             <ExternalLink className="w-4 h-4" />
             Redirects
@@ -299,21 +297,19 @@ export default function InsuranceTab() {
           <div className="flex rounded-lg border border-gray-300 dark:border-gray-700 overflow-hidden h-10">
             <button
               onClick={() => handleTimezoneChange('local')}
-              className={`px-3 text-sm font-medium transition-colors ${
-                timezone === 'local'
+              className={`px-3 text-sm font-medium transition-colors ${timezone === 'local'
                   ? 'bg-primary text-white'
                   : 'bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
-              }`}
+                }`}
             >
               {getLocalOffsetLabel()}
             </button>
             <button
               onClick={() => handleTimezoneChange('utc')}
-              className={`px-3 text-sm font-medium border-l border-gray-300 dark:border-gray-700 transition-colors ${
-                timezone === 'utc'
+              className={`px-3 text-sm font-medium border-l border-gray-300 dark:border-gray-700 transition-colors ${timezone === 'utc'
                   ? 'bg-primary text-white'
                   : 'bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
-              }`}
+                }`}
             >
               UTC
             </button>
@@ -351,7 +347,7 @@ export default function InsuranceTab() {
             <div className="rounded-xl border border-violet-200 dark:border-violet-800 bg-violet-50 dark:bg-violet-900/20 p-4">
               <div className="flex items-center gap-2 mb-1">
                 <MousePointerClick className="w-4 h-4 text-violet-600 dark:text-violet-400" />
-                <span className="text-xs font-medium text-violet-700 dark:text-violet-400">Total Redirects</span>
+                <span className="text-xs font-medium text-violet-700 dark:text-violet-400">Unique Redirects</span>
               </div>
               <p className="text-2xl font-bold text-violet-700 dark:text-violet-300">
                 {redirectsData.summary.total.toLocaleString()}
@@ -361,41 +357,41 @@ export default function InsuranceTab() {
 
           {(redirectsData.summary.byPartner.length > 0 ||
             redirectsData.summary.byInsuranceType.length > 0) && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {redirectsData.summary.byPartner.length > 0 && (
-                <div className="rounded-xl border border-gray-200 dark:border-gray-800 p-4">
-                  <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">By Partner</h3>
-                  <ul className="space-y-2">
-                    {redirectsData.summary.byPartner.map((row) => (
-                      <li
-                        key={row.partnerSlug}
-                        className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400"
-                      >
-                        <span>{formatEnumLabel(row.partnerSlug.replace(/-/g, '_'))}</span>
-                        <span className="font-semibold text-gray-900 dark:text-white">{row.count.toLocaleString()}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-              {redirectsData.summary.byInsuranceType.length > 0 && (
-                <div className="rounded-xl border border-gray-200 dark:border-gray-800 p-4">
-                  <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">By Insurance Type</h3>
-                  <ul className="space-y-2">
-                    {redirectsData.summary.byInsuranceType.map((row) => (
-                      <li
-                        key={row.insuranceType}
-                        className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400"
-                      >
-                        <span>{formatEnumLabel(row.insuranceType)}</span>
-                        <span className="font-semibold text-gray-900 dark:text-white">{row.count.toLocaleString()}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
-          )}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {redirectsData.summary.byPartner.length > 0 && (
+                  <div className="rounded-xl border border-gray-200 dark:border-gray-800 p-4">
+                    <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">By Partner</h3>
+                    <ul className="space-y-2">
+                      {redirectsData.summary.byPartner.map((row) => (
+                        <li
+                          key={row.partnerSlug}
+                          className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400"
+                        >
+                          <span>{formatEnumLabel(row.partnerSlug.replace(/-/g, '_'))}</span>
+                          <span className="font-semibold text-gray-900 dark:text-white">{row.count.toLocaleString()}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {redirectsData.summary.byInsuranceType.length > 0 && (
+                  <div className="rounded-xl border border-gray-200 dark:border-gray-800 p-4">
+                    <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">By Insurance Type</h3>
+                    <ul className="space-y-2">
+                      {redirectsData.summary.byInsuranceType.map((row) => (
+                        <li
+                          key={row.insuranceType}
+                          className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400"
+                        >
+                          <span>{formatEnumLabel(row.insuranceType)}</span>
+                          <span className="font-semibold text-gray-900 dark:text-white">{row.count.toLocaleString()}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
         </div>
       )}
 
@@ -481,6 +477,10 @@ export default function InsuranceTab() {
                   <tr className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
                     <th className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 whitespace-nowrap">Partner</th>
                     <th className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 whitespace-nowrap">Insurance Type</th>
+                    <th className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 whitespace-nowrap">First Name</th>
+                    <th className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 whitespace-nowrap">Last Name</th>
+                    <th className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 whitespace-nowrap">Occupation</th>
+                    <th className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 whitespace-nowrap">Email</th>
                     <th className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 whitespace-nowrap">User</th>
                     <th className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 whitespace-nowrap">IP Address</th>
                     <th className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 whitespace-nowrap">Redirected At</th>
@@ -489,7 +489,7 @@ export default function InsuranceTab() {
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
                   {redirectsData?.records.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="px-4 py-10 text-center text-gray-500 dark:text-gray-400">
+                      <td colSpan={9} className="px-4 py-10 text-center text-gray-500 dark:text-gray-400">
                         No redirect records found for the selected filters.
                       </td>
                     </tr>
@@ -504,6 +504,18 @@ export default function InsuranceTab() {
                         </td>
                         <td className="px-4 py-3 text-gray-700 dark:text-gray-300 whitespace-nowrap">
                           {formatEnumLabel(record.insuranceType)}
+                        </td>
+                        <td className="px-4 py-3 text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                          {formatNullable(record.firstName)}
+                        </td>
+                        <td className="px-4 py-3 text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                          {formatNullable(record.lastName)}
+                        </td>
+                        <td className="px-4 py-3 text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                          {formatNullable(record.occupation)}
+                        </td>
+                        <td className="px-4 py-3 text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                          {formatNullable(record.email)}
                         </td>
                         <td className="px-4 py-3 text-gray-700 dark:text-gray-300 text-xs whitespace-nowrap">
                           {formatUserLabel(record.user)}

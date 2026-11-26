@@ -30,6 +30,7 @@ export interface IngestRawFields {
   details: string | null;
   description: string | null;
   contact: string | null;
+  listingType?: string | null;
   contactCompany?: string | null;
   contactPhone?: string | null;
 }
@@ -45,6 +46,7 @@ export interface IngestInputRow {
   details?: string;
   description?: string;
   contact?: string;
+  listingType?: string;
   contactCompany?: string;
   contactPhone?: string;
   offers?: {
