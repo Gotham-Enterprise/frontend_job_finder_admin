@@ -2,7 +2,7 @@
 
 import React from "react";
 import { Clock, RefreshCw, CheckCircle, XCircle, Zap, User } from "lucide-react";
-import type { ScraperRun } from "@/services/api/medicalLibraryScraper";
+import { getImportSourceLabel, type ScraperRun } from "@/services/api/medicalLibraryScraper";
 
 const getStatusBadge = (status: ScraperRun["status"]) => {
   const styles = {
@@ -19,6 +19,16 @@ const getStatusBadge = (status: ScraperRun["status"]) => {
       {status.charAt(0).toUpperCase() + status.slice(1)}
     </span>
   );
+};
+
+const SourceBadge: React.FC<{ source: string }> = ({ source }) => {
+  const cls =
+    source === "medlineplus"
+      ? "bg-teal-100 dark:bg-teal-900/30 text-teal-800 dark:text-teal-200"
+      : source === "nami"
+        ? "bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-200"
+        : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300";
+  return <span className={`inline-block px-2 py-1 rounded-md text-xs font-medium ${cls}`}>{getImportSourceLabel(source)}</span>;
 };
 
 const TriggerBadge: React.FC<{ run: ScraperRun }> = ({ run }) => {
@@ -55,41 +65,52 @@ const ProgressBar: React.FC<{ run: ScraperRun }> = ({ run }) => {
   );
 };
 
+const headerCell = "px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider";
+
 const RunsTable: React.FC<{ runs: ScraperRun[] }> = ({ runs }) => {
   return (
     <div className="border border-gray-200 dark:border-gray-800 rounded-lg overflow-hidden overflow-x-auto">
       <table className="w-full">
         <thead className="bg-gray-50 dark:bg-gray-900/50">
           <tr>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-              Triggered By
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-              Status
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-              Progress
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-              Results
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-              Started
-            </th>
+            <th className={headerCell}>Source</th>
+            <th className={headerCell}>Triggered By</th>
+            <th className={headerCell}>Status</th>
+            <th className={headerCell}>Progress</th>
+            <th className={headerCell}>Results</th>
+            <th className={headerCell}>Started</th>
           </tr>
         </thead>
         <tbody className="bg-white dark:bg-transparent divide-y divide-gray-200 dark:divide-gray-800">
           {runs.map((run) => (
             <tr key={run.id} className="hover:bg-gray-50 dark:hover:bg-gray-900/30 transition-colors">
               <td className="px-6 py-4">
+                <SourceBadge source={run.source} />
+              </td>
+              <td className="px-6 py-4">
                 <TriggerBadge run={run} />
               </td>
-              <td className="px-6 py-4">{getStatusBadge(run.status)}</td>
+              <td className="px-6 py-4">
+                {getStatusBadge(run.status)}
+                {run.errorMessage && (run.status === "failed" || run.status === "completed") && (
+                  // On a failed run this is the error; on a completed run it is a
+                  // note (e.g. ICD-10 codes came from a cached list).
+                  <p
+                    className={`mt-1 max-w-xs truncate text-xs ${
+                      run.status === "failed" ? "text-red-600 dark:text-red-400" : "text-amber-700 dark:text-amber-400"
+                    }`}
+                    title={run.errorMessage}
+                  >
+                    {run.errorMessage}
+                  </p>
+                )}
+              </td>
               <td className="px-6 py-4">
                 <ProgressBar run={run} />
                 {(run.status === "completed" || run.status === "failed") && (
                   <span className="text-xs text-gray-500 dark:text-gray-400">
-                    {run.processedTopics} processed
+                    {run.processedTopics}
+                    {run.totalTopics ? ` / ${run.totalTopics}` : ""} processed
                   </span>
                 )}
               </td>
@@ -111,8 +132,8 @@ const RunsTable: React.FC<{ runs: ScraperRun[] }> = ({ runs }) => {
           ))}
           {runs.length === 0 && (
             <tr>
-              <td colSpan={5} className="px-6 py-8 text-center text-sm text-gray-500 dark:text-gray-400">
-                No scraper runs yet.
+              <td colSpan={6} className="px-6 py-8 text-center text-sm text-gray-500 dark:text-gray-400">
+                No import runs yet.
               </td>
             </tr>
           )}

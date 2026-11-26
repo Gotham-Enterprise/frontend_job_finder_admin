@@ -3,6 +3,9 @@
 import React from "react";
 import Input from "../../../ui/input/Input";
 import { SearchIcon } from "../../../ui/icons";
+import { MedicalLibraryFilters } from "@/services/api/medicalLibrary";
+
+type Option = { value: string; label: string };
 
 interface MedicalLibraryHeaderProps {
   totalCount: number;
@@ -12,7 +15,33 @@ interface MedicalLibraryHeaderProps {
   setSearchInput: (val: string) => void;
   onRefetch: () => void;
   onAddNew: () => void;
+  filters: MedicalLibraryFilters;
+  onFilterChange: (key: keyof MedicalLibraryFilters, value: any) => void;
+  categoryOptions: Option[];
+  statusOptions: Option[];
+  sourceOptions: Option[];
 }
+
+const selectClassName =
+  "text-sm border border-gray-200 dark:border-gray-700 rounded-md px-3 py-2 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500";
+
+const FilterSelect: React.FC<{
+  label: string;
+  value: string;
+  options: Option[];
+  onChange: (value: string) => void;
+}> = ({ label, value, options, onChange }) => (
+  <label className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+    <span className="whitespace-nowrap">{label}</span>
+    <select value={value} onChange={(e) => onChange(e.target.value)} className={selectClassName} aria-label={label}>
+      {options.map((opt) => (
+        <option key={opt.value || "all"} value={opt.value}>
+          {opt.label}
+        </option>
+      ))}
+    </select>
+  </label>
+);
 
 const MedicalLibraryHeader: React.FC<MedicalLibraryHeaderProps> = ({
   totalCount,
@@ -22,14 +51,21 @@ const MedicalLibraryHeader: React.FC<MedicalLibraryHeaderProps> = ({
   setSearchInput,
   onRefetch,
   onAddNew,
+  filters,
+  onFilterChange,
+  categoryOptions,
+  statusOptions,
+  sourceOptions,
 }) => {
+  const hasActiveFilter = Boolean(filters.category || filters.status || filters.source);
+
   return (
     <div className="px-6 py-5 border-b border-gray-200 dark:border-gray-800">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h3 className="text-xl font-semibold text-gray-800 dark:text-white">Medical Library</h3>
           <p className="text-sm text-gray-500 mt-1 dark:text-gray-400">
-            {totalCount || 0} total topics
+            {totalCount || 0} {hasActiveFilter ? "matching" : "total"} topics
             {isPending && <span className="ml-2 text-xs text-primary">Updating...</span>}
           </p>
         </div>
@@ -93,6 +129,40 @@ const MedicalLibraryHeader: React.FC<MedicalLibraryHeaderProps> = ({
             </div>
           )}
         </div>
+      </div>
+
+      <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2">
+        <FilterSelect
+          label="Category"
+          value={filters.category || ""}
+          options={categoryOptions}
+          onChange={(v) => onFilterChange("category", v)}
+        />
+        <FilterSelect
+          label="Status"
+          value={filters.status || ""}
+          options={statusOptions}
+          onChange={(v) => onFilterChange("status", v)}
+        />
+        <FilterSelect
+          label="Source"
+          value={filters.source || ""}
+          options={sourceOptions}
+          onChange={(v) => onFilterChange("source", v)}
+        />
+        {hasActiveFilter && (
+          <button
+            type="button"
+            onClick={() => {
+              onFilterChange("category", "");
+              onFilterChange("status", "");
+              onFilterChange("source", "");
+            }}
+            className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
+          >
+            Clear filters
+          </button>
+        )}
       </div>
     </div>
   );

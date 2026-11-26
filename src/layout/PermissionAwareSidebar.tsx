@@ -143,7 +143,7 @@ const navItems: NavItem[] = [
     subItems: [
       { name: "All Topics", path: "/admin/medical-library", requiredAction: "view" },
       { name: "Add New", path: "/admin/medical-library/add-new", requiredAction: "add" },
-      { name: "Scraper Runs", path: "/admin/medical-library/scraper-runs", requiredAction: "view" },
+      { name: "Imports", path: "/admin/medical-library/scraper-runs", requiredAction: "view" },
     ],
   },
 
