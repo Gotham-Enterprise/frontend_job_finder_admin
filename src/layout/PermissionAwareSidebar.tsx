@@ -22,6 +22,7 @@ import {
   IdCardIcon,
   HandShake,
   MailIcon,
+  ChatIcon,
   ShootingStarIcon,
   DocsIcon,
   BoxIcon,
@@ -92,6 +93,18 @@ const navItems: NavItem[] = [
     subItems: [
       { name: "Partners", path: "/admin/affiliates/partners" },
       { name: "Links", path: "/admin/affiliates/links" },
+    ],
+  },
+  {
+    icon: <ChatIcon />,
+    name: "Campaigns",
+    path: "/admin/campaigns",
+    isAccessible: true,
+    subItems: [
+      { name: "Managed Campaigns", path: "/admin/campaigns/managed" },
+      { name: "Inquiries", path: "/admin/campaigns/inquiries" },
+      { name: "Self-Serve Plans", path: "/admin/campaigns/plans" },
+      { name: "Flagged Content", path: "/admin/campaigns/content-flags" },
     ],
   },
   {
@@ -526,7 +539,13 @@ const AppSidebar: React.FC = () => {
   } | null>(null);
   const [subMenuHeight, setSubMenuHeight] = useState<Record<string, number>>({});
   const subMenuRefs = useRef<Record<string, HTMLDivElement | null>>({});
-  const isActive = useCallback((path: string) => path === pathname, [pathname]);
+  // A managed campaign's own page (/admin/campaigns/managed/<id>) still belongs to "Managed campaigns".
+  const isActive = useCallback(
+    (path: string) =>
+      path === pathname ||
+      (path === "/admin/campaigns/managed" && !!pathname?.startsWith("/admin/campaigns/managed/")),
+    [pathname],
+  );
   const hasActiveSubItem = useCallback(
     (nav: NavItem) => nav.subItems?.some((subItem) => isActive(subItem.path)) ?? false,
     [isActive],
