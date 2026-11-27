@@ -1,10 +1,15 @@
 import { SupervisorFilters, SupervisorsResponse } from "@/services/types/supervisor";
 
+/** Supervisors page, or the Medical Directors page (same list, own columns). */
+export type SupervisorListMode = "supervisors" | "medicalDirectors";
+
 export interface SupervisorsProps {
   className?: string;
+  mode?: SupervisorListMode;
 }
 
 export interface SupervisorHeaderProps {
+  mode?: SupervisorListMode;
   totalCount: number;
   isPending: boolean;
   isLoading: boolean;
@@ -29,6 +34,7 @@ export interface SupervisorFiltersProps {
 }
 
 export interface SupervisorTableProps {
+  mode?: SupervisorListMode;
   data: SupervisorsResponse | undefined;
   isLoading: boolean;
   tableColumns: Array<{ key: string; label: string; className?: string; sortKey?: string }>;

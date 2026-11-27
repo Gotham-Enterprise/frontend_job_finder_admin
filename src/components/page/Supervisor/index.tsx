@@ -2,7 +2,7 @@
 import React from "react";
 import { BoltIcon } from "@/icons";
 import ErrorState from "../../common/ErrorState";
-import { useSupervisorLogic } from "@/services/hooks/useSupervisorLogic";
+import { SUPERVISOR_LIST_CONFIG, useSupervisorLogic } from "@/services/hooks/useSupervisorLogic";
 import { usePreservedNavigation } from "@/hooks/usePreservedNavigation";
 import { SupervisorsProps } from "@/services/types/SupervisorTypes";
 import {
@@ -18,11 +18,12 @@ import {
   HideProfileModal,
 } from "./components";
 
-const Supervisors: React.FC<SupervisorsProps> = ({ className = "" }) => {
+const Supervisors: React.FC<SupervisorsProps> = ({ className = "", mode = "supervisors" }) => {
+  const listConfig = SUPERVISOR_LIST_CONFIG[mode];
   usePreservedNavigation({
-    statePath: "supervisor-search-state",
-    scrollPath: "supervisor-scroll-position",
-    listPagePath: "/admin/supervisors",
+    statePath: listConfig.keys.searchState,
+    scrollPath: listConfig.keys.scrollPosition,
+    listPagePath: listConfig.basePath,
   });
 
   const {
@@ -89,13 +90,13 @@ const Supervisors: React.FC<SupervisorsProps> = ({ className = "" }) => {
     openHideProfileModal,
     closeHideProfileModal,
     confirmHideProfile,
-  } = useSupervisorLogic();
+  } = useSupervisorLogic(mode);
 
   if (error && !isPending) {
     return (
       <ErrorState
         className={className}
-        message={`Error loading supervisors: ${error.message}`}
+        message={`Error loading ${mode === "medicalDirectors" ? "medical directors" : "supervisors"}: ${error.message}`}
         onRetry={() => refetch()}
         retryIcon={<BoltIcon />}
       />
@@ -108,6 +109,7 @@ const Supervisors: React.FC<SupervisorsProps> = ({ className = "" }) => {
         className={`rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] ${className}`}
       >
         <SupervisorHeader
+          mode={mode}
           totalCount={data?.metaData?.totalCount || 0}
           isPending={isPending}
           isLoading={isLoading}
@@ -123,7 +125,8 @@ const Supervisors: React.FC<SupervisorsProps> = ({ className = "" }) => {
               filters={filters}
               onFilterChange={filterChange}
               statusOptions={statusOptions}
-              typeOptions={typeOptions}
+              // Every row on the Medical Directors page has the same type.
+              typeOptions={mode === "medicalDirectors" ? [] : typeOptions}
               subscriptionOptions={subscriptionOptions}
               hasActiveFilters={hasActiveFilters}
               clearIndividualFilter={clearIndividualFilter}
@@ -132,6 +135,7 @@ const Supervisors: React.FC<SupervisorsProps> = ({ className = "" }) => {
         />
 
         <SupervisorTable
+          mode={mode}
           data={data}
           isLoading={isLoading}
           tableColumns={tableColumns}

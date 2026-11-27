@@ -4,7 +4,10 @@ import React, { createContext, useContext, ReactNode } from "react";
 import { usePendingSupervisorCount } from "@/hooks/usePendingSupervisorCount";
 
 interface PendingSupervisorContextType {
+  /** Supervisors + Medical Directors awaiting verification. */
   pendingCount: number;
+  pendingSupervisorCount: number;
+  pendingMedicalDirectorCount: number;
   isLoading: boolean;
   refetch: () => void;
 }
@@ -26,10 +29,14 @@ interface PendingSupervisorProviderProps {
 export const PendingSupervisorProvider: React.FC<PendingSupervisorProviderProps> = ({ children }) => {
   const { data, isLoading, refetch } = usePendingSupervisorCount();
 
-  const pendingCount = typeof data === "number" ? data : 0;
+  const pendingSupervisorCount = data?.supervisors ?? 0;
+  const pendingMedicalDirectorCount = data?.medicalDirectors ?? 0;
+  const pendingCount = pendingSupervisorCount + pendingMedicalDirectorCount;
 
   return (
-    <PendingSupervisorContext.Provider value={{ pendingCount, isLoading, refetch }}>
+    <PendingSupervisorContext.Provider
+      value={{ pendingCount, pendingSupervisorCount, pendingMedicalDirectorCount, isLoading, refetch }}
+    >
       {children}
     </PendingSupervisorContext.Provider>
   );
