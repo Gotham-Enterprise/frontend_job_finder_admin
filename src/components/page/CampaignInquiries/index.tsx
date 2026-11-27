@@ -4,34 +4,34 @@ import React, { useRef, useState } from "react";
 import { ChevronDown, Inbox, MessageSquareText, Search, X } from "lucide-react";
 import Pagination from "@/components/tables/Pagination";
 import {
-  ENQUIRY_STATUSES,
-  type CampaignEnquiry,
-  type EnquiryCampaignType,
-  type EnquiryStatus,
-} from "@/services/api/campaignEnquiries";
-import { useCampaignEnquiries, useCampaignEnquiryStats } from "@/services/hooks/useCampaignEnquiries";
-import EnquiryDetailPanel from "./EnquiryDetailPanel";
+  INQUIRY_STATUSES,
+  type CampaignInquiry,
+  type InquiryCampaignType,
+  type InquiryStatus,
+} from "@/services/api/campaignInquiries";
+import { useCampaignInquiries, useCampaignInquiryStats } from "@/services/hooks/useCampaignInquiries";
+import InquiryDetailPanel from "./InquiryDetailPanel";
 import { CAMPAIGN_TYPE_LABELS, STATUS_DOTS, STATUS_LABELS, STATUS_STYLES, callIsLive, callStatusLabel, formatCallTime, formatDateTime } from "./labels";
 
 const PAGE_SIZE = 15;
 
-export default function CampaignEnquiries() {
+export default function CampaignInquiries() {
   const [page, setPage] = useState(1);
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
-  const [status, setStatus] = useState<EnquiryStatus | "">("");
-  const [campaignType, setCampaignType] = useState<EnquiryCampaignType | "">("");
+  const [status, setStatus] = useState<InquiryStatus | "">("");
+  const [campaignType, setCampaignType] = useState<InquiryCampaignType | "">("");
   const [openId, setOpenId] = useState<string | null>(null);
   const debounce = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const { data, isLoading, isError, refetch } = useCampaignEnquiries({
+  const { data, isLoading, isError, refetch } = useCampaignInquiries({
     page,
     limit: PAGE_SIZE,
     search: search || undefined,
     status: status || undefined,
     campaignType: campaignType || undefined,
   });
-  const { data: stats } = useCampaignEnquiryStats();
+  const { data: stats } = useCampaignInquiryStats();
 
   const onSearch = (value: string) => {
     setSearchInput(value);
@@ -41,7 +41,7 @@ export default function CampaignEnquiries() {
       setPage(1);
     }, 300);
   };
-  const pickStatus = (value: EnquiryStatus | "") => {
+  const pickStatus = (value: InquiryStatus | "") => {
     setStatus(value);
     setPage(1);
   };
@@ -55,11 +55,11 @@ export default function CampaignEnquiries() {
   };
 
   // The panel shows the latest copy of the row, so a save is reflected straight away.
-  const open: CampaignEnquiry | null = data?.enquiries.find((row) => row.id === openId) ?? null;
+  const open: CampaignInquiry | null = data?.inquiries.find((row) => row.id === openId) ?? null;
 
-  const chips: { key: EnquiryStatus | ""; label: string; value: number | undefined; dot?: string }[] = [
+  const chips: { key: InquiryStatus | ""; label: string; value: number | undefined; dot?: string }[] = [
     { key: "", label: "All", value: stats?.total },
-    ...ENQUIRY_STATUSES.map((value) => ({ key: value, label: STATUS_LABELS[value], value: stats?.byStatus[value], dot: STATUS_DOTS[value] })),
+    ...INQUIRY_STATUSES.map((value) => ({ key: value, label: STATUS_LABELS[value], value: stats?.byStatus[value], dot: STATUS_DOTS[value] })),
   ];
 
   return (
@@ -69,7 +69,7 @@ export default function CampaignEnquiries() {
         <div>
           <div className="flex items-center gap-3">
             <MessageSquareText className="h-6 w-6 text-primary" />
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Campaign Enquiries</h1>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Campaign Inquiries</h1>
           </div>
           <p className="mt-2 text-gray-600 dark:text-gray-400">
             People who asked Gotham to run a text or email campaign, from the “Start hiring with Gotham” form.
@@ -122,13 +122,13 @@ export default function CampaignEnquiries() {
             <select
               value={campaignType}
               onChange={(event) => {
-                setCampaignType(event.target.value as EnquiryCampaignType | "");
+                setCampaignType(event.target.value as InquiryCampaignType | "");
                 setPage(1);
               }}
               className="w-full appearance-none rounded-lg border border-gray-200 bg-white py-2 pl-3 pr-9 text-sm text-gray-900 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30 dark:border-gray-700 dark:bg-gray-800 dark:text-white sm:w-52"
             >
               <option value="">All campaign types</option>
-              {(Object.keys(CAMPAIGN_TYPE_LABELS) as EnquiryCampaignType[]).map((value) => (
+              {(Object.keys(CAMPAIGN_TYPE_LABELS) as InquiryCampaignType[]).map((value) => (
                 <option key={value} value={value}>{CAMPAIGN_TYPE_LABELS[value]}</option>
               ))}
             </select>
@@ -148,19 +148,19 @@ export default function CampaignEnquiries() {
           </div>
         ) : isError ? (
           <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-center text-sm text-red-700 dark:border-red-900/50 dark:bg-red-900/10 dark:text-red-300">
-            We couldn’t load the enquiries.{" "}
+            We couldn’t load the inquiries.{" "}
             <button onClick={() => refetch()} className="font-semibold underline">Try again</button>
           </div>
-        ) : !data || data.enquiries.length === 0 ? (
+        ) : !data || data.inquiries.length === 0 ? (
           <div className="flex flex-col items-center py-14 text-center">
             <span className="flex h-14 w-14 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800">
               <Inbox className="h-7 w-7 text-gray-400" />
             </span>
             <p className="mt-4 text-sm font-semibold text-gray-900 dark:text-white">
-              {filtering ? "No enquiries match your filters" : "No enquiries yet"}
+              {filtering ? "No inquiries match your filters" : "No inquiries yet"}
             </p>
             <p className="mt-1 max-w-sm text-sm text-gray-500 dark:text-gray-400">
-              {filtering ? "Try a different search or clear the filters." : "When someone submits the campaigns form, their enquiry will appear here."}
+              {filtering ? "Try a different search or clear the filters." : "When someone submits the campaigns form, their inquiry will appear here."}
             </p>
             {filtering && (
               <button onClick={clearFilters} className="mt-4 rounded-lg border border-gray-200 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800">
@@ -180,7 +180,7 @@ export default function CampaignEnquiries() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-800 dark:bg-transparent">
-                  {data.enquiries.map((row) => (
+                  {data.inquiries.map((row) => (
                     <tr key={row.id} onClick={() => setOpenId(row.id)} className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-900/50">
                       <td className="whitespace-nowrap px-4 py-3 text-sm font-semibold text-primary">{row.referenceCode}</td>
                       <td className="px-4 py-3 text-sm">
@@ -222,7 +222,7 @@ export default function CampaignEnquiries() {
             {data.pages > 1 && (
               <div className="flex flex-col items-center justify-between gap-3 sm:flex-row">
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Page {data.page} of {data.pages} ({data.total} enquiries)
+                  Page {data.page} of {data.pages} ({data.total} inquiries)
                 </p>
                 <Pagination currentPage={page} totalPages={data.pages} onPageChange={setPage} />
               </div>
@@ -231,7 +231,7 @@ export default function CampaignEnquiries() {
         )}
       </div>
 
-      <EnquiryDetailPanel enquiry={open} onClose={() => setOpenId(null)} />
+      <InquiryDetailPanel inquiry={open} onClose={() => setOpenId(null)} />
     </div>
   );
 }

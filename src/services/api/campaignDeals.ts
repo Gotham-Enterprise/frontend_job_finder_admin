@@ -1,6 +1,6 @@
 import { apiGet, apiPost, apiPut } from "./apiUtils";
 
-// The sales side of a campaign enquiry: quote, agreement and Stripe payment link, then the customer's access.
+// The sales side of a campaign inquiry: quote, agreement and Stripe payment link, then the customer's access.
 
 export type DealStatus =
   | "DRAFT"
@@ -14,7 +14,7 @@ export type DealStatus =
 
 export interface CampaignDeal {
   id: string;
-  enquiryId: string;
+  inquiryId: string;
   status: DealStatus;
   contactName: string;
   contactEmail: string;
@@ -64,10 +64,10 @@ export interface QuoteInput {
 const BASE = "/api/admin/campaign-deals";
 type Wrapped = { data: { deal: CampaignDeal } };
 
-export const getDeal = async (enquiryId: string): Promise<CampaignDeal | null> =>
-  (await apiGet<{ data: { deal: CampaignDeal | null } }>(`${BASE}/by-enquiry/${enquiryId}`)).data.deal;
-export const saveQuote = async (enquiryId: string, input: QuoteInput) =>
-  (await apiPut<Wrapped>(`${BASE}/by-enquiry/${enquiryId}/quote`, input)).data.deal;
+export const getDeal = async (inquiryId: string): Promise<CampaignDeal | null> =>
+  (await apiGet<{ data: { deal: CampaignDeal | null } }>(`${BASE}/by-inquiry/${inquiryId}`)).data.deal;
+export const saveQuote = async (inquiryId: string, input: QuoteInput) =>
+  (await apiPut<Wrapped>(`${BASE}/by-inquiry/${inquiryId}/quote`, input)).data.deal;
 export const sendQuote = async (id: string) => (await apiPost<Wrapped>(`${BASE}/${id}/send-quote`)).data.deal;
 export const createPaymentLink = async (id: string) => (await apiPost<Wrapped>(`${BASE}/${id}/payment-link`)).data.deal;
 export const sendPaymentLink = async (id: string) => (await apiPost<Wrapped>(`${BASE}/${id}/send-payment-link`)).data.deal;

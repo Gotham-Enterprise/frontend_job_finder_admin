@@ -1,12 +1,12 @@
 import { apiGet, apiPatch, apiPost } from "./apiUtils";
 
-export const ENQUIRY_STATUSES = ["NEW", "IN_REVIEW", "CONTACTED", "CONVERTED", "CLOSED"] as const;
-export type EnquiryStatus = (typeof ENQUIRY_STATUSES)[number];
-export type EnquiryCampaignType = "text" | "email" | "email-text";
+export const INQUIRY_STATUSES = ["NEW", "IN_REVIEW", "CONTACTED", "CONVERTED", "CLOSED"] as const;
+export type InquiryStatus = (typeof INQUIRY_STATUSES)[number];
+export type InquiryCampaignType = "text" | "email" | "email-text";
 
-// One enquiry from the public "Start hiring with Gotham" form.
-/** The call the person booked after sending the enquiry (null when nobody has booked one). */
-export interface EnquiryCall {
+// One inquiry from the public "Start hiring with Gotham" form.
+/** The call the person booked after sending the inquiry (null when nobody has booked one). */
+export interface InquiryCall {
   startAt: string;
   endAt: string;
   timezone: string;
@@ -16,10 +16,10 @@ export interface EnquiryCall {
   host: { name: string; title: string } | null;
 }
 
-export interface CampaignEnquiry {
+export interface CampaignInquiry {
   id: string;
   referenceCode: string;
-  campaignType: EnquiryCampaignType | null;
+  campaignType: InquiryCampaignType | null;
   organizationType: string;
   firstName: string;
   lastName: string;
@@ -27,13 +27,13 @@ export interface CampaignEnquiry {
   email: string;
   phoneNumber: string;
   companySize: string | null;
-  // Older enquiries (before the form was simplified) may still carry these.
+  // Older inquiries (before the form was simplified) may still carry these.
   website: string | null;
   howDidYouHear: string | null;
   primaryGoal: string | null;
   estimatedAudienceSize: string | null;
   notes: string | null;
-  status: EnquiryStatus;
+  status: InquiryStatus;
   assignedTo: string | null;
   internalNotes: string | null;
   reviewedAt: string | null;
@@ -45,63 +45,63 @@ export interface CampaignEnquiry {
   /** The customer's company, for IN_APP requests. */
   companyId?: string | null;
   /** The booked call, with when and with whom. */
-  call?: EnquiryCall | null;
+  call?: InquiryCall | null;
   createdAt: string;
   updatedAt: string;
 }
 
-export interface CampaignEnquiryList {
-  enquiries: CampaignEnquiry[];
+export interface CampaignInquiryList {
+  inquiries: CampaignInquiry[];
   total: number;
   page: number;
   pages: number;
 }
 
-export interface CampaignEnquiryStats {
+export interface CampaignInquiryStats {
   total: number;
-  byStatus: Record<EnquiryStatus, number>;
+  byStatus: Record<InquiryStatus, number>;
   lastSevenDays: number;
 }
 
-export interface CampaignEnquiryFilters {
+export interface CampaignInquiryFilters {
   page?: number;
   limit?: number;
   search?: string;
-  status?: EnquiryStatus;
-  campaignType?: EnquiryCampaignType;
+  status?: InquiryStatus;
+  campaignType?: InquiryCampaignType;
 }
 
-const BASE = "/api/campaign-enquiries";
+const BASE = "/api/campaign-inquiries";
 
-export const getCampaignEnquiries = async (filters: CampaignEnquiryFilters = {}): Promise<CampaignEnquiryList> => {
+export const getCampaignInquiries = async (filters: CampaignInquiryFilters = {}): Promise<CampaignInquiryList> => {
   const query = new URLSearchParams();
   Object.entries(filters).forEach(([key, value]) => {
     if (value !== undefined && value !== "") query.set(key, String(value));
   });
-  const res = await apiGet<{ data: CampaignEnquiryList }>(`${BASE}${query.size ? `?${query}` : ""}`);
+  const res = await apiGet<{ data: CampaignInquiryList }>(`${BASE}${query.size ? `?${query}` : ""}`);
   return res.data;
 };
 
-export const getCampaignEnquiryStats = async (): Promise<CampaignEnquiryStats> => {
-  const res = await apiGet<{ data: CampaignEnquiryStats }>(`${BASE}/stats`);
+export const getCampaignInquiryStats = async (): Promise<CampaignInquiryStats> => {
+  const res = await apiGet<{ data: CampaignInquiryStats }>(`${BASE}/stats`);
   return res.data;
 };
 
-export const updateCampaignEnquiry = async (
+export const updateCampaignInquiry = async (
   id: string,
-  changes: { status?: EnquiryStatus; assignedTo?: string | null; internalNotes?: string | null },
-): Promise<CampaignEnquiry> => {
-  const res = await apiPatch<{ data: { enquiry: CampaignEnquiry } }>(`${BASE}/${id}`, changes);
-  return res.data.enquiry;
+  changes: { status?: InquiryStatus; assignedTo?: string | null; internalNotes?: string | null },
+): Promise<CampaignInquiry> => {
+  const res = await apiPatch<{ data: { inquiry: CampaignInquiry } }>(`${BASE}/${id}`, changes);
+  return res.data.inquiry;
 };
 
 /** Add one-off credits to the customer's account from their request (once per request; closes it and emails them). */
-export const grantEnquiryCredits = async (
+export const grantInquiryCredits = async (
   id: string,
   input: { emailCredits: number; smsCredits: number; note?: string },
-): Promise<CampaignEnquiry> => {
-  const res = await apiPost<{ data: { enquiry: CampaignEnquiry } }>(`${BASE}/${id}/grant-credits`, input);
-  return res.data.enquiry;
+): Promise<CampaignInquiry> => {
+  const res = await apiPost<{ data: { inquiry: CampaignInquiry } }>(`${BASE}/${id}/grant-credits`, input);
+  return res.data.inquiry;
 };
 
 /** A one-off credit top-up sold with a one-time Stripe payment link. */

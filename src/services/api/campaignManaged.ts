@@ -50,7 +50,6 @@ export interface ManagedBrief {
 // The campaign as Gotham prepares it: the same fields as the employer's own campaign builder.
 export interface ManagedForm {
   specialties: string[];
-  experienceLevels: string[];
   location: string;
   radius: string;
   locationLatitude: number | null;
@@ -150,7 +149,6 @@ export const estimateSmsCost = async (smsBody: string, extras: { ctaTargetUrl?: 
 
 export const estimateManagedAudience = async (body: {
   occupationIds: string[];
-  experienceLevels: string[];
   location?: { latitude: number; longitude: number; radiusMiles: number };
 }): Promise<AudienceEstimate> => (await apiPost<{ data: AudienceEstimate }>(`${BASE}/audience/estimate`, body)).data;
 

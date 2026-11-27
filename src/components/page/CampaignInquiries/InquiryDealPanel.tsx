@@ -29,10 +29,10 @@ const Step: React.FC<{ n: number; title: string; done: boolean; note?: React.Rea
 
 const Spinner = () => <Loader2 className="h-4 w-4 animate-spin" />;
 
-// Turns an enquiry into a customer: a quote, an agreement, a Stripe payment link, then access to their credits.
-export default function EnquiryDealPanel({ enquiryId }: { enquiryId: string }) {
-  const { data: deal, isLoading } = useCampaignDeal(enquiryId);
-  const act = useDealActions(enquiryId);
+// Turns an inquiry into a customer: a quote, an agreement, a Stripe payment link, then access to their credits.
+export default function InquiryDealPanel({ inquiryId }: { inquiryId: string }) {
+  const { data: deal, isLoading } = useCampaignDeal(inquiryId);
+  const act = useDealActions(inquiryId);
 
   const [emailCredits, setEmailCredits] = useState("");
   const [smsCredits, setSmsCredits] = useState("");
@@ -45,7 +45,7 @@ export default function EnquiryDealPanel({ enquiryId }: { enquiryId: string }) {
     setSmsCredits(deal ? String(deal.quote.smsCredits) : "");
     setPrice(deal ? String(deal.quote.priceInCents / 100) : "");
     setNotes(deal?.quote.notes ?? "");
-  }, [deal?.updatedAt, enquiryId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [deal?.updatedAt, inquiryId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (isLoading) {
     return (

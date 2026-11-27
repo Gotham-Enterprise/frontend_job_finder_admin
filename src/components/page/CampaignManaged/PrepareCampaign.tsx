@@ -21,11 +21,6 @@ import {
 import { showToast } from "@/services/utils/toast";
 import { CHANNEL_LABELS, STATUS_LABELS, STATUS_STYLES, formatDateTime } from "./labels";
 
-const EXPERIENCE_LEVELS = [
-  { id: "entry", label: "Entry Level (0–2 yrs)" },
-  { id: "mid", label: "Mid-Level (3–7 yrs)" },
-  { id: "senior", label: "Senior (8+ yrs)" },
-];
 const RADIUS_OPTIONS = ["10", "25", "50", "100"];
 const TIMEZONES = [
   "Eastern Time (EDT / EST)",
@@ -56,7 +51,6 @@ const withDefaults = (campaign: ManagedCampaignDetail): ManagedForm => {
   const brief = campaign.brief;
   return {
     specialties: saved.specialties ?? [],
-    experienceLevels: saved.experienceLevels ?? [],
     location: saved.location ?? "",
     radius: saved.radius ?? "",
     locationLatitude: saved.locationLatitude ?? null,
@@ -135,12 +129,11 @@ export default function PrepareCampaign({ id }: { id: string }) {
   const estimateBody = useMemo(
     () => ({
       occupationIds: form?.specialties ?? [],
-      experienceLevels: form?.experienceLevels ?? [],
       ...(form && radiusMiles > 0 && form.locationLatitude != null && form.locationLongitude != null
         ? { location: { latitude: form.locationLatitude, longitude: form.locationLongitude, radiusMiles } }
         : {}),
     }),
-    [form?.specialties, form?.experienceLevels, form?.locationLatitude, form?.locationLongitude, radiusMiles], // eslint-disable-line react-hooks/exhaustive-deps
+    [form?.specialties, form?.locationLatitude, form?.locationLongitude, radiusMiles], // eslint-disable-line react-hooks/exhaustive-deps
   );
   const { data: estimate, isFetching: estimating } = useManagedAudienceEstimate(estimateBody);
   const { data: smsCost } = useSmsCost(form?.smsBody ?? "", Boolean(campaign?.channels.includes("SMS")), { ctaTargetUrl: form?.ctaTargetUrl, location: form?.location, payRate: form?.payRate, facilityName: form?.facilityName, specialtyName: form?.specialtyName, locationText: form?.locationText });
@@ -360,16 +353,6 @@ export default function PrepareCampaign({ id }: { id: string }) {
               </div>
               {form.specialties.length > 0 && <p className="mt-1.5 text-xs text-gray-500">{form.specialties.length} selected</p>}
             </Field>
-
-            <div>
-              <span className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Experience level</span>
-              <div className="flex flex-wrap gap-x-6 gap-y-2">
-                {EXPERIENCE_LEVELS.map((level) => (
-                  <Check_ key={level.id} label={level.label} checked={form.experienceLevels.includes(level.id)} onChange={() => update({ experienceLevels: toggle(form.experienceLevels, level.id) })} />
-                ))}
-              </div>
-              <p className="mt-1 text-xs text-gray-500">Leave all unticked to include every level.</p>
-            </div>
 
             {/* The employer said where they want to hire, but the audience only follows a place (and radius) picked below. */}
             {brief?.cityState && !(form.locationLatitude != null && radiusMiles > 0) && (

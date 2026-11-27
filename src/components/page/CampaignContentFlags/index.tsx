@@ -5,7 +5,7 @@ import { Loader2, ShieldAlert } from "lucide-react";
 import Pagination from "@/components/tables/Pagination";
 import type { ContentFlag, FlagStatus } from "@/services/api/campaignModeration";
 import { useContentFlags, useReviewContentFlag } from "@/services/hooks/useContentFlags";
-import { formatDateTime } from "../CampaignEnquiries/labels";
+import { formatDateTime } from "../CampaignInquiries/labels";
 
 const PAGE_SIZE = 10;
 const TABS: { key: FlagStatus; label: string }[] = [

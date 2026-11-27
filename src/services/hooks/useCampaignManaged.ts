@@ -30,7 +30,7 @@ export const useAudienceOccupations = () =>
   useQuery({ queryKey: keys.occupations, queryFn: getAudienceOccupations, staleTime: 5 * 60 * 1000 });
 
 export const useManagedAudienceEstimate = (
-  body: { occupationIds: string[]; experienceLevels: string[]; location?: { latitude: number; longitude: number; radiusMiles: number } },
+  body: { occupationIds: string[]; location?: { latitude: number; longitude: number; radiusMiles: number } },
 ) =>
   useQuery({
     queryKey: ["managed-campaigns", "estimate", body],

@@ -2,8 +2,8 @@
 
 import React, { useState } from "react";
 import { CheckCircle2, Copy, ExternalLink, Loader2 } from "lucide-react";
-import { type CampaignEnquiry } from "@/services/api/campaignEnquiries";
-import { useCreditTopup, useCreditTopupActions, useGrantEnquiryCredits } from "@/services/hooks/useCampaignEnquiries";
+import { type CampaignInquiry } from "@/services/api/campaignInquiries";
+import { useCreditTopup, useCreditTopupActions, useGrantInquiryCredits } from "@/services/hooks/useCampaignInquiries";
 import { showToast } from "@/services/utils/toast";
 import { formatDateTime } from "./labels";
 
@@ -21,11 +21,11 @@ const creditsText = (email: number, sms: number) => [email > 0 && `${email.toLoc
 
 // For a request from an existing customer: sell them one-off credits. The customer gets a one-time Stripe payment link and
 // the credits are added when they pay. (Or add them free, for goodwill.) A bigger monthly plan is the quote below.
-export default function EnquiryCreditsPanel({ enquiry }: { enquiry: CampaignEnquiry }) {
-  const isCustomer = enquiry.source === "IN_APP" && Boolean(enquiry.companyId);
-  const { data: topup } = useCreditTopup(enquiry.id, isCustomer);
-  const act = useCreditTopupActions(enquiry.id);
-  const grant = useGrantEnquiryCredits();
+export default function InquiryCreditsPanel({ inquiry }: { inquiry: CampaignInquiry }) {
+  const isCustomer = inquiry.source === "IN_APP" && Boolean(inquiry.companyId);
+  const { data: topup } = useCreditTopup(inquiry.id, isCustomer);
+  const act = useCreditTopupActions(inquiry.id);
+  const grant = useGrantInquiryCredits();
   const [emailCredits, setEmailCredits] = useState("");
   const [smsCredits, setSmsCredits] = useState("");
   const [price, setPrice] = useState("");
@@ -39,7 +39,7 @@ export default function EnquiryCreditsPanel({ enquiry }: { enquiry: CampaignEnqu
   const creditsValid = Number.isInteger(email) && Number.isInteger(sms) && email + sms > 0 && email <= 1_000_000 && sms <= 1_000_000;
   const priceValid = price.trim() !== "" && Number.isFinite(dollars) && dollars >= 0.5 && dollars <= 100000;
   const busy = act.send.isPending || act.resend.isPending || act.cancel.isPending || act.simulate.isPending || grant.isPending;
-  const grantedFree = enquiry.status === "CONVERTED" && /Added \d+ email \+ \d+ text credits/.test(enquiry.internalNotes ?? "");
+  const grantedFree = inquiry.status === "CONVERTED" && /Added \d+ email \+ \d+ text credits/.test(inquiry.internalNotes ?? "");
   const pending = topup?.status === "PENDING" ? topup : null;
 
   const copyLink = async (link: string) => {
@@ -138,8 +138,8 @@ export default function EnquiryCreditsPanel({ enquiry }: { enquiry: CampaignEnqu
               disabled={!creditsValid || busy || Boolean(pending)}
               title={pending ? "Withdraw the payment link first" : "Adds the credits now without charging"}
               onClick={() => {
-                if (!window.confirm(`Add ${email} email and ${sms} text credits to ${enquiry.companyName} for free? This closes the request and emails the customer.`)) return;
-                grant.mutate({ id: enquiry.id, emailCredits: email, smsCredits: sms, note: note.trim() || undefined });
+                if (!window.confirm(`Add ${email} email and ${sms} text credits to ${inquiry.companyName} for free? This closes the request and emails the customer.`)) return;
+                grant.mutate({ id: inquiry.id, emailCredits: email, smsCredits: sms, note: note.trim() || undefined });
               }}
             >
               {grant.isPending && <Loader2 className="h-4 w-4 animate-spin" />} Add free instead

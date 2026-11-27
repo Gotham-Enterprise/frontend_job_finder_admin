@@ -102,7 +102,7 @@ const navItems: NavItem[] = [
     isAccessible: true,
     subItems: [
       { name: "Managed Campaigns", path: "/admin/campaigns/managed" },
-      { name: "Enquiries", path: "/admin/campaigns/enquiries" },
+      { name: "Inquiries", path: "/admin/campaigns/inquiries" },
       { name: "Self-Serve Plans", path: "/admin/campaigns/plans" },
       { name: "Flagged Content", path: "/admin/campaigns/content-flags" },
     ],
