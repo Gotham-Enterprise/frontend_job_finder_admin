@@ -154,7 +154,7 @@ export default function PrepareCampaign({ id }: { id: string }) {
     return (
       <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-center text-sm text-red-700">
         We couldn’t load this campaign.{" "}
-        <button onClick={() => refetch()} className="font-semibold underline">Try again</button>
+        <button onClick={() => refetch()} className="font-semibold underline">Try Again</button>
       </div>
     );
   }
@@ -197,7 +197,7 @@ export default function PrepareCampaign({ id }: { id: string }) {
       {/* Header */}
       <div>
         <Link href="/admin/campaigns/managed" className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">
-          <ArrowLeft className="h-4 w-4" /> Back to managed campaigns
+          <ArrowLeft className="h-4 w-4" /> Back to Managed Campaigns
         </Link>
         <div className="mt-3 flex flex-wrap items-start justify-between gap-3">
           <div>
@@ -241,10 +241,10 @@ export default function PrepareCampaign({ id }: { id: string }) {
             {brief ? (
               <dl className="mt-4 space-y-3 text-sm">
                 {[
-                  ["Job title", brief.jobTitle],
+                  ["Job Title", brief.jobTitle],
                   ["Location", brief.cityState],
                   ["Audience", brief.audienceRole],
-                  ["Results forwarding", brief.forwardResults ? brief.forwardEmail || "Requested" : "Not requested"],
+                  ["Results Forwarding", brief.forwardResults ? brief.forwardEmail || "Requested" : "Not Requested"],
                 ].map(([label, value]) => (
                   <div key={label}>
                     <dt className="text-xs uppercase tracking-wide text-gray-500">{label}</dt>
@@ -252,7 +252,7 @@ export default function PrepareCampaign({ id }: { id: string }) {
                   </div>
                 ))}
                 <div>
-                  <dt className="text-xs uppercase tracking-wide text-gray-500">Job link</dt>
+                  <dt className="text-xs uppercase tracking-wide text-gray-500">Job Link</dt>
                   <dd className="mt-0.5 break-all">
                     <a href={brief.jobLink} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 font-medium text-primary hover:underline">
                       {brief.jobLink} <ExternalLink className="h-3 w-3 shrink-0" />
@@ -272,22 +272,22 @@ export default function PrepareCampaign({ id }: { id: string }) {
             ) : (
               <div className="mt-3 space-y-2 text-sm">
                 <p className="m-0 flex items-center gap-2 text-2xl font-bold text-gray-900 dark:text-white">
-                  {estimate ? (hasEmail && !hasSms ? estimate.byChannel.email : hasSms && !hasEmail ? estimate.byChannel.sms : estimate.count).toLocaleString() : "–"}
+                  {estimate ? (hasEmail && !hasSms ? estimate.byChannel.email : hasSms && !hasEmail ? estimate.byChannel.sms : estimate.count).toLocaleString("en-US") : "–"}
                   {estimating && <Loader2 className="h-4 w-4 animate-spin text-gray-400" />}
                 </p>
                 <p className="m-0 text-gray-500">candidates match</p>
                 {estimate && (
                   <ul className="m-0 list-none space-y-1 p-0 text-gray-700 dark:text-gray-300">
-                    {hasEmail && <li>{estimate.deliverable.email.toLocaleString()} emails will be sent (opted in)</li>}
-                    {hasSms && <li>{estimate.deliverable.sms.toLocaleString()} texts will be sent (opted in)</li>}
+                    {hasEmail && <li>{estimate.deliverable.email.toLocaleString("en-US")} emails will be sent (opted in)</li>}
+                    {hasSms && <li>{estimate.deliverable.sms.toLocaleString("en-US")} texts will be sent (opted in)</li>}
                   </ul>
                 )}
                 <p className="m-0 border-t border-gray-100 pt-2 text-gray-700 dark:border-gray-800 dark:text-gray-300">
                   Employer’s credits:{" "}
                   {campaign.creditsAvailable
                     ? [
-                        hasEmail && `Email ${campaign.creditsAvailable.EMAIL.toLocaleString()}`,
-                        hasSms && `Text ${campaign.creditsAvailable.SMS.toLocaleString()}`,
+                        hasEmail && `Email ${campaign.creditsAvailable.EMAIL.toLocaleString("en-US")}`,
+                        hasSms && `Text ${campaign.creditsAvailable.SMS.toLocaleString("en-US")}`,
                       ]
                         .filter(Boolean)
                         .join(" · ")
@@ -304,7 +304,7 @@ export default function PrepareCampaign({ id }: { id: string }) {
                       <>
                         {hasSms && smsCost && (
                           <span className="mt-1 block text-xs text-gray-500">
-                            Texts need about {textCredits.toLocaleString()} credits ({estimate.deliverable.sms.toLocaleString()} texts × {smsCost.segments} each).
+                            Texts need about {textCredits.toLocaleString("en-US")} credits ({estimate.deliverable.sms.toLocaleString("en-US")} texts × {smsCost.segments} each).
                           </span>
                         )}
                         {short.length > 0 && (
@@ -346,7 +346,7 @@ export default function PrepareCampaign({ id }: { id: string }) {
                         />
                         {occupation.name}
                       </span>
-                      <span className="text-xs text-gray-500">{occupation.count.toLocaleString()}</span>
+                      <span className="text-xs text-gray-500">{occupation.count.toLocaleString("en-US")}</span>
                     </label>
                   ))
                 )}
@@ -373,12 +373,12 @@ export default function PrepareCampaign({ id }: { id: string }) {
             />
           </Section>
 
-          <Section title="2. Message" hint="What candidates will receive. Personalise with the variables below.">
+          <Section title="2. Message" hint="What candidates will receive. Personalize with the variables below.">
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="Job Link *" hint="Where candidates go to see the job and apply. Clicks are tracked. Use it in the message with {{apply_link}}.">
                 <input value={form.ctaTargetUrl} onChange={(event) => update({ ctaTargetUrl: event.target.value })} placeholder="https://" className={inputClass} />
               </Field>
-              <Field label="Pay Rate (optional)" hint="Only used where the message has {{pay_rate}}.">
+              <Field label="Pay Rate (Optional)" hint="Only used where the message has {{pay_rate}}.">
                 <input value={form.payRate} onChange={(event) => update({ payRate: event.target.value })} maxLength={60} placeholder="$65/hr + $10k sign-on bonus" className={inputClass} />
               </Field>
               <Field label="Facility or Company Name *" hint="Fills {{facility_name}}. Starts as the employer’s company name.">
@@ -387,7 +387,7 @@ export default function PrepareCampaign({ id }: { id: string }) {
               <Field label="Job Location *" hint="Where the job is; fills {{location}}. Starts as the location the employer asked for.">
                 <input value={form.locationText} onChange={(event) => update({ locationText: event.target.value })} maxLength={120} placeholder="Austin, TX" className={inputClass} />
               </Field>
-              <Field label="Role or Specialty (optional)" hint="Fills {{specialty}}. Leave empty and each candidate sees their own specialty.">
+              <Field label="Role or Specialty (Optional)" hint="Fills {{specialty}}. Leave empty and each candidate sees their own specialty.">
                 <input value={form.specialtyName} onChange={(event) => update({ specialtyName: event.target.value })} maxLength={120} placeholder="Registered Nurse" className={inputClass} />
               </Field>
             </div>
@@ -402,7 +402,7 @@ export default function PrepareCampaign({ id }: { id: string }) {
                 <Field label="Email Subject">
                   <input value={form.subjectLine} onChange={(event) => update({ subjectLine: event.target.value })} maxLength={150} className={inputClass} />
                 </Field>
-                <Field label="Email Body" hint={`${form.emailBody.length.toLocaleString()} / ${EMAIL_BODY_MAX.toLocaleString()} characters`}>
+                <Field label="Email Body" hint={`${form.emailBody.length.toLocaleString("en-US")} / ${EMAIL_BODY_MAX.toLocaleString("en-US")} characters`}>
                   <textarea value={form.emailBody} onChange={(event) => update({ emailBody: event.target.value })} rows={9} maxLength={EMAIL_BODY_MAX} className={inputClass} />
                 </Field>
                 <div className="grid gap-4 sm:grid-cols-2">
@@ -432,7 +432,7 @@ export default function PrepareCampaign({ id }: { id: string }) {
               and whether to skip weekends, US holidays and night hours. You do not need to set anything here.
             </p>
             <div className="flex flex-wrap gap-x-6 gap-y-2">
-              <Check_ label="Skip people contacted recently" checked={form.preventFatigue} onChange={(value) => update({ preventFatigue: value })} />
+              <Check_ label="Skip People Contacted Recently" checked={form.preventFatigue} onChange={(value) => update({ preventFatigue: value })} />
             </div>
           </Section>
 
@@ -445,18 +445,18 @@ export default function PrepareCampaign({ id }: { id: string }) {
           )}
           {editable && (
             <div className="flex flex-wrap items-center justify-end gap-3">
-              {dirty && <span className="text-sm text-gray-500">Unsaved changes</span>}
+              {dirty && <span className="text-sm text-gray-500">Unsaved Changes</span>}
               <button type="button" onClick={handleSave} disabled={busy || !dirty} className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200">
                 {save.isPending ? "Saving…" : "Save"}
               </button>
               {canSubmit ? (
                 <button type="button" onClick={() => setConfirming(true)} disabled={busy} className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50">
                   <Send className="h-4 w-4" />
-                  {submit.isPending ? "Submitting…" : "Submit for employer approval"}
+                  {submit.isPending ? "Submitting…" : "Submit for Employer Approval"}
                 </button>
               ) : (
                 <span className="inline-flex items-center gap-1.5 text-sm font-medium text-indigo-700 dark:text-indigo-300">
-                  <Check className="h-4 w-4" /> With the employer for approval
+                  <Check className="h-4 w-4" /> With the Employer for Approval
                 </span>
               )}
             </div>
@@ -469,7 +469,7 @@ export default function PrepareCampaign({ id }: { id: string }) {
         onClose={() => setConfirming(false)}
         onCancel={() => setConfirming(false)}
         onConfirm={handleSubmit}
-        title="Send to the employer for approval?"
+        title="Send to the Employer for Approval?"
         message="Your preparation is saved and the employer can review and approve it. Nothing is sent to candidates until they approve."
         confirmText="Submit"
       />
@@ -525,7 +525,7 @@ function LocationPicker({
 
   return (
     <div>
-      <span className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Location (optional)</span>
+      <span className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Location (Optional)</span>
       {location && hasPoint ? (
         <div className="flex flex-wrap items-center gap-3">
           <span className="inline-flex items-center gap-1.5 rounded-lg bg-gray-100 px-3 py-2 text-sm text-gray-800 dark:bg-gray-800 dark:text-gray-200">
@@ -533,7 +533,7 @@ function LocationPicker({
           </span>
           <div className="relative">
             <select value={radius} onChange={(event) => onRadius(event.target.value)} disabled={disabled} className="min-w-[190px] cursor-pointer appearance-none rounded-lg border border-gray-200 bg-white py-2 pl-3 pr-10 text-sm disabled:cursor-not-allowed dark:border-gray-700 dark:bg-gray-800 dark:text-white">
-              <option value="">No radius (everywhere)</option>
+              <option value="">No Radius (everywhere)</option>
               {RADIUS_OPTIONS.map((miles) => <option key={miles} value={miles}>within {miles} miles</option>)}
             </select>
             <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />

@@ -13,7 +13,7 @@ const TABS: { key: FlagStatus; label: string }[] = [
   { key: "APPROVED", label: "Approved" },
   { key: "UPHELD", label: "Upheld" },
 ];
-const STAGES = { BRIEF: "Customer's brief", PREPARE: "Prepared by Gotham", LAUNCH: "About to be sent" } as const;
+const STAGES = { BRIEF: "Customer's Brief", PREPARE: "Prepared by Gotham", LAUNCH: "About to Be Sent" } as const;
 
 function FlagCard({ flag }: { flag: ContentFlag }) {
   const [note, setNote] = useState("");
@@ -44,7 +44,7 @@ function FlagCard({ flag }: { flag: ContentFlag }) {
       <pre className="mt-3 max-h-48 overflow-auto whitespace-pre-wrap rounded-lg bg-gray-50 p-3 font-sans text-[13px] text-gray-800 dark:bg-gray-800 dark:text-gray-200">{flag.excerpt}</pre>
       {flag.reviewRequestNote && (
         <p className="mt-3 mb-0 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:border-amber-900/50 dark:bg-amber-900/20 dark:text-amber-100">
-          <b>Customer&apos;s note:</b> {flag.reviewRequestNote}
+          <b>Customer&apos;s Note:</b> {flag.reviewRequestNote}
         </p>
       )}
 
@@ -70,7 +70,7 @@ function FlagCard({ flag }: { flag: ContentFlag }) {
               onClick={() => review.mutate({ id: flag.id, decision: "UPHOLD", note })}
               className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3.5 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200"
             >
-              Uphold: keep it blocked
+              Uphold: Keep It Blocked
             </button>
           </div>
         </div>
@@ -99,7 +99,7 @@ export default function CampaignContentFlags() {
         <div>
           <h1 className="m-0 text-xl font-semibold text-gray-900 dark:text-white">Flagged Campaign Content</h1>
           <p className="m-0 mt-0.5 text-sm text-gray-500">
-            An AI reads every campaign message before it can be sent. A flagged message is blocked and the customer is told on screen and by email; most just edit it and send it again. Only messages where the customer clicked "Ask Gotham to review" appear here. If the AI got it wrong, approve it; the customer is emailed and can send it. Otherwise uphold it and they are told it stays blocked.
+            An AI reads every campaign message before it can be sent. A flagged message is blocked and the customer is told on screen and by email; most just edit it and send it again. Only messages where the customer clicked "Ask Gotham to Review" appear here. If the AI got it wrong, approve it; the customer is emailed and can send it. Otherwise uphold it and they are told it stays blocked.
           </p>
         </div>
       </div>
@@ -126,7 +126,7 @@ export default function CampaignContentFlags() {
         <p className="text-sm text-red-600">
           Could not load flagged content.{" "}
           <button className="underline" onClick={() => refetch()}>
-            Try again
+            Try Again
           </button>
         </p>
       ) : data && data.flags.length === 0 ? (

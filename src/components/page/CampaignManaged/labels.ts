@@ -21,4 +21,4 @@ export const STATUS_STYLES: Record<ManagedStatus, string> = {
 export const CHANNEL_LABELS = { EMAIL: "Email", SMS: "Text" } as const;
 
 export const formatDateTime = (iso: string | null) =>
-  iso ? new Date(iso).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" }) : "–";
+  iso ? new Date(iso).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" }) : "–";

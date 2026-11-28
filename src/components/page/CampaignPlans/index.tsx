@@ -5,7 +5,7 @@ import { Loader2, Plus } from "lucide-react";
 import type { CampaignPlan } from "@/services/api/campaignPlans";
 import { useCampaignPlans, useSaveCampaignPlan, useTogglePlan } from "@/services/hooks/useCampaignPlans";
 
-const kindOf = (emailCredits: number, smsCredits: number) => (smsCredits > 0 && emailCredits > 0 ? "Text + Email" : smsCredits > 0 ? "Text only" : emailCredits > 0 ? "Email only" : "No credits");
+const kindOf = (emailCredits: number, smsCredits: number) => (smsCredits > 0 && emailCredits > 0 ? "Text + Email" : smsCredits > 0 ? "Text Only" : emailCredits > 0 ? "Email Only" : "No Credits");
 const money = (cents: number) => `$${(cents / 100).toLocaleString("en-US", { minimumFractionDigits: cents % 100 ? 2 : 0 })}`;
 const input = "w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-primary dark:border-gray-700 dark:bg-gray-800 dark:text-white";
 const primary = "inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50";
@@ -51,16 +51,16 @@ function PlanForm({ plan, onDone }: { plan?: CampaignPlan; onDone: () => void })
   return (
     <div className="space-y-4 rounded-xl border border-gray-200 bg-gray-50 p-5 dark:border-gray-800 dark:bg-gray-900">
       <div className="grid gap-4 sm:grid-cols-2">
-        <label className="block text-sm"><span className="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-500">Plan name</span><input value={draft.name} maxLength={60} onChange={(e) => set({ name: e.target.value })} className={input} placeholder="Growth" /></label>
-        <label className="block text-sm"><span className="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-500">Price per month (USD)</span><input type="number" min={1} step="0.01" value={draft.price} onChange={(e) => set({ price: e.target.value })} className={input} placeholder="149" /></label>
-        <label className="block text-sm"><span className="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-500">Email credits per month</span><input type="number" min={0} value={draft.emailCredits} onChange={(e) => set({ emailCredits: e.target.value })} className={input} /></label>
-        <label className="block text-sm"><span className="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-500">Text credits per month</span><input type="number" min={0} value={draft.smsCredits} onChange={(e) => set({ smsCredits: e.target.value })} className={input} /></label>
+        <label className="block text-sm"><span className="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-500">Plan Name</span><input value={draft.name} maxLength={60} onChange={(e) => set({ name: e.target.value })} className={input} placeholder="Growth" /></label>
+        <label className="block text-sm"><span className="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-500">Price per Month (USD)</span><input type="number" min={1} step="0.01" value={draft.price} onChange={(e) => set({ price: e.target.value })} className={input} placeholder="149" /></label>
+        <label className="block text-sm"><span className="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-500">Email Credits per Month</span><input type="number" min={0} value={draft.emailCredits} onChange={(e) => set({ emailCredits: e.target.value })} className={input} /></label>
+        <label className="block text-sm"><span className="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-500">Text Credits per Month</span><input type="number" min={0} value={draft.smsCredits} onChange={(e) => set({ smsCredits: e.target.value })} className={input} /></label>
       </div>
       <p className="m-0 text-xs text-gray-500">This plan is <b>{kindOf(Number(draft.emailCredits), Number(draft.smsCredits))}</b>. Set one kind of credit to 0 for a text-only or email-only plan. Customers see each kind in its own tab, so each can have its own price.</p>
-      <label className="block text-sm"><span className="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-500">Short description (shown under the name)</span><input value={draft.summary} maxLength={200} onChange={(e) => set({ summary: e.target.value })} className={input} /></label>
-      <label className="block text-sm"><span className="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-500">Included features (one per line, up to 10)</span><textarea rows={4} value={draft.features} onChange={(e) => set({ features: e.target.value })} className={input} /></label>
+      <label className="block text-sm"><span className="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-500">Short Description (shown under the name)</span><input value={draft.summary} maxLength={200} onChange={(e) => set({ summary: e.target.value })} className={input} /></label>
+      <label className="block text-sm"><span className="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-500">Included Features (one per line, up to 10)</span><textarea rows={4} value={draft.features} onChange={(e) => set({ features: e.target.value })} className={input} /></label>
       <div className="flex flex-wrap items-center gap-6">
-        <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300"><input type="checkbox" checked={draft.isPopular} onChange={(e) => set({ isPopular: e.target.checked })} className="h-4 w-4" />Mark as &ldquo;Most popular&rdquo;</label>
+        <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300"><input type="checkbox" checked={draft.isPopular} onChange={(e) => set({ isPopular: e.target.checked })} className="h-4 w-4" />Mark as &ldquo;Most Popular&rdquo;</label>
         <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">Order on the Page<input type="number" min={0} value={draft.sortOrder} onChange={(e) => set({ sortOrder: e.target.value })} className={`${input} w-20`} /></label>
       </div>
       {plan && plan.subscribers > 0 && (
@@ -69,7 +69,7 @@ function PlanForm({ plan, onDone }: { plan?: CampaignPlan; onDone: () => void })
         </p>
       )}
       <div className="flex gap-2">
-        <button className={primary} disabled={!valid || save.isPending} onClick={submit}>{save.isPending && <Loader2 className="h-4 w-4 animate-spin" />}{plan ? "Save changes" : "Create plan"}</button>
+        <button className={primary} disabled={!valid || save.isPending} onClick={submit}>{save.isPending && <Loader2 className="h-4 w-4 animate-spin" />}{plan ? "Save Changes" : "Create Plan"}</button>
         <button className={secondary} onClick={onDone}>Cancel</button>
       </div>
     </div>
@@ -85,12 +85,12 @@ function PlanRow({ plan }: { plan: CampaignPlan }) {
       <div>
         <p className="m-0 text-base font-semibold text-gray-900 dark:text-white">
           {plan.name}
-          {plan.isPopular && <span className="ml-2 rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700">Most popular</span>}
+          {plan.isPopular && <span className="ml-2 rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700">Most Popular</span>}
           <span className="ml-2 rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700">{kindOf(plan.emailCredits, plan.smsCredits)}</span>
           <span className={`ml-2 rounded-full px-2 py-0.5 text-xs font-medium ${plan.isActive ? "bg-green-50 text-green-700" : "bg-gray-100 text-gray-600"}`}>{plan.isActive ? "Live" : "Hidden"}</span>
         </p>
         <p className="m-0 mt-1 text-sm text-gray-600 dark:text-gray-400">
-          {money(plan.priceInCents)} per month · {plan.emailCredits.toLocaleString()} email + {plan.smsCredits.toLocaleString()} text credits · {plan.subscribers} subscriber{plan.subscribers === 1 ? "" : "s"}
+          {money(plan.priceInCents)} per month · {plan.emailCredits.toLocaleString("en-US")} email + {plan.smsCredits.toLocaleString("en-US")} text credits · {plan.subscribers} subscriber{plan.subscribers === 1 ? "" : "s"}
         </p>
       </div>
       <div className="flex gap-2">
@@ -117,7 +117,7 @@ export default function CampaignPlans() {
             The monthly plans employers can buy by themselves. Each plan gives separate email and text credits every month. Hidden plans cannot be bought. Customers who already subscribed are never changed by an edit.
           </p>
         </div>
-        {!creating && <button className={primary} onClick={() => setCreating(true)}><Plus className="h-4 w-4" />New plan</button>}
+        {!creating && <button className={primary} onClick={() => setCreating(true)}><Plus className="h-4 w-4" />New Plan</button>}
       </div>
       {creating && <PlanForm onDone={() => setCreating(false)} />}
       {isLoading && <div className="flex justify-center py-12 text-gray-500"><Loader2 className="h-6 w-6 animate-spin" /></div>}

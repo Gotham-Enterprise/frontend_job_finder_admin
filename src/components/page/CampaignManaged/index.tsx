@@ -91,7 +91,7 @@ export default function CampaignManaged() {
         ) : isError ? (
           <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-center text-sm text-red-700 dark:border-red-900/50 dark:bg-red-900/10 dark:text-red-300">
             We couldn’t load the campaigns.{" "}
-            <button onClick={() => refetch()} className="font-semibold underline">Try again</button>
+            <button onClick={() => refetch()} className="font-semibold underline">Try Again</button>
           </div>
         ) : !data || data.campaigns.length === 0 ? (
           <div className="flex flex-col items-center py-14 text-center">
@@ -99,7 +99,7 @@ export default function CampaignManaged() {
               <Inbox className="h-7 w-7 text-gray-400" />
             </span>
             <p className="mt-4 text-sm font-semibold text-gray-900 dark:text-white">
-              {search ? "No campaigns match your search" : "Nothing here"}
+              {search ? "No Campaigns Match Your Search" : "Nothing Here"}
             </p>
             <p className="mt-1 max-w-sm text-sm text-gray-500 dark:text-gray-400">
               {tab === "TO_PREPARE" && !search ? "When an employer sends their campaign details, it appears here for you to prepare." : "Try another tab or a different search."}
@@ -133,7 +133,7 @@ export default function CampaignManaged() {
                         {row.channels.map((channel) => CHANNEL_LABELS[channel]).join(" + ")}
                       </td>
                       <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
-                        {row.matchedCount != null ? `${row.matchedCount.toLocaleString()} candidates` : <span className="text-gray-400">Not set</span>}
+                        {row.matchedCount != null ? `${row.matchedCount.toLocaleString("en-US")} candidates` : <span className="text-gray-400">Not Set</span>}
                       </td>
                       <td className="whitespace-nowrap px-4 py-3">
                         <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${STATUS_STYLES[row.status]}`}>{STATUS_LABELS[row.status]}</span>

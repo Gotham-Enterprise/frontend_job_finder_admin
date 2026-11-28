@@ -87,29 +87,29 @@ export default function InquiryDealPanel({ inquiryId }: { inquiryId: string }) {
       <Step n={1} title="Quote" done={Boolean(d?.quote.sentAt)} note={d?.quote.sentAt ? `Emailed ${formatDateTime(d.quote.sentAt)}` : undefined}>
         <div className="grid grid-cols-1 items-end gap-3 sm:grid-cols-3">
           <label className="text-sm">
-            <span className="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-500">Email credits / month</span>
+            <span className="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-500">Email Credits / Month</span>
             <input type="number" min={0} inputMode="numeric" value={emailCredits} onChange={(e) => setEmailCredits(e.target.value)} className={input} disabled={Boolean(d?.payment.paidAt)} />
           </label>
           <label className="text-sm">
-            <span className="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-500">Text credits / month</span>
+            <span className="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-500">Text Credits / Month</span>
             <input type="number" min={0} inputMode="numeric" value={smsCredits} onChange={(e) => setSmsCredits(e.target.value)} className={input} disabled={Boolean(d?.payment.paidAt)} />
           </label>
           <label className="text-sm">
-            <span className="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-500">Price / month (USD)</span>
+            <span className="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-500">Price / Month (USD)</span>
             <input type="number" min={0} step="0.01" inputMode="decimal" value={price} onChange={(e) => setPrice(e.target.value)} className={input} disabled={Boolean(d?.payment.paidAt)} />
           </label>
         </div>
         <label className="block text-sm">
-          <span className="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-500">Notes for the customer (optional)</span>
+          <span className="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-500">Notes for the Customer (Optional)</span>
           <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} maxLength={2000} className={input} disabled={Boolean(d?.payment.paidAt)} />
         </label>
         {d?.quote.sentAt === null && d && !quoteDirty && <p className="m-0 text-xs text-gray-500">Saved. Email it to the customer when you are ready.</p>}
         <div className="flex flex-wrap gap-2">
           <button className={primary} disabled={busy || !quoteValid || !quoteDirty || Boolean(d?.payment.paidAt)} onClick={() => act.saveQuote.mutate({ emailCredits: Number(emailCredits), smsCredits: Number(smsCredits), priceInDollars: Number(price), notes })}>
-            {act.saveQuote.isPending && <Spinner />} Save quote
+            {act.saveQuote.isPending && <Spinner />} Save Quote
           </button>
           <button className={secondary} disabled={busy || !d || quoteDirty || !d.quote.complete || Boolean(d.payment.paidAt)} onClick={() => d && act.sendQuote.mutate(d.id)}>
-            {act.sendQuote.isPending && <Spinner />} {d?.quote.sentAt ? "Email the quote again" : "Email quote to customer"}
+            {act.sendQuote.isPending && <Spinner />} {d?.quote.sentAt ? "Email the Quote Again" : "Email Quote to Customer"}
           </button>
         </div>
       </Step>
@@ -123,8 +123,8 @@ export default function InquiryDealPanel({ inquiryId }: { inquiryId: string }) {
           d?.agreement.signedAt
             ? `Accepted ${formatDateTime(d.agreement.signedAt)}${d.agreement.termsVersion ? ` (terms ${d.agreement.termsVersion})` : ""}`
             : needsAgreement
-              ? "Waiting for the customer"
-              : "Not required"
+              ? "Waiting for the Customer"
+              : "Not Required"
         }
       >
         <p className="m-0 text-sm text-gray-700 dark:text-gray-300">
@@ -137,7 +137,7 @@ export default function InquiryDealPanel({ inquiryId }: { inquiryId: string }) {
                 : d.agreement.proposalViewedAt
                   ? `The customer opened the proposal on ${formatDateTime(d.agreement.proposalViewedAt)} and has not accepted yet.`
                   : d.quote.sentAt
-                    ? "The quote was sent. The customer reads the plan and terms, ticks a box and goes straight to payment."
+                    ? "The quote was sent. The customer reads the plan and terms, checks a box and goes straight to payment."
                     : "Send the quote. The customer accepts the terms on a page from the email and goes straight to payment."}
         </p>
       </Step>
@@ -165,12 +165,12 @@ export default function InquiryDealPanel({ inquiryId }: { inquiryId: string }) {
             <div className="flex flex-wrap gap-2">
               {!d.payment.linkUrl && (
                 <button className={primary} disabled={busy || !d.payment.canCreateLink || quoteDirty} onClick={() => act.createPaymentLink.mutate(d.id)}>
-                  {act.createPaymentLink.isPending && <Spinner />} Create payment link
+                  {act.createPaymentLink.isPending && <Spinner />} Create Payment Link
                 </button>
               )}
               {d.payment.linkUrl && (
                 <button className={primary} disabled={busy} onClick={() => act.sendPaymentLink.mutate(d.id)}>
-                  {act.sendPaymentLink.isPending && <Spinner />} {d.payment.sentAt ? "Email the link again" : "Email link to customer"}
+                  {act.sendPaymentLink.isPending && <Spinner />} {d.payment.sentAt ? "Email the Link Again" : "Email Link to Customer"}
                 </button>
               )}
             </div>
@@ -212,7 +212,7 @@ export default function InquiryDealPanel({ inquiryId }: { inquiryId: string }) {
             {d.canSimulatePayment && (
               <div>
                 <button className={secondary} disabled={busy} onClick={() => act.simulatePayment.mutate(d.id)}>
-                  {act.simulatePayment.isPending && <Spinner />} Mark as paid (test only)
+                  {act.simulatePayment.isPending && <Spinner />} Mark as Paid (test only)
                 </button>
                 <p className="m-0 mt-1 text-xs text-gray-500">For local testing, when Stripe cannot reach this computer. Not available in production.</p>
               </div>

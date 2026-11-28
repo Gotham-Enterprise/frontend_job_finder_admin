@@ -73,7 +73,7 @@ export default function InquiryCreditsPanel({ inquiry }: { inquiry: CampaignInqu
           {pending && (
             <div className="space-y-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-900/50 dark:bg-amber-900/20 dark:text-amber-200">
               <p className="m-0">
-                <strong>Waiting for payment:</strong> {creditsText(pending.emailCredits, pending.smsCredits)} credits for {money(pending.priceInCents)}
+                <strong>Waiting for Payment:</strong> {creditsText(pending.emailCredits, pending.smsCredits)} credits for {money(pending.priceInCents)}
                 {pending.sentAt ? `, link emailed ${formatDateTime(pending.sentAt)}` : ""}. Nothing is added until it is paid.
               </p>
               {pending.paymentUrl && (
@@ -85,7 +85,7 @@ export default function InquiryCreditsPanel({ inquiry }: { inquiry: CampaignInqu
               )}
               <div className="flex flex-wrap gap-2">
                 <button type="button" className={secondary} disabled={busy} onClick={() => act.resend.mutate()}>
-                  {act.resend.isPending && <Loader2 className="h-4 w-4 animate-spin" />} Email the link again
+                  {act.resend.isPending && <Loader2 className="h-4 w-4 animate-spin" />} Email the Link Again
                 </button>
                 <button
                   type="button"
@@ -93,25 +93,25 @@ export default function InquiryCreditsPanel({ inquiry }: { inquiry: CampaignInqu
                   disabled={busy}
                   onClick={() => window.confirm("Withdraw this payment link? It will stop working.") && act.cancel.mutate()}
                 >
-                  {act.cancel.isPending && <Loader2 className="h-4 w-4 animate-spin" />} Withdraw the link
+                  {act.cancel.isPending && <Loader2 className="h-4 w-4 animate-spin" />} Withdraw the Link
                 </button>
                 {pending.canSimulate && (
                   <button type="button" className={secondary} disabled={busy} onClick={() => act.simulate.mutate()}>
-                    {act.simulate.isPending && <Loader2 className="h-4 w-4 animate-spin" />} Mark as paid (test)
+                    {act.simulate.isPending && <Loader2 className="h-4 w-4 animate-spin" />} Mark as Paid (test)
                   </button>
                 )}
               </div>
             </div>
           )}
 
-          <p className="m-0 text-xs font-medium text-gray-600 dark:text-gray-400">{pending ? "Change the offer (replaces the link above)" : "New offer"}</p>
+          <p className="m-0 text-xs font-medium text-gray-600 dark:text-gray-400">{pending ? "Change the offer (replaces the link above)" : "New Offer"}</p>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <label className="text-sm">
-              <span className={label}>Email credits</span>
+              <span className={label}>Email Credits</span>
               <input inputMode="numeric" value={emailCredits} onChange={(e) => setEmailCredits(e.target.value)} placeholder="0" className={input} />
             </label>
             <label className="text-sm">
-              <span className={label}>Text credits</span>
+              <span className={label}>Text Credits</span>
               <input inputMode="numeric" value={smsCredits} onChange={(e) => setSmsCredits(e.target.value)} placeholder="0" className={input} />
             </label>
             <label className="text-sm">
@@ -130,7 +130,7 @@ export default function InquiryCreditsPanel({ inquiry }: { inquiry: CampaignInqu
               disabled={!creditsValid || !priceValid || busy}
               onClick={() => act.send.mutate({ emailCredits: email, smsCredits: sms, priceInDollars: dollars, note: note.trim() || undefined })}
             >
-              {act.send.isPending && <Loader2 className="h-4 w-4 animate-spin" />} {pending ? "Send a new payment link" : "Send payment link"}
+              {act.send.isPending && <Loader2 className="h-4 w-4 animate-spin" />} {pending ? "Send a New Payment Link" : "Send Payment Link"}
             </button>
             <button
               type="button"
@@ -142,7 +142,7 @@ export default function InquiryCreditsPanel({ inquiry }: { inquiry: CampaignInqu
                 grant.mutate({ id: inquiry.id, emailCredits: email, smsCredits: sms, note: note.trim() || undefined });
               }}
             >
-              {grant.isPending && <Loader2 className="h-4 w-4 animate-spin" />} Add free instead
+              {grant.isPending && <Loader2 className="h-4 w-4 animate-spin" />} Add Free Instead
             </button>
           </div>
         </div>

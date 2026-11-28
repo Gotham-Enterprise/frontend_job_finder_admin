@@ -127,7 +127,7 @@ export default function CampaignInquiries() {
               }}
               className="w-full appearance-none rounded-lg border border-gray-200 bg-white py-2 pl-3 pr-9 text-sm text-gray-900 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30 dark:border-gray-700 dark:bg-gray-800 dark:text-white sm:w-52"
             >
-              <option value="">All campaign types</option>
+              <option value="">All Campaign Types</option>
               {(Object.keys(CAMPAIGN_TYPE_LABELS) as InquiryCampaignType[]).map((value) => (
                 <option key={value} value={value}>{CAMPAIGN_TYPE_LABELS[value]}</option>
               ))}
@@ -136,7 +136,7 @@ export default function CampaignInquiries() {
           </div>
           {filtering && (
             <button onClick={clearFilters} className="inline-flex items-center gap-1 text-sm font-medium text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">
-              <X className="h-4 w-4" /> Clear filters
+              <X className="h-4 w-4" /> Clear Filters
             </button>
           )}
         </div>
@@ -149,7 +149,7 @@ export default function CampaignInquiries() {
         ) : isError ? (
           <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-center text-sm text-red-700 dark:border-red-900/50 dark:bg-red-900/10 dark:text-red-300">
             We couldn’t load the inquiries.{" "}
-            <button onClick={() => refetch()} className="font-semibold underline">Try again</button>
+            <button onClick={() => refetch()} className="font-semibold underline">Try Again</button>
           </div>
         ) : !data || data.inquiries.length === 0 ? (
           <div className="flex flex-col items-center py-14 text-center">
@@ -157,14 +157,14 @@ export default function CampaignInquiries() {
               <Inbox className="h-7 w-7 text-gray-400" />
             </span>
             <p className="mt-4 text-sm font-semibold text-gray-900 dark:text-white">
-              {filtering ? "No inquiries match your filters" : "No inquiries yet"}
+              {filtering ? "No Inquiries Match Your Filters" : "No Inquiries Yet"}
             </p>
             <p className="mt-1 max-w-sm text-sm text-gray-500 dark:text-gray-400">
               {filtering ? "Try a different search or clear the filters." : "When someone submits the campaigns form, their inquiry will appear here."}
             </p>
             {filtering && (
               <button onClick={clearFilters} className="mt-4 rounded-lg border border-gray-200 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800">
-                Clear filters
+                Clear Filters
               </button>
             )}
           </div>
@@ -174,7 +174,7 @@ export default function CampaignInquiries() {
               <table className="w-full">
                 <thead className="bg-gray-50 dark:bg-gray-900/50">
                   <tr>
-                    {["Reference", "Contact", "Campaign", "Company size", "Status", "Owner", "Call", "Received"].map((heading) => (
+                    {["Reference", "Contact", "Campaign", "Company Size", "Status", "Owner", "Call", "Received"].map((heading) => (
                       <th key={heading} className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">{heading}</th>
                     ))}
                   </tr>
@@ -189,12 +189,12 @@ export default function CampaignInquiries() {
                         <div className="text-xs text-gray-400">{row.email}</div>
                       </td>
                       <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
-                        {row.campaignType ? CAMPAIGN_TYPE_LABELS[row.campaignType] : <span className="text-gray-400">Not chosen</span>}
+                        {row.campaignType ? CAMPAIGN_TYPE_LABELS[row.campaignType] : <span className="text-gray-400">Not Chosen</span>}
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">{row.companySize ? `${row.companySize} employees` : row.estimatedAudienceSize ?? <span className="text-gray-400">–</span>}</td>
                       <td className="whitespace-nowrap px-4 py-3">
                         <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${STATUS_STYLES[row.status]}`}>{STATUS_LABELS[row.status]}</span>
-                        {row.notifyError && <span title={row.notifyError} className="ml-2 text-xs text-red-600">email issue</span>}
+                        {row.notifyError && <span title={row.notifyError} className="ml-2 text-xs text-red-600">Email Issue</span>}
                       </td>
                       <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-700 dark:text-gray-300">{row.assignedTo ?? <span className="text-gray-400">Unassigned</span>}</td>
                       <td className="px-4 py-3 text-sm">
@@ -209,7 +209,7 @@ export default function CampaignInquiries() {
                             </div>
                           </>
                         ) : (
-                          <span className="text-gray-400">No call booked</span>
+                          <span className="text-gray-400">No Call Booked</span>
                         )}
                       </td>
                       <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-500">{formatDateTime(row.createdAt)}</td>

@@ -50,13 +50,13 @@ export const HEARD_ABOUT_LABELS: Record<string, string> = {
 };
 
 export const formatDateTime = (iso: string) =>
-  new Date(iso).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
+  new Date(iso).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" });
 
 const CALL_STATUS: Record<string, string> = {
   SCHEDULED: "Scheduled",
   RESCHEDULED: "Rescheduled",
-  CANCELLED_BY_USER: "Cancelled by the Customer",
-  CANCELLED_BY_ADMIN: "Cancelled by Gotham",
+  CANCELLED_BY_USER: "Canceled by the Customer",
+  CANCELLED_BY_ADMIN: "Canceled by Gotham",
   COMPLETED: "Completed",
   NO_SHOW: "No Show",
 };
@@ -68,6 +68,6 @@ export const formatCallTime = (iso: string, timeZone: string) => {
   try {
     return new Date(iso).toLocaleString("en-US", { timeZone, weekday: "short", month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit", timeZoneName: "short" });
   } catch {
-    return new Date(iso).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
+    return new Date(iso).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" });
   }
 };

@@ -21,7 +21,7 @@ import {
 const Field = ({ label, children }: { label: string; children: React.ReactNode }) => (
   <div>
     <dt className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">{label}</dt>
-    <dd className="mt-1 text-sm text-gray-900 dark:text-white break-words">{children || <span className="text-gray-400">Not provided</span>}</dd>
+    <dd className="mt-1 text-sm text-gray-900 dark:text-white break-words">{children || <span className="text-gray-400">Not Provided</span>}</dd>
   </div>
 );
 
@@ -129,14 +129,14 @@ export default function InquiryDetailPanel({ inquiry, onClose }: Props) {
                 ))}
             </Field>
             )}
-            <Field label="Type of Organisation">{ORGANIZATION_LABELS[inquiry.organizationType] ?? inquiry.organizationType}</Field>
+            <Field label="Type of Organization">{ORGANIZATION_LABELS[inquiry.organizationType] ?? inquiry.organizationType}</Field>
           </dl>
         </section>
 
         <section className="mt-4 rounded-lg border border-gray-200 p-4 dark:border-gray-800">
           <h3 className="mb-3 text-sm font-semibold text-gray-900 dark:text-white">Campaign Brief</h3>
           <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Field label="Campaign">{inquiry.campaignType ? CAMPAIGN_TYPE_LABELS[inquiry.campaignType] : "Not chosen"}</Field>
+            <Field label="Campaign">{inquiry.campaignType ? CAMPAIGN_TYPE_LABELS[inquiry.campaignType] : "Not Chosen"}</Field>
             <Field label="Company Size">{inquiry.companySize ? `${inquiry.companySize} employees` : null}</Field>
             {inquiry.estimatedAudienceSize && <Field label="Estimated Audience">{inquiry.estimatedAudienceSize}</Field>}
             {inquiry.howDidYouHear && <Field label="Heard About Us">{HEARD_ABOUT_LABELS[inquiry.howDidYouHear] ?? inquiry.howDidYouHear}</Field>}
@@ -150,7 +150,7 @@ export default function InquiryDetailPanel({ inquiry, onClose }: Props) {
           {inquiry.call ? (
             <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Field label="When">{formatCallTime(inquiry.call.startAt, inquiry.call.timezone)}</Field>
-              <Field label="With">{inquiry.call.host ? `${inquiry.call.host.name}, ${inquiry.call.host.title}` : "No host set"}</Field>
+              <Field label="With">{inquiry.call.host ? `${inquiry.call.host.name}, ${inquiry.call.host.title}` : "No Host Set"}</Field>
               <Field label="Status">
                 <span className={callIsLive(inquiry.call.status) ? "" : "text-amber-700"}>{callStatusLabel(inquiry.call.status)}</span>
               </Field>
@@ -159,7 +159,7 @@ export default function InquiryDetailPanel({ inquiry, onClose }: Props) {
                 <div className="sm:col-span-2">
                   <Field label="Meeting Link">
                     <a href={inquiry.call.zoomLink} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-primary hover:underline">
-                      Join the call <ExternalLink className="h-3.5 w-3.5" />
+                      Join the Call <ExternalLink className="h-3.5 w-3.5" />
                     </a>
                   </Field>
                 </div>
@@ -175,7 +175,7 @@ export default function InquiryDetailPanel({ inquiry, onClose }: Props) {
         <InquiryDealPanel inquiryId={inquiry.id} />
 
         <section className="mt-4 rounded-lg border border-gray-200 p-4 dark:border-gray-800">
-          <h3 className="mb-3 text-sm font-semibold text-gray-900 dark:text-white">Follow-up</h3>
+          <h3 className="mb-3 text-sm font-semibold text-gray-900 dark:text-white">Follow-Up</h3>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <label className="text-sm">
               <span className="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-500">Status</span>
@@ -200,7 +200,7 @@ export default function InquiryDetailPanel({ inquiry, onClose }: Props) {
               />
             </label>
             <label className="text-sm sm:col-span-2">
-              <span className="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-500">Internal notes (never shown to the visitor)</span>
+              <span className="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-500">Internal Notes (never shown to the visitor)</span>
               <textarea
                 value={notes}
                 onChange={(event) => setNotes(event.target.value)}
@@ -216,7 +216,7 @@ export default function InquiryDetailPanel({ inquiry, onClose }: Props) {
             disabled={!dirty || update.isPending}
             className="mt-4 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {update.isPending ? "Saving…" : "Save changes"}
+            {update.isPending ? "Saving…" : "Save Changes"}
           </button>
         </section>
 
